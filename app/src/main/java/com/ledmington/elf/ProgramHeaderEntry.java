@@ -70,7 +70,7 @@ public final class ProgramHeaderEntry {
         sb.append("Alignment              : ");
         sb.append(alignment);
         if (alignment == 0 || alignment == 1) {
-            sb.append(" (none)");
+            sb.append(" (no alignment)");
         }
         sb.append('\n');
         return sb.toString();
