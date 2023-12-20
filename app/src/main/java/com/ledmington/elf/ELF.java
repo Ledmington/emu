@@ -11,12 +11,12 @@ public final class ELF {
 
     private final FileHeader fileHeader;
     private final PHTEntry[] programHeaderTable;
-    private final SHTEntry[] sectionHeaderTable;
+    private final Section[] sectionTable;
 
-    public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final SHTEntry[] sectionHeaderTable) {
+    public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section[] sectionTable) {
         this.fileHeader = Objects.requireNonNull(fileHeader);
         this.programHeaderTable = Objects.requireNonNull(programHeaderTable);
-        this.sectionHeaderTable = Objects.requireNonNull(sectionHeaderTable);
+        this.sectionTable = Objects.requireNonNull(sectionTable);
     }
 
     public String toString() {
@@ -31,13 +31,13 @@ public final class ELF {
             sb.append('\n');
         }
         sb.append(" --- End of Program Header Table --- \n\n");
-        sb.append(" --- Section Header Table --- \n\n");
-        for (int i = 0; i < sectionHeaderTable.length; i++) {
-            sb.append(String.format("SHT entry n.%,d\n", i));
-            sb.append(sectionHeaderTable[i].toString());
+        sb.append(" --- Section Table --- \n\n");
+        for (int i = 0; i < sectionTable.length; i++) {
+            sb.append(String.format("Section n.%,d\n", i));
+            sb.append(sectionTable[i].toString());
             sb.append('\n');
         }
-        sb.append(" --- End of Section Header Table --- \n");
+        sb.append(" --- End of Section Table --- \n");
         return sb.toString();
     }
 }

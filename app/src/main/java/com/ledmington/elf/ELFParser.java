@@ -256,16 +256,19 @@ public final class ELFParser {
         final Section[] sectionTable = new Section[fileHeader.nSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].fileOffset();
-        logger.debug("Reading section names");
-        for (final SHTEntry entry : sectionHeaderTable) {
+        for (int k = 0; k < sectionHeaderTable.length; k++) {
+            final SHTEntry entry = sectionHeaderTable[k];
             b.setPosition(shstr_offset + entry.nameOffset());
+
             final StringBuilder sb = new StringBuilder();
             char c = (char) b.read1();
             while (c != '\0') {
                 sb.append(c);
                 c = (char) b.read1();
             }
-            logger.debug("'%s'", sb.toString());
+            final String name = sb.toString();
+
+            sectionTable[k] = new Section(name, entry);
         }
 
         return sectionTable;
@@ -282,6 +285,6 @@ public final class ELFParser {
 
         final Section[] sectionTable = parseSectionTable(fileHeader, sectionHeaderTable);
 
-        return new ELF(fileHeader, programHeaderTable, sectionHeaderTable);
+        return new ELF(fileHeader, programHeaderTable, sectionTable);
     }
 }

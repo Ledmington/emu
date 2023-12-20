@@ -48,13 +48,16 @@ public final class SHTEntry {
         return fileOffset;
     }
 
+    public SHTEntryType type() {
+        return type;
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name offset     : ");
         sb.append(String.format("%,d (0x%08x)\n", nameOffset, nameOffset));
         sb.append("Type            : ");
-        sb.append(type);
-        sb.append('\n');
+        sb.append(String.format("%s (%s)\n", type.name(), type.description()));
         sb.append("Flags           : ");
         sb.append(String.format("0x%016x ", flags));
         {
