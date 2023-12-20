@@ -15,9 +15,10 @@ public final class FileHeader {
     private final FileType fileType;
     private final ISA isa;
     private final long entryAddress;
-    private final long programHeaderStart;
-    private final long sectionHeaderStart;
+    private final long programHeaderTableOffset;
+    private final long sectionHeaderTableOffset;
     private final int flags;
+    private final short headerSize;
     private final short programHeaderTableEntrySize;
     private final short nProgramHeaderTableEntries;
     private final short sectionHeaderTableEntrySize;
@@ -34,9 +35,10 @@ public final class FileHeader {
             FileType fileType,
             ISA isa,
             long entryAddress,
-            long programHeaderStart,
-            long sectionHeaderStart,
+            long programHeaderTableOffset,
+            long sectionHeaderTableOffset,
             int flags,
+            short headerSize,
             short programHeaderTableEntrySize,
             short nProgramHeaderTableEntries,
             short sectionHeaderTableEntrySize,
@@ -51,9 +53,10 @@ public final class FileHeader {
         this.fileType = fileType;
         this.isa = isa;
         this.entryAddress = entryAddress;
-        this.programHeaderStart = programHeaderStart;
-        this.sectionHeaderStart = sectionHeaderStart;
+        this.programHeaderTableOffset = programHeaderTableOffset;
+        this.sectionHeaderTableOffset = sectionHeaderTableOffset;
         this.flags = flags;
+        this.headerSize = headerSize;
         this.programHeaderTableEntrySize = programHeaderTableEntrySize;
         this.nProgramHeaderTableEntries = nProgramHeaderTableEntries;
         this.sectionHeaderTableEntrySize = sectionHeaderTableEntrySize;
@@ -77,58 +80,70 @@ public final class FileHeader {
         return nSectionHeaderTableEntries;
     }
 
-    public long programHeaderOffset() {
-        return programHeaderStart;
+    public long programHeaderTableOffset() {
+        return programHeaderTableOffset;
     }
 
-    public long sectionHeaderOffset() {
-        return sectionHeaderStart;
+    public short programHeaderTableEntrySize() {
+        return programHeaderTableEntrySize;
+    }
+
+    public long sectionHeaderTableOffset() {
+        return sectionHeaderTableOffset;
+    }
+
+    public short sectionHeaderTableEntrySize() {
+        return sectionHeaderTableEntrySize;
     }
 
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Magic number   : ");
+        sb.append("Magic number         : ");
         sb.append(String.format("0x%08x\n", magicNumber));
-        sb.append("Format         : ");
+        sb.append("Format               : ");
         sb.append(is32Bit ? "32 bit\n" : "64 bit\n");
-        sb.append("Endianness     : ");
-        sb.append(isLittleEndian ? "little endian\n" : "big endian\n");
-        sb.append("Version        : ");
+        sb.append("Endianness           : ");
+        sb.append(isLittleEndian ? "2's complement, little endian\n" : "2's complement, big endian\n");
+        sb.append("Version              : ");
         sb.append(version);
         sb.append('\n');
-        sb.append("OS ABI         : ");
+        sb.append("OS ABI               : ");
         sb.append(osabi.OSName());
         sb.append('\n');
-        sb.append("ABI version    : ");
+        sb.append("ABI version          : ");
         sb.append(ABIVersion);
         sb.append('\n');
-        sb.append("File type      : ");
+        sb.append("File type            : ");
         sb.append(fileType.fileTypeName());
         sb.append('\n');
-        sb.append("ISA            : ");
+        sb.append("ISA                  : ");
         sb.append(isa.ISAName());
         sb.append('\n');
-        sb.append("Entry address  : ");
-        sb.append(String.format("0x%016x\n", entryAddress));
-        sb.append("PH start       : ");
-        sb.append(String.format("0x%016x\n", programHeaderStart));
-        sb.append("SH start       : ");
-        sb.append(String.format("0x%016x\n", sectionHeaderStart));
-        sb.append("Flags          : ");
-        sb.append(String.format("0x%08x\n", flags));
-        sb.append("PHTE size      : ");
-        sb.append(programHeaderTableEntrySize);
+        sb.append("Entry point address  : ");
+        sb.append(String.format("0x%016x", entryAddress));
+        if (entryAddress == 0x0L) {
+            sb.append(" (none)");
+        }
         sb.append('\n');
-        sb.append("PHT entries    : ");
+        sb.append("PHT offset           : ");
+        sb.append(String.format("%,d (bytes into file)\n", programHeaderTableOffset));
+        sb.append("SHT offset           : ");
+        sb.append(String.format("%,d (bytes into file)\n", sectionHeaderTableOffset));
+        sb.append("Flags                : ");
+        sb.append(String.format("0x%08x\n", flags));
+        sb.append("Size of this header  : ");
+        sb.append(String.format("%,d (bytes)\n", headerSize));
+        sb.append("PHTE size            : ");
+        sb.append(String.format("%,d (bytes)\n", programHeaderTableEntrySize));
+        sb.append("PHT entries          : ");
         sb.append(nProgramHeaderTableEntries);
         sb.append('\n');
-        sb.append("SHTE size      : ");
-        sb.append(sectionHeaderTableEntrySize);
-        sb.append('\n');
-        sb.append("SHT entries    : ");
+        sb.append("SHTE size            : ");
+        sb.append(String.format("%,d (bytes)\n", sectionHeaderTableEntrySize));
+        sb.append("SHT entries          : ");
         sb.append(nSectionHeaderTableEntries);
         sb.append('\n');
-        sb.append("SHTE names idx : ");
+        sb.append("SHTE names idx       : ");
         sb.append(namesSectionHeaderTableEntryIndex);
         sb.append('\n');
         return sb.toString();

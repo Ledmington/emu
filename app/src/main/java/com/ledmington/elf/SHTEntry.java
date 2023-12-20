@@ -4,23 +4,25 @@ package com.ledmington.elf;
  * This class is just a data holder.
  * No check is performed in the constructor on the given data.
  */
-public final class SectionHeaderEntry {
+public final class SHTEntry {
 
     private final int nameOffset;
-    private final SectionHeaderEntryType type;
+    private final SHTEntryType type;
     private final long flags;
     private final long virtualAddress;
+    private final long fileOffset;
     private final long size;
     private final int sh_link;
     private final int sh_info;
     private final long alignment;
     private final long entrySize;
 
-    public SectionHeaderEntry(
+    public SHTEntry(
             int nameOffset,
-            SectionHeaderEntryType type,
+            SHTEntryType type,
             long flags,
             long virtualAddress,
+            long fileOffset,
             long size,
             int sh_link,
             int sh_info,
@@ -30,6 +32,7 @@ public final class SectionHeaderEntry {
         this.type = type;
         this.flags = flags;
         this.virtualAddress = virtualAddress;
+        this.fileOffset = fileOffset;
         this.size = size;
         this.sh_link = sh_link;
         this.sh_info = sh_info;
@@ -37,42 +40,49 @@ public final class SectionHeaderEntry {
         this.entrySize = entrySize;
     }
 
+    public int nameOffset() {
+        return nameOffset;
+    }
+
+    public long fileOffset() {
+        return fileOffset;
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name offset     : ");
-        sb.append(nameOffset);
-        sb.append('\n');
+        sb.append(String.format("%,d (0x%08x)\n", nameOffset, nameOffset));
         sb.append("Type            : ");
-        sb.append(type.description());
+        sb.append(type);
         sb.append('\n');
         sb.append("Flags           : ");
+        sb.append(String.format("0x%016x ", flags));
         {
-            boolean first = true;
-            for (final SectionHeaderEntryFlags f : SectionHeaderEntryFlags.values()) {
+            for (final SHTEntryFlags f : SHTEntryFlags.values()) {
                 if ((flags & f.code()) != 0L) {
-                    if (!first) {
-                        sb.append('|');
-                    }
-                    sb.append(f.name());
+                    sb.append(f.id());
                 }
             }
         }
         sb.append('\n');
         sb.append("Virtual address : ");
         sb.append(String.format("0x%016x\n", virtualAddress));
-        sb.append("Size            : ");
-        sb.append(size);
-        sb.append('\n');
+        sb.append("Offset on file  : ");
+        sb.append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset));
+        sb.append("Size on file    : ");
+        sb.append(String.format("%,d bytes\n", size));
         sb.append("sh_link         : ");
         sb.append(String.format("%,d (0x%08x)\n", sh_link, sh_link));
         sb.append("sh_info         : ");
         sb.append(String.format("%,d (0x%08x)\n", sh_info, sh_info));
         sb.append("Alignment       : ");
         sb.append(alignment);
+        if (alignment == 0 || alignment == 1) {
+            sb.append(" (no alignment)");
+        }
         sb.append('\n');
         sb.append("Entry size      : ");
-        sb.append(entrySize);
-        sb.append('\n');
+        sb.append(String.format("%,d bytes\n", entrySize));
         return sb.toString();
     }
 }

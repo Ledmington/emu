@@ -4,9 +4,9 @@ package com.ledmington.elf;
  * This class is just a data holder.
  * No check is performed in the constructor on the given data.
  */
-public final class ProgramHeaderEntry {
+public final class PHTEntry {
 
-    private final ProgramHeaderEntryType type;
+    private final PHTEntryType type;
     private final int flags;
     private final long segmentOffset;
     private final long segmentVirtualAddress;
@@ -15,8 +15,8 @@ public final class ProgramHeaderEntry {
     private final long segmentMemorySize;
     private final long alignment;
 
-    public ProgramHeaderEntry(
-            ProgramHeaderEntryType type,
+    public PHTEntry(
+            PHTEntryType type,
             int flags,
             long segmentOffset,
             long segmentVirtualAddress,
@@ -37,20 +37,26 @@ public final class ProgramHeaderEntry {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Segment type           : ");
-        sb.append(type.description());
+        sb.append(type);
         sb.append('\n');
         sb.append("Flags                  : ");
         sb.append(String.format("0x%08x", flags));
         if (flags != 0) {
             sb.append(" (");
-            if ((flags & PHFlags.PF_R.code()) != 0) {
-                sb.append('r');
+            if ((flags & PHTEntryFlags.PF_R.code()) != 0) {
+                sb.append(PHTEntryFlags.PF_R.id());
+            } else {
+                sb.append(' ');
             }
-            if ((flags & PHFlags.PF_W.code()) != 0) {
-                sb.append('w');
+            if ((flags & PHTEntryFlags.PF_W.code()) != 0) {
+                sb.append(PHTEntryFlags.PF_W.id());
+            } else {
+                sb.append(' ');
             }
-            if ((flags & PHFlags.PF_X.code()) != 0) {
-                sb.append('x');
+            if ((flags & PHTEntryFlags.PF_X.code()) != 0) {
+                sb.append(PHTEntryFlags.PF_X.id());
+            } else {
+                sb.append(' ');
             }
             sb.append(')');
         }
@@ -62,11 +68,9 @@ public final class ProgramHeaderEntry {
         sb.append("Physical address       : ");
         sb.append(String.format("0x%016x\n", segmentPhysicalAddress));
         sb.append("Segment size on file   : ");
-        sb.append(segmentFileSize);
-        sb.append('\n');
+        sb.append(String.format("%,d bytes\n", segmentFileSize));
         sb.append("Segment size in memory : ");
-        sb.append(segmentMemorySize);
-        sb.append('\n');
+        sb.append(String.format("%,d bytes\n", segmentMemorySize));
         sb.append("Alignment              : ");
         sb.append(alignment);
         if (alignment == 0 || alignment == 1) {

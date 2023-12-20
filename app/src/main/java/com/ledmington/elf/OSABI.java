@@ -21,7 +21,8 @@ public enum OSABI {
     AROS((byte) 0x0f, "AROS"),
     Fenix_OS((byte) 0x10, "Fenix OS"),
     Nuxi_CloudABI((byte) 0x11, "Nuxi CloudABI"),
-    Stratus_Technologies_OpenVOS((byte) 0x12, "Stratus Technologies OpenVOS");
+    Stratus_Technologies_OpenVOS((byte) 0x12, "Stratus Technologies OpenVOS"),
+    STANDALONE((byte) 0xff, "Standalone (embedded) application");
 
     private static final Map<Byte, OSABI> codeToABI = new HashMap<>();
 
