@@ -268,7 +268,14 @@ public final class ELFParser {
             }
             final String name = sb.toString();
 
-            sectionTable[k] = new Section(name, entry);
+            if (entry.type() == SHTEntryType.SHT_STRTAB) {
+                sectionTable[k] = new StringTableSection(name, entry, b);
+            } else if (entry.type() == SHTEntryType.SHT_SYMTAB) {
+                sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
+            } else {
+                logger.warning(String.format("Unknown type for entry n.%,d", k));
+                sectionTable[k] = null;
+            }
         }
 
         return sectionTable;

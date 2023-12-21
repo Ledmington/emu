@@ -6,6 +6,10 @@ import java.util.Objects;
  * This class is just a data holder.
  * No check (other than non-null) is performed in the constructor on the given
  * data.
+ * <p>
+ * References:
+ * <a href="http://www.skyfree.org/linux/references/ELF_Format.pdf">32 bit</a>
+ * <a href="https://uclibc.org/docs/elf-64-gen.pdf">64 bit</a>
  */
 public final class ELF {
 

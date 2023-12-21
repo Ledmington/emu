@@ -48,8 +48,16 @@ public final class SHTEntry {
         return fileOffset;
     }
 
+    public long size() {
+        return size;
+    }
+
     public SHTEntryType type() {
         return type;
+    }
+
+    public long alignment() {
+        return alignment;
     }
 
     public String toString() {
