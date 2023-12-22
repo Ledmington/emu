@@ -4,10 +4,10 @@ package com.ledmington.elf;
  * This class is just a data holder.
  * No check is performed in the constructor on the given data.
  */
-public final class SHTEntry {
+public final class SectionHeader {
 
     private final int nameOffset;
-    private final SHTEntryType type;
+    private final SectionHeaderType type;
     private final long flags;
     private final long virtualAddress;
     private final long fileOffset;
@@ -17,9 +17,9 @@ public final class SHTEntry {
     private final long alignment;
     private final long entrySize;
 
-    public SHTEntry(
+    public SectionHeader(
             int nameOffset,
-            SHTEntryType type,
+            SectionHeaderType type,
             long flags,
             long virtualAddress,
             long fileOffset,
@@ -52,7 +52,7 @@ public final class SHTEntry {
         return size;
     }
 
-    public SHTEntryType type() {
+    public SectionHeaderType type() {
         return type;
     }
 
@@ -69,7 +69,7 @@ public final class SHTEntry {
         sb.append("Flags           : ");
         sb.append(String.format("0x%016x ", flags));
         {
-            for (final SHTEntryFlags f : SHTEntryFlags.values()) {
+            for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
                 if ((flags & f.code()) != 0L) {
                     sb.append(f.id());
                 }

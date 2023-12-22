@@ -23,7 +23,7 @@ public final class FileHeader {
     private final short nProgramHeaderTableEntries;
     private final short sectionHeaderTableEntrySize;
     private final short nSectionHeaderTableEntries;
-    private final short namesSectionHeaderTableEntryIndex;
+    private final short shstrtab_index;
 
     public FileHeader(
             int magic,
@@ -43,7 +43,7 @@ public final class FileHeader {
             short nProgramHeaderTableEntries,
             short sectionHeaderTableEntrySize,
             short nSectionHeaderTableEntries,
-            short namesSectionHeaderTableEntryIndex) {
+            short shstrtab_index) {
         this.magicNumber = magic;
         this.is32Bit = is32Bit;
         this.isLittleEndian = isLittleEndian;
@@ -61,7 +61,7 @@ public final class FileHeader {
         this.nProgramHeaderTableEntries = nProgramHeaderTableEntries;
         this.sectionHeaderTableEntrySize = sectionHeaderTableEntrySize;
         this.nSectionHeaderTableEntries = nSectionHeaderTableEntries;
-        this.namesSectionHeaderTableEntryIndex = namesSectionHeaderTableEntryIndex;
+        this.shstrtab_index = shstrtab_index;
     }
 
     public boolean is32Bit() {
@@ -94,6 +94,10 @@ public final class FileHeader {
 
     public short sectionHeaderTableEntrySize() {
         return sectionHeaderTableEntrySize;
+    }
+
+    public short shstrtab_index() {
+        return shstrtab_index;
     }
 
     public String toString() {
@@ -144,7 +148,7 @@ public final class FileHeader {
         sb.append(nSectionHeaderTableEntries);
         sb.append('\n');
         sb.append("SHTE names idx       : ");
-        sb.append(namesSectionHeaderTableEntryIndex);
+        sb.append(shstrtab_index);
         sb.append('\n');
         return sb.toString();
     }

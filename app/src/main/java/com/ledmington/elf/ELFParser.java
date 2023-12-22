@@ -6,6 +6,13 @@ public final class ELFParser {
 
     private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
 
+    // A collection of standard section names
+    private static final String SECTION_NAMES_TABLE_NAME = ".shstrtab";
+    private static final String STRING_TABLE_NAME = ".strtab";
+    private static final String SYMBOL_TABLE_NAME = ".symtab";
+    private static final String INTERP_SECTION_NAME = ".interp";
+    private static final String DYNAMIC_SYMBOL_TABLE_NAME = ".dynsym";
+
     private ByteBuffer b;
 
     public ELFParser() {}
@@ -171,18 +178,18 @@ public final class ELFParser {
                 alignment);
     }
 
-    private SHTEntry parseSectionHeaderEntry(final boolean is32Bit) {
+    private SectionHeader parseSectionHeaderEntry(final boolean is32Bit) {
         final int nameOffset = b.read4();
 
         final int type = b.read4();
-        if (!SHTEntryType.isValid(type)) {
+        if (!SectionHeaderType.isValid(type)) {
             throw new IllegalArgumentException(String.format("Wrong section header type: was %d (0x%08x)", type, type));
         }
 
         final long flags = is32Bit ? b.read4AsLong() : b.read8();
-        if (!SHTEntryFlags.isValid(flags)) {
+        if (!SectionHeaderFlags.isValid(flags)) {
             final StringBuilder sb = new StringBuilder();
-            for (final SHTEntryFlags f : SHTEntryFlags.values()) {
+            for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
                 if ((flags & f.code()) != 0L) {
                     sb.append(f.id());
                 }
@@ -209,9 +216,9 @@ public final class ELFParser {
 
         final long entrySize = is32Bit ? b.read4AsLong() : b.read8();
 
-        return new SHTEntry(
+        return new SectionHeader(
                 nameOffset,
-                SHTEntryType.fromCode(type),
+                SectionHeaderType.fromCode(type),
                 flags,
                 virtualAddress,
                 fileOffset,
@@ -237,27 +244,27 @@ public final class ELFParser {
         return programHeaderTable;
     }
 
-    private SHTEntry[] parseSectionHeaderTable(final FileHeader fileHeader) {
+    private SectionHeader[] parseSectionHeaderTable(final FileHeader fileHeader) {
         final int nSHTEntries = fileHeader.nSectionHeaderTableEntries();
-        final SHTEntry[] sectionHeaderTable = new SHTEntry[nSHTEntries];
+        final SectionHeader[] sectionHeaderTable = new SectionHeader[nSHTEntries];
         final int SHTOffset = (int) fileHeader.sectionHeaderTableOffset();
         final int SHTEntrySize = fileHeader.sectionHeaderTableEntrySize();
 
         for (int k = 0; k < nSHTEntries; k++) {
             b.setPosition(SHTOffset + k * SHTEntrySize);
-            final SHTEntry sectionHeaderEntry = parseSectionHeaderEntry(fileHeader.is32Bit());
+            final SectionHeader sectionHeaderEntry = parseSectionHeaderEntry(fileHeader.is32Bit());
             sectionHeaderTable[k] = sectionHeaderEntry;
         }
 
         return sectionHeaderTable;
     }
 
-    private Section[] parseSectionTable(final FileHeader fileHeader, final SHTEntry[] sectionHeaderTable) {
+    private Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader[] sectionHeaderTable) {
         final Section[] sectionTable = new Section[fileHeader.nSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].fileOffset();
         for (int k = 0; k < sectionHeaderTable.length; k++) {
-            final SHTEntry entry = sectionHeaderTable[k];
+            final SectionHeader entry = sectionHeaderTable[k];
             b.setPosition(shstr_offset + entry.nameOffset());
 
             final StringBuilder sb = new StringBuilder();
@@ -268,12 +275,23 @@ public final class ELFParser {
             }
             final String name = sb.toString();
 
-            if (entry.type() == SHTEntryType.SHT_STRTAB) {
-                sectionTable[k] = new StringTableSection(name, entry, b);
-            } else if (entry.type() == SHTEntryType.SHT_SYMTAB) {
+            final String typeName = entry.type().name();
+
+            if (typeName.equals(SectionHeaderType.SHT_NULL.name())) {
+                sectionTable[k] = new NullSection(entry);
+            } else if (name.equals(SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_SYMTAB.name())) {
                 sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
+            } else if (name.equals(SECTION_NAMES_TABLE_NAME)
+                    || name.equals(STRING_TABLE_NAME)
+                    || typeName.equals(SectionHeaderType.SHT_STRTAB.name())) {
+                sectionTable[k] = new StringTableSection(name, entry, b);
+            } else if (name.equals(INTERP_SECTION_NAME)) {
+                sectionTable[k] = new InterpreterPathSection(name, entry, b);
+            } else if (name.equals(DYNAMIC_SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_DYNSYM.name())) {
+                sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else {
-                logger.warning(String.format("Unknown type for entry n.%,d", k));
+                logger.warning(String.format(
+                        "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
                 sectionTable[k] = null;
             }
         }
@@ -288,7 +306,7 @@ public final class ELFParser {
 
         final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
 
-        final SHTEntry[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
+        final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
 
         final Section[] sectionTable = parseSectionTable(fileHeader, sectionHeaderTable);
 

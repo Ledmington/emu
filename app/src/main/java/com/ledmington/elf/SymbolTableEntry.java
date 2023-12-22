@@ -26,4 +26,18 @@ public final class SymbolTableEntry {
             size = b.read8();
         }
     }
+
+    public String toString() {
+        return "Name offset         : " + String.format("0x%08x\n", nameOffset)
+                + "Section table index : "
+                + String.format("%,d (0x%04x)\n", sectionTableIndex, sectionTableIndex)
+                + "Value               : "
+                + String.format("%,d (0x%016x)\n", value, value)
+                + "Size                : "
+                + String.format("%,d bytes (0x%016x)\n", size, size)
+                + "Info                : "
+                + String.format("0x%02x\n", info)
+                + "Other               : "
+                + String.format("0x%02x\n", other);
+    }
 }

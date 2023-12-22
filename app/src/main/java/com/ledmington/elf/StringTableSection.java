@@ -4,7 +4,7 @@ public final class StringTableSection extends Section {
 
     private final char[] table;
 
-    public StringTableSection(final String name, final SHTEntry entry, final ByteBuffer b) {
+    public StringTableSection(final String name, final SectionHeader entry, final ByteBuffer b) {
         super(name, entry);
 
         final int start = (int) entry.fileOffset();

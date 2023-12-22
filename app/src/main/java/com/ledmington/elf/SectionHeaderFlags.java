@@ -1,6 +1,6 @@
 package com.ledmington.elf;
 
-public enum SHTEntryFlags {
+public enum SectionHeaderFlags {
     SHF_WRITE(0x00000000000001L, "Writable", 'W'),
     SHF_ALLOC(0x00000000000002L, "Occupies memory during execution", 'A'),
     SHT_EXECINSTR(0x00000000000004L, "Executable", 'X'),
@@ -17,7 +17,7 @@ public enum SHTEntryFlags {
     SHF_EXCLUDE(0x0000000008000000L, "Section is excluded unless referenced or allocated (Solaris)", 'E');
 
     public static boolean isValid(long flags) {
-        for (final SHTEntryFlags f : SHTEntryFlags.values()) {
+        for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
             flags = flags & (~f.code());
         }
         return flags == 0L;
@@ -27,7 +27,7 @@ public enum SHTEntryFlags {
     private final String description;
     private final char id;
 
-    SHTEntryFlags(final long code, final String description, final char id) {
+    SectionHeaderFlags(final long code, final String description, final char id) {
         this.code = code;
         this.description = description;
         this.id = id;
