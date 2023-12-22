@@ -36,7 +36,7 @@ public final class SymbolTableEntry {
                 + "Size                : "
                 + String.format("%,d bytes (0x%016x)\n", size, size)
                 + "Info                : "
-                + String.format("0x%02x\n", info.toByte())
+                + String.format("0x%02x (%s)\n", info.toByte(), info)
                 + "Other               : "
                 + String.format("0x%02x\n", other);
     }
