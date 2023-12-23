@@ -277,22 +277,25 @@ public final class ELFParser {
             final String typeName = entry.type().name();
 
             if (typeName.equals(SectionHeaderType.SHT_NULL.name())) {
-                logger.info("Parsing SHT_NULL");
+                logger.debug("Parsing SHT_NULL");
                 sectionTable[k] = new NullSection(entry);
             } else if (name.equals(SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_SYMTAB.name())) {
-                logger.info("Parsing %s (%s)", name, typeName);
+                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (name.equals(SECTION_NAMES_TABLE_NAME)
                     || name.equals(STRING_TABLE_NAME)
                     || typeName.equals(SectionHeaderType.SHT_STRTAB.name())) {
-                logger.info("Parsing %s (%s)", name, typeName);
+                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new StringTableSection(name, entry, b);
             } else if (name.equals(INTERP_SECTION_NAME)) {
-                logger.info("Parsing %s (%s)", name, typeName);
+                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new InterpreterPathSection(name, entry, b);
             } else if (name.equals(DYNAMIC_SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_DYNSYM.name())) {
-                logger.info("Parsing %s (%s)", name, typeName);
+                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
+            } else if (typeName.equals(SectionHeaderType.SHT_NOTE.name())) {
+                logger.debug("Parsing %s (%s)", name, typeName);
+                sectionTable[k] = new NoteSection(name, entry, b, fileHeader.is32Bit());
             } else {
                 logger.warning(String.format(
                         "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
