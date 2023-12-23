@@ -7,7 +7,7 @@ public final class SymbolTableEntry {
     private final long value;
     private final long size;
     private final SymbolTableEntryInfo info;
-    private final byte other;
+    private final SymbolTableEntryVisibility visibility;
 
     public SymbolTableEntry(final ByteBuffer b, final boolean is32Bit) {
         if (is32Bit) {
@@ -15,16 +15,32 @@ public final class SymbolTableEntry {
             value = b.read4AsLong();
             size = b.read4AsLong();
             info = SymbolTableEntryInfo.fromByte(b.read1());
-            other = b.read1();
+            visibility = SymbolTableEntryVisibility.fromByte(b.read1());
             sectionTableIndex = b.read2();
         } else {
             nameOffset = b.read4();
             info = SymbolTableEntryInfo.fromByte(b.read1());
-            other = b.read1();
+            visibility = SymbolTableEntryVisibility.fromByte(b.read1());
             sectionTableIndex = b.read2();
             value = b.read8();
             size = b.read8();
         }
+    }
+
+    public long value() {
+        return value;
+    }
+
+    public long size() {
+        return size;
+    }
+
+    public SymbolTableEntryInfo info() {
+        return info;
+    }
+
+    public SymbolTableEntryVisibility visibility() {
+        return visibility;
     }
 
     public String toString() {
@@ -37,7 +53,6 @@ public final class SymbolTableEntry {
                 + String.format("%,d bytes (0x%016x)\n", size, size)
                 + "Info                : "
                 + String.format("0x%02x (%s)\n", info.toByte(), info)
-                + "Other               : "
-                + String.format("0x%02x\n", other);
+                + "Other               : " + visibility + "\n";
     }
 }

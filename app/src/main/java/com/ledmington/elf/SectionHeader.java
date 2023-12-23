@@ -60,6 +60,10 @@ public final class SectionHeader {
         return alignment;
     }
 
+    public long entrySize() {
+        return entrySize;
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name offset     : ");

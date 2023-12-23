@@ -6,7 +6,6 @@ package com.ledmington.elf;
  */
 public final class FileHeader {
 
-    private final int magicNumber;
     private final boolean is32Bit;
     private final boolean isLittleEndian;
     private final byte version;
@@ -26,7 +25,6 @@ public final class FileHeader {
     private final short shstrtab_index;
 
     public FileHeader(
-            int magic,
             boolean is32Bit,
             boolean isLittleEndian,
             byte version,
@@ -44,7 +42,6 @@ public final class FileHeader {
             short sectionHeaderTableEntrySize,
             short nSectionHeaderTableEntries,
             short shstrtab_index) {
-        this.magicNumber = magic;
         this.is32Bit = is32Bit;
         this.isLittleEndian = isLittleEndian;
         this.version = version;
@@ -102,8 +99,6 @@ public final class FileHeader {
 
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Magic number         : ");
-        sb.append(String.format("0x%08x\n", magicNumber));
         sb.append("Format               : ");
         sb.append(is32Bit ? "32 bit\n" : "64 bit\n");
         sb.append("Endianness           : ");

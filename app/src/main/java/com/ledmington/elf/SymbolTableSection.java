@@ -10,7 +10,6 @@ public final class SymbolTableSection extends Section {
         final int start = (int) entry.fileOffset();
         final int size = (int) entry.size();
         b.setPosition(start);
-        b.setAlignment((int) entry.alignment());
         final int symtabEntrySize = is32Bit ? 16 : 24;
 
         this.symbolTable = new SymbolTableEntry[size / symtabEntrySize];

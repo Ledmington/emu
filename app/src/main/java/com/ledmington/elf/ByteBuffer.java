@@ -7,13 +7,11 @@ public final class ByteBuffer {
     private final byte[] b;
     private boolean isLittleEndian;
     private int i;
-    private int alignment;
 
     public ByteBuffer(final byte[] b) {
         this.b = Objects.requireNonNull(b);
         this.i = 0;
         this.isLittleEndian = false;
-        this.alignment = 1;
     }
 
     public void setEndianness(final boolean isLittleEndian) {
@@ -22,10 +20,6 @@ public final class ByteBuffer {
 
     public int position() {
         return i;
-    }
-
-    public void setAlignment(final int alignment) {
-        this.alignment = alignment == 0 ? 1 : alignment;
     }
 
     public void setPosition(final int pos) {
@@ -45,7 +39,7 @@ public final class ByteBuffer {
     }
 
     private void move(final int amount) {
-        i += Math.max(amount, alignment);
+        i += amount;
     }
 
     public byte read1() {

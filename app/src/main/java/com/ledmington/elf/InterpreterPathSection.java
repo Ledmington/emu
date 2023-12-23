@@ -9,7 +9,6 @@ public final class InterpreterPathSection extends Section {
 
         final int start = (int) sectionHeader.fileOffset();
         b.setPosition(start);
-        b.setAlignment((int) sectionHeader.alignment());
 
         final StringBuilder sb = new StringBuilder();
         char c = (char) b.read1();
