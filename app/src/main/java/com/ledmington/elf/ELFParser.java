@@ -295,7 +295,7 @@ public final class ELFParser {
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.name())) {
                 logger.debug("Parsing %s (%s)", name, typeName);
-                sectionTable[k] = new NoteSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new NoteSection(name, entry, b);
             } else {
                 logger.warning(String.format(
                         "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
