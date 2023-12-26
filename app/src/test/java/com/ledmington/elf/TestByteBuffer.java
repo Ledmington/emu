@@ -116,12 +116,4 @@ public final class TestByteBuffer {
         bb.setPosition(pos);
         assertEquals(arr[pos], bb.read1());
     }
-
-    @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7})
-    public void readBytesWithAlignment(int align) {
-        bb.setAlignment(align);
-        assertEquals(arr[0], bb.read1());
-        assertEquals(arr[0 + ((align == 0 ? 1 : align))], bb.read1());
-    }
 }

@@ -300,6 +300,10 @@ public final class ELFParser {
                 sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.name())) {
                 sectionTable[k] = new ProgBitsSection(name, entry, b);
+            } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.name())) {
+                sectionTable[k] = new NoBitsSection(name, entry, b);
+            } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.name())) {
+                sectionTable[k] = new DynamicSection(name, entry, b, fileHeader.is32Bit());
             } else {
                 logger.warning(String.format(
                         "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
