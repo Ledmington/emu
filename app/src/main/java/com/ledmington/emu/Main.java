@@ -43,10 +43,10 @@ public final class Main {
 
         final String filename = args[0];
 
+        final ELF elf;
         try {
-            final ELF elf = parseELF(filename);
+            elf = parseELF(filename);
             logger.info("ELF file parsed successfully");
-            System.out.println(elf);
         } catch (final Throwable t) {
             logger.error(t);
             System.exit(-1);

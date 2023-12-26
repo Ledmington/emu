@@ -13,6 +13,8 @@ public final class ELFParser {
     private static final String INTERP_SECTION_NAME = ".interp";
     private static final String DYNAMIC_SYMBOL_TABLE_NAME = ".dynsym";
     private static final String GNU_PROPERTY_NAME = ".note.gnu.property";
+    private static final String GNU_VERSYM_NAME = ".gnu.version";
+    private static final String GNU_VERNEED_NAME = ".gnu.version_r";
 
     private ByteBuffer b;
 
@@ -308,6 +310,14 @@ public final class ELFParser {
                 sectionTable[k] = new RelocationAddendSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.name())) {
                 sectionTable[k] = new RelocationSection(name, entry, b, fileHeader.is32Bit());
+            } else if (name.equals(GNU_VERSYM_NAME)) {
+                sectionTable[k] = new GnuVersionSection(name, entry, b);
+            } else if (name.equals(GNU_VERNEED_NAME)) {
+                sectionTable[k] = new GnuVersionRequirementsSection(name, entry, b);
+            } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.name())) {
+                sectionTable[k] = new ConstructorsSection(name, entry, b);
+            } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.name())) {
+                sectionTable[k] = new DestructorsSection(name, entry, b);
             } else {
                 logger.warning(String.format(
                         "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
