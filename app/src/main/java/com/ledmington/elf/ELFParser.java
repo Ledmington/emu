@@ -12,6 +12,7 @@ public final class ELFParser {
     private static final String SYMBOL_TABLE_NAME = ".symtab";
     private static final String INTERP_SECTION_NAME = ".interp";
     private static final String DYNAMIC_SYMBOL_TABLE_NAME = ".dynsym";
+    private static final String GNU_PROPERTY_NAME = ".note.gnu.property";
 
     private ByteBuffer b;
 
@@ -275,27 +276,30 @@ public final class ELFParser {
             final String name = sb.toString();
 
             final String typeName = entry.type().name();
+            logger.debug("Parsing %s (%s)", name, typeName);
 
             if (typeName.equals(SectionHeaderType.SHT_NULL.name())) {
-                logger.debug("Parsing SHT_NULL");
                 sectionTable[k] = new NullSection(entry);
             } else if (name.equals(SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_SYMTAB.name())) {
-                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (name.equals(SECTION_NAMES_TABLE_NAME)
                     || name.equals(STRING_TABLE_NAME)
                     || typeName.equals(SectionHeaderType.SHT_STRTAB.name())) {
-                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new StringTableSection(name, entry, b);
             } else if (name.equals(INTERP_SECTION_NAME)) {
-                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new InterpreterPathSection(name, entry, b);
             } else if (name.equals(DYNAMIC_SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_DYNSYM.name())) {
-                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.name())) {
-                logger.debug("Parsing %s (%s)", name, typeName);
-                sectionTable[k] = new NoteSection(name, entry, b);
+                if (name.equals(GNU_PROPERTY_NAME)) {
+                    sectionTable[k] = new GnuPropertySection(name, entry, b);
+                } else {
+                    sectionTable[k] = new NoteSection(name, entry, b);
+                }
+            } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.name())) {
+                sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
+            } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.name())) {
+                sectionTable[k] = new ProgBitsSection(name, entry, b);
             } else {
                 logger.warning(String.format(
                         "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
