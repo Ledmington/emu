@@ -14,4 +14,8 @@ public final class ProgBitsSection extends Section {
             this.content[i] = b.read1();
         }
     }
+
+    public byte[] content() {
+        return content;
+    }
 }

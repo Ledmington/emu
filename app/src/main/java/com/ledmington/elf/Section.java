@@ -11,4 +11,8 @@ public abstract class Section {
         this.name = Objects.requireNonNull(name);
         this.sectionHeader = Objects.requireNonNull(sectionHeader);
     }
+
+    public String name() {
+        return name;
+    }
 }

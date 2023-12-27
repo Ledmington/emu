@@ -23,6 +23,18 @@ public final class ELF {
         this.sectionTable = Objects.requireNonNull(sectionTable);
     }
 
+    public Section getFirstSectionByName(final String sectionName) {
+        Objects.requireNonNull(sectionName);
+
+        for (final Section s : sectionTable) {
+            if (s.name().equals(sectionName)) {
+                return s;
+            }
+        }
+
+        throw new IllegalArgumentException(String.format("No section found with name '%s'", sectionName));
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(" --- File Header --- \n");

@@ -23,11 +23,17 @@ dependencies {
 application {
 	mainClass = 'com.ledmington.emu.Main'
 	applicationDefaultJvmArgs = [
+			"-Xms2G",
+			"-Xmx2G",
 			// "-XX:+PrintCompilation",
 			//"-XX:+PrintInlining",
 			//"-XX:+LogCompilation",
 			//"-XX:LogFile=jvm_compilation_log"
 	]
+}
+
+run {
+	args = ["/usr/bin/gcc"]
 }
 
 test {

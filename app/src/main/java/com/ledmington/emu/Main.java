@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
+import com.ledmington.elf.ProgBitsSection;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -31,6 +33,15 @@ public final class Main {
         return new ELFParser().parse(bytes);
     }
 
+    private static void run(final String filename) {
+        final ELF elf = parseELF(filename);
+        logger.info("ELF file parsed successfully");
+
+        final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
+        final InstructionDecoder dec = new InstructionDecoder();
+        dec.decode(code);
+    }
+
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
         if (args.length == 0) {
@@ -43,10 +54,8 @@ public final class Main {
 
         final String filename = args[0];
 
-        final ELF elf;
         try {
-            elf = parseELF(filename);
-            logger.info("ELF file parsed successfully");
+            run(filename);
         } catch (final Throwable t) {
             logger.error(t);
             System.exit(-1);
