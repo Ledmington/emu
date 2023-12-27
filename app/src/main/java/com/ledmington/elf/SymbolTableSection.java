@@ -12,8 +12,9 @@ public final class SymbolTableSection extends Section {
         b.setPosition(start);
         final int symtabEntrySize = is32Bit ? 16 : 24;
 
-        this.symbolTable = new SymbolTableEntry[size / symtabEntrySize];
-        for (int i = 0; i < size; i++) {
+        final int nEntries = size / symtabEntrySize;
+        this.symbolTable = new SymbolTableEntry[nEntries];
+        for (int i = 0; i < nEntries; i++) {
             symbolTable[i] = new SymbolTableEntry(b, is32Bit);
         }
     }

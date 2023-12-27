@@ -45,6 +45,7 @@ public final class DynamicTableEntryTag {
     public static final DynamicTableEntryTag DT_PREINIT_ARRAY = new DynamicTableEntryTag(32L, "PREINIT_ARRAY");
     public static final DynamicTableEntryTag DT_GNU_HASH = new DynamicTableEntryTag(0x000000006ffffef5L, "GNU_HASH");
     public static final DynamicTableEntryTag DT_VERSYM = new DynamicTableEntryTag(0x000000006ffffff0L, "VERSYM");
+    public static final DynamicTableEntryTag DT_RELACOUNT = new DynamicTableEntryTag(0x000000006ffffff9L, "VERSYM");
     public static final DynamicTableEntryTag DT_FLAGS_1 = new DynamicTableEntryTag(0x000000006ffffffbL, "FLAGS_1");
 
     // Address of version definition
