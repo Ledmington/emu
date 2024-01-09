@@ -1,5 +1,7 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.ByteBuffer;
+
 public final class SymbolTableEntry {
 
     private final int nameOffset; // relative to the start of the symbol string table

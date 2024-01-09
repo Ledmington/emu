@@ -1,5 +1,7 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.ByteBuffer;
+
 public final class StringTableSection extends Section {
 
     private final char[] table;

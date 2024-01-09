@@ -1,5 +1,7 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.ByteBuffer;
+
 public final class DynamicSection extends Section {
 
     private final DynamicTableEntry[] dynamicTable;

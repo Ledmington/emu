@@ -1,12 +1,13 @@
 package com.ledmington.cpu.x86;
 
-import com.ledmington.elf.ByteBuffer;
+import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
 
 /**
- * Reference Intel® 64 and IA-32 Architectures Software Developer’s Manual volume 2.
+ * Reference Intel\u00ae 64 and IA-32 Architectures Software Developer’s Manual
+ * volume 2.
  * Legacy prefixes : Paragraph 2.1.1.
- * Instruction opcodes : Appendix A.
+ * Instruction opcodes : Appendix A. (pag. 2839)
  */
 public final class InstructionDecoder {
 

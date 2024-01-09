@@ -1,5 +1,7 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.ByteBuffer;
+
 public sealed class NoteSection extends Section permits GnuPropertySection {
 
     protected final byte[] ownerBytes;
@@ -13,8 +15,10 @@ public sealed class NoteSection extends Section permits GnuPropertySection {
 
         b.setPosition((int) entry.fileOffset());
 
-        // for some reason, even though on the ELF64 reference says that the fields of a SHT_NOTE section
-        // are all 8-byte words and aligned on 8-byte boundaries, here the only code that works is the one
+        // for some reason, even though on the ELF64 reference says that the fields of a
+        // SHT_NOTE section
+        // are all 8-byte words and aligned on 8-byte boundaries, here the only code
+        // that works is the one
         // which uses 4-byte words regardless of the actual ELF_CLASS
         final int namesz = b.read4();
         final int descsz = b.read4();

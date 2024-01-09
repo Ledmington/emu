@@ -1,4 +1,4 @@
-package com.ledmington.elf;
+package com.ledmington.utils;
 
 import java.util.Objects;
 
@@ -24,6 +24,10 @@ public final class ByteBuffer {
 
     public void setPosition(final int pos) {
         this.i = pos;
+    }
+
+    public void goBack(final int n) {
+        this.i -= n;
     }
 
     private short asShort(final byte b) {

@@ -1,5 +1,6 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
 
 public final class ELFParser {

@@ -60,7 +60,7 @@ testlogger {
 	showOnlySlow false
 
 	showStandardStreams true
-	showPassedStandardStreams true
+	showPassedStandardStreams false
 	showSkippedStandardStreams true
 	showFailedStandardStreams true
 
