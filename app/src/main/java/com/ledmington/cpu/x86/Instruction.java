@@ -20,6 +20,16 @@ public final class Instruction {
     private static final byte REX_B_MASK = (byte) 0x01;
 
     private static final byte XOR_Ev_Gv_OPCODE = (byte) 0x31;
+    private static final byte MOV_R2R_OPCODE = (byte) 0x89; // register to register
+    private static final byte MOV_TO_EAX_OPCODE = (byte) 0xb8; // mov eax,0xXXXXXXXX
+    private static final byte MOV_TO_ECX_OPCODE = (byte) 0xb9; // mov ecx,0xXXXXXXXX
+    private static final byte MOV_TO_EDX_OPCODE = (byte) 0xba; // mov edx,0xXXXXXXXX
+    private static final byte MOV_TO_EBX_OPCODE = (byte) 0xbb; // mov ebx,0xXXXXXXXX
+    private static final byte MOV_TO_ESP_OPCODE = (byte) 0xbc; // mov esp,0xXXXXXXXX
+    private static final byte MOV_TO_EBP_OPCODE = (byte) 0xbd; // mov ebp,0xXXXXXXXX
+    private static final byte MOV_TO_ESI_OPCODE = (byte) 0xbe; // mov esi,0xXXXXXXXX
+    private static final byte MOV_TO_EDI_OPCODE = (byte) 0xbf; // mov edi,0xXXXXXXXX
+    private static final byte CALL_OPCODE = (byte) 0xe8;
     private static final byte JMP_nearf64_OPCODE = (byte) 0xe9;
 
     private static final byte MODRM_MOD_MASK = (byte) 0xc0; // 11000000
@@ -40,8 +50,8 @@ public final class Instruction {
     private final Optional<Byte> rexPrefix;
 
     private final Opcode opcode;
-    private final Optional<Register> operand1;
-    private final Optional<Register> operand2;
+    private Optional<Operand> operand1;
+    private Optional<Operand> operand2;
 
     // ModR/M
     private final Optional<Byte> modrm;
@@ -52,10 +62,10 @@ public final class Instruction {
     public Instruction(final ByteBuffer b) {
         Objects.requireNonNull(b);
 
-        p1 = readLegacyPrefixGroup1(b);
-        p2 = readLegacyPrefixGroup2(b);
-        p3 = readLegacyPrefixGroup3(b);
-        p4 = readLegacyPrefixGroup4(b);
+        this.p1 = readLegacyPrefixGroup1(b);
+        this.p2 = readLegacyPrefixGroup2(b);
+        this.p3 = readLegacyPrefixGroup3(b);
+        this.p4 = readLegacyPrefixGroup4(b);
 
         boolean isModRMRequired = false;
         boolean isSIBRequired = false;
@@ -79,11 +89,11 @@ public final class Instruction {
                             + (ModRMRegExtension ? ".R" : "")
                             + (SIBIndexExtension ? ".X" : "")
                             + (extension ? ".B" : ""));
-            rexPrefix = Optional.of(opcode1);
+            this.rexPrefix = Optional.of(opcode1);
             opcode1 = b.read1();
         } else {
             logger.debug("No REX prefix found");
-            rexPrefix = Optional.empty();
+            this.rexPrefix = Optional.empty();
         }
 
         if (isMultibyteOpcode(opcode1)) {
@@ -93,40 +103,98 @@ public final class Instruction {
         } else {
             // 1 byte opcode
             switch (opcode1) {
+                case MOV_R2R_OPCODE:
+                    // page 1255
+                    this.opcode = Opcode.MOV;
+                    isModRMRequired = true;
+                    break;
+                case MOV_TO_EAX_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.EAX);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_EBX_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.EBX);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_ECX_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.ECX);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_EDX_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.EDX);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_ESP_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.ESP);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_EBP_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.EBP);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_ESI_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.ESI);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case MOV_TO_EDI_OPCODE:
+                    this.opcode = Opcode.MOV;
+                    this.operand1 = Optional.of(Register32.EDI);
+                    this.operand2 = Optional.of(MemoryLocation.of32(b.read4()));
+                    break;
+                case JMP_nearf64_OPCODE:
+                    // page 735
+                    this.opcode = Opcode.JMP;
+                    this.operand1 = Optional.of(RelativeOffset.of32(b.read4()));
+                    break;
+                case CALL_OPCODE:
+                    this.opcode = Opcode.CALL;
+                    // page 598, section 3.1.1.1
+                    this.operand1 = Optional.of(RelativeOffset.of32(b.read4()));
+                    break;
                 case XOR_Ev_Gv_OPCODE:
                     // page 2722
                     this.opcode = Opcode.XOR;
                     isModRMRequired = true;
                     break;
-                case JMP_nearf64_OPCODE:
-                    this.opcode = Opcode.JMP;
-                    break;
                 default:
-                    throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcode1));
+                    throw new IllegalArgumentException(String.format(
+                            "Unknown opcode %02x %02x %02x %02x %02x %02x %02x",
+                            opcode1, b.read1(), b.read1(), b.read1(), b.read1(), b.read1(), b.read1()));
             }
         }
 
         // ModR/M byte (1 byte, if required)
         if (isModRMRequired) {
             final byte m = b.read1();
-            modrm = Optional.of(m);
+            this.modrm = Optional.of(m);
             if ((m & MODRM_MOD_MASK) == MODRM_MOD_MASK) {
                 final byte op2 =
                         BitUtils.asByte(((m & MODRM_REG_MASK) >>> 3) | (ModRMRegExtension ? ((byte) 0x08) : 0));
-                operand2 = Optional.of(operand64Bit ? Register64.fromByte(op2) : Register32.fromByte(op2));
+                this.operand2 = Optional.of(operand64Bit ? Register64.fromByte(op2) : Register32.fromByte(op2));
                 final byte op1 = BitUtils.asByte((m & MODRM_RM_MASK) | (extension ? ((byte) 0x08) : 0));
-                operand1 = Optional.of(operand64Bit ? Register64.fromByte(op1) : Register32.fromByte(op1));
+                this.operand1 = Optional.of(operand64Bit ? Register64.fromByte(op1) : Register32.fromByte(op1));
             } else {
                 throw new IllegalArgumentException("Don't know what to do when first 2 bits of ModRM ar not set");
             }
         } else {
-            modrm = Optional.empty();
-            operand1 = Optional.empty();
-            operand2 = Optional.empty();
+            this.modrm = Optional.empty();
+            if (this.operand1 == null) {
+                this.operand1 = Optional.empty();
+            }
+            if (this.operand2 == null) {
+                this.operand2 = Optional.empty();
+            }
         }
 
         // SIB byte (1 byte, if required)
-        sib = isSIBRequired ? Optional.of(b.read1()) : Optional.empty();
+        this.sib = isSIBRequired ? Optional.of(b.read1()) : Optional.empty();
 
         // Displacement (1, 2, 4 or 8 bytes, if required)
         if (isDisplacementRequired) {}
@@ -231,13 +299,16 @@ public final class Instruction {
     }
 
     public String toString() {
-        if (operand1.isPresent()) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(opcode.mnemonic());
+        if (this.operand1.isPresent()) {
+            sb.append(' ');
+            sb.append(this.operand1.orElseThrow().toString());
             if (operand2.isPresent()) {
-                return opcode.mnemonic() + " " + operand1.orElseThrow().getName() + ","
-                        + operand2.orElseThrow().getName();
+                sb.append(',');
+                sb.append(this.operand2.orElseThrow().toString());
             }
-            return opcode.mnemonic() + " " + operand1.orElseThrow().getName();
         }
-        return opcode.mnemonic();
+        return sb.toString();
     }
 }

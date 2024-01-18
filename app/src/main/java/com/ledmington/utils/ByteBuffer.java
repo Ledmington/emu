@@ -9,9 +9,13 @@ public final class ByteBuffer {
     private int i;
 
     public ByteBuffer(final byte[] b) {
+        this(b, false);
+    }
+
+    public ByteBuffer(final byte[] b, final boolean isLittleEndian) {
         this.b = Objects.requireNonNull(b);
         this.i = 0;
-        this.isLittleEndian = false;
+        this.isLittleEndian = isLittleEndian;
     }
 
     public void setEndianness(final boolean isLittleEndian) {

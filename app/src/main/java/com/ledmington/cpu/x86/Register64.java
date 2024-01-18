@@ -2,27 +2,27 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
-public enum Register64 implements Register {
-    RAX("rax"),
-    RBX("rbx"),
-    RCX("rcx"),
-    RDX("rdx"),
-    RSI("rsi"),
-    RDI("rdi"),
-    RSP("rsp"),
-    RBP("rbp"),
-    R8("r8"),
-    R9("r9"),
-    R10("r10"),
-    R11("r11"),
-    R12("r12"),
-    R13("r13"),
-    R14("r14"),
-    R15("r15");
+public final class Register64 implements Register {
+    public static final Register64 RAX = new Register64("rax");
+    public static final Register64 RBX = new Register64("rbx");
+    public static final Register64 RCX = new Register64("rcx");
+    public static final Register64 RDX = new Register64("rdx");
+    public static final Register64 RSI = new Register64("rsi");
+    public static final Register64 RDI = new Register64("rdi");
+    public static final Register64 RSP = new Register64("rsp");
+    public static final Register64 RBP = new Register64("rbp");
+    public static final Register64 R8 = new Register64("r8");
+    public static final Register64 R9 = new Register64("r9");
+    public static final Register64 R10 = new Register64("r10");
+    public static final Register64 R11 = new Register64("r11");
+    public static final Register64 R12 = new Register64("r12");
+    public static final Register64 R13 = new Register64("r13");
+    public static final Register64 R14 = new Register64("r14");
+    public static final Register64 R15 = new Register64("r15");
 
     private final String mnemonic;
 
-    Register64(final String mnemonic) {
+    private Register64(final String mnemonic) {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
@@ -54,7 +54,7 @@ public enum Register64 implements Register {
     }
 
     @Override
-    public String getName() {
+    public String toString() {
         return mnemonic;
     }
 }

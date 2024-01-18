@@ -4,7 +4,9 @@ import java.util.Objects;
 
 public enum Opcode {
     XOR("xor"),
-    JMP("jmp");
+    JMP("jmp"),
+    CALL("call"),
+    MOV("mov");
 
     private final String mnemonic;
 

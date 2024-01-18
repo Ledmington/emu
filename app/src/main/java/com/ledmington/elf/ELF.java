@@ -23,6 +23,10 @@ public final class ELF {
         this.sectionTable = Objects.requireNonNull(sectionTable);
     }
 
+    public FileHeader getFileHeader() {
+        return fileHeader;
+    }
+
     public Section getFirstSectionByName(final String sectionName) {
         Objects.requireNonNull(sectionName);
 

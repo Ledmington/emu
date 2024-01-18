@@ -39,11 +39,11 @@ public final class Main {
 
         final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
         final InstructionDecoder dec = new InstructionDecoder();
-        dec.decode(code);
+        dec.decode(code, elf.getFileHeader().isLittleEndian());
     }
 
     public static void main(final String[] args) {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
         if (args.length == 0) {
             logger.error("expected 1 argument");
             System.exit(-1);

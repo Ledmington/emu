@@ -17,15 +17,15 @@ public final class InstructionDecoder {
 
     public InstructionDecoder() {}
 
-    public void decode(final byte[] code) {
-        this.b = new ByteBuffer(code);
+    public void decode(final byte[] code, final boolean isLittleEndian) {
+        this.b = new ByteBuffer(code, isLittleEndian);
         final int length = code.length;
         int i = 0;
-        logger.debug("The code is %,d bytes long", length);
+        logger.info("The code is %,d bytes long", length);
 
         for (; i < length; i++) {
             final Instruction inst = new Instruction(b);
-            logger.debug(inst.toString());
+            logger.info(inst.toString());
         }
     }
 }

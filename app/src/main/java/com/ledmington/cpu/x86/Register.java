@@ -1,7 +1,5 @@
 package com.ledmington.cpu.x86;
 
-public interface Register {
+public interface Register extends Operand {
     int bits();
-
-    String getName();
 }

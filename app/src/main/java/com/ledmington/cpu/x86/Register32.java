@@ -2,27 +2,27 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
-public enum Register32 implements Register {
-    EAX("eax"),
-    EBX("ebx"),
-    ECX("ecx"),
-    EDX("edx"),
-    ESI("esi"),
-    EDI("edi"),
-    ESP("esp"),
-    EBP("ebp"),
-    R8D("r8d"),
-    R9D("r9d"),
-    R10D("r10d"),
-    R11D("r11d"),
-    R12D("r12d"),
-    R13D("r13d"),
-    R14D("r14d"),
-    R15D("r15d");
+public final class Register32 implements Register {
+    public static final Register32 EAX = new Register32("eax");
+    public static final Register32 EBX = new Register32("ebx");
+    public static final Register32 ECX = new Register32("ecx");
+    public static final Register32 EDX = new Register32("edx");
+    public static final Register32 ESI = new Register32("esi");
+    public static final Register32 EDI = new Register32("edi");
+    public static final Register32 ESP = new Register32("esp");
+    public static final Register32 EBP = new Register32("ebp");
+    public static final Register32 R8D = new Register32("r8d");
+    public static final Register32 R9D = new Register32("r9d");
+    public static final Register32 R10D = new Register32("r10d");
+    public static final Register32 R11D = new Register32("r11d");
+    public static final Register32 R12D = new Register32("r12d");
+    public static final Register32 R13D = new Register32("r13d");
+    public static final Register32 R14D = new Register32("r14d");
+    public static final Register32 R15D = new Register32("r15d");
 
     private final String mnemonic;
 
-    Register32(final String mnemonic) {
+    private Register32(final String mnemonic) {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
@@ -54,7 +54,7 @@ public enum Register32 implements Register {
     }
 
     @Override
-    public String getName() {
+    public String toString() {
         return mnemonic;
     }
 }
