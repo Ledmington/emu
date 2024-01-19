@@ -1,2 +1,6 @@
 * text=auto eol=lf
 *.bat text eol=crlf
+
+*.pdf binary
+
+*.test text eol=lf
