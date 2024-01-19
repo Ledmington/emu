@@ -90,7 +90,6 @@ public final class InstructionDecoder {
         boolean SIBIndexExtension = false;
         boolean extension = false;
         final boolean isREX = isREXPrefix(rex);
-        Optional<Byte> rexPrefix;
         if (isREX) {
             operand64Bit = (rex & REX_W_MASK) != 0;
             ModRMRegExtension = (rex & REX_R_MASK) != 0;
@@ -103,9 +102,6 @@ public final class InstructionDecoder {
                             + (ModRMRegExtension ? ".R" : "")
                             + (SIBIndexExtension ? ".X" : "")
                             + (extension ? ".B" : ""));
-            rexPrefix = Optional.of(rex);
-        } else {
-            rexPrefix = Optional.empty();
         }
 
         Opcode opcode;
@@ -176,14 +172,11 @@ public final class InstructionDecoder {
             }
         }
 
-        Optional<Byte> modrm;
-
-        // ModR/M byte (1 byte, if required)
+		// ModR/M byte (1 byte, if required)
         if (isModRMRequired) {
             final byte m = b.read1();
             logger.debug("Read ModRM byte 0b%s", BitUtils.toBinaryString(m));
-            modrm = Optional.of(m);
-            final byte tmp = BitUtils.asByte(m & MODRM_MOD_MASK);
+			final byte tmp = BitUtils.asByte(m & MODRM_MOD_MASK);
             byte op1;
             switch (tmp) {
                 case (byte) 0x00: // 00
@@ -214,8 +207,7 @@ public final class InstructionDecoder {
                             String.format("Invalid bit pattern in ModRM byte: it was 0x%02x", m));
             }
         } else {
-            modrm = Optional.empty();
-            if (operand1 == null) {
+			if (operand1 == null) {
                 operand1 = Optional.empty();
             }
             if (operand2 == null) {
@@ -223,18 +215,13 @@ public final class InstructionDecoder {
             }
         }
 
-        Optional<Byte> sib;
-
-        // SIB byte (1 byte, if required)
+		// SIB byte (1 byte, if required)
         if (isSIBRequired) {
             final byte s = b.read1();
             logger.debug("Read SIB byte 0b%s", BitUtils.toBinaryString(s));
-            sib = Optional.of(s);
-            final byte ss = BitUtils.asByte((s & SIB_SCALE_MASK) >>> 6);
+			final byte ss = BitUtils.asByte((s & SIB_SCALE_MASK) >>> 6);
             final byte index = BitUtils.asByte(((s & SIB_INDEX_MASK) >>> 3) | (SIBIndexExtension ? ((byte) 0x08) : 0));
             final byte base = BitUtils.asByte((s & SIB_BASE_MASK) | (extension ? ((byte) 0x08) : 0));
-        } else {
-            sib = Optional.empty();
         }
 
         // Displacement (1, 2, 4 or 8 bytes, if required)
