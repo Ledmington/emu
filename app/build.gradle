@@ -1,8 +1,9 @@
 plugins {
 	id 'java'
 	id 'application'
-	id 'com.diffplug.spotless' version '6.22.0'
-	id 'com.adarshr.test-logger' version '3.2.0'
+	id 'com.diffplug.spotless' version '6.24.0'
+	id 'com.adarshr.test-logger' version '4.0.0'
+	id 'com.github.ben-manes.versions' version '0.50.0'
 }
 
 repositories {
@@ -13,7 +14,7 @@ static def path(String... args) {
 	return String.join(File.separator, args)
 }
 
-ext.junitVersion = "5.9.2"
+ext.junitVersion = "5.10.1"
 dependencies {
 	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
 	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
@@ -54,7 +55,7 @@ testlogger {
 
 	showSummary true
 	showSimpleNames false
-	showPassed true
+	showPassed false
 	showSkipped true
 	showFailed true
 	showOnlySlow false
@@ -86,7 +87,7 @@ spotless {
 		trimTrailingWhitespace()
 		endWithNewline()
 		setEncoding('utf-8')
-		palantirJavaFormat('2.38.0')
+		palantirJavaFormat('2.39.0')
 
 		// check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
 		importOrder('java', 'javax', 'javafx', 'com', 'org', group as String)
