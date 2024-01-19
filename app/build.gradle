@@ -21,6 +21,12 @@ dependencies {
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
 application {
 	mainClass = 'com.ledmington.emu.Main'
 	applicationDefaultJvmArgs = [

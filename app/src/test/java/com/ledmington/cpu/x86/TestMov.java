@@ -1,18 +1,19 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ByteBuffer;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * Checked with https://defuse.ca/online-x86-assembler.htm
+ * Checked with <a href="https://defuse.ca/online-x86-assembler.htm">online x86/x64 assembler</a>.
  */
 public final class TestMov {
 
@@ -171,6 +172,10 @@ public final class TestMov {
             code[i] = BitUtils.parseByte(parsed[i]);
         }
 
-        assertEquals(expected, new Instruction(new ByteBuffer(code)).toString());
+        final InstructionDecoder id = new InstructionDecoder();
+        final List<Instruction> instructions = id.decode(code);
+        assertNotNull(instructions);
+        assertEquals(1, instructions.size());
+        assertEquals(expected, instructions.get(0).toString());
     }
 }
