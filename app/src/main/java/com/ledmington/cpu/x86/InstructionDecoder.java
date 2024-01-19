@@ -13,19 +13,17 @@ public final class InstructionDecoder {
 
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
 
-    private ByteBuffer b;
-
     public InstructionDecoder() {}
 
     public void decode(final byte[] code, final boolean isLittleEndian) {
-        this.b = new ByteBuffer(code, isLittleEndian);
+        final ByteBuffer b = new ByteBuffer(code, isLittleEndian);
         final int length = code.length;
-        int i = 0;
         logger.info("The code is %,d bytes long", length);
 
+        int i = 0;
         for (; i < length; i++) {
             final Instruction inst = new Instruction(b);
-            logger.info(inst.toString());
+            logger.info("%08x: %s", b.position(), inst.toString());
         }
     }
 }

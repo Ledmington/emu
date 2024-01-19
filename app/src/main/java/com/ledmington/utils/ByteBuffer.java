@@ -34,18 +34,6 @@ public final class ByteBuffer {
         this.i -= n;
     }
 
-    private short asShort(final byte b) {
-        return (short) (((short) b) & (short) 0x00ff);
-    }
-
-    private int asInt(final byte b) {
-        return ((int) b) & 0x000000ff;
-    }
-
-    private long asLong(final byte b) {
-        return ((long) b) & 0x00000000000000ffL;
-    }
-
     private void move(final int amount) {
         i += amount;
     }
@@ -59,9 +47,9 @@ public final class ByteBuffer {
     public short read2() {
         final short s;
         if (isLittleEndian) {
-            s = (short) ((asShort(b[i + 1]) << 8) | asShort(b[i]));
+            s = (short) ((BitUtils.asShort(b[i + 1]) << 8) | BitUtils.asShort(b[i]));
         } else {
-            s = (short) ((asShort(b[i]) << 8) | asShort(b[i + 1]));
+            s = (short) ((BitUtils.asShort(b[i]) << 8) | BitUtils.asShort(b[i + 1]));
         }
         move(2);
         return s;
@@ -70,38 +58,40 @@ public final class ByteBuffer {
     public int read4() {
         final int x;
         if (isLittleEndian) {
-            x = (asInt(b[i + 3]) << 24) | (asInt(b[i + 2]) << 16) | (asInt(b[i + 1]) << 8) | asInt(b[i]);
+            x = (BitUtils.asInt(b[i + 3]) << 24)
+                    | (BitUtils.asInt(b[i + 2]) << 16)
+                    | (BitUtils.asInt(b[i + 1]) << 8)
+                    | BitUtils.asInt(b[i]);
         } else {
-            x = (asInt(b[i]) << 24) | (asInt(b[i + 1]) << 16) | (asInt(b[i + 2]) << 8) | asInt(b[i + 3]);
+            x = (BitUtils.asInt(b[i]) << 24)
+                    | (BitUtils.asInt(b[i + 1]) << 16)
+                    | (BitUtils.asInt(b[i + 2]) << 8)
+                    | BitUtils.asInt(b[i + 3]);
         }
         move(4);
         return x;
     }
 
-    public long read4AsLong() {
-        return ((long) read4()) & 0x00000000ffffffffL;
-    }
-
     public long read8() {
         final long x;
         if (isLittleEndian) {
-            x = (asLong(b[i + 7]) << 56)
-                    | (asLong(b[i + 6]) << 48)
-                    | (asLong(b[i + 5]) << 40)
-                    | (asLong(b[i + 4]) << 32)
-                    | (asLong(b[i + 3]) << 24)
-                    | (asLong(b[i + 2]) << 16)
-                    | (asLong(b[i + 1]) << 8)
-                    | asLong(b[i]);
+            x = (BitUtils.asLong(b[i + 7]) << 56)
+                    | (BitUtils.asLong(b[i + 6]) << 48)
+                    | (BitUtils.asLong(b[i + 5]) << 40)
+                    | (BitUtils.asLong(b[i + 4]) << 32)
+                    | (BitUtils.asLong(b[i + 3]) << 24)
+                    | (BitUtils.asLong(b[i + 2]) << 16)
+                    | (BitUtils.asLong(b[i + 1]) << 8)
+                    | BitUtils.asLong(b[i]);
         } else {
-            x = (asLong(b[i]) << 56)
-                    | (asLong(b[i + 1]) << 48)
-                    | (asLong(b[i + 2]) << 40)
-                    | (asLong(b[i + 3]) << 32)
-                    | (asLong(b[i + 4]) << 24)
-                    | (asLong(b[i + 5]) << 16)
-                    | (asLong(b[i + 6]) << 8)
-                    | asLong(b[i + 7]);
+            x = (BitUtils.asLong(b[i]) << 56)
+                    | (BitUtils.asLong(b[i + 1]) << 48)
+                    | (BitUtils.asLong(b[i + 2]) << 40)
+                    | (BitUtils.asLong(b[i + 3]) << 32)
+                    | (BitUtils.asLong(b[i + 4]) << 24)
+                    | (BitUtils.asLong(b[i + 5]) << 16)
+                    | (BitUtils.asLong(b[i + 6]) << 8)
+                    | BitUtils.asLong(b[i + 7]);
         }
         move(8);
         return x;

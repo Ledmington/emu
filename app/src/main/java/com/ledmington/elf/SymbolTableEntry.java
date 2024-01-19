@@ -1,5 +1,6 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 
 public final class SymbolTableEntry {
@@ -14,8 +15,8 @@ public final class SymbolTableEntry {
     public SymbolTableEntry(final ByteBuffer b, final boolean is32Bit) {
         if (is32Bit) {
             nameOffset = b.read4();
-            value = b.read4AsLong();
-            size = b.read4AsLong();
+            value = BitUtils.asLong(b.read4());
+            size = BitUtils.asLong(b.read4());
             info = SymbolTableEntryInfo.fromByte(b.read1());
             visibility = SymbolTableEntryVisibility.fromByte(b.read1());
             sectionTableIndex = b.read2();

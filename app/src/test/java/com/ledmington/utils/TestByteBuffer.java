@@ -80,15 +80,15 @@ public final class TestByteBuffer {
     @Test
     public void doubleWordsAsQuadWordsBE() {
         bb.setEndianness(false);
-        assertEquals(0x0000000001234567L, bb.read4AsLong());
-        assertEquals(0x0000000089abcdefL, bb.read4AsLong());
+        assertEquals(0x0000000001234567L, BitUtils.asLong(bb.read4()));
+        assertEquals(0x0000000089abcdefL, BitUtils.asLong(bb.read4()));
     }
 
     @Test
     public void doubleWordsAsQuadWordsLE() {
         bb.setEndianness(true);
-        assertEquals(0x0000000067452301L, bb.read4AsLong());
-        assertEquals(0x00000000efcdab89L, bb.read4AsLong());
+        assertEquals(0x0000000067452301L, BitUtils.asLong(bb.read4()));
+        assertEquals(0x00000000efcdab89L, BitUtils.asLong(bb.read4()));
     }
 
     @Test

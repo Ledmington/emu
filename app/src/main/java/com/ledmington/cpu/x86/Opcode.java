@@ -5,8 +5,11 @@ import java.util.Objects;
 public enum Opcode {
     XOR("xor"),
     JMP("jmp"),
+    JE("je"),
     CALL("call"),
-    MOV("mov");
+    MOV("mov"),
+    TEST("test"),
+    NOP("nop");
 
     private final String mnemonic;
 

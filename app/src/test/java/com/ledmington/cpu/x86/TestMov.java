@@ -157,7 +157,9 @@ public final class TestMov {
                 Arguments.of("mov esp,0x12345678", "bc 12 34 56 78"),
                 Arguments.of("mov ebp,0x12345678", "bd 12 34 56 78"),
                 Arguments.of("mov esi,0x12345678", "be 12 34 56 78"),
-                Arguments.of("mov edi,0x12345678", "bf 12 34 56 78"));
+                Arguments.of("mov edi,0x12345678", "bf 12 34 56 78"),
+                //
+                Arguments.of("mov QWORD PTR [rax-0xd8],rax", "48 89 80 28 ff ff ff"));
     }
 
     @ParameterizedTest

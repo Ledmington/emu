@@ -1,5 +1,6 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
 
@@ -84,11 +85,11 @@ public final class ELFParser {
                     ELFVersion_2, ELFVersion_2));
         }
 
-        final long entryPoint = is32Bit ? b.read4AsLong() : b.read8();
+        final long entryPoint = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long PHTOffset = is32Bit ? b.read4AsLong() : b.read8();
+        final long PHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long SHTOffset = is32Bit ? b.read4AsLong() : b.read8();
+        final long SHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         final int flags = b.read4();
 
@@ -141,15 +142,15 @@ public final class ELFParser {
             flags = b.read4();
         }
 
-        final long segmentOffset = is32Bit ? b.read4AsLong() : b.read8();
+        final long segmentOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long segmentVirtualAddress = is32Bit ? b.read4AsLong() : b.read8();
+        final long segmentVirtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long segmentPhysicalAddress = is32Bit ? b.read4AsLong() : b.read8();
+        final long segmentPhysicalAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long segmentSizeOnFile = is32Bit ? b.read4AsLong() : b.read8();
+        final long segmentSizeOnFile = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long segmentSizeInMemory = is32Bit ? b.read4AsLong() : b.read8();
+        final long segmentSizeInMemory = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         if (is32Bit) {
             flags = b.read4();
@@ -189,7 +190,7 @@ public final class ELFParser {
             throw new IllegalArgumentException(String.format("Wrong section header type: was %d (0x%08x)", type, type));
         }
 
-        final long flags = is32Bit ? b.read4AsLong() : b.read8();
+        final long flags = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         if (!SectionHeaderFlags.isValid(flags)) {
             final StringBuilder sb = new StringBuilder();
             for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
@@ -201,23 +202,23 @@ public final class ELFParser {
                     String.format("Invalid flags value: was 0x%016x (%s)", flags, sb.toString()));
         }
 
-        final long virtualAddress = is32Bit ? b.read4AsLong() : b.read8();
+        final long virtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long fileOffset = is32Bit ? b.read4AsLong() : b.read8();
+        final long fileOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final long size = is32Bit ? b.read4AsLong() : b.read8();
+        final long size = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         final int sh_link = b.read4();
 
         final int sh_info = b.read4();
 
-        final long alignment = is32Bit ? b.read4AsLong() : b.read8();
+        final long alignment = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         if (alignment != 0 && Long.bitCount(alignment) != 1) {
             throw new IllegalArgumentException(String.format(
                     "Wrong value for alignment: expected a power of two but was %,d (0x%016x)", alignment, alignment));
         }
 
-        final long entrySize = is32Bit ? b.read4AsLong() : b.read8();
+        final long entrySize = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         return new SectionHeader(
                 nameOffset,

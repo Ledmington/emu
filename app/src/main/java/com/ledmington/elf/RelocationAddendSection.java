@@ -1,5 +1,6 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 
 public final class RelocationAddendSection extends Section {
@@ -14,9 +15,9 @@ public final class RelocationAddendSection extends Section {
         final int nEntries = (int) (sectionHeader.size() / sectionHeader.entrySize());
         this.relocationAddendTable = new RelocationAddendEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
-            final long offset = is32Bit ? b.read4AsLong() : b.read8();
-            final long info = is32Bit ? b.read4AsLong() : b.read8();
-            final long addend = is32Bit ? b.read4AsLong() : b.read8();
+            final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+            final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+            final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             this.relocationAddendTable[i] = new RelocationAddendEntry(offset, info, addend);
         }
     }

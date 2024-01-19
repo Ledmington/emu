@@ -1,5 +1,6 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 
 public final class GnuHashSection extends Section {
@@ -23,7 +24,7 @@ public final class GnuHashSection extends Section {
         this.buckets = new int[nBuckets];
 
         for (int i = 0; i < bloomSize; i++) {
-            bloom[i] = is32Bit ? b.read4AsLong() : b.read8();
+            bloom[i] = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         }
 
         for (int i = 0; i < nBuckets; i++) {
