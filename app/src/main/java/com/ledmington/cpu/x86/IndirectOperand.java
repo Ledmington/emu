@@ -53,7 +53,22 @@ public final class IndirectOperand implements Operand {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
+        sb.append("QWORD PTR ");
         sb.append('[');
+        if (reg1.isPresent()) {
+            sb.append(reg1.orElseThrow());
+        }
+        if (constant.isPresent()) {
+            sb.append('*');
+            sb.append(constant.orElseThrow());
+        }
+        if (reg2.isPresent()) {
+            sb.append('+');
+            sb.append(reg2.orElseThrow());
+        }
+        if (displacement.isPresent()) {
+            sb.append(String.format("%c0x%x", displacement.orElseThrow() < 0 ? '-' : '+', displacement.orElseThrow()));
+        }
         sb.append(']');
         return sb.toString();
     }

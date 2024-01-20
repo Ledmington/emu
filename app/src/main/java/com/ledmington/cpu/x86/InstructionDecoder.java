@@ -81,7 +81,8 @@ public final class InstructionDecoder {
         boolean isSIBRequired = false;
         boolean isDisplacementRequired = false;
         int displacementBytes = 0;
-        Optional<Long> displacement;
+        Optional<Long> displacement = Optional.empty();
+        boolean operand1RequiresDisplacement = false;
         boolean isImmediateRequired = false;
 
         final byte rex = b.read1();
@@ -106,8 +107,8 @@ public final class InstructionDecoder {
 
         Opcode opcode;
         final byte opcodeFirstByte = isREX ? b.read1() : rex;
-        Optional<Operand> operand1 = null;
-        Optional<Operand> operand2 = null;
+        Optional<Operand> operand1 = Optional.empty();
+        Optional<Operand> operand2 = Optional.empty();
 
         if (isMultibyteOpcode(opcodeFirstByte)) {
             // more than 1 bytes opcode
@@ -172,56 +173,55 @@ public final class InstructionDecoder {
             }
         }
 
-		// ModR/M byte (1 byte, if required)
+        // ModR/M byte (1 byte, if required)
         if (isModRMRequired) {
             final byte m = b.read1();
             logger.debug("Read ModRM byte 0b%s", BitUtils.toBinaryString(m));
-			final byte tmp = BitUtils.asByte(m & MODRM_MOD_MASK);
+            final byte mod = ModRMExtractMod(m);
+            final byte rm = ModRMExtractRM(m);
+            final byte reg = ModRMExtractReg(m);
             byte op1;
-            switch (tmp) {
+            byte op2;
+            switch (mod) {
                 case (byte) 0x00: // 00
                     throw new IllegalArgumentException("Don't know what to do when first 2 bits of ModRM are 00");
                 case (byte) 0x80: // 10
                     // register + displacement 32
-                    op1 = BitUtils.asByte((m & MODRM_RM_MASK) | (extension ? ((byte) 0x08) : 0));
+                    op1 = combine(extension, rm);
                     if (op1 == (byte) 0x04 /* 100 */) {
                         operand1 = Optional.empty();
                     } else {
                         operand1 = registerFromCode(op1, operand64Bit);
                     }
+                    op2 = combine(ModRMRegExtension, reg);
+                    operand2 = registerFromCode(op2, operand64Bit);
                     isSIBRequired = true;
                     isDisplacementRequired = true;
+                    operand1RequiresDisplacement = true;
                     displacementBytes = 4;
                     break;
                 case (byte) 0x40: // 01
                     throw new IllegalArgumentException("Don't know what to do when first 2 bits of ModRM are 01");
                 case MODRM_MOD_MASK: // 11
-                    final byte op2 =
-                            BitUtils.asByte(((m & MODRM_REG_MASK) >>> 3) | (ModRMRegExtension ? ((byte) 0x08) : 0));
-                    operand2 = registerFromCode(op2, operand64Bit);
-                    op1 = BitUtils.asByte((m & MODRM_RM_MASK) | (extension ? ((byte) 0x08) : 0));
+                    op1 = combine(extension, rm);
                     operand1 = registerFromCode(op1, operand64Bit);
+                    op2 = combine(ModRMRegExtension, reg);
+                    operand2 = registerFromCode(op2, operand64Bit);
                     break;
                 default:
                     throw new IllegalArgumentException(
                             String.format("Invalid bit pattern in ModRM byte: it was 0x%02x", m));
             }
-        } else {
-			if (operand1 == null) {
-                operand1 = Optional.empty();
-            }
-            if (operand2 == null) {
-                operand2 = Optional.empty();
-            }
         }
 
-		// SIB byte (1 byte, if required)
+        // SIB byte (1 byte, if required)
         if (isSIBRequired) {
             final byte s = b.read1();
             logger.debug("Read SIB byte 0b%s", BitUtils.toBinaryString(s));
-			final byte ss = BitUtils.asByte((s & SIB_SCALE_MASK) >>> 6);
+            final byte ss = BitUtils.asByte((s & SIB_SCALE_MASK) >>> 6);
             final byte index = BitUtils.asByte(((s & SIB_INDEX_MASK) >>> 3) | (SIBIndexExtension ? ((byte) 0x08) : 0));
             final byte base = BitUtils.asByte((s & SIB_BASE_MASK) | (extension ? ((byte) 0x08) : 0));
+            // TODO
         }
 
         // Displacement (1, 2, 4 or 8 bytes, if required)
@@ -238,16 +238,37 @@ public final class InstructionDecoder {
                                 "Invalid displacement bytes value: expected 1, 2, 4 or 8 but was %,d (0x%08x)",
                                 displacementBytes, displacementBytes));
                     });
-        } else {
-            displacement = Optional.empty();
         }
 
-        if (displacement.isPresent()) {}
+        if (displacement.isPresent()) {
+            if (operand1RequiresDisplacement) {
+                operand1 = Optional.of(
+                        operand1.isPresent()
+                                ? IndirectOperand.of((Register) operand1.orElseThrow(), displacement.orElseThrow())
+                                : IndirectOperand.of(displacement.orElseThrow()));
+            }
+        }
 
         // Immediate (1, 2, 4 or 8 bytes, if required)
         if (isImmediateRequired) {}
 
         return new Instruction(opcode, operand1, operand2);
+    }
+
+    private byte ModRMExtractMod(final byte m) {
+        return BitUtils.asByte(m & MODRM_MOD_MASK);
+    }
+
+    private byte ModRMExtractRM(final byte m) {
+        return BitUtils.asByte(m & MODRM_RM_MASK);
+    }
+
+    private byte ModRMExtractReg(final byte m) {
+        return BitUtils.asByte((m & MODRM_REG_MASK) >>> 3);
+    }
+
+    private byte combine(final boolean b, final byte x) {
+        return BitUtils.asByte(x | (b ? ((byte) 0x08) : 0));
     }
 
     private Optional<Operand> registerFromCode(final byte operandCode, final boolean isOperand64Bit) {

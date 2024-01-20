@@ -59,8 +59,16 @@ public final class TestDecoding {
 
         final InstructionDecoder id = new InstructionDecoder();
         final List<Instruction> instructions = id.decode(code);
-        assertNotNull(instructions);
-        assertEquals(1, instructions.size());
-        assertEquals(expected, instructions.get(0).toString());
+        assertNotNull(instructions, "InstructionDecoder returned a null List");
+        assertEquals(
+                1,
+                instructions.size(),
+                String.format("Expected 1 instruction but %,d were found", instructions.size()));
+        assertEquals(
+                expected,
+                instructions.get(0).toString(),
+                String.format(
+                        "Expected '%s' but '%s' was decoded",
+                        expected, instructions.get(0).toString()));
     }
 }

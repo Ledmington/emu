@@ -12,6 +12,10 @@
 # - a single '|' character to separate the input and the expected output
 # - the binary (hexadecimal) representation of the instruction
 #
+# To have a reference which is a bit more usable than the Intel
+# Software Developer Manual, you can use this:
+# https://defuse.ca/online-x86-assembler.htm
+#
 
 # No-op
 nop | 90
