@@ -4,6 +4,8 @@ import java.util.Objects;
 
 public final class ByteBuffer {
 
+    private static final MiniLogger logger = MiniLogger.getLogger("byte-buffer");
+
     private final byte[] b;
     private boolean isLittleEndian;
     private int i;
@@ -31,6 +33,7 @@ public final class ByteBuffer {
     }
 
     public void goBack(final int n) {
+        // logger.debug("Goind back %,d bytes", n);
         this.i -= n;
     }
 
@@ -41,6 +44,7 @@ public final class ByteBuffer {
     public byte read1() {
         final byte x = b[i];
         move(1);
+        // logger.debug("Read 0x%02x", x);
         return x;
     }
 
@@ -52,6 +56,7 @@ public final class ByteBuffer {
             s = (short) ((BitUtils.asShort(b[i]) << 8) | BitUtils.asShort(b[i + 1]));
         }
         move(2);
+        // logger.debug("Read 0x%04x", s);
         return s;
     }
 
@@ -69,6 +74,7 @@ public final class ByteBuffer {
                     | BitUtils.asInt(b[i + 3]);
         }
         move(4);
+        // logger.debug("Read 0x%08x", x);
         return x;
     }
 
@@ -94,6 +100,7 @@ public final class ByteBuffer {
                     | BitUtils.asLong(b[i + 7]);
         }
         move(8);
+        // logger.debug("Read 0x%016x", x);
         return x;
     }
 }

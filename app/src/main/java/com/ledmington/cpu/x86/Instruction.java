@@ -23,17 +23,29 @@ public final class Instruction {
         }
     }
 
+    private String operandString(final Operand op) {
+        if (!(op instanceof IndirectOperand)) {
+            return op.toIntelSyntax();
+        }
+        if (opcode == Opcode.LEA) {
+            return op.toIntelSyntax();
+        } else {
+            return "QWORD PTR " + op.toIntelSyntax();
+        }
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(opcode.mnemonic());
         if (this.operand1.isPresent()) {
             sb.append(' ');
-            sb.append(this.operand1.orElseThrow());
 
             if (operand2.isPresent()) {
-                sb.append(',');
-                sb.append(this.operand2.orElseThrow());
+                sb.append(operandString(this.operand2.orElseThrow()));
             }
+
+            sb.append(',');
+            sb.append(operandString(this.operand1.orElseThrow()));
         }
         return sb.toString();
     }

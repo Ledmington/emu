@@ -3,6 +3,7 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 public final class Register64 implements Register {
+
     public static final Register64 RAX = new Register64("rax");
     public static final Register64 RBX = new Register64("rbx");
     public static final Register64 RCX = new Register64("rcx");
@@ -54,7 +55,7 @@ public final class Register64 implements Register {
     }
 
     @Override
-    public String toString() {
+    public String toIntelSyntax() {
         return mnemonic;
     }
 }

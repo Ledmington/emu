@@ -9,7 +9,11 @@ public enum Opcode {
     CALL("call"),
     MOV("mov"),
     TEST("test"),
-    NOP("nop");
+    NOP("nop"),
+    LEA("lea"),
+    CMOVE("cmove"),
+    ADD("add"),
+    CMP("cmp");
 
     private final String mnemonic;
 

@@ -3,6 +3,7 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 public final class Register32 implements Register {
+
     public static final Register32 EAX = new Register32("eax");
     public static final Register32 EBX = new Register32("ebx");
     public static final Register32 ECX = new Register32("ecx");
@@ -54,7 +55,7 @@ public final class Register32 implements Register {
     }
 
     @Override
-    public String toString() {
+    public String toIntelSyntax() {
         return mnemonic;
     }
 }

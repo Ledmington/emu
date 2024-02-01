@@ -18,25 +18,64 @@ public final class IndirectOperand implements Operand {
     private final Optional<Register> reg2;
     private final Optional<Long> displacement;
 
-    public static IndirectOperand of(final Register r) {
-        return new IndirectOperand(Optional.of(r), Optional.empty(), Optional.empty(), Optional.empty());
+    public static IndirectOperandBuilder builder() {
+        return new IndirectOperandBuilder();
     }
 
-    public static IndirectOperand of(final Register r, final long displacement) {
-        return new IndirectOperand(Optional.of(r), Optional.empty(), Optional.empty(), Optional.of(displacement));
-    }
+    public static final class IndirectOperandBuilder {
 
-    public static IndirectOperand of(final long displacement) {
-        return new IndirectOperand(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(displacement));
-    }
+        private Optional<Register> reg1 = Optional.empty();
+        private Optional<Integer> c = Optional.empty();
+        private Optional<Register> reg2 = Optional.empty();
+        private Optional<Long> displacement = Optional.empty();
+        private boolean alreadyBuilt = false;
 
-    public static IndirectOperand of(final Register r1, final int constant, final Register r2) {
-        return new IndirectOperand(Optional.of(r1), Optional.of(constant), Optional.of(r2), Optional.empty());
-    }
+        public IndirectOperandBuilder() {}
 
-    public static IndirectOperand of(
-            final Register r1, final int constant, final Register r2, final long displacement) {
-        return new IndirectOperand(Optional.of(r1), Optional.of(constant), Optional.of(r2), Optional.of(displacement));
+        public IndirectOperandBuilder reg1(final Register r) {
+            this.reg1 = Optional.of(r);
+            return this;
+        }
+
+        public IndirectOperandBuilder constant(final int c) {
+            this.c = Optional.of(c);
+            return this;
+        }
+
+        public IndirectOperandBuilder reg2(final Register r) {
+            this.reg2 = Optional.of(r);
+            return this;
+        }
+
+        public IndirectOperandBuilder displacement(final long disp) {
+            this.displacement = Optional.of(disp);
+            return this;
+        }
+
+        public IndirectOperand build() {
+            if (alreadyBuilt) {
+                throw new IllegalStateException("Cannot build the same IndirectOperandBuilder twice");
+            }
+            alreadyBuilt = true;
+
+            if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isEmpty()) {
+                return new IndirectOperand(reg1, c, reg2, displacement);
+            } else if (reg1.isPresent() && c.isEmpty() && reg2.isPresent() && displacement.isEmpty()) {
+                return new IndirectOperand(reg1, c, reg2, displacement);
+            } else if (reg1.isEmpty() && c.isEmpty() && reg2.isPresent() && displacement.isEmpty()) {
+                return new IndirectOperand(reg1, c, reg2, displacement);
+            } else if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
+                return new IndirectOperand(reg1, c, reg2, displacement);
+            } else if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isPresent()) {
+                return new IndirectOperand(reg1, c, reg2, displacement);
+            }
+
+            throw new IllegalStateException("Cannot build an IndirectOperand with "
+                    + (reg1.isEmpty() ? "no reg1" : "reg1=" + reg1.orElseThrow().toString()) + ", "
+                    + (c.isEmpty() ? "no constant" : "constant=" + c.orElseThrow()) + ", "
+                    + (reg2.isEmpty() ? "no reg2" : "reg2=" + reg2.orElseThrow().toString()) + ", "
+                    + (displacement.isEmpty() ? "no displacement" : "displacement=" + displacement.orElseThrow()));
+        }
     }
 
     private IndirectOperand(
@@ -48,23 +87,29 @@ public final class IndirectOperand implements Operand {
         this.constant = Objects.requireNonNull(constant);
         this.reg2 = Objects.requireNonNull(reg2);
         this.displacement = Objects.requireNonNull(displacement);
+
+        if (constant.isPresent()) {
+            if (constant.orElseThrow() != 0 && Integer.bitCount(constant.orElseThrow()) != 1) {
+                throw new IllegalArgumentException(String.format(
+                        "Invalid 'constant' value: expected 0 or a power of two but was %,d", constant.orElseThrow()));
+            }
+        }
     }
 
     @Override
-    public String toString() {
+    public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("QWORD PTR ");
         sb.append('[');
         if (reg1.isPresent()) {
-            sb.append(reg1.orElseThrow());
+            sb.append(reg1.orElseThrow().toIntelSyntax());
         }
-        if (constant.isPresent()) {
+        if (constant.isPresent() && constant.orElseThrow() != 0) {
             sb.append('*');
             sb.append(constant.orElseThrow());
         }
-        if (reg2.isPresent()) {
+        if (reg2.isPresent() && !reg2.equals(reg1)) {
             sb.append('+');
-            sb.append(reg2.orElseThrow());
+            sb.append(reg2.orElseThrow().toIntelSyntax());
         }
         if (displacement.isPresent()) {
             sb.append(String.format("%c0x%x", displacement.orElseThrow() < 0 ? '-' : '+', displacement.orElseThrow()));

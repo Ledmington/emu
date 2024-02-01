@@ -14,7 +14,7 @@ public final class RelativeOffset implements Operand {
     }
 
     @Override
-    public String toString() {
+    public String toIntelSyntax() {
         return String.format("0x%x", value);
     }
 }
