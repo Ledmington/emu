@@ -53,12 +53,9 @@ public final class TestDecoding extends X86Test {
         assertEquals(
                 1,
                 instructions.size(),
-                String.format("Expected 1 instruction but %,d were found", instructions.size()));
+                () -> String.format("Expected 1 instruction but %,d were found", instructions.size()));
+        final Instruction inst = instructions.get(0);
         assertEquals(
-                expected,
-                instructions.get(0).toString(),
-                String.format(
-                        "Expected '%s' but '%s' was decoded",
-                        expected, instructions.get(0).toString()));
+                expected, inst.toString(), () -> String.format("Expected '%s' but '%s' was decoded", expected, inst));
     }
 }

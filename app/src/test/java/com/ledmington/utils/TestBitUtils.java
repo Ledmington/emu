@@ -10,6 +10,22 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public final class TestBitUtils {
 
+    private static Stream<Arguments> stringBytes() {
+        return Stream.of(
+                Arguments.of((byte) 0x00, "00"),
+                Arguments.of((byte) 0xf0, "f0"),
+                Arguments.of((byte) 0xff, "ff"),
+                Arguments.of((byte) 0x0f, "0f"),
+                Arguments.of((byte) 0x80, "80"),
+                Arguments.of((byte) 0x01, "01"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("stringBytes")
+    void parseBytes(final byte expected, final String input) {
+        assertEquals(expected, BitUtils.parseByte(input));
+    }
+
     private static Stream<Arguments> SHRbytes() {
         return Stream.of(
                 Arguments.of((byte) 0xff, (byte) 0xff, 0),

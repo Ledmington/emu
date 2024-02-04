@@ -33,21 +33,33 @@ public final class IndirectOperand implements Operand {
         public IndirectOperandBuilder() {}
 
         public IndirectOperandBuilder reg1(final Register r) {
+            if (this.reg1.isPresent()) {
+                throw new IllegalStateException("Cannot define reg1 twice");
+            }
             this.reg1 = Optional.of(r);
             return this;
         }
 
         public IndirectOperandBuilder constant(final int c) {
+            if (this.c.isPresent()) {
+                throw new IllegalStateException("Cannot define constant twice");
+            }
             this.c = Optional.of(c);
             return this;
         }
 
         public IndirectOperandBuilder reg2(final Register r) {
+            if (this.reg2.isPresent()) {
+                throw new IllegalStateException("Cannot define reg2 twice");
+            }
             this.reg2 = Optional.of(r);
             return this;
         }
 
         public IndirectOperandBuilder displacement(final long disp) {
+            if (this.displacement.isPresent()) {
+                throw new IllegalStateException("Cannot define displacement twice");
+            }
             this.displacement = Optional.of(disp);
             return this;
         }
