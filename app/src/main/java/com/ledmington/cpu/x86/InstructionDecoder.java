@@ -120,115 +120,51 @@ public final class InstructionDecoder {
             }*/
         } else {
             // 1 byte opcode
-            final int operandsRequired = operandsRequired(opcodeFirstByte);
-            switch (operandsRequired) {
-                case 0:
-                    break;
-                case 1: {
-                    final Opcode opcode = opcodeFromByte(opcodeFirstByte);
-                    final Register operand =
-                            registerFromCode(BitUtils.asByte(opcodeFirstByte & OPCODE_REG_MASK), extension);
-                    return new Instruction(opcode, Optional.of(operand), Optional.empty());
-                }
-                case 2: {
-                    final Opcode opcode = opcodeFromByte(opcodeFirstByte);
-                    final byte modrm = b.read1();
-                    final Register operand1 = registerFromCode(ModRMExtractReg(modrm), ModRMRegExtension);
-                    final Register operand2 = registerFromCode(ModRMExtractRM(modrm), extension);
-                    return new Instruction(opcode, Optional.of(operand1), Optional.of(operand2));
-                }
-
-                case 3:
-                    // TODO
-                    break;
-                default:
-                    throw new IllegalArgumentException(String.format(
-                            "Unknown number of required operands: expected 0, 1, 2 or 3 but was %,d",
-                            operandsRequired));
-            }
-            /*
-                   switch (opcodeFirstByte) {
-                       case ADD_OPCODE:
-                           // page 628
-                           opcode = Opcode.ADD;
-            break;
-                       case CMP_OPCODE:
-                           // page 775
-                           opcode = Opcode.CMP;
-            isImmediateRequired = true;
-                           break;
-                       case TEST_OPCODE:
-                           {
-                               // page 1923
-                               opcode = Opcode.TEST;
-                               final byte modrm = b.read1();
-                               operand1 = registerFromCode(combine(ModRMRegExtension, ModRMExtractReg(modrm)), operand64Bit);
-                               operand2 = registerFromCode(combine(extension, ModRMExtractRM(modrm)), operand64Bit);
-                           }
-                           break;
-                       case MOV_R2R_OPCODE:
-                       case MOV_R2R_64_OPCODE:
-                           {
-                               // page 1255
-                               opcode = Opcode.MOV;
-                               final byte modrm = b.read1();
-                               operand1 = registerFromCode(combine(ModRMRegExtension, ModRMExtractReg(modrm)), operand64Bit);
-                               operand2 = registerFromCode(combine(extension, ModRMExtractRM(modrm)), operand64Bit);
-                           }
-                           break;
-                       case LEA_OPCODE:
-                           {
-                               // page 1191
-                               opcode = Opcode.LEA;
-                               final byte modrm = b.read1();
-                               final byte sib = b.read1();
-                               // final byte disp = b.read1();
-                               operand1 = IndirectOperand.builder()
-                                       .constant(2 * SIBExtractSS(sib))
-                                       .reg1(registerFromCode(ModRMExtractReg(modrm), operand64Bit))
-                                       .reg2(registerFromCode(SIBExtractIndex(sib), SIBIndexExtension))
-                                       // .displacement(disp)
-                                       .build();
-                               operand2 = registerFromCode(ModRMExtractReg(modrm), ModRMRegExtension);
-                           }
-                           break;
-                       case NOP_OPCODE:
-                           opcode = Opcode.NOP;
-                           break;
-                       case MOV_TO_EAX_OPCODE:
-                       case MOV_TO_EBX_OPCODE:
-                       case MOV_TO_ECX_OPCODE:
-                       case MOV_TO_EDX_OPCODE:
-                       case MOV_TO_ESI_OPCODE:
-                       case MOV_TO_EDI_OPCODE:
-                       case MOV_TO_ESP_OPCODE:
-                       case MOV_TO_EBP_OPCODE:
-                           opcode = Opcode.MOV;
-                           operand1 = MemoryLocation.of32(b.read4());
-                           operand2 = Register32.fromByte(BitUtils.asByte(opcodeFirstByte & 0x07));
-                           break;
-                       case JMP_nearf64_OPCODE:
-                           // page 735
-                           opcode = Opcode.JMP;
-                           operand1 = RelativeOffset.of32(b.read4());
-                           break;
-                       case CALL_OPCODE:
-                           opcode = Opcode.CALL;
-                           // page 598, section 3.1.1.1
-                           operand1 = RelativeOffset.of32(b.read4());
-                           break;
-                       case XOR_Ev_Gv_OPCODE:
-                           // page 2722
-                           opcode = Opcode.XOR;
-            break;
-                       default:
-                           throw new IllegalArgumentException(String.format(
-                                   "Unknown opcode %02x %02x %02x %02x %02x %02x %02x",
-                                   opcodeFirstByte, b.read1(), b.read1(), b.read1(), b.read1(), b.read1(), b.read1()));
-                   }*/
+            return switch (opcodeFirstByte) {
+                case NOP_OPCODE -> new Instruction(Opcode.NOP);
+                case LEA_OPCODE -> // page 1191
+                parseLEA(b, ModRMRegExtension, extension);
+                default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
+            };
         }
 
         throw new IllegalArgumentException("Could not decode any instruction");
+    }
+
+    private Instruction parseLEA(final ByteBuffer b, final boolean ModRMRegExtension, final boolean extension) {
+        final byte modrm = b.read1();
+        final byte rm = ModRMExtractRM(modrm);
+        final Register operand1 = registerFromCode(ModRMExtractReg(modrm), ModRMRegExtension);
+        final Register operand2 = registerFromCode(rm, extension);
+
+        final byte mod = ModRMExtractMod(modrm);
+        if (mod == (byte) 0x00 && rm == (byte) 0x04) {
+            // SIB byte needed
+            final byte sib = b.read1();
+            // TODO
+        } else if ((mod == (byte) 0x00 && rm == (byte) 0x05) || mod == (byte) 0x02) {
+            // 32-bit displacement
+            final int disp = b.read4();
+            return new Instruction(
+                    Opcode.LEA,
+                    operand1,
+                    IndirectOperand.builder()
+                            .reg1(operand2)
+                            .displacement(BitUtils.asLong(disp))
+                            .build());
+        } else if (mod == (byte) 0x01) {
+            // 8-bit displacement
+            final byte disp = b.read1();
+            return new Instruction(
+                    Opcode.LEA,
+                    operand1,
+                    IndirectOperand.builder()
+                            .reg1(operand2)
+                            .displacement(BitUtils.asLong(disp))
+                            .build());
+        }
+
+        return new Instruction(Opcode.LEA, operand1, operand2);
     }
 
     /**

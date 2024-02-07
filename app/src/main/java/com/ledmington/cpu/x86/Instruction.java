@@ -1,7 +1,6 @@
 package com.ledmington.cpu.x86;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * High-level representation of an x86 instruction.
@@ -9,18 +8,18 @@ import java.util.Optional;
 public final class Instruction {
 
     private final Opcode opcode;
-    private final Optional<Operand> operand1;
-    private final Optional<Operand> operand2;
+    private final Operand[] operands;
 
-    public Instruction(final Opcode opcode, final Optional<Operand> op1, final Optional<Operand> op2) {
+    public Instruction(final Opcode opcode, final Operand... ops) {
         this.opcode = Objects.requireNonNull(opcode);
-        this.operand1 = Objects.requireNonNull(op1);
-        this.operand2 = Objects.requireNonNull(op2);
-
-        if (op2.isPresent() && op1.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Cannot have an instruction with a second operand without a first operand");
+        this.operands = new Operand[Objects.requireNonNull(ops).length];
+        for (int i = 0; i < ops.length; i++) {
+            this.operands[i] = Objects.requireNonNull(ops[i]);
         }
+    }
+
+    public int nOperands() {
+        return operands.length;
     }
 
     private String operandString(final Operand op) {
@@ -37,15 +36,15 @@ public final class Instruction {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(opcode.mnemonic());
-        if (this.operand1.isPresent()) {
+
+        if (operands.length > 0) {
             sb.append(' ');
+            sb.append(operandString(operands[0]));
 
-            if (operand2.isPresent()) {
-                sb.append(operandString(this.operand2.orElseThrow()));
+            for (int i = 1; i < operands.length; i++) {
+                sb.append(',');
+                sb.append(operandString(operands[i]));
             }
-
-            sb.append(',');
-            sb.append(operandString(this.operand1.orElseThrow()));
         }
         return sb.toString();
     }
