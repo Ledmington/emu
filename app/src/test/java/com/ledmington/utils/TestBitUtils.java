@@ -75,4 +75,24 @@ public final class TestBitUtils {
         final byte result = BitUtils.and(input1, input2);
         assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
     }
+
+    private static Stream<Arguments> ORbytes() {
+        return Stream.of(
+                Arguments.of((byte) 0xff, (byte) 0x00, (byte) 0xff),
+                Arguments.of((byte) 0x81, (byte) 0x80, (byte) 0x01),
+                Arguments.of((byte) 0x82, (byte) 0x80, (byte) 0x02),
+                Arguments.of((byte) 0x84, (byte) 0x80, (byte) 0x04),
+                Arguments.of((byte) 0x88, (byte) 0x80, (byte) 0x08),
+                Arguments.of((byte) 0x90, (byte) 0x80, (byte) 0x10),
+                Arguments.of((byte) 0xa0, (byte) 0x80, (byte) 0x20),
+                Arguments.of((byte) 0xc0, (byte) 0x80, (byte) 0x40),
+                Arguments.of((byte) 0x80, (byte) 0x80, (byte) 0x80));
+    }
+
+    @ParameterizedTest
+    @MethodSource("ORbytes")
+    void bitwiseOr(final byte expected, final byte input1, final byte input2) {
+        final byte result = BitUtils.or(input1, input2);
+        assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+    }
 }

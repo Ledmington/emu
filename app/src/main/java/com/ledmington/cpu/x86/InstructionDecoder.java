@@ -19,11 +19,6 @@ public final class InstructionDecoder {
 
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
 
-    private static final byte REX_W_MASK = (byte) 0x08;
-    private static final byte REX_R_MASK = (byte) 0x04;
-    private static final byte REX_X_MASK = (byte) 0x02;
-    private static final byte REX_B_MASK = (byte) 0x01;
-
     private static final byte OPCODE_REG_MASK = (byte) 0x07;
 
     // single byte opcodes
@@ -79,51 +74,44 @@ public final class InstructionDecoder {
         final Optional<Byte> p3 = readLegacyPrefixGroup3(b);
         final Optional<Byte> p4 = readLegacyPrefixGroup4(b);
 
-        final byte rex = b.read1();
-        boolean operand64Bit = false;
-        boolean ModRMRegExtension = false;
-        boolean SIBIndexExtension = false;
-        boolean extension = false;
-        final boolean isREX = isREXPrefix(rex);
+        final byte rexByte = b.read1();
+        final RexPrefix rexPrefix;
+        final boolean isREX = RexPrefix.isREXPrefix(rexByte);
         if (isREX) {
-            operand64Bit = (rex & REX_W_MASK) != 0;
-            ModRMRegExtension = (rex & REX_R_MASK) != 0;
-            SIBIndexExtension = (rex & REX_X_MASK) != 0;
-            extension = (rex & REX_B_MASK) != 0;
-            logger.debug(
-                    "Found REX prefix: 0x%02x -> %s",
-                    rex,
-                    (operand64Bit ? ".W" : "")
-                            + (ModRMRegExtension ? ".R" : "")
-                            + (SIBIndexExtension ? ".X" : "")
-                            + (extension ? ".B" : ""));
+            rexPrefix = new RexPrefix(rexByte);
+            logger.debug("Found REX prefix: 0x%02x -> %s", rexByte, rexPrefix);
+        } else {
+            rexPrefix = new RexPrefix((byte) 0x40);
         }
 
-        final byte opcodeFirstByte = isREX ? b.read1() : rex;
+        final byte opcodeFirstByte = isREX ? b.read1() : rexByte;
 
         if (isMultibyteOpcode(opcodeFirstByte)) {
             // more than 1 bytes opcode
-            /* final byte opcodeSecondByte = b.read1();
-            switch (opcodeSecondByte) {
-                case JE_OPCODE:
-                    // page 1145
-                    opcode = Opcode.JE;
-                    operand1 = RelativeOffset.of32(b.read4());
-                    break;
-                case CMOVE_OPCODE:
-                    // page 771
-                    opcode = Opcode.CMOVE;
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                            String.format("Unknown multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
-            }*/
+            /*
+             * final byte opcodeSecondByte = b.read1();
+             * switch (opcodeSecondByte) {
+             * case JE_OPCODE:
+             * // page 1145
+             * opcode = Opcode.JE;
+             * operand1 = RelativeOffset.of32(b.read4());
+             * break;
+             * case CMOVE_OPCODE:
+             * // page 771
+             * opcode = Opcode.CMOVE;
+             * break;
+             * default:
+             * throw new IllegalArgumentException(
+             * String.format("Unknown multibyte opcode 0x%02x%02x", opcodeFirstByte,
+             * opcodeSecondByte));
+             * }
+             */
         } else {
             // 1 byte opcode
             return switch (opcodeFirstByte) {
                 case NOP_OPCODE -> new Instruction(Opcode.NOP);
                 case LEA_OPCODE -> // page 1191
-                parseLEA(b, ModRMRegExtension, extension);
+                parseLEA(b, rexPrefix);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
             };
         }
@@ -131,13 +119,14 @@ public final class InstructionDecoder {
         throw new IllegalArgumentException("Could not decode any instruction");
     }
 
-    private Instruction parseLEA(final ByteBuffer b, final boolean ModRMRegExtension, final boolean extension) {
-        final byte modrm = b.read1();
-        final byte rm = ModRMExtractRM(modrm);
-        final Register operand1 = registerFromCode(ModRMExtractReg(modrm), ModRMRegExtension);
-        final Register operand2 = registerFromCode(rm, extension);
+    private Instruction parseLEA(final ByteBuffer b, final RexPrefix rexPrefix) {
+        final ModRM modrm = new ModRM(b.read1());
+        logger.debug("Read ModR/M byte: %s", modrm);
+        final byte rm = modrm.rm();
+        final Register operand1 = registerFromCode(modrm.reg(), rexPrefix.ModRMRegExtension());
+        final Register operand2 = registerFromCode(rm, rexPrefix.extension());
 
-        final byte mod = ModRMExtractMod(modrm);
+        final byte mod = modrm.mod();
         if (mod == (byte) 0x00 && rm == (byte) 0x04) {
             // SIB byte needed
             final byte sib = b.read1();
@@ -174,8 +163,10 @@ public final class InstructionDecoder {
      * any x86 instruction can be of three formats:
      * - 1 operand: the reg field of the opcode is used
      * - 2 operands: the reg and r/m fields of the ModRM byte are used
-     * - 3 operands: the reg field of the ModRM byte, the base and the index fields of the SIB byte
-     * Zero-operand instructions like NOP are not mentioned since they are pretty rare.
+     * - 3 operands: the reg field of the ModRM byte, the base and the index fields
+     * of the SIB byte
+     * Zero-operand instructions like NOP are not mentioned since they are pretty
+     * rare.
      */
     private int operandsRequired(final byte opcode) {
         return switch (opcode) {
@@ -224,21 +215,6 @@ public final class InstructionDecoder {
     private byte SIBExtractBase(final byte sib) {
         final byte SIB_BASE_MASK = (byte) 0x07; // 00000111
         return BitUtils.and(sib, SIB_BASE_MASK);
-    }
-
-    private byte ModRMExtractMod(final byte m) {
-        final byte MODRM_MOD_MASK = (byte) 0xc0; // 11000000
-        return BitUtils.and(m, MODRM_MOD_MASK);
-    }
-
-    private byte ModRMExtractReg(final byte m) {
-        final byte MODRM_REG_MASK = (byte) 0x38; // 00111000
-        return BitUtils.shr(BitUtils.and(m, MODRM_REG_MASK), 3);
-    }
-
-    private byte ModRMExtractRM(final byte m) {
-        final byte MODRM_RM_MASK = (byte) 0x07; // 00000111
-        return BitUtils.and(m, MODRM_RM_MASK);
     }
 
     /**

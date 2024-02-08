@@ -33,7 +33,7 @@ public final class ByteBuffer {
     }
 
     public void goBack(final int n) {
-        // logger.debug("Goind back %,d bytes", n);
+        // logger.debug("Going back %,d bytes", n);
         this.i -= n;
     }
 
