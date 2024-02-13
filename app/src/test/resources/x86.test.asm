@@ -29,6 +29,9 @@ je 0x2e0e1 | 0f 84 db e0 02 00
 # Jmp
 jmp 0x2e301 | e9 fc e2 02 00
 
+# And
+and rdi,0xfffffffffffffff0 | 48 83 e7 f0
+
 # lea
 lea eax,[r10-0xf]                | 41 8d 42 f1
 lea eax,[r11+0x1]                | 41 8d 43 01
@@ -514,15 +517,15 @@ lea r13,[rdx+r8*1]               | 4e 8d 2c 02
 lea r13,[rip+0x79a08]            | 4c 8d 2d 08 9a 07 00
 lea r13,[rip+0x90f21]            | 4c 8d 2d 21 0f 09 00
 lea r13,[rsi+r9*8+0x8]           | 4e 8d 6c ce 08
-lea r13,[rsp+0x107]              | 4c 8d ac 24 07 01 00
+lea r13,[rsp+0x107]              | 4c 8d ac 24 07 01 00 00
 lea r13,[rsp+0x10]               | 4c 8d 6c 24 10
-lea r13,[rsp+0x170]              | 4c 8d ac 24 70 01 00
+lea r13,[rsp+0x170]              | 4c 8d ac 24 70 01 00 00
 lea r13,[rsp+0x30]               | 4c 8d 6c 24 30
-lea r13,[rsp+0x3e0]              | 4c 8d ac 24 e0 03 00
+lea r13,[rsp+0x3e0]              | 4c 8d ac 24 e0 03 00 00
 lea r13,[rsp+0x68]               | 4c 8d 6c 24 68
 lea r13,[rsp+0x70]               | 4c 8d 6c 24 70
-lea r13,[rsp+0xa0]               | 4c 8d ac 24 a0 00 00
-lea r13,[rsp+0xc0]               | 4c 8d ac 24 c0 00 00
+lea r13,[rsp+0xa0]               | 4c 8d ac 24 a0 00 00 00
+lea r13,[rsp+0xc0]               | 4c 8d ac 24 c0 00 00 00
 lea r13,[rsp+0xf]                | 4c 8d 6c 24 0f
 lea r13d,[r10-0x1]               | 45 8d 6a ff
 lea r13d,[r13+0x1]               | 45 8d 6d 01
@@ -659,7 +662,7 @@ lea r15,[rsp+0x1c]               | 4c 8d 7c 24 1c
 lea r15,[rsp+0x30]               | 4c 8d 7c 24 30
 lea r15,[rsp+0x58]               | 4c 8d 7c 24 58
 lea r15,[rsp+0x70]               | 4c 8d 7c 24 70
-lea r15,[rsp+0xa0]               | 4c 8d bc 24 a0 00 00
+lea r15,[rsp+0xa0]               | 4c 8d bc 24 a0 00 00 00
 lea r15,[rsp+0xc0]               | 4c 8d bc 24 c0 00 00
 lea r15,[rsp+0xf]                | 4c 8d 7c 24 0f
 lea r15d,[r14-0x1]               | 45 8d 7e ff
@@ -1003,7 +1006,7 @@ lea rax,[rsp+0x4b0]              | 48 8d 84 24 b0 04 00
 lea rax,[rsp+0x70]               | 48 8d 44 24 70
 lea rax,[rsp+0x810]              | 48 8d 84 24 10 08 00
 lea rax,[rsp+0x8]                | 48 8d 44 24 08
-lea rax,[rsp+0xe0]               | 48 8d 84 24 e0 00 00
+lea rax,[rsp+0xe0]               | 48 8d 84 24 e0 00 00 00
 lea rax,[rsp+0xf]                | 48 8d 44 24 0f
 lea rbp,[r11+0x1]                | 49 8d 6b 01
 lea rbp,[r11+0x21]               | 49 8d 6b 21
@@ -1021,7 +1024,7 @@ lea rbp,[r8+0x8]                 | 49 8d 68 08
 lea rbp,[r9+0x14]                | 49 8d 69 14
 lea rbp,[r9+0x58]                | 49 8d 69 58
 lea rbp,[r9+0xa]                 | 49 8d 69 0a
-lea rbp,[rax*8+0x10]             | 48 8d 2c c5 10 00 00
+lea rbp,[rax*8+0x10]             | 48 8d 2c c5 10 00 00 00
 lea rbp,[rax+0x18]               | 48 8d 68 18
 lea rbp,[rax+0x1]                | 48 8d 68 01
 lea rbp,[rax+0x60]               | 48 8d 68 60
@@ -1233,7 +1236,7 @@ lea rcx,[rcx-0x1]                | 48 8d 49 ff
 lea rcx,[rdi+0x10]               | 48 8d 4f 10
 lea rcx,[rdi+0x1]                | 48 8d 4f 01
 lea rcx,[rdi+0x48baa0]           | 48 8d 8f a0 ba 48 00
-lea rcx,[rdx*8+0x0]              | 48 8d 0c d5 00 00 00
+lea rcx,[rdx*8+0x0]              | 48 8d 0c d5 00 00 00 00
 lea rcx,[rdx+0x1]                | 48 8d 4a 01
 lea rcx,[rdx+0x2]                | 48 8d 4a 02
 lea rcx,[rdx+rax*1-0x1]          | 48 8d 4c 02 ff
@@ -1297,7 +1300,7 @@ lea rdi,[r12+0x18]               | 49 8d 7c 24 18
 lea rdi,[r12+0x1]                | 49 8d 7c 24 01
 lea rdi,[r12+0x58]               | 49 8d 7c 24 58
 lea rdi,[r12+0x68]               | 49 8d 7c 24 68
-lea rdi,[r12+0xb0]               | 49 8d bc 24 b0 00 00
+lea rdi,[r12+0xb0]               | 49 8d bc 24 b0 00 00 00
 lea rdi,[r12+r10*1]              | 4b 8d 3c 14
 lea rdi,[r12+r14*1+0x2]          | 4b 8d 7c 34 02
 lea rdi,[r12+r14*1+0x8]          | 4b 8d 7c 34 08
@@ -1561,7 +1564,7 @@ lea rdi,[rsp+0x108]              | 48 8d bc 24 08 01 00
 lea rdi,[rsp+0x10]               | 48 8d 7c 24 10
 lea rdi,[rsp+0x110]              | 48 8d bc 24 10 01 00
 lea rdi,[rsp+0x120]              | 48 8d bc 24 20 01 00
-lea rdi,[rsp+0x128]              | 48 8d bc 24 28 01 00
+lea rdi,[rsp+0x128]              | 48 8d bc 24 28 01 00 00
 lea rdi,[rsp+0x140]              | 48 8d bc 24 40 01 00
 lea rdi,[rsp+0x148]              | 48 8d bc 24 48 01 00
 lea rdi,[rsp+0x168]              | 48 8d bc 24 68 01 00
@@ -1613,7 +1616,7 @@ lea rdi,[rsp+0xc0]               | 48 8d bc 24 c0 00 00
 lea rdi,[rsp+0xc8]               | 48 8d bc 24 c8 00 00
 lea rdi,[rsp+0xcc]               | 48 8d bc 24 cc 00 00
 lea rdi,[rsp+0xd0]               | 48 8d bc 24 d0 00 00
-lea rdi,[rsp+0xe0]               | 48 8d bc 24 e0 00 00
+lea rdi,[rsp+0xe0]               | 48 8d bc 24 e0 00 00 00
 lea rdi,[rsp+0xf]                | 48 8d 7c 24 0f
 lea rdi,[rsp+r11*8+0x50]         | 4a 8d 7c dc 50
 lea rdx,[r10+0x1]                | 49 8d 52 01
@@ -1793,7 +1796,7 @@ lea rsi,[r15+r12*1]              | 4b 8d 34 27
 lea rsi,[r15+rbp*1+0x8]          | 49 8d 74 2f 08
 lea rsi,[r15+rsi*8]              | 49 8d 34 f7
 lea rsi,[r15-0x1]                | 49 8d 77 ff
-lea rsi,[r8*8+0x8]               | 4a 8d 34 c5 08 00 00
+lea rsi,[r8*8+0x8]               | 4a 8d 34 c5 08 00 00 00
 lea rsi,[r8+0x1]                 | 49 8d 70 01
 lea rsi,[r8+0x8]                 | 49 8d 70 08
 lea rsi,[r8+0xcc]                | 49 8d b0 cc 00 00 00
@@ -1807,8 +1810,8 @@ lea rsi,[r9+r13*1]               | 4b 8d 34 29
 lea rsi,[r9+r8*1]                | 4b 8d 34 01
 lea rsi,[r9+rax*1+0x4]           | 49 8d 74 01 04
 lea rsi,[rax*4+0x0]              | 48 8d 34 85 00 00 00
-lea rsi,[rax*8+0x0]              | 48 8d 34 c5 00 00 00
-lea rsi,[rax*8+0x8]              | 48 8d 34 c5 08 00 00
+lea rsi,[rax*8+0x0]              | 48 8d 34 c5 00 00 00 00
+lea rsi,[rax*8+0x8]              | 48 8d 34 c5 08 00 00 00
 lea rsi,[rax+0x10]               | 48 8d 70 10
 lea rsi,[rax+0x17]               | 48 8d 70 17
 lea rsi,[rax+0x1]                | 48 8d 70 01
@@ -2010,7 +2013,7 @@ lea rsi,[rip+0xc9d9]             | 48 8d 35 d9 c9 00 00
 lea rsi,[rip+0xe490]             | 48 8d 35 90 e4 00 00
 lea rsi,[rip+0xffffffffffff64c6] | 48 8d 35 c6 64 ff ff
 lea rsi,[rip+0xffffffffffffe083] | 48 8d 35 83 e0 ff ff
-lea rsi,[rsi*8+0x8]              | 48 8d 34 f5 08 00 00
+lea rsi,[rsi*8+0x8]              | 48 8d 34 f5 08 00 00 00
 lea rsi,[rsi+rdi*1]              | 48 8d 34 3e
 lea rsi,[rsi+rdx*1]              | 48 8d 34 16
 lea rsi,[rsi-0x1]                | 48 8d 76 ff
@@ -2413,5 +2416,40 @@ xor esp,edx | 31 d4
 xor esp,esi | 31 f4
 xor esp,esp | 31 e4
 
+# Push
+push rbp | 55
+push rbx | 53
+push r13 | 41 55
+push r12 | 41 54
+
 # Pop
 pop rbx | 5b
+pop rbp | 5d
+pop r12 | 41 5c
+pop r13 | 41 5d
+pop r14 | 41 5e
+pop r15 | 41 5f
+
+# Movups
+movups XMMWORD PTR [rsp+0x8],xmm0 | 0f 11 44 24 08
+
+# Shl
+shl rax,0x4 | 48 c1 e0 04
+
+# Movzx
+movzx r14d,BYTE PTR [r14+0x2] | 45 0f b6 76 02
+
+# Movsxd
+movsxd rdx,ecx | 48 63 d1
+
+# Sub
+sub esi,ebp | 29 ee
+
+# Rep movs
+rep movs DWORD PTR es:[rdi],DWORD PTR ds:[rsi] | f3 a5
+
+# Leave
+leave | c9
+
+# Ret
+ret | c3
