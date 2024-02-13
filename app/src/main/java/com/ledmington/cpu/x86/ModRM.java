@@ -64,8 +64,8 @@ public final class ModRM {
     }
 
     public String toString() {
-        return "mod:" + BitUtils.toBinaryString(mod).substring(0, 2) + " reg:"
-                + BitUtils.toBinaryString(reg).substring(0, 3) + " r/m:"
-                + BitUtils.toBinaryString(rm).substring(0, 3);
+        return "mod:" + BitUtils.toBinaryString(mod).substring(6, 8) + " reg:"
+                + BitUtils.toBinaryString(reg).substring(5, 8) + " r/m:"
+                + BitUtils.toBinaryString(rm).substring(5, 8);
     }
 }
