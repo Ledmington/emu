@@ -58,8 +58,9 @@ public final class InstructionDecoder {
 
         final List<Instruction> instructions = new ArrayList<>();
         while (b.position() < length) {
+            final int pos = b.position();
             final Instruction inst = decodeInstruction(b);
-            logger.info("%08x: %s", b.position(), inst.toString());
+            logger.info("%08x: %s", pos, inst.toString());
             instructions.add(inst);
         }
 
@@ -123,34 +124,34 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(b.read1());
         logger.debug("Read ModR/M byte: %s", modrm);
         final byte rm = modrm.rm();
-        final Register operand1 = registerFromCode(modrm.reg(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = registerFromCode(rm, rexPrefix.extension());
+        final Register operand1 =
+                registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
+        final Register operand2 = registerFromCode(rm, rexPrefix.isOperand64Bit(), rexPrefix.extension());
 
         final byte mod = modrm.mod();
         if (mod == (byte) 0x00 && rm == (byte) 0x04) {
             // SIB byte needed
-            final byte sib = b.read1();
+            final SIB sib = new SIB(b.read1());
+            logger.debug("Read SIB byte: %s", sib);
             // TODO
         } else if ((mod == (byte) 0x00 && rm == (byte) 0x05) || mod == (byte) 0x02) {
             // 32-bit displacement
+            final boolean oldEndianness = b.isLittleEndian();
+            b.setEndianness(true);
             final int disp = b.read4();
+            b.setEndianness(oldEndianness);
+            logger.debug("Displacement: 0x%08x", disp);
             return new Instruction(
                     Opcode.LEA,
                     operand1,
-                    IndirectOperand.builder()
-                            .reg1(operand2)
-                            .displacement(BitUtils.asLong(disp))
-                            .build());
+                    IndirectOperand.builder().reg1(operand2).displacement(disp).build());
         } else if (mod == (byte) 0x01) {
             // 8-bit displacement
             final byte disp = b.read1();
             return new Instruction(
                     Opcode.LEA,
                     operand1,
-                    IndirectOperand.builder()
-                            .reg1(operand2)
-                            .displacement(BitUtils.asLong(disp))
-                            .build());
+                    IndirectOperand.builder().reg1(operand2).displacement(disp).build());
         }
 
         return new Instruction(Opcode.LEA, operand1, operand2);
@@ -202,21 +203,6 @@ public final class InstructionDecoder {
         };
     }
 
-    private byte SIBExtractSS(final byte sib) {
-        final byte SIB_SCALE_MASK = (byte) 0xc0; // 11000000
-        return BitUtils.shr(BitUtils.and(sib, SIB_SCALE_MASK), 6);
-    }
-
-    private byte SIBExtractIndex(final byte sib) {
-        final byte SIB_INDEX_MASK = (byte) 0x38; // 00111000
-        return BitUtils.shr(BitUtils.and(sib, SIB_INDEX_MASK), 3);
-    }
-
-    private byte SIBExtractBase(final byte sib) {
-        final byte SIB_BASE_MASK = (byte) 0x07; // 00000111
-        return BitUtils.and(sib, SIB_BASE_MASK);
-    }
-
     /**
      * Performs a bitwise OR with the given byte and a byte
      * with the given value in the third bit.
@@ -227,8 +213,10 @@ public final class InstructionDecoder {
         return BitUtils.asByte(x | (b ? ((byte) 0x08) : 0));
     }
 
-    private Register registerFromCode(final byte operandCode, final boolean isOperand64Bit) {
-        return isOperand64Bit ? Register64.fromByte(operandCode) : Register32.fromByte(operandCode);
+    private Register registerFromCode(final byte operandCode, final boolean isOperand64Bit, final boolean extension) {
+        return isOperand64Bit
+                ? Register64.fromByte(combine(extension, operandCode))
+                : Register32.fromByte(combine(extension, operandCode));
     }
 
     private Optional<Byte> readLegacyPrefixGroup1(final ByteBuffer b) {

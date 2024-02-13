@@ -15,8 +15,8 @@ public final class TestDecoding extends X86Test {
 
     @Test
     void debug() {
-        final String expected = "lea eax,[r10-0xf]";
-        final String hexCode = "41 8d 42 f1";
+        final String expected = "lea rsi,[rsp+0xa0]";
+        final String hexCode = "48 8d b4 24 a0 00 00 00";
         final String[] parsed = hexCode.split(" ");
         final byte[] code = new byte[parsed.length];
         for (int i = 0; i < parsed.length; i++) {
@@ -29,13 +29,9 @@ public final class TestDecoding extends X86Test {
         assertEquals(
                 1,
                 instructions.size(),
-                String.format("Expected 1 instruction but %,d were found", instructions.size()));
-        assertEquals(
-                expected,
-                instructions.get(0).toString(),
-                String.format(
-                        "Expected '%s' but '%s' was decoded",
-                        expected, instructions.get(0).toString()));
+                () -> String.format("Expected 1 instruction but %,d were found", instructions.size()));
+        final String decoded = instructions.get(0).toString();
+        assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
     }
 
     @ParameterizedTest
@@ -54,8 +50,7 @@ public final class TestDecoding extends X86Test {
                 1,
                 instructions.size(),
                 () -> String.format("Expected 1 instruction but %,d were found", instructions.size()));
-        final Instruction inst = instructions.get(0);
-        assertEquals(
-                expected, inst.toString(), () -> String.format("Expected '%s' but '%s' was decoded", expected, inst));
+        final String decoded = instructions.get(0).toString();
+        assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
     }
 }

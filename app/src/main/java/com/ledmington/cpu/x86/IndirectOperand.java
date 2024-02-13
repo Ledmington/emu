@@ -3,6 +3,8 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.ledmington.utils.BitUtils;
+
 /**
  * This class maps the following cases:
  * [reg1]
@@ -13,10 +15,18 @@ import java.util.Optional;
  */
 public final class IndirectOperand implements Operand {
 
-    private final Optional<Register> reg1;
-    private final Optional<Integer> constant;
-    private final Optional<Register> reg2;
-    private final Optional<Long> displacement;
+    private enum Type {
+        BYTE,
+        SHORT,
+        INT,
+        LONG;
+    }
+
+    private final Register reg1;
+    private final int constant;
+    private final Register reg2;
+    private final long displacement;
+    private final Type displacementType;
 
     public static IndirectOperandBuilder builder() {
         return new IndirectOperandBuilder();
@@ -28,6 +38,7 @@ public final class IndirectOperand implements Operand {
         private Optional<Integer> c = Optional.empty();
         private Optional<Register> reg2 = Optional.empty();
         private Optional<Long> displacement = Optional.empty();
+        private Type displacementType = null;
         private boolean alreadyBuilt = false;
 
         public IndirectOperandBuilder() {}
@@ -56,11 +67,28 @@ public final class IndirectOperand implements Operand {
             return this;
         }
 
+        public IndirectOperandBuilder displacement(final byte disp) {
+            return displacement((long) disp, Type.BYTE);
+        }
+
+        public IndirectOperandBuilder displacement(final short disp) {
+            return displacement(BitUtils.asLong(disp), Type.SHORT);
+        }
+
+        public IndirectOperandBuilder displacement(final int disp) {
+            return displacement(BitUtils.asLong(disp), Type.INT);
+        }
+
         public IndirectOperandBuilder displacement(final long disp) {
+            return displacement(disp, Type.LONG);
+        }
+
+        private IndirectOperandBuilder displacement(final long disp, final Type displacementType) {
             if (this.displacement.isPresent()) {
                 throw new IllegalStateException("Cannot define displacement twice");
             }
             this.displacement = Optional.of(disp);
+            this.displacementType = Type.LONG;
             return this;
         }
 
@@ -70,16 +98,35 @@ public final class IndirectOperand implements Operand {
             }
             alreadyBuilt = true;
 
+            // [reg1]
             if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isEmpty()) {
-                return new IndirectOperand(reg1, c, reg2, displacement);
-            } else if (reg1.isPresent() && c.isEmpty() && reg2.isPresent() && displacement.isEmpty()) {
-                return new IndirectOperand(reg1, c, reg2, displacement);
-            } else if (reg1.isEmpty() && c.isEmpty() && reg2.isPresent() && displacement.isEmpty()) {
-                return new IndirectOperand(reg1, c, reg2, displacement);
-            } else if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
-                return new IndirectOperand(reg1, c, reg2, displacement);
-            } else if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isPresent()) {
-                return new IndirectOperand(reg1, c, reg2, displacement);
+                return new IndirectOperand(reg1.orElseThrow(), 0, null, 0L, displacementType);
+            } else
+            // [reg1 + disp]
+            if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
+                return new IndirectOperand(reg1.orElseThrow(), 0, null, displacement.orElseThrow(), displacementType);
+            } else
+            // [disp]
+            if (reg1.isEmpty() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
+                return new IndirectOperand(null, 0, null, displacement.orElseThrow(), displacementType);
+            } else
+            // [reg2] -> [reg1]
+            if (reg1.isEmpty() && c.isEmpty() && reg2.isPresent() && displacement.isEmpty()) {
+                return new IndirectOperand(reg2.orElseThrow(), 0, null, 0L, displacementType);
+            } else
+            // [reg1*c + reg2]
+            if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
+                return new IndirectOperand(
+                        reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), 0L, displacementType);
+            } else
+            // [reg1*c + reg2 + disp]
+            if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isPresent()) {
+                return new IndirectOperand(
+                        reg1.orElseThrow(),
+                        c.orElseThrow(),
+                        reg2.orElseThrow(),
+                        displacement.orElseThrow(),
+                        displacementType);
             }
 
             throw new IllegalStateException("Cannot build an IndirectOperand with "
@@ -91,20 +138,20 @@ public final class IndirectOperand implements Operand {
     }
 
     private IndirectOperand(
-            final Optional<Register> reg1,
-            final Optional<Integer> constant,
-            final Optional<Register> reg2,
-            final Optional<Long> displacement) {
-        this.reg1 = Objects.requireNonNull(reg1);
-        this.constant = Objects.requireNonNull(constant);
-        this.reg2 = Objects.requireNonNull(reg2);
-        this.displacement = Objects.requireNonNull(displacement);
+            final Register reg1,
+            final int constant,
+            final Register reg2,
+            final long displacement,
+            final Type displacementType) {
+        this.reg1 = reg1;
+        this.constant = constant;
+        this.reg2 = reg2;
+        this.displacement = displacement;
+        this.displacementType = Objects.requireNonNull(displacementType);
 
-        if (constant.isPresent()) {
-            if (constant.orElseThrow() != 0 && Integer.bitCount(constant.orElseThrow()) != 1) {
-                throw new IllegalArgumentException(String.format(
-                        "Invalid 'constant' value: expected 0 or a power of two but was %,d", constant.orElseThrow()));
-            }
+        if (constant != 0 && Integer.bitCount(constant) != 1) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid 'constant' value: expected 0 or a power of two but was %,d", constant));
         }
     }
 
@@ -112,19 +159,31 @@ public final class IndirectOperand implements Operand {
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
         sb.append('[');
-        if (reg1.isPresent()) {
-            sb.append(reg1.orElseThrow().toIntelSyntax());
+        if (reg1 != null) {
+            sb.append(reg1.toIntelSyntax());
         }
-        if (constant.isPresent() && constant.orElseThrow() != 0) {
+        if (constant != 0) {
             sb.append('*');
-            sb.append(constant.orElseThrow());
+            sb.append(constant);
         }
-        if (reg2.isPresent() && !reg2.equals(reg1)) {
+        if (reg2 != null) {
             sb.append('+');
-            sb.append(reg2.orElseThrow().toIntelSyntax());
+            sb.append(reg2.toIntelSyntax());
         }
-        if (displacement.isPresent()) {
-            sb.append(String.format("%c0x%x", displacement.orElseThrow() < 0 ? '-' : '+', displacement.orElseThrow()));
+        if (displacement != 0) {
+            if (displacement > 0) {
+                sb.append(String.format("+0x%x", displacement));
+            } else {
+                sb.append(String.format(
+                        "-0x%x",
+                        switch (displacementType) {
+                            case BYTE -> (~BitUtils.asByte(displacement)) + 1;
+                            case SHORT -> (~BitUtils.asShort(displacement)) + 1;
+                            case INT -> (~BitUtils.asInt(displacement)) + 1;
+                            case LONG -> (~displacement) + 1;
+                            default -> throw new IllegalStateException();
+                        }));
+            }
         }
         sb.append(']');
         return sb.toString();

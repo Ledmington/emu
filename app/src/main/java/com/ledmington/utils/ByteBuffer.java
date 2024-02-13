@@ -20,6 +20,10 @@ public final class ByteBuffer {
         this.isLittleEndian = isLittleEndian;
     }
 
+    public boolean isLittleEndian() {
+        return isLittleEndian;
+    }
+
     public void setEndianness(final boolean isLittleEndian) {
         this.isLittleEndian = isLittleEndian;
     }
