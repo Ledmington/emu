@@ -3,15 +3,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class FormatTestFiles {
+
+    // Change to false to sort by hexadecimal
+    private static final boolean sortByMnemonic = true;
+    private static final boolean sortByHexadecimal = !sortByMnemonic;
+
     public static void main(final String[] args) {
         if (args.length > 0) {
             System.out.println("Command-line arguments were provided but not needed. Ignoring them.");
@@ -27,30 +33,36 @@ public final class FormatTestFiles {
     }
 
     private static List<String> readAllLines(final String filepath) {
-        final List<String> allLines = new ArrayList<>();
-        final Map<String, Integer> stats = new HashMap<>();
+        /*
+        You may be wondering "Why the hell a List of Sets of Strings?".
+        I couldn't find a better to solution to encode the fact that:
+        - comments, empty lines and blank lines need to be saved in order
+        - everything else is a group and does not need to be saved in order
+        So, comments, empty lines and blank will be Sets with a single element.
+         */
+        final List<Set<String>> lines = new ArrayList<>();
 
-        try (final InputStream is = new FileInputStream(filepath)) {
-            final InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
-            final BufferedReader br = new BufferedReader(reader);
-            int i = 0;
-            List<String> groupLines = new ArrayList<>();
-            for (String line; (line = br.readLine()) != null; i++) {
-                if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
-                    if (!groupLines.isEmpty()) {
-                        final int maxInstructionLength = groupLines.stream()
-                                .mapToInt(s -> s.split("\\|")[0].strip().length())
-                                .max()
-                                .orElseThrow();
-                        final String fmt = String.format("%%-%ds", maxInstructionLength);
-                        groupLines.stream()
-                                .sorted()
-                                .forEach(gl -> allLines.add(String.format(
-                                        fmt + " | %s", gl.split("\\|")[0].strip(), gl.split("\\|")[1].strip())));
-                    }
-                    allLines.add(line);
-                    groupLines.clear();
-                    groupLines = new ArrayList<>();
+        try (final BufferedReader br =
+                new BufferedReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_8))) {
+            int lineIndex = 0;
+            boolean isGroupEnded = false;
+            for (String line; (line = br.readLine()) != null; lineIndex++) {
+                // empty lines are added as they are
+                if (line.isEmpty()) {
+                    lines.add(Set.of(""));
+                    isGroupEnded = true;
+                    continue;
+                }
+                // blank lines are substituted with empty lines
+                if (line.isBlank()) {
+                    lines.add(Set.of(""));
+                    isGroupEnded = true;
+                    continue;
+                }
+                // comments are stripped before being added
+                if (line.startsWith("#")) {
+                    lines.add(Set.of(line.strip()));
+                    isGroupEnded = true;
                     continue;
                 }
 
@@ -58,26 +70,60 @@ public final class FormatTestFiles {
 
                 if (splitted.length != 2) {
                     throw new IllegalArgumentException(
-                            String.format("Line %,d: '%s' is not formatted correctly", i, line));
+                            String.format("Line %,d: '%s' is not formatted correctly", lineIndex, line));
                 }
-                groupLines.add(line);
 
-                // Collecting statistics
-                final String prefix = line.split(" ")[0];
-                if (stats.containsKey(prefix)) {
-                    stats.replace(prefix, stats.get(prefix) + 1);
+                if (isGroupEnded) {
+                    final Set<String> s = new HashSet<>();
+                    s.add(line.strip());
+                    lines.add(s);
+                    isGroupEnded = false;
                 } else {
-                    stats.put(prefix, 1);
+                    lines.get(lines.size() - 1).add(line.strip());
                 }
             }
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.printf("Read %,d lines:\n", allLines.size());
-        stats.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue((a, b) -> b - a))
-                .forEach(e -> System.out.printf("%,6d: '%s'\n", e.getValue(), e.getKey()));
+        System.out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
+
+        final List<String> allLines = new ArrayList<>();
+
+        for (final Set<String> ss : lines) {
+            if (ss.size() == 1) {
+                allLines.add(ss.stream().findFirst().orElseThrow());
+                continue;
+            }
+
+            final int maxInstructionLength = ss.stream()
+                    .mapToInt(s -> s.split("\\|")[0].strip().length())
+                    .max()
+                    .orElseThrow();
+            final String fmt = String.format("%%-%ds", maxInstructionLength);
+            final Map<String, String> m = new HashMap<>();
+            for (final String s : ss) {
+                final String[] splitted = s.split("\\|");
+                m.put(splitted[0].strip(), splitted[1].strip());
+            }
+
+            if (sortByMnemonic) {
+                m.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEach(e -> allLines.add(String.format(fmt + " | %s", e.getKey(), e.getValue())));
+            } else if (sortByHexadecimal) {
+                m.entrySet().stream()
+                        .sorted(Map.Entry.comparingByValue())
+                        .forEach(e -> allLines.add(String.format(fmt + " | %s", e.getKey(), e.getValue())));
+            } else {
+                throw new IllegalStateException("Both sortByMnemonic and sortByHexadecimal are false");
+            }
+        }
+
+        // Last empty line
+        if (!allLines.get(allLines.size() - 1).isEmpty()) {
+            allLines.add("");
+        }
 
         return allLines;
     }

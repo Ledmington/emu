@@ -2413,4 +2413,5 @@ xor esp,edx | 31 d4
 xor esp,esi | 31 f4
 xor esp,esp | 31 e4
 
-# Add
+# Pop
+pop rbx | 5b
