@@ -46,6 +46,8 @@ run {
 
 test {
 	useJUnitPlatform()
+	minHeapSize = "128m"
+	maxHeapSize = "512m"
 }
 
 testlogger {
@@ -104,10 +106,18 @@ spotless {
 tasks.compileJava.dependsOn(spotlessApply)
 
 tasks.register('downloadManual', Download) {
-	group 'Utilities'
+	group 'utilities'
 	description 'Downloads the Intel Software Developer Manual in the project root directory'
 	src "https://cdrdv2-public.intel.com/812392/325462-sdm-vol-1-2abcd-3abcd-4.pdf"
 	dest new File(project.getRootDir(), "intel-developer-manual.pdf")
 	overwrite false
 	acceptAnyCertificate true
+}
+
+tasks.register('formatTestFiles', JavaExec) {
+	group 'utilities'
+	description 'Formats in-place the test asm files inside app/test/resources'
+	dependsOn spotlessApply
+	classpath sourceSets.test.runtimeClasspath
+	mainClass = "FormatTestFiles"
 }
