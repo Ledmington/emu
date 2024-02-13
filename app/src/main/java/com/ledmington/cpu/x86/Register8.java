@@ -41,4 +41,8 @@ public final class Register8 implements Register {
     public String toIntelSyntax() {
         return mnemonic;
     }
+
+    public String toString() {
+        return mnemonic;
+    }
 }

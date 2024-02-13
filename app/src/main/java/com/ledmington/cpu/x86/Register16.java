@@ -42,4 +42,8 @@ public final class Register16 implements Register {
     public String toIntelSyntax() {
         return mnemonic;
     }
+
+    public String toString() {
+        return mnemonic;
+    }
 }

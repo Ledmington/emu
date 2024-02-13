@@ -58,4 +58,8 @@ public final class Register64 implements Register {
     public String toIntelSyntax() {
         return mnemonic;
     }
+
+    public String toString() {
+        return mnemonic;
+    }
 }
