@@ -6,17 +6,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public final class FormatTestFiles {
 
-    // Change to false to sort by hexadecimal
-    private static final boolean sortByMnemonic = true;
-    private static final boolean sortByHexadecimal = !sortByMnemonic;
+    private enum Sort {
+        BY_MNEMONIC,
+        BY_MNEMONIC_LENGTH,
+        BY_HEXADECIMAL,
+        BY_HEXADECIMAL_LENGTH
+    }
+
+    private static final Sort sort = Sort.BY_MNEMONIC;
 
     public static void main(final String[] args) {
         if (args.length > 0) {
@@ -107,17 +114,16 @@ public final class FormatTestFiles {
                 m.put(splitted[0].strip(), splitted[1].strip());
             }
 
-            if (sortByMnemonic) {
-                m.entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .forEach(e -> allLines.add(String.format(fmt + " | %s", e.getKey(), e.getValue())));
-            } else if (sortByHexadecimal) {
-                m.entrySet().stream()
-                        .sorted(Map.Entry.comparingByValue())
-                        .forEach(e -> allLines.add(String.format(fmt + " | %s", e.getKey(), e.getValue())));
-            } else {
-                throw new IllegalStateException("Both sortByMnemonic and sortByHexadecimal are false");
+            Stream<Map.Entry<String, String>> str = m.entrySet().stream();
+            switch (sort) {
+                case BY_MNEMONIC -> str = str.sorted(Map.Entry.comparingByKey());
+                case BY_MNEMONIC_LENGTH -> str =
+                        str.sorted(Map.Entry.comparingByKey(Comparator.comparingInt(String::length)));
+                case BY_HEXADECIMAL -> str = str.sorted(Map.Entry.comparingByValue());
+                case BY_HEXADECIMAL_LENGTH -> str =
+                        str.sorted(Map.Entry.comparingByValue(Comparator.comparingInt(String::length)));
             }
+            str.forEach(e -> allLines.add(String.format(fmt + " | %s", e.getKey(), e.getValue())));
         }
 
         // Last empty line
