@@ -126,7 +126,7 @@ public final class InstructionDecoder {
         final byte rm = modrm.rm();
         final Register operand1 =
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = registerFromCode(rm, rexPrefix.isOperand64Bit(), rexPrefix.extension());
+        final Register operand2 = registerFromCode(rm, rexPrefix.isOperand64Bit(), rexPrefix.b());
 
         /*final byte mod = modrm.mod();
         if (mod == (byte) 0x00 && rm == (byte) 0x04) {
@@ -177,18 +177,19 @@ public final class InstructionDecoder {
                         IndirectOperand.builder().reg1(operand2).build());
             }
             case (byte) 0x01 -> { // 01
+                final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
                 if (rm == (byte) 0x04 /* 100 */) {
                     // SIB byte
                     final SIB sib = new SIB(b.read1());
                     logger.debug("Read SIB byte: %s", sib);
                     // TODO
                     throw new Error("Not implemented");
+                } else {
+                    iob.reg1(operand2);
                 }
                 final byte disp8 = b.read1();
                 yield new Instruction(
-                        Opcode.LEA,
-                        operand1,
-                        IndirectOperand.builder().displacement(disp8).build());
+                        Opcode.LEA, operand1, iob.displacement(disp8).build());
             }
             case (byte) 0x02 -> { // 10
                 final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
@@ -206,10 +207,7 @@ public final class InstructionDecoder {
                             .constant(1 << BitUtils.asInt(sib.scale()))
                             .reg2(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()));
                 }
-                final boolean oldEndianness = b.isLittleEndian();
-                b.setEndianness(true);
-                final int disp32 = b.read4();
-                b.setEndianness(oldEndianness);
+                final int disp32 = b.read4LittleEndian();
                 yield new Instruction(
                         Opcode.LEA, operand1, iob.displacement(disp32).build());
             }

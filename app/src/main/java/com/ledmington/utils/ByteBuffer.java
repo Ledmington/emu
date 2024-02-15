@@ -33,15 +33,16 @@ public final class ByteBuffer {
     }
 
     public void setPosition(final int pos) {
-        this.i = pos;
+        i = pos;
     }
 
     public void goBack(final int n) {
-        // logger.debug("Going back %,d bytes", n);
-        this.i -= n;
+
+        move(-n);
     }
 
     private void move(final int amount) {
+        // logger.debug("Moving %,d bytes", amount);
         i += amount;
     }
 
@@ -79,6 +80,18 @@ public final class ByteBuffer {
         }
         move(4);
         // logger.debug("Read 0x%08x", x);
+        return x;
+    }
+
+    /**
+     * Reads 4 bytes in little-endian without modifying the endianness.
+     */
+    public int read4LittleEndian() {
+        // TODO: refactor
+        final boolean oldEndianness = isLittleEndian;
+        isLittleEndian = true;
+        final int x = read4();
+        isLittleEndian = false;
         return x;
     }
 

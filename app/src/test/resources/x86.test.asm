@@ -32,7 +32,7 @@ jmp 0x2e301 | e9 fc e2 02 00
 # And
 and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 
-# lea
+# Lea
 lea eax,[r10-0xf]                | 41 8d 42 f1
 lea eax,[r11+0x1]                | 41 8d 43 01
 lea eax,[r11-0x19]               | 41 8d 43 e7
