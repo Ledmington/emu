@@ -47,7 +47,7 @@ public final class IndirectOperand implements Operand {
             if (this.reg1.isPresent()) {
                 throw new IllegalStateException("Cannot define reg1 twice");
             }
-            this.reg1 = Optional.of(r);
+            this.reg1 = (r == null) ? Optional.empty() : Optional.of(r);
             return this;
         }
 
@@ -63,7 +63,7 @@ public final class IndirectOperand implements Operand {
             if (this.reg2.isPresent()) {
                 throw new IllegalStateException("Cannot define reg2 twice");
             }
-            this.reg2 = Optional.of(r);
+            this.reg2 = (r == null) ? Optional.empty() : Optional.of(r);
             return this;
         }
 
@@ -72,11 +72,11 @@ public final class IndirectOperand implements Operand {
         }
 
         public IndirectOperandBuilder displacement(final short disp) {
-            return displacement(BitUtils.asLong(disp), Type.SHORT);
+            return displacement((long) disp, Type.SHORT);
         }
 
         public IndirectOperandBuilder displacement(final int disp) {
-            return displacement(BitUtils.asLong(disp), Type.INT);
+            return displacement((long) disp, Type.INT);
         }
 
         public IndirectOperandBuilder displacement(final long disp) {
@@ -88,7 +88,7 @@ public final class IndirectOperand implements Operand {
                 throw new IllegalStateException("Cannot define displacement twice");
             }
             this.displacement = Optional.of(disp);
-            this.displacementType = Type.LONG;
+            this.displacementType = displacementType;
             return this;
         }
 
@@ -111,8 +111,9 @@ public final class IndirectOperand implements Operand {
                 return new IndirectOperand(null, 0, null, displacement.orElseThrow(), displacementType);
             } else
             // [reg2] -> [reg1]
-            if (reg1.isEmpty() && c.isEmpty() && reg2.isPresent() && displacement.isEmpty()) {
-                return new IndirectOperand(reg2.orElseThrow(), 0, null, 0L, displacementType);
+            if (reg1.isEmpty() && reg2.isPresent()) {
+                return new IndirectOperand(
+                        reg2.orElseThrow(), c.orElseThrow(), null, displacement.orElseThrow(), displacementType);
             } else
             // [reg1*c + reg2]
             if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
@@ -162,7 +163,7 @@ public final class IndirectOperand implements Operand {
         if (reg1 != null) {
             sb.append(reg1.toIntelSyntax());
         }
-        if (constant != 0) {
+        if (constant != 0 && constant != 1) {
             sb.append('*');
             sb.append(constant);
         }
@@ -176,12 +177,12 @@ public final class IndirectOperand implements Operand {
             } else {
                 sb.append(String.format(
                         "-0x%x",
+                        // Computing 2's complement by hand
                         switch (displacementType) {
                             case BYTE -> (~BitUtils.asByte(displacement)) + 1;
                             case SHORT -> (~BitUtils.asShort(displacement)) + 1;
                             case INT -> (~BitUtils.asInt(displacement)) + 1;
                             case LONG -> (~displacement) + 1;
-                            default -> throw new IllegalStateException();
                         }));
             }
         }

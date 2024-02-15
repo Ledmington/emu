@@ -128,7 +128,7 @@ public final class InstructionDecoder {
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
         final Register operand2 = registerFromCode(rm, rexPrefix.isOperand64Bit(), rexPrefix.extension());
 
-        final byte mod = modrm.mod();
+        /*final byte mod = modrm.mod();
         if (mod == (byte) 0x00 && rm == (byte) 0x04) {
             // SIB byte needed
             final SIB sib = new SIB(b.read1());
@@ -136,6 +136,7 @@ public final class InstructionDecoder {
             // TODO
         } else if ((mod == (byte) 0x00 && rm == (byte) 0x05) || mod == (byte) 0x02) {
             // 32-bit displacement
+            // displacements and immediate values are always little-endian in Intel asm
             final boolean oldEndianness = b.isLittleEndian();
             b.setEndianness(true);
             final int disp = b.read4();
@@ -152,9 +153,70 @@ public final class InstructionDecoder {
                     Opcode.LEA,
                     operand1,
                     IndirectOperand.builder().reg1(operand2).displacement(disp).build());
-        }
+        }*/
 
-        return new Instruction(Opcode.LEA, operand1, operand2);
+        // Table at page 530
+        final byte mod = modrm.mod();
+        return switch (mod) {
+            case (byte) 0x00 -> { // 00
+                if (rm == (byte) 0x04 /* 100 */) {
+                    // just SIB byte
+                    final SIB sib = new SIB(b.read1());
+                    logger.debug("Read SIB byte: %s", sib);
+                    // TODO
+                    throw new Error("Not implemented");
+                }
+                if (rm == (byte) 0x05 /* 101 */) {
+                    // just a 32-bit displacement (not sign extended) added to the index
+                    // TODO
+                    throw new Error("Not implemented");
+                }
+                yield new Instruction(
+                        Opcode.LEA,
+                        operand1,
+                        IndirectOperand.builder().reg1(operand2).build());
+            }
+            case (byte) 0x01 -> { // 01
+                if (rm == (byte) 0x04 /* 100 */) {
+                    // SIB byte
+                    final SIB sib = new SIB(b.read1());
+                    logger.debug("Read SIB byte: %s", sib);
+                    // TODO
+                    throw new Error("Not implemented");
+                }
+                final byte disp8 = b.read1();
+                yield new Instruction(
+                        Opcode.LEA,
+                        operand1,
+                        IndirectOperand.builder().displacement(disp8).build());
+            }
+            case (byte) 0x02 -> { // 10
+                final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
+                if (rm == (byte) 0x04 /* 100 */) {
+                    // SIB byte
+                    final SIB sib = new SIB(b.read1());
+                    logger.debug("Read SIB byte: %s", sib);
+                    iob.reg1(
+                                    (sib.index() == (byte) 0x04 /* 100 */
+                                            ? null
+                                            : registerFromCode(
+                                                    sib.index(),
+                                                    rexPrefix.isOperand64Bit(),
+                                                    rexPrefix.SIBIndexExtension())))
+                            .constant(1 << BitUtils.asInt(sib.scale()))
+                            .reg2(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()));
+                }
+                final boolean oldEndianness = b.isLittleEndian();
+                b.setEndianness(true);
+                final int disp32 = b.read4();
+                b.setEndianness(oldEndianness);
+                yield new Instruction(
+                        Opcode.LEA, operand1, iob.displacement(disp32).build());
+            }
+            case (byte) 0x03 -> // 11
+            throw new Error("Not implemented");
+            default -> throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
+        };
     }
 
     /**
