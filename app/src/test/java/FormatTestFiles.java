@@ -41,11 +41,11 @@ public final class FormatTestFiles {
 
     private static List<String> readAllLines(final String filepath) {
         /*
-        You may be wondering "Why the hell a List of Sets of Strings?".
-        I couldn't find a better to solution to encode the fact that:
-        - comments, empty lines and blank lines need to be saved in order
-        - everything else is a group and does not need to be saved in order
-        So, comments, empty lines and blank will be Sets with a single element.
+         * You may be wondering "Why the hell a List of Sets of Strings?".
+         * I couldn't find a better to solution to encode the fact that:
+         * - comments, empty lines and blank lines need to be saved in order
+         * - everything else is a group and does not need to be saved in order
+         * So, comments, empty lines and blank will be Sets with a single element.
          */
         final List<Set<String>> lines = new ArrayList<>();
 
