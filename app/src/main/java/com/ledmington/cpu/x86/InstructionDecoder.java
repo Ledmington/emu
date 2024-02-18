@@ -121,8 +121,9 @@ public final class InstructionDecoder {
     }
 
     private Instruction parseLEA(final ByteBuffer b, final RexPrefix rexPrefix) {
-        final ModRM modrm = new ModRM(b.read1());
-        logger.debug("Read ModR/M byte: %s", modrm);
+        final byte _modrm = b.read1();
+        final ModRM modrm = new ModRM(_modrm);
+        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
         final byte rm = modrm.rm();
         final Register operand1 =
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
@@ -214,52 +215,6 @@ public final class InstructionDecoder {
             case (byte) 0x03 -> // 11
             throw new Error("Not implemented");
             default -> throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
-        };
-    }
-
-    /**
-     * Returns the number of operands required by the given opcode.
-     * <p>
-     * As stated in section 2.2.1.1 of Intel's Software Developer Manual,
-     * any x86 instruction can be of three formats:
-     * - 1 operand: the reg field of the opcode is used
-     * - 2 operands: the reg and r/m fields of the ModRM byte are used
-     * - 3 operands: the reg field of the ModRM byte, the base and the index fields
-     * of the SIB byte
-     * Zero-operand instructions like NOP are not mentioned since they are pretty
-     * rare.
-     */
-    private int operandsRequired(final byte opcode) {
-        return switch (opcode) {
-            case NOP_OPCODE -> 0;
-            case MOV_TO_EAX_OPCODE,
-                    MOV_TO_EBX_OPCODE,
-                    MOV_TO_ECX_OPCODE,
-                    MOV_TO_EDX_OPCODE,
-                    MOV_TO_ESI_OPCODE,
-                    MOV_TO_EDI_OPCODE,
-                    MOV_TO_ESP_OPCODE,
-                    MOV_TO_EBP_OPCODE -> 1;
-            case MOV_R2R_OPCODE, MOV_R2R_64_OPCODE, LEA_OPCODE, XOR_Ev_Gv_OPCODE -> 2;
-            default -> throw new IllegalArgumentException(String.format("Unknown opcode 0x%02x (%d)", opcode, opcode));
-        };
-    }
-
-    private Opcode opcodeFromByte(final byte opcode) {
-        return switch (opcode) {
-            case NOP_OPCODE -> Opcode.NOP;
-            case MOV_R2R_OPCODE,
-                    MOV_R2R_64_OPCODE,
-                    MOV_TO_EAX_OPCODE,
-                    MOV_TO_EBX_OPCODE,
-                    MOV_TO_ECX_OPCODE,
-                    MOV_TO_EDX_OPCODE,
-                    MOV_TO_ESI_OPCODE,
-                    MOV_TO_EDI_OPCODE,
-                    MOV_TO_ESP_OPCODE,
-                    MOV_TO_EBP_OPCODE -> Opcode.MOV;
-            case LEA_OPCODE -> Opcode.LEA;
-            default -> throw new IllegalArgumentException(String.format("Unknown opcode 0x%02x (%d)", opcode, opcode));
         };
     }
 
