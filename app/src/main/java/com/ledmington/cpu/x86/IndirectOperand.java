@@ -98,6 +98,12 @@ public final class IndirectOperand implements Operand {
             }
             alreadyBuilt = true;
 
+            // swap reg1 with reg2 if reg2 is defined but reg1 is not
+            if (reg1.isEmpty() && reg2.isPresent()) {
+                reg1 = reg2;
+                reg2 = Optional.empty();
+            }
+
             // [reg1]
             if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isEmpty()) {
                 return new IndirectOperand(reg1.orElseThrow(), 0, null, 0L, displacementType);
@@ -110,15 +116,15 @@ public final class IndirectOperand implements Operand {
             if (reg1.isEmpty() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
                 return new IndirectOperand(null, 0, null, displacement.orElseThrow(), displacementType);
             } else
-            // [reg2] -> [reg1]
-            if (reg1.isEmpty() && reg2.isPresent()) {
-                return new IndirectOperand(
-                        reg2.orElseThrow(), c.orElseThrow(), null, displacement.orElseThrow(), displacementType);
-            } else
             // [reg1*c + reg2]
             if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
                 return new IndirectOperand(
                         reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), 0L, displacementType);
+            } else
+            // [reg1*c + disp]
+            if (reg1.isPresent() && c.isPresent() && reg2.isEmpty() && displacement.isPresent()) {
+                return new IndirectOperand(
+                        reg1.orElseThrow(), c.orElseThrow(), null, displacement.orElseThrow(), displacementType);
             } else
             // [reg1*c + reg2 + disp]
             if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isPresent()) {
@@ -131,9 +137,9 @@ public final class IndirectOperand implements Operand {
             }
 
             throw new IllegalStateException("Cannot build an IndirectOperand with "
-                    + (reg1.isEmpty() ? "no reg1" : "reg1=" + reg1.orElseThrow().toString()) + ", "
+                    + (reg1.isEmpty() ? "no reg1" : "reg1=" + reg1.orElseThrow()) + ", "
                     + (c.isEmpty() ? "no constant" : "constant=" + c.orElseThrow()) + ", "
-                    + (reg2.isEmpty() ? "no reg2" : "reg2=" + reg2.orElseThrow().toString()) + ", "
+                    + (reg2.isEmpty() ? "no reg2" : "reg2=" + reg2.orElseThrow()) + ", "
                     + (displacement.isEmpty() ? "no displacement" : "displacement=" + displacement.orElseThrow()));
         }
     }
@@ -171,20 +177,18 @@ public final class IndirectOperand implements Operand {
             sb.append('+');
             sb.append(reg2.toIntelSyntax());
         }
-        if (displacement != 0) {
-            if (displacement > 0) {
-                sb.append(String.format("+0x%x", displacement));
-            } else {
-                sb.append(String.format(
-                        "-0x%x",
-                        // Computing 2's complement by hand
-                        switch (displacementType) {
-                            case BYTE -> (~BitUtils.asByte(displacement)) + 1;
-                            case SHORT -> (~BitUtils.asShort(displacement)) + 1;
-                            case INT -> (~BitUtils.asInt(displacement)) + 1;
-                            case LONG -> (~displacement) + 1;
-                        }));
-            }
+        if (displacement >= 0) {
+            sb.append(String.format("+0x%x", displacement));
+        } else {
+            sb.append(String.format(
+                    "-0x%x",
+                    // Computing 2's complement by hand
+                    switch (displacementType) {
+                        case BYTE -> (~BitUtils.asByte(displacement)) + 1;
+                        case SHORT -> (~BitUtils.asShort(displacement)) + 1;
+                        case INT -> (~BitUtils.asInt(displacement)) + 1;
+                        case LONG -> (~displacement) + 1;
+                    }));
         }
         sb.append(']');
         return sb.toString();

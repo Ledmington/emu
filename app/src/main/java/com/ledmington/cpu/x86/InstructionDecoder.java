@@ -142,19 +142,21 @@ public final class InstructionDecoder {
                     final SIB sib = new SIB(_sib);
                     logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
-                    iob.reg1(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()))
-                            .reg2(
+                    final int disp32 = b.read4LittleEndian();
+                    iob.reg2(
                                     (sib.index() == (byte) 0x04 /* 100 */
                                             ? null
                                             : registerFromCode(
                                                     sib.index(),
                                                     rexPrefix.isOperand64Bit(),
                                                     rexPrefix.SIBIndexExtension())))
-                            .constant(1 << BitUtils.asInt(sib.scale()));
+                            .constant(1 << BitUtils.asInt(sib.scale()))
+                            .displacement(disp32);
+
                 } else if (rm == (byte) 0x05 /* 101 */) {
                     // just a 32-bit displacement (not sign extended) added to the index
                     final int disp32 = b.read4LittleEndian();
-                    iob.reg1(Register64.RIP).displacement(disp32);
+                    iob.reg1(Register64.RIP).displacement((long) disp32);
                 }
                 yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
