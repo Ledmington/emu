@@ -153,8 +153,8 @@ public final class InstructionDecoder {
                             .constant(1 << BitUtils.asInt(sib.scale()));
                 } else if (rm == (byte) 0x05 /* 101 */) {
                     // just a 32-bit displacement (not sign extended) added to the index
-                    // TODO
-                    throw new Error("Not implemented");
+                    final int disp32 = b.read4LittleEndian();
+                    iob.reg1(Register64.RIP).displacement(disp32);
                 }
                 yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
