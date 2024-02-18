@@ -34,6 +34,7 @@ and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 
 # Lea
 lea eax,[r10-0xf]                | 41 8d 42 f1
+lea eax,[r10d-0xf]               | 67 41 8d 42 f1
 lea eax,[r11+0x1]                | 41 8d 43 01
 lea eax,[r11-0x19]               | 41 8d 43 e7
 lea eax,[r13*8-0x1]              | 42 8d 04 ed ff ff ff ff
@@ -67,6 +68,7 @@ lea eax,[rdx-0x1c]               | 8d 42 e4
 lea eax,[rdx-0x30]               | 8d 42 d0
 lea eax,[rdx-0x3]                | 8d 42 fd
 lea eax,[rdx-0x77]               | 8d 42 89
+lea eax,[rdx-0xf]                | 8d 42 f1
 lea eax,[rsi+0x1]                | 8d 46 01
 lea eax,[rsi+0x2]                | 8d 46 02
 lea eax,[rsi-0x1]                | 8d 46 ff

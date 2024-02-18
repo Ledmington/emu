@@ -112,7 +112,7 @@ public final class InstructionDecoder {
             return switch (opcodeFirstByte) {
                 case NOP_OPCODE -> new Instruction(Opcode.NOP);
                 case LEA_OPCODE -> // page 1191
-                parseLEA(b, rexPrefix);
+                parseLEA(b, p4.isPresent(), rexPrefix);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
             };
         }
@@ -120,41 +120,16 @@ public final class InstructionDecoder {
         throw new IllegalArgumentException("Could not decode any instruction");
     }
 
-    private Instruction parseLEA(final ByteBuffer b, final RexPrefix rexPrefix) {
+    private Instruction parseLEA(
+            final ByteBuffer b, final boolean hasAddressSizeOverridePrefix, final RexPrefix rexPrefix) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
         final byte rm = modrm.rm();
         final Register operand1 =
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = registerFromCode(rm, rexPrefix.isOperand64Bit(), rexPrefix.b());
-
-        /*final byte mod = modrm.mod();
-        if (mod == (byte) 0x00 && rm == (byte) 0x04) {
-            // SIB byte needed
-            final SIB sib = new SIB(b.read1());
-            logger.debug("Read SIB byte: %s", sib);
-            // TODO
-        } else if ((mod == (byte) 0x00 && rm == (byte) 0x05) || mod == (byte) 0x02) {
-            // 32-bit displacement
-            // displacements and immediate values are always little-endian in Intel asm
-            final boolean oldEndianness = b.isLittleEndian();
-            b.setEndianness(true);
-            final int disp = b.read4();
-            b.setEndianness(oldEndianness);
-            logger.debug("Displacement: 0x%08x", disp);
-            return new Instruction(
-                    Opcode.LEA,
-                    operand1,
-                    IndirectOperand.builder().reg1(operand2).displacement(disp).build());
-        } else if (mod == (byte) 0x01) {
-            // 8-bit displacement
-            final byte disp = b.read1();
-            return new Instruction(
-                    Opcode.LEA,
-                    operand1,
-                    IndirectOperand.builder().reg1(operand2).displacement(disp).build());
-        }*/
+        final Register operand2 =
+                registerFromCode(rm, !hasAddressSizeOverridePrefix || rexPrefix.isOperand64Bit(), rexPrefix.b());
 
         // Table at page 530
         final byte mod = modrm.mod();
@@ -312,12 +287,6 @@ public final class InstructionDecoder {
     private boolean isLegacyPrefixGroup4(final byte prefix) {
         final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
         return prefix == ADDRESS_SIZE_OVERRIDE_PREFIX;
-    }
-
-    private boolean isREXPrefix(final byte opcode) {
-        final byte REX_PREFIX_MASK = (byte) 0xf0;
-        final byte REX_PREFIX = (byte) 0x40;
-        return (opcode & REX_PREFIX_MASK) == REX_PREFIX;
     }
 
     private boolean isMultibyteOpcode(final byte opcode) {
