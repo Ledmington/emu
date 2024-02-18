@@ -156,10 +156,19 @@ public final class InstructionDecoder {
                 final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
                 if (rm == (byte) 0x04 /* 100 */) {
                     // SIB byte
-                    final SIB sib = new SIB(b.read1());
-                    logger.debug("Read SIB byte: %s", sib);
-                    // TODO
-                    throw new Error("Not implemented");
+                    final byte _sib = b.read1();
+                    final SIB sib = new SIB(_sib);
+                    logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
+
+                    iob.reg1(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()))
+                            .reg2(
+                                    (sib.index() == (byte) 0x04 /* 100 */
+                                            ? null
+                                            : registerFromCode(
+                                                    sib.index(),
+                                                    rexPrefix.isOperand64Bit(),
+                                                    rexPrefix.SIBIndexExtension())))
+                            .constant(1 << BitUtils.asInt(sib.scale()));
                 } else {
                     iob.reg1(operand2);
                 }
