@@ -169,26 +169,27 @@ public final class IndirectOperand implements Operand {
         if (reg1 != null) {
             sb.append(reg1.toIntelSyntax());
         }
-        if (constant != 0 && constant != 1) {
-            sb.append('*');
-            sb.append(constant);
-        }
         if (reg2 != null) {
             sb.append('+');
             sb.append(reg2.toIntelSyntax());
         }
-        if (displacement >= 0) {
-            sb.append(String.format("+0x%x", displacement));
-        } else {
-            sb.append(String.format(
-                    "-0x%x",
-                    // Computing 2's complement by hand
-                    switch (displacementType) {
-                        case BYTE -> (~BitUtils.asByte(displacement)) + 1;
-                        case SHORT -> (~BitUtils.asShort(displacement)) + 1;
-                        case INT -> (~BitUtils.asInt(displacement)) + 1;
-                        case LONG -> (~displacement) + 1;
-                    }));
+        if (constant != 0 && constant != 1) {
+            sb.append('*');
+            sb.append(constant);
+        }
+        if (displacement != 0) {
+            long d = displacement;
+            if (displacement < 0) {
+                d = switch (displacementType) {
+                    case BYTE -> (~BitUtils.asByte(displacement)) + 1;
+                    case SHORT -> (~BitUtils.asShort(displacement)) + 1;
+                    case INT -> (~BitUtils.asInt(displacement)) + 1;
+                    case LONG -> (~displacement) + 1;};
+            }
+            if (sb.length() > 1) {
+                sb.append((displacement < 0) ? '-' : '+');
+            }
+            sb.append(String.format("0x%x", d));
         }
         sb.append(']');
         return sb.toString();
