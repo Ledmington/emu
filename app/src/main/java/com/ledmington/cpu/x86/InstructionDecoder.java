@@ -135,22 +135,28 @@ public final class InstructionDecoder {
         final byte mod = modrm.mod();
         return switch (mod) {
             case (byte) 0x00 -> { // 00
+                final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
                 if (rm == (byte) 0x04 /* 100 */) {
                     // just SIB byte
-                    final SIB sib = new SIB(b.read1());
-                    logger.debug("Read SIB byte: %s", sib);
-                    // TODO
-                    throw new Error("Not implemented");
-                }
-                if (rm == (byte) 0x05 /* 101 */) {
+                    final byte _sib = b.read1();
+                    final SIB sib = new SIB(_sib);
+                    logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
+
+                    iob.reg1(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()))
+                            .reg2(
+                                    (sib.index() == (byte) 0x04 /* 100 */
+                                            ? null
+                                            : registerFromCode(
+                                                    sib.index(),
+                                                    rexPrefix.isOperand64Bit(),
+                                                    rexPrefix.SIBIndexExtension())))
+                            .constant(1 << BitUtils.asInt(sib.scale()));
+                } else if (rm == (byte) 0x05 /* 101 */) {
                     // just a 32-bit displacement (not sign extended) added to the index
                     // TODO
                     throw new Error("Not implemented");
                 }
-                yield new Instruction(
-                        Opcode.LEA,
-                        operand1,
-                        IndirectOperand.builder().reg1(operand2).build());
+                yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
             case (byte) 0x01 -> { // 01
                 final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();

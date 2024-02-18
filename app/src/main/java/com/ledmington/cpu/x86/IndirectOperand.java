@@ -38,7 +38,7 @@ public final class IndirectOperand implements Operand {
         private Optional<Integer> c = Optional.empty();
         private Optional<Register> reg2 = Optional.empty();
         private Optional<Long> displacement = Optional.empty();
-        private Type displacementType = null;
+        private Type displacementType = Type.LONG;
         private boolean alreadyBuilt = false;
 
         public IndirectOperandBuilder() {}
