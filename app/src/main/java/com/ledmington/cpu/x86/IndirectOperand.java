@@ -25,7 +25,7 @@ public final class IndirectOperand implements Operand {
     private final Register reg1;
     private final int constant;
     private final Register reg2;
-    private final long displacement;
+    private final Optional<Long> displacement;
     private final Type displacementType;
 
     public static IndirectOperandBuilder builder() {
@@ -106,34 +106,29 @@ public final class IndirectOperand implements Operand {
 
             // [reg1]
             if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isEmpty()) {
-                return new IndirectOperand(reg1.orElseThrow(), 0, null, 0L, displacementType);
+                return new IndirectOperand(reg1.orElseThrow(), 0, null, displacement, displacementType);
             } else
             // [reg1 + disp]
             if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(reg1.orElseThrow(), 0, null, displacement.orElseThrow(), displacementType);
+                return new IndirectOperand(reg1.orElseThrow(), 0, null, displacement, displacementType);
             } else
             // [disp]
             if (reg1.isEmpty() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(null, 0, null, displacement.orElseThrow(), displacementType);
+                return new IndirectOperand(null, 0, null, displacement, displacementType);
             } else
             // [reg1*c + reg2]
             if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
                 return new IndirectOperand(
-                        reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), 0L, displacementType);
+                        reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), displacement, displacementType);
             } else
             // [reg1*c + disp]
             if (reg1.isPresent() && c.isPresent() && reg2.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(
-                        reg1.orElseThrow(), c.orElseThrow(), null, displacement.orElseThrow(), displacementType);
+                return new IndirectOperand(reg1.orElseThrow(), c.orElseThrow(), null, displacement, displacementType);
             } else
             // [reg1*c + reg2 + disp]
             if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isPresent()) {
                 return new IndirectOperand(
-                        reg1.orElseThrow(),
-                        c.orElseThrow(),
-                        reg2.orElseThrow(),
-                        displacement.orElseThrow(),
-                        displacementType);
+                        reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), displacement, displacementType);
             }
 
             throw new IllegalStateException("Cannot build an IndirectOperand with "
@@ -148,12 +143,12 @@ public final class IndirectOperand implements Operand {
             final Register reg1,
             final int constant,
             final Register reg2,
-            final long displacement,
+            final Optional<Long> displacement,
             final Type displacementType) {
         this.reg1 = reg1;
         this.constant = constant;
         this.reg2 = reg2;
-        this.displacement = displacement;
+        this.displacement = Objects.requireNonNull(displacement);
         this.displacementType = Objects.requireNonNull(displacementType);
 
         if (constant != 0 && Integer.bitCount(constant) != 1) {
@@ -177,17 +172,17 @@ public final class IndirectOperand implements Operand {
             sb.append('*');
             sb.append(constant);
         }
-        if (displacement != 0) {
-            long d = displacement;
-            if (displacement < 0) {
+        if (displacement.isPresent()) {
+            long d = displacement.orElseThrow();
+            if (displacement.orElseThrow() < 0) {
                 d = switch (displacementType) {
-                    case BYTE -> (~BitUtils.asByte(displacement)) + 1;
-                    case SHORT -> (~BitUtils.asShort(displacement)) + 1;
-                    case INT -> (~BitUtils.asInt(displacement)) + 1;
-                    case LONG -> (~displacement) + 1;};
+                    case BYTE -> (~BitUtils.asByte(d)) + 1;
+                    case SHORT -> (~BitUtils.asShort(d)) + 1;
+                    case INT -> (~BitUtils.asInt(d)) + 1;
+                    case LONG -> (~d) + 1;};
             }
             if (sb.length() > 1) {
-                sb.append((displacement < 0) ? '-' : '+');
+                sb.append((displacement.orElseThrow() < 0) ? '-' : '+');
             }
             sb.append(String.format("0x%x", d));
         }
