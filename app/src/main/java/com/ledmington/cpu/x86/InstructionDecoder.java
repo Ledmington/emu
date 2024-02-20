@@ -129,7 +129,7 @@ public final class InstructionDecoder {
         final Register operand1 =
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
         final Register operand2 =
-                registerFromCode(rm, !hasAddressSizeOverridePrefix || rexPrefix.isOperand64Bit(), rexPrefix.b());
+                registerFromCode(rm, !hasAddressSizeOverridePrefix /*|| rexPrefix.isOperand64Bit()*/, rexPrefix.b());
 
         // Table at page 530
         final byte mod = modrm.mod();
@@ -146,9 +146,12 @@ public final class InstructionDecoder {
                         iob.reg2(registerFromCode(
                                         sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()))
                                 .constant(1 << BitUtils.asInt(sib.scale()));
+                    } else {
+                        iob.reg2(operand2).constant(1);
                     }
                     if (sib.base() != (byte) 0x05 /* 101 */) {
-                        iob.reg1(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.extension()));
+                        iob.reg1(registerFromCode(
+                                sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension()));
                     } else {
                         final int disp32 = b.read4LittleEndian();
                         iob.displacement(disp32);
@@ -157,6 +160,8 @@ public final class InstructionDecoder {
                     // just a 32-bit displacement (not sign extended) added to the index
                     final int disp32 = b.read4LittleEndian();
                     iob.reg1(Register64.RIP).displacement((long) disp32);
+                } else {
+                    iob.reg1(operand2);
                 }
                 yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
@@ -181,8 +186,8 @@ public final class InstructionDecoder {
                     iob.reg1(operand2);
                 }
                 final byte disp8 = b.read1();
-                yield new Instruction(
-                        Opcode.LEA, operand1, iob.displacement(disp8).build());
+                iob.displacement(disp8);
+                yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
             case (byte) 0x02 -> { // 10
                 final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
@@ -196,16 +201,16 @@ public final class InstructionDecoder {
                                             ? null
                                             : registerFromCode(
                                                     sib.index(),
-                                                    rexPrefix.isOperand64Bit(),
+                                                    !hasAddressSizeOverridePrefix,
                                                     rexPrefix.SIBIndexExtension())))
                             .constant(1 << BitUtils.asInt(sib.scale()))
-                            .reg2(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()));
+                            .reg2(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.extension()));
                 } else {
                     iob.reg1(operand2);
                 }
                 final int disp32 = b.read4LittleEndian();
-                yield new Instruction(
-                        Opcode.LEA, operand1, iob.displacement(disp32).build());
+                iob.displacement(disp32);
+                yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
             case (byte) 0x03 -> // 11
             throw new Error("Not implemented");

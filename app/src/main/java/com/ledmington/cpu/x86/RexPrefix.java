@@ -63,6 +63,14 @@ public final class RexPrefix {
         return b;
     }
 
+    public boolean SIBBaseExtension() {
+        return b;
+    }
+
+    public boolean ModRMRMExtension() {
+        return b;
+    }
+
     public int hashCode() {
         int h = 17;
         h = 31 + h + (w ? 1 : 0);
