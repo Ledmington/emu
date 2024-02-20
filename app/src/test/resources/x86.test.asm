@@ -99,6 +99,7 @@ lea ebx,[rdx-0x61]       | 8d 5a 9f
 lea ebx,[rsi+0x1]        | 8d 5e 01
 lea ebx,[rsi+rbx*2+0x1]  | 8d 5c 5e 01
 lea ebx,[rsi-0x1]        | 8d 5e ff
+lea ecx,[edx+edx*8]      | 67 8d 0c d2
 lea ecx,[r10-0x6]        | 41 8d 4a fa
 lea ecx,[r11-0x22]       | 41 8d 4b de
 lea ecx,[r11-0x30]       | 41 8d 4b d0
@@ -150,6 +151,7 @@ lea ecx,[rdi-0x30]       | 8d 4f d0
 lea ecx,[rdi-0x9]        | 8d 4f f7
 lea ecx,[rdx+0x1]        | 8d 4a 01
 lea ecx,[rdx+0x8]        | 8d 4a 08
+lea ecx,[rdx+rdx*8+0x1]  | 8d 4c d2 01
 lea ecx,[rdx+rdx*8]      | 8d 0c d2
 lea ecx,[rdx+rdx]        | 8d 0c 12
 lea ecx,[rdx+rsi]        | 8d 0c 32
@@ -1164,6 +1166,7 @@ lea rbx,[rsp+0x8]        | 48 8d 5c 24 08
 lea rbx,[rsp+0xb0]       | 48 8d 9c 24 b0 00 00 00
 lea rbx,[rsp+0xf0]       | 48 8d 9c 24 f0 00 00 00
 lea rbx,[rsp+0xf]        | 48 8d 5c 24 0f
+lea rcx,[edx+edx*8]      | 67 48 8d 0c d2
 lea rcx,[r10+0x1]        | 49 8d 4a 01
 lea rcx,[r11+0x1]        | 49 8d 4b 01
 lea rcx,[r11+0x48baa0]   | 49 8d 8b a0 ba 48 00
