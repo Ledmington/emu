@@ -147,7 +147,8 @@ public final class InstructionDecoder {
                                         sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()))
                                 .constant(1 << BitUtils.asInt(sib.scale()));
                     } else {
-                        iob.reg2(operand2).constant(1);
+                        iob.reg2(registerFromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()))
+                                .constant(1);
                     }
                     if (sib.base() != (byte) 0x05 /* 101 */) {
                         iob.reg1(registerFromCode(
@@ -173,19 +174,23 @@ public final class InstructionDecoder {
                     final SIB sib = new SIB(_sib);
                     logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
-                    iob.reg1(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.extension()))
-                            .reg2(
-                                    (sib.index() == (byte) 0x04 /* 100 */
-                                            ? null
-                                            : registerFromCode(
-                                                    sib.index(),
-                                                    !hasAddressSizeOverridePrefix,
-                                                    rexPrefix.SIBIndexExtension())))
-                            .constant(1 << BitUtils.asInt(sib.scale()));
+                    if (sib.index() != (byte) 0x04 /* 100 */) {
+                        iob.reg2(registerFromCode(
+                                sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
+                    } else {
+                        iob.reg2(registerFromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
+                    }
+                    iob.constant(1 << BitUtils.asInt(sib.scale()));
+                    if (sib.base() != (byte) 0x05 /* 101 */) {
+                        iob.reg1(registerFromCode(
+                                sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension()));
+                    } else {
+                        iob.reg1(Register64.RBP);
+                    }
                 } else {
                     iob.reg1(operand2);
                 }
-                final byte disp8 = b.read1();
+                final int disp8 = b.read1();
                 iob.displacement(disp8);
                 yield new Instruction(Opcode.LEA, operand1, iob.build());
             }
