@@ -1247,6 +1247,7 @@ lea rcx,[rdx+0x2]        | 48 8d 4a 02
 lea rcx,[rdx+rax-0x1]    | 48 8d 4c 02 ff
 lea rcx,[rdx+rax]        | 48 8d 0c 02
 lea rcx,[rdx+rdx*2]      | 48 8d 0c 52
+lea rcx,[rdx+rdx*8]      | 48 8d 0c d2
 lea rcx,[rip+0x754a3]    | 48 8d 0d a3 54 07 00
 lea rcx,[rip+0x76ab3]    | 48 8d 0d b3 6a 07 00
 lea rcx,[rip+0x77081]    | 48 8d 0d 81 70 07 00

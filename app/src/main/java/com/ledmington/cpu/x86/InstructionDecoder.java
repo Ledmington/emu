@@ -144,16 +144,11 @@ public final class InstructionDecoder {
 
                     if (sib.index() != (byte) 0x04 /* 100 */) {
                         iob.reg2(registerFromCode(
-                                        sib.index(),
-                                        !hasAddressSizeOverridePrefix || rexPrefix.isOperand64Bit(),
-                                        rexPrefix.SIBIndexExtension()))
+                                        sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()))
                                 .constant(1 << BitUtils.asInt(sib.scale()));
                     }
                     if (sib.base() != (byte) 0x05 /* 101 */) {
-                        iob.reg1(registerFromCode(
-                                sib.base(),
-                                !hasAddressSizeOverridePrefix || rexPrefix.isOperand64Bit(),
-                                rexPrefix.extension()));
+                        iob.reg1(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.extension()));
                     } else {
                         final int disp32 = b.read4LittleEndian();
                         iob.displacement(disp32);
@@ -173,13 +168,13 @@ public final class InstructionDecoder {
                     final SIB sib = new SIB(_sib);
                     logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
-                    iob.reg1(registerFromCode(sib.base(), rexPrefix.isOperand64Bit(), rexPrefix.extension()))
+                    iob.reg1(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.extension()))
                             .reg2(
                                     (sib.index() == (byte) 0x04 /* 100 */
                                             ? null
                                             : registerFromCode(
                                                     sib.index(),
-                                                    rexPrefix.isOperand64Bit(),
+                                                    !hasAddressSizeOverridePrefix,
                                                     rexPrefix.SIBIndexExtension())))
                             .constant(1 << BitUtils.asInt(sib.scale()));
                 } else {
