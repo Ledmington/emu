@@ -46,6 +46,14 @@ public final class InstructionDecoder {
     private static final byte PUSH_EBP_OPCODE = (byte) 0x55;
     private static final byte PUSH_ESI_OPCODE = (byte) 0x56;
     private static final byte PUSH_EDI_OPCODE = (byte) 0x57;
+    private static final byte POP_EAX_OPCODE = (byte) 0x58;
+    private static final byte POP_ECX_OPCODE = (byte) 0x59;
+    private static final byte POP_EDX_OPCODE = (byte) 0x5a;
+    private static final byte POP_EBX_OPCODE = (byte) 0x5b;
+    private static final byte POP_ESP_OPCODE = (byte) 0x5c;
+    private static final byte POP_EBP_OPCODE = (byte) 0x5d;
+    private static final byte POP_ESI_OPCODE = (byte) 0x5e;
+    private static final byte POP_EDI_OPCODE = (byte) 0x5f;
     private static final byte CALL_OPCODE = (byte) 0xe8;
     private static final byte JMP_nearf64_OPCODE = (byte) 0xe9;
 
@@ -129,7 +137,15 @@ public final class InstructionDecoder {
                         PUSH_ESP_OPCODE,
                         PUSH_EBP_OPCODE,
                         PUSH_ESI_OPCODE,
-                        PUSH_EDI_OPCODE -> parsePUSH(rexPrefix, opcodeFirstByte);
+                        PUSH_EDI_OPCODE -> parseOpcode(rexPrefix, opcodeFirstByte, Opcode.PUSH);
+                case POP_EAX_OPCODE,
+                        POP_EBX_OPCODE,
+                        POP_ECX_OPCODE,
+                        POP_EDX_OPCODE,
+                        POP_ESP_OPCODE,
+                        POP_EBP_OPCODE,
+                        POP_ESI_OPCODE,
+                        POP_EDI_OPCODE -> parseOpcode(rexPrefix, opcodeFirstByte, Opcode.POP);
                 case LEA_OPCODE -> // page 1191
                 parseLEA(b, p4.isPresent(), rexPrefix);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
@@ -139,10 +155,10 @@ public final class InstructionDecoder {
         throw new IllegalArgumentException("Could not decode any instruction");
     }
 
-    private Instruction parsePUSH(final RexPrefix rexPrefix, final byte opcode) {
+    private Instruction parseOpcode(final RexPrefix rexPrefix, final byte opcodeByte, final Opcode opcode) {
         final Register operand =
-                Register64.fromByte(combine(rexPrefix.extension(), BitUtils.and(opcode, OPCODE_REG_MASK)));
-        return new Instruction(Opcode.PUSH, operand);
+                Register64.fromByte(combine(rexPrefix.extension(), BitUtils.and(opcodeByte, OPCODE_REG_MASK)));
+        return new Instruction(opcode, operand);
     }
 
     private Instruction parseSimple(final ByteBuffer b, final RexPrefix rexPrefix, final Opcode opcode) {

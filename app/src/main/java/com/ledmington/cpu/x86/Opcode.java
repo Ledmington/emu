@@ -12,6 +12,7 @@ public enum Opcode {
     LEA("lea"),
     MOV("mov"),
     NOP("nop"),
+    POP("pop"),
     PUSH("push"),
     TEST("test"),
     XOR("xor");
