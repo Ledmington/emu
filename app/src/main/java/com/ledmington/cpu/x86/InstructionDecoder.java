@@ -112,6 +112,7 @@ public final class InstructionDecoder {
             return switch (opcodeFirstByte) {
                 case NOP_OPCODE -> new Instruction(Opcode.NOP);
                 case MOV_R2R_OPCODE -> parseMOV(b, rexPrefix);
+                case TEST_OPCODE -> parseTEST(b, rexPrefix);
                 case LEA_OPCODE -> // page 1191
                 parseLEA(b, p4.isPresent(), rexPrefix);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
@@ -129,6 +130,16 @@ public final class InstructionDecoder {
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
         final Register operand2 = registerFromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
         return new Instruction(Opcode.MOV, operand2, operand1);
+    }
+
+    private Instruction parseTEST(final ByteBuffer b, final RexPrefix rexPrefix) {
+        final byte _modrm = b.read1();
+        final ModRM modrm = new ModRM(_modrm);
+        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final Register operand1 =
+                registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
+        final Register operand2 = registerFromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
+        return new Instruction(Opcode.TEST, operand2, operand1);
     }
 
     private Instruction parseLEA(
