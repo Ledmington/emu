@@ -249,15 +249,17 @@ public final class InstructionDecoder {
                     final byte _sib = b.read1();
                     final SIB sib = new SIB(_sib);
                     logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
-                    iob.reg1(
-                                    (sib.index() == (byte) 0x04 /* 100 */
-                                            ? null
-                                            : registerFromCode(
-                                                    sib.index(),
-                                                    !hasAddressSizeOverridePrefix,
-                                                    rexPrefix.SIBIndexExtension())))
-                            .constant(1 << BitUtils.asInt(sib.scale()))
-                            .reg2(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.extension()));
+
+                    if (sib.index() != (byte) 0x04 /* 100 */) {
+                        iob.reg2(registerFromCode(
+                                sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
+                    } else if (!operand2.toIntelSyntax().endsWith("sp")) { // cannot have [xxx+rsp+...]
+                        iob.reg2(operand2);
+                    }
+                    iob.constant(1 << BitUtils.asInt(sib.scale()));
+                    final Register _base =
+                            registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension());
+                    iob.reg1(_base);
                 } else {
                     iob.reg1(operand2);
                 }
