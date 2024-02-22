@@ -23,7 +23,7 @@ public final class InstructionDecoder {
 
     // single byte opcodes
     private static final byte ADD_OPCODE = (byte) 0x01;
-    private static final byte XOR_Ev_Gv_OPCODE = (byte) 0x31;
+    private static final byte XOR_OPCODE = (byte) 0x31;
     private static final byte CMP_OPCODE = (byte) 0x81;
     private static final byte TEST_OPCODE = (byte) 0x85;
     private static final byte MOV_R2R_OPCODE = (byte) 0x89; // register to register
@@ -111,8 +111,9 @@ public final class InstructionDecoder {
             // 1 byte opcode
             return switch (opcodeFirstByte) {
                 case NOP_OPCODE -> new Instruction(Opcode.NOP);
-                case MOV_R2R_OPCODE -> parseMOV(b, rexPrefix);
-                case TEST_OPCODE -> parseTEST(b, rexPrefix);
+                case MOV_R2R_OPCODE -> parseSimple(b, rexPrefix, Opcode.MOV);
+                case TEST_OPCODE -> parseSimple(b, rexPrefix, Opcode.TEST);
+                case XOR_OPCODE -> parseSimple(b, rexPrefix, Opcode.XOR);
                 case LEA_OPCODE -> // page 1191
                 parseLEA(b, p4.isPresent(), rexPrefix);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
@@ -122,24 +123,14 @@ public final class InstructionDecoder {
         throw new IllegalArgumentException("Could not decode any instruction");
     }
 
-    private Instruction parseMOV(final ByteBuffer b, final RexPrefix rexPrefix) {
+    private Instruction parseSimple(final ByteBuffer b, final RexPrefix rexPrefix, final Opcode opcode) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
         final Register operand1 =
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
         final Register operand2 = registerFromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
-        return new Instruction(Opcode.MOV, operand2, operand1);
-    }
-
-    private Instruction parseTEST(final ByteBuffer b, final RexPrefix rexPrefix) {
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        final Register operand1 =
-                registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = registerFromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
-        return new Instruction(Opcode.TEST, operand2, operand1);
+        return new Instruction(opcode, operand2, operand1);
     }
 
     private Instruction parseLEA(
