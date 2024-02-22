@@ -177,16 +177,13 @@ public final class InstructionDecoder {
                     if (sib.index() != (byte) 0x04 /* 100 */) {
                         iob.reg2(registerFromCode(
                                 sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
-                    } else {
-                        iob.reg2(registerFromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
+                    } else if (!operand2.toIntelSyntax().endsWith("sp")) { // cannot have [xxx+rsp+...]
+                        iob.reg2(operand2);
                     }
                     iob.constant(1 << BitUtils.asInt(sib.scale()));
-                    if (sib.base() != (byte) 0x05 /* 101 */) {
-                        iob.reg1(registerFromCode(
-                                sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension()));
-                    } else {
-                        iob.reg1(Register64.RBP);
-                    }
+                    // if (sib.base() != (byte) 0x05 /* 101 */) {
+                    iob.reg1(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension()));
+                    // } else {                        iob.reg1(Register64.RBP);}
                 } else {
                     iob.reg1(operand2);
                 }

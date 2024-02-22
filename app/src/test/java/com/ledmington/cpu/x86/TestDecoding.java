@@ -15,8 +15,8 @@ public final class TestDecoding extends X86Test {
 
     @Test
     void debug() {
-        final String expected = "lea rbp,[rsp+0x10]";
-        final String hexCode = "48 8d 6c 24 10";
+        final String expected = "lea rbx,[r12+0x1]";
+        final String hexCode = "49 8d 5c 24 01";
         final String[] parsed = hexCode.split(" ");
         final byte[] code = new byte[parsed.length];
         for (int i = 0; i < parsed.length; i++) {
@@ -26,10 +26,8 @@ public final class TestDecoding extends X86Test {
         final InstructionDecoder id = new InstructionDecoder();
         final List<Instruction> instructions = id.decode(code);
         assertNotNull(instructions, "InstructionDecoder returned a null List");
-        assertEquals(
-                1,
-                instructions.size(),
-                () -> String.format("Expected 1 instruction but %,d were found", instructions.size()));
+        final int codeLen = instructions.size();
+        assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));
         final String decoded = instructions.get(0).toString();
         assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
     }
@@ -46,10 +44,8 @@ public final class TestDecoding extends X86Test {
         final InstructionDecoder id = new InstructionDecoder();
         final List<Instruction> instructions = id.decode(code);
         assertNotNull(instructions, "InstructionDecoder returned a null List");
-        assertEquals(
-                1,
-                instructions.size(),
-                () -> String.format("Expected 1 instruction but %,d were found", instructions.size()));
+        final int codeLen = instructions.size();
+        assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));
         final String decoded = instructions.get(0).toString();
         assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
     }
