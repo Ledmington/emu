@@ -23,6 +23,12 @@ nop | 90
 # Call
 call 0xffffffffffffff1d | e8 18 ff ff ff
 
+# Cdq
+cdq | 99
+
+# Ja
+ja 0x79 | 77 77
+
 # Je
 je 0x2e0e1 | 0f 84 db e0 02 00
 
@@ -30,6 +36,7 @@ je 0x2e0e1 | 0f 84 db e0 02 00
 jmp 0x2e301 | e9 fc e2 02 00
 
 # And
+and ah,BYTE PTR [rdx]      | 22 22
 and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 
 # Lea
@@ -2218,14 +2225,16 @@ mov esp,esp | 89 e4
 mov eax,0x12345678 | b8 78 56 34 12
 mov ebp,0x12345678 | bd 78 56 34 12
 mov ebx,0x12345678 | bb 78 56 34 12
+mov ebx,0xbbbbbbbb | bb bb bb bb bb
 mov ecx,0x12345678 | b9 78 56 34 12
 mov edi,0x12345678 | bf 78 56 34 12
 mov edx,0x12345678 | ba 78 56 34 12
 mov esi,0x12345678 | be 78 56 34 12
 mov esp,0x12345678 | bc 78 56 34 12
 #
-mov QWORD PTR [rbp-0xd8],rax | 48 89 85 28 ff ff ff
-mov rsi,QWORD PTR [rbp-0xd8] | 48 8b b5 28 ff ff ff
+mov BYTE PTR [rax-0x77777778],cl | 88 88 88 88 88 88
+mov QWORD PTR [rbp-0xd8],rax     | 48 89 85 28 ff ff ff
+mov rsi,QWORD PTR [rbp-0xd8]     | 48 8b b5 28 ff ff ff
 
 # Test
 test rax,rax | 48 85 c0
@@ -2488,6 +2497,8 @@ xor esp,edi | 31 fc
 xor esp,edx | 31 d4
 xor esp,esi | 31 f4
 xor esp,esp | 31 e4
+#
+xor esi,DWORD PTR [rbx] | 33 33
 
 # Push
 push r10 | 41 52
@@ -2570,3 +2581,21 @@ inc rax | 48 ff c0
 # Dec
 dec eax | ff c8
 dec rax | 48 ff c8
+
+# Add
+add BYTE PTR [rax],al | 00 00 00
+
+# Adc
+adc DWORD PTR [rcx],edx | 11 11
+
+# Stos
+stos BYTE PTR es:[rdi],al | aa
+
+# Int3
+int3 | cc
+
+# Fstp
+fstp st(5) | dd dd
+
+# Out
+out dx,al | ee
