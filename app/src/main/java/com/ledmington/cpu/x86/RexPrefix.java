@@ -4,7 +4,8 @@ import com.ledmington.utils.BitUtils;
 
 public final class RexPrefix {
 
-    private static final byte REX_PREFIX_MASK = (byte) 0x40;
+    private static final byte REX_PREFIX_MASK = (byte) 0xf0;
+    private static final byte REX_PREFIX = (byte) 0x40;
 
     private final boolean w;
     private final boolean r;
@@ -12,7 +13,7 @@ public final class RexPrefix {
     private final boolean b;
 
     public static boolean isREXPrefix(final byte b) {
-        return BitUtils.and(b, REX_PREFIX_MASK) != 0;
+        return BitUtils.and(b, REX_PREFIX_MASK) == REX_PREFIX;
     }
 
     public RexPrefix(final byte b) {

@@ -20,7 +20,7 @@ public final class TestREXPrefix {
     private static Stream<Arguments> wrongPrefixes() {
         return IntStream.range(0, 256)
                 .mapToObj(x -> BitUtils.asByte(x))
-                .filter(x -> BitUtils.and((byte) 0x40, x) == 0)
+                .filter(x -> BitUtils.and((byte) 0xf0, x) != (byte) 0x40)
                 .map(Arguments::of);
     }
 
