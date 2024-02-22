@@ -15,8 +15,8 @@ public final class TestDecoding extends X86Test {
 
     @Test
     void debug() {
-        final String expected = "xor r11d,r13d";
-        final String hexCode = "45 31 eb";
+        final String expected = "push r10";
+        final String hexCode = "41 52";
         final String[] parsed = hexCode.split(" ");
         final byte[] code = new byte[parsed.length];
         for (int i = 0; i < parsed.length; i++) {

@@ -3,17 +3,18 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 public enum Opcode {
-    XOR("xor"),
-    JMP("jmp"),
-    JE("je"),
-    CALL("call"),
-    MOV("mov"),
-    TEST("test"),
-    NOP("nop"),
-    LEA("lea"),
-    CMOVE("cmove"),
     ADD("add"),
-    CMP("cmp");
+    CALL("call"),
+    CMOVE("cmove"),
+    CMP("cmp"),
+    JE("je"),
+    JMP("jmp"),
+    LEA("lea"),
+    MOV("mov"),
+    NOP("nop"),
+    PUSH("push"),
+    TEST("test"),
+    XOR("xor");
 
     private final String mnemonic;
 
