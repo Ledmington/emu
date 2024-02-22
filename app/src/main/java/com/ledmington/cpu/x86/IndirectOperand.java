@@ -7,11 +7,13 @@ import com.ledmington.utils.BitUtils;
 
 /**
  * This class maps the following cases:
- * [reg1]
- * [reg1 + displacement]
+ * [reg2]
+ * [reg2 + displacement]
+ * [reg2 * constant]
+ * [reg2 * constant + displacement]
  * [displacement]
- * [reg1 * constant + reg2]
- * [reg1 * constant + reg2 + displacement]
+ * [reg1 + reg2 * constant]
+ * [reg1 + reg2 * constant + displacement]
  */
 public final class IndirectOperand implements Operand {
 
@@ -98,51 +100,56 @@ public final class IndirectOperand implements Operand {
             }
             alreadyBuilt = true;
 
-            // swap reg1 with reg2 if reg2 is defined but reg1 is not
-            if (reg1.isEmpty() && reg2.isPresent()) {
-                reg1 = reg2;
-                reg2 = Optional.empty();
-            }
-
-            // [reg1]
-            if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isEmpty()) {
-                return new IndirectOperand(reg1.orElseThrow(), 0, null, displacement, displacementType);
+            // [reg2]
+            if (reg1.isEmpty() && reg2.isPresent() && c.isEmpty() && displacement.isEmpty()) {
+                return new IndirectOperand(null, reg2.orElseThrow(), 0, displacement, displacementType);
             } else
-            // [reg1 + disp]
-            if (reg1.isPresent() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(reg1.orElseThrow(), 0, null, displacement, displacementType);
+            // [reg2 + displacement]
+            if (reg1.isEmpty() && reg2.isPresent() && c.isEmpty() && displacement.isPresent()) {
+                return new IndirectOperand(null, reg2.orElseThrow(), 0, displacement, displacementType);
             } else
-            // [disp]
-            if (reg1.isEmpty() && c.isEmpty() && reg2.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(null, 0, null, displacement, displacementType);
+            // [reg2 * constant]
+            if (reg1.isEmpty() && reg2.isPresent() && c.isPresent() && displacement.isEmpty()) {
+                return new IndirectOperand(null, reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
             } else
-            // [reg1*c + reg2]
-            if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isEmpty()) {
+            // [reg2 * constant + displacement]
+            if (reg1.isEmpty() && reg2.isPresent() && c.isPresent() && displacement.isPresent()) {
+                return new IndirectOperand(null, reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
+            } else
+            // [displacement]
+            if (reg1.isEmpty() && reg2.isEmpty() && c.isEmpty() && displacement.isPresent()) {
+                return new IndirectOperand(null, null, 0, displacement, displacementType);
+            } else
+            // [reg1 + reg2 * constant]
+            if (reg1.isPresent() && reg2.isPresent() && c.isPresent() && displacement.isEmpty()) {
                 return new IndirectOperand(
-                        reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), displacement, displacementType);
+                        reg1.orElseThrow(), reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
             } else
-            // [reg1*c + disp]
-            if (reg1.isPresent() && c.isPresent() && reg2.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(reg1.orElseThrow(), c.orElseThrow(), null, displacement, displacementType);
-            } else
-            // [reg1*c + reg2 + disp]
-            if (reg1.isPresent() && c.isPresent() && reg2.isPresent() && displacement.isPresent()) {
+            // [reg1 + reg2 * constant + displacement]
+            if (reg1.isPresent() && reg2.isPresent() && c.isPresent() && displacement.isPresent()) {
                 return new IndirectOperand(
-                        reg1.orElseThrow(), c.orElseThrow(), reg2.orElseThrow(), displacement, displacementType);
+                        reg1.orElseThrow(), reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
             }
 
             throw new IllegalStateException("Cannot build an IndirectOperand with "
                     + (reg1.isEmpty() ? "no reg1" : "reg1=" + reg1.orElseThrow()) + ", "
-                    + (c.isEmpty() ? "no constant" : "constant=" + c.orElseThrow()) + ", "
                     + (reg2.isEmpty() ? "no reg2" : "reg2=" + reg2.orElseThrow()) + ", "
+                    + (c.isEmpty() ? "no constant" : "constant=" + c.orElseThrow()) + ", "
                     + (displacement.isEmpty() ? "no displacement" : "displacement=" + displacement.orElseThrow()));
+        }
+
+        public String toString() {
+            return "IndirectOperandBuilder(" + (reg1.isEmpty() ? "no reg1" : "reg1=" + reg1.orElseThrow()) + ", "
+                    + (reg2.isEmpty() ? "no reg2" : "reg2=" + reg2.orElseThrow()) + ", "
+                    + (c.isEmpty() ? "no constant" : "constant=" + c.orElseThrow()) + ", "
+                    + (displacement.isEmpty() ? "no displacement" : "displacement=" + displacement.orElseThrow()) + ")";
         }
     }
 
     private IndirectOperand(
             final Register reg1,
-            final int constant,
             final Register reg2,
+            final int constant,
             final Optional<Long> displacement,
             final Type displacementType) {
         this.reg1 = reg1;
@@ -163,9 +170,11 @@ public final class IndirectOperand implements Operand {
         sb.append('[');
         if (reg1 != null) {
             sb.append(reg1.toIntelSyntax());
+            if (reg2 != null) {
+                sb.append('+');
+            }
         }
         if (reg2 != null) {
-            sb.append('+');
             sb.append(reg2.toIntelSyntax());
         }
         if (constant != 0 && constant != 1) {
