@@ -111,6 +111,7 @@ public final class InstructionDecoder {
             // 1 byte opcode
             return switch (opcodeFirstByte) {
                 case NOP_OPCODE -> new Instruction(Opcode.NOP);
+                case MOV_R2R_OPCODE -> parseMOV(b, rexPrefix);
                 case LEA_OPCODE -> // page 1191
                 parseLEA(b, p4.isPresent(), rexPrefix);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
@@ -118,6 +119,16 @@ public final class InstructionDecoder {
         }
 
         throw new IllegalArgumentException("Could not decode any instruction");
+    }
+
+    private Instruction parseMOV(final ByteBuffer b, final RexPrefix rexPrefix) {
+        final byte _modrm = b.read1();
+        final ModRM modrm = new ModRM(_modrm);
+        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final Register operand1 =
+                registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
+        final Register operand2 = registerFromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
+        return new Instruction(Opcode.MOV, operand2, operand1);
     }
 
     private Instruction parseLEA(
@@ -181,9 +192,9 @@ public final class InstructionDecoder {
                         iob.reg2(operand2);
                     }
                     iob.constant(1 << BitUtils.asInt(sib.scale()));
-                    // if (sib.base() != (byte) 0x05 /* 101 */) {
-                    iob.reg1(registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension()));
-                    // } else {                        iob.reg1(Register64.RBP);}
+                    final Register _base =
+                            registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension());
+                    iob.reg1(_base);
                 } else {
                     iob.reg1(operand2);
                 }
