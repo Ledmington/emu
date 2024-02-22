@@ -211,7 +211,7 @@ public final class InstructionDecoder {
                 } else if (rm == (byte) 0x05 /* 101 */) {
                     // just a 32-bit displacement (not sign extended) added to the index
                     final int disp32 = b.read4LittleEndian();
-                    iob.reg1(Register64.RIP).displacement((long) disp32);
+                    iob.reg2(Register64.RIP).displacement((long) disp32);
                 } else {
                     iob.reg1(operand2);
                 }
@@ -225,18 +225,21 @@ public final class InstructionDecoder {
                     final SIB sib = new SIB(_sib);
                     logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
-                    if (sib.index() != (byte) 0x04 /* 100 */) {
-                        iob.reg2(registerFromCode(
-                                sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
-                    } else if (!operand2.toIntelSyntax().endsWith("sp")) { // cannot have [xxx+rsp+...]
-                        iob.reg2(operand2);
-                    }
                     iob.constant(1 << BitUtils.asInt(sib.scale()));
                     final Register _base =
                             registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension());
-                    iob.reg1(_base);
+
+                    if (sib.index() != (byte) 0x04 /* 100 */) {
+                        iob.reg1(_base)
+                                .reg2(registerFromCode(
+                                        sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
+                    } else if (!operand2.toIntelSyntax().endsWith("sp")) { // cannot have [xxx+rsp+...]
+                        iob.reg1(_base).reg2(operand2);
+                    } else {
+                        iob.reg2(_base);
+                    }
                 } else {
-                    iob.reg1(operand2);
+                    iob.reg2(operand2);
                 }
                 final int disp8 = b.read1();
                 iob.displacement(disp8);
@@ -250,18 +253,21 @@ public final class InstructionDecoder {
                     final SIB sib = new SIB(_sib);
                     logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
-                    if (sib.index() != (byte) 0x04 /* 100 */) {
-                        iob.reg2(registerFromCode(
-                                sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
-                    } else if (!operand2.toIntelSyntax().endsWith("sp")) { // cannot have [xxx+rsp+...]
-                        iob.reg2(operand2);
-                    }
                     iob.constant(1 << BitUtils.asInt(sib.scale()));
                     final Register _base =
                             registerFromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension());
-                    iob.reg1(_base);
+
+                    if (sib.index() != (byte) 0x04 /* 100 */) {
+                        iob.reg1(_base)
+                                .reg2(registerFromCode(
+                                        sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension()));
+                    } else if (!operand2.toIntelSyntax().endsWith("sp")) { // cannot have [xxx+rsp+...]
+                        iob.reg1(_base).reg2(operand2);
+                    } else {
+                        iob.reg2(_base);
+                    }
                 } else {
-                    iob.reg1(operand2);
+                    iob.reg2(operand2);
                 }
                 final int disp32 = b.read4LittleEndian();
                 iob.displacement(disp32);
