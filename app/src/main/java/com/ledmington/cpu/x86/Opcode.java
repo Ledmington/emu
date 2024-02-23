@@ -3,17 +3,15 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 public enum Opcode {
-    ADD("add"),
-    CALL("call"),
-    CMOVE("cmove"),
-    CMP("cmp"),
-    JE("je"),
-    JMP("jmp"),
+    CDQ("cdq"),
+    INT3("int3"),
     LEA("lea"),
+    LEAVE("leave"),
     MOV("mov"),
     NOP("nop"),
     POP("pop"),
     PUSH("push"),
+    RET("ret"),
     TEST("test"),
     XOR("xor");
 

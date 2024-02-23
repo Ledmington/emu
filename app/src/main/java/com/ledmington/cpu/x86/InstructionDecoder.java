@@ -22,22 +22,11 @@ public final class InstructionDecoder {
     private static final byte OPCODE_REG_MASK = (byte) 0x07;
 
     // single byte opcodes
-    private static final byte ADD_OPCODE = (byte) 0x01;
     private static final byte XOR_OPCODE = (byte) 0x31;
-    private static final byte CMP_OPCODE = (byte) 0x81;
     private static final byte TEST_OPCODE = (byte) 0x85;
     private static final byte MOV_R2R_OPCODE = (byte) 0x89; // register to register
-    private static final byte MOV_R2R_64_OPCODE = (byte) 0x8b; // register to register (64 bit)
     private static final byte LEA_OPCODE = (byte) 0x8d;
     private static final byte NOP_OPCODE = (byte) 0x90;
-    private static final byte MOV_TO_EAX_OPCODE = (byte) 0xb8; // mov eax,0xXXXXXXXX
-    private static final byte MOV_TO_ECX_OPCODE = (byte) 0xb9; // mov ecx,0xXXXXXXXX
-    private static final byte MOV_TO_EDX_OPCODE = (byte) 0xba; // mov edx,0xXXXXXXXX
-    private static final byte MOV_TO_EBX_OPCODE = (byte) 0xbb; // mov ebx,0xXXXXXXXX
-    private static final byte MOV_TO_ESP_OPCODE = (byte) 0xbc; // mov esp,0xXXXXXXXX
-    private static final byte MOV_TO_EBP_OPCODE = (byte) 0xbd; // mov ebp,0xXXXXXXXX
-    private static final byte MOV_TO_ESI_OPCODE = (byte) 0xbe; // mov esi,0xXXXXXXXX
-    private static final byte MOV_TO_EDI_OPCODE = (byte) 0xbf; // mov edi,0xXXXXXXXX
     private static final byte PUSH_EAX_OPCODE = (byte) 0x50;
     private static final byte PUSH_ECX_OPCODE = (byte) 0x51;
     private static final byte PUSH_EDX_OPCODE = (byte) 0x52;
@@ -54,12 +43,10 @@ public final class InstructionDecoder {
     private static final byte POP_EBP_OPCODE = (byte) 0x5d;
     private static final byte POP_ESI_OPCODE = (byte) 0x5e;
     private static final byte POP_EDI_OPCODE = (byte) 0x5f;
-    private static final byte CALL_OPCODE = (byte) 0xe8;
-    private static final byte JMP_nearf64_OPCODE = (byte) 0xe9;
-
-    // multibyte opcodes
-    private static final byte JE_OPCODE = (byte) 0x84;
-    private static final byte CMOVE_OPCODE = (byte) 0x44;
+    private static final byte RET_OPCODE = (byte) 0xc3;
+    private static final byte LEAVE_OPCODE = (byte) 0xc9;
+    private static final byte INT3_OPCODE = (byte) 0xcc;
+    private static final byte CDQ_OPCODE = (byte) 0x99;
 
     public InstructionDecoder() {}
 
@@ -127,6 +114,10 @@ public final class InstructionDecoder {
             // 1 byte opcode
             return switch (opcodeFirstByte) {
                 case NOP_OPCODE -> new Instruction(Opcode.NOP);
+                case RET_OPCODE -> new Instruction(Opcode.RET);
+                case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
+                case INT3_OPCODE -> new Instruction(Opcode.INT3);
+                case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
                 case MOV_R2R_OPCODE -> parseSimple(b, rexPrefix, Opcode.MOV);
                 case TEST_OPCODE -> parseSimple(b, rexPrefix, Opcode.TEST);
                 case XOR_OPCODE -> parseSimple(b, rexPrefix, Opcode.XOR);
@@ -179,8 +170,7 @@ public final class InstructionDecoder {
         final byte rm = modrm.rm();
         final Register operand1 =
                 registerFromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 =
-                registerFromCode(rm, !hasAddressSizeOverridePrefix /*|| rexPrefix.isOperand64Bit()*/, rexPrefix.b());
+        final Register operand2 = registerFromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension());
 
         // Table at page 530
         final byte mod = modrm.mod();
