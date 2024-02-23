@@ -1,0 +1,109 @@
+plugins {
+	id 'java'
+	id 'java-library'
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'com.adarshr.test-logger' version '4.0.0'
+	id 'com.github.ben-manes.versions' version '0.51.0'
+	id 'de.undercouch.download' version '5.5.0'
+}
+
+repositories {
+	mavenCentral()
+}
+
+static def path(String... args) {
+	return String.join(File.separator, args)
+}
+
+ext.junitVersion = "5.10.2"
+dependencies {
+	implementation project(':common')
+
+	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+test {
+	useJUnitPlatform()
+	minHeapSize = "128m"
+	maxHeapSize = "512m"
+}
+
+testlogger {
+	theme 'standard'
+	// theme 'mocha'
+	// theme 'mocha-parallel'
+
+	showExceptions true
+	showStackTraces true
+	showFullStackTraces false
+	showCauses true
+
+	slowThreshold 2000
+
+	showSummary true
+	showSimpleNames false
+	showPassed false
+	showSkipped true
+	showFailed true
+	showOnlySlow false
+
+	showStandardStreams true
+	showPassedStandardStreams false
+	showSkippedStandardStreams true
+	showFailedStandardStreams true
+
+	logLevel 'lifecycle'
+}
+
+spotless {
+	format 'misc', {
+		target '*.gradle', '*.md', '.gitignore'
+		trimTrailingWhitespace()
+		indentWithTabs()
+		endWithNewline()
+		setEncoding('utf-8')
+	}
+
+	java {
+		target fileTree('.') {
+			include path('**', '*.java')
+			exclude path('**', 'build', '**'), path('**', 'build-*', '**'), path('**', 'bin', '**')
+		}
+		removeUnusedImports()
+		formatAnnotations()
+		trimTrailingWhitespace()
+		endWithNewline()
+		setEncoding('utf-8')
+		palantirJavaFormat('2.39.0')
+
+		// check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
+		importOrder('java', 'javax', 'javafx', 'com', 'org', group as String)
+	}
+}
+
+tasks.compileJava.dependsOn(spotlessApply)
+
+tasks.register('downloadManual', Download) {
+	group 'utilities'
+	description 'Downloads the Intel Software Developer Manual in the project root directory'
+	src "https://cdrdv2-public.intel.com/812392/325462-sdm-vol-1-2abcd-3abcd-4.pdf"
+	dest new File(project.getRootDir(), "intel-developer-manual.pdf")
+	overwrite false
+	acceptAnyCertificate true
+}
+
+tasks.register('formatTestFiles', JavaExec) {
+	group 'utilities'
+	description 'Formats in-place the test asm files inside app/test/resources'
+	dependsOn spotlessApply
+	classpath sourceSets.test.runtimeClasspath
+	mainClass = "FormatTestFiles"
+}

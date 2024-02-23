@@ -3,4 +3,8 @@ plugins {
 }
 
 rootProject.name = 'emu'
-include('app')
+include('emu')
+include('elf')
+include('id')
+include('common')
+include('breakdown')

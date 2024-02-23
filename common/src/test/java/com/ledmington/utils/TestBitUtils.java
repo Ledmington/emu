@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -53,7 +54,7 @@ public final class TestBitUtils {
     @MethodSource("SHRbytes")
     void shiftRight(final byte expected, final byte input, final int shift) {
         final byte result = BitUtils.shr(input, shift);
-        assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
     }
 
     private static Stream<Arguments> ANDbytes() {
@@ -73,7 +74,7 @@ public final class TestBitUtils {
     @MethodSource("ANDbytes")
     void bitwiseAnd(final byte expected, final byte input1, final byte input2) {
         final byte result = BitUtils.and(input1, input2);
-        assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
     }
 
     private static Stream<Arguments> ORbytes() {
@@ -93,6 +94,6 @@ public final class TestBitUtils {
     @MethodSource("ORbytes")
     void bitwiseOr(final byte expected, final byte input1, final byte input2) {
         final byte result = BitUtils.or(input1, input2);
-        assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
     }
 }

@@ -1,0 +1,64 @@
+plugins {
+	id 'java'
+	id 'application'
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'com.github.ben-manes.versions' version '0.51.0'
+}
+
+repositories {
+	mavenCentral()
+}
+
+static def path(String... args) {
+	return String.join(File.separator, args)
+}
+
+dependencies {
+	implementation project(':id')
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+application {
+	mainClass = 'com.ledmington.Breakdown'
+	applicationDefaultJvmArgs = [
+			"-Xms2G",
+			"-Xmx2G",
+			// "-XX:+PrintCompilation",
+			//"-XX:+PrintInlining",
+			//"-XX:+LogCompilation",
+			//"-XX:LogFile=jvm_compilation_log"
+	]
+}
+
+spotless {
+	format 'misc', {
+		target '*.gradle', '*.md', '.gitignore'
+		trimTrailingWhitespace()
+		indentWithTabs()
+		endWithNewline()
+		setEncoding('utf-8')
+	}
+
+	java {
+		target fileTree('.') {
+			include path('**', '*.java')
+			exclude path('**', 'build', '**'), path('**', 'build-*', '**'), path('**', 'bin', '**')
+		}
+		removeUnusedImports()
+		formatAnnotations()
+		trimTrailingWhitespace()
+		endWithNewline()
+		setEncoding('utf-8')
+		palantirJavaFormat('2.39.0')
+
+		// check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
+		importOrder('java', 'javax', 'javafx', 'com', 'org', group as String)
+	}
+}
+
+tasks.compileJava.dependsOn(spotlessApply)
