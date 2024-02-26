@@ -69,11 +69,18 @@ public final class Breakdown {
             pos++;
         }
 
-        if (binary[pos] == (byte) 0x8d) {
-            System.out.printf("0x%02x -> LEA opcode\n", binary[pos]);
-        } else {
-            System.err.printf("Unknown opcode 0x%02x\n", binary[pos]);
-            System.exit(-1);
+        System.out.printf("0x%02x -> ", binary[pos]);
+        switch (binary[pos]) {
+            case (byte) 0x8d:
+                System.out.println("LEA opcode");
+                break;
+            case (byte) 0x89:
+                System.out.println("MOV opcode");
+                break;
+            default:
+                System.err.println("unknown");
+                System.exit(-1);
+                break;
         }
         pos++;
 

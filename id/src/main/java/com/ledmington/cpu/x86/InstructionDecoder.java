@@ -24,7 +24,8 @@ public final class InstructionDecoder {
     // single byte opcodes
     private static final byte XOR_OPCODE = (byte) 0x31;
     private static final byte TEST_OPCODE = (byte) 0x85;
-    private static final byte MOV_R2R_OPCODE = (byte) 0x89; // register to register
+    private static final byte MOV_REG_TO_MEM_OPCODE = (byte) 0x89;
+    private static final byte MOV_MEM_TO_REG_OPCODE = (byte) 0x8b;
     private static final byte LEA_OPCODE = (byte) 0x8d;
     private static final byte NOP_OPCODE = (byte) 0x90;
     private static final byte PUSH_EAX_OPCODE = (byte) 0x50;
@@ -57,6 +58,7 @@ public final class InstructionDecoder {
     private static final byte JE_OPCODE = (byte) 0x84;
     private static final byte CALL_OPCODE = (byte) 0xe8;
     private static final byte MOV_IMM32_TO_EDI_OPCODE = (byte) 0xbf;
+    private static final byte SUB_OPCODE = (byte) 0x29;
 
     public InstructionDecoder() {}
 
@@ -124,9 +126,11 @@ public final class InstructionDecoder {
                 case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
                 case INT3_OPCODE -> new Instruction(Opcode.INT3);
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
-                case MOV_R2R_OPCODE -> parseSimple(b, rexPrefix, Opcode.MOV);
+                case MOV_REG_TO_MEM_OPCODE -> parseMOV(b, rexPrefix,true);
+                case MOV_MEM_TO_REG_OPCODE -> parseMOV(b, rexPrefix,false);
                 case TEST_OPCODE -> parseSimple(b, rexPrefix, Opcode.TEST);
                 case XOR_OPCODE -> parseSimple(b, rexPrefix, Opcode.XOR);
+                case SUB_OPCODE -> parseSimple(b, rexPrefix, Opcode.SUB);
                 case JMP_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
                 case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
@@ -152,8 +156,23 @@ public final class InstructionDecoder {
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
             };
         }
+    }
 
-        // throw new IllegalArgumentException("Could not decode any instruction");
+    private Instruction parseMOV(final ByteBuffer b,final RexPrefix rexPrefix,final boolean isFirstOperandRegister) {
+        final byte _modrm = b.read1();
+        final ModRM modrm = new ModRM(_modrm);
+        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final Register operand1 =
+                Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
+        final Register operand2 = Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
+        final IndirectOperand.IndirectOperandBuilder iob=IndirectOperand.builder();
+
+        if(modrm.mod()==(byte)0x01){
+            final byte disp8=b.read1();
+            iob.displacement(disp8);
+        }
+
+        iob.reg2(isFirstOperandRegister?operand2:operand1);
     }
 
     private Instruction parseOpcode(final RexPrefix rexPrefix, final byte opcodeByte, final Opcode opcode) {
@@ -162,6 +181,7 @@ public final class InstructionDecoder {
         return new Instruction(opcode, operand);
     }
 
+    // TODO: change name of method
     private Instruction parseSimple(final ByteBuffer b, final RexPrefix rexPrefix, final Opcode opcode) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
@@ -170,17 +190,6 @@ public final class InstructionDecoder {
                 Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
         final Register operand2 = Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
         return new Instruction(opcode, operand2, operand1);
-    }
-
-    private Instruction parseSHL(final ByteBuffer b, final RexPrefix rexPrefix) {
-        // page 1812
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        final Register operand1 =
-                Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
-        return new Instruction(Opcode.SHL, operand2, operand1);
     }
 
     private Instruction parseLEA(

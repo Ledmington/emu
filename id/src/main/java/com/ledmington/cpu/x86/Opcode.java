@@ -16,6 +16,7 @@ public enum Opcode {
     PUSH("push"),
     RET("ret"),
     SHL("shl"),
+    SUB("sub"),
     TEST("test"),
     XOR("xor");
 

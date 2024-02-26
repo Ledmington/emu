@@ -1101,7 +1101,9 @@ mov esi,0x12345678 | be 78 56 34 12
 mov esp,0x12345678 | bc 78 56 34 12
 #
 mov BYTE PTR [rax-0x77777778],cl | 88 88 88 88 88 88
+mov DWORD PTR [rbp-0xd8],eax     | 89 85 28 ff ff ff
 mov QWORD PTR [rbp-0xd8],rax     | 48 89 85 28 ff ff ff
+mov rax,QWORD PTR [rbp-0xd8]     | 48 8b 85 28 ff ff ff
 mov rsi,QWORD PTR [rbp-0xd8]     | 48 8b b5 28 ff ff ff
 
 # Test
@@ -1425,205 +1427,19 @@ pop rdx | 5a
 pop rsi | 5e
 pop rsp | 5c
 
-# Movups
-movups XMMWORD PTR [rsp+0x8],xmm0 | 0f 11 44 24 08
-
-# Shl
-shl DWORD PTR [rax],1 | d1 30
-shl DWORD PTR [rcx],1 | d1 21
-shl DWORD PTR [rdx],1 | d1 22
-shl eax,0x0           | c1 e0 00
-shl eax,0x1           | d1 e0
-shl eax,0x2           | c1 e0 02
-shl eax,0x3           | c1 e0 03
-shl eax,0x4           | c1 e0 04
-shl eax,0x5           | c1 e0 05
-shl eax,0x6           | c1 e0 06
-shl ebp,0x6           | c1 e5 06
-shl ebx,0x2           | c1 e3 02
-shl ebx,0xa           | c1 e3 0a
-shl ecx,0x3           | c1 e1 03
-shl edi,0x8           | c1 e7 08
-shl edx,0x4           | c1 e2 04
-shl esi,0x7           | c1 e6 07
-shl esp,0x5           | c1 e4 05
-shl rax,0x1           | 48 d1 e0
-shl rax,0x4           | 48 c1 e0 04
-shl rbp,0x6           | 48 c1 e5 06
-shl rbx,0x2           | 48 c1 e3 02
-shl rbx,0x9           | 48 c1 e3 09
-shl rcx,0x3           | 48 c1 e1 03
-shl rdi,0x8           | 48 c1 e7 08
-shl rdx,0x4           | 48 c1 e2 04
-shl rsi,0x7           | 48 c1 e6 07
-shl rsp,0x5           | 48 c1 e4 05
-
-# Shr
-shr eax,0x4 | c1 e8 04
-
-# Sar
-sar eax,0x4 | c1 f8 04
-
-# Movzx
-movzx r14d,BYTE PTR [r14+0x2] | 45 0f b6 76 02
-
-# Movsxd
-movsxd rdx,ecx | 48 63 d1
-
-# Movq
-movq r10,xmm0  | 66 49 0f 7e c2
-movq r13,xmm12 | 66 4d 0f 7e e5
-movq r14,xmm12 | 66 4d 0f 7e e6
-movq rax,xmm0  | 66 48 0f 7e c0
-movq rax,xmm1  | 66 48 0f 7e c8
-movq rbp,xmm2  | 66 48 0f 7e d5
-movq rdi,xmm8  | 66 4c 0f 7e c7
-movq rdx,xmm8  | 66 4c 0f 7e c2
-movq xmm0,r10  | 66 49 0f 6e c2
-movq xmm0,r12  | 66 49 0f 6e c4
-movq xmm0,r13  | 66 49 0f 6e c5
-movq xmm0,r14  | 66 49 0f 6e c6
-movq xmm0,r15  | 66 49 0f 6e c7
-movq xmm0,r8   | 66 49 0f 6e c0
-movq xmm0,r9   | 66 49 0f 6e c1
-movq xmm0,rax  | 66 48 0f 6e c0
-movq xmm0,rbp  | 66 48 0f 6e c5
-movq xmm0,rbx  | 66 48 0f 6e c3
-movq xmm0,rcx  | 66 48 0f 6e c1
-movq xmm0,rdi  | 66 48 0f 6e c7
-movq xmm0,rdx  | 66 48 0f 6e c2
-movq xmm0,rsi  | 66 48 0f 6e c6
-movq xmm1,r10  | 66 49 0f 6e ca
-movq xmm1,r12  | 66 49 0f 6e cc
-movq xmm1,r13  | 66 49 0f 6e cd
-movq xmm1,r14  | 66 49 0f 6e ce
-movq xmm1,r8   | 66 49 0f 6e c8
-movq xmm1,r9   | 66 49 0f 6e c9
-movq xmm1,rax  | 66 48 0f 6e c8
-movq xmm1,rbp  | 66 48 0f 6e cd
-movq xmm1,rcx  | 66 48 0f 6e c9
-movq xmm1,rdx  | 66 48 0f 6e ca
-movq xmm10,rax | 66 4c 0f 6e d0
-movq xmm10,rbp | 66 4c 0f 6e d5
-movq xmm11,r12 | 66 4d 0f 6e dc
-movq xmm11,r13 | 66 4d 0f 6e dd
-movq xmm11,rax | 66 4c 0f 6e d8
-movq xmm11,rbp | 66 4c 0f 6e dd
-movq xmm11,rcx | 66 4c 0f 6e d9
-movq xmm11,rdx | 66 4c 0f 6e da
-movq xmm12,r13 | 66 4d 0f 6e e5
-movq xmm12,r9  | 66 4d 0f 6e e1
-movq xmm12,rcx | 66 4c 0f 6e e1
-movq xmm13,r11 | 66 4d 0f 6e eb
-movq xmm13,rbx | 66 4c 0f 6e eb
-movq xmm13,rcx | 66 4c 0f 6e e9
-movq xmm13,rdx | 66 4c 0f 6e ea
-movq xmm14,rax | 66 4c 0f 6e f0
-movq xmm14,rsi | 66 4c 0f 6e f6
-movq xmm15,r12 | 66 4d 0f 6e fc
-movq xmm15,r14 | 66 4d 0f 6e fe
-movq xmm15,rcx | 66 4c 0f 6e f9
-movq xmm15,rdx | 66 4c 0f 6e fa
-movq xmm2,r11  | 66 49 0f 6e d3
-movq xmm2,r13  | 66 49 0f 6e d5
-movq xmm2,r15  | 66 49 0f 6e d7
-movq xmm2,r9   | 66 49 0f 6e d1
-movq xmm2,rax  | 66 48 0f 6e d0
-movq xmm2,rbp  | 66 48 0f 6e d5
-movq xmm2,rcx  | 66 48 0f 6e d1
-movq xmm2,rdx  | 66 48 0f 6e d2
-movq xmm2,rsi  | 66 48 0f 6e d6
-movq xmm3,r10  | 66 49 0f 6e da
-movq xmm3,r11  | 66 49 0f 6e db
-movq xmm3,r12  | 66 49 0f 6e dc
-movq xmm3,r13  | 66 49 0f 6e dd
-movq xmm3,rax  | 66 48 0f 6e d8
-movq xmm3,rbp  | 66 48 0f 6e dd
-movq xmm3,rbx  | 66 48 0f 6e db
-movq xmm3,rcx  | 66 48 0f 6e d9
-movq xmm3,rdx  | 66 48 0f 6e da
-movq xmm4,r12  | 66 49 0f 6e e4
-movq xmm4,r13  | 66 49 0f 6e e5
-movq xmm4,r15  | 66 49 0f 6e e7
-movq xmm4,r8   | 66 49 0f 6e e0
-movq xmm4,r9   | 66 49 0f 6e e1
-movq xmm4,rax  | 66 48 0f 6e e0
-movq xmm4,rbp  | 66 48 0f 6e e5
-movq xmm4,rbx  | 66 48 0f 6e e3
-movq xmm4,rcx  | 66 48 0f 6e e1
-movq xmm5,r11  | 66 49 0f 6e eb
-movq xmm5,r13  | 66 49 0f 6e ed
-movq xmm5,rcx  | 66 48 0f 6e e9
-movq xmm5,rdx  | 66 48 0f 6e ea
-movq xmm6,r11  | 66 49 0f 6e f3
-movq xmm6,r12  | 66 49 0f 6e f4
-movq xmm6,r8   | 66 49 0f 6e f0
-movq xmm6,rcx  | 66 48 0f 6e f1
-movq xmm6,rdx  | 66 48 0f 6e f2
-movq xmm7,r13  | 66 49 0f 6e fd
-movq xmm7,r9   | 66 49 0f 6e f9
-movq xmm7,rax  | 66 48 0f 6e f8
-movq xmm7,rcx  | 66 48 0f 6e f9
-movq xmm7,rdx  | 66 48 0f 6e fa
-movq xmm8,r11  | 66 4d 0f 6e c3
-movq xmm8,rax  | 66 4c 0f 6e c0
-movq xmm8,rdx  | 66 4c 0f 6e c2
-movq xmm8,rsi  | 66 4c 0f 6e c6
-movq xmm9,r10  | 66 4d 0f 6e ca
-movq xmm9,r12  | 66 4d 0f 6e cc
-movq xmm9,r9   | 66 4d 0f 6e c9
-movq xmm9,rbx  | 66 4c 0f 6e cb
-movq xmm9,rdi  | 66 4c 0f 6e cf
-movq xmm9,rdx  | 66 4c 0f 6e ca
-#
-movq QWORD PTR [r12+0x1c],xmm0   | 66 41 0f d6 44 24 1c
-movq QWORD PTR [r14+rbp*1],xmm8  | 66 45 0f d6 04 2e
-movq QWORD PTR [r9],xmm3         | 66 41 0f d6 19
-movq QWORD PTR [rax+0x10],xmm0   | 66 0f d6 40 10
-movq QWORD PTR [rax+0x10],xmm6   | 66 0f d6 70 10
-movq QWORD PTR [rbp+0x13d8],xmm3 | 66 0f d6 9d d8 13 00
-movq QWORD PTR [rbp+0x20],xmm0   | 66 0f d6 45 20
-movq QWORD PTR [rbp+0xec8],xmm0  | 66 0f d6 85 c8 0e 00
-movq QWORD PTR [rbx],xmm6        | 66 0f d6 33
-movq QWORD PTR [rdi],xmm0        | 66 0f d6 07
-movq QWORD PTR [rsp+0x10],xmm11  | 66 44 0f d6 5c 24 10
-movq QWORD PTR [rsp+0x10],xmm15  | 66 44 0f d6 7c 24 10
-movq QWORD PTR [rsp+0x170],xmm2  | 66 0f d6 94 24 70 01
-movq QWORD PTR [rsp+0x30],xmm13  | 66 44 0f d6 6c 24 30
-movq QWORD PTR [rsp+0x38],xmm15  | 66 44 0f d6 7c 24 38
-movq QWORD PTR [rsp+0x4b0],xmm1  | 66 0f d6 8c 24 b0 04
-movq QWORD PTR [rsp+0x50],xmm15  | 66 44 0f d6 7c 24 50
-movq QWORD PTR [rsp+0x50],xmm7   | 66 0f d6 7c 24 50
-movq QWORD PTR [rsp+0x68],xmm4   | 66 0f d6 64 24 68
-movq QWORD PTR [rsp+0x80],xmm2   | 66 0f d6 94 24 80 00
-movq QWORD PTR [rsp+0x80],xmm4   | 66 0f d6 a4 24 80 00
-movq QWORD PTR [rsp+0x8],xmm15   | 66 44 0f d6 7c 24 08
-movq QWORD PTR [rsp+0x8],xmm9    | 66 44 0f d6 4c 24 08
-movq QWORD PTR [rsp+0x90],xmm4   | 66 0f d6 a4 24 90 00
-movq QWORD PTR [rsp],xmm1        | 66 0f d6 0c 24
-movq QWORD PTR [rsp],xmm13       | 66 44 0f d6 2c 24
-movq xmm0,QWORD PTR [rbp+0x120]  | f3 0f 7e 85 20 01 00
-movq xmm0,QWORD PTR [rbx+0x1c]   | f3 0f 7e 43 1c
-movq xmm0,QWORD PTR [rsp+0x38]   | f3 0f 7e 44 24 38
-movq xmm1,QWORD PTR [rdi+0x128]  | f3 0f 7e 8f 28 01 00
-movq xmm1,QWORD PTR [rsp+0x20]   | f3 0f 7e 4c 24 20
-movq xmm10,QWORD PTR [rbp+0x128] | f3 44 0f 7e 95 28 01
-movq xmm10,QWORD PTR [rsp+0x378] | f3 44 0f 7e 94 24 78
-movq xmm12,QWORD PTR [rbp+0x128] | f3 44 0f 7e a5 28 01
-movq xmm15,QWORD PTR [rsp+0x50]  | f3 44 0f 7e 7c 24 50
-movq xmm2,QWORD  PTR [rdx+0x10]  | f3 0f 7e 52 10
-movq xmm4,QWORD PTR [r12]        | f3 41 0f 7e 24 24
-movq xmm4,QWORD PTR [rsp+0x148]  | f3 0f 7e a4 24 48 01
-movq xmm4,QWORD PTR [rsp+0x90]   | f3 0f 7e a4 24 90 00
-movq xmm5,QWORD PTR [rax]        | f3 0f 7e 28
-movq xmm6,QWORD PTR [rsp+0x68]   | f3 0f 7e 74 24 68
-movq xmm8,QWORD PTR [r12]        | f3 45 0f 7e 04 24
-movq xmm8,QWORD PTR [rdi+0x128]  | f3 44 0f 7e 87 28 01
-movq xmm9,QWORD PTR [rbp+0x10]   | f3 44 0f 7e 4d 10
-
 # Sub
-sub eax,0x30 | 83 e8 30
-sub esi,ebp  | 29 ee
+sub DWORD PTR [rbp+0x138],0x1 | 83 ad 38 01 00 00 01
+sub eax,0x30                  | 83 e8 30
+sub edx,0x42                  | 83 ea 42
+sub edx,esi                   | 29 f2
+sub esi,ebp                   | 29 ee
+sub r13,0x20                  | 49 83 ed 20
+sub rax,0xff                  | 48 2d ff 00 00 00
+sub rax,QWORD PTR [rsp+0x10]  | 48 2b 44 24 10
+sub rdi,rax                   | 48 29 c7
+sub rdx,QWORD PTR fs:0x28     | 64 48 2b 14 25 28 00 00 00
+sub rsp,0x18                  | 48 83 ec 18
+sub rsp,0x278                 | 48 81 ec 78 02 00 00
 
 # Rep movs
 rep movs DWORD PTR es:[rdi],DWORD PTR ds:[rsi] | f3 a5
