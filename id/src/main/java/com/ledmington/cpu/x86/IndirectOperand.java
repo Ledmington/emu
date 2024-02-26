@@ -53,6 +53,10 @@ public final class IndirectOperand implements Operand {
             return this;
         }
 
+        public Optional<Register> reg1() {
+            return reg1;
+        }
+
         public IndirectOperandBuilder constant(final int c) {
             if (this.c.isPresent()) {
                 throw new IllegalStateException("Cannot define constant twice");

@@ -20,7 +20,8 @@ public final class Register64 implements Register {
     public static final Register64 R13 = new Register64("r13");
     public static final Register64 R14 = new Register64("r14");
     public static final Register64 R15 = new Register64("r15");
-    public static final Register64 RIP = new Register64("rip");
+    public static final Register64 RIP = new Register64("rip"); // instruction pointer
+    public static final Register64 RIZ = new Register64("riz"); // zero
 
     private final String mnemonic;
 

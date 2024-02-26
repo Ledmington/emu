@@ -1,6 +1,8 @@
 package com.ledmington;
 
 import com.ledmington.cpu.x86.ModRM;
+import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.SIB;
 import com.ledmington.utils.BitUtils;
 
 public final class Breakdown {
@@ -32,6 +34,15 @@ public final class Breakdown {
         boolean r = false;
         boolean x = false;
         boolean b = false;
+        boolean hasAddressSizeOverridePrefix = false;
+
+        if (binary[pos] == (byte) 0x67) { // address size override prefix
+            System.out.printf(
+                    "0x%02x -> address size override prefix -> 32-bit registers are used to compute memory location\n",
+                    binary[pos]);
+            hasAddressSizeOverridePrefix = true;
+            pos++;
+        }
 
         if (BitUtils.and(binary[pos], (byte) 0xf0) == (byte) 0x40) {
             w = BitUtils.and(binary[pos], (byte) 0x08) != 0;
@@ -66,6 +77,10 @@ public final class Breakdown {
         }
         pos++;
 
+        boolean isSIBByteNeeded = false;
+        boolean isDisplacementNeeded = false;
+        int displacementBytes = 0;
+
         // ModR/m byte
         final ModRM modrm = new ModRM(binary[pos++]);
         System.out.printf(
@@ -75,40 +90,98 @@ public final class Breakdown {
                 BitUtils.toBinaryString(modrm.reg()).substring(5, 8),
                 BitUtils.toBinaryString(modrm.rm()).substring(5, 8));
         System.out.printf(
-                "        Mod: %s -> %s\n",
-                BitUtils.toBinaryString(modrm.mod()).substring(6, 8),
-                switch (modrm.mod()) {
-                    case 0x00 -> "no specific displacement";
-                    case 0x01 -> "8-bit displacement";
-                    case 0x02 -> "32-bit displacement";
-                    case 0x03 -> "unknown";
-                    default -> "invalid value";
-                });
+                "        Mod: %s -> ", BitUtils.toBinaryString(modrm.mod()).substring(6, 8));
+
+        switch (modrm.mod()) {
+            case 0x00:
+                if (modrm.rm() == (byte) 0x05) {
+                    System.out.print("32-bit displacement");
+                    isDisplacementNeeded = true;
+                    displacementBytes = 4;
+                } else {
+                    System.out.print("no specific displacement");
+                }
+                break;
+            case 0x01:
+                System.out.print("8-bit displacement");
+                isDisplacementNeeded = true;
+                displacementBytes = 1;
+                break;
+            case 0x02:
+                System.out.print("32-bit displacement");
+                isDisplacementNeeded = true;
+                displacementBytes = 4;
+                break;
+            case 0x03:
+                System.out.print("no specific displacement");
+                break;
+            default:
+                System.out.print("invalid value");
+                break;
+        }
+        System.out.println();
+        final String reg = Register.fromCode(modrm.reg(), w, r).toIntelSyntax();
         System.out.printf(
-                "        Reg: %s -> %s -> %s\n",
-                BitUtils.toBinaryString(modrm.reg()).substring(5, 8),
-                switch (modrm.reg()) {
-                    case 0x00 -> "xAX";
-                    case 0x01 -> "xCX";
-                    case 0x02 -> "xDX";
-                    case 0x03 -> "xBX";
-                    case 0x04 -> "xSP";
-                    case 0x05 -> "xBP";
-                    case 0x06 -> "xSI";
-                    case 0x07 -> "xDI";
-                    default -> "invalid value";
-                },
-                (w ? "R" : "E")
-                        + switch (modrm.reg()) {
-                            case 0x00 -> "AX";
-                            case 0x01 -> "CX";
-                            case 0x02 -> "DX";
-                            case 0x03 -> "BX";
-                            case 0x04 -> "SP";
-                            case 0x05 -> "BP";
-                            case 0x06 -> "SI";
-                            case 0x07 -> "DI";
-                            default -> "invalid value";
-                        });
+                "        Reg: %s -> %s\n", BitUtils.toBinaryString(modrm.reg()).substring(5, 8), reg);
+        String rm =
+                Register.fromCode(modrm.rm(), !hasAddressSizeOverridePrefix, b).toIntelSyntax();
+        if (modrm.mod() == (byte) 0x00 && rm.endsWith("bp")) {
+            rm = hasAddressSizeOverridePrefix ? "eip" : "rip";
+        }
+        System.out.printf(
+                "        R/M: %s -> %s", BitUtils.toBinaryString(modrm.rm()).substring(5, 8), rm);
+        if (modrm.mod() != (byte) 0x03 && modrm.rm() == (byte) 0x04) {
+            System.out.print(" (a SIB byte follows)");
+            isSIBByteNeeded = true;
+        }
+        System.out.println();
+
+        if (isSIBByteNeeded) {
+            final SIB sib = new SIB(binary[pos++]);
+            System.out.printf(
+                    "0x%02x -> SIB byte (%s-%s-%s)\n",
+                    binary[pos - 1],
+                    BitUtils.toBinaryString(sib.scale()).substring(6, 8),
+                    BitUtils.toBinaryString(sib.index()).substring(5, 8),
+                    BitUtils.toBinaryString(sib.base()).substring(5, 8));
+            System.out.printf(
+                    "        Scale: %s -> *%d\n",
+                    BitUtils.toBinaryString(sib.scale()).substring(6, 8), 1 << BitUtils.asInt(sib.scale()));
+            final String index = Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, x)
+                    .toIntelSyntax();
+            System.out.printf(
+                    "        Index: %s -> %s\n",
+                    BitUtils.toBinaryString(sib.index()).substring(5, 8), index);
+            final String base = Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, b)
+                    .toIntelSyntax();
+            System.out.printf(
+                    "        Base: %s -> %s\n",
+                    BitUtils.toBinaryString(sib.base()).substring(5, 8), base);
+        }
+
+        if (isDisplacementNeeded) {
+            switch (displacementBytes) {
+                case 1:
+                    System.out.printf("0x%02x -> displacement\n", binary[pos]);
+                    pos++;
+                    break;
+                case 4:
+                    System.out.printf(
+                            "0x%02x%02x%02x%02x -> displacement\n",
+                            binary[pos + 3], binary[pos + 2], binary[pos + 1], binary[pos]);
+                    pos += 4;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid displacement");
+            }
+        }
+
+        if (pos < binary.length) {
+            System.out.print("Unused bytes: ");
+            for (; pos < binary.length; pos++) {
+                System.out.printf("%02x ", binary[pos]);
+            }
+            System.out.println();
+        }
     }
 }

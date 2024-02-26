@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.MiniLogger.LoggingLevel;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.provider.Arguments;
 
 public abstract class X86Test {
@@ -46,5 +50,10 @@ public abstract class X86Test {
             }
         }
         return args.stream();
+    }
+
+    @BeforeAll
+    public static void setup() {
+        MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
     }
 }

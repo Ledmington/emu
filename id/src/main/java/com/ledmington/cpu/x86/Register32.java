@@ -20,6 +20,8 @@ public final class Register32 implements Register {
     public static final Register32 R13D = new Register32("r13d");
     public static final Register32 R14D = new Register32("r14d");
     public static final Register32 R15D = new Register32("r15d");
+    public static final Register32 EIP = new Register32("eip"); // instruction pointer
+    public static final Register32 EIZ = new Register32("eiz"); // zero
 
     private final String mnemonic;
 
