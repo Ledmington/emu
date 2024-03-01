@@ -52,7 +52,8 @@ je 0x78563412 | 0f 84 12 34 56 78
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'jmp rip+0x....'
-jmp 0x2e2fc | e9 fc e2 02 00
+jmp 0x12       | eb 12
+jmp 0x78563412 | e9 12 34 56 78
 
 # Cmove
 cmove r15,rcx | 4c 0f 44 f9
@@ -1099,6 +1100,9 @@ mov esp,edi | 89 fc
 mov esp,edx | 89 d4
 mov esp,esi | 89 f4
 mov esp,esp | 89 e4
+#
+mov QWORD PTR [rbp+0x7eadbeef],0x12345678 | 48 c7 85 ef be ad 7e 78 56 34 12
+mov QWORD PTR [rbp-0xf0],0x0              | 48 c7 85 10 ff ff ff 00 00 00 00
 
 # Push
 push r10 | 41 52

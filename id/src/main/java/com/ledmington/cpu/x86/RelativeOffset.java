@@ -8,6 +8,10 @@ public final class RelativeOffset implements Operand {
 
     private final long value;
 
+    public static RelativeOffset of8(final byte x) {
+        return new RelativeOffset((long) x);
+    }
+
     public static RelativeOffset of32(final int x) {
         return new RelativeOffset((long) x);
     }

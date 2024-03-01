@@ -53,7 +53,8 @@ public final class InstructionDecoder {
     private static final byte LEAVE_OPCODE = (byte) 0xc9;
     private static final byte INT3_OPCODE = (byte) 0xcc;
     private static final byte CALL_OPCODE = (byte) 0xe8;
-    private static final byte JMP_OPCODE = (byte) 0xe9;
+    private static final byte JMP_DISP32_OPCODE = (byte) 0xe9;
+    private static final byte JMP_DISP8_OPCODE = (byte) 0xeb;
 
     // two bytes opcodes
     private static final byte CMOVE_OPCODE = (byte) 0x44;
@@ -164,7 +165,8 @@ public final class InstructionDecoder {
                 case SUB_OPCODE -> parseSimple(b, rexPrefix, Opcode.SUB, false);
                 case ADD_OPCODE -> parseSimple(b, rexPrefix, Opcode.ADD, false);
                 case CMP_REG_REG_OPCODE -> parseSimple(b, rexPrefix, Opcode.CMP, false);
-                case JMP_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
+                case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
+                case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
                 case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
                         Opcode.MOV, Register32.EDI, new Immediate(b.read4LittleEndian()));
