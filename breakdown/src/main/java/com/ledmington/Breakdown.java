@@ -1,11 +1,30 @@
 package com.ledmington;
 
+import java.util.Map;
+
 import com.ledmington.cpu.x86.ModRM;
+import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register;
 import com.ledmington.cpu.x86.SIB;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.ImmutableMap;
 
 public final class Breakdown {
+
+    private static final Map<Byte, Opcode> opcodes = ImmutableMap.<Byte, Opcode>builder()
+            .put((byte) 0x01, Opcode.ADD)
+            .put((byte) 0x81, Opcode.CMP)
+            .put((byte) 0x83, Opcode.ADD)
+            .put((byte) 0xb9, Opcode.MOV)
+            .build();
+
+    private static final Map<Byte, Opcode> multiByteOpcodes = ImmutableMap.<Byte, Opcode>builder()
+            .put((byte) 0x44, Opcode.CMOVE)
+            .put((byte) 0x84, Opcode.JE)
+            .put((byte) 0x87, Opcode.JA)
+            .put((byte) 0x8f, Opcode.JG)
+            .build();
+
     public static void main(final String[] args) {
         if (args.length == 0) {
             System.err.println("I was expecting a hexadecimal string to decode");
@@ -28,6 +47,10 @@ public final class Breakdown {
         breakdown(binary);
     }
 
+    private static boolean isMultibyteOpcodePrefix(final byte b) {
+        return b == (byte) 0x0f;
+    }
+
     private static void breakdown(final byte[] binary) {
         int pos = 0;
         boolean w = false;
@@ -38,7 +61,7 @@ public final class Breakdown {
 
         if (binary[pos] == (byte) 0x67) { // address size override prefix
             System.out.printf(
-                    "0x%02x -> address size override prefix -> 32-bit registers are used to compute memory location\n",
+                    "0x%02x   -> address size override prefix -> 32-bit registers are used to compute memory location\n",
                     binary[pos]);
             hasAddressSizeOverridePrefix = true;
             pos++;
@@ -50,37 +73,42 @@ public final class Breakdown {
             x = BitUtils.and(binary[pos], (byte) 0x02) != 0;
             b = BitUtils.and(binary[pos], (byte) 0x01) != 0;
             System.out.printf(
-                    "0x%02x -> REX prefix -> %s%s%s%s\n",
+                    "0x%02x   -> REX prefix -> %s%s%s%s\n",
                     binary[pos], (w ? ".W" : ""), (r ? ".R" : ""), (x ? ".X" : ""), (b ? ".B" : ""));
             if (w) {
-                System.out.println("        .W -> first operand is 64 bits");
+                System.out.println("          .W -> first operand is 64 bits");
             }
             if (r) {
-                System.out.println("        .R -> the ModR/M Reg field is extended");
+                System.out.println("          .R -> the ModR/M Reg field is extended");
             }
             if (x) {
-                System.out.println("        .X -> the SIB Index field is extended");
+                System.out.println("          .X -> the SIB Index field is extended");
             }
             if (b) {
                 System.out.println(
-                        "        .B -> the Opcode Reg field, the ModR/M R/M field or the SIB Base field is extended");
+                        "          .B -> the Opcode Reg field, the ModR/M R/M field or the SIB Base field is extended");
             }
 
             pos++;
         }
 
-        System.out.printf("0x%02x -> ", binary[pos]);
-        switch (binary[pos]) {
-            case (byte) 0x8d:
-                System.out.println("LEA opcode");
-                break;
-            case (byte) 0x89:
-                System.out.println("MOV opcode");
-                break;
-            default:
-                System.err.println("unknown");
+        if (isMultibyteOpcodePrefix(binary[pos])) {
+            System.out.printf("0x%02x%02x -> ", binary[pos], binary[pos + 1]);
+            if (multiByteOpcodes.containsKey(binary[pos + 1])) {
+                System.out.println(multiByteOpcodes.get(binary[pos + 1]) + " opcode");
+            } else {
+                System.out.println("unknown opcode");
                 System.exit(-1);
-                break;
+            }
+            pos++;
+        } else {
+            System.out.printf("0x%02x   -> ", binary[pos]);
+            if (opcodes.containsKey(binary[pos])) {
+                System.out.println(opcodes.get(binary[pos]) + " opcode");
+            } else {
+                System.out.println("unknown opcode");
+                System.exit(-1);
+            }
         }
         pos++;
 
@@ -91,13 +119,13 @@ public final class Breakdown {
         // ModR/m byte
         final ModRM modrm = new ModRM(binary[pos++]);
         System.out.printf(
-                "0x%02x -> ModR/M byte (%s-%s-%s)\n",
+                "0x%02x   -> ModR/M byte (%s-%s-%s)\n",
                 binary[pos - 1],
                 BitUtils.toBinaryString(modrm.mod()).substring(6, 8),
                 BitUtils.toBinaryString(modrm.reg()).substring(5, 8),
                 BitUtils.toBinaryString(modrm.rm()).substring(5, 8));
         System.out.printf(
-                "        Mod: %s -> ", BitUtils.toBinaryString(modrm.mod()).substring(6, 8));
+                "          Mod: %s -> ", BitUtils.toBinaryString(modrm.mod()).substring(6, 8));
 
         switch (modrm.mod()) {
             case 0x00:
@@ -129,14 +157,15 @@ public final class Breakdown {
         System.out.println();
         final String reg = Register.fromCode(modrm.reg(), w, r).toIntelSyntax();
         System.out.printf(
-                "        Reg: %s -> %s\n", BitUtils.toBinaryString(modrm.reg()).substring(5, 8), reg);
+                "          Reg: %s -> %s\n",
+                BitUtils.toBinaryString(modrm.reg()).substring(5, 8), reg);
         String rm =
                 Register.fromCode(modrm.rm(), !hasAddressSizeOverridePrefix, b).toIntelSyntax();
         if (modrm.mod() == (byte) 0x00 && rm.endsWith("bp")) {
             rm = hasAddressSizeOverridePrefix ? "eip" : "rip";
         }
         System.out.printf(
-                "        R/M: %s -> %s", BitUtils.toBinaryString(modrm.rm()).substring(5, 8), rm);
+                "          R/M: %s -> %s", BitUtils.toBinaryString(modrm.rm()).substring(5, 8), rm);
         if (modrm.mod() != (byte) 0x03 && modrm.rm() == (byte) 0x04) {
             System.out.print(" (a SIB byte follows)");
             isSIBByteNeeded = true;
@@ -146,36 +175,46 @@ public final class Breakdown {
         if (isSIBByteNeeded) {
             final SIB sib = new SIB(binary[pos++]);
             System.out.printf(
-                    "0x%02x -> SIB byte (%s-%s-%s)\n",
+                    "0x%02x   -> SIB byte (%s-%s-%s)\n",
                     binary[pos - 1],
                     BitUtils.toBinaryString(sib.scale()).substring(6, 8),
                     BitUtils.toBinaryString(sib.index()).substring(5, 8),
                     BitUtils.toBinaryString(sib.base()).substring(5, 8));
             System.out.printf(
-                    "        Scale: %s -> *%d\n",
+                    "          Scale: %s -> *%d\n",
                     BitUtils.toBinaryString(sib.scale()).substring(6, 8), 1 << BitUtils.asInt(sib.scale()));
             final String index = Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, x)
                     .toIntelSyntax();
             System.out.printf(
-                    "        Index: %s -> %s\n",
+                    "          Index: %s -> %s\n",
                     BitUtils.toBinaryString(sib.index()).substring(5, 8), index);
             final String base = Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, b)
                     .toIntelSyntax();
             System.out.printf(
-                    "        Base: %s -> %s\n",
+                    "          Base: %s -> %s\n",
                     BitUtils.toBinaryString(sib.base()).substring(5, 8), base);
         }
 
         if (isDisplacementNeeded) {
             switch (displacementBytes) {
                 case 1:
-                    System.out.printf("0x%02x -> displacement\n", binary[pos]);
+                    System.out.printf("0x%02x  ", binary[pos]);
+                    if (binary[pos] < 0) {
+                        System.out.printf(" -> -0x%x", (~binary[pos]) + 1);
+                    }
+                    System.out.println(" -> displacement");
                     pos++;
                     break;
                 case 4:
-                    System.out.printf(
-                            "0x%02x%02x%02x%02x -> displacement\n",
-                            binary[pos + 3], binary[pos + 2], binary[pos + 1], binary[pos]);
+                    final int disp32 = (BitUtils.asInt(binary[pos + 3]) << 24)
+                            | (BitUtils.asInt(binary[pos + 2]) << 16)
+                            | (BitUtils.asInt(binary[pos + 1]) << 8)
+                            | BitUtils.asInt(binary[pos]);
+                    System.out.printf("0x%08x  ", disp32);
+                    if (disp32 < 0) {
+                        System.out.printf(" -> -0x%x", (~disp32) + 1);
+                    }
+                    System.out.println(" -> displacement");
                     pos += 4;
                     break;
                 default:

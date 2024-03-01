@@ -43,7 +43,7 @@ public final class Main {
     }
 
     public static void main(final String[] args) {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
         if (args.length == 0) {
             logger.error("expected 1 argument");
             System.exit(-1);

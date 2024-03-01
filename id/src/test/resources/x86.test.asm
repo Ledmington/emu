@@ -8,7 +8,7 @@
 # will be treated as comments and, therefore, ignored.
 #
 # All other lines must follow the following format:
-# - the expected output: the instruction written in human-readable form
+# - the expected output: the instruction written in human-readable form (intel syntax)
 # - a single '|' character to separate the input and the expected output
 # - the binary (hexadecimal) representation of the instruction
 #
@@ -21,23 +21,47 @@
 nop | 90
 
 # Call
-call 0xffffffffffffff1d | e8 18 ff ff ff
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'call rip+0x....'
+call 0xffffffffffffff18 | e8 18 ff ff ff
 
 # Cdq
 cdq | 99
 
 # Ja
-ja 0x79 | 77 77
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'jg rip+0x....'
+ja 0x78563412 | 0f 87 12 34 56 78
+
+# Jg
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'jg rip+0x....'
+jg 0x78563412 | 0f 8f 12 34 56 78
 
 # Je
-je 0x2e0e1 | 0f 84 db e0 02 00
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'je rip+0x....'
+je 0x2e0db    | 0f 84 db e0 02 00
+je 0x78563412 | 0f 84 12 34 56 78
 
 # Jmp
-jmp 0x2e301 | e9 fc e2 02 00
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'jmp rip+0x....'
+jmp 0x2e2fc | e9 fc e2 02 00
 
-# And
-and ah,BYTE PTR [rdx]      | 22 22
-and rdi,0xfffffffffffffff0 | 48 83 e7 f0
+# Cmove
+cmove r15,rcx | 4c 0f 44 f9
+cmove rcx,r15 | 49 0f 44 cf
+
+# Cmp
+cmp edi,0x12345678 | 81 ff 78 56 34 12
+cmp rdi,0xfbf      | 48 81 ff bf 0f 00 00
+cmp rsp,r8         | 4c 39 c4
 
 # Lea
 lea eax,[r10-0xf]        | 41 8d 42 f1
@@ -945,19 +969,6 @@ lea rsi,[rsi-0x1]        | 48 8d 76 ff
 lea rsi,[rsp+0xe0]       | 48 8d b4 24 e0 00 00 00
 lea rsp,[rbp-0x28]       | 48 8d 65 d8
 
-# Cmove
-cmove r15,rax | 4c 0f 44 f8
-cmove r15,rbp | 4c 0f 44 fd
-cmove r15,rbx | 4c 0f 44 fb
-cmove r15,rcx | 4c 0f 44 f9
-cmove r15,rdi | 4c 0f 44 ff
-cmove r15,rdx | 4c 0f 44 fa
-cmove r15,rsi | 4c 0f 44 fe
-cmove r15,rsp | 4c 0f 44 fc
-
-# Cmp
-cmp rdi,0xfbf | 48 81 ff bf 0f 00 00
-
 # Mov
 mov r10d,r10d | 45 89 d2
 mov r10d,r11d | 45 89 da
@@ -1088,308 +1099,6 @@ mov esp,edi | 89 fc
 mov esp,edx | 89 d4
 mov esp,esi | 89 f4
 mov esp,esp | 89 e4
-#
-# In Intel ISA displacements and immediates are little-endian
-mov eax,0x12345678 | b8 78 56 34 12
-mov ebp,0x12345678 | bd 78 56 34 12
-mov ebx,0x12345678 | bb 78 56 34 12
-mov ebx,0xbbbbbbbb | bb bb bb bb bb
-mov ecx,0x12345678 | b9 78 56 34 12
-mov edi,0x12345678 | bf 78 56 34 12
-mov edx,0x12345678 | ba 78 56 34 12
-mov esi,0x12345678 | be 78 56 34 12
-mov esp,0x12345678 | bc 78 56 34 12
-#
-mov BYTE PTR [rax-0x77777778],cl | 88 88 88 88 88 88
-mov DWORD PTR [rbp-0xd8],eax     | 89 85 28 ff ff ff
-mov QWORD PTR [rbp-0xd8],rax     | 48 89 85 28 ff ff ff
-mov rax,QWORD PTR [rbp-0xd8]     | 48 8b 85 28 ff ff ff
-mov rsi,QWORD PTR [rbp-0xd8]     | 48 8b b5 28 ff ff ff
-
-# Test
-test rax,rax | 48 85 c0
-test rax,rbp | 48 85 e8
-test rax,rbx | 48 85 d8
-test rax,rcx | 48 85 c8
-test rax,rdi | 48 85 f8
-test rax,rdx | 48 85 d0
-test rax,rsi | 48 85 f0
-test rax,rsp | 48 85 e0
-test rbp,rax | 48 85 c5
-test rbp,rbp | 48 85 ed
-test rbp,rbx | 48 85 dd
-test rbp,rcx | 48 85 cd
-test rbp,rdi | 48 85 fd
-test rbp,rdx | 48 85 d5
-test rbp,rsi | 48 85 f5
-test rbp,rsp | 48 85 e5
-test rbx,rax | 48 85 c3
-test rbx,rbp | 48 85 eb
-test rbx,rbx | 48 85 db
-test rbx,rcx | 48 85 cb
-test rbx,rdi | 48 85 fb
-test rbx,rdx | 48 85 d3
-test rbx,rsi | 48 85 f3
-test rbx,rsp | 48 85 e3
-test rcx,rax | 48 85 c1
-test rcx,rbp | 48 85 e9
-test rcx,rbx | 48 85 d9
-test rcx,rcx | 48 85 c9
-test rcx,rdi | 48 85 f9
-test rcx,rdx | 48 85 d1
-test rcx,rsi | 48 85 f1
-test rcx,rsp | 48 85 e1
-test rdi,rax | 48 85 c7
-test rdi,rbp | 48 85 ef
-test rdi,rbx | 48 85 df
-test rdi,rcx | 48 85 cf
-test rdi,rdi | 48 85 ff
-test rdi,rdx | 48 85 d7
-test rdi,rsi | 48 85 f7
-test rdi,rsp | 48 85 e7
-test rdx,rax | 48 85 c2
-test rdx,rbp | 48 85 ea
-test rdx,rbx | 48 85 da
-test rdx,rcx | 48 85 ca
-test rdx,rdi | 48 85 fa
-test rdx,rdx | 48 85 d2
-test rdx,rsi | 48 85 f2
-test rdx,rsp | 48 85 e2
-test rsi,rax | 48 85 c6
-test rsi,rbp | 48 85 ee
-test rsi,rbx | 48 85 de
-test rsi,rcx | 48 85 ce
-test rsi,rdi | 48 85 fe
-test rsi,rdx | 48 85 d6
-test rsi,rsi | 48 85 f6
-test rsi,rsp | 48 85 e6
-test rsp,rax | 48 85 c4
-test rsp,rbp | 48 85 ec
-test rsp,rbx | 48 85 dc
-test rsp,rcx | 48 85 cc
-test rsp,rdi | 48 85 fc
-test rsp,rdx | 48 85 d4
-test rsp,rsi | 48 85 f4
-test rsp,rsp | 48 85 e4
-#
-test eax,eax | 85 c0
-test eax,ebp | 85 e8
-test eax,ebx | 85 d8
-test eax,ecx | 85 c8
-test eax,edi | 85 f8
-test eax,edx | 85 d0
-test eax,esi | 85 f0
-test eax,esp | 85 e0
-test ebp,eax | 85 c5
-test ebp,ebp | 85 ed
-test ebp,ebx | 85 dd
-test ebp,ecx | 85 cd
-test ebp,edi | 85 fd
-test ebp,edx | 85 d5
-test ebp,esi | 85 f5
-test ebp,esp | 85 e5
-test ebx,eax | 85 c3
-test ebx,ebp | 85 eb
-test ebx,ebx | 85 db
-test ebx,ecx | 85 cb
-test ebx,edi | 85 fb
-test ebx,edx | 85 d3
-test ebx,esi | 85 f3
-test ebx,esp | 85 e3
-test ecx,eax | 85 c1
-test ecx,ebp | 85 e9
-test ecx,ebx | 85 d9
-test ecx,ecx | 85 c9
-test ecx,edi | 85 f9
-test ecx,edx | 85 d1
-test ecx,esi | 85 f1
-test ecx,esp | 85 e1
-test edi,eax | 85 c7
-test edi,ebp | 85 ef
-test edi,ebx | 85 df
-test edi,ecx | 85 cf
-test edi,edi | 85 ff
-test edi,edx | 85 d7
-test edi,esi | 85 f7
-test edi,esp | 85 e7
-test edx,eax | 85 c2
-test edx,ebp | 85 ea
-test edx,ebx | 85 da
-test edx,ecx | 85 ca
-test edx,edi | 85 fa
-test edx,edx | 85 d2
-test edx,esi | 85 f2
-test edx,esp | 85 e2
-test esi,eax | 85 c6
-test esi,ebp | 85 ee
-test esi,ebx | 85 de
-test esi,ecx | 85 ce
-test esi,edi | 85 fe
-test esi,edx | 85 d6
-test esi,esi | 85 f6
-test esi,esp | 85 e6
-test esp,eax | 85 c4
-test esp,ebp | 85 ec
-test esp,ebx | 85 dc
-test esp,ecx | 85 cc
-test esp,edi | 85 fc
-test esp,edx | 85 d4
-test esp,esi | 85 f4
-test esp,esp | 85 e4
-#
-test BYTE PTR [r15+0x20],0x4  | 41 f6 47 20 04
-test BYTE PTR [rbp-0x200],0x1 | f6 85 00 fe ff ff 01
-test al,0x60                  | a8 60
-test al,al                    | 84 c0
-test cl,0x2                   | f6 c1 02
-test dil,dil                  | 40 84 ff
-test r14b,0x60                | 41 f6 c6 60
-test r14d,r14d                | 45 85 f6
-
-# Xor
-xor r10d,r10d | 45 31 d2
-xor r10d,r11d | 45 31 da
-xor r10d,r12d | 45 31 e2
-xor r10d,r13d | 45 31 ea
-xor r10d,r14d | 45 31 f2
-xor r10d,r15d | 45 31 fa
-xor r10d,r8d  | 45 31 c2
-xor r10d,r9d  | 45 31 ca
-xor r11d,r10d | 45 31 d3
-xor r11d,r11d | 45 31 db
-xor r11d,r12d | 45 31 e3
-xor r11d,r13d | 45 31 eb
-xor r11d,r14d | 45 31 f3
-xor r11d,r15d | 45 31 fb
-xor r11d,r8d  | 45 31 c3
-xor r11d,r9d  | 45 31 cb
-xor r12d,r10d | 45 31 d4
-xor r12d,r11d | 45 31 dc
-xor r12d,r12d | 45 31 e4
-xor r12d,r13d | 45 31 ec
-xor r12d,r14d | 45 31 f4
-xor r12d,r15d | 45 31 fc
-xor r12d,r8d  | 45 31 c4
-xor r12d,r9d  | 45 31 cc
-xor r13d,r10d | 45 31 d5
-xor r13d,r11d | 45 31 dd
-xor r13d,r12d | 45 31 e5
-xor r13d,r13d | 45 31 ed
-xor r13d,r14d | 45 31 f5
-xor r13d,r15d | 45 31 fd
-xor r13d,r8d  | 45 31 c5
-xor r13d,r9d  | 45 31 cd
-xor r14d,r10d | 45 31 d6
-xor r14d,r11d | 45 31 de
-xor r14d,r12d | 45 31 e6
-xor r14d,r13d | 45 31 ee
-xor r14d,r14d | 45 31 f6
-xor r14d,r15d | 45 31 fe
-xor r14d,r8d  | 45 31 c6
-xor r14d,r9d  | 45 31 ce
-xor r15d,r10d | 45 31 d7
-xor r15d,r11d | 45 31 df
-xor r15d,r12d | 45 31 e7
-xor r15d,r13d | 45 31 ef
-xor r15d,r14d | 45 31 f7
-xor r15d,r15d | 45 31 ff
-xor r15d,r8d  | 45 31 c7
-xor r15d,r9d  | 45 31 cf
-xor r8d,r10d  | 45 31 d0
-xor r8d,r11d  | 45 31 d8
-xor r8d,r12d  | 45 31 e0
-xor r8d,r13d  | 45 31 e8
-xor r8d,r14d  | 45 31 f0
-xor r8d,r15d  | 45 31 f8
-xor r8d,r8d   | 45 31 c0
-xor r8d,r9d   | 45 31 c8
-xor r9d,r10d  | 45 31 d1
-xor r9d,r11d  | 45 31 d9
-xor r9d,r12d  | 45 31 e1
-xor r9d,r13d  | 45 31 e9
-xor r9d,r14d  | 45 31 f1
-xor r9d,r15d  | 45 31 f9
-xor r9d,r8d   | 45 31 c1
-xor r9d,r9d   | 45 31 c9
-#
-xor eax,eax | 31 c0
-xor eax,ebp | 31 e8
-xor eax,ebx | 31 d8
-xor eax,ecx | 31 c8
-xor eax,edi | 31 f8
-xor eax,edx | 31 d0
-xor eax,esi | 31 f0
-xor eax,esp | 31 e0
-xor ebp,eax | 31 c5
-xor ebp,ebp | 31 ed
-xor ebp,ebx | 31 dd
-xor ebp,ecx | 31 cd
-xor ebp,edi | 31 fd
-xor ebp,edx | 31 d5
-xor ebp,esi | 31 f5
-xor ebp,esp | 31 e5
-xor ebx,eax | 31 c3
-xor ebx,ebp | 31 eb
-xor ebx,ebx | 31 db
-xor ebx,ecx | 31 cb
-xor ebx,edi | 31 fb
-xor ebx,edx | 31 d3
-xor ebx,esi | 31 f3
-xor ebx,esp | 31 e3
-xor ecx,eax | 31 c1
-xor ecx,ebp | 31 e9
-xor ecx,ebx | 31 d9
-xor ecx,ecx | 31 c9
-xor ecx,edi | 31 f9
-xor ecx,edx | 31 d1
-xor ecx,esi | 31 f1
-xor ecx,esp | 31 e1
-xor edi,eax | 31 c7
-xor edi,ebp | 31 ef
-xor edi,ebx | 31 df
-xor edi,ecx | 31 cf
-xor edi,edi | 31 ff
-xor edi,edx | 31 d7
-xor edi,esi | 31 f7
-xor edi,esp | 31 e7
-xor edx,eax | 31 c2
-xor edx,ebp | 31 ea
-xor edx,ebx | 31 da
-xor edx,ecx | 31 ca
-xor edx,edi | 31 fa
-xor edx,edx | 31 d2
-xor edx,esi | 31 f2
-xor edx,esp | 31 e2
-xor esi,eax | 31 c6
-xor esi,ebp | 31 ee
-xor esi,ebx | 31 de
-xor esi,ecx | 31 ce
-xor esi,edi | 31 fe
-xor esi,edx | 31 d6
-xor esi,esi | 31 f6
-xor esi,esp | 31 e6
-xor esp,eax | 31 c4
-xor esp,ebp | 31 ec
-xor esp,ebx | 31 dc
-xor esp,ecx | 31 cc
-xor esp,edi | 31 fc
-xor esp,edx | 31 d4
-xor esp,esi | 31 f4
-xor esp,esp | 31 e4
-#
-xor esi,DWORD PTR [rbx] | 33 33
-
-# Pxor
-pxor xmm0,xmm0   | 66 0f ef c0
-pxor xmm1,xmm1   | 66 0f ef c9
-pxor xmm10,xmm10 | 66 45 0f ef d2
-pxor xmm12,xmm12 | 66 45 0f ef e4
-pxor xmm2,xmm2   | 66 0f ef d2
-pxor xmm3,xmm3   | 66 0f ef db
-pxor xmm4,xmm4   | 66 0f ef e4
-pxor xmm6,xmm6   | 66 0f ef f6
-pxor xmm7,xmm7   | 66 0f ef ff
-pxor xmm8,xmm8   | 66 45 0f ef c0
 
 # Push
 push r10 | 41 52
@@ -1427,57 +1136,21 @@ pop rdx | 5a
 pop rsi | 5e
 pop rsp | 5c
 
-# Sub
-sub DWORD PTR [rbp+0x138],0x1 | 83 ad 38 01 00 00 01
-sub eax,0x30                  | 83 e8 30
-sub edx,0x42                  | 83 ea 42
-sub edx,esi                   | 29 f2
-sub esi,ebp                   | 29 ee
-sub r13,0x20                  | 49 83 ed 20
-sub rax,0xff                  | 48 2d ff 00 00 00
-sub rax,QWORD PTR [rsp+0x10]  | 48 2b 44 24 10
-sub rdi,rax                   | 48 29 c7
-sub rdx,QWORD PTR fs:0x28     | 64 48 2b 14 25 28 00 00 00
-sub rsp,0x18                  | 48 83 ec 18
-sub rsp,0x278                 | 48 81 ec 78 02 00 00
-
-# Rep movs
-rep movs DWORD PTR es:[rdi],DWORD PTR ds:[rsi] | f3 a5
-
 # Leave
 leave | c9
 
 # Ret
 ret | c3
 
-# Inc
-inc eax | ff c0
-inc rax | 48 ff c0
-
-# Dec
-dec eax | ff c8
-dec rax | 48 ff c8
-
 # Add
-add BYTE PTR [rax],al | 00 00 00
+add eax,0x18 | 83 c0 18
+add r8,0x1   | 49 83 c0 01
+add rax,0x1  | 48 83 c0 01
 
-# Adc
-adc DWORD PTR [rcx],edx | 11 11
-
-# Stos
-stos BYTE PTR es:[rdi],al | aa
-
-# Int3
-int3 | cc
-
-# Fstp
-fstp st(5) | dd dd
-
-# Out
-out dx,al | ee
-
-# Rol
-rol DWORD PTR [rax],1 | d1 00
-
-# Ror
-ror DWORD PTR [rax],1 | d1 08
+# And
+and edi,0x1                | 83 e7 01
+and edi,0x1d               | 83 e7 1d
+and edi,0x7f               | 83 e7 7f
+and edi,0xf                | 83 e7 0f
+and r15d,0x1f              | 41 83 e7 1f
+and rdi,0xfffffffffffffff0 | 48 83 e7 f0

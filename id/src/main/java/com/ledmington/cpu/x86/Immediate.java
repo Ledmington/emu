@@ -2,6 +2,9 @@ package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
 
+/**
+ * This class represents an immediate value in a x86 instruction.
+ */
 public final class Immediate implements Operand {
 
     private final long value;
@@ -36,12 +39,16 @@ public final class Immediate implements Operand {
     @Override
     public String toIntelSyntax() {
         return switch (bits) {
-            case 8 -> String.format("0x%02x", BitUtils.asByte(value));
-            case 16 -> String.format("0x%04x", BitUtils.asShort(value));
-            case 32 -> String.format("0x%08x", BitUtils.asInt(value));
-            case 64 -> String.format("0x%016x", value);
+            case 8 -> String.format("0x%x", BitUtils.asByte(value));
+            case 16 -> String.format("0x%x", BitUtils.asShort(value));
+            case 32 -> String.format("0x%x", BitUtils.asInt(value));
+            case 64 -> String.format("0x%x", value);
             default -> throw new IllegalStateException(
                     String.format("Invalid value of bits: expected 8, 16, 32 or 64 but was %,d", bits));
         };
+    }
+
+    public String toString() {
+        return "Immediate(" + this.toIntelSyntax() + ")";
     }
 }

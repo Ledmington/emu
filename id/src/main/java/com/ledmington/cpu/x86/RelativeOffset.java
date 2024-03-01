@@ -1,12 +1,15 @@
 package com.ledmington.cpu.x86;
 
+/**
+ * An offset relative to the current (at run-time) value of
+ * the Instruction Pointer register.
+ */
 public final class RelativeOffset implements Operand {
 
     private final long value;
 
     public static RelativeOffset of32(final int x) {
-        final long l = ((long) x) & 0x00000000ffffffffL;
-        return new RelativeOffset(l);
+        return new RelativeOffset((long) x);
     }
 
     private RelativeOffset(final long value) {

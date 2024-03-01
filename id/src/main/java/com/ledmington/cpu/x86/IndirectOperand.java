@@ -168,6 +168,10 @@ public final class IndirectOperand implements Operand {
         }
     }
 
+    public Register reg2() {
+        return reg2;
+    }
+
     @Override
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
@@ -201,5 +205,15 @@ public final class IndirectOperand implements Operand {
         }
         sb.append(']');
         return sb.toString();
+    }
+
+    public String toString() {
+        return "IndirectOperand(" + "reg1="
+                + ((reg1 == null) ? "null" : reg1.toString())
+                + ";" + "reg2="
+                + reg2.toString() + ";" + "constant="
+                + constant + ";" + "displacement="
+                + displacement.toString()
+                + ")";
     }
 }
