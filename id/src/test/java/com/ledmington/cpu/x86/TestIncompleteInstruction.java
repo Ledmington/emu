@@ -18,10 +18,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 public final class TestIncompleteInstruction extends X86Test {
 
     static Stream<Arguments> incompleteInstructions() {
-        final Set<String> validInstructions = instructions()
-                .map(arg -> ((String) arg.get()[1]).strip())
-                .distinct()
-                .collect(Collectors.toSet());
+        final Set<String> validInstructions =
+                instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
         return validInstructions.stream()
                 .flatMap(hexCode -> {
                     final String[] splitted = hexCode.split(" ");
@@ -74,6 +72,6 @@ public final class TestIncompleteInstruction extends X86Test {
         // if we reached here, nothing was thrown
         fail(String.format(
                 "Expected ArrayIndexOutOfBounds to be thrown but nothing was thrown. The input was decoded into a list of %,d instructions: %s",
-                decoded.size(), decoded.stream().map(i -> i.toIntelSyntax()).toList()));
+                decoded.size(), decoded.stream().map(Instruction::toIntelSyntax).toList()));
     }
 }

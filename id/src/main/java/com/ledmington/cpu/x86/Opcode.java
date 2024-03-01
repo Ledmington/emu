@@ -18,6 +18,7 @@ public enum Opcode {
     LEAVE("leave"),
     MOV("mov"),
     NOP("nop"),
+    OR("or"),
     POP("pop"),
     PUSH("push"),
     RET("ret"),

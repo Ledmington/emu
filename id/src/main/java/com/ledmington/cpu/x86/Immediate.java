@@ -36,6 +36,10 @@ public final class Immediate implements Operand {
         this(x, 64);
     }
 
+    public int bits() {
+        return bits;
+    }
+
     @Override
     public String toIntelSyntax() {
         return switch (bits) {

@@ -19,8 +19,6 @@ public final class InstructionDecoder {
 
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
 
-    private static final byte OPCODE_REG_MASK = (byte) 0x07;
-
     // single byte opcodes
     private static final byte ADD_OPCODE = (byte) 0x01;
     private static final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
@@ -129,22 +127,21 @@ public final class InstructionDecoder {
             final ModRM modrm = new ModRM(opcodeSecondByte);
             logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
-            if (modrm.mod() != (byte) 0x03 /* 11 */) {
-                throw new IllegalArgumentException(String.format(
-                        "Don't know what to do when the mod field is %s",
-                        BitUtils.toBinaryString(modrm.mod()).substring(6, 8)));
-            }
-
             return switch (modrm.reg()) {
                     // full table at page 2856
                 case (byte) 0x00 /* 000 */ -> new Instruction(
                         Opcode.ADD,
                         Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension()),
                         new Immediate(b.read1()));
+                case (byte) 0x01 /* 001 */ -> parse(b, p4.isPresent(), rexPrefix, modrm, Optional.of(1), Opcode.OR);
                 case (byte) 0x04 /* 100 */ -> new Instruction(
                         Opcode.AND,
                         Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension()),
-                        new Immediate(b.read1()));
+                        new Immediate((long) b.read1()));
+                case (byte) 0x05 /* 101 */ -> new Instruction(
+                        Opcode.SUB,
+                        Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension()),
+                        new Immediate(b.read4LittleEndian()));
                 case (byte) 0x07 /* 111 */ -> new Instruction(
                         Opcode.CMP,
                         Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension()),
@@ -160,8 +157,8 @@ public final class InstructionDecoder {
                 case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
                 case INT3_OPCODE -> new Instruction(Opcode.INT3);
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
-                case MOV_REG_MEM_OPCODE -> parseMOV(b, p4.isPresent(), rexPrefix, true);
-                case MOV_MEM_REG_OPCODE -> parseMOV(b, p4.isPresent(), rexPrefix, false);
+                case MOV_REG_MEM_OPCODE -> parseMOV(b, rexPrefix, true);
+                case MOV_MEM_REG_OPCODE -> parseMOV(b, rexPrefix, false);
                 case TEST_OPCODE -> parseSimple(b, rexPrefix, Opcode.TEST, false);
                 case XOR_OPCODE -> parseSimple(b, rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, rexPrefix, Opcode.SUB, false);
@@ -219,15 +216,92 @@ public final class InstructionDecoder {
         }
     }
 
-    private boolean isExtendedOpcode(final byte opcode) {
-        return opcode == (byte) 0x80 || opcode == (byte) 0x81 || opcode == (byte) 0x81 || opcode == (byte) 0x83;
-    }
-
-    private Instruction parseMOV(
+    private Instruction parse(
             final ByteBuffer b,
             final boolean hasAddressSizeOverridePrefix,
             final RexPrefix rexPrefix,
-            final boolean isFirstOperandRegister) {
+            final Optional<Integer> immediateBytes,
+            final Opcode opcode) {
+        final byte _modrm = b.read1();
+        final ModRM modrm = new ModRM(_modrm);
+        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        return parse(b, hasAddressSizeOverridePrefix, rexPrefix, modrm, immediateBytes, opcode);
+    }
+
+    private Instruction parse(
+            final ByteBuffer b,
+            final boolean hasAddressSizeOverridePrefix,
+            final RexPrefix rexPrefix,
+            final ModRM modrm,
+            final Optional<Integer> immediateBytes,
+            final Opcode opcode) {
+        final byte rm = modrm.rm();
+        final Register operand1 =
+                Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
+        final Register operand2 = Register.fromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension());
+
+        // Table at page 530
+        final byte mod = modrm.mod();
+        if (mod < (byte) 0x00 || mod > (byte) 0x03) {
+            throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
+        }
+
+        final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
+        SIB sib;
+        if (rm == (byte) 0x04 /* 100 */) {
+            final byte _sib = b.read1();
+            sib = new SIB(_sib);
+            logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
+
+            final Register base =
+                    Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension());
+            final Register index =
+                    Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension());
+            if (index.toIntelSyntax().endsWith("sp")) { // an indirect operand of [xxx+rsp+...] is not allowed
+                iob.reg2(base);
+            } else {
+                if (!(mod == (byte) 0x00 && base.toIntelSyntax().endsWith("bp"))) {
+                    iob.reg1(base);
+                }
+                iob.reg2(index);
+                iob.constant(1 << BitUtils.asInt(sib.scale()));
+            }
+        } else {
+            sib = new SIB((byte) 0x00);
+            if (mod == (byte) 0x00 && operand2.toIntelSyntax().endsWith("bp")) {
+                iob.reg2(hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP);
+            } else {
+                iob.reg2(operand2);
+            }
+        }
+
+        if ((mod == (byte) 0x00 && rm == (byte) 0x05)
+                || (mod == (byte) 0x00 && sib.base() == (byte) 0x05)
+                || mod == (byte) 0x02) {
+            final int disp32 = b.read4LittleEndian();
+            iob.displacement(disp32);
+        } else if (mod == (byte) 0x01) {
+            final byte disp8 = b.read1();
+            iob.displacement(disp8);
+        }
+
+        if (immediateBytes.isEmpty()) {
+            return new Instruction(opcode, iob.build(), operand2);
+        }
+
+        return switch (immediateBytes.orElseThrow()) {
+            case 1 -> new Instruction(opcode, iob.build(), new Immediate((long) b.read1()));
+            case 4 -> new Instruction(opcode, iob.build(), new Immediate((long) b.read4LittleEndian()));
+            default -> throw new IllegalArgumentException(
+                    String.format("Invalid value for immediate bytes: %,d", immediateBytes.orElseThrow()));
+        };
+    }
+
+    private boolean isExtendedOpcode(final byte opcode) {
+        return opcode == (byte) 0x80 || opcode == (byte) 0x81 || opcode == (byte) 0x82 || opcode == (byte) 0x83;
+    }
+
+    private Instruction parseMOV(final ByteBuffer b, final RexPrefix rexPrefix, final boolean isFirstOperandRegister) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
@@ -266,7 +340,7 @@ public final class InstructionDecoder {
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
         final Register operand1 =
                 Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.b());
+        final Register operand2 = Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.extension());
 
         if (invertOperands) {
             return new Instruction(opcode, operand1, operand2);
@@ -286,7 +360,7 @@ public final class InstructionDecoder {
 
         // Table at page 530
         final byte mod = modrm.mod();
-        if (mod < (byte) 0x00 && mod > (byte) 0x03) {
+        if (mod < (byte) 0x00 || mod > (byte) 0x03) {
             throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
         }
 

@@ -13,24 +13,22 @@ public final class Instruction {
 
     public Instruction(final Opcode opcode, final Operand... ops) {
         this.opcode = Objects.requireNonNull(opcode);
-        this.operands = new Operand[Objects.requireNonNull(ops).length];
+        this.operands = new Operand[Objects.requireNonNull(ops, "Cannot have null array of operands").length];
         for (int i = 0; i < ops.length; i++) {
-            this.operands[i] = Objects.requireNonNull(ops[i]);
+            final int finalI = i;
+            this.operands[i] =
+                    Objects.requireNonNull(ops[i], () -> String.format("The %,d-th operand was null", finalI));
         }
-    }
-
-    public int nOperands() {
-        return operands.length;
     }
 
     /**
      * The number of bits "used" by this instruction, which not necessarily
      * corresponds to the size of the operands.
-     *
+     * <p>
      * For example:
      * lea eax,[rbx] "uses" 32 bits
      * vaddsd xmm9, xmm10, xmm9 "uses" 64 bits
-     *
+     * <p>
      * Instructions which do not "use" anything like NOP, RET, LEAVE etc.
      * return 0.
      */
@@ -40,6 +38,9 @@ public final class Instruction {
         for (final Operand op : operands) {
             if (op instanceof Register r) {
                 return r.bits();
+            }
+            if (op instanceof Immediate imm) {
+                return imm.bits();
             }
         }
 
@@ -56,9 +57,8 @@ public final class Instruction {
                         case 128 -> "XMMWORD";
                         case 256 -> "YMMWORD";
                         case 512 -> "ZMMWORD";
-                        default -> throw new IllegalStateException(String.format(
-                                "Instruction '%s' invalid value of bits: '%,d'",
-                                io.reg2(), op, io.reg2().bits()));
+                        default -> throw new IllegalStateException(
+                                String.format("Instruction '%s' has invalid value of bits: '%,d'", this, this.bits()));
                     } + " PTR " + op.toIntelSyntax();
         }
         return op.toIntelSyntax();

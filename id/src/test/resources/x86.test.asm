@@ -1154,3 +1154,9 @@ and edi,0x7f               | 83 e7 7f
 and edi,0xf                | 83 e7 0f
 and r15d,0x1f              | 41 83 e7 1f
 and rdi,0xfffffffffffffff0 | 48 83 e7 f0
+
+# Sub
+sub rsp,0x12345678 | 48 81 ec 78 56 34 12
+
+# Or
+or QWORD PTR [rsp+0xff8],0x0                   | 48 83 8c 24 f8 0f 00 00 00
