@@ -1,11 +1,9 @@
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
 /**
  * SSE registers.
  */
-public final class RegisterMMX implements Register {
+public final class RegisterMMX extends Register {
 
     public static final RegisterMMX MM0 = new RegisterMMX("mm0");
     public static final RegisterMMX MM1 = new RegisterMMX("mm1");
@@ -16,10 +14,8 @@ public final class RegisterMMX implements Register {
     public static final RegisterMMX MM6 = new RegisterMMX("mm6");
     public static final RegisterMMX MM7 = new RegisterMMX("mm7");
 
-    private final String mnemonic;
-
     private RegisterMMX(final String mnemonic) {
-        this.mnemonic = Objects.requireNonNull(mnemonic);
+        super(mnemonic);
     }
 
     public static RegisterMMX fromByte(final byte b) {
@@ -36,17 +32,7 @@ public final class RegisterMMX implements Register {
         };
     }
 
-    @Override
     public int bits() {
         return 64;
-    }
-
-    @Override
-    public String toIntelSyntax() {
-        return mnemonic;
-    }
-
-    public String toString() {
-        return mnemonic;
     }
 }

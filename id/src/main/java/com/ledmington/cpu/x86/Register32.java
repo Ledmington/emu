@@ -1,8 +1,6 @@
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
-public final class Register32 implements Register {
+public final class Register32 extends Register {
 
     public static final Register32 EAX = new Register32("eax");
     public static final Register32 EBX = new Register32("ebx");
@@ -23,10 +21,8 @@ public final class Register32 implements Register {
     public static final Register32 EIP = new Register32("eip"); // instruction pointer
     public static final Register32 EIZ = new Register32("eiz"); // zero
 
-    private final String mnemonic;
-
     private Register32(final String mnemonic) {
-        this.mnemonic = Objects.requireNonNull(mnemonic);
+        super(mnemonic);
     }
 
     public static Register32 fromByte(final byte b) {
@@ -51,17 +47,7 @@ public final class Register32 implements Register {
         };
     }
 
-    @Override
     public int bits() {
         return 32;
-    }
-
-    @Override
-    public String toIntelSyntax() {
-        return mnemonic;
-    }
-
-    public String toString() {
-        return mnemonic;
     }
 }

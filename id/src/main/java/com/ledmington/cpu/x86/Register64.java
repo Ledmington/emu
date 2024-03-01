@@ -1,8 +1,6 @@
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
-public final class Register64 implements Register {
+public final class Register64 extends Register {
 
     public static final Register64 RAX = new Register64("rax");
     public static final Register64 RBX = new Register64("rbx");
@@ -23,10 +21,8 @@ public final class Register64 implements Register {
     public static final Register64 RIP = new Register64("rip"); // instruction pointer
     public static final Register64 RIZ = new Register64("riz"); // zero
 
-    private final String mnemonic;
-
     private Register64(final String mnemonic) {
-        this.mnemonic = Objects.requireNonNull(mnemonic);
+        super(mnemonic);
     }
 
     public static Register64 fromByte(final byte b) {
@@ -51,17 +47,7 @@ public final class Register64 implements Register {
         };
     }
 
-    @Override
     public int bits() {
         return 64;
-    }
-
-    @Override
-    public String toIntelSyntax() {
-        return mnemonic;
-    }
-
-    public String toString() {
-        return mnemonic;
     }
 }

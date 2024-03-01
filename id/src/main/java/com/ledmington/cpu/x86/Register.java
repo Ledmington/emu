@@ -1,10 +1,10 @@
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
 
-public interface Register extends Operand {
-
-    int bits();
+public abstract class Register implements Operand {
 
     /**
      * Performs a bitwise OR with the given byte and a byte
@@ -20,5 +20,21 @@ public interface Register extends Operand {
         return isOperand64Bit
                 ? Register64.fromByte(combine(extension, operandCode))
                 : Register32.fromByte(combine(extension, operandCode));
+    }
+
+    protected final String mnemonic;
+
+    protected Register(final String mnemonic) {
+        this.mnemonic = Objects.requireNonNull(mnemonic);
+    }
+
+    public abstract int bits();
+
+    public String toIntelSyntax() {
+        return mnemonic;
+    }
+
+    public String toString() {
+        return mnemonic;
     }
 }

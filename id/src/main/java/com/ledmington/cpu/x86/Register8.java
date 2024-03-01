@@ -1,8 +1,7 @@
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+public final class Register8 extends Register {
 
-public final class Register8 implements Register {
     public static final Register8 AL = new Register8("al");
     public static final Register8 BL = new Register8("bl");
     public static final Register8 CL = new Register8("cl");
@@ -12,10 +11,8 @@ public final class Register8 implements Register {
     public static final Register8 CH = new Register8("ch");
     public static final Register8 DH = new Register8("dh");
 
-    private final String mnemonic;
-
-    private Register8(final String mnemonic) {
-        this.mnemonic = Objects.requireNonNull(mnemonic);
+    public Register8(final String mnemonic) {
+        super(mnemonic);
     }
 
     public static Register8 fromByte(final byte b) {
@@ -32,17 +29,7 @@ public final class Register8 implements Register {
         };
     }
 
-    @Override
     public int bits() {
         return 8;
-    }
-
-    @Override
-    public String toIntelSyntax() {
-        return mnemonic;
-    }
-
-    public String toString() {
-        return mnemonic;
     }
 }
