@@ -13,6 +13,7 @@ public final class Breakdown {
 
     private static final Map<Byte, Opcode> opcodes = ImmutableMap.<Byte, Opcode>builder()
             .put((byte) 0x01, Opcode.ADD)
+            .put((byte) 0x39, Opcode.CMP)
             .put((byte) 0x81, Opcode.CMP)
             .put((byte) 0x83, Opcode.ADD)
             .put((byte) 0xb9, Opcode.MOV)

@@ -165,7 +165,12 @@ public final class InstructionDecoder {
                 case XOR_OPCODE -> parseSimple(b, rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, rexPrefix, Opcode.SUB, false);
                 case ADD_OPCODE -> parseSimple(b, rexPrefix, Opcode.ADD, false);
-                case CMP_REG_REG_OPCODE -> parseSimple(b, rexPrefix, Opcode.CMP, false);
+                case CMP_REG_REG_OPCODE -> parse(
+                        b,
+                        p4.isPresent(),
+                        rexPrefix,
+                        Optional.empty(),
+                        Opcode.CMP); // parseSimple(b, rexPrefix, Opcode.CMP, false);
                 case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
                 case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
@@ -242,7 +247,7 @@ public final class InstructionDecoder {
         final byte rm = modrm.rm();
         final Register operand1 =
                 Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 = Register.fromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension());
+        Operand operand2 = Register.fromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension());
 
         // Table at page 530
         final byte mod = modrm.mod();
@@ -252,7 +257,8 @@ public final class InstructionDecoder {
 
         final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
         SIB sib;
-        if (rm == (byte) 0x04 /* 100 */) {
+        if (mod != (byte) 0x03 /* 11 */ && rm == (byte) 0x04 /* 100 */) {
+            // SIB needed
             final byte _sib = b.read1();
             sib = new SIB(_sib);
             logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
@@ -271,31 +277,34 @@ public final class InstructionDecoder {
                 iob.constant(1 << BitUtils.asInt(sib.scale()));
             }
         } else {
-            sib = new SIB((byte) 0x00);
+            // SIB not needed
+            sib = null;
             if (mod == (byte) 0x00 && operand2.toIntelSyntax().endsWith("bp")) {
                 iob.reg2(hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP);
             } else {
-                iob.reg2(operand2);
+                iob.reg2((Register) operand2);
             }
         }
 
         if ((mod == (byte) 0x00 && rm == (byte) 0x05)
-                || (mod == (byte) 0x00 && sib.base() == (byte) 0x05)
+                || (mod == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
                 || mod == (byte) 0x02) {
             final int disp32 = b.read4LittleEndian();
             iob.displacement(disp32);
+            operand2 = iob.build();
         } else if (mod == (byte) 0x01) {
             final byte disp8 = b.read1();
             iob.displacement(disp8);
+            operand2 = iob.build();
         }
 
         if (immediateBytes.isEmpty()) {
-            return new Instruction(opcode, iob.build(), operand2);
+            return new Instruction(opcode, operand2, operand1);
         }
 
         return switch (immediateBytes.orElseThrow()) {
-            case 1 -> new Instruction(opcode, iob.build(), new Immediate((long) b.read1()));
-            case 4 -> new Instruction(opcode, iob.build(), new Immediate((long) b.read4LittleEndian()));
+            case 1 -> new Instruction(opcode, operand2, new Immediate((long) b.read1()));
+            case 4 -> new Instruction(opcode, operand2, new Immediate((long) b.read4LittleEndian()));
             default -> throw new IllegalArgumentException(
                     String.format("Invalid value for immediate bytes: %,d", immediateBytes.orElseThrow()));
         };

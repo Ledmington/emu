@@ -60,9 +60,10 @@ cmove r15,rcx | 4c 0f 44 f9
 cmove rcx,r15 | 49 0f 44 cf
 
 # Cmp
-cmp edi,0x12345678 | 81 ff 78 56 34 12
-cmp rdi,0xfbf      | 48 81 ff bf 0f 00 00
-cmp rsp,r8         | 4c 39 c4
+cmp DWORD PTR [rbp-0xe8],r15d | 44 39 bd 18 ff ff ff
+cmp edi,0x12345678            | 81 ff 78 56 34 12
+cmp rdi,0xfbf                 | 48 81 ff bf 0f 00 00
+cmp rsp,r8                    | 4c 39 c4
 
 # Lea
 lea eax,[r10-0xf]        | 41 8d 42 f1
