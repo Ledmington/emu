@@ -45,6 +45,7 @@ jg 0x78563412 | 0f 8f 12 34 56 78
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'je rip+0x....'
+je 0x12       | 74 12
 je 0x2e0db    | 0f 84 db e0 02 00
 je 0x78563412 | 0f 84 12 34 56 78
 

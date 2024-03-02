@@ -41,6 +41,7 @@ public final class InstructionDecoder {
     private static final byte POP_EBP_OPCODE = (byte) 0x5d;
     private static final byte POP_ESI_OPCODE = (byte) 0x5e;
     private static final byte POP_EDI_OPCODE = (byte) 0x5f;
+    private static final byte JE_DISP8_OPCODE = (byte) 0x74;
     private static final byte TEST_OPCODE = (byte) 0x85;
     private static final byte MOV_MEM_REG_OPCODE = (byte) 0x89;
     private static final byte MOV_REG_MEM_OPCODE = (byte) 0x8b;
@@ -59,7 +60,7 @@ public final class InstructionDecoder {
 
     // two bytes opcodes
     private static final byte CMOVE_OPCODE = (byte) 0x44;
-    private static final byte JE_OPCODE = (byte) 0x84;
+    private static final byte JE_DISP32_OPCODE = (byte) 0x84;
     private static final byte JA_OPCODE = (byte) 0x87;
     private static final byte JG_OPCODE = (byte) 0x8f;
 
@@ -113,7 +114,7 @@ public final class InstructionDecoder {
             logger.debug("Read multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
             return switch (opcodeSecondByte) {
                 case JA_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
-                case JE_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
+                case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
                 case JG_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
                 case CMOVE_OPCODE ->
                 // page 771
@@ -174,6 +175,7 @@ public final class InstructionDecoder {
                         Opcode.CMP); // parseSimple(b, rexPrefix, Opcode.CMP, false);
                 case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
                 case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
+                case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
                 case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
                         Opcode.MOV, Register32.EDI, new Immediate(b.read4LittleEndian()));
