@@ -1102,6 +1102,18 @@ mov esp,edx | 89 d4
 mov esp,esi | 89 f4
 mov esp,esp | 89 e4
 #
+mov rax,rbx | 48 89 d8
+mov rcx,rdx | 48 89 d1
+mov rsi,rdi | 48 89 fe
+mov rsp,rax | 48 89 c4
+mov rsp,rbp | 48 89 ec
+mov rsp,rbx | 48 89 dc
+mov rsp,rcx | 48 89 cc
+mov rsp,rdi | 48 89 fc
+mov rsp,rdx | 48 89 d4
+mov rsp,rsi | 48 89 f4
+mov rsp,rsp | 48 89 e4
+#
 mov QWORD PTR [rbp+0x7eadbeef],0x12345678 | 48 c7 85 ef be ad 7e 78 56 34 12
 mov QWORD PTR [rbp-0xf0],0x0              | 48 c7 85 10 ff ff ff 00 00 00 00
 
