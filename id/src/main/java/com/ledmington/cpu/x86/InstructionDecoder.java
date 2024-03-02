@@ -42,6 +42,7 @@ public final class InstructionDecoder {
     private static final byte POP_ESI_OPCODE = (byte) 0x5e;
     private static final byte POP_EDI_OPCODE = (byte) 0x5f;
     private static final byte JE_DISP8_OPCODE = (byte) 0x74;
+    private static final byte JLE_DISP8_OPCODE = (byte) 0x7e;
     private static final byte TEST_OPCODE = (byte) 0x85;
     private static final byte MOV_MEM_REG_OPCODE = (byte) 0x89;
     private static final byte MOV_REG_MEM_OPCODE = (byte) 0x8b;
@@ -176,6 +177,7 @@ public final class InstructionDecoder {
                 case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
                 case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
                 case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
+                case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
                 case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
                         Opcode.MOV, Register32.EDI, new Immediate(b.read4LittleEndian()));
