@@ -50,6 +50,7 @@ public final class InstructionDecoder {
     private static final byte MOV_IMM32_TO_ECX_OPCODE = (byte) 0xb9;
     private static final byte MOV_IMM32_TO_EDI_OPCODE = (byte) 0xbf;
     private static final byte RET_OPCODE = (byte) 0xc3;
+    private static final byte MOV_INDIRECT_IMM32_OPCODE = (byte) 0xc7;
     private static final byte LEAVE_OPCODE = (byte) 0xc9;
     private static final byte INT3_OPCODE = (byte) 0xcc;
     private static final byte CALL_OPCODE = (byte) 0xe8;
@@ -174,6 +175,7 @@ public final class InstructionDecoder {
                         Opcode.MOV, Register32.ECX, new Immediate(b.read4LittleEndian()));
                 case AND_RAX_IMM32_OPCODE -> new Instruction(
                         Opcode.AND, Register64.RAX, new Immediate((long) b.read4LittleEndian()));
+                case MOV_INDIRECT_IMM32_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.of(4), Opcode.MOV);
 
                     // PUSH
                 case PUSH_EAX_OPCODE -> new Instruction(
