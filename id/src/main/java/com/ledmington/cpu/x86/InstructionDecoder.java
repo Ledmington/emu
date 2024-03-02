@@ -63,6 +63,8 @@ public final class InstructionDecoder {
     private static final byte CMOVE_OPCODE = (byte) 0x44;
     private static final byte JE_DISP32_OPCODE = (byte) 0x84;
     private static final byte JA_OPCODE = (byte) 0x87;
+    private static final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
+    private static final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
     private static final byte JG_OPCODE = (byte) 0x8f;
 
     // extended opcodes
@@ -117,6 +119,8 @@ public final class InstructionDecoder {
                 case JA_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
                 case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
                 case JG_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
+                case MOVZX_BYTE_PTR_OPCODE -> parseLEALike(b, p4.isPresent(), rexPrefix, Opcode.MOVZX, Optional.of(8));
+                case MOVZX_WORD_PTR_OPCODE -> parseLEALike(b, p4.isPresent(), rexPrefix, Opcode.MOVZX, Optional.of(16));
                 case CMOVE_OPCODE ->
                 // page 771
                 parseSimple(b, rexPrefix, Opcode.CMOVE, true);
@@ -224,7 +228,7 @@ public final class InstructionDecoder {
                         Opcode.POP, rexPrefix.extension() ? Register64.R15 : Register64.RDI);
 
                 case LEA_OPCODE -> // page 1191
-                parseLEA(b, p4.isPresent(), rexPrefix);
+                parseLEALike(b, p4.isPresent(), rexPrefix, Opcode.LEA);
                 default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
             };
         }
@@ -335,8 +339,24 @@ public final class InstructionDecoder {
         return new Instruction(opcode, operand2, operand1);
     }
 
-    private Instruction parseLEA(
-            final ByteBuffer b, final boolean hasAddressSizeOverridePrefix, final RexPrefix rexPrefix) {
+    /**
+     * Parses a LEA-like instruction.
+     * opcode operand, indirect-operand
+     */
+    private Instruction parseLEALike(
+            final ByteBuffer b,
+            final boolean hasAddressSizeOverridePrefix,
+            final RexPrefix rexPrefix,
+            final Opcode opcode) {
+        return parseLEALike(b, hasAddressSizeOverridePrefix, rexPrefix, opcode, Optional.empty());
+    }
+
+    private Instruction parseLEALike(
+            final ByteBuffer b,
+            final boolean hasAddressSizeOverridePrefix,
+            final RexPrefix rexPrefix,
+            final Opcode opcode,
+            final Optional<Integer> pointerSize) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
@@ -390,7 +410,11 @@ public final class InstructionDecoder {
             iob.displacement(disp8);
         }
 
-        return new Instruction(Opcode.LEA, operand1, iob.build());
+        if (pointerSize.isPresent()) {
+            iob.ptrSize(pointerSize.orElseThrow());
+        }
+
+        return new Instruction(opcode, operand1, iob.build());
     }
 
     private Optional<Byte> readLegacyPrefixGroup1(final ByteBuffer b) {

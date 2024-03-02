@@ -1124,6 +1124,12 @@ mov rsp,rsp | 48 89 e4
 mov QWORD PTR [rbp+0x7eadbeef],0x12345678 | 48 c7 85 ef be ad 7e 78 56 34 12
 mov QWORD PTR [rbp-0xf0],0x0              | 48 c7 85 10 ff ff ff 00 00 00 00
 
+# Movzx
+movzx r9d,BYTE PTR [rcx]                  | 44 0f b6 09
+movzx r9d,BYTE PTR [rdx+rax*4+0x12345678] | 44 0f b6 8c 82 78 56 34 12
+movzx r9d,WORD PTR [rcx]                  | 44 0f b7 09
+movzx r9d,WORD PTR [rdx+rax*4+0x12345678] | 44 0f b7 8c 82 78 56 34 12
+
 # Push
 push r10 | 41 52
 push r11 | 41 53

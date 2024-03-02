@@ -47,19 +47,26 @@ public final class Instruction {
         return 0;
     }
 
+    private String sizeToPointerType(final int size) {
+        return switch (size) {
+            case 8 -> "BYTE";
+            case 16 -> "WORD";
+            case 32 -> "DWORD";
+            case 64 -> "QWORD";
+            case 128 -> "XMMWORD";
+            case 256 -> "YMMWORD";
+            case 512 -> "ZMMWORD";
+            default -> throw new IllegalStateException(String.format("Invalid value of bits: '%,d'", size));
+        };
+    }
+
     private String operandString(final Operand op) {
         if (op instanceof IndirectOperand io && opcode != Opcode.LEA) {
-            return switch (this.bits()) {
-                        case 8 -> "BYTE";
-                        case 16 -> "WORD";
-                        case 32 -> "DWORD";
-                        case 64 -> "QWORD";
-                        case 128 -> "XMMWORD";
-                        case 256 -> "YMMWORD";
-                        case 512 -> "ZMMWORD";
-                        default -> throw new IllegalStateException(
-                                String.format("Instruction '%s' has invalid value of bits: '%,d'", this, this.bits()));
-                    } + " PTR " + op.toIntelSyntax();
+            if (io.hasExplicitPtrSize()) {
+                return sizeToPointerType(io.explicitPtrSize()) + " PTR " + op.toIntelSyntax();
+            }
+
+            return sizeToPointerType(this.bits()) + " PTR " + op.toIntelSyntax();
         }
         return op.toIntelSyntax();
     }

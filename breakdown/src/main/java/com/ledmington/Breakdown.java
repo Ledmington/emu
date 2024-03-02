@@ -25,6 +25,8 @@ public final class Breakdown {
             .put((byte) 0x84, Opcode.JE)
             .put((byte) 0x87, Opcode.JA)
             .put((byte) 0x8f, Opcode.JG)
+            .put((byte) 0xb6, Opcode.MOVZX)
+            .put((byte) 0xb7, Opcode.MOVZX)
             .build();
 
     public static void main(final String[] args) {

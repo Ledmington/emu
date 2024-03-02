@@ -29,6 +29,7 @@ public final class IndirectOperand implements Operand {
     private final Register reg2;
     private final Optional<Long> displacement;
     private final Type displacementType;
+    private final int ptrSize;
 
     public static IndirectOperandBuilder builder() {
         return new IndirectOperandBuilder();
@@ -41,6 +42,7 @@ public final class IndirectOperand implements Operand {
         private Optional<Register> reg2 = Optional.empty();
         private Optional<Long> displacement = Optional.empty();
         private Type displacementType = Type.LONG;
+        private int ptrSize = 0;
         private boolean alreadyBuilt = false;
 
         public IndirectOperandBuilder() {}
@@ -51,10 +53,6 @@ public final class IndirectOperand implements Operand {
             }
             this.reg1 = (r == null) ? Optional.empty() : Optional.of(r);
             return this;
-        }
-
-        public Optional<Register> reg1() {
-            return reg1;
         }
 
         public IndirectOperandBuilder constant(final int c) {
@@ -98,6 +96,19 @@ public final class IndirectOperand implements Operand {
             return this;
         }
 
+        public IndirectOperandBuilder ptrSize(final int ptrSize) {
+            if (this.ptrSize != 0) {
+                throw new IllegalStateException("Cannot define PTR size twice");
+            }
+
+            if (ptrSize != 8 && ptrSize != 16) {
+                throw new IllegalArgumentException(String.format("Invalid argument for ptrSize: %,d", ptrSize));
+            }
+
+            this.ptrSize = ptrSize;
+            return this;
+        }
+
         public IndirectOperand build() {
             if (alreadyBuilt) {
                 throw new IllegalStateException("Cannot build the same IndirectOperandBuilder twice");
@@ -106,33 +117,45 @@ public final class IndirectOperand implements Operand {
 
             // [reg2]
             if (reg1.isEmpty() && reg2.isPresent() && c.isEmpty() && displacement.isEmpty()) {
-                return new IndirectOperand(null, reg2.orElseThrow(), 0, displacement, displacementType);
+                return new IndirectOperand(null, reg2.orElseThrow(), 0, displacement, displacementType, ptrSize);
             } else
             // [reg2 + displacement]
             if (reg1.isEmpty() && reg2.isPresent() && c.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(null, reg2.orElseThrow(), 0, displacement, displacementType);
+                return new IndirectOperand(null, reg2.orElseThrow(), 0, displacement, displacementType, ptrSize);
             } else
             // [reg2 * constant]
             if (reg1.isEmpty() && reg2.isPresent() && c.isPresent() && displacement.isEmpty()) {
-                return new IndirectOperand(null, reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
+                return new IndirectOperand(
+                        null, reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType, ptrSize);
             } else
             // [reg2 * constant + displacement]
             if (reg1.isEmpty() && reg2.isPresent() && c.isPresent() && displacement.isPresent()) {
-                return new IndirectOperand(null, reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
+                return new IndirectOperand(
+                        null, reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType, ptrSize);
             } else
             // [displacement]
             if (reg1.isEmpty() && reg2.isEmpty() && c.isEmpty() && displacement.isPresent()) {
-                return new IndirectOperand(null, null, 0, displacement, displacementType);
+                return new IndirectOperand(null, null, 0, displacement, displacementType, ptrSize);
             } else
             // [reg1 + reg2 * constant]
             if (reg1.isPresent() && reg2.isPresent() && c.isPresent() && displacement.isEmpty()) {
                 return new IndirectOperand(
-                        reg1.orElseThrow(), reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
+                        reg1.orElseThrow(),
+                        reg2.orElseThrow(),
+                        c.orElseThrow(),
+                        displacement,
+                        displacementType,
+                        ptrSize);
             } else
             // [reg1 + reg2 * constant + displacement]
             if (reg1.isPresent() && reg2.isPresent() && c.isPresent() && displacement.isPresent()) {
                 return new IndirectOperand(
-                        reg1.orElseThrow(), reg2.orElseThrow(), c.orElseThrow(), displacement, displacementType);
+                        reg1.orElseThrow(),
+                        reg2.orElseThrow(),
+                        c.orElseThrow(),
+                        displacement,
+                        displacementType,
+                        ptrSize);
             }
 
             throw new IllegalStateException("Cannot build an IndirectOperand with "
@@ -155,12 +178,14 @@ public final class IndirectOperand implements Operand {
             final Register reg2,
             final int constant,
             final Optional<Long> displacement,
-            final Type displacementType) {
+            final Type displacementType,
+            final int ptrSize) {
         this.reg1 = reg1;
         this.constant = constant;
         this.reg2 = reg2;
         this.displacement = Objects.requireNonNull(displacement);
         this.displacementType = Objects.requireNonNull(displacementType);
+        this.ptrSize = ptrSize;
 
         if (constant != 0 && Integer.bitCount(constant) != 1) {
             throw new IllegalArgumentException(
@@ -168,8 +193,12 @@ public final class IndirectOperand implements Operand {
         }
     }
 
-    public Register reg2() {
-        return reg2;
+    public boolean hasExplicitPtrSize() {
+        return this.ptrSize != 0;
+    }
+
+    public int explicitPtrSize() {
+        return this.ptrSize;
     }
 
     @Override
