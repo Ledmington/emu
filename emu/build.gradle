@@ -13,6 +13,13 @@ static def path(String... args) {
 	return String.join(File.separator, args)
 }
 
+String version = '0.1.0'
+String fatJarBaseName = "emu-v${version}"
+String fatJarName = "${fatJarBaseName}.jar"
+String fatJarPath = path("${project.layout.buildDirectory.get()}", "libs", "${fatJarName}")
+String basePackage = "com.ledmington"
+String mainClassName = "${basePackage}.emu.Main"
+
 dependencies {
 	implementation project(':elf')
 	implementation project(':id')
@@ -68,3 +75,28 @@ spotless {
 }
 
 tasks.compileJava.dependsOn(spotlessApply)
+
+tasks.register('fatJar', Jar) {
+	group 'distribution'
+	description 'Builds the fat jar of the application'
+	from sourceSets.main.output
+	dependsOn configurations.runtimeClasspath
+	from {
+		configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+	}
+	duplicatesStrategy = 'include'
+	manifest {
+		archiveBaseName = fatJarBaseName
+		attributes(
+				//"Implementation-Title": "Gradle",
+				"Implementation-Version": version,
+				"Main-Class": "$mainClassName"
+		)
+	}
+	archiveBaseName = "${fatJarBaseName}"
+
+	doLast {
+		println "The fat jar is ${fatJarPath}"
+		println String.format("Fat jar size: %.3f MB", (double) new File(fatJarPath).length() / 1_000_000.0)
+	}
+}
