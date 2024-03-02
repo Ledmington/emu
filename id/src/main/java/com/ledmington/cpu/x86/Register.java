@@ -16,10 +16,16 @@ public abstract class Register implements Operand {
         return BitUtils.asByte(x | (b ? ((byte) 0x08) : 0));
     }
 
-    public static Register fromCode(final byte operandCode, final boolean isOperand64Bit, final boolean extension) {
-        return isOperand64Bit
-                ? Register64.fromByte(combine(extension, operandCode))
-                : Register32.fromByte(combine(extension, operandCode));
+    public static Register fromCode(
+            final byte operandCode,
+            final boolean isOperand64Bit,
+            final boolean extension,
+            final boolean hasOperandSizeOverridePrefix) {
+        return hasOperandSizeOverridePrefix
+                ? Register16.fromByte(combine(extension, operandCode))
+                : isOperand64Bit
+                        ? Register64.fromByte(combine(extension, operandCode))
+                        : Register32.fromByte(combine(extension, operandCode));
     }
 
     protected final String mnemonic;

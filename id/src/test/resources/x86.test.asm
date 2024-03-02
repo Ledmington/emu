@@ -1189,4 +1189,10 @@ and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 sub rsp,0x12345678 | 48 81 ec 78 56 34 12
 
 # Or
-or QWORD PTR [rsp+0xff8],0x0                   | 48 83 8c 24 f8 0f 00 00 00
+or QWORD PTR [rsp+0xff8],0x0  | 48 83 8c 24 f8 0f 00 00 00
+
+# Test
+test r9b,r9b | 45 84 c9
+test r9d,r9d | 45 85 c9
+test r9w,r9w | 66 45 85 c9
+test rbx,rbx | 48 85 db

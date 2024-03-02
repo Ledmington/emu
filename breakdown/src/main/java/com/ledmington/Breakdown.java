@@ -61,7 +61,14 @@ public final class Breakdown {
         boolean r = false;
         boolean x = false;
         boolean b = false;
+        boolean hasOperandSizeOverridePrefix = false;
         boolean hasAddressSizeOverridePrefix = false;
+
+        if (binary[pos] == (byte) 0x67) { // operand size override prefix
+            System.out.printf("0x%02x   -> operand size override prefix -> 16-bit registers are used\n", binary[pos]);
+            hasOperandSizeOverridePrefix = true;
+            pos++;
+        }
 
         if (binary[pos] == (byte) 0x67) { // address size override prefix
             System.out.printf(
@@ -159,12 +166,13 @@ public final class Breakdown {
                 break;
         }
         System.out.println();
-        final String reg = Register.fromCode(modrm.reg(), w, r).toIntelSyntax();
+        final String reg = Register.fromCode(modrm.reg(), w, r, hasOperandSizeOverridePrefix)
+                .toIntelSyntax();
         System.out.printf(
                 "          Reg: %s -> %s\n",
                 BitUtils.toBinaryString(modrm.reg()).substring(5, 8), reg);
-        String rm =
-                Register.fromCode(modrm.rm(), !hasAddressSizeOverridePrefix, b).toIntelSyntax();
+        String rm = Register.fromCode(modrm.rm(), !hasAddressSizeOverridePrefix, b, hasOperandSizeOverridePrefix)
+                .toIntelSyntax();
         if (modrm.mod() == (byte) 0x00 && rm.endsWith("bp")) {
             rm = hasAddressSizeOverridePrefix ? "eip" : "rip";
         }
@@ -187,12 +195,14 @@ public final class Breakdown {
             System.out.printf(
                     "          Scale: %s -> *%d\n",
                     BitUtils.toBinaryString(sib.scale()).substring(6, 8), 1 << BitUtils.asInt(sib.scale()));
-            final String index = Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, x)
+            final String index = Register.fromCode(
+                            sib.index(), !hasAddressSizeOverridePrefix, x, hasOperandSizeOverridePrefix)
                     .toIntelSyntax();
             System.out.printf(
                     "          Index: %s -> %s\n",
                     BitUtils.toBinaryString(sib.index()).substring(5, 8), index);
-            final String base = Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, b)
+            final String base = Register.fromCode(
+                            sib.base(), !hasAddressSizeOverridePrefix, b, hasOperandSizeOverridePrefix)
                     .toIntelSyntax();
             System.out.printf(
                     "          Base: %s -> %s\n",
