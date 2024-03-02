@@ -159,8 +159,9 @@ public final class InstructionDecoder {
                 case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
                 case INT3_OPCODE -> new Instruction(Opcode.INT3);
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
-                case MOV_REG_MEM_OPCODE -> parseMOV(b, rexPrefix, true);
-                case MOV_MEM_REG_OPCODE -> parseMOV(b, rexPrefix, false);
+                case MOV_REG_MEM_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
+                case MOV_MEM_REG_OPCODE -> parse(
+                        b, !rexPrefix.isOperand64Bit(), rexPrefix, Optional.empty(), Opcode.MOV);
                 case TEST_OPCODE -> parseSimple(b, rexPrefix, Opcode.TEST, false);
                 case XOR_OPCODE -> parseSimple(b, rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, rexPrefix, Opcode.SUB, false);
@@ -312,37 +313,6 @@ public final class InstructionDecoder {
 
     private boolean isExtendedOpcode(final byte opcode) {
         return opcode == (byte) 0x80 || opcode == (byte) 0x81 || opcode == (byte) 0x82 || opcode == (byte) 0x83;
-    }
-
-    private Instruction parseMOV(final ByteBuffer b, final RexPrefix rexPrefix, final boolean isFirstOperandRegister) {
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        final Register operand1 =
-                Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension());
-        final Register operand2 =
-                Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension());
-
-        if (modrm.mod() == (byte) 0x03 || (modrm.rm() != (byte) 0x04 && modrm.rm() != (byte) 0x05)) {
-            // indirect operand not needed
-            return new Instruction(Opcode.MOV, operand2, operand1);
-        }
-
-        final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
-
-        if (modrm.mod() == (byte) 0x01) {
-            final byte disp8 = b.read1();
-            iob.displacement(disp8);
-        } else if ((modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05) || (modrm.mod() == (byte) 0x02)) {
-            final int disp32 = b.read4LittleEndian();
-            iob.displacement(disp32);
-        }
-
-        iob.reg2(isFirstOperandRegister ? operand1 : operand2);
-
-        return isFirstOperandRegister
-                ? new Instruction(Opcode.MOV, operand2, iob.build())
-                : new Instruction(Opcode.MOV, iob.build(), operand1);
     }
 
     // TODO: change name of method

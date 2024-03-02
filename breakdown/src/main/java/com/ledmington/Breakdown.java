@@ -16,6 +16,7 @@ public final class Breakdown {
             .put((byte) 0x39, Opcode.CMP)
             .put((byte) 0x81, Opcode.CMP)
             .put((byte) 0x83, Opcode.ADD)
+            .put((byte) 0x89, Opcode.MOV)
             .put((byte) 0xb9, Opcode.MOV)
             .build();
 
