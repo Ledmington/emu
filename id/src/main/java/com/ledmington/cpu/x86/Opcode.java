@@ -15,6 +15,7 @@ public enum Opcode {
     JG("jg"),
     JLE("jle"),
     JMP("jmp"),
+    JNE("jne"),
     LEA("lea"),
     LEAVE("leave"),
     MOV("mov"),

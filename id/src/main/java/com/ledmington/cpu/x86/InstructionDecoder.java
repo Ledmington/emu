@@ -63,6 +63,7 @@ public final class InstructionDecoder {
     // two bytes opcodes
     private static final byte CMOVE_OPCODE = (byte) 0x44;
     private static final byte JE_DISP32_OPCODE = (byte) 0x84;
+    private static final byte JNE_DISP32_OPCODE = (byte) 0x85;
     private static final byte JA_OPCODE = (byte) 0x87;
     private static final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
     private static final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
@@ -119,6 +120,7 @@ public final class InstructionDecoder {
             return switch (opcodeSecondByte) {
                 case JA_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
                 case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
+                case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of32(b.read4LittleEndian()));
                 case JG_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
                 case MOVZX_BYTE_PTR_OPCODE -> parseLEALike(b, p4.isPresent(), rexPrefix, Opcode.MOVZX, Optional.of(8));
                 case MOVZX_WORD_PTR_OPCODE -> parseLEALike(b, p4.isPresent(), rexPrefix, Opcode.MOVZX, Optional.of(16));
