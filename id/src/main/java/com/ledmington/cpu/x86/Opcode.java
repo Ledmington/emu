@@ -25,6 +25,7 @@ public enum Opcode {
     POP("pop"),
     PUSH("push"),
     RET("ret"),
+    SBB("sbb"),
     SHL("shl"),
     SUB("sub"),
     TEST("test"),

@@ -21,6 +21,7 @@ public final class InstructionDecoder {
 
     // single byte opcodes
     private static final byte ADD_OPCODE = (byte) 0x01;
+    private static final byte SBB_OPCODE = (byte) 0x19;
     private static final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
     private static final byte SUB_OPCODE = (byte) 0x29;
     private static final byte XOR_OPCODE = (byte) 0x31;
@@ -175,6 +176,7 @@ public final class InstructionDecoder {
                 case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
                 case INT3_OPCODE -> new Instruction(Opcode.INT3);
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
+                case SBB_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.SBB, false);
                 case MOV_REG_MEM_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
                 case MOV_MEM_REG_OPCODE -> parse(
                         b, !rexPrefix.isOperand64Bit(), rexPrefix, Optional.empty(), Opcode.MOV);
