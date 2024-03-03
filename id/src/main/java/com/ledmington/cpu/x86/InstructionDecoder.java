@@ -173,7 +173,8 @@ public final class InstructionDecoder {
                 case MOV_REG_MEM_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
                 case MOV_MEM_REG_OPCODE -> parse(
                         b, !rexPrefix.isOperand64Bit(), rexPrefix, Optional.empty(), Opcode.MOV);
-                case TEST_R8_OPCODE, TEST_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.TEST, false);
+                case TEST_R8_OPCODE -> parseSimple8Bit(b, rexPrefix, Opcode.TEST, false);
+                case TEST_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.TEST, false);
                 case XOR_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.SUB, false);
                 case ADD_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.ADD, false);
@@ -336,7 +337,22 @@ public final class InstructionDecoder {
         final Register operand1 = Register.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
         final Register operand2 = Register.fromCode(
-                modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.extension(), hasOperandSizeOverridePrefix);
+                modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
+
+        if (invertOperands) {
+            return new Instruction(opcode, operand1, operand2);
+        }
+        return new Instruction(opcode, operand2, operand1);
+    }
+
+    // TODO: change name of method
+    private Instruction parseSimple8Bit(
+            final ByteBuffer b, final RexPrefix rexPrefix, final Opcode opcode, final boolean invertOperands) {
+        final byte _modrm = b.read1();
+        final ModRM modrm = new ModRM(_modrm);
+        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final Register operand1 = Register8.fromByte(Register.combine(rexPrefix.ModRMRegExtension(), modrm.reg()));
+        final Register operand2 = Register8.fromByte(Register.combine(rexPrefix.ModRMRMExtension(), modrm.rm()));
 
         if (invertOperands) {
             return new Instruction(opcode, operand1, operand2);
