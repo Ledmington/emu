@@ -148,7 +148,10 @@ public final class InstructionDecoder {
                         Opcode.AND,
                         Register.fromCode(
                                 modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), p3.isPresent()),
-                        new Immediate((long) b.read1()));
+                        new Immediate(
+                                (opcodeFirstByte == (byte) 0x83)
+                                        ? ((long) b.read1())
+                                        : ((long) b.read4LittleEndian())));
                 case (byte) 0x05 /* 101 */ -> new Instruction(
                         Opcode.SUB,
                         Register.fromCode(
