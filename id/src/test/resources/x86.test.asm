@@ -1196,6 +1196,7 @@ and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 sub rsp,0x12345678 | 48 81 ec 78 56 34 12
 
 # Sbb
+sbb al,0x12   | 1c 12
 sbb esi,esi   | 19 f6
 sbb r12d,r12d | 45 19 e4
 sbb rax,rax   | 48 19 c0

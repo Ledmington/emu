@@ -22,6 +22,7 @@ public final class InstructionDecoder {
     // single byte opcodes
     private static final byte ADD_OPCODE = (byte) 0x01;
     private static final byte SBB_OPCODE = (byte) 0x19;
+    private static final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
     private static final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
     private static final byte SUB_OPCODE = (byte) 0x29;
     private static final byte XOR_OPCODE = (byte) 0x31;
@@ -84,11 +85,13 @@ public final class InstructionDecoder {
         logger.info("The code is %,d bytes long", length);
 
         final List<Instruction> instructions = new ArrayList<>();
+        int i = 0;
         while (b.position() < length) {
             final int pos = b.position();
             final Instruction inst = decodeInstruction(b);
-            logger.info("%08x: %s", pos, inst.toIntelSyntax());
+            logger.info("[%,d] %08x: %s", i, pos, inst.toIntelSyntax());
             instructions.add(inst);
+            i++;
         }
 
         return instructions;
@@ -177,6 +180,7 @@ public final class InstructionDecoder {
                 case INT3_OPCODE -> new Instruction(Opcode.INT3);
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
                 case SBB_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.SBB, false);
+                case SBB_AL_IMM8_OPCODE -> new Instruction(Opcode.SBB, Register8.AL, new Immediate(b.read1()));
                 case MOV_REG_MEM_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
                 case MOV_MEM_REG_OPCODE -> parse(
                         b, !rexPrefix.isOperand64Bit(), rexPrefix, Optional.empty(), Opcode.MOV);
