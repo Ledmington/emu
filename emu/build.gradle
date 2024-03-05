@@ -26,6 +26,14 @@ dependencies {
 	implementation project(':common')
 }
 
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-Xdiags:verbose'
+	options.compilerArgs << '-Xlint:all'
+	options.compilerArgs << '-Werror'
+	options.deprecation = true
+	options.encoding = 'UTF-8'
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
