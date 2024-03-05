@@ -193,11 +193,15 @@ public final class InstructionDecoder {
                         Register.fromCode(
                                 modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), p3.isPresent()),
                         new Immediate(b.read4LittleEndian()));
-                case (byte) 0x07 /* 111 */ -> new Instruction(
+                case (byte) 0x07 /* 111 */ -> parse(
+                        b,
+                        p4.isPresent(),
+                        p3.isPresent(),
+                        rexPrefix,
+                        modrm,
+                        Optional.of(immediateBytes),
                         Opcode.CMP,
-                        Register.fromCode(
-                                modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), p3.isPresent()),
-                        new Immediate(b.read4LittleEndian()));
+                        rexPrefix.isOperand64Bit() ? Optional.of(64) : Optional.empty());
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             };
@@ -456,15 +460,16 @@ public final class InstructionDecoder {
             iob.ptrSize(pointerSize.orElseThrow());
         }
 
-        if ((mod == (byte) 0x00 && rm == (byte) 0x05)
-                || (mod == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
-                || mod == (byte) 0x02) {
-            final int disp32 = b.read4LittleEndian();
-            iob.displacement(disp32);
-            operand2 = iob.build();
-        } else if (mod == (byte) 0x01) {
-            final byte disp8 = b.read1();
-            iob.displacement(disp8);
+        if (mod != (byte) 0x03 /* 11 */) {
+            if ((mod == (byte) 0x00 && rm == (byte) 0x05)
+                    || (mod == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
+                    || mod == (byte) 0x02) {
+                final int disp32 = b.read4LittleEndian();
+                iob.displacement(disp32);
+            } else if (mod == (byte) 0x01) {
+                final byte disp8 = b.read1();
+                iob.displacement(disp8);
+            }
             operand2 = iob.build();
         }
 

@@ -73,10 +73,15 @@ cmove r15,rcx | 4c 0f 44 f9
 cmove rcx,r15 | 49 0f 44 cf
 
 # Cmp
-cmp DWORD PTR [rbp-0xe8],r15d | 44 39 bd 18 ff ff ff
-cmp edi,0x12345678            | 81 ff 78 56 34 12
-cmp rdi,0xfbf                 | 48 81 ff bf 0f 00 00
-cmp rsp,r8                    | 4c 39 c4
+cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
+cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
+cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
+cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
+cmp QWORD PTR [rdi],0x12345678                 | 48 81 3f 78 56 34 12
+cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
+cmp edi,0x12345678                             | 81 ff 78 56 34 12
+cmp rdi,0x12345678                             | 48 81 ff 78 56 34 12
+cmp rsp,r8                                     | 4c 39 c4
 
 # Lea
 lea eax,[r10-0xf]        | 41 8d 42 f1
