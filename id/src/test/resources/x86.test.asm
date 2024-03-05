@@ -79,7 +79,10 @@ cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
 cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
 cmp QWORD PTR [rdi],0x12345678                 | 48 81 3f 78 56 34 12
 cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
+cmp al,dh                                      | 38 f0
 cmp edi,0x12345678                             | 81 ff 78 56 34 12
+cmp esp,r13d                                   | 44 39 ec
+cmp r8w,dx                                     | 66 41 39 d0
 cmp rdi,0x12345678                             | 48 81 ff 78 56 34 12
 cmp rsp,r8                                     | 4c 39 c4
 

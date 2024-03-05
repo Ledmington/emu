@@ -10,7 +10,7 @@ import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
 
 /**
- * Reference Intel\u00ae 64 and IA-32 Architectures Software Developer's Manual
+ * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual
  * volume 2.
  * Legacy prefixes : Paragraph 2.1.1.
  * Instruction opcodes : Appendix A. (pag. 2839)
@@ -26,7 +26,8 @@ public final class InstructionDecoder {
     private static final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
     private static final byte SUB_OPCODE = (byte) 0x29;
     private static final byte XOR_OPCODE = (byte) 0x31;
-    private static final byte CMP_REG_REG_OPCODE = (byte) 0x39;
+    private static final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
+    private static final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
     private static final byte PUSH_EAX_OPCODE = (byte) 0x50;
     private static final byte PUSH_ECX_OPCODE = (byte) 0x51;
     private static final byte PUSH_EDX_OPCODE = (byte) 0x52;
@@ -201,7 +202,7 @@ public final class InstructionDecoder {
                         modrm,
                         Optional.of(immediateBytes),
                         Opcode.CMP,
-                        rexPrefix.isOperand64Bit() ? Optional.of(64) : Optional.empty());
+                        Optional.of(rexPrefix.isOperand64Bit() ? 64 : 8 * immediateBytes));
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             };
@@ -246,7 +247,8 @@ public final class InstructionDecoder {
                 case XOR_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.SUB, false);
                 case ADD_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.ADD, false);
-                case CMP_REG_REG_OPCODE -> parse(
+                case CMP_INDIRECT8_R8_OPCODE -> parseSimple8Bit(b, rexPrefix, Opcode.CMP, false);
+                case CMP_INDIRECT32_R32_OPCODE -> parse(
                         b, p4.isPresent(), p3.isPresent(), rexPrefix, Optional.empty(), Opcode.CMP);
                 case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
                 case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
@@ -416,7 +418,8 @@ public final class InstructionDecoder {
         final byte rm = modrm.rm();
         final Register operand1 = Register.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
-        Operand operand2 = Register.fromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), false);
+        Operand operand2 = Register.fromCode(
+                rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
 
         // Table at page 530
         final byte mod = modrm.mod();
