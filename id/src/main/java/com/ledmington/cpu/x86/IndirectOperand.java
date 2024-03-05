@@ -101,7 +101,7 @@ public final class IndirectOperand implements Operand {
                 throw new IllegalStateException("Cannot define PTR size twice");
             }
 
-            if (ptrSize != 8 && ptrSize != 16) {
+            if (ptrSize != 8 && ptrSize != 16 && ptrSize != 32 && ptrSize != 64) {
                 throw new IllegalArgumentException(String.format("Invalid argument for ptrSize: %,d", ptrSize));
             }
 

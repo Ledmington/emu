@@ -120,4 +120,16 @@ public final class ByteBuffer {
         // logger.debug("Read 0x%016x", x);
         return x;
     }
+
+    /**
+     * Reads 2 bytes in little-endian without modifying the endianness.
+     */
+    public short read2LittleEndian() {
+        // TODO: refactor
+        final boolean oldEndianness = isLittleEndian;
+        isLittleEndian = true;
+        final short x = read2();
+        isLittleEndian = false;
+        return x;
+    }
 }

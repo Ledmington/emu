@@ -1127,8 +1127,15 @@ mov rsp,rdx | 48 89 d4
 mov rsp,rsi | 48 89 f4
 mov rsp,rsp | 48 89 e4
 #
-mov QWORD PTR [rbp+0x7eadbeef],0x12345678 | 48 c7 85 ef be ad 7e 78 56 34 12
-mov QWORD PTR [rbp-0xf0],0x0              | 48 c7 85 10 ff ff ff 00 00 00 00
+mov BYTE PTR [r11+r8*4+0x12345678],0x99        | 43 c6 84 83 78 56 34 12 99
+mov DWORD PTR [r11+r8*4+0x12345678],0xdeadbeef | 43 c7 84 83 78 56 34 12 ef be ad de
+mov DWORD PTR [rbp+0x7eadbeef],0x12345678      | c7 85 ef be ad 7e 78 56 34 12
+mov QWORD PTR [rbp+0x7eadbeef],0x12345678      | 48 c7 85 ef be ad 7e 78 56 34 12
+mov WORD PTR [r11+r8*4+0x12345678],0xbeef      | 66 43 c7 84 83 78 56 34 12 ef be
+mov esi,0x12345678                             | be 78 56 34 12
+mov r11b,0x12                                  | 41 b3 12
+mov r8w,0x1234                                 | 66 41 b8 34 12
+mov r9,0x12345678                              | 49 c7 c1 78 56 34 12
 
 # Movzx
 movzx r9d,BYTE PTR [rcx]                  | 44 0f b6 09
@@ -1202,7 +1209,9 @@ sbb r12d,r12d | 45 19 e4
 sbb rax,rax   | 48 19 c0
 
 # Or
-or QWORD PTR [rsp+0xff8],0x0  | 48 83 8c 24 f8 0f 00 00 00
+or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
+or DWORD PTR [r11+r9*4+0x12345678],0xdeadbeef | 43 81 8c 8b 78 56 34 12 ef be ad de
+or WORD PTR [r11+r9*4+0x12345678],0xbeef      | 66 43 81 8c 8b 78 56 34 12 ef be
 
 # Test
 test r9b,r9b | 45 84 c9

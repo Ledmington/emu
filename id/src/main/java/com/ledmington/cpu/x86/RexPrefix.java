@@ -72,6 +72,10 @@ public final class RexPrefix {
         return b;
     }
 
+    public boolean opcodeRegExtension() {
+        return b;
+    }
+
     public int hashCode() {
         int h = 17;
         h = 31 + h + (w ? 1 : 0);

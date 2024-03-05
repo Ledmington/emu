@@ -10,7 +10,7 @@ import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
 
 /**
- * Reference Intel\u00ae 64 and IA-32 Architectures Software Developer’s Manual
+ * Reference Intel\u00ae 64 and IA-32 Architectures Software Developer's Manual
  * volume 2.
  * Legacy prefixes : Paragraph 2.1.1.
  * Instruction opcodes : Appendix A. (pag. 2839)
@@ -52,10 +52,23 @@ public final class InstructionDecoder {
     private static final byte LEA_OPCODE = (byte) 0x8d;
     private static final byte NOP_OPCODE = (byte) 0x90;
     private static final byte CDQ_OPCODE = (byte) 0x99;
+    private static final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
+    private static final byte MOV_IMM8_TO_CL_OPCODE = (byte) 0xb1;
+    private static final byte MOV_IMM8_TO_DL_OPCODE = (byte) 0xb2;
+    private static final byte MOV_IMM8_TO_BL_OPCODE = (byte) 0xb3;
+    private static final byte MOV_IMM8_TO_AH_OPCODE = (byte) 0xb4;
+    private static final byte MOV_IMM8_TO_CH_OPCODE = (byte) 0xb5;
+    private static final byte MOV_IMM8_TO_DH_OPCODE = (byte) 0xb6;
+    private static final byte MOV_IMM8_TO_BH_OPCODE = (byte) 0xb7;
+    private static final byte MOV_IMM32_TO_EAX_OPCODE = (byte) 0xb8;
     private static final byte MOV_IMM32_TO_ECX_OPCODE = (byte) 0xb9;
+    private static final byte MOV_IMM32_TO_EDX_OPCODE = (byte) 0xba;
+    private static final byte MOV_IMM32_TO_EBX_OPCODE = (byte) 0xbb;
+    private static final byte MOV_IMM32_TO_ESP_OPCODE = (byte) 0xbc;
+    private static final byte MOV_IMM32_TO_EBP_OPCODE = (byte) 0xbd;
+    private static final byte MOV_IMM32_TO_ESI_OPCODE = (byte) 0xbe;
     private static final byte MOV_IMM32_TO_EDI_OPCODE = (byte) 0xbf;
     private static final byte RET_OPCODE = (byte) 0xc3;
-    private static final byte MOV_INDIRECT_IMM32_OPCODE = (byte) 0xc7;
     private static final byte LEAVE_OPCODE = (byte) 0xc9;
     private static final byte INT3_OPCODE = (byte) 0xcc;
     private static final byte CALL_OPCODE = (byte) 0xe8;
@@ -85,13 +98,20 @@ public final class InstructionDecoder {
         logger.info("The code is %,d bytes long", length);
 
         final List<Instruction> instructions = new ArrayList<>();
-        int i = 0;
         while (b.position() < length) {
             final int pos = b.position();
             final Instruction inst = decodeInstruction(b);
-            logger.info("[%,d] %08x: %s", i, pos, inst.toIntelSyntax());
+            { // Debugging info
+                final int codeLen = b.position() - pos;
+                final StringBuilder sb = new StringBuilder();
+                b.setPosition(pos);
+                sb.append(String.format("%02x", b.read1()));
+                for (int i = 1; i < codeLen; i++) {
+                    sb.append(String.format(" %02x", b.read1()));
+                }
+                logger.info("%08x: %-24s %s", pos, sb.toString(), inst.toIntelSyntax());
+            }
             instructions.add(inst);
-            i++;
         }
 
         return instructions;
@@ -142,6 +162,8 @@ public final class InstructionDecoder {
             final ModRM modrm = new ModRM(opcodeSecondByte);
             logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
+            final int immediateBytes = p3.isPresent() ? 2 : ((opcodeFirstByte == (byte) 0x81) ? 4 : 1);
+
             return switch (modrm.reg()) {
                     // full table at page 2856
                 case (byte) 0x00 /* 000 */ -> new Instruction(
@@ -149,7 +171,15 @@ public final class InstructionDecoder {
                         Register.fromCode(
                                 modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), p3.isPresent()),
                         new Immediate(b.read1()));
-                case (byte) 0x01 /* 001 */ -> parse(b, p4.isPresent(), rexPrefix, modrm, Optional.of(1), Opcode.OR);
+                case (byte) 0x01 /* 001 */ -> parse(
+                        b,
+                        p4.isPresent(),
+                        p3.isPresent(),
+                        rexPrefix,
+                        modrm,
+                        Optional.of(immediateBytes),
+                        Opcode.OR,
+                        Optional.empty());
                 case (byte) 0x04 /* 100 */ -> new Instruction(
                         Opcode.AND,
                         Register.fromCode(
@@ -171,6 +201,28 @@ public final class InstructionDecoder {
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             };
+        } else if (opcodeFirstByte == (byte) 0xc6 || opcodeFirstByte == (byte) 0xc7) {
+            final byte opcodeSecondByte = b.read1();
+            logger.debug("Read extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
+
+            final ModRM modrm = new ModRM(opcodeSecondByte);
+            logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
+
+            final int immediateBytes = p3.isPresent() ? 2 : ((opcodeFirstByte == (byte) 0xc6) ? 1 : 4);
+
+            return switch (modrm.reg()) {
+                case (byte) 0x00 /* 000 */ -> parse(
+                        b,
+                        p4.isPresent(),
+                        p3.isPresent(),
+                        rexPrefix,
+                        modrm,
+                        Optional.of(immediateBytes),
+                        Opcode.MOV,
+                        Optional.of(rexPrefix.isOperand64Bit() ? 64 : 8 * immediateBytes));
+                default -> throw new IllegalArgumentException(
+                        String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            };
         } else {
             // 1 byte opcode
             return switch (opcodeFirstByte) {
@@ -181,27 +233,108 @@ public final class InstructionDecoder {
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
                 case SBB_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.SBB, false);
                 case SBB_AL_IMM8_OPCODE -> new Instruction(Opcode.SBB, Register8.AL, new Immediate(b.read1()));
-                case MOV_REG_MEM_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
+                case MOV_REG_MEM_OPCODE -> parse(
+                        b, p4.isPresent(), p3.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
                 case MOV_MEM_REG_OPCODE -> parse(
-                        b, !rexPrefix.isOperand64Bit(), rexPrefix, Optional.empty(), Opcode.MOV);
+                        b, !rexPrefix.isOperand64Bit(), p3.isPresent(), rexPrefix, Optional.empty(), Opcode.MOV);
                 case TEST_R8_OPCODE -> parseSimple8Bit(b, rexPrefix, Opcode.TEST, false);
                 case TEST_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.TEST, false);
                 case XOR_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.SUB, false);
                 case ADD_OPCODE -> parseSimple(b, p3.isPresent(), rexPrefix, Opcode.ADD, false);
-                case CMP_REG_REG_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.empty(), Opcode.CMP);
+                case CMP_REG_REG_OPCODE -> parse(
+                        b, p4.isPresent(), p3.isPresent(), rexPrefix, Optional.empty(), Opcode.CMP);
                 case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
                 case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
                 case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
                 case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
-                case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
-                        Opcode.MOV, Register32.EDI, new Immediate(b.read4LittleEndian()));
-                case MOV_IMM32_TO_ECX_OPCODE -> new Instruction(
-                        Opcode.MOV, Register32.ECX, new Immediate(b.read4LittleEndian()));
                 case AND_RAX_IMM32_OPCODE -> new Instruction(
                         Opcode.AND, Register64.RAX, new Immediate((long) b.read4LittleEndian()));
-                case MOV_INDIRECT_IMM32_OPCODE -> parse(b, p4.isPresent(), rexPrefix, Optional.of(4), Opcode.MOV);
+
+                    // MOV 8/16-bit
+                case MOV_IMM8_TO_AL_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R8B : Register8.AL,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_CL_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R9B : Register8.CL,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_DL_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R10B : Register8.DL,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_BL_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R11B : Register8.BL,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_AH_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R12B : Register8.AH,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_CH_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R13B : Register8.CH,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_DH_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R14B : Register8.DH,
+                        new Immediate(b.read1()));
+                case MOV_IMM8_TO_BH_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        rexPrefix.opcodeRegExtension() ? Register8.R15B : Register8.BH,
+                        new Immediate(b.read1()));
+
+                    // MOV 32-bit
+                case MOV_IMM32_TO_EAX_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R8W : Register16.AX)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R8D : Register32.EAX),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_EBX_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R11W : Register16.BX)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R11D : Register32.EBX),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_ECX_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R9W : Register16.CX)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R9D : Register32.ECX),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_EDX_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R10W : Register16.DX)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R10D : Register32.EDX),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_ESP_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R12W : Register16.SP)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R12D : Register32.ESP),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_EBP_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R13W : Register16.BP)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R13D : Register32.EBP),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_ESI_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R14W : Register16.SI)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R14D : Register32.ESI),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
+                        Opcode.MOV,
+                        p3.isPresent()
+                                ? (rexPrefix.opcodeRegExtension() ? Register16.R15W : Register16.DI)
+                                : (rexPrefix.opcodeRegExtension() ? Register32.R15D : Register32.EDI),
+                        new Immediate(p3.isPresent() ? b.read2LittleEndian() : b.read4LittleEndian()));
 
                     // PUSH
                 case PUSH_EAX_OPCODE -> new Instruction(
@@ -249,25 +382,36 @@ public final class InstructionDecoder {
     private Instruction parse(
             final ByteBuffer b,
             final boolean hasAddressSizeOverridePrefix,
+            final boolean hasOperandSizeOverridePrefix,
             final RexPrefix rexPrefix,
             final Optional<Integer> immediateBytes,
             final Opcode opcode) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        return parse(b, hasAddressSizeOverridePrefix, rexPrefix, modrm, immediateBytes, opcode);
+        return parse(
+                b,
+                hasAddressSizeOverridePrefix,
+                hasOperandSizeOverridePrefix,
+                rexPrefix,
+                modrm,
+                immediateBytes,
+                opcode,
+                Optional.empty());
     }
 
     private Instruction parse(
             final ByteBuffer b,
             final boolean hasAddressSizeOverridePrefix,
+            final boolean hasOperandSizeOverridePrefix,
             final RexPrefix rexPrefix,
             final ModRM modrm,
             final Optional<Integer> immediateBytes,
-            final Opcode opcode) {
+            final Opcode opcode,
+            final Optional<Integer> pointerSize) {
         final byte rm = modrm.rm();
-        final Register operand1 =
-                Register.fromCode(modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), false);
+        final Register operand1 = Register.fromCode(
+                modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
         Operand operand2 = Register.fromCode(rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), false);
 
         // Table at page 530
@@ -307,6 +451,11 @@ public final class InstructionDecoder {
             }
         }
 
+        if (pointerSize.isPresent()) {
+            logger.debug("Using pointer size: %,d", pointerSize.orElseThrow());
+            iob.ptrSize(pointerSize.orElseThrow());
+        }
+
         if ((mod == (byte) 0x00 && rm == (byte) 0x05)
                 || (mod == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
                 || mod == (byte) 0x02) {
@@ -324,8 +473,9 @@ public final class InstructionDecoder {
         }
 
         return switch (immediateBytes.orElseThrow()) {
-            case 1 -> new Instruction(opcode, operand2, new Immediate((long) b.read1()));
-            case 4 -> new Instruction(opcode, operand2, new Immediate((long) b.read4LittleEndian()));
+            case 1 -> new Instruction(opcode, operand2, new Immediate(b.read1()));
+            case 2 -> new Instruction(opcode, operand2, new Immediate(b.read2LittleEndian()));
+            case 4 -> new Instruction(opcode, operand2, new Immediate(b.read4LittleEndian()));
             default -> throw new IllegalArgumentException(
                     String.format("Invalid value for immediate bytes: %,d", immediateBytes.orElseThrow()));
         };

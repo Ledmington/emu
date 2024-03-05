@@ -14,8 +14,6 @@ public final class Breakdown {
     private static final Map<Byte, Opcode> opcodes = ImmutableMap.<Byte, Opcode>builder()
             .put((byte) 0x01, Opcode.ADD)
             .put((byte) 0x39, Opcode.CMP)
-            .put((byte) 0x81, Opcode.CMP)
-            .put((byte) 0x83, Opcode.ADD)
             .put((byte) 0x89, Opcode.MOV)
             .put((byte) 0xb9, Opcode.MOV)
             .build();
@@ -112,6 +110,24 @@ public final class Breakdown {
                 System.exit(-1);
             }
             pos++;
+        } else if (binary[pos] == (byte) 0x80
+                || binary[pos] == (byte) 0x81
+                || binary[pos] == (byte) 0x82
+                || binary[pos] == (byte) 0x83) {
+            System.out.printf("0x%02x%02x -> ", binary[pos], binary[pos + 1]);
+            final ModRM modrm = new ModRM(binary[pos + 1]);
+            System.out.println(
+                    switch (modrm.reg()) {
+                        case (byte) 0x00 -> "ADD";
+                        case (byte) 0x01 -> "OR";
+                        case (byte) 0x02 -> "ADC";
+                        case (byte) 0x03 -> "SBB";
+                        case (byte) 0x04 -> "AND";
+                        case (byte) 0x05 -> "SUB";
+                        case (byte) 0x06 -> "XOR";
+                        case (byte) 0x07 -> "CMP";
+                        default -> "unknown";
+                    });
         } else {
             System.out.printf("0x%02x   -> ", binary[pos]);
             if (opcodes.containsKey(binary[pos])) {
