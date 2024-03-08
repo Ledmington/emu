@@ -84,6 +84,9 @@ spotless {
 
 tasks.compileJava.dependsOn(spotlessApply)
 
+// Disable javadoc for now
+tasks.javadoc.enabled = false
+
 tasks.register('fatJar', Jar) {
 	group 'distribution'
 	description 'Builds the fat jar of the application'

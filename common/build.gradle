@@ -30,6 +30,12 @@ tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
+tasks.withType(Javadoc).configureEach {
+	failOnError = true
+	title "common-v${version}"
+	options.addBooleanOption('Werror', true)
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)

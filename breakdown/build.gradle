@@ -71,3 +71,6 @@ spotless {
 }
 
 tasks.compileJava.dependsOn(spotlessApply)
+
+// Disable javadoc for now
+tasks.javadoc.enabled = false

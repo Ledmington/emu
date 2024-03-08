@@ -3,11 +3,34 @@ package com.ledmington.elf;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The type of an ELF file.
+ */
 public enum FileType {
+
+    /**
+     * Unknown type.
+     */
     ET_NONE((short) 0x0000, "Unknown"),
+
+    /**
+     * Relocatable file.
+     */
     ET_REL((short) 0x0001, "Relocatable file"),
+
+    /**
+     * Executable file.
+     */
     ET_EXEC((short) 0x0002, "Executable file"),
+
+    /**
+     * Shared object.
+     */
     ET_DYN((short) 0x0003, "Shared object"),
+
+    /**
+     * Core file.
+     */
     ET_CORE((short) 0x0004, "Core file");
 
     private static final Map<Short, FileType> codeToFileType = new HashMap<>();
