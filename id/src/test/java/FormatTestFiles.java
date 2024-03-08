@@ -6,24 +6,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 public final class FormatTestFiles {
 
-    private enum Sort {
-        BY_MNEMONIC,
-        BY_MNEMONIC_LENGTH,
-        BY_HEXADECIMAL,
-        BY_HEXADECIMAL_LENGTH
-    }
-
-    private static final Sort sort = Sort.BY_MNEMONIC;
+    private static final record TestCase(String mnemonic, String hex) {}
 
     public static void main(final String[] args) {
         if (args.length > 0) {
@@ -108,22 +97,18 @@ public final class FormatTestFiles {
                     .max()
                     .orElseThrow();
             final String fmt = String.format("%%-%ds", maxInstructionLength);
-            final Map<String, String> m = new HashMap<>();
+
+            final Set<TestCase> tc = new HashSet<>();
             for (final String s : ss) {
                 final String[] splitted = s.split("\\|");
-                m.put(splitted[0].strip(), splitted[1].strip());
+                tc.add(new TestCase(splitted[0].strip(), splitted[1].strip()));
             }
 
-            Stream<Map.Entry<String, String>> str = m.entrySet().stream();
-            switch (sort) {
-                case BY_MNEMONIC -> str = str.sorted(Map.Entry.comparingByKey());
-                case BY_MNEMONIC_LENGTH -> str =
-                        str.sorted(Map.Entry.comparingByKey(Comparator.comparingInt(String::length)));
-                case BY_HEXADECIMAL -> str = str.sorted(Map.Entry.comparingByValue());
-                case BY_HEXADECIMAL_LENGTH -> str =
-                        str.sorted(Map.Entry.comparingByValue(Comparator.comparingInt(String::length)));
-            }
-            str.forEach(e -> allLines.add(String.format(fmt + " | %s", e.getKey(), e.getValue())));
+            tc.stream()
+                    .sorted((a, b) -> ((a.mnemonic().equals(b.mnemonic()))
+                            ? (a.hex().compareTo(b.hex()))
+                            : (a.mnemonic().compareTo(b.mnemonic()))))
+                    .forEach(e -> allLines.add(String.format(fmt + " | %s", e.mnemonic(), e.hex())));
         }
 
         // Last empty line
