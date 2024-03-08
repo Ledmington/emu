@@ -299,8 +299,21 @@ public final class InstructionDecoder {
             logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
             return switch (modrm.reg()) {
-                case (byte) 0x02 /* 010 */ -> new Instruction(
-                        Opcode.CALL, Register64.fromByte(Register.combine(rexPrefix.ModRMRMExtension(), modrm.rm())));
+                case (byte) 0x02 /* 010 */ -> {
+                    logger.debug("dio bono");
+                    final Register reg = Register.fromCode(
+                            modrm.rm(), !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), false);
+                    yield (modrm.mod() != (byte) 0x03) // indirect operand needed
+                            ? (new Instruction(
+                                    Opcode.CALL,
+                                    parseIndirectOperand(b, rexPrefix, modrm, hasAddressSizeOverridePrefix, reg)
+                                            .ptrSize(
+                                                    hasOperandSizeOverridePrefix
+                                                            ? 16
+                                                            : (hasAddressSizeOverridePrefix ? 32 : 64))
+                                            .build()))
+                            : (new Instruction(Opcode.CALL, reg));
+                }
                 case (byte) 0x03 /* 011 */ -> new Instruction(
                         Opcode.CALL,
                         parseIndirectOperand(
@@ -308,11 +321,7 @@ public final class InstructionDecoder {
                                         rexPrefix,
                                         modrm,
                                         hasAddressSizeOverridePrefix,
-                                        Register.fromCode(
-                                                modrm.rm(),
-                                                hasAddressSizeOverridePrefix,
-                                                rexPrefix.ModRMRMExtension(),
-                                                hasOperandSizeOverridePrefix))
+                                        Register.fromCode(modrm.rm(), false, rexPrefix.ModRMRMExtension(), false))
                                 .ptrSize(hasOperandSizeOverridePrefix ? 32 : 64)
                                 .build());
                 case (byte) 0x07 /* 111 */ -> throw new IllegalArgumentException(
