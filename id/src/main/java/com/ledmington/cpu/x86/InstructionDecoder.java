@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.ledmington.cpu.x86.IndirectOperand.IndirectOperandBuilder;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
@@ -300,16 +301,20 @@ public final class InstructionDecoder {
             return switch (modrm.reg()) {
                 case (byte) 0x02 /* 010 */ -> new Instruction(
                         Opcode.CALL, Register64.fromByte(Register.combine(rexPrefix.ModRMRMExtension(), modrm.rm())));
-                case (byte) 0x03 /* 011 */ -> parse(
-                        b,
-                        hasAddressSizeOverridePrefix,
-                        hasOperandSizeOverridePrefix,
-                        rexPrefix,
-                        modrm,
-                        Optional.empty(),
+                case (byte) 0x03 /* 011 */ -> new Instruction(
                         Opcode.CALL,
-                        Optional.of(32),
-                        /* TODO: CONTINUE HERE (false) */ false);
+                        parseIndirectOperand(
+                                        b,
+                                        rexPrefix,
+                                        modrm,
+                                        hasAddressSizeOverridePrefix,
+                                        Register.fromCode(
+                                                modrm.rm(),
+                                                hasAddressSizeOverridePrefix,
+                                                rexPrefix.ModRMRMExtension(),
+                                                hasOperandSizeOverridePrefix))
+                                .ptrSize(hasOperandSizeOverridePrefix ? 32 : 64)
+                                .build());
                 case (byte) 0x07 /* 111 */ -> throw new IllegalArgumentException(
                         String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
                 default -> throw new IllegalArgumentException(
@@ -537,37 +542,8 @@ public final class InstructionDecoder {
             throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
         }
 
-        final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
-        SIB sib;
-        if (mod != (byte) 0x03 /* 11 */ && rm == (byte) 0x04 /* 100 */) {
-            // SIB needed
-            final byte _sib = b.read1();
-            sib = new SIB(_sib);
-            logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
-
-            final Register base =
-                    Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
-            final Register index =
-                    Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension(), false);
-            if (index.toIntelSyntax().endsWith("sp")) { // an indirect operand of [xxx+rsp+...] is not
-                // allowed
-                iob.reg2(base);
-            } else {
-                if (!(mod == (byte) 0x00 && base.toIntelSyntax().endsWith("bp"))) {
-                    iob.reg1(base);
-                }
-                iob.reg2(index);
-                iob.constant(1 << BitUtils.asInt(sib.scale()));
-            }
-        } else {
-            // SIB not needed
-            sib = null;
-            if (mod == (byte) 0x00 && operand2.toIntelSyntax().endsWith("bp")) {
-                iob.reg2(hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP);
-            } else {
-                iob.reg2((Register) operand2);
-            }
-        }
+        final IndirectOperand.IndirectOperandBuilder iob =
+                parseIndirectOperand(b, rexPrefix, modrm, hasAddressSizeOverridePrefix, operand2);
 
         if (pointerSize.isPresent()) {
             logger.debug("Using pointer size: %,d", pointerSize.orElseThrow());
@@ -576,15 +552,6 @@ public final class InstructionDecoder {
 
         if (mod != (byte) 0x03 /* 11 */) {
             // indirect operand needed
-            if ((mod == (byte) 0x00 && rm == (byte) 0x05)
-                    || (mod == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
-                    || mod == (byte) 0x02) {
-                final int disp32 = b.read4LittleEndian();
-                iob.displacement(disp32);
-            } else if (mod == (byte) 0x01) {
-                final byte disp8 = b.read1();
-                iob.displacement(disp8);
-            }
             operand2 = iob.build();
         } else {
             // indirect operand not needed, so we take the second operand without using the
@@ -607,6 +574,60 @@ public final class InstructionDecoder {
             default -> throw new IllegalArgumentException(
                     String.format("Invalid value for immediate bytes: %,d", immediateBytes.orElseThrow()));
         };
+    }
+
+    private IndirectOperandBuilder parseIndirectOperand(
+            final ByteBuffer b,
+            final RexPrefix rexPrefix,
+            final ModRM modrm,
+            final boolean hasAddressSizeOverridePrefix,
+            final Operand operand2) {
+        final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
+        SIB sib;
+        if (modrm.mod() != (byte) 0x03 /* 11 */ && modrm.rm() == (byte) 0x04 /* 100 */) {
+            // SIB needed
+            final byte _sib = b.read1();
+            sib = new SIB(_sib);
+            logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
+
+            final Register base =
+                    Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
+            final Register index =
+                    Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension(), false);
+            if (index.toIntelSyntax().endsWith("sp")) { // an indirect operand of [xxx+rsp+...] is not
+                // allowed
+                iob.reg2(base);
+            } else {
+                if (!(modrm.mod() == (byte) 0x00 && base.toIntelSyntax().endsWith("bp"))) {
+                    iob.reg1(base);
+                }
+                iob.reg2(index);
+                iob.constant(1 << BitUtils.asInt(sib.scale()));
+            }
+        } else {
+            // SIB not needed
+            sib = null;
+            if (modrm.mod() == (byte) 0x00 && operand2.toIntelSyntax().endsWith("bp")) {
+                iob.reg2(hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP);
+            } else {
+                iob.reg2((Register) operand2);
+            }
+        }
+
+        if (modrm.mod() != (byte) 0x03 /* 11 */) {
+            // indirect operand needed
+            if ((modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05)
+                    || (modrm.mod() == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
+                    || modrm.mod() == (byte) 0x02) {
+                final int disp32 = b.read4LittleEndian();
+                iob.displacement(disp32);
+            } else if (modrm.mod() == (byte) 0x01) {
+                final byte disp8 = b.read1();
+                iob.displacement(disp8);
+            }
+        }
+
+        return iob;
     }
 
     private boolean isExtendedOpcode(final byte opcode) {

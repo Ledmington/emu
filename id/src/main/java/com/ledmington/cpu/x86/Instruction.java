@@ -26,15 +26,14 @@ public final class Instruction {
      * corresponds to the size of the operands.
      * <p>
      * For example:
-     * lea eax,[rbx] "uses" 32 bits
-     * vaddsd xmm9, xmm10, xmm9 "uses" 64 bits
+     * {@code lea eax,[rbx]} "uses" 32 bits
+     * {@code vaddsd xmm9, xmm10, xmm9} "uses" 64 bits
      * <p>
      * Instructions which do not "use" anything like NOP, RET, LEAVE etc.
      * return 0.
      */
     public int bits() {
-        // here it is assumed that not all operands can be IndirectOperands
-        // and that all "first-class" registers involved have the same size
+        // here it is assumed that all "first-class" registers involved have the same size
         for (final Operand op : operands) {
             if (op instanceof Register r) {
                 return r.bits();
@@ -42,6 +41,10 @@ public final class Instruction {
             if (op instanceof Immediate imm) {
                 return imm.bits();
             }
+        }
+
+        if (operands.length > 0 && operands[0] instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
+            return io.explicitPtrSize();
         }
 
         return 0;
