@@ -59,23 +59,50 @@ public final class Breakdown {
         boolean r = false;
         boolean x = false;
         boolean b = false;
+        boolean hasLegacyGroup1Prefix = false;
+        boolean hasLegacyGroup2Prefix = false;
         boolean hasOperandSizeOverridePrefix = false;
         boolean hasAddressSizeOverridePrefix = false;
 
-        if (binary[pos] == (byte) 0x67) { // operand size override prefix
-            System.out.printf("0x%02x   -> operand size override prefix -> 16-bit registers are used\n", binary[pos]);
-            hasOperandSizeOverridePrefix = true;
-            pos++;
+        // parse legacy prefixes
+        for (int i = 0; i < 4; i++) {
+            byte p = binary[pos++];
+
+            if (isLegacyPrefixGroup1(p)) {
+                if (hasLegacyGroup1Prefix) {
+                    throw new IllegalStateException(
+                            String.format("Found duplicate legacy prefix group 1 at byte 0x%08x", pos));
+                }
+                System.out.printf("0x%02x   -> Legacy prefix group 1\n", p);
+                hasLegacyGroup1Prefix = true;
+            } else if (isLegacyPrefixGroup2(p)) {
+                if (hasLegacyGroup2Prefix) {
+                    throw new IllegalStateException(
+                            String.format("Found duplicate legacy prefix group 2 at byte 0x%08x", pos));
+                }
+                System.out.printf("0x%02x   -> Legacy prefix group 2\n", p);
+                hasLegacyGroup2Prefix = true;
+            } else if (p == (byte) 0x66) {
+                if (hasOperandSizeOverridePrefix) {
+                    throw new IllegalStateException(
+                            String.format("Found duplicate operand size override prefix at byte 0x%08x", pos));
+                }
+                System.out.printf("0x%02x   -> Operand size override prefix\n", p);
+                hasOperandSizeOverridePrefix = true;
+            } else if (p == (byte) 0x67) {
+                if (hasAddressSizeOverridePrefix) {
+                    throw new IllegalStateException(
+                            String.format("Found duplicate address size override prefix at byte 0x%08x", pos));
+                }
+                System.out.printf("0x%02x   -> Address size override prefix\n", p);
+                hasAddressSizeOverridePrefix = true;
+            } else {
+                pos--;
+                break;
+            }
         }
 
-        if (binary[pos] == (byte) 0x67) { // address size override prefix
-            System.out.printf(
-                    "0x%02x   -> address size override prefix -> 32-bit registers are used to compute memory location\n",
-                    binary[pos]);
-            hasAddressSizeOverridePrefix = true;
-            pos++;
-        }
-
+        // parse REX prefix
         if (BitUtils.and(binary[pos], (byte) 0xf0) == (byte) 0x40) {
             w = BitUtils.and(binary[pos], (byte) 0x08) != 0;
             r = BitUtils.and(binary[pos], (byte) 0x04) != 0;
@@ -126,6 +153,21 @@ public final class Breakdown {
                         case (byte) 0x05 -> "SUB";
                         case (byte) 0x06 -> "XOR";
                         case (byte) 0x07 -> "CMP";
+                        default -> "unknown";
+                    });
+        } else if (binary[pos] == (byte) 0xff) {
+            System.out.printf("0x%02x%02x -> ", binary[pos], binary[pos + 1]);
+            final ModRM modrm = new ModRM(binary[pos + 1]);
+            System.out.println(
+                    switch (modrm.reg()) {
+                        case (byte) 0x00 -> "INC";
+                        case (byte) 0x01 -> "DEC";
+                        case (byte) 0x02 -> "CALL";
+                        case (byte) 0x03 -> "CALL";
+                        case (byte) 0x04 -> "JMP";
+                        case (byte) 0x05 -> "JMP";
+                        case (byte) 0x06 -> "PUSH";
+                        case (byte) 0x07 -> "<reserved>";
                         default -> "unknown";
                     });
         } else {
@@ -259,5 +301,31 @@ public final class Breakdown {
             }
             System.out.println();
         }
+    }
+
+    private static boolean isLegacyPrefixGroup1(final byte prefix) {
+        final byte LOCK_PREFIX = (byte) 0xf0;
+        final byte REPNE_PREFIX = (byte) 0xf2; // REPNE / REPNZ
+        final byte REP_PREFIX = (byte) 0xf3; // REP / REPE / REPZ
+        return prefix == LOCK_PREFIX || prefix == REPNE_PREFIX || prefix == REP_PREFIX;
+    }
+
+    private static boolean isLegacyPrefixGroup2(final byte prefix) {
+        final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
+        final byte SS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x36;
+        final byte DS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x3e;
+        final byte ES_SEGMENT_OVERRIDE_PREFIX = (byte) 0x26;
+        final byte FS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x64;
+        final byte GS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x65;
+        final byte BRANCH_NOT_TAKEN_PREFIX = (byte) 0x2e;
+        final byte BRANCH_TAKEN_PREFIX = (byte) 0x3e;
+        return prefix == CS_SEGMENT_OVERRIDE_PREFIX
+                || prefix == SS_SEGMENT_OVERRIDE_PREFIX
+                || prefix == DS_SEGMENT_OVERRIDE_PREFIX
+                || prefix == ES_SEGMENT_OVERRIDE_PREFIX
+                || prefix == FS_SEGMENT_OVERRIDE_PREFIX
+                || prefix == GS_SEGMENT_OVERRIDE_PREFIX
+                || prefix == BRANCH_NOT_TAKEN_PREFIX
+                || prefix == BRANCH_TAKEN_PREFIX;
     }
 }
