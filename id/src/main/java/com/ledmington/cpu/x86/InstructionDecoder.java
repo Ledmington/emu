@@ -59,6 +59,8 @@ public final class InstructionDecoder {
     private static final byte NOP_OPCODE = (byte) 0x90;
     private static final byte CDQE_OPCODE = (byte) 0x98;
     private static final byte CDQ_OPCODE = (byte) 0x99;
+    private static final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
+    private static final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
     private static final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
     private static final byte MOV_IMM8_TO_CL_OPCODE = (byte) 0xb1;
     private static final byte MOV_IMM8_TO_DL_OPCODE = (byte) 0xb2;
@@ -358,6 +360,11 @@ public final class InstructionDecoder {
                         Opcode.MOV);
                 case TEST_R8_OPCODE -> parseSimple8Bit(b, rexPrefix, Opcode.TEST, false);
                 case TEST_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.TEST, false);
+                case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, new Immediate(b.read1()));
+                case TEST_EAX_IMM32_OPCODE -> new Instruction(
+                        Opcode.TEST,
+                        rexPrefix.isOperand64Bit() ? Register64.RAX : Register32.EAX,
+                        new Immediate(b.read4LittleEndian()));
                 case XOR_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.XOR, false);
                 case SUB_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.SUB, false);
                 case ADD_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.ADD, false);

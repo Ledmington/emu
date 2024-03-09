@@ -389,10 +389,13 @@ or DWORD PTR [r11+r9*4+0x12345678],0xdeadbeef | 43 81 8c 8b 78 56 34 12 ef be ad
 or WORD PTR [r11+r9*4+0x12345678],0xbeef      | 66 43 81 8c 8b 78 56 34 12 ef be
 
 # Test
-test r9b,r9b | 45 84 c9
-test r9d,r9d | 45 85 c9
-test r9w,r9w | 66 45 85 c9
-test rbx,rbx | 48 85 db
+test al,0x12        | a8 12
+test eax,0x12345678 | a9 78 56 34 12
+test r9b,r9b        | 45 84 c9
+test r9d,r9d        | 45 85 c9
+test r9w,r9w        | 66 45 85 c9
+test rax,0x12345678 | 48 a9 78 56 34 12
+test rbx,rbx        | 48 85 db
 
 # Ud2
 ud2 | 0f 0b
