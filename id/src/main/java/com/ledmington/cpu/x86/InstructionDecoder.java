@@ -57,6 +57,7 @@ public final class InstructionDecoder {
     private static final byte MOV_REG_MEM_OPCODE = (byte) 0x8b;
     private static final byte LEA_OPCODE = (byte) 0x8d;
     private static final byte NOP_OPCODE = (byte) 0x90;
+    private static final byte CDQE_OPCODE = (byte) 0x98;
     private static final byte CDQ_OPCODE = (byte) 0x99;
     private static final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
     private static final byte MOV_IMM8_TO_CL_OPCODE = (byte) 0xb1;
@@ -343,6 +344,7 @@ public final class InstructionDecoder {
                 case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
                 case INT3_OPCODE -> new Instruction(Opcode.INT3);
                 case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
+                case CDQE_OPCODE -> new Instruction(rexPrefix.isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
                 case SBB_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.SBB, false);
                 case SBB_AL_IMM8_OPCODE -> new Instruction(Opcode.SBB, Register8.AL, new Immediate(b.read1()));
                 case MOV_REG_MEM_OPCODE -> parseLEALike(

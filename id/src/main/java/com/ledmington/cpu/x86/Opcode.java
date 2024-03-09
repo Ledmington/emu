@@ -28,6 +28,16 @@ public enum Opcode {
     CDQ("cdq"),
 
     /**
+     * Convert doubleword to quadword.
+     */
+    CDQE("cdqe"),
+
+    /**
+     * Convert word to doubleword.
+     */
+    CWDE("cwde"),
+
+    /**
      * Conditional move if equal.
      */
     CMOVE("cmove"),

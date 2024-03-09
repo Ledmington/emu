@@ -55,6 +55,12 @@ call WORD PTR [rsi]                     | 66 ff 16
 # Cdq
 cdq | 99
 
+# Cwde
+cwde | 98
+
+# Cdqe
+cdqe | 48 98
+
 # Ja
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
