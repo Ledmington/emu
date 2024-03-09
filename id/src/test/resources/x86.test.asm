@@ -110,7 +110,8 @@ jns 0x12345678 | 0f 89 78 56 34 12
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'js rip+0x....'
-js 0x12 | 78 12
+js 0x12       | 78 12
+js 0x12345678 | 0f 88 78 56 34 12
 
 # Jmp
 # The output of these instructions is different from what you can see from other tools such as objdump

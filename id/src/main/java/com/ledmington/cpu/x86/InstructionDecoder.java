@@ -90,9 +90,10 @@ public final class InstructionDecoder {
     private static final byte JE_DISP32_OPCODE = (byte) 0x84;
     private static final byte JNE_DISP32_OPCODE = (byte) 0x85;
     private static final byte JBE_DISP32_OPCODE = (byte) 0x86;
-    private static final byte JA_OPCODE = (byte) 0x87;
-    private static final byte JNS_OPCODE = (byte) 0x89;
-    private static final byte JG_OPCODE = (byte) 0x8f;
+    private static final byte JA_DISP32_OPCODE = (byte) 0x87;
+    private static final byte JS_DISP32_OPCODE = (byte) 0x88;
+    private static final byte JNS_DISP32_OPCODE = (byte) 0x89;
+    private static final byte JG_DISP32_OPCODE = (byte) 0x8f;
     private static final byte IMUL_OPCODE = (byte) 0xaf;
     private static final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
     private static final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
@@ -188,12 +189,13 @@ public final class InstructionDecoder {
             final byte opcodeSecondByte = b.read1();
             logger.debug("Read multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
             return switch (opcodeSecondByte) {
-                case JA_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
+                case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
                 case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
                 case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of32(b.read4LittleEndian()));
                 case JBE_DISP32_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of32(b.read4LittleEndian()));
-                case JG_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
-                case JNS_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
+                case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
+                case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LittleEndian()));
+                case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
                 case IMUL_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.IMUL, true);
                 case MOVZX_BYTE_PTR_OPCODE -> parseLEALike(
                         b,
