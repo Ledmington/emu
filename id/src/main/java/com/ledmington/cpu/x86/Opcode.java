@@ -158,6 +158,11 @@ public enum Opcode {
     SHL("shl"),
 
     /**
+     * Logical shift right.
+     */
+    SHR("shr"),
+
+    /**
      * Subtract.
      */
     SUB("sub"),

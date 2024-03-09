@@ -278,6 +278,23 @@ public final class InstructionDecoder {
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             };
+        } else if (opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xc1) {
+            final byte opcodeSecondByte = b.read1();
+            logger.debug("Read extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
+
+            final ModRM modrm = new ModRM(opcodeSecondByte);
+            logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
+
+            return switch (modrm.reg()) {
+                case (byte) 0x05 /* 101 */ -> new Instruction(
+                        Opcode.SHR,
+                        Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), false),
+                        new Immediate(b.read1()));
+                case (byte) 0x06 /* 110 */ -> throw new IllegalArgumentException(
+                        String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+                default -> throw new IllegalArgumentException(
+                        String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            };
         } else if (opcodeFirstByte == (byte) 0xc6 || opcodeFirstByte == (byte) 0xc7) {
             final byte opcodeSecondByte = b.read1();
             logger.debug("Read extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);

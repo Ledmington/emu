@@ -386,6 +386,10 @@ sbb esi,esi   | 19 f6
 sbb r12d,r12d | 45 19 e4
 sbb rax,rax   | 48 19 c0
 
+# Shr
+shr ecx,0x12 | c1 e9 12
+shr rdx,0x12 | 48 c1 ea 12
+
 # Imul
 imul rbx,rbp | 48 0f af dd
 
