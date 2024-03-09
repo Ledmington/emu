@@ -355,6 +355,7 @@ and edi,0x1d               | 83 e7 1d
 and edi,0x7f               | 83 e7 7f
 and edi,0xf                | 83 e7 0f
 and edx,0xfff              | 81 e2 ff 0f 00 00
+and r12,r13                | 4d 21 ec
 and r15d,0x1f              | 41 83 e7 1f
 and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 

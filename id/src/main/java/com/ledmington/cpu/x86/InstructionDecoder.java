@@ -24,6 +24,7 @@ public final class InstructionDecoder {
     private static final byte ADD_OPCODE = (byte) 0x01;
     private static final byte SBB_OPCODE = (byte) 0x19;
     private static final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
+    private static final byte AND_OPCODE = (byte) 0x21;
     private static final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
     private static final byte SUB_OPCODE = (byte) 0x29;
     private static final byte XOR_OPCODE = (byte) 0x31;
@@ -373,6 +374,13 @@ public final class InstructionDecoder {
                 case JS_DISP8_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of8(b.read1()));
                 case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
+                case AND_OPCODE -> parse(
+                        b,
+                        hasAddressSizeOverridePrefix,
+                        hasOperandSizeOverridePrefix,
+                        rexPrefix,
+                        Optional.empty(),
+                        Opcode.AND);
                 case AND_RAX_IMM32_OPCODE -> new Instruction(
                         Opcode.AND, Register64.RAX, new Immediate((long) b.read4LittleEndian()));
 
