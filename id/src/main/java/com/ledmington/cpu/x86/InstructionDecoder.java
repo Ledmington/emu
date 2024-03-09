@@ -50,6 +50,7 @@ public final class InstructionDecoder {
     private static final byte JE_DISP8_OPCODE = (byte) 0x74;
     private static final byte JNE_DISP8_OPCODE = (byte) 0x75;
     private static final byte JS_DISP8_OPCODE = (byte) 0x78;
+    private static final byte JNS_DISP8_OPCODE = (byte) 0x79;
     private static final byte JLE_DISP8_OPCODE = (byte) 0x7e;
     private static final byte TEST_R8_OPCODE = (byte) 0x84;
     private static final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
@@ -406,6 +407,7 @@ public final class InstructionDecoder {
                 case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
                 case JNE_DISP8_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of8(b.read1()));
                 case JS_DISP8_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of8(b.read1()));
+                case JNS_DISP8_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of8(b.read1()));
                 case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
                 case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
                 case AND_OPCODE -> parse(
