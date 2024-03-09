@@ -100,6 +100,12 @@ jle 0x12 | 7e 12
 jne 0x12       | 75 12
 jne 0x12345678 | 0f 85 78 56 34 12
 
+# Jns
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'jns rip+0x....'
+jns 0x12345678 | 0f 89 78 56 34 12
+
 # Js
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.

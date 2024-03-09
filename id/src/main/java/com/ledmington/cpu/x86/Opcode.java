@@ -93,6 +93,11 @@ public enum Opcode {
     JNE("jne"),
 
     /**
+     * Conditional jump if not signed.
+     */
+    JNS("jns"),
+
+    /**
      * Conditional jump if signed.
      */
     JS("js"),
