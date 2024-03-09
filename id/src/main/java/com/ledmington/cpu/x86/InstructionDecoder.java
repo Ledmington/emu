@@ -300,7 +300,7 @@ public final class InstructionDecoder {
 
             return switch (modrm.reg()) {
                 case (byte) 0x02 /* 010 */ -> {
-                    logger.debug("dio bono");
+                    // near CALL
                     final Register reg = Register.fromCode(
                             modrm.rm(), !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), false);
                     yield (modrm.mod() != (byte) 0x03) // indirect operand needed
@@ -310,11 +310,12 @@ public final class InstructionDecoder {
                                             .ptrSize(
                                                     hasOperandSizeOverridePrefix
                                                             ? 16
-                                                            : (hasAddressSizeOverridePrefix ? 32 : 64))
+                                                            : (hasAddressSizeOverridePrefix ? 64 : reg.bits()))
                                             .build()))
                             : (new Instruction(Opcode.CALL, reg));
                 }
-                case (byte) 0x03 /* 011 */ -> new Instruction(
+                case (byte) 0x03 /* 011 */ -> // far CALL
+                new Instruction(
                         Opcode.CALL,
                         parseIndirectOperand(
                                         b,
