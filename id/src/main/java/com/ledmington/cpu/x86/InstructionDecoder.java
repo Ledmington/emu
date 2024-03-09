@@ -82,6 +82,7 @@ public final class InstructionDecoder {
     private static final byte JMP_DISP8_OPCODE = (byte) 0xeb;
 
     // two bytes opcodes
+    private static final byte UD2_OPCODE = (byte) 0x0b;
     private static final byte CMOVE_OPCODE = (byte) 0x44;
     private static final byte JE_DISP32_OPCODE = (byte) 0x84;
     private static final byte JNE_DISP32_OPCODE = (byte) 0x85;
@@ -204,6 +205,7 @@ public final class InstructionDecoder {
                 case CMOVE_OPCODE ->
                 // page 771
                 parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.CMOVE, true);
+                case UD2_OPCODE -> new Instruction(Opcode.UD2);
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             };

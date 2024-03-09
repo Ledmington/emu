@@ -381,3 +381,6 @@ test r9b,r9b | 45 84 c9
 test r9d,r9d | 45 85 c9
 test r9w,r9w | 66 45 85 c9
 test rbx,rbx | 48 85 db
+
+# Ud2
+ud2 | 0f 0b

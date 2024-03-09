@@ -148,6 +148,11 @@ public enum Opcode {
     TEST("test"),
 
     /**
+     * Undefined instruction.
+     */
+    UD2("ud2"),
+
+    /**
      * Logical XOR.
      */
     XOR("xor");
