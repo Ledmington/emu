@@ -94,6 +94,7 @@ public final class InstructionDecoder {
     private static final byte JA_DISP32_OPCODE = (byte) 0x87;
     private static final byte JS_DISP32_OPCODE = (byte) 0x88;
     private static final byte JNS_DISP32_OPCODE = (byte) 0x89;
+    private static final byte JLE_DISP32_OPCODE = (byte) 0x8e;
     private static final byte JG_DISP32_OPCODE = (byte) 0x8f;
     private static final byte IMUL_OPCODE = (byte) 0xaf;
     private static final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
@@ -200,6 +201,7 @@ public final class InstructionDecoder {
                 case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
                 case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LittleEndian()));
                 case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
+                case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LittleEndian()));
                 case IMUL_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.IMUL, true);
 
                 case MOVZX_BYTE_PTR_OPCODE, MOVZX_WORD_PTR_OPCODE, MOVSX_BYTE_PTR_OPCODE, MOVSX_WORD_PTR_OPCODE -> {
