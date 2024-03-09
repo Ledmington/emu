@@ -47,6 +47,7 @@ public final class InstructionDecoder {
     private static final byte POP_EBP_OPCODE = (byte) 0x5d;
     private static final byte POP_ESI_OPCODE = (byte) 0x5e;
     private static final byte POP_EDI_OPCODE = (byte) 0x5f;
+    private static final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
     private static final byte JE_DISP8_OPCODE = (byte) 0x74;
     private static final byte JNE_DISP8_OPCODE = (byte) 0x75;
     private static final byte JS_DISP8_OPCODE = (byte) 0x78;
@@ -448,6 +449,16 @@ public final class InstructionDecoder {
                         Opcode.AND);
                 case AND_RAX_IMM32_OPCODE -> new Instruction(
                         Opcode.AND, Register64.RAX, new Immediate((long) b.read4LittleEndian()));
+                case IMUL_REG_REG_IMM8_OPCODE -> {
+                    final ModRM modrm = new ModRM(b.read1());
+                    yield new Instruction(
+                            Opcode.IMUL,
+                            Registers.fromCode(
+                                    modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), false),
+                            Registers.fromCode(
+                                    modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), false),
+                            new Immediate(b.read1()));
+                }
 
                     // MOV 8/16-bit
                 case MOV_IMM8_TO_AL_OPCODE -> new Instruction(
