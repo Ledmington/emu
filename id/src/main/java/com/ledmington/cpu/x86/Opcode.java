@@ -118,6 +118,11 @@ public enum Opcode {
     MOV("mov"),
 
     /**
+     * Move and sign-extend.
+     */
+    MOVSX("movsx"),
+
+    /**
      * Move and zero-extend.
      */
     MOVZX("movzx"),

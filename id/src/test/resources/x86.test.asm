@@ -317,10 +317,22 @@ mov r9,0x12345678                              | 49 c7 c1 78 56 34 12
 mov rsi,QWORD PTR [rbp+r9*4+0x12345678]        | 4a 8b b4 8d 78 56 34 12
 
 # Movzx
+movzx esi,bl                              | 0f b6 f3
 movzx r9d,BYTE PTR [rcx]                  | 44 0f b6 09
 movzx r9d,BYTE PTR [rdx+rax*4+0x12345678] | 44 0f b6 8c 82 78 56 34 12
 movzx r9d,WORD PTR [rcx]                  | 44 0f b7 09
 movzx r9d,WORD PTR [rdx+rax*4+0x12345678] | 44 0f b7 8c 82 78 56 34 12
+movzx rsi,bl                              | 48 0f b6 f3
+movzx rsi,di                              | 48 0f b7 f7
+
+# Movsx
+movsx edi,BYTE PTR [rax+rbx*4+0x12345678] | 0f be bc 98 78 56 34 12
+movsx edi,WORD PTR [rax+rbx*4+0x12345678] | 0f bf bc 98 78 56 34 12
+movsx esi,bl                              | 0f be f3
+movsx rdi,BYTE PTR [rax+rbx*4+0x12345678] | 48 0f be bc 98 78 56 34 12
+movsx rdi,WORD PTR [rax+rbx*4+0x12345678] | 48 0f bf bc 98 78 56 34 12
+movsx rsi,bl                              | 48 0f be f3
+movsx rsi,di                              | 48 0f bf f7
 
 # Push
 push r10 | 41 52

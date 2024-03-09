@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.ledmington.cpu.x86.ModRM;
 import com.ledmington.cpu.x86.Opcode;
-import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.Registers;
 import com.ledmington.cpu.x86.SIB;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ImmutableMap;
@@ -224,12 +224,12 @@ public final class Breakdown {
                 break;
         }
         System.out.println();
-        final String reg = Register.fromCode(modrm.reg(), w, r, hasOperandSizeOverridePrefix)
+        final String reg = Registers.fromCode(modrm.reg(), w, r, hasOperandSizeOverridePrefix)
                 .toIntelSyntax();
         System.out.printf(
                 "          Reg: %s -> %s\n",
                 BitUtils.toBinaryString(modrm.reg()).substring(5, 8), reg);
-        String rm = Register.fromCode(modrm.rm(), !hasAddressSizeOverridePrefix, b, hasOperandSizeOverridePrefix)
+        String rm = Registers.fromCode(modrm.rm(), !hasAddressSizeOverridePrefix, b, hasOperandSizeOverridePrefix)
                 .toIntelSyntax();
         if (modrm.mod() == (byte) 0x00 && rm.endsWith("bp")) {
             rm = hasAddressSizeOverridePrefix ? "eip" : "rip";
@@ -253,13 +253,13 @@ public final class Breakdown {
             System.out.printf(
                     "          Scale: %s -> *%d\n",
                     BitUtils.toBinaryString(sib.scale()).substring(6, 8), 1 << BitUtils.asInt(sib.scale()));
-            final String index = Register.fromCode(
+            final String index = Registers.fromCode(
                             sib.index(), !hasAddressSizeOverridePrefix, x, hasOperandSizeOverridePrefix)
                     .toIntelSyntax();
             System.out.printf(
                     "          Index: %s -> %s\n",
                     BitUtils.toBinaryString(sib.index()).substring(5, 8), index);
-            final String base = Register.fromCode(
+            final String base = Registers.fromCode(
                             sib.base(), !hasAddressSizeOverridePrefix, b, hasOperandSizeOverridePrefix)
                     .toIntelSyntax();
             System.out.printf(

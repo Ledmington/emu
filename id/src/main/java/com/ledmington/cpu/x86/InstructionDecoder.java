@@ -98,6 +98,8 @@ public final class InstructionDecoder {
     private static final byte IMUL_OPCODE = (byte) 0xaf;
     private static final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
     private static final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
+    private static final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
+    private static final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
 
     // extended opcodes
 
@@ -189,6 +191,7 @@ public final class InstructionDecoder {
             // more than 1 bytes opcode
             final byte opcodeSecondByte = b.read1();
             logger.debug("Read multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
+
             return switch (opcodeSecondByte) {
                 case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
                 case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
@@ -198,20 +201,44 @@ public final class InstructionDecoder {
                 case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LittleEndian()));
                 case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
                 case IMUL_OPCODE -> parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.IMUL, true);
-                case MOVZX_BYTE_PTR_OPCODE -> parseLEALike(
-                        b,
-                        hasAddressSizeOverridePrefix,
-                        hasOperandSizeOverridePrefix,
-                        rexPrefix,
-                        Opcode.MOVZX,
-                        Optional.of(8));
-                case MOVZX_WORD_PTR_OPCODE -> parseLEALike(
-                        b,
-                        hasAddressSizeOverridePrefix,
-                        hasOperandSizeOverridePrefix,
-                        rexPrefix,
-                        Opcode.MOVZX,
-                        Optional.of(16));
+
+                case MOVZX_BYTE_PTR_OPCODE, MOVZX_WORD_PTR_OPCODE, MOVSX_BYTE_PTR_OPCODE, MOVSX_WORD_PTR_OPCODE -> {
+                    final Opcode opcode =
+                            (opcodeSecondByte == MOVZX_BYTE_PTR_OPCODE || opcodeSecondByte == MOVZX_WORD_PTR_OPCODE)
+                                    ? Opcode.MOVZX
+                                    : Opcode.MOVSX;
+                    final int ptrSize =
+                            (opcodeSecondByte == MOVZX_BYTE_PTR_OPCODE || opcodeSecondByte == MOVSX_BYTE_PTR_OPCODE)
+                                    ? 8
+                                    : 16;
+
+                    final ModRM modrm = new ModRM(b.read1());
+                    final Register r1 = Registers.fromCode(
+                            modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), false);
+
+                    if (modrm.mod() != (byte) 0x03) { // indirect operand needed
+                        yield new Instruction(
+                                opcode,
+                                r1,
+                                parseIndirectOperand(
+                                                b,
+                                                rexPrefix,
+                                                modrm,
+                                                hasAddressSizeOverridePrefix,
+                                                Registers.fromCode(
+                                                        modrm.rm(),
+                                                        !hasAddressSizeOverridePrefix,
+                                                        rexPrefix.ModRMRMExtension(),
+                                                        hasOperandSizeOverridePrefix))
+                                        .ptrSize(ptrSize)
+                                        .build());
+                    } else {
+                        final byte regByte = Registers.combine(rexPrefix.ModRMRMExtension(), modrm.rm());
+                        final Register r2 = (ptrSize == 8) ? Register8.fromByte(regByte) : Register16.fromByte(regByte);
+                        yield new Instruction(opcode, r1, r2);
+                    }
+                }
+
                 case CMOVE_OPCODE ->
                 // page 771
                 parseSimple(b, hasOperandSizeOverridePrefix, rexPrefix, Opcode.CMOVE, true);
@@ -233,7 +260,7 @@ public final class InstructionDecoder {
                     // full table at page 2856
                 case (byte) 0x00 /* 000 */ -> new Instruction(
                         Opcode.ADD,
-                        Register.fromCode(
+                        Registers.fromCode(
                                 modrm.rm(),
                                 rexPrefix.isOperand64Bit(),
                                 rexPrefix.ModRMRMExtension(),
@@ -251,7 +278,7 @@ public final class InstructionDecoder {
                         false);
                 case (byte) 0x04 /* 100 */ -> new Instruction(
                         Opcode.AND,
-                        Register.fromCode(
+                        Registers.fromCode(
                                 modrm.rm(),
                                 rexPrefix.isOperand64Bit(),
                                 rexPrefix.ModRMRMExtension(),
@@ -262,7 +289,7 @@ public final class InstructionDecoder {
                                         : ((long) b.read4LittleEndian())));
                 case (byte) 0x05 /* 101 */ -> new Instruction(
                         Opcode.SUB,
-                        Register.fromCode(
+                        Registers.fromCode(
                                 modrm.rm(),
                                 rexPrefix.isOperand64Bit(),
                                 rexPrefix.ModRMRMExtension(),
@@ -291,7 +318,7 @@ public final class InstructionDecoder {
             return switch (modrm.reg()) {
                 case (byte) 0x05 /* 101 */ -> new Instruction(
                         Opcode.SHR,
-                        Register.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), false),
+                        Registers.fromCode(modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), false),
                         new Immediate(b.read1()));
                 case (byte) 0x06 /* 110 */ -> throw new IllegalArgumentException(
                         String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
@@ -331,7 +358,7 @@ public final class InstructionDecoder {
             return switch (modrm.reg()) {
                 case (byte) 0x02 /* 010 */ -> {
                     // near CALL
-                    final Register reg = Register.fromCode(
+                    final Register reg = Registers.fromCode(
                             modrm.rm(), !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), false);
                     yield (modrm.mod() != (byte) 0x03) // indirect operand needed
                             ? (new Instruction(
@@ -352,7 +379,7 @@ public final class InstructionDecoder {
                                         rexPrefix,
                                         modrm,
                                         hasAddressSizeOverridePrefix,
-                                        Register.fromCode(modrm.rm(), false, rexPrefix.ModRMRMExtension(), false))
+                                        Registers.fromCode(modrm.rm(), false, rexPrefix.ModRMRMExtension(), false))
                                 .ptrSize(hasOperandSizeOverridePrefix ? 32 : 64)
                                 .build());
                 case (byte) 0x07 /* 111 */ -> throw new IllegalArgumentException(
@@ -585,9 +612,9 @@ public final class InstructionDecoder {
             final Optional<Integer> pointerSize,
             final boolean ignoreSecondOperand) {
         final byte rm = modrm.rm();
-        final Register operand1 = Register.fromCode(
+        final Register operand1 = Registers.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
-        Operand operand2 = Register.fromCode(
+        Operand operand2 = Registers.fromCode(
                 rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
 
         // Table at page 530
@@ -610,7 +637,7 @@ public final class InstructionDecoder {
         } else {
             // indirect operand not needed, so we take the second operand without using the
             // addressSizeOverride
-            operand2 = Register.fromCode(
+            operand2 = Registers.fromCode(
                     rm, rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
         }
 
@@ -645,9 +672,9 @@ public final class InstructionDecoder {
             logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
             final Register base =
-                    Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
-            final Register index =
-                    Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension(), false);
+                    Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
+            final Register index = Registers.fromCode(
+                    sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension(), false);
             if (index.toIntelSyntax().endsWith("sp")) { // an indirect operand of [xxx+rsp+...] is not
                 // allowed
                 iob.reg2(base);
@@ -698,9 +725,9 @@ public final class InstructionDecoder {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        final Register operand1 = Register.fromCode(
+        final Register operand1 = Registers.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
-        final Register operand2 = Register.fromCode(
+        final Register operand2 = Registers.fromCode(
                 modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
 
         if (invertOperands) {
@@ -715,8 +742,8 @@ public final class InstructionDecoder {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        final Register operand1 = Register8.fromByte(Register.combine(rexPrefix.ModRMRegExtension(), modrm.reg()));
-        final Register operand2 = Register8.fromByte(Register.combine(rexPrefix.ModRMRMExtension(), modrm.rm()));
+        final Register operand1 = Register8.fromByte(Registers.combine(rexPrefix.ModRMRegExtension(), modrm.reg()));
+        final Register operand2 = Register8.fromByte(Registers.combine(rexPrefix.ModRMRMExtension(), modrm.rm()));
 
         if (invertOperands) {
             return new Instruction(opcode, operand1, operand2);
@@ -749,9 +776,9 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
         final byte rm = modrm.rm();
-        final Register operand1 = Register.fromCode(
+        final Register operand1 = Registers.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
-        final Register operand2 = Register.fromCode(
+        final Register operand2 = Registers.fromCode(
                 rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
 
         // Table at page 530
@@ -768,9 +795,9 @@ public final class InstructionDecoder {
             logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
 
             final Register base =
-                    Register.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
-            final Register index =
-                    Register.fromCode(sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension(), false);
+                    Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
+            final Register index = Registers.fromCode(
+                    sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.SIBIndexExtension(), false);
             if (index.toIntelSyntax().endsWith("sp")) { // an indirect operand of [xxx+rsp+...] is not
                 // allowed
                 iob.reg2(base);
