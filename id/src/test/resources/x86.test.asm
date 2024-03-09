@@ -61,6 +61,12 @@ cdq | 99
 # In reality, it would look like 'jg rip+0x....'
 ja 0x78563412 | 0f 87 12 34 56 78
 
+# Jbe
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'jbe rip+0x....'
+jbe 0x78563412 | 0f 86 12 34 56 78
+
 # Jg
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
