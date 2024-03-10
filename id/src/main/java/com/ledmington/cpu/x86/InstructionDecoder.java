@@ -218,6 +218,7 @@ public final class InstructionDecoder {
 
     private Instruction parse2BytesOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
         final byte UD2_OPCODE = (byte) 0x0b;
+        final byte MOVAPS_OPCODE = (byte) 0x29;
         final byte CMOVE_OPCODE = (byte) 0x44;
         final byte MOVDQA_OPCODE = (byte) 0x6f;
         final byte JE_DISP32_OPCODE = (byte) 0x84;
@@ -290,6 +291,13 @@ public final class InstructionDecoder {
                         Opcode.MOVDQA,
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
                         parseIndirectOperand(b, pref, modrm, null).build());
+            }
+            case MOVAPS_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.MOVAPS,
+                        parseIndirectOperand(b, pref, modrm, null).build(),
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())));
             }
 
             case CMOVE_OPCODE ->

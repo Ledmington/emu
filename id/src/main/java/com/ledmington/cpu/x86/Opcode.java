@@ -118,6 +118,11 @@ public enum Opcode {
     MOV("mov"),
 
     /**
+     * Move aligned packed single floating-point values.
+     */
+    MOVAPS("movaps"),
+
+    /**
      * Move aligned double-quadword.
      */
     MOVDQA("movdqa"),
