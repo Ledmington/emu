@@ -88,25 +88,6 @@ public final class InstructionDecoder {
     private static final byte JMP_DISP32_OPCODE = (byte) 0xe9;
     private static final byte JMP_DISP8_OPCODE = (byte) 0xeb;
 
-    // two bytes opcodes
-    private static final byte UD2_OPCODE = (byte) 0x0b;
-    private static final byte CMOVE_OPCODE = (byte) 0x44;
-    private static final byte JE_DISP32_OPCODE = (byte) 0x84;
-    private static final byte JNE_DISP32_OPCODE = (byte) 0x85;
-    private static final byte JBE_DISP32_OPCODE = (byte) 0x86;
-    private static final byte JA_DISP32_OPCODE = (byte) 0x87;
-    private static final byte JS_DISP32_OPCODE = (byte) 0x88;
-    private static final byte JNS_DISP32_OPCODE = (byte) 0x89;
-    private static final byte JLE_DISP32_OPCODE = (byte) 0x8e;
-    private static final byte JG_DISP32_OPCODE = (byte) 0x8f;
-    private static final byte IMUL_OPCODE = (byte) 0xaf;
-    private static final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
-    private static final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
-    private static final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
-    private static final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
-
-    // extended opcodes
-
     public InstructionDecoder() {}
 
     public List<Instruction> decode(final byte[] code) {
@@ -181,7 +162,7 @@ public final class InstructionDecoder {
                 yield (modrm.mod() != (byte) 0x03) // indirect operand needed
                         ? (new Instruction(
                                 Opcode.CALL,
-                                parseIndirectOperand(b, pref.rex(), modrm, pref.hasAddressSizeOverridePrefix(), reg)
+                                parseIndirectOperand(b, pref, modrm, reg)
                                         .ptrSize(
                                                 pref.hasOperandSizeOverridePrefix()
                                                         ? 16
@@ -194,9 +175,8 @@ public final class InstructionDecoder {
                     Opcode.CALL,
                     parseIndirectOperand(
                                     b,
-                                    pref.rex(),
+                                    pref,
                                     modrm,
-                                    pref.hasAddressSizeOverridePrefix(),
                                     Registers.fromCode(
                                             modrm.rm(), false, pref.rex().ModRMRMExtension(), false))
                             .ptrSize(pref.hasOperandSizeOverridePrefix() ? 32 : 64)
@@ -305,6 +285,23 @@ public final class InstructionDecoder {
     }
 
     private Instruction parse2BytesOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+        final byte UD2_OPCODE = (byte) 0x0b;
+        final byte CMOVE_OPCODE = (byte) 0x44;
+        final byte MOVDQA_OPCODE = (byte) 0x6f;
+        final byte JE_DISP32_OPCODE = (byte) 0x84;
+        final byte JNE_DISP32_OPCODE = (byte) 0x85;
+        final byte JBE_DISP32_OPCODE = (byte) 0x86;
+        final byte JA_DISP32_OPCODE = (byte) 0x87;
+        final byte JS_DISP32_OPCODE = (byte) 0x88;
+        final byte JNS_DISP32_OPCODE = (byte) 0x89;
+        final byte JLE_DISP32_OPCODE = (byte) 0x8e;
+        final byte JG_DISP32_OPCODE = (byte) 0x8f;
+        final byte IMUL_OPCODE = (byte) 0xaf;
+        final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
+        final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
+        final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
+        final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
+
         final byte opcodeSecondByte = b.read1();
         logger.debug("Read multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
 
@@ -339,9 +336,8 @@ public final class InstructionDecoder {
                             r1,
                             parseIndirectOperand(
                                             b,
-                                            pref.rex(),
+                                            pref,
                                             modrm,
-                                            pref.hasAddressSizeOverridePrefix(),
                                             Registers.fromCode(
                                                     modrm.rm(),
                                                     !pref.hasAddressSizeOverridePrefix(),
@@ -354,6 +350,14 @@ public final class InstructionDecoder {
                     final Register r2 = (ptrSize == 8) ? Register8.fromByte(regByte) : Register16.fromByte(regByte);
                     yield new Instruction(opcode, r1, r2);
                 }
+            }
+
+            case MOVDQA_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.MOVDQA,
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
+                        parseIndirectOperand(b, pref, modrm, null).build());
             }
 
             case CMOVE_OPCODE ->
@@ -689,8 +693,7 @@ public final class InstructionDecoder {
             throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
         }
 
-        final IndirectOperand.IndirectOperandBuilder iob =
-                parseIndirectOperand(b, rexPrefix, modrm, hasAddressSizeOverridePrefix, operand2);
+        final IndirectOperand.IndirectOperandBuilder iob = parseIndirectOperand(b, pref, modrm, operand2);
 
         if (pointerSize.isPresent()) {
             logger.debug("Using pointer size: %,d", pointerSize.orElseThrow());
@@ -724,11 +727,9 @@ public final class InstructionDecoder {
     }
 
     private IndirectOperandBuilder parseIndirectOperand(
-            final ByteBuffer b,
-            final RexPrefix rexPrefix,
-            final ModRM modrm,
-            final boolean hasAddressSizeOverridePrefix,
-            final Operand operand2) {
+            final ByteBuffer b, final Prefixes pref, final ModRM modrm, final Operand operand2) {
+        final RexPrefix rexPrefix = pref.rex();
+        final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
         final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
         SIB sib;
         if (modrm.mod() != (byte) 0x03 /* 11 */ && modrm.rm() == (byte) 0x04 /* 100 */) {
