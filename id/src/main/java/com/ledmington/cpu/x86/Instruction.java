@@ -2,16 +2,25 @@ package com.ledmington.cpu.x86;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * High-level representation of an x86 instruction.
  */
 public final class Instruction {
 
+    public enum Prefix {
+        LOCK,
+        REP,
+        REPNZ
+    }
+
+    private final Optional<Prefix> pref;
     private final Opcode opcode;
     private final Operand[] operands;
 
-    public Instruction(final Opcode opcode, final Operand... ops) {
+    public Instruction(final Prefix pref, final Opcode opcode, final Operand... ops) {
+        this.pref = (pref == null) ? Optional.empty() : Optional.of(pref);
         this.opcode = Objects.requireNonNull(opcode);
         this.operands = new Operand[Objects.requireNonNull(ops, "Cannot have null array of operands").length];
         for (int i = 0; i < ops.length; i++) {
@@ -19,6 +28,10 @@ public final class Instruction {
             this.operands[i] =
                     Objects.requireNonNull(ops[i], () -> String.format("The %,d-th operand was null", finalI));
         }
+    }
+
+    public Instruction(final Opcode opcode, final Operand... ops) {
+        this(null, opcode, ops);
     }
 
     /**
@@ -76,6 +89,9 @@ public final class Instruction {
 
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
+        if (this.pref.isPresent()) {
+            sb.append(this.pref.orElseThrow().name().toLowerCase()).append(' ');
+        }
         sb.append(opcode.mnemonic());
 
         if (operands.length > 0) {

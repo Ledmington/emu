@@ -19,6 +19,14 @@ public final class Register16 extends Register {
     public static final Register16 R14W = new Register16("r14w");
     public static final Register16 R15W = new Register16("r15w");
 
+    // segment registers
+    public static final Register16 CS = new Register16("cs");
+    public static final Register16 DS = new Register16("ds");
+    public static final Register16 SS = new Register16("ss");
+    public static final Register16 ES = new Register16("es");
+    public static final Register16 FS = new Register16("fs");
+    public static final Register16 GS = new Register16("gs");
+
     private Register16(final String mnemonic) {
         super(mnemonic);
     }

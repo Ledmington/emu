@@ -426,3 +426,16 @@ test rbx,rbx        | 48 85 db
 
 # Ud2
 ud2 | 0f 0b
+
+# Rep/repnz movs
+movs BYTE PTR es:[rdi],BYTE PTR ds:[rsi]         | a4
+movs DWORD PTR es:[rdi],DWORD PTR ds:[rsi]       | a5
+movs WORD PTR es:[edi],WORD PTR ds:[esi]         | 67 66 a5
+rep movs BYTE PTR es:[edi],BYTE PTR ds:[esi]     | 67 f3 a4
+rep movs DWORD PTR es:[edi],DWORD PTR ds:[esi]   | 67 f3 a5
+rep movs DWORD PTR es:[rdi],DWORD PTR ds:[rsi]   | f3 a5
+rep movs WORD PTR es:[edi],WORD PTR ds:[esi]     | 67 66 f3 a5
+rep movs WORD PTR es:[rdi],WORD PTR ds:[rsi]     | 66 f3 a5
+repnz movs BYTE PTR es:[edi],BYTE PTR ds:[esi]   | 67 f2 a4
+repnz movs DWORD PTR es:[edi],DWORD PTR ds:[esi] | 67 f2 a5
+repnz movs WORD PTR es:[edi],WORD PTR ds:[esi]   | 67 66 f2 a5

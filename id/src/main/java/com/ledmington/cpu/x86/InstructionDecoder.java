@@ -61,6 +61,8 @@ public final class InstructionDecoder {
     private static final byte NOP_OPCODE = (byte) 0x90;
     private static final byte CDQE_OPCODE = (byte) 0x98;
     private static final byte CDQ_OPCODE = (byte) 0x99;
+    private static final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
+    private static final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
     private static final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
     private static final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
     private static final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
@@ -418,6 +420,55 @@ public final class InstructionDecoder {
                                 false),
                         new Immediate(b.read1()));
             }
+            case MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE -> {
+                final Operand op1 = IndirectOperand.builder()
+                        .reg2(new SegmentRegister(
+                                Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+                        .ptrSize(8)
+                        .build();
+                final Operand op2 = IndirectOperand.builder()
+                        .reg2(new SegmentRegister(
+                                Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
+                        .ptrSize(8)
+                        .build();
+                logger.debug(pref.toString());
+                if (pref.p1().isPresent()) {
+                    if (pref.p1().orElseThrow() == (byte) 0xf2) {
+                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.MOVS, op1, op2);
+                    } else if (pref.p1().orElseThrow() == (byte) 0xf3) {
+                        yield new Instruction(Instruction.Prefix.REP, Opcode.MOVS, op1, op2);
+                    } else {
+                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.MOVS, op1, op2);
+                    }
+                } else {
+                    yield new Instruction(Opcode.MOVS, op1, op2);
+                }
+            }
+            case MOVS_ES_EDI_DS_ESI_OPCODE -> {
+                final int size = pref.hasOperandSizeOverridePrefix() ? 16 : 32;
+                final Operand op1 = IndirectOperand.builder()
+                        .reg2(new SegmentRegister(
+                                Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+                        .ptrSize(size)
+                        .build();
+                final Operand op2 = IndirectOperand.builder()
+                        .reg2(new SegmentRegister(
+                                Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
+                        .ptrSize(size)
+                        .build();
+                logger.debug(pref.toString());
+                if (pref.p1().isPresent()) {
+                    if (pref.p1().orElseThrow() == (byte) 0xf2) {
+                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.MOVS, op1, op2);
+                    } else if (pref.p1().orElseThrow() == (byte) 0xf3) {
+                        yield new Instruction(Instruction.Prefix.REP, Opcode.MOVS, op1, op2);
+                    } else {
+                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.MOVS, op1, op2);
+                    }
+                } else {
+                    yield new Instruction(Opcode.MOVS, op1, op2);
+                }
+            }
 
                 // MOV 8/16-bit
             case MOV_IMM8_TO_AL_OPCODE -> new Instruction(
@@ -540,6 +591,12 @@ public final class InstructionDecoder {
             case LEA_OPCODE -> // page 1191
             parseLEALike(b, pref, Opcode.LEA);
 
+            case (byte) 0xf0 -> throw new IllegalArgumentException(
+                    String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.position()));
+            case (byte) 0xf2 -> throw new IllegalArgumentException(
+                    String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.position()));
+            case (byte) 0xf3 -> throw new IllegalArgumentException(
+                    String.format("Found an unrecognized REP prefix at byte 0x%08x", b.position()));
             case (byte) 0x66 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized operand size override prefix at byte 0x%08x", b.position()));
             case (byte) 0x67 -> throw new IllegalArgumentException(

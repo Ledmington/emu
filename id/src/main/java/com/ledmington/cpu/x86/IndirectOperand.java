@@ -204,6 +204,9 @@ public final class IndirectOperand implements Operand {
     @Override
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
+        if (reg2 != null && reg2 instanceof SegmentRegister sr) {
+            sb.append(sr.segment().toIntelSyntax()).append(':');
+        }
         sb.append('[');
         if (reg1 != null) {
             sb.append(reg1.toIntelSyntax());
