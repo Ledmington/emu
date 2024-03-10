@@ -378,6 +378,7 @@ leave | c9
 ret | c3
 
 # Add
+add al,0x99  | 04 99
 add eax,0x18 | 83 c0 18
 add r8,0x1   | 49 83 c0 01
 add rax,0x1  | 48 83 c0 01

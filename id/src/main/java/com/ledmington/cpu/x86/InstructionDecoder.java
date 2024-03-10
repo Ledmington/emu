@@ -20,74 +20,6 @@ public final class InstructionDecoder {
 
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
 
-    // single byte opcodes
-    private static final byte ADD_OPCODE = (byte) 0x01;
-    private static final byte SBB_OPCODE = (byte) 0x19;
-    private static final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
-    private static final byte AND_OPCODE = (byte) 0x21;
-    private static final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
-    private static final byte SUB_OPCODE = (byte) 0x29;
-    private static final byte XOR_OPCODE = (byte) 0x31;
-    private static final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
-    private static final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
-    private static final byte CMP_RAX_IMM32_OPCODE = (byte) 0x3d;
-    private static final byte PUSH_EAX_OPCODE = (byte) 0x50;
-    private static final byte PUSH_ECX_OPCODE = (byte) 0x51;
-    private static final byte PUSH_EDX_OPCODE = (byte) 0x52;
-    private static final byte PUSH_EBX_OPCODE = (byte) 0x53;
-    private static final byte PUSH_ESP_OPCODE = (byte) 0x54;
-    private static final byte PUSH_EBP_OPCODE = (byte) 0x55;
-    private static final byte PUSH_ESI_OPCODE = (byte) 0x56;
-    private static final byte PUSH_EDI_OPCODE = (byte) 0x57;
-    private static final byte POP_EAX_OPCODE = (byte) 0x58;
-    private static final byte POP_ECX_OPCODE = (byte) 0x59;
-    private static final byte POP_EDX_OPCODE = (byte) 0x5a;
-    private static final byte POP_EBX_OPCODE = (byte) 0x5b;
-    private static final byte POP_ESP_OPCODE = (byte) 0x5c;
-    private static final byte POP_EBP_OPCODE = (byte) 0x5d;
-    private static final byte POP_ESI_OPCODE = (byte) 0x5e;
-    private static final byte POP_EDI_OPCODE = (byte) 0x5f;
-    private static final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
-    private static final byte JE_DISP8_OPCODE = (byte) 0x74;
-    private static final byte JNE_DISP8_OPCODE = (byte) 0x75;
-    private static final byte JS_DISP8_OPCODE = (byte) 0x78;
-    private static final byte JNS_DISP8_OPCODE = (byte) 0x79;
-    private static final byte JLE_DISP8_OPCODE = (byte) 0x7e;
-    private static final byte TEST_R8_OPCODE = (byte) 0x84;
-    private static final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
-    private static final byte MOV_MEM_REG_OPCODE = (byte) 0x89;
-    private static final byte MOV_REG_MEM_OPCODE = (byte) 0x8b;
-    private static final byte LEA_OPCODE = (byte) 0x8d;
-    private static final byte NOP_OPCODE = (byte) 0x90;
-    private static final byte CDQE_OPCODE = (byte) 0x98;
-    private static final byte CDQ_OPCODE = (byte) 0x99;
-    private static final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
-    private static final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
-    private static final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
-    private static final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
-    private static final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
-    private static final byte MOV_IMM8_TO_CL_OPCODE = (byte) 0xb1;
-    private static final byte MOV_IMM8_TO_DL_OPCODE = (byte) 0xb2;
-    private static final byte MOV_IMM8_TO_BL_OPCODE = (byte) 0xb3;
-    private static final byte MOV_IMM8_TO_AH_OPCODE = (byte) 0xb4;
-    private static final byte MOV_IMM8_TO_CH_OPCODE = (byte) 0xb5;
-    private static final byte MOV_IMM8_TO_DH_OPCODE = (byte) 0xb6;
-    private static final byte MOV_IMM8_TO_BH_OPCODE = (byte) 0xb7;
-    private static final byte MOV_IMM32_TO_EAX_OPCODE = (byte) 0xb8;
-    private static final byte MOV_IMM32_TO_ECX_OPCODE = (byte) 0xb9;
-    private static final byte MOV_IMM32_TO_EDX_OPCODE = (byte) 0xba;
-    private static final byte MOV_IMM32_TO_EBX_OPCODE = (byte) 0xbb;
-    private static final byte MOV_IMM32_TO_ESP_OPCODE = (byte) 0xbc;
-    private static final byte MOV_IMM32_TO_EBP_OPCODE = (byte) 0xbd;
-    private static final byte MOV_IMM32_TO_ESI_OPCODE = (byte) 0xbe;
-    private static final byte MOV_IMM32_TO_EDI_OPCODE = (byte) 0xbf;
-    private static final byte RET_OPCODE = (byte) 0xc3;
-    private static final byte LEAVE_OPCODE = (byte) 0xc9;
-    private static final byte INT3_OPCODE = (byte) 0xcc;
-    private static final byte CALL_OPCODE = (byte) 0xe8;
-    private static final byte JMP_DISP32_OPCODE = (byte) 0xe9;
-    private static final byte JMP_DISP8_OPCODE = (byte) 0xeb;
-
     public InstructionDecoder() {}
 
     public List<Instruction> decode(final byte[] code) {
@@ -370,6 +302,74 @@ public final class InstructionDecoder {
     }
 
     private Instruction parseSingleByteOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+        final byte ADD_OPCODE = (byte) 0x01;
+        final byte ADD_AL_IMM8_OPCODE = (byte) 0x04;
+        final byte SBB_OPCODE = (byte) 0x19;
+        final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
+        final byte AND_OPCODE = (byte) 0x21;
+        final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
+        final byte SUB_OPCODE = (byte) 0x29;
+        final byte XOR_OPCODE = (byte) 0x31;
+        final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
+        final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
+        final byte CMP_RAX_IMM32_OPCODE = (byte) 0x3d;
+        final byte PUSH_EAX_OPCODE = (byte) 0x50;
+        final byte PUSH_ECX_OPCODE = (byte) 0x51;
+        final byte PUSH_EDX_OPCODE = (byte) 0x52;
+        final byte PUSH_EBX_OPCODE = (byte) 0x53;
+        final byte PUSH_ESP_OPCODE = (byte) 0x54;
+        final byte PUSH_EBP_OPCODE = (byte) 0x55;
+        final byte PUSH_ESI_OPCODE = (byte) 0x56;
+        final byte PUSH_EDI_OPCODE = (byte) 0x57;
+        final byte POP_EAX_OPCODE = (byte) 0x58;
+        final byte POP_ECX_OPCODE = (byte) 0x59;
+        final byte POP_EDX_OPCODE = (byte) 0x5a;
+        final byte POP_EBX_OPCODE = (byte) 0x5b;
+        final byte POP_ESP_OPCODE = (byte) 0x5c;
+        final byte POP_EBP_OPCODE = (byte) 0x5d;
+        final byte POP_ESI_OPCODE = (byte) 0x5e;
+        final byte POP_EDI_OPCODE = (byte) 0x5f;
+        final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
+        final byte JE_DISP8_OPCODE = (byte) 0x74;
+        final byte JNE_DISP8_OPCODE = (byte) 0x75;
+        final byte JS_DISP8_OPCODE = (byte) 0x78;
+        final byte JNS_DISP8_OPCODE = (byte) 0x79;
+        final byte JLE_DISP8_OPCODE = (byte) 0x7e;
+        final byte TEST_R8_OPCODE = (byte) 0x84;
+        final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
+        final byte MOV_MEM_REG_OPCODE = (byte) 0x89;
+        final byte MOV_REG_MEM_OPCODE = (byte) 0x8b;
+        final byte LEA_OPCODE = (byte) 0x8d;
+        final byte NOP_OPCODE = (byte) 0x90;
+        final byte CDQE_OPCODE = (byte) 0x98;
+        final byte CDQ_OPCODE = (byte) 0x99;
+        final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
+        final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
+        final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
+        final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
+        final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
+        final byte MOV_IMM8_TO_CL_OPCODE = (byte) 0xb1;
+        final byte MOV_IMM8_TO_DL_OPCODE = (byte) 0xb2;
+        final byte MOV_IMM8_TO_BL_OPCODE = (byte) 0xb3;
+        final byte MOV_IMM8_TO_AH_OPCODE = (byte) 0xb4;
+        final byte MOV_IMM8_TO_CH_OPCODE = (byte) 0xb5;
+        final byte MOV_IMM8_TO_DH_OPCODE = (byte) 0xb6;
+        final byte MOV_IMM8_TO_BH_OPCODE = (byte) 0xb7;
+        final byte MOV_IMM32_TO_EAX_OPCODE = (byte) 0xb8;
+        final byte MOV_IMM32_TO_ECX_OPCODE = (byte) 0xb9;
+        final byte MOV_IMM32_TO_EDX_OPCODE = (byte) 0xba;
+        final byte MOV_IMM32_TO_EBX_OPCODE = (byte) 0xbb;
+        final byte MOV_IMM32_TO_ESP_OPCODE = (byte) 0xbc;
+        final byte MOV_IMM32_TO_EBP_OPCODE = (byte) 0xbd;
+        final byte MOV_IMM32_TO_ESI_OPCODE = (byte) 0xbe;
+        final byte MOV_IMM32_TO_EDI_OPCODE = (byte) 0xbf;
+        final byte RET_OPCODE = (byte) 0xc3;
+        final byte LEAVE_OPCODE = (byte) 0xc9;
+        final byte INT3_OPCODE = (byte) 0xcc;
+        final byte CALL_OPCODE = (byte) 0xe8;
+        final byte JMP_DISP32_OPCODE = (byte) 0xe9;
+        final byte JMP_DISP8_OPCODE = (byte) 0xeb;
+
         return switch (opcodeFirstByte) {
             case NOP_OPCODE -> new Instruction(Opcode.NOP);
             case RET_OPCODE -> new Instruction(Opcode.RET);
@@ -391,6 +391,7 @@ public final class InstructionDecoder {
             case XOR_OPCODE -> parseSimple(b, pref, Opcode.XOR, false);
             case SUB_OPCODE -> parseSimple(b, pref, Opcode.SUB, false);
             case ADD_OPCODE -> parseSimple(b, pref, Opcode.ADD, false);
+            case ADD_AL_IMM8_OPCODE -> new Instruction(Opcode.ADD, Register8.AL, new Immediate(b.read1()));
             case CMP_INDIRECT8_R8_OPCODE -> parseSimple8Bit(b, pref.rex(), Opcode.CMP, false);
             case CMP_INDIRECT32_R32_OPCODE -> parse(b, pref, Optional.empty(), Opcode.CMP);
             case CMP_RAX_IMM32_OPCODE -> new Instruction(
