@@ -133,6 +133,11 @@ public enum Opcode {
     MOVSX("movsx"),
 
     /**
+     * Move and sign-extend doubleword.
+     */
+    MOVSXD("movsxd"),
+
+    /**
      * Move and zero-extend.
      */
     MOVZX("movzx"),

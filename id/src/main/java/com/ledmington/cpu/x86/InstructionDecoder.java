@@ -329,6 +329,7 @@ public final class InstructionDecoder {
         final byte POP_EBP_OPCODE = (byte) 0x5d;
         final byte POP_ESI_OPCODE = (byte) 0x5e;
         final byte POP_EDI_OPCODE = (byte) 0x5f;
+        final byte MOVSXD_OPCODE = (byte) 0x63;
         final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
         final byte JE_DISP8_OPCODE = (byte) 0x74;
         final byte JNE_DISP8_OPCODE = (byte) 0x75;
@@ -473,6 +474,17 @@ public final class InstructionDecoder {
                 } else {
                     yield new Instruction(Opcode.MOVS, op1, op2);
                 }
+            }
+            case MOVSXD_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.MOVSXD,
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()),
+                        parseIndirectOperand(b, pref, modrm, null).ptrSize(32).build());
             }
 
                 // MOV 8/16-bit

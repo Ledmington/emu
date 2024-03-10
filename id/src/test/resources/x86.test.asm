@@ -335,6 +335,9 @@ movsx rdi,WORD PTR [rax+rbx*4+0x12345678] | 48 0f bf bc 98 78 56 34 12
 movsx rsi,bl                              | 48 0f be f3
 movsx rsi,di                              | 48 0f bf f7
 
+# Movsxd
+movsxd rdx,DWORD PTR [r11+r15*4+0x12345678] | 4b 63 94 bb 78 56 34 12
+
 # Push
 push r10 | 41 52
 push r11 | 41 53
