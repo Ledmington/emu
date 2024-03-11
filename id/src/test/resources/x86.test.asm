@@ -65,6 +65,7 @@ cdqe | 48 98
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'jg rip+0x....'
+ja 0x12       | 77 12
 ja 0x78563412 | 0f 87 12 34 56 78
 
 # Jbe
@@ -77,6 +78,7 @@ jbe 0x78563412 | 0f 86 12 34 56 78
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'jg rip+0x....'
+jg 0x12       | 7f 12
 jg 0x78563412 | 0f 8f 12 34 56 78
 
 # Je
@@ -306,6 +308,10 @@ mov rsp,rsi | 48 89 f4
 mov rsp,rsp | 48 89 e4
 #
 mov BYTE PTR [r11+r8*4+0x12345678],0x99        | 43 c6 84 83 78 56 34 12 99
+mov BYTE PTR [rsp+rcx*4+0x12345678],bh         | 88 bc 8c 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x12345678],cl         | 88 8c 8c 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x12345678],dil        | 40 88 bc 8c 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x12345678],r9b        | 44 88 8c 8c 78 56 34 12
 mov DWORD PTR [r11+r8*4+0x12345678],0xdeadbeef | 43 c7 84 83 78 56 34 12 ef be ad de
 mov DWORD PTR [rbp+0x7eadbeef],0x12345678      | c7 85 ef be ad 7e 78 56 34 12
 mov QWORD PTR [rbp+0x7eadbeef],0x12345678      | 48 c7 85 ef be ad 7e 78 56 34 12
@@ -397,7 +403,11 @@ and r15d,0x1f              | 41 83 e7 1f
 and rdi,0xfffffffffffffff0 | 48 83 e7 f0
 
 # Sub
-sub rsp,0x12345678 | 48 81 ec 78 56 34 12
+sub DWORD PTR [rax+rbx*4+0x12345678],r8d  | 44 29 84 98 78 56 34 12
+sub QWORD PTR [rax+rbx*4+0x12345678],r9   | 4c 29 8c 98 78 56 34 12
+sub r11d,DWORD PTR [rax+rbx*4+0x12345678] | 44 2b 9c 98 78 56 34 12
+sub rsp,0x12345678                        | 48 81 ec 78 56 34 12
+sub rsp,QWORD PTR [rax+rbx*4+0x12345678]  | 48 2b a4 98 78 56 34 12
 
 # Sbb
 sbb al,0x12   | 1c 12
@@ -418,6 +428,12 @@ imul rdx,r9,0x58  | 49 6b d1 58
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
 or DWORD PTR [r11+r9*4+0x12345678],0xdeadbeef | 43 81 8c 8b 78 56 34 12 ef be ad de
 or WORD PTR [r11+r9*4+0x12345678],0xbeef      | 66 43 81 8c 8b 78 56 34 12 ef be
+
+# Xor
+xor eax,0x12       | 83 f0 12
+xor eax,0x12345678 | 35 78 56 34 12
+xor r8,0x12        | 49 83 f0 12
+xor r8,0x12345678  | 49 81 f0 78 56 34 12
 
 # Test
 test al,0x12        | a8 12

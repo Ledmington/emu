@@ -7,6 +7,7 @@ public record Prefixes(
         Optional<Byte> p2,
         boolean hasOperandSizeOverridePrefix,
         boolean hasAddressSizeOverridePrefix,
+        boolean hasRexPrefix,
         RexPrefix rex) {
     public String toString() {
         return "Prefixes[p1=" + (p1.isPresent() ? String.format("0x%02x", p1.orElseThrow()) : p1) + ", p2="

@@ -110,7 +110,8 @@ public final class InstructionDecoder {
                                     pref,
                                     modrm,
                                     Registers.fromCode(
-                                            modrm.rm(), false, pref.rex().ModRMRMExtension(), false))
+                                            modrm.rm(), false,
+                                            pref.rex().ModRMRMExtension(), false))
                             .ptrSize(pref.hasOperandSizeOverridePrefix() ? 32 : 64)
                             .build());
             case (byte) 0x07 /* 111 */ -> throw new IllegalArgumentException(
@@ -203,6 +204,14 @@ public final class InstructionDecoder {
                             pref.rex().ModRMRMExtension(),
                             pref.hasOperandSizeOverridePrefix()),
                     new Immediate(b.read4LittleEndian()));
+            case (byte) 0x06 /* 110 */ -> parse(
+                    b,
+                    pref,
+                    modrm,
+                    Optional.of(immediateBytes),
+                    Opcode.XOR,
+                    Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
+                    false);
             case (byte) 0x07 /* 111 */ -> parse(
                     b,
                     pref,
@@ -280,7 +289,9 @@ public final class InstructionDecoder {
                                     .build());
                 } else {
                     final byte regByte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
-                    final Register r2 = (ptrSize == 8) ? Register8.fromByte(regByte) : Register16.fromByte(regByte);
+                    final Register r2 = (ptrSize == 8)
+                            ? Register8.fromByte(regByte, pref.hasRexPrefix())
+                            : Register16.fromByte(regByte);
                     yield new Instruction(opcode, r1, r2);
                 }
             }
@@ -316,8 +327,10 @@ public final class InstructionDecoder {
         final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
         final byte AND_OPCODE = (byte) 0x21;
         final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
-        final byte SUB_OPCODE = (byte) 0x29;
+        final byte SUB_INDIRECT32_R32_OPCODE = (byte) 0x29;
+        final byte SUB_R32_INDIRECT32_OPCODE = (byte) 0x2b;
         final byte XOR_OPCODE = (byte) 0x31;
+        final byte XOR_RAX_IMM32_OPCODE = (byte) 0x35;
         final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
         final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
         final byte CMP_RAX_IMM32_OPCODE = (byte) 0x3d;
@@ -341,13 +354,16 @@ public final class InstructionDecoder {
         final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
         final byte JE_DISP8_OPCODE = (byte) 0x74;
         final byte JNE_DISP8_OPCODE = (byte) 0x75;
+        final byte JA_DISP8_OPCODE = (byte) 0x77;
         final byte JS_DISP8_OPCODE = (byte) 0x78;
         final byte JNS_DISP8_OPCODE = (byte) 0x79;
         final byte JLE_DISP8_OPCODE = (byte) 0x7e;
+        final byte JG_DISP8_OPCODE = (byte) 0x7f;
         final byte TEST_R8_OPCODE = (byte) 0x84;
         final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
-        final byte MOV_MEM_REG_OPCODE = (byte) 0x89;
-        final byte MOV_REG_MEM_OPCODE = (byte) 0x8b;
+        final byte MOV_MEM8_REG8_OPCODE = (byte) 0x88;
+        final byte MOV_MEM32_REG32_OPCODE = (byte) 0x89;
+        final byte MOV_REG32_MEM32_OPCODE = (byte) 0x8b;
         final byte LEA_OPCODE = (byte) 0x8d;
         final byte NOP_OPCODE = (byte) 0x90;
         final byte CDQE_OPCODE = (byte) 0x98;
@@ -388,9 +404,17 @@ public final class InstructionDecoder {
             case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
             case SBB_OPCODE -> parseSimple(b, pref, Opcode.SBB, false);
             case SBB_AL_IMM8_OPCODE -> new Instruction(Opcode.SBB, Register8.AL, new Immediate(b.read1()));
-            case MOV_REG_MEM_OPCODE -> parseLEALike(b, pref, Opcode.MOV);
-            case MOV_MEM_REG_OPCODE -> parse(b, pref, Optional.empty(), Opcode.MOV);
-            case TEST_R8_OPCODE -> parseSimple8Bit(b, pref.rex(), Opcode.TEST, false);
+            case MOV_REG32_MEM32_OPCODE -> parseLEALike(b, pref, Opcode.MOV);
+            case MOV_MEM32_REG32_OPCODE -> parse(b, pref, Optional.empty(), Opcode.MOV);
+            case MOV_MEM8_REG8_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.MOV,
+                        parseIndirectOperand(b, pref, modrm, null).build(),
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
+            }
+            case TEST_R8_OPCODE -> parseSimple8Bit(b, pref, Opcode.TEST, false);
             case TEST_OPCODE -> parseSimple(b, pref, Opcode.TEST, false);
             case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, new Immediate(b.read1()));
             case TEST_EAX_IMM32_OPCODE -> new Instruction(
@@ -398,10 +422,34 @@ public final class InstructionDecoder {
                     pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
                     new Immediate(b.read4LittleEndian()));
             case XOR_OPCODE -> parseSimple(b, pref, Opcode.XOR, false);
-            case SUB_OPCODE -> parseSimple(b, pref, Opcode.SUB, false);
+            case XOR_RAX_IMM32_OPCODE -> new Instruction(
+                    Opcode.XOR, pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX, new Immediate((long)
+                            b.read4LittleEndian()));
+            case SUB_INDIRECT32_R32_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.SUB,
+                        parseIndirectOperand(b, pref, modrm, null).build(),
+                        Registers.fromCode(
+                                modrm.rm(),
+                                pref.hasAddressSizeOverridePrefix(),
+                                pref.rex().ModRMRMExtension(),
+                                pref.hasOperandSizeOverridePrefix()));
+            }
+            case SUB_R32_INDIRECT32_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.SUB,
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()),
+                        parseIndirectOperand(b, pref, modrm, null).build());
+            }
             case ADD_OPCODE -> parseSimple(b, pref, Opcode.ADD, false);
             case ADD_AL_IMM8_OPCODE -> new Instruction(Opcode.ADD, Register8.AL, new Immediate(b.read1()));
-            case CMP_INDIRECT8_R8_OPCODE -> parseSimple8Bit(b, pref.rex(), Opcode.CMP, false);
+            case CMP_INDIRECT8_R8_OPCODE -> parseSimple8Bit(b, pref, Opcode.CMP, false);
             case CMP_INDIRECT32_R32_OPCODE -> parse(b, pref, Optional.empty(), Opcode.CMP);
             case CMP_RAX_IMM32_OPCODE -> new Instruction(
                     Opcode.CMP,
@@ -410,10 +458,12 @@ public final class InstructionDecoder {
             case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
             case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
             case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
+            case JA_DISP8_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of8(b.read1()));
             case JNE_DISP8_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of8(b.read1()));
             case JS_DISP8_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of8(b.read1()));
             case JNS_DISP8_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of8(b.read1()));
             case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
+            case JG_DISP8_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of8(b.read1()));
             case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
             case AND_OPCODE -> parse(b, pref, Optional.empty(), Opcode.AND);
             case AND_RAX_IMM32_OPCODE -> new Instruction(
@@ -492,7 +542,17 @@ public final class InstructionDecoder {
                                 pref.rex().isOperand64Bit(),
                                 pref.rex().ModRMRegExtension(),
                                 pref.hasOperandSizeOverridePrefix()),
-                        parseIndirectOperand(b, pref, modrm, null).ptrSize(32).build());
+                        parseIndirectOperand(
+                                        b,
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .ptrSize(32)
+                                .build());
             }
 
                 // MOV 8/16-bit
@@ -680,7 +740,7 @@ public final class InstructionDecoder {
             b.goBack(1);
         }
 
-        return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, rexPrefix);
+        return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix);
     }
 
     private Instruction parse(
@@ -824,12 +884,14 @@ public final class InstructionDecoder {
 
     // TODO: change name of method
     private Instruction parseSimple8Bit(
-            final ByteBuffer b, final RexPrefix rexPrefix, final Opcode opcode, final boolean invertOperands) {
+            final ByteBuffer b, final Prefixes pref, final Opcode opcode, final boolean invertOperands) {
         final byte _modrm = b.read1();
         final ModRM modrm = new ModRM(_modrm);
         logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        final Register operand1 = Register8.fromByte(Registers.combine(rexPrefix.ModRMRegExtension(), modrm.reg()));
-        final Register operand2 = Register8.fromByte(Registers.combine(rexPrefix.ModRMRMExtension(), modrm.rm()));
+        final Register operand1 =
+                Register8.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix());
+        final Register operand2 =
+                Register8.fromByte(Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix());
 
         if (invertOperands) {
             return new Instruction(opcode, operand1, operand2);
