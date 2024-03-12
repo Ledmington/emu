@@ -26,7 +26,7 @@ dependencies {
 	implementation project(':common')
 }
 
-tasks.withType(JavaCompile).configureEach {
+compileJava {
 	options.compilerArgs << '-Xdiags:verbose'
 	options.compilerArgs << '-Xlint:all'
 	options.compilerArgs << '-Werror'

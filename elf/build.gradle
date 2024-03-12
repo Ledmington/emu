@@ -24,7 +24,7 @@ dependencies {
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
-tasks.withType(JavaCompile).configureEach {
+compileJava {
 	options.compilerArgs << '-Xdiags:verbose'
 	options.compilerArgs << '-Xlint:all'
 	options.compilerArgs << '-Werror'
@@ -32,7 +32,7 @@ tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
-tasks.withType(Javadoc).configureEach {
+javadoc {
 	failOnError = true
 	title "elf-v${version}"
 	options.addBooleanOption('Werror', true)
