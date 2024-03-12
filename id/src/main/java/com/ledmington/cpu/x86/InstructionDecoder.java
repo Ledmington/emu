@@ -131,6 +131,19 @@ public final class InstructionDecoder {
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
         return switch (modrm.reg()) {
+            case (byte) 0x00 /* 000 */ -> new Instruction(
+                    Opcode.TEST,
+                    parseIndirectOperand(
+                                    b,
+                                    pref,
+                                    modrm,
+                                    Registers.fromCode(
+                                            modrm.rm(),
+                                            !pref.hasAddressSizeOverridePrefix(),
+                                            pref.rex().ModRMRMExtension(),
+                                            pref.hasOperandSizeOverridePrefix()))
+                            .build(),
+                    (opcodeFirstByte == (byte) 0xf6) ? new Immediate(b.read1()) : new Immediate(b.read4LittleEndian()));
             case (byte) 0x02 /* 010 */ -> new Instruction(
                     Opcode.NOT,
                     Registers.fromCode(
