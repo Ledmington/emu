@@ -540,3 +540,7 @@ movq xmm2,rax | 66 48 0f 6e d0
 # Punpcklqdq
 punpcklqdq xmm0,xmm0 | 66 0f 6c c0
 punpcklqdq xmm3,xmm9 | 66 41 0f 6c d9
+
+# Setne
+setne al  | 0f 95 c0
+setne r8b | 41 0f 95 c0

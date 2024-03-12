@@ -198,6 +198,11 @@ public enum Opcode {
     SBB("sbb"),
 
     /**
+     * Set byte if not equal.
+     */
+    SETNE("setne"),
+
+    /**
      * Logical shift left.
      */
     SHL("shl"),
