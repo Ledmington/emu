@@ -64,7 +64,12 @@ public final class InstructionDecoder {
         } else if (isExtendedOpcode(opcodeFirstByte)) {
             // extended opcode group 1
             return parseExtendedOpcodeGroup1(b, opcodeFirstByte, pref);
-        } else if (opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xc1) {
+        } else if (opcodeFirstByte == (byte) 0xc0
+                || opcodeFirstByte == (byte) 0xc1
+                || opcodeFirstByte == (byte) 0xd0
+                || opcodeFirstByte == (byte) 0xd1
+                || opcodeFirstByte == (byte) 0xd2
+                || opcodeFirstByte == (byte) 0xd3) {
             return parseExtendedOpcodeGroup2(b, opcodeFirstByte, pref);
         } else if (opcodeFirstByte == (byte) 0xc6 || opcodeFirstByte == (byte) 0xc7) {
             return parseExtendedOpcodeGroup11(b, opcodeFirstByte, pref);
@@ -190,12 +195,26 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(opcodeSecondByte);
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
+        final Operand op2 = (opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xc1)
+                ? new Immediate(b.read1())
+                : ((opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd1)
+                        ? new Immediate(1)
+                        : Register8.CL);
+        final boolean reg8bit =
+                opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd2;
+
         return switch (modrm.reg()) {
             case (byte) 0x05 /* 101 */ -> new Instruction(
                     Opcode.SHR,
-                    Registers.fromCode(
-                            modrm.rm(), pref.rex().isOperand64Bit(), pref.rex().ModRMRMExtension(), false),
-                    new Immediate(b.read1()));
+                    reg8bit
+                            ? (Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()))
+                            : (Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    false)),
+                    op2);
             case (byte) 0x06 /* 110 */ -> throw new IllegalArgumentException(
                     String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             default -> throw new IllegalArgumentException(

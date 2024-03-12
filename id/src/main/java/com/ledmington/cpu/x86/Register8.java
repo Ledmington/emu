@@ -41,9 +41,9 @@ public final class Register8 extends Register {
             case 0x01 -> CL;
             case 0x02 -> DL;
             case 0x03 -> BL;
-            case 0x04 -> hasRexPrefix ? SIL : AH;
-            case 0x05 -> hasRexPrefix ? SPL : CH;
-            case 0x06 -> hasRexPrefix ? BPL : DH;
+            case 0x04 -> hasRexPrefix ? SPL : AH;
+            case 0x05 -> hasRexPrefix ? BPL : CH;
+            case 0x06 -> hasRexPrefix ? SIL : DH;
             case 0x07 -> hasRexPrefix ? DIL : BH;
             case 0x08 -> R8B;
             case 0x09 -> R9B;

@@ -437,8 +437,11 @@ sbb r12d,r12d | 45 19 e4
 sbb rax,rax   | 48 19 c0
 
 # Shr
+shr bpl,0x1  | 40 d0 ed
 shr ecx,0x12 | c1 e9 12
 shr rdx,0x12 | 48 c1 ea 12
+shr spl,0x1  | 40 d0 ec
+shr sil,0x1  | 40 d0 ee
 
 # Imul
 imul eax,ebx,0x12 | 6b c3 12
