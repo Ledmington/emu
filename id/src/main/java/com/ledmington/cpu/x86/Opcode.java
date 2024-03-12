@@ -33,9 +33,9 @@ public enum Opcode {
     CDQE("cdqe"),
 
     /**
-     * Convert word to doubleword.
+     * Conditional move if below or equal.
      */
-    CWDE("cwde"),
+    CMOVBE("cmovbe"),
 
     /**
      * Conditional move if equal.
@@ -46,6 +46,11 @@ public enum Opcode {
      * Compare two operands.
      */
     CMP("cmp"),
+
+    /**
+     * Convert word to doubleword.
+     */
+    CWDE("cwde"),
 
     /**
      * Signed multiply.
@@ -128,6 +133,11 @@ public enum Opcode {
     MOVDQA("movdqa"),
 
     /**
+     * Move quadword.
+     */
+    MOVQ("movq"),
+
+    /**
      * Move string.
      */
     MOVS("movs"),
@@ -153,6 +163,11 @@ public enum Opcode {
     NOP("nop"),
 
     /**
+     * Logical NOT.
+     */
+    NOT("not"),
+
+    /**
      * Logical OR.
      */
     OR("or"),
@@ -166,6 +181,11 @@ public enum Opcode {
      * Push word, doubleword or quadword onto the stack.
      */
     PUSH("push"),
+
+    /**
+     * Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register.
+     */
+    PUNPCKLQDQ("punpcklqdq"),
 
     /**
      * Return from procedure.
