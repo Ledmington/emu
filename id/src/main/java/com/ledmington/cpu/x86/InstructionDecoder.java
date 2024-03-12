@@ -425,6 +425,7 @@ public final class InstructionDecoder {
         final byte XOR_RAX_IMM32_OPCODE = (byte) 0x35;
         final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
         final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
+        final byte CMP_R32_INDIRECT32_OPCODE = (byte) 0x3b;
         final byte CMP_RAX_IMM32_OPCODE = (byte) 0x3d;
         final byte PUSH_EAX_OPCODE = (byte) 0x50;
         final byte PUSH_ECX_OPCODE = (byte) 0x51;
@@ -596,6 +597,17 @@ public final class InstructionDecoder {
             case ADD_AL_IMM8_OPCODE -> new Instruction(Opcode.ADD, Register8.AL, new Immediate(b.read1()));
             case CMP_INDIRECT8_R8_OPCODE -> parseSimple8Bit(b, pref, Opcode.CMP, false);
             case CMP_INDIRECT32_R32_OPCODE -> parse(b, pref, Optional.empty(), Opcode.CMP);
+            case CMP_R32_INDIRECT32_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.CMP,
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()),
+                        parseIndirectOperand(b, pref, modrm, null).build());
+            }
             case CMP_RAX_IMM32_OPCODE -> new Instruction(
                     Opcode.CMP,
                     pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,

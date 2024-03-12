@@ -141,6 +141,7 @@ cmp QWORD PTR [rdi],0x12345678                 | 48 81 3f 78 56 34 12
 cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
 cmp al,dh                                      | 38 f0
 cmp eax,0x12345678                             | 3d 78 56 34 12
+cmp ebp,DWORD PTR [rbx+r9*4+0x12345678]        | 42 3b ac 8b 78 56 34 12
 cmp edi,0x12345678                             | 81 ff 78 56 34 12
 cmp esp,r13d                                   | 44 39 ec
 cmp r8w,dx                                     | 66 41 39 d0
@@ -440,8 +441,8 @@ sbb rax,rax   | 48 19 c0
 shr bpl,0x1  | 40 d0 ed
 shr ecx,0x12 | c1 e9 12
 shr rdx,0x12 | 48 c1 ea 12
-shr spl,0x1  | 40 d0 ec
 shr sil,0x1  | 40 d0 ee
+shr spl,0x1  | 40 d0 ec
 
 # Imul
 imul eax,ebx,0x12 | 6b c3 12
