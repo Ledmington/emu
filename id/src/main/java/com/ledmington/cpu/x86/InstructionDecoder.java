@@ -349,7 +349,16 @@ public final class InstructionDecoder {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(
                         Opcode.MOVAPS,
-                        parseIndirectOperand(b, pref, modrm, null).build(),
+                        parseIndirectOperand(
+                                        b,
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                pref.rex().isOperand64Bit(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .build(),
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())));
             }
 

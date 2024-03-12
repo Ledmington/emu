@@ -519,6 +519,7 @@ repnz movs WORD PTR es:[edi],WORD PTR ds:[esi]   | 67 66 f2 a5
 movdqa xmm2,XMMWORD PTR [rsp+r9*4+0x12345678] | 66 42 0f 6f 94 8c 78 56 34 12
 
 # Movaps
+movaps XMMWORD PTR [rip+0x12345678],xmm6       | 0f 29 35 78 56 34 12
 movaps XMMWORD PTR [rsp+r11*4+0x12345678],xmm7 | 42 0f 29 bc 9c 78 56 34 12
 
 # Movq
