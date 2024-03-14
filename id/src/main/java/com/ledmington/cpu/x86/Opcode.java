@@ -173,6 +173,11 @@ public enum Opcode {
     MOVZX("movzx"),
 
     /**
+     * Two's complement negation.
+     */
+    NEG("neg"),
+
+    /**
      * No operation.
      */
     NOP("nop"),

@@ -507,6 +507,12 @@ not rdx  | 48 f7 d2
 not rsi  | 48 f7 d6
 not rsp  | 48 f7 d4
 
+# Neg
+neg DWORD PTR [r8+r9*4+0x12345678] | 43 f7 9c 88 78 56 34 12
+neg QWORD PTR [r8+r9*4+0x12345678] | 4b f7 9c 88 78 56 34 12
+neg eax                            | f7 d8
+neg rbx                            | 48 f7 db
+
 # Test
 test BYTE PTR [r11+rdx*4+0x12345678],0x99         | 41 f6 84 93 78 56 34 12 99
 test BYTE PTR [r11d+edx*4+0x12345678],0x99        | 67 41 f6 84 93 78 56 34 12 99

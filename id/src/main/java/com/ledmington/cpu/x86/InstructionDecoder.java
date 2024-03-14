@@ -156,6 +156,17 @@ public final class InstructionDecoder {
                             pref.rex().isOperand64Bit(),
                             pref.rex().ModRMRMExtension(),
                             pref.hasOperandSizeOverridePrefix()));
+            case (byte) 0x03 /* 011 */ -> new Instruction(
+                    Opcode.NEG,
+                    (modrm.mod() != (byte) 0x03) // indirect operand needed
+                            ? parseIndirectOperand(b, pref, modrm, null)
+                                    .ptrSize(pref.rex().isOperand64Bit() ? 64 : 32)
+                                    .build()
+                            : Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    pref.hasOperandSizeOverridePrefix()));
             case (byte) 0x01 /* 001 */ -> throw new IllegalArgumentException(
                     String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
             default -> throw new IllegalArgumentException(
