@@ -296,6 +296,7 @@ public final class InstructionDecoder {
         final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
         final byte MOVQ_OPCODE = (byte) 0x6e;
         final byte MOVDQA_OPCODE = (byte) 0x6f;
+        final byte JB_DISP32_OPCODE = (byte) 0x82;
         final byte JE_DISP32_OPCODE = (byte) 0x84;
         final byte JNE_DISP32_OPCODE = (byte) 0x85;
         final byte JBE_DISP32_OPCODE = (byte) 0x86;
@@ -323,6 +324,7 @@ public final class InstructionDecoder {
             case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LittleEndian()));
             case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
             case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LittleEndian()));
+            case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of32(b.read4LittleEndian()));
             case SETNE_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(
