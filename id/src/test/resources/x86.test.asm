@@ -555,3 +555,8 @@ setne r8b | 41 0f 95 c0
 # Movabs
 movabs rcx,0xdeadbeef         | 48 b9 ef be ad de 00 00 00 00
 movabs rdx,0xdeadbeefcafebabe | 48 ba be ba fe ca ef be ad de
+
+# Movups
+movups XMMWORD PTR [ebx+edi*8+0x12345678],xmm14 | 67 44 0f 11 b4 fb 78 56 34 12
+movups XMMWORD PTR [r8],xmm0                    | 41 0f 11 00
+movups XMMWORD PTR [rbx+rdi*8+0x12345678],xmm14 | 44 0f 11 b4 fb 78 56 34 12

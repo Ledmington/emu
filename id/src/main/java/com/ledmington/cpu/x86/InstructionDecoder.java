@@ -289,6 +289,7 @@ public final class InstructionDecoder {
 
     private Instruction parse2BytesOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
         final byte UD2_OPCODE = (byte) 0x0b;
+        final byte MOVUPS_OPCODE = (byte) 0x11;
         final byte MOVAPS_OPCODE = (byte) 0x29;
         final byte CMOVE_OPCODE = (byte) 0x44;
         final byte CMOVBE_OPCODE = (byte) 0x46;
@@ -427,6 +428,22 @@ public final class InstructionDecoder {
                         Opcode.PUNPCKLQDQ,
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm())));
+            }
+            case MOVUPS_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.MOVUPS,
+                        parseIndirectOperand(
+                                        b,
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                !pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .build(),
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())));
             }
             default -> throw new IllegalArgumentException(
                     String.format("Unknown multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));

@@ -158,6 +158,11 @@ public enum Opcode {
     MOVSXD("movsxd"),
 
     /**
+     * Move unaligned packed single precision floating-point values into XMM register.
+     */
+    MOVUPS("movups"),
+
+    /**
      * Move and zero-extend.
      */
     MOVZX("movzx"),
