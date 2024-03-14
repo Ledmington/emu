@@ -204,6 +204,17 @@ public final class InstructionDecoder {
                 opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd2;
 
         return switch (modrm.reg()) {
+            case (byte) 0x04 /* 100 */ -> new Instruction(
+                    Opcode.SHL,
+                    reg8bit
+                            ? (Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()))
+                            : (Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    false)),
+                    op2);
             case (byte) 0x05 /* 101 */ -> new Instruction(
                     Opcode.SHR,
                     reg8bit

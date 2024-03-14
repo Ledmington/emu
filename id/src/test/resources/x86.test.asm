@@ -444,6 +444,11 @@ shr rdx,0x12 | 48 c1 ea 12
 shr sil,0x1  | 40 d0 ee
 shr spl,0x1  | 40 d0 ec
 
+# Shl
+shl esi,0x12 | c1 e6 12
+shl r9b,0x12 | 41 c0 e1 12
+shl rdx,0x99 | 48 c1 e2 99
+
 # Imul
 imul eax,ebx,0x12 | 6b c3 12
 imul rbx,rbp      | 48 0f af dd
