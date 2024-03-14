@@ -374,7 +374,16 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.MOVDQA,
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
-                        parseIndirectOperand(b, pref, modrm, null).build());
+                        parseIndirectOperand(
+                                        b,
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                pref.rex().isOperand64Bit(),
+                                                pref.rex().ModRMRMExtension(),
+                                                false))
+                                .build());
             }
             case MOVQ_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
