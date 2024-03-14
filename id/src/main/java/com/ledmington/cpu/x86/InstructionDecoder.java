@@ -431,6 +431,8 @@ public final class InstructionDecoder {
     }
 
     private Instruction parseSingleByteOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+        final byte OPCODE_REG_MASK = (byte) 0x07;
+
         final byte ADD_INDIRECT32_R32_OPCODE = (byte) 0x01;
         final byte ADD_R32_INDIRECT32_OPCODE = (byte) 0x03;
         final byte ADD_AL_IMM8_OPCODE = (byte) 0x04;
@@ -765,55 +767,35 @@ public final class InstructionDecoder {
                     pref.rex().opcodeRegExtension() ? Register8.R15B : Register8.BH,
                     new Immediate(b.read1()));
 
-                // MOV 32-bit
-            case MOV_IMM32_TO_EAX_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R8W : Register16.AX)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R8D : Register32.EAX),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_EBX_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R11W : Register16.BX)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R11D : Register32.EBX),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_ECX_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R9W : Register16.CX)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R9D : Register32.ECX),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_EDX_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R10W : Register16.DX)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R10D : Register32.EDX),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_ESP_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R12W : Register16.SP)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R12D : Register32.ESP),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_EBP_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R13W : Register16.BP)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R13D : Register32.EBP),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_ESI_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R14W : Register16.SI)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R14D : Register32.ESI),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
-            case MOV_IMM32_TO_EDI_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? (pref.rex().opcodeRegExtension() ? Register16.R15W : Register16.DI)
-                            : (pref.rex().opcodeRegExtension() ? Register32.R15D : Register32.EDI),
-                    new Immediate(pref.hasOperandSizeOverridePrefix() ? b.read2LittleEndian() : b.read4LittleEndian()));
+                // MOV 32 or 64 bits
+            case MOV_IMM32_TO_EAX_OPCODE,
+                    MOV_IMM32_TO_EBX_OPCODE,
+                    MOV_IMM32_TO_ECX_OPCODE,
+                    MOV_IMM32_TO_EDX_OPCODE,
+                    MOV_IMM32_TO_ESP_OPCODE,
+                    MOV_IMM32_TO_EBP_OPCODE,
+                    MOV_IMM32_TO_ESI_OPCODE,
+                    MOV_IMM32_TO_EDI_OPCODE -> {
+                final byte regByte = Registers.combine(
+                        pref.rex().opcodeRegExtension(), BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK));
+                final int size =
+                        pref.hasOperandSizeOverridePrefix() ? 16 : (pref.rex().isOperand64Bit() ? 64 : 32);
+                final Register r =
+                        switch (size) {
+                            case 16 -> Register16.fromByte(regByte);
+                            case 32 -> Register32.fromByte(regByte);
+                            case 64 -> Register64.fromByte(regByte);
+                            default -> throw new IllegalArgumentException("Invalid value");
+                        };
+                final Immediate imm =
+                        switch (size) {
+                            case 16 -> new Immediate(b.read2LittleEndian());
+                            case 32 -> new Immediate(b.read4LittleEndian());
+                            case 64 -> new Immediate(b.read8LittleEndian());
+                            default -> throw new IllegalArgumentException("Invalid value");
+                        };
+                yield new Instruction(pref.rex().isOperand64Bit() ? Opcode.MOVABS : Opcode.MOV, r, imm);
+            }
 
                 // PUSH
             case PUSH_EAX_OPCODE -> new Instruction(

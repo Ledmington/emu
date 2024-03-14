@@ -65,6 +65,18 @@ public final class ByteBuffer {
         return s;
     }
 
+    /**
+     * Reads 2 bytes in little-endian without modifying the endianness.
+     */
+    public short read2LittleEndian() {
+        // TODO: refactor
+        final boolean oldEndianness = isLittleEndian;
+        isLittleEndian = true;
+        final short x = read2();
+        isLittleEndian = false;
+        return x;
+    }
+
     public int read4() {
         final int x;
         if (isLittleEndian) {
@@ -122,13 +134,13 @@ public final class ByteBuffer {
     }
 
     /**
-     * Reads 2 bytes in little-endian without modifying the endianness.
+     * Reads 8 bytes in little-endian without modifying the endianness.
      */
-    public short read2LittleEndian() {
+    public long read8LittleEndian() {
         // TODO: refactor
         final boolean oldEndianness = isLittleEndian;
         isLittleEndian = true;
-        final short x = read2();
+        final long x = read8();
         isLittleEndian = false;
         return x;
     }

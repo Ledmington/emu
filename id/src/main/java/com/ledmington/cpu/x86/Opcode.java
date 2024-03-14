@@ -123,6 +123,11 @@ public enum Opcode {
     MOV("mov"),
 
     /**
+     * Move a 64-bit immediate into a 64-bit register.
+     */
+    MOVABS("movabs"),
+
+    /**
      * Move aligned packed single floating-point values.
      */
     MOVAPS("movaps"),
