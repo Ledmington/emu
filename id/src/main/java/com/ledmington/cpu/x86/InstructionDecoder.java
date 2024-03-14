@@ -264,14 +264,8 @@ public final class InstructionDecoder {
                             pref.hasOperandSizeOverridePrefix()),
                     new Immediate(
                             (opcodeFirstByte == (byte) 0x83) ? ((long) b.read1()) : ((long) b.read4LittleEndian())));
-            case (byte) 0x05 /* 101 */ -> new Instruction(
-                    Opcode.SUB,
-                    Registers.fromCode(
-                            modrm.rm(),
-                            pref.rex().isOperand64Bit(),
-                            pref.rex().ModRMRMExtension(),
-                            pref.hasOperandSizeOverridePrefix()),
-                    new Immediate(b.read4LittleEndian()));
+            case (byte) 0x05 /* 101 */ -> parse(
+                    b, pref, modrm, Optional.of(immediateBytes), Opcode.SUB, Optional.empty(), false);
             case (byte) 0x06 /* 110 */ -> parse(
                     b,
                     pref,
