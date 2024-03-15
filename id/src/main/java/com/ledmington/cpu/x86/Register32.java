@@ -1,25 +1,99 @@
 package com.ledmington.cpu.x86;
 
+/**
+ * An x86 32-bit general-purpose register.
+ */
 public final class Register32 extends Register {
 
+    /**
+     * The register EAX.
+     */
     public static final Register32 EAX = new Register32("eax");
+
+    /**
+     * The register EBX.
+     */
     public static final Register32 EBX = new Register32("ebx");
+
+    /**
+     * The register ECX.
+     */
     public static final Register32 ECX = new Register32("ecx");
+
+    /**
+     * The register EDX.
+     */
     public static final Register32 EDX = new Register32("edx");
+
+    /**
+     * The register ESI.
+     */
     public static final Register32 ESI = new Register32("esi");
+
+    /**
+     * The register EDI.
+     */
     public static final Register32 EDI = new Register32("edi");
+
+    /**
+     * The register ESP.
+     */
     public static final Register32 ESP = new Register32("esp");
+
+    /**
+     * The register EBP.
+     */
     public static final Register32 EBP = new Register32("ebp");
+
+    /**
+     * The register R8D.
+     */
     public static final Register32 R8D = new Register32("r8d");
+
+    /**
+     * The register R9D.
+     */
     public static final Register32 R9D = new Register32("r9d");
+
+    /**
+     * The register R10D.
+     */
     public static final Register32 R10D = new Register32("r10d");
+
+    /**
+     * The register R11D.
+     */
     public static final Register32 R11D = new Register32("r11d");
+
+    /**
+     * The register R12D.
+     */
     public static final Register32 R12D = new Register32("r12d");
+
+    /**
+     * The register R13D.
+     */
     public static final Register32 R13D = new Register32("r13d");
+
+    /**
+     * The register R14D.
+     */
     public static final Register32 R14D = new Register32("r14d");
+
+    /**
+     * The register R15D.
+     */
     public static final Register32 R15D = new Register32("r15d");
-    public static final Register32 EIP = new Register32("eip"); // instruction pointer
-    public static final Register32 EIZ = new Register32("eiz"); // zero
+
+    /**
+     * The instruction pointer register EIP.
+     */
+    public static final Register32 EIP = new Register32("eip");
+
+    /**
+     * The zero register EIZ.
+     */
+    public static final Register32 EIZ = new Register32("eiz");
 
     private Register32(final String mnemonic) {
         super(mnemonic);

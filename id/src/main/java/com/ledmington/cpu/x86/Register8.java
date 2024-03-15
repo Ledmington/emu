@@ -1,29 +1,111 @@
 package com.ledmington.cpu.x86;
 
+/**
+ * An x86 8-bit general-purpose register.
+ */
 public final class Register8 extends Register {
 
+    /**
+     * The register AL.
+     */
     public static final Register8 AL = new Register8("al");
+
+    /**
+     * The register BL.
+     */
     public static final Register8 BL = new Register8("bl");
+
+    /**
+     * The register CL.
+     */
     public static final Register8 CL = new Register8("cl");
+
+    /**
+     * The register DL.
+     */
     public static final Register8 DL = new Register8("dl");
+
+    /**
+     * The register AH.
+     */
     public static final Register8 AH = new Register8("ah");
+
+    /**
+     * The register BH.
+     */
     public static final Register8 BH = new Register8("bh");
+
+    /**
+     * The register CH.
+     */
     public static final Register8 CH = new Register8("ch");
+
+    /**
+     * The register DH.
+     */
     public static final Register8 DH = new Register8("dh");
+
+    /**
+     * The register DIL.
+     */
     public static final Register8 DIL = new Register8("dil");
+
+    /**
+     * The register SIL.
+     */
     public static final Register8 SIL = new Register8("sil");
+
+    /**
+     * The register BPL.
+     */
     public static final Register8 BPL = new Register8("bpl");
+
+    /**
+     * The register SPL.
+     */
     public static final Register8 SPL = new Register8("spl");
+
+    /**
+     * The register R8B.
+     */
     public static final Register8 R8B = new Register8("r8b");
+
+    /**
+     * The register R9B.
+     */
     public static final Register8 R9B = new Register8("r9b");
+
+    /**
+     * The register R10B.
+     */
     public static final Register8 R10B = new Register8("r10b");
+
+    /**
+     * The register R11B.
+     */
     public static final Register8 R11B = new Register8("r11b");
+
+    /**
+     * The register R12B.
+     */
     public static final Register8 R12B = new Register8("r12b");
+
+    /**
+     * The register R13B.
+     */
     public static final Register8 R13B = new Register8("r13b");
+
+    /**
+     * The register R14B.
+     */
     public static final Register8 R14B = new Register8("r14b");
+
+    /**
+     * The register R15B.
+     */
     public static final Register8 R15B = new Register8("r15b");
 
-    public Register8(final String mnemonic) {
+    private Register8(final String mnemonic) {
         super(mnemonic);
     }
 

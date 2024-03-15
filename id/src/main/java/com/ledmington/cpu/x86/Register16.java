@@ -1,30 +1,118 @@
 package com.ledmington.cpu.x86;
 
+/**
+ * An x86 16-bit general-purpose register.
+ */
 public final class Register16 extends Register {
 
+    /**
+     * The register AX.
+     */
     public static final Register16 AX = new Register16("ax");
+
+    /**
+     * The register BX.
+     */
     public static final Register16 BX = new Register16("bx");
+
+    /**
+     * The register CX.
+     */
     public static final Register16 CX = new Register16("cx");
+
+    /**
+     * The register DX.
+     */
     public static final Register16 DX = new Register16("dx");
+
+    /**
+     * The register SI.
+     */
     public static final Register16 SI = new Register16("si");
+
+    /**
+     * The register DI.
+     */
     public static final Register16 DI = new Register16("di");
+
+    /**
+     * The register SP.
+     */
     public static final Register16 SP = new Register16("sp");
+
+    /**
+     * The register BP.
+     */
     public static final Register16 BP = new Register16("bp");
+
+    /**
+     * The register R8W.
+     */
     public static final Register16 R8W = new Register16("r8w");
+
+    /**
+     * The register R9W.
+     */
     public static final Register16 R9W = new Register16("r9w");
+
+    /**
+     * The register R10W.
+     */
     public static final Register16 R10W = new Register16("r10w");
+
+    /**
+     * The register R11W.
+     */
     public static final Register16 R11W = new Register16("r11w");
+
+    /**
+     * The register R12W.
+     */
     public static final Register16 R12W = new Register16("r12w");
+
+    /**
+     * The register R13W.
+     */
     public static final Register16 R13W = new Register16("r13w");
+
+    /**
+     * The register R14W.
+     */
     public static final Register16 R14W = new Register16("r14w");
+
+    /**
+     * The register R15W.
+     */
     public static final Register16 R15W = new Register16("r15w");
 
-    // segment registers
+    /**
+     * The segment register CS.
+     */
     public static final Register16 CS = new Register16("cs");
+
+    /**
+     * The segment register DS.
+     */
     public static final Register16 DS = new Register16("ds");
+
+    /**
+     * The segment register SS.
+     */
     public static final Register16 SS = new Register16("ss");
+
+    /**
+     * The segment register ES.
+     */
     public static final Register16 ES = new Register16("es");
+
+    /**
+     * The segment register FS.
+     */
     public static final Register16 FS = new Register16("fs");
+
+    /**
+     * The segment register GS.
+     */
     public static final Register16 GS = new Register16("gs");
 
     private Register16(final String mnemonic) {

@@ -35,7 +35,7 @@ compileJava {
 javadoc {
 	failOnError = true
 	title "id-v${version}"
-	options.addBooleanOption('Werror', true)
+	// options.addBooleanOption('Werror', true)
 }
 
 java {

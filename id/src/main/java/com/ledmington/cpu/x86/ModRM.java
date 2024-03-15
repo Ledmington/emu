@@ -8,17 +8,17 @@ public final class ModRM {
     private final byte reg;
     private final byte rm;
 
-    public static byte extractMod(final byte m) {
+    private static byte extractMod(final byte m) {
         final byte MODRM_MOD_MASK = (byte) 0xc0; // 11000000
         return BitUtils.shr(BitUtils.and(m, MODRM_MOD_MASK), 6);
     }
 
-    public static byte extractReg(final byte m) {
+    private static byte extractReg(final byte m) {
         final byte MODRM_REG_MASK = (byte) 0x38; // 00111000
         return BitUtils.shr(BitUtils.and(m, MODRM_REG_MASK), 3);
     }
 
-    public static byte extractRM(final byte m) {
+    private static byte extractRM(final byte m) {
         final byte MODRM_RM_MASK = (byte) 0x07; // 00000111
         return BitUtils.and(m, MODRM_RM_MASK);
     }

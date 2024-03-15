@@ -20,18 +20,38 @@ public final class Immediate implements Operand {
         this.bits = bits;
     }
 
+    /**
+     * Creates an immediate value of 1 byte.
+     * @param b
+     *      The 1-byte immediate.
+     */
     public Immediate(final byte b) {
         this(BitUtils.asLong(b), 8);
     }
 
+    /**
+     * Creates an immediate value of 2 bytes.
+     * @param s
+     *      The 2-bytes immediate.
+     */
     public Immediate(final short s) {
         this(BitUtils.asLong(s), 16);
     }
 
+    /**
+     * Creates an immediate value of 4 bytes.
+     * @param x
+     *      The 4-bytes immediate.
+     */
     public Immediate(final int x) {
         this(BitUtils.asLong(x), 32);
     }
 
+    /**
+     * Creates an immediate value of 8 bytes.
+     * @param x
+     *      The 8-bytes immediate.
+     */
     public Immediate(final long x) {
         this(x, 64);
     }
