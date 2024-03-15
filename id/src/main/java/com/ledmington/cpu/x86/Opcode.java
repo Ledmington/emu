@@ -48,6 +48,11 @@ public enum Opcode {
     CMOVNE("cmovne"),
 
     /**
+     * Conditional move if signed.
+     */
+    CMOVS("cmovs"),
+
+    /**
      * Compare two operands.
      */
     CMP("cmp"),
