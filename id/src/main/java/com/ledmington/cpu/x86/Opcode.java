@@ -58,6 +58,16 @@ public enum Opcode {
     CWDE("cwde"),
 
     /**
+     * Terminate an indirect branch in 32-bit mode.
+     */
+    ENDBR32("endbr32"),
+
+    /**
+     * Terminate an indirect branch in 32-bit mode.
+     */
+    ENDBR64("endbr64"),
+
+    /**
      * Signed multiply.
      */
     IMUL("imul"),

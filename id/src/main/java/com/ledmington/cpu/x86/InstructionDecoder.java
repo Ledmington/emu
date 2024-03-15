@@ -317,6 +317,7 @@ public final class InstructionDecoder {
     private Instruction parse2BytesOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
         final byte UD2_OPCODE = (byte) 0x0b;
         final byte MOVUPS_OPCODE = (byte) 0x11;
+        final byte ENDBR_OPCODE = (byte) 0x1e;
         final byte MOVAPS_OPCODE = (byte) 0x29;
         final byte CMOVE_OPCODE = (byte) 0x44;
         final byte CMOVNE_OPCODE = (byte) 0x45;
@@ -354,6 +355,16 @@ public final class InstructionDecoder {
             case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
             case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LittleEndian()));
             case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of32(b.read4LittleEndian()));
+            case ENDBR_OPCODE -> {
+                final byte x = b.read1();
+                if (x == (byte) 0xfa) {
+                    yield new Instruction(Opcode.ENDBR64);
+                } else if (x == (byte) 0xfb) {
+                    yield new Instruction(Opcode.ENDBR32);
+                } else {
+                    throw new IllegalArgumentException("Invalid value");
+                }
+            }
             case SETE_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(

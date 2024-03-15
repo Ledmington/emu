@@ -582,3 +582,9 @@ movabs rdx,0xdeadbeefcafebabe | 48 ba be ba fe ca ef be ad de
 movups XMMWORD PTR [ebx+edi*8+0x12345678],xmm14 | 67 44 0f 11 b4 fb 78 56 34 12
 movups XMMWORD PTR [r8],xmm0                    | 41 0f 11 00
 movups XMMWORD PTR [rbx+rdi*8+0x12345678],xmm14 | 44 0f 11 b4 fb 78 56 34 12
+
+# Endbr32
+endbr32 | f3 0f 1e fb
+
+# Endbr64
+endbr64 | f3 0f 1e fa
