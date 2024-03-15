@@ -319,6 +319,7 @@ public final class InstructionDecoder {
         final byte MOVUPS_OPCODE = (byte) 0x11;
         final byte MOVAPS_OPCODE = (byte) 0x29;
         final byte CMOVE_OPCODE = (byte) 0x44;
+        final byte CMOVNE_OPCODE = (byte) 0x45;
         final byte CMOVBE_OPCODE = (byte) 0x46;
         final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
         final byte MOVQ_OPCODE = (byte) 0x6e;
@@ -450,6 +451,7 @@ public final class InstructionDecoder {
             // page 771
             parseSimple(b, pref, Opcode.CMOVE, true);
             case CMOVBE_OPCODE -> parseSimple(b, pref, Opcode.CMOVBE, true);
+            case CMOVNE_OPCODE -> parseSimple(b, pref, Opcode.CMOVNE, true);
             case UD2_OPCODE -> new Instruction(Opcode.UD2);
             case PUNPCKLQDQ_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());

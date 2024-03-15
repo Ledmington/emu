@@ -43,6 +43,11 @@ public enum Opcode {
     CMOVE("cmove"),
 
     /**
+     * Conditional move if not equal.
+     */
+    CMOVNE("cmovne"),
+
+    /**
      * Compare two operands.
      */
     CMP("cmp"),

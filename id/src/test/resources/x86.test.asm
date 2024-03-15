@@ -138,6 +138,10 @@ cmove rcx,r15 | 49 0f 44 cf
 cmovbe r15,rcx | 4c 0f 46 f9
 cmovbe rcx,r15 | 49 0f 46 cf
 
+# Cmovne
+cmovne r15,rdx | 4c 0f 45 fa
+cmovne rdx,r15 | 49 0f 45 d7
+
 # Cmp
 cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
 cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
