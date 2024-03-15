@@ -168,6 +168,11 @@ public enum Opcode {
     MOVS("movs"),
 
     /**
+     * Move double-word string.
+     */
+    MOVSD("movsd"),
+
+    /**
      * Move and sign-extend.
      */
     MOVSX("movsx"),

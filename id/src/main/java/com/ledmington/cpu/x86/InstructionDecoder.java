@@ -316,6 +316,7 @@ public final class InstructionDecoder {
 
     private Instruction parse2BytesOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
         final byte UD2_OPCODE = (byte) 0x0b;
+        final byte MOVSD_OPCODE = (byte) 0x10;
         final byte MOVUPS_OPCODE = (byte) 0x11;
         final byte ENDBR_OPCODE = (byte) 0x1e;
         final byte MOVAPS_OPCODE = (byte) 0x29;
@@ -478,6 +479,24 @@ public final class InstructionDecoder {
                         Opcode.PUNPCKLQDQ,
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm())));
+            }
+            case MOVSD_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                final boolean hasRepnePrefix = pref.p1().isPresent();
+                yield new Instruction(
+                        hasRepnePrefix ? Opcode.MOVSD : Opcode.MOVUPS,
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
+                        parseIndirectOperand(
+                                        b,
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                !pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .ptrSize(hasRepnePrefix ? 64 : 128)
+                                .build());
             }
             case MOVUPS_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
