@@ -255,6 +255,7 @@ public final class InstructionDecoder {
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
         final int immediateBytes = pref.hasOperandSizeOverridePrefix() ? 2 : ((opcodeFirstByte == (byte) 0x81) ? 4 : 1);
+        final boolean isRegister8Bit = opcodeFirstByte == (byte) 0x80 || opcodeFirstByte == (byte) 0x82;
 
         return switch (modrm.reg()) {
                 // full table at page 2856
@@ -288,14 +289,26 @@ public final class InstructionDecoder {
                     Opcode.XOR,
                     Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
                     false);
-            case (byte) 0x07 /* 111 */ -> parse(
-                    b,
-                    pref,
-                    modrm,
-                    Optional.of(immediateBytes),
-                    Opcode.CMP,
-                    Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
-                    false);
+            case (byte) 0x07 /* 111 */ -> {
+                if (isRegister8Bit) {
+                    final Register r = Register8.fromByte(modrm.rm(), pref.hasRexPrefix());
+                    yield new Instruction(
+                            Opcode.CMP,
+                            (modrm.mod() != (byte) 0x03)
+                                    ? parseIndirectOperand(b, pref, modrm, r).build()
+                                    : r,
+                            new Immediate(b.read1()));
+                } else {
+                    yield parse(
+                            b,
+                            pref,
+                            modrm,
+                            Optional.of(immediateBytes),
+                            Opcode.CMP,
+                            Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
+                            false);
+                }
+            }
             default -> throw new IllegalArgumentException(
                     String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
         };
@@ -483,6 +496,7 @@ public final class InstructionDecoder {
         final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
         final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
         final byte CMP_R32_INDIRECT32_OPCODE = (byte) 0x3b;
+        final byte CMP_AL_IMM8_OPCODE = (byte) 0x3c;
         final byte CMP_RAX_IMM32_OPCODE = (byte) 0x3d;
         final byte PUSH_EAX_OPCODE = (byte) 0x50;
         final byte PUSH_ECX_OPCODE = (byte) 0x51;
@@ -665,6 +679,7 @@ public final class InstructionDecoder {
                                 pref.hasOperandSizeOverridePrefix()),
                         parseIndirectOperand(b, pref, modrm, null).build());
             }
+            case CMP_AL_IMM8_OPCODE -> new Instruction(Opcode.CMP, Register8.AL, new Immediate(b.read1()));
             case CMP_RAX_IMM32_OPCODE -> new Instruction(
                     Opcode.CMP,
                     pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
