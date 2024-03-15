@@ -91,6 +91,13 @@ public final class InstructionDecoder {
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
         return switch (modrm.reg()) {
+            case (byte) 0x00 /* 000 */ -> new Instruction(
+                    Opcode.INC,
+                    Registers.fromCode(
+                            modrm.rm(),
+                            pref.rex().isOperand64Bit(),
+                            pref.rex().ModRMRMExtension(),
+                            pref.hasOperandSizeOverridePrefix()));
             case (byte) 0x02 /* 010 */ -> {
                 // near CALL
                 final Register reg = Registers.fromCode(

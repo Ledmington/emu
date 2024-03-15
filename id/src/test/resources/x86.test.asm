@@ -595,3 +595,37 @@ endbr32 | f3 0f 1e fb
 
 # Endbr64
 endbr64 | f3 0f 1e fa
+
+# Inc
+inc eax  | ff c0
+inc ebp  | ff c5
+inc ebx  | ff c3
+inc ecx  | ff c1
+inc edi  | ff c7
+inc edx  | ff c2
+inc esi  | ff c6
+inc esp  | ff c4
+inc r10  | 49 ff c2
+inc r10d | 41 ff c2
+inc r11  | 49 ff c3
+inc r11d | 41 ff c3
+inc r12  | 49 ff c4
+inc r12d | 41 ff c4
+inc r13  | 49 ff c5
+inc r13d | 41 ff c5
+inc r14  | 49 ff c6
+inc r14d | 41 ff c6
+inc r15  | 49 ff c7
+inc r15d | 41 ff c7
+inc r8   | 49 ff c0
+inc r8d  | 41 ff c0
+inc r9   | 49 ff c1
+inc r9d  | 41 ff c1
+inc rax  | 48 ff c0
+inc rbp  | 48 ff c5
+inc rbx  | 48 ff c3
+inc rcx  | 48 ff c1
+inc rdi  | 48 ff c7
+inc rdx  | 48 ff c2
+inc rsi  | 48 ff c6
+inc rsp  | 48 ff c4

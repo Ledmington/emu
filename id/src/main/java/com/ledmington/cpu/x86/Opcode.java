@@ -73,6 +73,11 @@ public enum Opcode {
     IMUL("imul"),
 
     /**
+     * Increment.
+     */
+    INC("inc"),
+
+    /**
      * Call to interrupt procedure.
      */
     INT3("int3"),
