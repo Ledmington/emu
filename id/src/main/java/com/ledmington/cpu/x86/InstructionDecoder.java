@@ -333,6 +333,7 @@ public final class InstructionDecoder {
         final byte JNS_DISP32_OPCODE = (byte) 0x89;
         final byte JLE_DISP32_OPCODE = (byte) 0x8e;
         final byte JG_DISP32_OPCODE = (byte) 0x8f;
+        final byte SETE_OPCODE = (byte) 0x94;
         final byte SETNE_OPCODE = (byte) 0x95;
         final byte IMUL_OPCODE = (byte) 0xaf;
         final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
@@ -353,6 +354,13 @@ public final class InstructionDecoder {
             case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
             case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LittleEndian()));
             case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of32(b.read4LittleEndian()));
+            case SETE_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                yield new Instruction(
+                        Opcode.SETE,
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
+            }
             case SETNE_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(

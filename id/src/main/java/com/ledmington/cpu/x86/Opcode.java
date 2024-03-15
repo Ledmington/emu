@@ -223,6 +223,11 @@ public enum Opcode {
     SBB("sbb"),
 
     /**
+     * Set byte if equal.
+     */
+    SETE("sete"),
+
+    /**
      * Set byte if not equal.
      */
     SETNE("setne"),

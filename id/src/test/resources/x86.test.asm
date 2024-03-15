@@ -570,6 +570,10 @@ punpcklqdq xmm3,xmm9 | 66 41 0f 6c d9
 setne al  | 0f 95 c0
 setne r8b | 41 0f 95 c0
 
+# Sete
+sete al  | 0f 94 c0
+sete r8b | 41 0f 94 c0
+
 # Movabs
 movabs rcx,0xdeadbeef         | 48 b9 ef be ad de 00 00 00 00
 movabs rdx,0xdeadbeefcafebabe | 48 ba be ba fe ca ef be ad de
