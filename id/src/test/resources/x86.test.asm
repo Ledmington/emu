@@ -487,6 +487,16 @@ imul rdx,r9,0x58  | 49 6b d1 58
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
 or DWORD PTR [r11+r9*4+0x12345678],0xdeadbeef | 43 81 8c 8b 78 56 34 12 ef be ad de
 or WORD PTR [r11+r9*4+0x12345678],0xbeef      | 66 43 81 8c 8b 78 56 34 12 ef be
+or al,0x12                                    | 0c 12
+or eax,0x12                                   | 83 c8 12
+or eax,0x12345678                             | 0d 78 56 34 12
+or eax,DWORD PTR [rax+rbx*4+0x12345678]       | 0b 84 98 78 56 34 12
+or ecx,DWORD PTR [r10]                        | 41 0b 0a
+or edi,0x12                                   | 83 cf 12
+or rax,0x12                                   | 48 83 c8 12
+or rax,0x12345678                             | 48 0d 78 56 34 12
+or rax,QWORD PTR [rax+rbx*4+0x12345678]       | 48 0b 84 98 78 56 34 12
+or rcx,QWORD PTR [r10]                        | 49 0b 0a
 
 # Xor
 xor eax,0x12       | 83 f0 12

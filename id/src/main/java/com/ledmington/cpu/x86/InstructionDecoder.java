@@ -560,6 +560,9 @@ public final class InstructionDecoder {
         final byte ADD_R32_INDIRECT32_OPCODE = (byte) 0x03;
         final byte ADD_AL_IMM8_OPCODE = (byte) 0x04;
         final byte ADD_EAX_IMM32_OPCODE = (byte) 0x05;
+        final byte OR_R32_INDIRECT32_OPCODE = (byte) 0x0b;
+        final byte OR_AL_IMM8_OPCODE = (byte) 0x0c;
+        final byte OR_EAX_IMM32_OPCODE = (byte) 0x0d;
         final byte SBB_OPCODE = (byte) 0x19;
         final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
         final byte AND_OPCODE = (byte) 0x21;
@@ -646,6 +649,30 @@ public final class InstructionDecoder {
             case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
             case SBB_OPCODE -> parseSimple(b, pref, Opcode.SBB, false);
             case SBB_AL_IMM8_OPCODE -> new Instruction(Opcode.SBB, Register8.AL, new Immediate(b.read1()));
+            case OR_AL_IMM8_OPCODE -> new Instruction(Opcode.OR, Register8.AL, new Immediate(b.read1()));
+            case OR_EAX_IMM32_OPCODE -> new Instruction(
+                    Opcode.OR,
+                    pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
+                    new Immediate(b.read4LittleEndian()));
+            case OR_R32_INDIRECT32_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                final Register r1 = Registers.fromCode(
+                        modrm.reg(),
+                        pref.rex().isOperand64Bit(),
+                        pref.rex().ModRMRegExtension(),
+                        pref.hasOperandSizeOverridePrefix());
+                final Register r2 = Registers.fromCode(
+                        modrm.rm(),
+                        !pref.hasAddressSizeOverridePrefix(),
+                        pref.rex().ModRMRMExtension(),
+                        pref.hasOperandSizeOverridePrefix());
+                yield (modrm.mod() != (byte) 0x03) // indirect operand needed
+                        ? new Instruction(
+                                Opcode.OR,
+                                r1,
+                                parseIndirectOperand(b, pref, modrm, r2).build())
+                        : new Instruction(Opcode.OR, r1, r2);
+            }
             case MOV_REG32_MEM32_OPCODE -> parseLEALike(b, pref, Opcode.MOV);
             case MOV_MEM32_REG32_OPCODE -> parse(b, pref, Optional.empty(), Opcode.MOV);
             case MOV_MEM8_REG8_OPCODE -> {
