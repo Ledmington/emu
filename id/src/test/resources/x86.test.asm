@@ -78,6 +78,7 @@ jb 0x12345678 | 0f 82 78 56 34 12
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'jbe rip+0x....'
+jbe 0x12       | 76 12
 jbe 0x78563412 | 0f 86 12 34 56 78
 
 # Jg
