@@ -417,6 +417,8 @@ add QWORD PTR [rax+rbx*4+0x12345678],rsp  | 48 01 a4 98 78 56 34 12
 add QWORD PTR [rsp+rbp*4+0x7eadbeef],0x12 | 48 83 84 ac ef be ad 7e 12
 add WORD PTR [rax+rbx*4+0x12345678],r8w   | 66 44 01 84 98 78 56 34 12
 add al,0x99                               | 04 99
+add ax,0x1234                             | 66 05 34 12
+add eax,0x12345678                        | 05 78 56 34 12
 add eax,0x18                              | 83 c0 18
 add esp,DWORD PTR [rax+rbx*4+0x12345678]  | 03 a4 98 78 56 34 12
 add r11d,DWORD PTR [rax+rbx*4+0x12345678] | 44 03 9c 98 78 56 34 12
@@ -424,6 +426,7 @@ add r8,0x1                                | 49 83 c0 01
 add r8,r9                                 | 4d 01 c8
 add r9,QWORD PTR [rax+rbx*4+0x12345678]   | 4c 03 8c 98 78 56 34 12
 add rax,0x1                               | 48 83 c0 01
+add rax,0x12345678                        | 48 05 78 56 34 12
 add rsp,0x12345678                        | 48 81 c4 78 56 34 12
 add rsp,QWORD PTR [rax+rbx*4+0x12345678]  | 48 03 a4 98 78 56 34 12
 
