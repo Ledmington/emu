@@ -266,15 +266,22 @@ public final class InstructionDecoder {
 
         return switch (modrm.reg()) {
                 // full table at page 2856
-            case (byte) 0x00 /* 000 */ -> new Instruction(
-                    Opcode.ADD,
-                    Registers.fromCode(
-                            modrm.rm(),
-                            pref.rex().isOperand64Bit(),
-                            pref.rex().ModRMRMExtension(),
-                            pref.hasOperandSizeOverridePrefix()),
-                    new Immediate(
-                            (opcodeFirstByte == (byte) 0x83) ? ((long) b.read1()) : ((long) b.read4LittleEndian())));
+            case (byte) 0x00 /* 000 */ -> {
+                final Register r = Registers.fromCode(
+                        modrm.rm(),
+                        pref.rex().isOperand64Bit(),
+                        pref.rex().ModRMRMExtension(),
+                        pref.hasOperandSizeOverridePrefix());
+                yield new Instruction(
+                        Opcode.ADD,
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(b, pref, modrm, r).build()
+                                : r,
+                        new Immediate(
+                                (opcodeFirstByte == (byte) 0x83)
+                                        ? ((long) b.read1())
+                                        : ((long) b.read4LittleEndian())));
+            }
             case (byte) 0x01 /* 001 */ -> parse(
                     b, pref, modrm, Optional.of(immediateBytes), Opcode.OR, Optional.empty(), false);
             case (byte) 0x04 /* 100 */ -> new Instruction(
