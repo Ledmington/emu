@@ -431,14 +431,19 @@ add rsp,0x12345678                        | 48 81 c4 78 56 34 12
 add rsp,QWORD PTR [rax+rbx*4+0x12345678]  | 48 03 a4 98 78 56 34 12
 
 # And
-and edi,0x1                | 83 e7 01
-and edi,0x1d               | 83 e7 1d
-and edi,0x7f               | 83 e7 7f
-and edi,0xf                | 83 e7 0f
-and edx,0xfff              | 81 e2 ff 0f 00 00
-and r12,r13                | 4d 21 ec
-and r15d,0x1f              | 41 83 e7 1f
-and rdi,0xfffffffffffffff0 | 48 83 e7 f0
+and al,0x12                              | 24 12
+and eax,0x12                             | 83 e0 12
+and eax,0x12345678                       | 25 78 56 34 12
+and eax,DWORD PTR [rax+rbx*4+0x12345678] | 23 84 98 78 56 34 12
+and ecx,DWORD PTR [r10]                  | 41 23 0a
+and edi,0x12                             | 83 e7 12
+and r12,r13                              | 4d 21 ec
+and r15d,0x1f                            | 41 83 e7 1f
+and rax,0x12                             | 48 83 e0 12
+and rax,0x12345678                       | 48 25 78 56 34 12
+and rax,QWORD PTR [rax+rbx*4+0x12345678] | 48 23 84 98 78 56 34 12
+and rcx,QWORD PTR [r10]                  | 49 23 0a
+and rdi,0xfffffffffffffff0               | 48 83 e7 f0
 
 # Sub
 sub DWORD PTR [eax+ebx*4+0x12345678],r8d  | 67 44 29 84 98 78 56 34 12
