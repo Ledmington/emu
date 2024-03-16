@@ -625,14 +625,14 @@ public final class InstructionDecoder {
         final byte MOV_IMM8_TO_CH_OPCODE = (byte) 0xb5;
         final byte MOV_IMM8_TO_DH_OPCODE = (byte) 0xb6;
         final byte MOV_IMM8_TO_BH_OPCODE = (byte) 0xb7;
-        final byte MOV_IMM32_TO_EAX_OPCODE = (byte) 0xb8;
-        final byte MOV_IMM32_TO_ECX_OPCODE = (byte) 0xb9;
-        final byte MOV_IMM32_TO_EDX_OPCODE = (byte) 0xba;
-        final byte MOV_IMM32_TO_EBX_OPCODE = (byte) 0xbb;
-        final byte MOV_IMM32_TO_ESP_OPCODE = (byte) 0xbc;
-        final byte MOV_IMM32_TO_EBP_OPCODE = (byte) 0xbd;
-        final byte MOV_IMM32_TO_ESI_OPCODE = (byte) 0xbe;
-        final byte MOV_IMM32_TO_EDI_OPCODE = (byte) 0xbf;
+        final byte MOV_EAX_IMM32_OPCODE = (byte) 0xb8;
+        final byte MOV_ECX_IMM32_OPCODE = (byte) 0xb9;
+        final byte MOV_EDX_IMM32_OPCODE = (byte) 0xba;
+        final byte MOV_EBX_IMM32_OPCODE = (byte) 0xbb;
+        final byte MOV_ESP_IMM32_OPCODE = (byte) 0xbc;
+        final byte MOV_EBP_IMM32_OPCODE = (byte) 0xbd;
+        final byte MOV_ESI_IMM32_OPCODE = (byte) 0xbe;
+        final byte MOV_EDI_IMM32_OPCODE = (byte) 0xbf;
         final byte RET_OPCODE = (byte) 0xc3;
         final byte LEAVE_OPCODE = (byte) 0xc9;
         final byte INT3_OPCODE = (byte) 0xcc;
@@ -797,6 +797,8 @@ public final class InstructionDecoder {
                     Opcode.CMP,
                     pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
                     new Immediate(b.read4LittleEndian()));
+
+                // jumps
             case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
             case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
             case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
@@ -807,6 +809,7 @@ public final class InstructionDecoder {
             case JNS_DISP8_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of8(b.read1()));
             case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
             case JG_DISP8_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of8(b.read1()));
+
             case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
             case AND_OPCODE -> parse(b, pref, Optional.empty(), Opcode.AND);
             case AND_R32_INDIRECT32_OPCODE -> {
@@ -922,49 +925,32 @@ public final class InstructionDecoder {
                                 .build());
             }
 
-                // MOV 8/16-bit
-            case MOV_IMM8_TO_AL_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R8B : Register8.AL,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_CL_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R9B : Register8.CL,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_DL_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R10B : Register8.DL,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_BL_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R11B : Register8.BL,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_AH_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R12B : Register8.AH,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_CH_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R13B : Register8.CH,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_DH_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R14B : Register8.DH,
-                    new Immediate(b.read1()));
-            case MOV_IMM8_TO_BH_OPCODE -> new Instruction(
-                    Opcode.MOV,
-                    pref.rex().opcodeRegExtension() ? Register8.R15B : Register8.BH,
-                    new Immediate(b.read1()));
+                // MOV 8-bit
+            case MOV_IMM8_TO_AL_OPCODE,
+                    MOV_IMM8_TO_BL_OPCODE,
+                    MOV_IMM8_TO_CL_OPCODE,
+                    MOV_IMM8_TO_DL_OPCODE,
+                    MOV_IMM8_TO_AH_OPCODE,
+                    MOV_IMM8_TO_BH_OPCODE,
+                    MOV_IMM8_TO_CH_OPCODE,
+                    MOV_IMM8_TO_DH_OPCODE -> {
+                final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+                yield new Instruction(
+                        Opcode.MOV,
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().opcodeRegExtension(), regByte), pref.hasRexPrefix()),
+                        new Immediate(b.read1()));
+            }
 
-                // MOV 32 or 64 bits
-            case MOV_IMM32_TO_EAX_OPCODE,
-                    MOV_IMM32_TO_EBX_OPCODE,
-                    MOV_IMM32_TO_ECX_OPCODE,
-                    MOV_IMM32_TO_EDX_OPCODE,
-                    MOV_IMM32_TO_ESP_OPCODE,
-                    MOV_IMM32_TO_EBP_OPCODE,
-                    MOV_IMM32_TO_ESI_OPCODE,
-                    MOV_IMM32_TO_EDI_OPCODE -> {
+                // MOV 16, 32 or 64 bits
+            case MOV_EAX_IMM32_OPCODE,
+                    MOV_EBX_IMM32_OPCODE,
+                    MOV_ECX_IMM32_OPCODE,
+                    MOV_EDX_IMM32_OPCODE,
+                    MOV_ESP_IMM32_OPCODE,
+                    MOV_EBP_IMM32_OPCODE,
+                    MOV_ESI_IMM32_OPCODE,
+                    MOV_EDI_IMM32_OPCODE -> {
                 final byte regByte = Registers.combine(
                         pref.rex().opcodeRegExtension(), BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK));
                 final int size =
