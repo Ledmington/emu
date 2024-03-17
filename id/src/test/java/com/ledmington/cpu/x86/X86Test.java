@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.provider.Arguments;
 
@@ -21,7 +22,10 @@ public abstract class X86Test {
     private static final String testInputFileName = "x86.test.asm";
     private static List<Arguments> args = null;
 
-    static Stream<Arguments> instructions() {
+    @BeforeAll
+    public static void setup() {
+        MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
+
         if (args == null) {
             args = new ArrayList<>();
             final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
@@ -49,11 +53,17 @@ public abstract class X86Test {
                 throw new RuntimeException(e);
             }
         }
-        return args.stream();
     }
 
-    @BeforeAll
-    public static void setup() {
-        MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
+    @AfterAll
+    public static void teardown() {
+        if (args != null) {
+            args.clear();
+            args = null;
+        }
+    }
+
+    static Stream<Arguments> instructions() {
+        return args.stream();
     }
 }
