@@ -564,23 +564,26 @@ public final class InstructionDecoder {
         final byte OR_AL_IMM8_OPCODE = (byte) 0x0c;
         final byte OR_EAX_IMM32_OPCODE = (byte) 0x0d;
         final byte ADC_AL_IMM8_OPCODE = (byte) 0x14;
+        final byte ADC_EAX_IMM32_OPCODE = (byte) 0x15;
         final byte SBB_OPCODE = (byte) 0x19;
         final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
+        final byte SBB_EAX_IMM32_OPCODE = (byte) 0x1d;
         final byte AND_OPCODE = (byte) 0x21;
         final byte AND_R32_INDIRECT32_OPCODE = (byte) 0x23;
         final byte AND_AL_IMM8_OPCODE = (byte) 0x24;
-        final byte AND_RAX_IMM32_OPCODE = (byte) 0x25;
+        final byte AND_EAX_IMM32_OPCODE = (byte) 0x25;
         final byte SUB_INDIRECT32_R32_OPCODE = (byte) 0x29;
         final byte SUB_R32_INDIRECT32_OPCODE = (byte) 0x2b;
         final byte SUB_AL_IMM8_OPCODE = (byte) 0x2c;
+        final byte SUB_EAX_IMM32_OPCODE = (byte) 0x2d;
         final byte XOR_OPCODE = (byte) 0x31;
         final byte XOR_AL_IMM8_OPCODE = (byte) 0x34;
-        final byte XOR_RAX_IMM32_OPCODE = (byte) 0x35;
+        final byte XOR_EAX_IMM32_OPCODE = (byte) 0x35;
         final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
         final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
         final byte CMP_R32_INDIRECT32_OPCODE = (byte) 0x3b;
         final byte CMP_AL_IMM8_OPCODE = (byte) 0x3c;
-        final byte CMP_RAX_IMM32_OPCODE = (byte) 0x3d;
+        final byte CMP_EAX_IMM32_OPCODE = (byte) 0x3d;
         final byte PUSH_EAX_OPCODE = (byte) 0x50;
         final byte PUSH_ECX_OPCODE = (byte) 0x51;
         final byte PUSH_EDX_OPCODE = (byte) 0x52;
@@ -651,10 +654,6 @@ public final class InstructionDecoder {
             case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
             case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
             case SBB_OPCODE -> parseSimple(b, pref, Opcode.SBB, false);
-            case OR_EAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.OR,
-                    pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
-                    new Immediate(b.read4LittleEndian()));
             case OR_R32_INDIRECT32_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 final Register r1 = Registers.fromCode(
@@ -692,9 +691,6 @@ public final class InstructionDecoder {
                     pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
                     new Immediate(b.read4LittleEndian()));
             case XOR_OPCODE -> parseSimple(b, pref, Opcode.XOR, false);
-            case XOR_RAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.XOR, pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX, new Immediate((long)
-                            b.read4LittleEndian()));
             case SUB_INDIRECT32_R32_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 final Register r1 = Registers.fromCode(
@@ -771,14 +767,6 @@ public final class InstructionDecoder {
                                 parseIndirectOperand(b, pref, modrm, r1).build())
                         : new Instruction(Opcode.ADD, r2, r1);
             }
-            case ADD_EAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.ADD,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? Register16.AX
-                            : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX),
-                    pref.hasOperandSizeOverridePrefix()
-                            ? new Immediate(b.read2LittleEndian())
-                            : new Immediate(b.read4LittleEndian()));
             case CMP_INDIRECT8_R8_OPCODE -> parseSimple8Bit(b, pref, Opcode.CMP, false);
             case CMP_INDIRECT32_R32_OPCODE -> parse(b, pref, Optional.empty(), Opcode.CMP);
             case CMP_R32_INDIRECT32_OPCODE -> {
@@ -792,10 +780,6 @@ public final class InstructionDecoder {
                                 pref.hasOperandSizeOverridePrefix()),
                         parseIndirectOperand(b, pref, modrm, null).build());
             }
-            case CMP_RAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.CMP,
-                    pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
-                    new Immediate(b.read4LittleEndian()));
 
                 // jumps
             case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
@@ -830,12 +814,6 @@ public final class InstructionDecoder {
                                 parseIndirectOperand(b, pref, modrm, r2).build())
                         : new Instruction(Opcode.AND, r1, r2);
             }
-            case AND_RAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.AND,
-                    pref.hasOperandSizeOverridePrefix()
-                            ? Register16.AX
-                            : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX),
-                    new Immediate((long) b.read4LittleEndian()));
             case IMUL_REG_REG_IMM8_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(
@@ -951,6 +929,43 @@ public final class InstructionDecoder {
                             default -> throw new IllegalArgumentException("Invalid value");
                         };
                 yield new Instruction(opcode, Register8.AL, new Immediate(b.read1()));
+            }
+
+                // OP EAX,Imm32 or OP AX,Imm16
+            case ADD_EAX_IMM32_OPCODE,
+                    ADC_EAX_IMM32_OPCODE,
+                    AND_EAX_IMM32_OPCODE,
+                    XOR_EAX_IMM32_OPCODE,
+                    OR_EAX_IMM32_OPCODE,
+                    SBB_EAX_IMM32_OPCODE,
+                    SUB_EAX_IMM32_OPCODE,
+                    CMP_EAX_IMM32_OPCODE -> {
+                final byte m1 = (byte) 0xc7; // 11000111 (just to check that we are doing the correct thing)
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x05) {
+                    throw new IllegalArgumentException("Invalid value");
+                }
+                final byte m2 = (byte) 0x38; // 00111000 (the inverse of m1)
+                final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+                final Opcode opcode =
+                        switch (opcodeByte) {
+                            case 0 -> Opcode.ADD;
+                            case 1 -> Opcode.OR;
+                            case 2 -> Opcode.ADC;
+                            case 3 -> Opcode.SBB;
+                            case 4 -> Opcode.AND;
+                            case 5 -> Opcode.SUB;
+                            case 6 -> Opcode.XOR;
+                            case 7 -> Opcode.CMP;
+                            default -> throw new IllegalArgumentException("Invalid value");
+                        };
+                yield new Instruction(
+                        opcode,
+                        pref.hasOperandSizeOverridePrefix()
+                                ? Register16.AX
+                                : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX),
+                        pref.hasOperandSizeOverridePrefix()
+                                ? new Immediate(b.read2LittleEndian())
+                                : new Immediate(b.read4LittleEndian()));
             }
 
                 // MOV 8-bit
