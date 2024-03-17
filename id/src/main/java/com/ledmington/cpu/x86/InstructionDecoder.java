@@ -685,7 +685,7 @@ public final class InstructionDecoder {
             case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
             case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
-            case MOV_REG32_MEM32_OPCODE -> parseLEALike(pref, Opcode.MOV);
+            case MOV_REG32_MEM32_OPCODE -> parseLEALike(pref, Opcode.MOV, Optional.empty());
             case MOV_MEM32_REG32_OPCODE -> parse(pref, Optional.empty(), Opcode.MOV);
             case MOV_MEM8_REG8_OPCODE -> {
                 final ModRM modrm = modrm();
@@ -1148,7 +1148,7 @@ public final class InstructionDecoder {
             }
 
             case LEA_OPCODE -> // page 1191
-            parseLEALike(pref, Opcode.LEA);
+            parseLEALike(pref, Opcode.LEA, Optional.empty());
 
             case (byte) 0xf0 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.position()));
@@ -1287,9 +1287,7 @@ public final class InstructionDecoder {
         SIB sib;
         if (modrm.mod() != (byte) 0x03 /* 11 */ && modrm.rm() == (byte) 0x04 /* 100 */) {
             // SIB needed
-            final byte _sib = b.read1();
-            sib = new SIB(_sib);
-            logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
+            sib = sib();
 
             final Register base =
                     Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
@@ -1339,9 +1337,7 @@ public final class InstructionDecoder {
     private Instruction parseSimple(final Prefixes pref, final Opcode opcode, final boolean invertOperands) {
         final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
         final RexPrefix rexPrefix = pref.rex();
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final ModRM modrm = modrm();
         final Register operand1 = Registers.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
         final Register operand2 = Registers.fromCode(
@@ -1355,9 +1351,7 @@ public final class InstructionDecoder {
 
     // FIXME: delete this
     private Instruction parseSimple8Bit(final Prefixes pref, final Opcode opcode, final boolean invertOperands) {
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final ModRM modrm = modrm();
         final Register operand1 =
                 Register8.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix());
         final Register operand2 =
@@ -1373,10 +1367,6 @@ public final class InstructionDecoder {
      * Parses a LEA-like instruction.
      * opcode operand, indirect-operand
      */
-    private Instruction parseLEALike(final Prefixes pref, final Opcode opcode) {
-        return parseLEALike(pref, opcode, Optional.empty());
-    }
-
     private Instruction parseLEALike(final Prefixes pref, final Opcode opcode, final Optional<Integer> pointerSize) {
         final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
         final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
@@ -1399,9 +1389,7 @@ public final class InstructionDecoder {
         final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
         SIB sib;
         if (rm == (byte) 0x04 /* 100 */) {
-            final byte _sib = b.read1();
-            sib = new SIB(_sib);
-            logger.debug("Read SIB byte: 0x%02x -> %s", _sib, sib);
+            sib = sib();
 
             final Register base =
                     Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.SIBBaseExtension(), false);
@@ -1444,7 +1432,15 @@ public final class InstructionDecoder {
     }
 
     private ModRM modrm() {
-        return new ModRM(b.read1());
+        final byte m = b.read1();
+        logger.debug("Read ModRM byte : 0x%02x", m);
+        return new ModRM(m);
+    }
+
+    private SIB sib() {
+        final byte s = b.read1();
+        logger.debug("Read SIB byte : 0x%02x", s);
+        return new SIB(s);
     }
 
     private Immediate imm8() {
