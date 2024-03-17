@@ -149,7 +149,9 @@ cmovs ecx,eax                             | 0f 48 c8
 cmovs edx,r9d                             | 41 0f 48 d1
 
 # Cmp
+cmp BYTE PTR [eax],dh                          | 67 38 30
 cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
+cmp BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 38 8c 8b 78 56 34 12
 cmp DWORD PTR [edi],0x12345678                 | 67 81 3f 78 56 34 12
 cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
 cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
@@ -529,9 +531,13 @@ imul rdx,r9,0x58  | 49 6b d1 58
 
 # Or
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
+or BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 08 8c 8b 78 56 34 12
 or DWORD PTR [r11+r9*4+0x12345678],0xdeadbeef | 43 81 8c 8b 78 56 34 12 ef be ad de
+or QWORD PTR [r8],rdx                         | 49 09 10
+or QWORD PTR [r9+rcx*4+0x12345678],rsi        | 49 09 b4 89 78 56 34 12
 or WORD PTR [r11+r9*4+0x12345678],0xbeef      | 66 43 81 8c 8b 78 56 34 12 ef be
 or al,0x12                                    | 0c 12
+or cl,0x12                                    | 80 c9 12
 or cx,0x1234                                  | 66 81 c9 34 12
 or eax,0x12                                   | 83 c8 12
 or eax,0x12345678                             | 0d 78 56 34 12
