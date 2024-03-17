@@ -151,6 +151,8 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(opcodeSecondByte);
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
+        final boolean isIndirectOperandNeeded = modrm.mod() != (byte) 0x03;
+
         return switch (modrm.reg()) {
             case (byte) 0x00 /* 000 */ -> new Instruction(
                     Opcode.TEST,
@@ -179,7 +181,7 @@ public final class InstructionDecoder {
                         pref.hasOperandSizeOverridePrefix());
                 yield new Instruction(
                         Opcode.NEG,
-                        (modrm.mod() != (byte) 0x03) // indirect operand needed
+                        isIndirectOperandNeeded
                                 ? parseIndirectOperand(pref, modrm, r)
                                         .ptrSize(pref.rex().isOperand64Bit() ? 64 : 32)
                                         .build()
@@ -199,16 +201,16 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(opcodeSecondByte);
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
-        final int immediateBytes = pref.hasOperandSizeOverridePrefix() ? 2 : ((opcodeFirstByte == (byte) 0xc6) ? 1 : 4);
+        final int immediateBits =
+                pref.hasOperandSizeOverridePrefix() ? 16 : ((opcodeFirstByte == (byte) 0xc6) ? 8 : 32);
 
         return switch (modrm.reg()) {
             case (byte) 0x00 /* 000 */ -> parse(
                     pref,
                     modrm,
-                    Optional.of(immediateBytes),
+                    Optional.of(immediateBits),
                     Opcode.MOV,
-                    Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
-                    false);
+                    Optional.of(pref.rex().isOperand64Bit() ? 64 : immediateBits));
             default -> throw new IllegalArgumentException(
                     String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
         };
@@ -686,7 +688,7 @@ public final class InstructionDecoder {
             case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
             case MOV_REG32_MEM32_OPCODE -> parseLEALike(pref, Opcode.MOV, Optional.empty());
-            case MOV_MEM32_REG32_OPCODE -> parse(pref, Optional.empty(), Opcode.MOV);
+            case MOV_MEM32_REG32_OPCODE -> parse(pref, Opcode.MOV);
             case MOV_MEM8_REG8_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(
@@ -1147,19 +1149,18 @@ public final class InstructionDecoder {
                                 regByte, true, pref.rex().opcodeRegExtension(), pref.hasOperandSizeOverridePrefix()));
             }
 
-            case LEA_OPCODE -> // page 1191
-            parseLEALike(pref, Opcode.LEA, Optional.empty());
+            case LEA_OPCODE -> parseLEALike(pref, Opcode.LEA, Optional.empty());
 
+            case (byte) 0x66 -> throw new IllegalArgumentException(
+                    String.format("Found an unrecognized operand size override prefix at byte 0x%08x", b.position()));
+            case (byte) 0x67 -> throw new IllegalArgumentException(
+                    String.format("Found an unrecognized address size override prefix at byte 0x%08x", b.position()));
             case (byte) 0xf0 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.position()));
             case (byte) 0xf2 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.position()));
             case (byte) 0xf3 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized REP prefix at byte 0x%08x", b.position()));
-            case (byte) 0x66 -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized operand size override prefix at byte 0x%08x", b.position()));
-            case (byte) 0x67 -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized address size override prefix at byte 0x%08x", b.position()));
             default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
         };
     }
@@ -1185,16 +1186,16 @@ public final class InstructionDecoder {
                             String.format("Found duplicate legacy prefix group 2 at byte 0x%08x", b.position()));
                 }
                 p2 = Optional.of(x);
-            } else if (isLegacyPrefixGroup3(x)) {
+            } else if (isOperandSizeOverridePrefix(x)) {
                 if (hasOperandSizeOverridePrefix) {
                     throw new IllegalStateException(
-                            String.format("Found duplicate legacy prefix group 3 at byte 0x%08x", b.position()));
+                            String.format("Found duplicate operand size override prefix at byte 0x%08x", b.position()));
                 }
                 hasOperandSizeOverridePrefix = true;
-            } else if (isLegacyPrefixGroup4(x)) {
+            } else if (isAddressSizeOverridePrefix(x)) {
                 if (hasAddressSizeOverridePrefix) {
                     throw new IllegalStateException(
-                            String.format("Found duplicate legacy prefix group 4 at byte 0x%08x", b.position()));
+                            String.format("Found duplicate address size override prefix at byte 0x%08x", b.position()));
                 }
                 hasAddressSizeOverridePrefix = true;
             } else {
@@ -1217,28 +1218,24 @@ public final class InstructionDecoder {
         return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix);
     }
 
-    private Instruction parse(final Prefixes pref, final Optional<Integer> immediateBytes, final Opcode opcode) {
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
-        return parse(pref, modrm, immediateBytes, opcode, Optional.empty(), false);
+    private Instruction parse(final Prefixes pref, final Opcode opcode) {
+        return parse(pref, modrm(), Optional.empty(), opcode, Optional.empty());
     }
 
     private Instruction parse(
             final Prefixes pref,
             final ModRM modrm,
-            final Optional<Integer> immediateBytes,
+            final Optional<Integer> immediateBits,
             final Opcode opcode,
-            final Optional<Integer> pointerSize,
-            final boolean ignoreSecondOperand) {
+            final Optional<Integer> pointerSize) {
         final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
         final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
         final RexPrefix rexPrefix = pref.rex();
         final byte rm = modrm.rm();
-        final Register operand1 = Registers.fromCode(
-                modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
-        Operand operand2 = Registers.fromCode(
+        Operand operand1 = Registers.fromCode(
                 rm, !hasAddressSizeOverridePrefix, rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
+        final Register operand2 = Registers.fromCode(
+                modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
 
         // Table at page 530
         final byte mod = modrm.mod();
@@ -1246,7 +1243,7 @@ public final class InstructionDecoder {
             throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
         }
 
-        final IndirectOperand.IndirectOperandBuilder iob = parseIndirectOperand(pref, modrm, operand2);
+        final IndirectOperand.IndirectOperandBuilder iob = parseIndirectOperand(pref, modrm, operand1);
 
         if (pointerSize.isPresent()) {
             logger.debug("Using pointer size: %,d", pointerSize.orElseThrow());
@@ -1255,27 +1252,24 @@ public final class InstructionDecoder {
 
         if (mod != (byte) 0x03 /* 11 */) {
             // indirect operand needed
-            operand2 = iob.build();
+            operand1 = iob.build();
         } else {
             // indirect operand not needed, so we take the second operand without using the
             // addressSizeOverride
-            operand2 = Registers.fromCode(
+            operand1 = Registers.fromCode(
                     rm, rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
         }
 
-        if (immediateBytes.isEmpty()) {
-            if (ignoreSecondOperand) {
-                return new Instruction(opcode, operand2);
-            }
-            return new Instruction(opcode, operand2, operand1);
+        if (immediateBits.isEmpty()) {
+            return new Instruction(opcode, operand1, operand2);
         }
 
-        return switch (immediateBytes.orElseThrow()) {
-            case 1 -> new Instruction(opcode, operand2, imm8());
-            case 2 -> new Instruction(opcode, operand2, imm16());
-            case 4 -> new Instruction(opcode, operand2, imm32());
+        return switch (immediateBits.orElseThrow()) {
+            case 8 -> new Instruction(opcode, operand1, imm8());
+            case 16 -> new Instruction(opcode, operand1, imm16());
+            case 32 -> new Instruction(opcode, operand1, imm32());
             default -> throw new IllegalArgumentException(
-                    String.format("Invalid value for immediate bytes: %,d", immediateBytes.orElseThrow()));
+                    String.format("Invalid value for immediate bytes: %,d", immediateBits.orElseThrow()));
         };
     }
 
@@ -1371,9 +1365,7 @@ public final class InstructionDecoder {
         final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
         final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
         final RexPrefix rexPrefix = pref.rex();
-        final byte _modrm = b.read1();
-        final ModRM modrm = new ModRM(_modrm);
-        logger.debug("Read ModR/M byte: 0x%02x -> %s", _modrm, modrm);
+        final ModRM modrm = modrm();
         final byte rm = modrm.rm();
         final Register operand1 = Registers.fromCode(
                 modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
@@ -1485,12 +1477,12 @@ public final class InstructionDecoder {
                 || prefix == BRANCH_TAKEN_PREFIX;
     }
 
-    private boolean isLegacyPrefixGroup3(final byte prefix) {
+    private boolean isOperandSizeOverridePrefix(final byte prefix) {
         final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
         return prefix == OPERAND_SIZE_OVERRIDE_PREFIX;
     }
 
-    private boolean isLegacyPrefixGroup4(final byte prefix) {
+    private boolean isAddressSizeOverridePrefix(final byte prefix) {
         final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
         return prefix == ADDRESS_SIZE_OVERRIDE_PREFIX;
     }
