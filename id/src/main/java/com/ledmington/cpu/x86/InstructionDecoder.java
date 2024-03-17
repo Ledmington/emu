@@ -261,71 +261,51 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(opcodeSecondByte);
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
-        final int immediateBytes = pref.hasOperandSizeOverridePrefix() ? 2 : ((opcodeFirstByte == (byte) 0x81) ? 4 : 1);
         final boolean isRegister8Bit = opcodeFirstByte == (byte) 0x80 || opcodeFirstByte == (byte) 0x82;
+        final int immediateBits =
+                pref.hasOperandSizeOverridePrefix() ? 16 : ((opcodeFirstByte == (byte) 0x81) ? 32 : 8);
+        final boolean isIndirectOperandNeeded = modrm.mod() != (byte) 0x03;
+        final byte regByte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
 
-        return switch (modrm.reg()) {
-                // full table at page 2856
-            case (byte) 0x00 /* 000 */ -> {
-                final Register r = Registers.fromCode(
-                        modrm.rm(),
-                        pref.rex().isOperand64Bit(),
-                        pref.rex().ModRMRMExtension(),
-                        pref.hasOperandSizeOverridePrefix());
-                yield new Instruction(
-                        Opcode.ADD,
-                        (modrm.mod() != (byte) 0x03)
-                                ? parseIndirectOperand(b, pref, modrm, r).build()
-                                : r,
-                        new Immediate(
-                                (opcodeFirstByte == (byte) 0x83)
-                                        ? ((long) b.read1())
-                                        : ((long) b.read4LittleEndian())));
-            }
-            case (byte) 0x01 /* 001 */ -> parse(
-                    b, pref, modrm, Optional.of(immediateBytes), Opcode.OR, Optional.empty(), false);
-            case (byte) 0x04 /* 100 */ -> new Instruction(
-                    Opcode.AND,
-                    Registers.fromCode(
-                            modrm.rm(),
-                            pref.rex().isOperand64Bit(),
-                            pref.rex().ModRMRMExtension(),
-                            pref.hasOperandSizeOverridePrefix()),
-                    new Immediate(
-                            (opcodeFirstByte == (byte) 0x83) ? ((long) b.read1()) : ((long) b.read4LittleEndian())));
-            case (byte) 0x05 /* 101 */ -> parse(
-                    b, pref, modrm, Optional.of(immediateBytes), Opcode.SUB, Optional.empty(), false);
-            case (byte) 0x06 /* 110 */ -> parse(
-                    b,
-                    pref,
-                    modrm,
-                    Optional.of(immediateBytes),
-                    Opcode.XOR,
-                    Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
-                    false);
-            case (byte) 0x07 /* 111 */ -> {
-                if (isRegister8Bit) {
-                    final Register r = Register8.fromByte(modrm.rm(), pref.hasRexPrefix());
-                    yield new Instruction(
-                            Opcode.CMP,
-                            (modrm.mod() != (byte) 0x03)
-                                    ? parseIndirectOperand(b, pref, modrm, r).build()
-                                    : r,
-                            new Immediate(b.read1()));
-                } else {
-                    yield parse(
-                            b,
-                            pref,
-                            modrm,
-                            Optional.of(immediateBytes),
-                            Opcode.CMP,
-                            Optional.of(pref.rex().isOperand64Bit() ? 64 : 8 * immediateBytes),
-                            false);
-                }
-            }
-            default -> throw new IllegalArgumentException(
-                    String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
-        };
+        final Opcode opcode =
+                switch (modrm.reg()) {
+                    case 0 -> Opcode.ADD;
+                    case 1 -> Opcode.OR;
+                    case 2 -> Opcode.ADC;
+                    case 3 -> Opcode.SBB;
+                    case 4 -> Opcode.AND;
+                    case 5 -> Opcode.SUB;
+                    case 6 -> Opcode.XOR;
+                    case 7 -> Opcode.CMP;
+                    default -> throw new IllegalArgumentException(
+                            String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+                };
+
+        final Register r = (isRegister8Bit)
+                ? Register8.fromByte(regByte, pref.hasRexPrefix())
+                : (isIndirectOperandNeeded
+                        ? (pref.hasAddressSizeOverridePrefix()
+                                ? Register32.fromByte(regByte)
+                                : Register64.fromByte(regByte))
+                        : (Registers.fromCode(
+                                regByte,
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRMExtension(),
+                                pref.hasOperandSizeOverridePrefix())));
+
+        return new Instruction(
+                opcode,
+                isIndirectOperandNeeded
+                        ? parseIndirectOperand(b, pref, modrm, r)
+                                .ptrSize(pref.rex().isOperand64Bit() ? 64 : immediateBits)
+                                .build()
+                        : r,
+                switch (immediateBits) {
+                    case 8 -> new Immediate(b.read1());
+                    case 16 -> new Immediate(b.read2LittleEndian());
+                    case 32 -> new Immediate(b.read4LittleEndian());
+                    default -> throw new IllegalArgumentException("Invalid value");
+                });
     }
 
     private Instruction parse2BytesOpcode(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {

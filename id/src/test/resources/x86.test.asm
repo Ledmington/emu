@@ -150,9 +150,11 @@ cmovs edx,r9d                             | 41 0f 48 d1
 
 # Cmp
 cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
+cmp DWORD PTR [edi],0x12345678                 | 67 81 3f 78 56 34 12
 cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
 cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
 cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
+cmp QWORD PTR [edi],0x12345678                 | 67 48 81 3f 78 56 34 12
 cmp QWORD PTR [rdi],0x12345678                 | 48 81 3f 78 56 34 12
 cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
 cmp al,0x99                                    | 3c 99
@@ -163,6 +165,7 @@ cmp eax,0x12345678                             | 3d 78 56 34 12
 cmp ebp,DWORD PTR [rbx+r9*4+0x12345678]        | 42 3b ac 8b 78 56 34 12
 cmp edi,0x12345678                             | 81 ff 78 56 34 12
 cmp esp,r13d                                   | 44 39 ec
+cmp r8b,0x12                                   | 41 80 f8 12
 cmp r8w,dx                                     | 66 41 39 d0
 cmp rax,0x12345678                             | 48 3d 78 56 34 12
 cmp rdi,0x12345678                             | 48 81 ff 78 56 34 12
@@ -481,7 +484,7 @@ and rax,0x12                             | 48 83 e0 12
 and rax,0x12345678                       | 48 25 78 56 34 12
 and rax,QWORD PTR [rax+rbx*4+0x12345678] | 48 23 84 98 78 56 34 12
 and rcx,QWORD PTR [r10]                  | 49 23 0a
-and rdi,0xfffffffffffffff0               | 48 83 e7 f0
+and rdi,0xf0                             | 48 83 e7 f0
 
 # Sub
 sub DWORD PTR [eax+ebx*4+0x12345678],r8d  | 67 44 29 84 98 78 56 34 12
@@ -539,6 +542,7 @@ or rax,0x12                                   | 48 83 c8 12
 or rax,0x12345678                             | 48 0d 78 56 34 12
 or rax,QWORD PTR [rax+rbx*4+0x12345678]       | 48 0b 84 98 78 56 34 12
 or rcx,QWORD PTR [r10]                        | 49 0b 0a
+or rdi,0x12                                   | 48 83 cf 12
 
 # Xor
 xor cx,0x1234      | 66 81 f1 34 12
