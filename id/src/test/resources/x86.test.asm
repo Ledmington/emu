@@ -152,6 +152,7 @@ cmovs edx,r9d                             | 41 0f 48 d1
 cmp BYTE PTR [eax],dh                          | 67 38 30
 cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
 cmp BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 38 8c 8b 78 56 34 12
+cmp DWORD PTR [ebp-0xe8],r15d                  | 67 44 39 bd 18 ff ff ff
 cmp DWORD PTR [edi],0x12345678                 | 67 81 3f 78 56 34 12
 cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
 cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
