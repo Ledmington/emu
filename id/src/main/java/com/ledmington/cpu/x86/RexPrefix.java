@@ -76,6 +76,7 @@ public final class RexPrefix {
         return b;
     }
 
+    @Override
     public int hashCode() {
         int h = 17;
         h = 31 + h + (w ? 1 : 0);
@@ -85,6 +86,7 @@ public final class RexPrefix {
         return h;
     }
 
+    @Override
     public boolean equals(final Object other) {
         if (other == null) {
             return false;
@@ -99,6 +101,7 @@ public final class RexPrefix {
         return this.w == rex.w && this.r == rex.r && this.x == rex.x && this.b == rex.b;
     }
 
+    @Override
     public String toString() {
         return (w ? ".W" : "") + (r ? ".R" : "") + (x ? ".X" : "") + (b ? ".B" : "");
     }

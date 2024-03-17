@@ -72,7 +72,28 @@ public final class Immediate implements Operand {
         };
     }
 
+    @Override
     public String toString() {
         return "Immediate(" + this.toIntelSyntax() + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (value >>> 32) * 31 + BitUtils.asInt(value);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final Immediate imm = (Immediate) other;
+        return this.value == imm.value && this.bits == imm.bits;
     }
 }

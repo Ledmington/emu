@@ -139,6 +139,7 @@ public final class Register8 extends Register {
         };
     }
 
+    @Override
     public int bits() {
         return 8;
     }

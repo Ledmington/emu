@@ -121,6 +121,7 @@ public final class Register64 extends Register {
         };
     }
 
+    @Override
     public int bits() {
         return 64;
     }

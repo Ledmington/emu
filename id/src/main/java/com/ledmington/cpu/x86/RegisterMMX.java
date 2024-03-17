@@ -63,6 +63,7 @@ public final class RegisterMMX extends Register {
         };
     }
 
+    @Override
     public int bits() {
         return 64;
     }

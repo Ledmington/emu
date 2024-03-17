@@ -41,6 +41,7 @@ public final class SIB {
         return base;
     }
 
+    @Override
     public int hashCode() {
         int h = 17;
         h = 31 * h + BitUtils.asInt(scale);
@@ -49,6 +50,7 @@ public final class SIB {
         return h;
     }
 
+    @Override
     public boolean equals(final Object other) {
         if (other == null) {
             return false;
@@ -63,6 +65,7 @@ public final class SIB {
         return this.scale == s.scale && this.index == s.index && this.base == s.base;
     }
 
+    @Override
     public String toString() {
         return "scale:" + BitUtils.toBinaryString(scale).substring(6, 8) + " index:"
                 + BitUtils.toBinaryString(index).substring(5, 8) + " base:"

@@ -141,6 +141,7 @@ public final class Register16 extends Register {
         };
     }
 
+    @Override
     public int bits() {
         return 16;
     }

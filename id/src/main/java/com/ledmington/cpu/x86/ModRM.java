@@ -41,6 +41,7 @@ public final class ModRM {
         return rm;
     }
 
+    @Override
     public int hashCode() {
         int h = 17;
         h = 31 * h + BitUtils.asInt(mod);
@@ -49,6 +50,7 @@ public final class ModRM {
         return h;
     }
 
+    @Override
     public boolean equals(final Object other) {
         if (other == null) {
             return false;
@@ -63,6 +65,7 @@ public final class ModRM {
         return this.mod == m.mod && this.reg == m.reg && this.rm == m.rm;
     }
 
+    @Override
     public String toString() {
         return "mod:" + BitUtils.toBinaryString(mod).substring(6, 8) + " reg:"
                 + BitUtils.toBinaryString(reg).substring(5, 8) + " r/m:"

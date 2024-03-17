@@ -15,10 +15,12 @@ public abstract class Register implements Operand {
 
     public abstract int bits();
 
+    @Override
     public String toIntelSyntax() {
         return mnemonic;
     }
 
+    @Override
     public String toString() {
         return mnemonic;
     }

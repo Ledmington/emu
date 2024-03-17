@@ -165,6 +165,7 @@ public final class IndirectOperand implements Operand {
                     + (displacement.isEmpty() ? "no displacement" : "displacement=" + displacement.orElseThrow()));
         }
 
+        @Override
         public String toString() {
             return "IndirectOperandBuilder(" + (reg1.isEmpty() ? "no reg1" : "reg1=" + reg1.orElseThrow()) + ", "
                     + (reg2.isEmpty() ? "no reg2" : "reg2=" + reg2.orElseThrow()) + ", "
@@ -239,6 +240,7 @@ public final class IndirectOperand implements Operand {
         return sb.toString();
     }
 
+    @Override
     public String toString() {
         return "IndirectOperand(" + "reg1="
                 + ((reg1 == null) ? "null" : reg1.toString())
@@ -247,5 +249,33 @@ public final class IndirectOperand implements Operand {
                 + constant + ";" + "displacement="
                 + displacement.toString()
                 + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + reg1.hashCode();
+        h = 31 * h + constant;
+        h = 31 * h + reg2.hashCode();
+        h = 31 * h + displacement.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final IndirectOperand io = (IndirectOperand) other;
+        return this.reg1.equals(io.reg1)
+                && this.constant == io.constant
+                && this.reg2.equals(io.reg2)
+                && this.displacement.equals(io.displacement);
     }
 }

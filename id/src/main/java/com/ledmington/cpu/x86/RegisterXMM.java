@@ -111,6 +111,7 @@ public final class RegisterXMM extends Register {
         };
     }
 
+    @Override
     public int bits() {
         return 128;
     }

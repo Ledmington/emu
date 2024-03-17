@@ -106,11 +106,37 @@ public final class Instruction {
         return sb.toString();
     }
 
+    @Override
     public String toString() {
         if (operands.length == 0) {
             return "Instruction(opcode=" + opcode.toString() + ")";
         }
         return "Instruction(opcode=" + opcode.toString() + ";operands="
                 + Arrays.stream(operands).toList() + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + opcode.hashCode();
+        for (final Operand op : this.operands) {
+            h = 31 * h + op.hashCode();
+        }
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final Instruction o = (Instruction) other;
+        return this.opcode.equals(o.opcode) && Arrays.equals(this.operands, o.operands);
     }
 }
