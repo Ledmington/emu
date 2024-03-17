@@ -1,6 +1,7 @@
 plugins {
 	id 'java'
 	id 'java-library'
+	id 'pmd'
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'com.adarshr.test-logger' version '4.0.0'
 	id 'com.github.ben-manes.versions' version '0.51.0'
@@ -120,4 +121,12 @@ tasks.register('formatTestFiles', JavaExec) {
 	dependsOn spotlessApply
 	classpath sourceSets.test.runtimeClasspath
 	mainClass = "FormatTestFiles"
+}
+
+pmd {
+	consoleOutput = true
+	toolVersion = "6.55.0"
+	rulesMinimumPriority = 5
+	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
+	threads = 4
 }
