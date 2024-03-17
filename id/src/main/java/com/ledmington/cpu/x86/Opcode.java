@@ -8,6 +8,11 @@ import java.util.Objects;
 public enum Opcode {
 
     /**
+     * Add with carry.
+     */
+    ADC("adc"),
+
+    /**
      * Add.
      */
     ADD("add"),
