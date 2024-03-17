@@ -6,12 +6,10 @@ package com.ledmington.utils;
  */
 public final class BitUtils {
 
-    private static final int INT_TO_BYTE_MASK = 0x000000ff;
-
     private BitUtils() {}
 
     public static byte asByte(final int x) {
-        return (byte) (x & INT_TO_BYTE_MASK);
+        return (byte) (x & 0x000000ff);
     }
 
     public static byte asByte(final long x) {
@@ -27,7 +25,7 @@ public final class BitUtils {
     }
 
     public static int asInt(final byte b) {
-        return ((int) b) & INT_TO_BYTE_MASK;
+        return ((int) b) & 0x000000ff;
     }
 
     public static int asInt(final long x) {
@@ -78,6 +76,6 @@ public final class BitUtils {
     }
 
     public static byte shr(final byte b, final int x) {
-        return asByte((b >>> x) & (INT_TO_BYTE_MASK >>> x));
+        return asByte((b >>> x) & (0x000000ff >>> x));
     }
 }
