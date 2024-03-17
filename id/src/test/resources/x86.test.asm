@@ -709,3 +709,9 @@ inc rdi  | 48 ff c7
 inc rdx  | 48 ff c2
 inc rsi  | 48 ff c6
 inc rsp  | 48 ff c4
+
+# Pshufd
+pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12
+
+# Pshufw
+pshufw mm0,mm1,0x12 | 0f 70 c1 12

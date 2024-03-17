@@ -321,6 +321,7 @@ public final class InstructionDecoder {
         final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
         final byte MOVQ_OPCODE = (byte) 0x6e;
         final byte MOVDQA_OPCODE = (byte) 0x6f;
+        final byte PSHUF_OPCODE = (byte) 0x70;
         final byte JB_DISP32_OPCODE = (byte) 0x82;
         final byte JE_DISP32_OPCODE = (byte) 0x84;
         final byte JNE_DISP32_OPCODE = (byte) 0x85;
@@ -430,6 +431,16 @@ public final class InstructionDecoder {
                                                 pref.rex().ModRMRMExtension(),
                                                 false))
                                 .build());
+            }
+            case PSHUF_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                final byte r1 = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                final byte r2 = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
+                yield new Instruction(
+                        pref.hasOperandSizeOverridePrefix() ? Opcode.PSHUFD : Opcode.PSHUFW,
+                        pref.hasOperandSizeOverridePrefix() ? RegisterXMM.fromByte(r1) : RegisterMMX.fromByte(r1),
+                        pref.hasOperandSizeOverridePrefix() ? RegisterXMM.fromByte(r2) : RegisterMMX.fromByte(r2),
+                        new Immediate(b.read1()));
             }
             case MOVQ_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());

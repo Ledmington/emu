@@ -243,6 +243,16 @@ public enum Opcode {
     PUNPCKLQDQ("punpcklqdq"),
 
     /**
+     * Shuffle packed doublewords.
+     */
+    PSHUFD("pshufd"),
+
+    /**
+     * Shuffle packed integer word in MMX register.
+     */
+    PSHUFW("pshufw"),
+
+    /**
      * Return from procedure.
      */
     RET("ret"),
