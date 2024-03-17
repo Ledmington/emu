@@ -648,12 +648,14 @@ punpcklqdq xmm0,xmm0 | 66 0f 6c c0
 punpcklqdq xmm3,xmm9 | 66 41 0f 6c d9
 
 # Setne
-setne al  | 0f 95 c0
-setne r8b | 41 0f 95 c0
+setne BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 95 84 4a 78 56 34 12
+setne al                             | 0f 95 c0
+setne r8b                            | 41 0f 95 c0
 
 # Sete
-sete al  | 0f 94 c0
-sete r8b | 41 0f 94 c0
+sete BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 94 84 4a 78 56 34 12
+sete al                             | 0f 94 c0
+sete r8b                            | 41 0f 94 c0
 
 # Movabs
 movabs rcx,0xdeadbeef         | 48 b9 ef be ad de 00 00 00 00

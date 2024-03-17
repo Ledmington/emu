@@ -367,15 +367,25 @@ public final class InstructionDecoder {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(
                         Opcode.SETE,
-                        Register8.fromByte(
-                                Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(b, pref, modrm, null)
+                                        .ptrSize(8)
+                                        .build()
+                                : Register8.fromByte(
+                                        Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
+                                        pref.hasRexPrefix()));
             }
             case SETNE_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
                 yield new Instruction(
                         Opcode.SETNE,
-                        Register8.fromByte(
-                                Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(b, pref, modrm, null)
+                                        .ptrSize(8)
+                                        .build()
+                                : Register8.fromByte(
+                                        Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
+                                        pref.hasRexPrefix()));
             }
             case IMUL_OPCODE -> parseSimple(b, pref, Opcode.IMUL, true);
 
