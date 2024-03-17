@@ -637,10 +637,11 @@ movaps XMMWORD PTR [rip+0x12345678],xmm6       | 0f 29 35 78 56 34 12
 movaps XMMWORD PTR [rsp+r11*4+0x12345678],xmm7 | 42 0f 29 bc 9c 78 56 34 12
 
 # Movq
-movq mm0,r9   | 49 0f 6e c1
-movq mm3,rsi  | 48 0f 6e de
-movq xmm0,r9  | 66 49 0f 6e c1
-movq xmm2,rax | 66 48 0f 6e d0
+movq QWORD PTR [rbp+rsi*4+0x12345678],xmm3 | 66 0f d6 9c b5 78 56 34 12
+movq mm0,r9                                | 49 0f 6e c1
+movq mm3,rsi                               | 48 0f 6e de
+movq xmm0,r9                               | 66 49 0f 6e c1
+movq xmm2,rax                              | 66 48 0f 6e d0
 
 # Punpcklqdq
 punpcklqdq xmm0,xmm0 | 66 0f 6c c0

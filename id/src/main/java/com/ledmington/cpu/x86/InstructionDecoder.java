@@ -338,6 +338,7 @@ public final class InstructionDecoder {
         final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
         final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
         final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
+        final byte MOVQ_INDIRECT_XMM_OPCODE = (byte) 0xd6;
 
         final byte opcodeSecondByte = b.read1();
         logger.debug("Read multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
@@ -455,6 +456,14 @@ public final class InstructionDecoder {
                         (modrm.mod() != (byte) 0x03)
                                 ? parseIndirectOperand(b, pref, modrm, r1).build()
                                 : r1);
+            }
+            case MOVQ_INDIRECT_XMM_OPCODE -> {
+                final ModRM modrm = new ModRM(b.read1());
+                final byte regByte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                yield new Instruction(
+                        Opcode.MOVQ,
+                        parseIndirectOperand(b, pref, modrm, null).ptrSize(64).build(),
+                        RegisterXMM.fromByte(regByte));
             }
             case MOVAPS_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
