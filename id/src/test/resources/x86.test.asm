@@ -535,6 +535,14 @@ imul eax,ebx,0x12 | 6b c3 12
 imul rbx,rbp      | 48 0f af dd
 imul rdx,r9,0x58  | 49 6b d1 58
 
+# Idiv
+idiv esi | f7 fe
+idiv r11 | 49 f7 fb
+idiv r9d | 41 f7 f9
+idiv rsi | 48 f7 fe
+                idiv rax | 48 f7 f8
+                idiv eax | f7 f8   
+
 # Or
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
 or BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 08 8c 8b 78 56 34 12

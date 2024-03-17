@@ -78,6 +78,11 @@ public enum Opcode {
     ENDBR64("endbr64"),
 
     /**
+     * Signed divide.
+     */
+    IDIV("idiv"),
+
+    /**
      * Signed multiply.
      */
     IMUL("imul"),
