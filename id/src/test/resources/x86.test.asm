@@ -96,6 +96,12 @@ je 0x12       | 74 12
 je 0x2e0db    | 0f 84 db e0 02 00
 je 0x78563412 | 0f 84 12 34 56 78
 
+# Jl
+# The output of these instructions is different from what you can see from other tools such as objdump
+# because here we keep the addition to the instruction pointer implicit.
+# In reality, it would look like 'jl rip+0x....'
+jl 0x12345678 | 0f 8c 78 56 34 12 
+
 # Jle
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.

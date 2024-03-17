@@ -343,6 +343,7 @@ public final class InstructionDecoder {
         final byte JA_DISP32_OPCODE = (byte) 0x87;
         final byte JS_DISP32_OPCODE = (byte) 0x88;
         final byte JNS_DISP32_OPCODE = (byte) 0x89;
+        final byte JL_DISP32_OPCODE = (byte) 0x8c;
         final byte JLE_DISP32_OPCODE = (byte) 0x8e;
         final byte JG_DISP32_OPCODE = (byte) 0x8f;
         final byte SETE_OPCODE = (byte) 0x94;
@@ -365,6 +366,7 @@ public final class InstructionDecoder {
             case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
             case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LittleEndian()));
             case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
+            case JL_DISP32_OPCODE -> new Instruction(Opcode.JL, RelativeOffset.of32(b.read4LittleEndian()));
             case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LittleEndian()));
             case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of32(b.read4LittleEndian()));
             case ENDBR_OPCODE -> {

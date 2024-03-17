@@ -123,6 +123,11 @@ public enum Opcode {
     JG("jg"),
 
     /**
+     * Signed conditional jump if less.
+     */
+    JL("jl"),
+
+    /**
      * Signed conditional jump if less or equal.
      */
     JLE("jle"),
