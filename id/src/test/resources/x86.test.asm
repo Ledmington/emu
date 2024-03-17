@@ -100,7 +100,7 @@ je 0x78563412 | 0f 84 12 34 56 78
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'jl rip+0x....'
-jl 0x12345678 | 0f 8c 78 56 34 12 
+jl 0x12345678 | 0f 8c 78 56 34 12
 
 # Jle
 # The output of these instructions is different from what you can see from other tools such as objdump
@@ -542,12 +542,12 @@ imul rbx,rbp      | 48 0f af dd
 imul rdx,r9,0x58  | 49 6b d1 58
 
 # Idiv
+idiv eax | f7 f8
 idiv esi | f7 fe
 idiv r11 | 49 f7 fb
 idiv r9d | 41 f7 f9
+idiv rax | 48 f7 f8
 idiv rsi | 48 f7 fe
-                idiv rax | 48 f7 f8
-                idiv eax | f7 f8   
 
 # Or
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
@@ -647,6 +647,12 @@ rep movs WORD PTR es:[rdi],WORD PTR ds:[rsi]     | 66 f3 a5
 repnz movs BYTE PTR es:[edi],BYTE PTR ds:[esi]   | 67 f2 a4
 repnz movs DWORD PTR es:[edi],DWORD PTR ds:[esi] | 67 f2 a5
 repnz movs WORD PTR es:[edi],WORD PTR ds:[esi]   | 67 66 f2 a5
+
+# Rep stos
+rep stos DWORD PTR es:[rdi],eax | f3 ab
+rep stos QWORD PTR es:[edi],rax | 67 f3 48 ab
+rep stos QWORD PTR es:[rdi],rax | f3 48 ab
+stos QWORD PTR es:[edi],rax     | 67 48 ab
 
 # Movdqa
 movdqa xmm2,XMMWORD PTR [rsp+r9*4+0x12345678] | 66 42 0f 6f 94 8c 78 56 34 12

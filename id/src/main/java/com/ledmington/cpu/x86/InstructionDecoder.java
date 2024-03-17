@@ -665,6 +665,7 @@ public final class InstructionDecoder {
         final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
         final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
         final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
+        final byte STOS_OPCODE = (byte) 0xab;
         final byte MOV_AL_IMM8_OPCODE = (byte) 0xb0;
         final byte MOV_CL_IMM8_OPCODE = (byte) 0xb1;
         final byte MOV_DL_IMM8_OPCODE = (byte) 0xb2;
@@ -795,6 +796,7 @@ public final class InstructionDecoder {
                     yield new Instruction(Opcode.MOVS, op1, op2);
                 }
             }
+            case STOS_OPCODE->new Instruction(Opcode.STOS,IndirectOperand.builder());
             case MOVSXD_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(
