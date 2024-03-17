@@ -617,14 +617,14 @@ public final class InstructionDecoder {
         final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
         final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
         final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
-        final byte MOV_IMM8_TO_AL_OPCODE = (byte) 0xb0;
-        final byte MOV_IMM8_TO_CL_OPCODE = (byte) 0xb1;
-        final byte MOV_IMM8_TO_DL_OPCODE = (byte) 0xb2;
-        final byte MOV_IMM8_TO_BL_OPCODE = (byte) 0xb3;
-        final byte MOV_IMM8_TO_AH_OPCODE = (byte) 0xb4;
-        final byte MOV_IMM8_TO_CH_OPCODE = (byte) 0xb5;
-        final byte MOV_IMM8_TO_DH_OPCODE = (byte) 0xb6;
-        final byte MOV_IMM8_TO_BH_OPCODE = (byte) 0xb7;
+        final byte MOV_AL_IMM8_OPCODE = (byte) 0xb0;
+        final byte MOV_CL_IMM8_OPCODE = (byte) 0xb1;
+        final byte MOV_DL_IMM8_OPCODE = (byte) 0xb2;
+        final byte MOV_BL_IMM8_OPCODE = (byte) 0xb3;
+        final byte MOV_AH_IMM8_OPCODE = (byte) 0xb4;
+        final byte MOV_CH_IMM8_OPCODE = (byte) 0xb5;
+        final byte MOV_DH_IMM8_OPCODE = (byte) 0xb6;
+        final byte MOV_BH_IMM8_OPCODE = (byte) 0xb7;
         final byte MOV_EAX_IMM32_OPCODE = (byte) 0xb8;
         final byte MOV_ECX_IMM32_OPCODE = (byte) 0xb9;
         final byte MOV_EDX_IMM32_OPCODE = (byte) 0xba;
@@ -926,14 +926,14 @@ public final class InstructionDecoder {
             }
 
                 // MOV 8-bit
-            case MOV_IMM8_TO_AL_OPCODE,
-                    MOV_IMM8_TO_BL_OPCODE,
-                    MOV_IMM8_TO_CL_OPCODE,
-                    MOV_IMM8_TO_DL_OPCODE,
-                    MOV_IMM8_TO_AH_OPCODE,
-                    MOV_IMM8_TO_BH_OPCODE,
-                    MOV_IMM8_TO_CH_OPCODE,
-                    MOV_IMM8_TO_DH_OPCODE -> {
+            case MOV_AL_IMM8_OPCODE,
+                    MOV_BL_IMM8_OPCODE,
+                    MOV_CL_IMM8_OPCODE,
+                    MOV_DL_IMM8_OPCODE,
+                    MOV_AH_IMM8_OPCODE,
+                    MOV_BH_IMM8_OPCODE,
+                    MOV_CH_IMM8_OPCODE,
+                    MOV_DH_IMM8_OPCODE -> {
                 final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
                 yield new Instruction(
                         Opcode.MOV,
@@ -972,39 +972,37 @@ public final class InstructionDecoder {
                 yield new Instruction(pref.rex().isOperand64Bit() ? Opcode.MOVABS : Opcode.MOV, r, imm);
             }
 
-                // PUSH
-            case PUSH_EAX_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R8 : Register64.RAX);
-            case PUSH_EBX_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R11 : Register64.RBX);
-            case PUSH_ECX_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R9 : Register64.RCX);
-            case PUSH_EDX_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R10 : Register64.RDX);
-            case PUSH_ESP_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R12 : Register64.RSP);
-            case PUSH_EBP_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R13 : Register64.RBP);
-            case PUSH_ESI_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R14 : Register64.RSI);
-            case PUSH_EDI_OPCODE -> new Instruction(
-                    Opcode.PUSH, pref.rex().extension() ? Register64.R15 : Register64.RDI);
+                // PUSH 16/64-bit
+            case PUSH_EAX_OPCODE,
+                    PUSH_EBX_OPCODE,
+                    PUSH_ECX_OPCODE,
+                    PUSH_EDX_OPCODE,
+                    PUSH_ESI_OPCODE,
+                    PUSH_EDI_OPCODE,
+                    PUSH_ESP_OPCODE,
+                    PUSH_EBP_OPCODE -> {
+                final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+                yield new Instruction(
+                        Opcode.PUSH,
+                        Registers.fromCode(
+                                regByte, true, pref.rex().opcodeRegExtension(), pref.hasOperandSizeOverridePrefix()));
+            }
 
-                // POP
-            case POP_EAX_OPCODE -> new Instruction(Opcode.POP, pref.rex().extension() ? Register64.R8 : Register64.RAX);
-            case POP_EBX_OPCODE -> new Instruction(
-                    Opcode.POP, pref.rex().extension() ? Register64.R11 : Register64.RBX);
-            case POP_ECX_OPCODE -> new Instruction(Opcode.POP, pref.rex().extension() ? Register64.R9 : Register64.RCX);
-            case POP_EDX_OPCODE -> new Instruction(
-                    Opcode.POP, pref.rex().extension() ? Register64.R10 : Register64.RDX);
-            case POP_ESP_OPCODE -> new Instruction(
-                    Opcode.POP, pref.rex().extension() ? Register64.R12 : Register64.RSP);
-            case POP_EBP_OPCODE -> new Instruction(
-                    Opcode.POP, pref.rex().extension() ? Register64.R13 : Register64.RBP);
-            case POP_ESI_OPCODE -> new Instruction(
-                    Opcode.POP, pref.rex().extension() ? Register64.R14 : Register64.RSI);
-            case POP_EDI_OPCODE -> new Instruction(
-                    Opcode.POP, pref.rex().extension() ? Register64.R15 : Register64.RDI);
+                // POP 16/64-bit
+            case POP_EAX_OPCODE,
+                    POP_EBX_OPCODE,
+                    POP_ECX_OPCODE,
+                    POP_EDX_OPCODE,
+                    POP_ESI_OPCODE,
+                    POP_EDI_OPCODE,
+                    POP_ESP_OPCODE,
+                    POP_EBP_OPCODE -> {
+                final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+                yield new Instruction(
+                        Opcode.POP,
+                        Registers.fromCode(
+                                regByte, true, pref.rex().opcodeRegExtension(), pref.hasOperandSizeOverridePrefix()));
+            }
 
             case LEA_OPCODE -> // page 1191
             parseLEALike(b, pref, Opcode.LEA);

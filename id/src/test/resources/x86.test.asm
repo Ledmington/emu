@@ -368,40 +368,72 @@ movsx rsi,di                              | 48 0f bf f7
 movsxd rdx,DWORD PTR [r11+r15*4+0x12345678] | 4b 63 94 bb 78 56 34 12
 
 # Push
-push r10 | 41 52
-push r11 | 41 53
-push r12 | 41 54
-push r13 | 41 55
-push r14 | 41 56
-push r15 | 41 57
-push r8  | 41 50
-push r9  | 41 51
-push rax | 50
-push rbp | 55
-push rbx | 53
-push rcx | 51
-push rdi | 57
-push rdx | 52
-push rsi | 56
-push rsp | 54
+push ax   | 66 50
+push bp   | 66 55
+push bx   | 66 53
+push cx   | 66 51
+push di   | 66 57
+push dx   | 66 52
+push r10  | 41 52
+push r10w | 66 41 52
+push r11  | 41 53
+push r11w | 66 41 53
+push r12  | 41 54
+push r12w | 66 41 54
+push r13  | 41 55
+push r13w | 66 41 55
+push r14  | 41 56
+push r14w | 66 41 56
+push r15  | 41 57
+push r15w | 66 41 57
+push r8   | 41 50
+push r8w  | 66 41 50
+push r9   | 41 51
+push r9w  | 66 41 51
+push rax  | 50
+push rbp  | 55
+push rbx  | 53
+push rcx  | 51
+push rdi  | 57
+push rdx  | 52
+push rsi  | 56
+push rsp  | 54
+push si   | 66 56
+push sp   | 66 54
 
 # Pop
-pop r10 | 41 5a
-pop r11 | 41 5b
-pop r12 | 41 5c
-pop r13 | 41 5d
-pop r14 | 41 5e
-pop r15 | 41 5f
-pop r8  | 41 58
-pop r9  | 41 59
-pop rax | 58
-pop rbp | 5d
-pop rbx | 5b
-pop rcx | 59
-pop rdi | 5f
-pop rdx | 5a
-pop rsi | 5e
-pop rsp | 5c
+pop ax   | 66 58
+pop bp   | 66 5d
+pop bx   | 66 5b
+pop cx   | 66 59
+pop di   | 66 5f
+pop dx   | 66 5a
+pop r10  | 41 5a
+pop r10w | 66 41 5a
+pop r11  | 41 5b
+pop r11w | 66 41 5b
+pop r12  | 41 5c
+pop r12w | 66 41 5c
+pop r13  | 41 5d
+pop r13w | 66 41 5d
+pop r14  | 41 5e
+pop r14w | 66 41 5e
+pop r15  | 41 5f
+pop r15w | 66 41 5f
+pop r8   | 41 58
+pop r8w  | 66 41 58
+pop r9   | 41 59
+pop r9w  | 66 41 59
+pop rax  | 58
+pop rbp  | 5d
+pop rbx  | 5b
+pop rcx  | 59
+pop rdi  | 5f
+pop rdx  | 5a
+pop rsi  | 5e
+pop rsp  | 5c
+pop si   | 66 5e
+pop sp   | 66 5c
 
 # Leave
 leave | c9
