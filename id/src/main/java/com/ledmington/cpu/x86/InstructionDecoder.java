@@ -168,7 +168,7 @@ public final class InstructionDecoder {
                                             pref.rex().ModRMRMExtension(),
                                             pref.hasOperandSizeOverridePrefix()))
                             .build(),
-                    (opcodeFirstByte == (byte) 0xf6) ? new Immediate(b.read1()) : new Immediate(b.read4LittleEndian()));
+                    (opcodeFirstByte == (byte) 0xf6) ? imm8(b) : imm32(b));
             case (byte) 0x02 /* 010 */ -> new Instruction(
                     Opcode.NOT,
                     Registers.fromCode(
@@ -221,8 +221,7 @@ public final class InstructionDecoder {
         };
     }
 
-    private static Instruction parseExtendedOpcodeGroup2(
-            final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+    private Instruction parseExtendedOpcodeGroup2(final ByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
         final byte opcodeSecondByte = b.read1();
         logger.debug("Read extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
 
@@ -230,7 +229,7 @@ public final class InstructionDecoder {
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
         final Operand op2 = (opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xc1)
-                ? new Immediate(b.read1())
+                ? imm8(b)
                 : ((opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd1)
                         ? new Immediate(1)
                         : Register8.CL);
@@ -314,9 +313,9 @@ public final class InstructionDecoder {
                                 .build()
                         : r,
                 switch (immediateBits) {
-                    case 8 -> new Immediate(b.read1());
-                    case 16 -> new Immediate(b.read2LittleEndian());
-                    case 32 -> new Immediate(b.read4LittleEndian());
+                    case 8 -> imm8(b);
+                    case 16 -> imm16(b);
+                    case 32 -> imm32(b);
                     default -> throw new IllegalArgumentException("Invalid value");
                 });
     }
@@ -464,7 +463,7 @@ public final class InstructionDecoder {
                         pref.hasOperandSizeOverridePrefix() ? Opcode.PSHUFD : Opcode.PSHUFW,
                         pref.hasOperandSizeOverridePrefix() ? RegisterXMM.fromByte(r1) : RegisterMMX.fromByte(r1),
                         pref.hasOperandSizeOverridePrefix() ? RegisterXMM.fromByte(r2) : RegisterMMX.fromByte(r2),
-                        new Immediate(b.read1()));
+                        imm8(b));
             }
             case MOVQ_OPCODE -> {
                 final ModRM modrm = new ModRM(b.read1());
@@ -710,11 +709,9 @@ public final class InstructionDecoder {
             }
             case TEST_R8_OPCODE -> parseSimple8Bit(b, pref, Opcode.TEST, false);
             case TEST_OPCODE -> parseSimple(b, pref, Opcode.TEST, false);
-            case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, new Immediate(b.read1()));
+            case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, imm8(b));
             case TEST_EAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.TEST,
-                    pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX,
-                    new Immediate(b.read4LittleEndian()));
+                    Opcode.TEST, pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX, imm32(b));
 
                 // jumps
             case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
@@ -744,7 +741,7 @@ public final class InstructionDecoder {
                                 pref.rex().isOperand64Bit(),
                                 pref.rex().ModRMRMExtension(),
                                 false),
-                        new Immediate(b.read1()));
+                        imm8(b));
             }
             case MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE -> {
                 final Operand op1 = IndirectOperand.builder()
@@ -1048,7 +1045,7 @@ public final class InstructionDecoder {
                             case 7 -> Opcode.CMP;
                             default -> throw new IllegalArgumentException("Invalid value");
                         };
-                yield new Instruction(opcode, Register8.AL, new Immediate(b.read1()));
+                yield new Instruction(opcode, Register8.AL, imm8(b));
             }
 
                 // OP EAX,Imm32 or OP AX,Imm16
@@ -1083,9 +1080,7 @@ public final class InstructionDecoder {
                         pref.hasOperandSizeOverridePrefix()
                                 ? Register16.AX
                                 : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX),
-                        pref.hasOperandSizeOverridePrefix()
-                                ? new Immediate(b.read2LittleEndian())
-                                : new Immediate(b.read4LittleEndian()));
+                        pref.hasOperandSizeOverridePrefix() ? imm16(b) : imm32(b));
             }
 
                 // MOV 8-bit
@@ -1102,7 +1097,7 @@ public final class InstructionDecoder {
                         Opcode.MOV,
                         Register8.fromByte(
                                 Registers.combine(pref.rex().opcodeRegExtension(), regByte), pref.hasRexPrefix()),
-                        new Immediate(b.read1()));
+                        imm8(b));
             }
 
                 // MOV 16, 32 or 64 bits
@@ -1127,9 +1122,9 @@ public final class InstructionDecoder {
                         };
                 final Immediate imm =
                         switch (size) {
-                            case 16 -> new Immediate(b.read2LittleEndian());
-                            case 32 -> new Immediate(b.read4LittleEndian());
-                            case 64 -> new Immediate(b.read8LittleEndian());
+                            case 16 -> imm16(b);
+                            case 32 -> imm32(b);
+                            case 64 -> imm64(b);
                             default -> throw new IllegalArgumentException("Invalid value");
                         };
                 yield new Instruction(pref.rex().isOperand64Bit() ? Opcode.MOVABS : Opcode.MOV, r, imm);
@@ -1151,7 +1146,7 @@ public final class InstructionDecoder {
                                 regByte, true, pref.rex().opcodeRegExtension(), pref.hasOperandSizeOverridePrefix()));
             }
 
-            case PUSH_IMM8_OPCODE -> new Instruction(Opcode.PUSH, new Immediate(b.read1()));
+            case PUSH_IMM8_OPCODE -> new Instruction(Opcode.PUSH, imm8(b));
 
                 // POP 16/64-bit
             case POP_EAX_OPCODE,
@@ -1295,9 +1290,9 @@ public final class InstructionDecoder {
         }
 
         return switch (immediateBytes.orElseThrow()) {
-            case 1 -> new Instruction(opcode, operand2, new Immediate(b.read1()));
-            case 2 -> new Instruction(opcode, operand2, new Immediate(b.read2LittleEndian()));
-            case 4 -> new Instruction(opcode, operand2, new Immediate(b.read4LittleEndian()));
+            case 1 -> new Instruction(opcode, operand2, imm8(b));
+            case 2 -> new Instruction(opcode, operand2, imm16(b));
+            case 4 -> new Instruction(opcode, operand2, imm32(b));
             default -> throw new IllegalArgumentException(
                     String.format("Invalid value for immediate bytes: %,d", immediateBytes.orElseThrow()));
         };
@@ -1468,6 +1463,22 @@ public final class InstructionDecoder {
         }
 
         return new Instruction(opcode, operand1, iob.build());
+    }
+
+    private Immediate imm8(final ByteBuffer b) {
+        return new Immediate(b.read1());
+    }
+
+    private Immediate imm16(final ByteBuffer b) {
+        return new Immediate(b.read2LittleEndian());
+    }
+
+    private Immediate imm32(final ByteBuffer b) {
+        return new Immediate(b.read4LittleEndian());
+    }
+
+    private Immediate imm64(final ByteBuffer b) {
+        return new Immediate(b.read8LittleEndian());
     }
 
     private boolean isLegacyPrefixGroup1(final byte prefix) {
