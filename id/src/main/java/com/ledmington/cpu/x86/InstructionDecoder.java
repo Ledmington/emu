@@ -644,6 +644,7 @@ public final class InstructionDecoder {
         final byte POP_ESI_OPCODE = (byte) 0x5e;
         final byte POP_EDI_OPCODE = (byte) 0x5f;
         final byte MOVSXD_OPCODE = (byte) 0x63;
+        final byte PUSH_IMM8_OPCODE = (byte) 0x6a;
         final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
         final byte JE_DISP8_OPCODE = (byte) 0x74;
         final byte JNE_DISP8_OPCODE = (byte) 0x75;
@@ -1149,6 +1150,8 @@ public final class InstructionDecoder {
                         Registers.fromCode(
                                 regByte, true, pref.rex().opcodeRegExtension(), pref.hasOperandSizeOverridePrefix()));
             }
+
+            case PUSH_IMM8_OPCODE -> new Instruction(Opcode.PUSH, new Immediate(b.read1()));
 
                 // POP 16/64-bit
             case POP_EAX_OPCODE,

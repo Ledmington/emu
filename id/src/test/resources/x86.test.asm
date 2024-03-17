@@ -375,6 +375,7 @@ movsx rsi,di                              | 48 0f bf f7
 movsxd rdx,DWORD PTR [r11+r15*4+0x12345678] | 4b 63 94 bb 78 56 34 12
 
 # Push
+push 0x12                              | 6a 12
 push QWORD PTR [edx]                   | 67 ff 32
 push QWORD PTR [r11+rsi*8+0x12345678]  | 41 ff b4 f3 78 56 34 12
 push QWORD PTR [r11d+edi*8+0x12345678] | 67 41 ff b4 fb 78 56 34 12
