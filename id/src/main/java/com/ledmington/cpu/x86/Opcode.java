@@ -103,6 +103,11 @@ public enum Opcode {
     JA("ja"),
 
     /**
+     * Unsigned conditional jump if above or equal.
+     */
+    JAE("jae"),
+
+    /**
      * Unsigned conditional jump if below.
      */
     JB("jb"),

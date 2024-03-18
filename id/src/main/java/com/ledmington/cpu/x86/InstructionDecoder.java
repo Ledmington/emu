@@ -331,6 +331,7 @@ public final class InstructionDecoder {
         final byte MOVDQA_OPCODE = (byte) 0x6f;
         final byte PSHUF_OPCODE = (byte) 0x70;
         final byte JB_DISP32_OPCODE = (byte) 0x82;
+        final byte JAE_DISP32_OPCODE = (byte) 0x83;
         final byte JE_DISP32_OPCODE = (byte) 0x84;
         final byte JNE_DISP32_OPCODE = (byte) 0x85;
         final byte JBE_DISP32_OPCODE = (byte) 0x86;
@@ -354,6 +355,7 @@ public final class InstructionDecoder {
 
         return switch (opcodeSecondByte) {
             case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
+            case JAE_DISP32_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of32(b.read4LittleEndian()));
             case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
             case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of32(b.read4LittleEndian()));
             case JBE_DISP32_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of32(b.read4LittleEndian()));
@@ -637,12 +639,15 @@ public final class InstructionDecoder {
         final byte MOVSXD_OPCODE = (byte) 0x63;
         final byte PUSH_IMM8_OPCODE = (byte) 0x6a;
         final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
+        final byte JB_DISP8_OPCODE = (byte) 0x72;
+        final byte JAE_DISP8_OPCODE = (byte) 0x73;
         final byte JE_DISP8_OPCODE = (byte) 0x74;
         final byte JNE_DISP8_OPCODE = (byte) 0x75;
         final byte JBE_DISP8_OPCODE = (byte) 0x76;
         final byte JA_DISP8_OPCODE = (byte) 0x77;
         final byte JS_DISP8_OPCODE = (byte) 0x78;
         final byte JNS_DISP8_OPCODE = (byte) 0x79;
+        final byte JL_DISP8_OPCODE = (byte) 0x7c;
         final byte JLE_DISP8_OPCODE = (byte) 0x7e;
         final byte JG_DISP8_OPCODE = (byte) 0x7f;
         final byte TEST_R8_OPCODE = (byte) 0x84;
@@ -713,12 +718,15 @@ public final class InstructionDecoder {
                 // jumps
             case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
             case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
+            case JB_DISP8_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of8(b.read1()));
+            case JAE_DISP8_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of8(b.read1()));
             case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of8(b.read1()));
             case JA_DISP8_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of8(b.read1()));
             case JNE_DISP8_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of8(b.read1()));
             case JBE_DISP8_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of8(b.read1()));
             case JS_DISP8_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of8(b.read1()));
             case JNS_DISP8_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of8(b.read1()));
+            case JL_DISP8_OPCODE -> new Instruction(Opcode.JL, RelativeOffset.of8(b.read1()));
             case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
             case JG_DISP8_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of8(b.read1()));
 

@@ -61,79 +61,45 @@ cwde | 98
 # Cdqe
 cdqe | 48 98
 
-# Ja
+#
+### Jumps
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'ja rip+0x....'
+# In reality, it would look like 'jXX rip+0x....'
+# Ja
 ja 0x12       | 77 12
 ja 0x78563412 | 0f 87 12 34 56 78
-
+# Jae
+jae 0x12       | 73 12
+jae 0x78563412 | 0f 83 12 34 56 78
 # Jb
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jb rip+0x....'
+jb 0x12       | 72 12
 jb 0x12345678 | 0f 82 78 56 34 12
-
 # Jbe
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jbe rip+0x....'
 jbe 0x12       | 76 12
 jbe 0x78563412 | 0f 86 12 34 56 78
-
 # Jg
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jg rip+0x....'
 jg 0x12       | 7f 12
 jg 0x78563412 | 0f 8f 12 34 56 78
-
 # Je
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'je rip+0x....'
 je 0x12       | 74 12
-je 0x2e0db    | 0f 84 db e0 02 00
 je 0x78563412 | 0f 84 12 34 56 78
-
 # Jl
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jl rip+0x....'
+jl 0x12       | 7c 12
 jl 0x12345678 | 0f 8c 78 56 34 12
-
 # Jle
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jle rip+0x....'
 jle 0x12       | 7e 12
 jle 0x12345678 | 0f 8e 78 56 34 12
-
 # Jne
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jne rip+0x....'
 jne 0x12       | 75 12
 jne 0x12345678 | 0f 85 78 56 34 12
-
 # Jns
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jns rip+0x....'
 jns 0x12       | 79 12
 jns 0x12345678 | 0f 89 78 56 34 12
-
 # Js
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'js rip+0x....'
 js 0x12       | 78 12
 js 0x12345678 | 0f 88 78 56 34 12
-
 # Jmp
-# The output of these instructions is different from what you can see from other tools such as objdump
-# because here we keep the addition to the instruction pointer implicit.
-# In reality, it would look like 'jmp rip+0x....'
 jmp 0x12       | eb 12
 jmp 0x78563412 | e9 12 34 56 78
 
