@@ -326,6 +326,7 @@ public final class InstructionDecoder {
         final byte CMOVNE_OPCODE = (byte) 0x45;
         final byte CMOVBE_OPCODE = (byte) 0x46;
         final byte CMOVS_OPCODE = (byte) 0x48;
+        final byte CMOVG_OPCODE = (byte) 0x4f;
         final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
         final byte MOVQ_OPCODE = (byte) 0x6e;
         final byte MOVDQA_OPCODE = (byte) 0x6f;
@@ -501,11 +502,10 @@ public final class InstructionDecoder {
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())));
             }
 
-            case CMOVE_OPCODE ->
-            // page 771
-            parseSimple(pref, Opcode.CMOVE, true);
+            case CMOVE_OPCODE -> parseSimple(pref, Opcode.CMOVE, true);
             case CMOVBE_OPCODE -> parseSimple(pref, Opcode.CMOVBE, true);
             case CMOVNE_OPCODE -> parseSimple(pref, Opcode.CMOVNE, true);
+            case CMOVG_OPCODE -> parseSimple(pref, Opcode.CMOVG, true);
             case CMOVS_OPCODE -> {
                 final ModRM modrm = modrm();
                 final Register r1 = Registers.fromCode(
