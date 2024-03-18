@@ -353,6 +353,16 @@ public enum Opcode {
     TEST("test"),
 
     /**
+     * Unordered compare scalar double-precision floating-point values and set EFLAGS.
+     */
+    UCOMISD("ucomisd"),
+
+    /**
+     * Unordered compare scalar single-precision floating-point values and set EFLAGS.
+     */
+    UCOMISS("ucomiss"),
+
+    /**
      * Undefined instruction.
      */
     UD2("ud2"),

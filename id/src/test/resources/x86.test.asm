@@ -747,3 +747,9 @@ divsd xmm8,xmm11 | f2 45 0f 5e c3
 # Addsd
 addsd xmm0,xmm0  | f2 0f 58 c0
 addsd xmm8,xmm11 | f2 45 0f 58 c3
+
+# Ucomisd
+ucomisd xmm13,QWORD PTR [rip+0x12345678] | 66 44 0f 2e 2d 78 56 34 12
+
+# Ucomiss
+ucomiss xmm13,DWORD PTR [rip+0x12345678] | 44 0f 2e 2d 78 56 34 12
