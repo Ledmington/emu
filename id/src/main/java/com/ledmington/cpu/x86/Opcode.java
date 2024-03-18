@@ -68,6 +68,11 @@ public enum Opcode {
     CMP("cmp"),
 
     /**
+     * Convert doubleword integer to scalar double precision floating-point value.
+     */
+    CVTSI2SD("cvtsi2sd"),
+
+    /**
      * Convert word to doubleword.
      */
     CWDE("cwde"),

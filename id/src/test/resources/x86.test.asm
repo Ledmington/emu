@@ -727,3 +727,7 @@ pshufw mm0,mm1,0x12 | 0f 70 c1 12
 # Pxor
 pxor xmm1,xmm15 | 66 41 0f ef cf
 pxor xmm7,xmm7  | 66 0f ef ff
+
+# Cvtsi2sd
+cvtsi2sd xmm2,rdi | f2 48 0f 2a d7
+cvtsi2sd xmm8,eax | f2 44 0f 2a c0

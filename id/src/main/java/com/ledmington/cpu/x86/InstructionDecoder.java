@@ -321,6 +321,7 @@ public final class InstructionDecoder {
         final byte MOVSD_OPCODE = (byte) 0x10;
         final byte MOVUPS_OPCODE = (byte) 0x11;
         final byte ENDBR_OPCODE = (byte) 0x1e;
+        final byte CVTSI2SD_OPCODE = (byte) 0x2a;
         final byte MOVAPS_OPCODE = (byte) 0x29;
         final byte CMOVE_OPCODE = (byte) 0x44;
         final byte CMOVNE_OPCODE = (byte) 0x45;
@@ -586,6 +587,17 @@ public final class InstructionDecoder {
                                                 pref.hasOperandSizeOverridePrefix()))
                                 .build(),
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())));
+            }
+            case CVTSI2SD_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.CVTSI2SD,
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
+                        Registers.fromCode(
+                                modrm.rm(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRMExtension(),
+                                pref.hasOperandSizeOverridePrefix()));
             }
             default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
