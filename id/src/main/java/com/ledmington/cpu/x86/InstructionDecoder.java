@@ -789,7 +789,24 @@ public final class InstructionDecoder {
                     yield new Instruction(Opcode.MOVS, op1, op2);
                 }
             }
-            case STOS_OPCODE -> new Instruction(Opcode.STOS, IndirectOperand.builder());
+            case STOS_OPCODE -> {
+                final Operand op1 = IndirectOperand.builder()
+                        .reg2(new SegmentRegister(
+                                Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+                        .build();
+                final Operand op2 = pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX;
+                if (pref.p1().isPresent()) {
+                    if (pref.p1().orElseThrow() == (byte) 0xf2) {
+                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.STOS, op1, op2);
+                    } else if (pref.p1().orElseThrow() == (byte) 0xf3) {
+                        yield new Instruction(Instruction.Prefix.REP, Opcode.STOS, op1, op2);
+                    } else {
+                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.STOS, op1, op2);
+                    }
+                } else {
+                    yield new Instruction(Opcode.STOS, op1, op2);
+                }
+            }
             case MOVSXD_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(

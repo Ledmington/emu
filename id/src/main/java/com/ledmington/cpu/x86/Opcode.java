@@ -293,6 +293,11 @@ public enum Opcode {
     SHR("shr"),
 
     /**
+     * Store string.
+     */
+    STOS("stos"),
+
+    /**
      * Subtract.
      */
     SUB("sub"),
