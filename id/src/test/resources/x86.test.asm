@@ -743,3 +743,7 @@ cvtsi2sd xmm8,eax | f2 44 0f 2a c0
 # Divsd
 divsd xmm0,xmm0  | f2 0f 5e c0
 divsd xmm8,xmm11 | f2 45 0f 5e c3
+
+# Addsd
+addsd xmm0,xmm0  | f2 0f 58 c0
+addsd xmm8,xmm11 | f2 45 0f 58 c3

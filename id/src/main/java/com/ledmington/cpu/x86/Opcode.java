@@ -18,6 +18,11 @@ public enum Opcode {
     ADD("add"),
 
     /**
+     * Add scalar double-precision floating-point values.
+     */
+    ADDSD("addsd"),
+
+    /**
      * Logical AND.
      */
     AND("and"),
@@ -78,7 +83,7 @@ public enum Opcode {
     CWDE("cwde"),
 
     /**
-     * Divide scalar double precision floating-point values.
+     * Divide scalar double-precision floating-point values.
      */
     DIVSD("divsd"),
 

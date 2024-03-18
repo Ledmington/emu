@@ -329,6 +329,7 @@ public final class InstructionDecoder {
         final byte CMOVBE_OPCODE = (byte) 0x46;
         final byte CMOVS_OPCODE = (byte) 0x48;
         final byte CMOVG_OPCODE = (byte) 0x4f;
+        final byte ADDSD_OPCODE = (byte) 0x58;
         final byte DIVSD_OPCODE = (byte) 0x5e;
         final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
         final byte MOVQ_OPCODE = (byte) 0x6e;
@@ -510,6 +511,12 @@ public final class InstructionDecoder {
                 final byte r1Byte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
                 final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
                 yield new Instruction(Opcode.PXOR, RegisterXMM.fromByte(r1Byte), RegisterXMM.fromByte(r2Byte));
+            }
+            case ADDSD_OPCODE -> {
+                final ModRM modrm = modrm();
+                final byte r1Byte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
+                yield new Instruction(Opcode.ADDSD, RegisterXMM.fromByte(r1Byte), RegisterXMM.fromByte(r2Byte));
             }
             case DIVSD_OPCODE -> {
                 final ModRM modrm = modrm();
