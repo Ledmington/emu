@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.ledmington.cpu.x86.IndirectOperand.IndirectOperandBuilder;
+import com.ledmington.cpu.x86.exc.ReservedOpcode;
+import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
@@ -137,10 +139,8 @@ public final class InstructionDecoder {
                                             pref.hasOperandSizeOverridePrefix()))
                             .ptrSize(64)
                             .build());
-            case (byte) 0x07 /* 111 */ -> throw new IllegalArgumentException(
-                    String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
-            default -> throw new IllegalArgumentException(
-                    String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            case (byte) 0x07 /* 111 */ -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+            default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
     }
 
@@ -194,10 +194,8 @@ public final class InstructionDecoder {
                             pref.rex().isOperand64Bit(),
                             pref.rex().ModRMRMExtension(),
                             pref.hasOperandSizeOverridePrefix()));
-            case (byte) 0x01 /* 001 */ -> throw new IllegalArgumentException(
-                    String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
-            default -> throw new IllegalArgumentException(
-                    String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            case (byte) 0x01 /* 001 */ -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+            default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
     }
 
@@ -218,8 +216,7 @@ public final class InstructionDecoder {
                     Optional.of(immediateBits),
                     Opcode.MOV,
                     Optional.of(pref.rex().isOperand64Bit() ? 64 : immediateBits));
-            default -> throw new IllegalArgumentException(
-                    String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
     }
 
@@ -261,10 +258,8 @@ public final class InstructionDecoder {
                                     pref.rex().ModRMRMExtension(),
                                     false)),
                     op2);
-            case (byte) 0x06 /* 110 */ -> throw new IllegalArgumentException(
-                    String.format("Reserved extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
-            default -> throw new IllegalArgumentException(
-                    String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            case (byte) 0x06 /* 110 */ -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+            default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
     }
 
@@ -291,8 +286,7 @@ public final class InstructionDecoder {
                     case 5 -> Opcode.SUB;
                     case 6 -> Opcode.XOR;
                     case 7 -> Opcode.CMP;
-                    default -> throw new IllegalArgumentException(
-                            String.format("Unknown extended opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+                    default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
                 };
 
         final Register r = (isRegister8Bit)
@@ -569,8 +563,7 @@ public final class InstructionDecoder {
                                 .build(),
                         RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())));
             }
-            default -> throw new IllegalArgumentException(
-                    String.format("Unknown multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte));
+            default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
     }
 
@@ -796,7 +789,7 @@ public final class InstructionDecoder {
                     yield new Instruction(Opcode.MOVS, op1, op2);
                 }
             }
-            case STOS_OPCODE->new Instruction(Opcode.STOS,IndirectOperand.builder());
+            case STOS_OPCODE -> new Instruction(Opcode.STOS, IndirectOperand.builder());
             case MOVSXD_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(
@@ -1064,7 +1057,7 @@ public final class InstructionDecoder {
                     String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.position()));
             case (byte) 0xf3 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized REP prefix at byte 0x%08x", b.position()));
-            default -> throw new IllegalArgumentException(String.format("Unknown opcode %02x", opcodeFirstByte));
+            default -> throw new UnknownOpcode(opcodeFirstByte);
         };
     }
 
