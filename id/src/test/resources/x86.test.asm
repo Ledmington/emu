@@ -657,6 +657,11 @@ sete BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 94 84 4a 78 56 34 12
 sete al                             | 0f 94 c0
 sete r8b                            | 41 0f 94 c0
 
+# Seta
+seta BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 97 84 4a 78 56 34 12
+seta al                             | 0f 97 c0
+seta r8b                            | 41 0f 97 c0
+
 # Movabs
 movabs rcx,0xdeadbeef         | 48 b9 ef be ad de 00 00 00 00
 movabs rdx,0xdeadbeefcafebabe | 48 ba be ba fe ca ef be ad de

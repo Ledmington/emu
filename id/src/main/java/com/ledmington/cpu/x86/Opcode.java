@@ -288,6 +288,11 @@ public enum Opcode {
     SBB("sbb"),
 
     /**
+     * Set byte if above.
+     */
+    SETA("seta"),
+
+    /**
      * Set byte if equal.
      */
     SETE("sete"),
