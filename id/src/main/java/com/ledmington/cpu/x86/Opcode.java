@@ -198,7 +198,12 @@ public enum Opcode {
     MOVABS("movabs"),
 
     /**
-     * Move aligned packed single floating-point values.
+     * Move aligned packed double-precision floating-point values.
+     */
+    MOVAPD("movapd"),
+
+    /**
+     * Move aligned packed single-precision floating-point values.
      */
     MOVAPS("movaps"),
 

@@ -322,7 +322,8 @@ public final class InstructionDecoder {
         final byte MOVUPS_OPCODE = (byte) 0x11;
         final byte ENDBR_OPCODE = (byte) 0x1e;
         final byte CVTSI2SD_OPCODE = (byte) 0x2a;
-        final byte MOVAPS_OPCODE = (byte) 0x29;
+        final byte MOVAPx_R128_R128_OPCODE = (byte) 0x28;
+        final byte MOVAPx_INDIRECT128_R128_OPCODE = (byte) 0x29;
         final byte CMOVE_OPCODE = (byte) 0x44;
         final byte CMOVNE_OPCODE = (byte) 0x45;
         final byte CMOVBE_OPCODE = (byte) 0x46;
@@ -516,10 +517,19 @@ public final class InstructionDecoder {
                 final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
                 yield new Instruction(Opcode.DIVSD, RegisterXMM.fromByte(r1Byte), RegisterXMM.fromByte(r2Byte));
             }
-            case MOVAPS_OPCODE -> {
+            case MOVAPx_R128_R128_OPCODE -> {
+                final ModRM modrm = modrm();
+                final byte r1Byte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
+                yield new Instruction(
+                        pref.hasOperandSizeOverridePrefix() ? Opcode.MOVAPD : Opcode.MOVAPS,
+                        RegisterXMM.fromByte(r1Byte),
+                        RegisterXMM.fromByte(r2Byte));
+            }
+            case MOVAPx_INDIRECT128_R128_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(
-                        Opcode.MOVAPS,
+                        pref.hasOperandSizeOverridePrefix() ? Opcode.MOVAPD : Opcode.MOVAPS,
                         parseIndirectOperand(
                                         pref,
                                         modrm,

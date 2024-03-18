@@ -635,6 +635,14 @@ movdqa xmm2,XMMWORD PTR [rsp+r9*4+0x12345678] | 66 42 0f 6f 94 8c 78 56 34 12
 # Movaps
 movaps XMMWORD PTR [rip+0x12345678],xmm6       | 0f 29 35 78 56 34 12
 movaps XMMWORD PTR [rsp+r11*4+0x12345678],xmm7 | 42 0f 29 bc 9c 78 56 34 12
+movaps xmm0,xmm0                               | 0f 28 c0
+movaps xmm7,xmm5                               | 0f 28 fd
+
+# Movapd
+movapd XMMWORD PTR [rip+0x12345678],xmm6       | 66 0f 29 35 78 56 34 12
+movapd XMMWORD PTR [rsp+r11*4+0x12345678],xmm7 | 66 42 0f 29 bc 9c 78 56 34 12
+movapd xmm0,xmm0                               | 66 0f 28 c0
+movapd xmm7,xmm5                               | 66 0f 28 fd
 
 # Movq
 movq QWORD PTR [rbp+rsi*4+0x12345678],xmm3 | 66 0f d6 9c b5 78 56 34 12
