@@ -723,3 +723,7 @@ pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12
 
 # Pshufw
 pshufw mm0,mm1,0x12 | 0f 70 c1 12
+
+# Pxor
+pxor xmm1,xmm15 | 66 41 0f ef cf
+pxor xmm7,xmm7  | 66 0f ef ff

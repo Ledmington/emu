@@ -278,6 +278,11 @@ public enum Opcode {
     PSHUFW("pshufw"),
 
     /**
+     * Logical XOR (MMX/XMM registers).
+     */
+    PXOR("pxor"),
+
+    /**
      * Return from procedure.
      */
     RET("ret"),
