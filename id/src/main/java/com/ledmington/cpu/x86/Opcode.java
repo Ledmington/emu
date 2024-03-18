@@ -78,6 +78,11 @@ public enum Opcode {
     CWDE("cwde"),
 
     /**
+     * Divide scalar double precision floating-point values.
+     */
+    DIVSD("divsd"),
+
+    /**
      * Terminate an indirect branch in 32-bit mode.
      */
     ENDBR32("endbr32"),
