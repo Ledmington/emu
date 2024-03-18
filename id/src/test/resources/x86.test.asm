@@ -310,6 +310,7 @@ mov rsp,rsi | 48 89 f4
 mov rsp,rsp | 48 89 e4
 #
 mov BYTE PTR [r11+r8*4+0x12345678],0x99        | 43 c6 84 83 78 56 34 12 99
+mov BYTE PTR [rdi],bl                          | 88 1f
 mov BYTE PTR [rsp+rcx*4+0x12345678],bh         | 88 bc 8c 78 56 34 12
 mov BYTE PTR [rsp+rcx*4+0x12345678],cl         | 88 8c 8c 78 56 34 12
 mov BYTE PTR [rsp+rcx*4+0x12345678],dil        | 40 88 bc 8c 78 56 34 12

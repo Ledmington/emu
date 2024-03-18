@@ -705,7 +705,15 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.MOV,
-                        parseIndirectOperand(pref, modrm, null).build(),
+                        parseIndirectOperand(
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                !pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .build(),
                         Register8.fromByte(
                                 Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
             }
