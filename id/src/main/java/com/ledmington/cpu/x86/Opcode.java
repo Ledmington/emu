@@ -178,6 +178,11 @@ public enum Opcode {
     JNS("jns"),
 
     /**
+     * Conditional jump if parity.
+     */
+    JP("jp"),
+
+    /**
      * Conditional jump if signed.
      */
     JS("js"),
