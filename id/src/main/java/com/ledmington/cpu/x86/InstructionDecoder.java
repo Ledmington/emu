@@ -337,6 +337,7 @@ public final class InstructionDecoder {
         final byte MOVQ_OPCODE = (byte) 0x6e;
         final byte MOVDQA_OPCODE = (byte) 0x6f;
         final byte PSHUF_OPCODE = (byte) 0x70;
+        final byte MOVQ_R128_INDIRECT64_OPCODE = (byte) 0x7e;
         final byte JB_DISP32_OPCODE = (byte) 0x82;
         final byte JAE_DISP32_OPCODE = (byte) 0x83;
         final byte JE_DISP32_OPCODE = (byte) 0x84;
@@ -509,6 +510,14 @@ public final class InstructionDecoder {
                         Opcode.MOVQ,
                         parseIndirectOperand(pref, modrm, null).ptrSize(64).build(),
                         RegisterXMM.fromByte(regByte));
+            }
+            case MOVQ_R128_INDIRECT64_OPCODE -> {
+                final ModRM modrm = modrm();
+                final byte regByte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                yield new Instruction(
+                        Opcode.MOVQ,
+                        RegisterXMM.fromByte(regByte),
+                        parseIndirectOperand(pref, modrm, null).ptrSize(64).build());
             }
             case PXOR_OPCODE -> {
                 final ModRM modrm = modrm();
