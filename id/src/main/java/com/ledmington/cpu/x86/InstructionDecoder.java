@@ -338,6 +338,7 @@ public final class InstructionDecoder {
         final byte CMOVBE_OPCODE = (byte) 0x46;
         final byte CMOVS_OPCODE = (byte) 0x48;
         final byte CMOVL_OPCODE = (byte) 0x4c;
+        final byte CMOVGE_OPCODE = (byte) 0x4d;
         final byte CMOVG_OPCODE = (byte) 0x4f;
         final byte ADDSD_OPCODE = (byte) 0x58;
         final byte DIVSD_OPCODE = (byte) 0x5e;
@@ -605,6 +606,7 @@ public final class InstructionDecoder {
             case CMOVBE_OPCODE -> parseSimple(pref, Opcode.CMOVBE, true);
             case CMOVNE_OPCODE -> parseSimple(pref, Opcode.CMOVNE, true);
             case CMOVL_OPCODE -> parseSimple(pref, Opcode.CMOVL, true);
+            case CMOVGE_OPCODE -> parseSimple(pref, Opcode.CMOVGE, true);
             case CMOVG_OPCODE -> parseSimple(pref, Opcode.CMOVG, true);
             case CMOVS_OPCODE -> {
                 final ModRM modrm = modrm();

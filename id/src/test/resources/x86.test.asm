@@ -125,6 +125,10 @@ cmovne rdx,r15 | 49 0f 45 d7
 cmovg r15,rdx | 4c 0f 4f fa
 cmovg rdx,r15 | 49 0f 4f d7
 
+# Cmovge
+cmovge r15,rdx | 4c 0f 4d fa
+cmovge rdx,r15 | 49 0f 4d d7
+
 # Cmovs
 cmovs ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 48 8c 80 78 56 34 12
 cmovs ecx,eax                             | 0f 48 c8
