@@ -745,6 +745,40 @@ inc rdx  | 48 ff c2
 inc rsi  | 48 ff c6
 inc rsp  | 48 ff c4
 
+# Dec
+dec eax  | ff c8
+dec ebp  | ff cd
+dec ebx  | ff cb
+dec ecx  | ff c9
+dec edi  | ff cf
+dec edx  | ff ca
+dec esi  | ff ce
+dec esp  | ff cc
+dec r10  | 49 ff ca
+dec r10d | 41 ff ca
+dec r11  | 49 ff cb
+dec r11d | 41 ff cb
+dec r12  | 49 ff cc
+dec r12d | 41 ff cc
+dec r13  | 49 ff cd
+dec r13d | 41 ff cd
+dec r14  | 49 ff ce
+dec r14d | 41 ff ce
+dec r15  | 49 ff cf
+dec r15d | 41 ff cf
+dec r8   | 49 ff c8
+dec r8d  | 41 ff c8
+dec r9   | 49 ff c9
+dec r9d  | 41 ff c9
+dec rax  | 48 ff c8
+dec rbp  | 48 ff cd
+dec rbx  | 48 ff cb
+dec rcx  | 48 ff c9
+dec rdi  | 48 ff cf
+dec rdx  | 48 ff ca
+dec rsi  | 48 ff ce
+dec rsp  | 48 ff cc
+
 # Pshufd
 pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12
 

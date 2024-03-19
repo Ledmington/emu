@@ -98,6 +98,13 @@ public final class InstructionDecoder {
                             pref.rex().isOperand64Bit(),
                             pref.rex().ModRMRMExtension(),
                             pref.hasOperandSizeOverridePrefix()));
+            case (byte) 0x01 /* 001 */ -> new Instruction(
+                    Opcode.DEC,
+                    Registers.fromCode(
+                            modrm.rm(),
+                            pref.rex().isOperand64Bit(),
+                            pref.rex().ModRMRMExtension(),
+                            pref.hasOperandSizeOverridePrefix()));
             case (byte) 0x02 /* 010 */ -> {
                 // near CALL
                 final Register reg = Registers.fromCode(

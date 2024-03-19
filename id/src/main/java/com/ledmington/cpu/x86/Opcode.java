@@ -83,6 +83,11 @@ public enum Opcode {
     CWDE("cwde"),
 
     /**
+     * Decrement.
+     */
+    DEC("dec"),
+
+    /**
      * Divide scalar double-precision floating-point values.
      */
     DIVSD("divsd"),
