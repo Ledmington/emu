@@ -288,6 +288,11 @@ public enum Opcode {
     PUSH("push"),
 
     /**
+     * Unpack low-order doublewords.
+     */
+    PUNPCKLDQ("punpckldq"),
+
+    /**
      * Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register.
      */
     PUNPCKLQDQ("punpcklqdq"),

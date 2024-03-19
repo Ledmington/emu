@@ -332,6 +332,7 @@ public final class InstructionDecoder {
         final byte CMOVG_OPCODE = (byte) 0x4f;
         final byte ADDSD_OPCODE = (byte) 0x58;
         final byte DIVSD_OPCODE = (byte) 0x5e;
+        final byte PUNPCKLDQ_OPCODE = (byte) 0x62;
         final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
         final byte MOVQ_OPCODE = (byte) 0x6e;
         final byte MOVDQA_OPCODE = (byte) 0x6f;
@@ -576,6 +577,13 @@ public final class InstructionDecoder {
                                 : r2);
             }
             case UD2_OPCODE -> new Instruction(Opcode.UD2);
+            case PUNPCKLDQ_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.PUNPCKLDQ,
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg())),
+                        RegisterXMM.fromByte(Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm())));
+            }
             case PUNPCKLQDQ_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(

@@ -658,6 +658,10 @@ movq xmm2,rax                              | 66 48 0f 6e d0
 punpcklqdq xmm0,xmm0 | 66 0f 6c c0
 punpcklqdq xmm3,xmm9 | 66 41 0f 6c d9
 
+# Punpckldq
+punpckldq xmm0,xmm0 | 66 0f 62 c0
+punpckldq xmm3,xmm9 | 66 41 0f 62 d9
+
 # Setne
 setne BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 95 84 4a 78 56 34 12
 setne al                             | 0f 95 c0
