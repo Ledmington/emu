@@ -655,6 +655,8 @@ movq xmm0,r9                               | 66 49 0f 6e c1
 movq xmm2,rax                              | 66 48 0f 6e d0
 movq xmm3,QWORD PTR [rbp+rsi*4+0x12345678] | f3 0f 7e 9c b5 78 56 34 12
 
+# Movhps
+movhps xmm3,QWORD PTR [rbp+rsi*4+0x12345678] | 0f 16 9c b5 78 56 34 12
 
 # Punpcklqdq
 punpcklqdq xmm0,xmm0 | 66 0f 6c c0

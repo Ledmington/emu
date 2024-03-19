@@ -223,6 +223,12 @@ public enum Opcode {
     MOVDQA("movdqa"),
 
     /**
+     * Move two packed single precision floating-point values to and from the high quadword of
+     * an XMM register and memory.
+     */
+    MOVHPS("movhps"),
+
+    /**
      * Move quadword.
      */
     MOVQ("movq"),
