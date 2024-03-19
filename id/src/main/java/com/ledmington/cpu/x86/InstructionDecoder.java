@@ -759,6 +759,7 @@ public final class InstructionDecoder {
         final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
         final byte MOV_MEM8_REG8_OPCODE = (byte) 0x88;
         final byte MOV_INDIRECT32_R32_OPCODE = (byte) 0x89;
+        final byte MOV_R8_INDIRECT8_OPCODE = (byte) 0x8a;
         final byte MOV_R32_INDIRECT32_OPCODE = (byte) 0x8b;
         final byte LEA_OPCODE = (byte) 0x8d;
         final byte NOP_OPCODE = (byte) 0x90;
@@ -821,6 +822,22 @@ public final class InstructionDecoder {
                                 .build(),
                         Register8.fromByte(
                                 Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
+            }
+            case MOV_R8_INDIRECT8_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.MOV,
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()),
+                        parseIndirectOperand(
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                !pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .build());
             }
             case TEST_R8_OPCODE -> parseSimple8Bit(pref, Opcode.TEST, false);
             case TEST_OPCODE -> parseSimple(pref, Opcode.TEST, false);

@@ -330,6 +330,7 @@ mov DWORD PTR [rbp+0x7eadbeef],0x12345678      | c7 85 ef be ad 7e 78 56 34 12
 mov QWORD PTR [rbp+0x7eadbeef],0x12345678      | 48 c7 85 ef be ad 7e 78 56 34 12
 mov QWORD PTR [rbp+r9*4+0x12345678],rsi        | 4a 89 b4 8d 78 56 34 12
 mov WORD PTR [r11+r8*4+0x12345678],0xbeef      | 66 43 c7 84 83 78 56 34 12 ef be
+mov al,BYTE PTR [rax+rbx*8+0x12345678]         | 8a 84 d8 78 56 34 12
 mov esi,0x12345678                             | be 78 56 34 12
 mov r11b,0x12                                  | 41 b3 12
 mov r8w,0x1234                                 | 66 41 b8 34 12
