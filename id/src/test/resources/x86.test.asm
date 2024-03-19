@@ -130,6 +130,10 @@ cmovs ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 48 8c 80 78 56 34 12
 cmovs ecx,eax                             | 0f 48 c8
 cmovs edx,r9d                             | 41 0f 48 d1
 
+# Cmovl
+cmovl r15,rdx | 4c 0f 4c fa
+cmovl rdx,r15 | 49 0f 4c d7
+
 # Cmp
 cmp BYTE PTR [eax],dh                          | 67 38 30
 cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99

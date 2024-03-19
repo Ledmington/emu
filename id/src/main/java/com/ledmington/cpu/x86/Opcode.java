@@ -58,6 +58,11 @@ public enum Opcode {
     CMOVG("cmovg"),
 
     /**
+     * Conditional move if less.
+     */
+    CMOVL("cmovl"),
+
+    /**
      * Conditional move if not equal.
      */
     CMOVNE("cmovne"),
