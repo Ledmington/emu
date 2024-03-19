@@ -354,6 +354,7 @@ public final class InstructionDecoder {
         final byte JG_DISP32_OPCODE = (byte) 0x8f;
         final byte SETE_OPCODE = (byte) 0x94;
         final byte SETNE_OPCODE = (byte) 0x95;
+        final byte SETBE_OPCODE = (byte) 0x96;
         final byte SETA_OPCODE = (byte) 0x97;
         final byte IMUL_OPCODE = (byte) 0xaf;
         final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
@@ -406,6 +407,18 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.SETNE,
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(pref, modrm, null)
+                                        .ptrSize(8)
+                                        .build()
+                                : Register8.fromByte(
+                                        Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
+                                        pref.hasRexPrefix()));
+            }
+            case SETBE_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.SETBE,
                         (modrm.mod() != (byte) 0x03)
                                 ? parseIndirectOperand(pref, modrm, null)
                                         .ptrSize(8)

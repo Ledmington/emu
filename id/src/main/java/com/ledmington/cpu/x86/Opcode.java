@@ -334,6 +334,11 @@ public enum Opcode {
     SETA("seta"),
 
     /**
+     * Set byte if below or equal.
+     */
+    SETBE("setbe"),
+
+    /**
      * Set byte if equal.
      */
     SETE("sete"),
