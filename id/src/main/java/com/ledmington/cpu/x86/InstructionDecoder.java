@@ -539,7 +539,16 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.MOVHPS,
                         RegisterXMM.fromByte(regByte),
-                        parseIndirectOperand(pref, modrm, null).ptrSize(64).build());
+                        parseIndirectOperand(
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                !pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .ptrSize(64)
+                                .build());
             }
             case PXOR_OPCODE -> {
                 final ModRM modrm = modrm();
