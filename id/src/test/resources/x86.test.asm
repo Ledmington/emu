@@ -106,37 +106,55 @@ js 0x12345678 | 0f 88 78 56 34 12
 jp 0x12       | 7a 12
 jp 0x12345678 | 0f 8a 78 56 34 12
 # Jmp
-jmp 0x12       | eb 12
-jmp 0x78563412 | e9 12 34 56 78
+jmp 0x12                             | eb 12
+jmp 0x78563412                       | e9 12 34 56 78
+jmp DWORD PTR [rax+rcx*4+0x12345678] | 66 ff ac 88 78 56 34 12
+jmp QWORD PTR [rax+rcx*4+0x12345678] | ff a4 88 78 56 34 12
 
 # Cmove
-cmove r15,rcx | 4c 0f 44 f9
-cmove rcx,r15 | 49 0f 44 cf
+cmove ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 44 8c 80 78 56 34 12
+cmove r15,rcx                             | 4c 0f 44 f9
+cmove rcx,r15                             | 49 0f 44 cf
+
+# Cmovae
+cmovae ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 43 8c 80 78 56 34 12
+cmovae r15,rcx                             | 4c 0f 43 f9
+cmovae rcx,r15                             | 49 0f 43 cf
 
 # Cmovbe
-cmovbe r15,rcx | 4c 0f 46 f9
-cmovbe rcx,r15 | 49 0f 46 cf
+cmovbe ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 46 8c 80 78 56 34 12
+cmovbe r15,rcx                             | 4c 0f 46 f9
+cmovbe rcx,r15                             | 49 0f 46 cf
 
 # Cmovne
-cmovne r15,rdx | 4c 0f 45 fa
-cmovne rdx,r15 | 49 0f 45 d7
+cmovne ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 45 8c 80 78 56 34 12
+cmovne r15,rdx                             | 4c 0f 45 fa
+cmovne rdx,r15                             | 49 0f 45 d7
 
 # Cmovg
-cmovg r15,rdx | 4c 0f 4f fa
-cmovg rdx,r15 | 49 0f 4f d7
+cmovg ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4f 8c 80 78 56 34 12
+cmovg r15,rdx                             | 4c 0f 4f fa
+cmovg rdx,r15                             | 49 0f 4f d7
 
 # Cmovge
-cmovge r15,rdx | 4c 0f 4d fa
-cmovge rdx,r15 | 49 0f 4d d7
+cmovge ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4d 8c 80 78 56 34 12
+cmovge r15,rdx                             | 4c 0f 4d fa
+cmovge rdx,r15                             | 49 0f 4d d7
 
 # Cmovs
 cmovs ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 48 8c 80 78 56 34 12
 cmovs ecx,eax                             | 0f 48 c8
 cmovs edx,r9d                             | 41 0f 48 d1
 
+# Cmova
+cmova ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 47 8c 80 78 56 34 12
+cmova ecx,eax                             | 0f 47 c8
+cmova edx,r9d                             | 41 0f 47 d1
+
 # Cmovl
-cmovl r15,rdx | 4c 0f 4c fa
-cmovl rdx,r15 | 49 0f 4c d7
+cmovl ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4c 8c 80 78 56 34 12
+cmovl r15,rdx                             | 4c 0f 4c fa
+cmovl rdx,r15                             | 49 0f 4c d7
 
 # Cmp
 cmp BYTE PTR [eax],dh                          | 67 38 30
@@ -446,6 +464,9 @@ leave | c9
 # Ret
 ret | c3
 
+# Cpuid
+cpuid | 0f a2
+
 # Add
 add DWORD PTR [eax+ebx*4+0x12345678],r8d  | 67 44 01 84 98 78 56 34 12
 add DWORD PTR [rax+rbx*4+0x12345678],r8d  | 44 01 84 98 78 56 34 12
@@ -524,9 +545,10 @@ shl r9b,0x12 | 41 c0 e1 12
 shl rdx,0x99 | 48 c1 e2 99
 
 # Imul
-imul eax,ebx,0x12 | 6b c3 12
-imul rbx,rbp      | 48 0f af dd
-imul rdx,r9,0x58  | 49 6b d1 58
+imul eax,ebx,0x12                         | 6b c3 12
+imul edi,DWORD PTR [rax+r12*8+0x12345678] | 42 0f af bc e0 78 56 34 12
+imul rbx,rbp                              | 48 0f af dd
+imul rdx,r9,0x58                          | 49 6b d1 58
 
 # Idiv
 idiv eax | f7 f8
@@ -658,11 +680,15 @@ movapd xmm7,xmm5                               | 66 0f 28 fd
 
 # Movq
 movq QWORD PTR [rbp+rsi*4+0x12345678],xmm3 | 66 0f d6 9c b5 78 56 34 12
+movq QWORD PTR [rsi+0x12345678],xmm3       | 66 0f d6 9e 78 56 34 12
+movq QWORD PTR [rsi],xmm3                  | 66 0f d6 1e
 movq mm0,r9                                | 49 0f 6e c1
 movq mm3,rsi                               | 48 0f 6e de
 movq xmm0,r9                               | 66 49 0f 6e c1
 movq xmm2,rax                              | 66 48 0f 6e d0
 movq xmm3,QWORD PTR [rbp+rsi*4+0x12345678] | f3 0f 7e 9c b5 78 56 34 12
+movq xmm6,QWORD PTR [rsi+0x12345678]       | f3 0f 7e b6 78 56 34 12
+movq xmm6,QWORD PTR [rsi]                  | f3 0f 7e 36
 
 # Movhps
 movhps xmm3,QWORD PTR [eax]                  | 67 0f 16 18
@@ -697,6 +723,21 @@ setbe BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 96 84 4a 78 56 34 12
 setbe al                             | 0f 96 c0
 setbe r8b                            | 41 0f 96 c0
 
+# Setl
+setl BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 9c 84 4a 78 56 34 12
+setl al                             | 0f 9c c0
+setl r8b                            | 41 0f 9c c0
+
+# Setg
+setg BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 9f 84 4a 78 56 34 12
+setg al                             | 0f 9f c0
+setg r8b                            | 41 0f 9f c0
+
+# Setge
+setge BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 9d 84 4a 78 56 34 12
+setge al                             | 0f 9d c0
+setge r8b                            | 41 0f 9d c0
+
 # Movabs
 movabs rcx,0xdeadbeef         | 48 b9 ef be ad de 00 00 00 00
 movabs rdx,0xdeadbeefcafebabe | 48 ba be ba fe ca ef be ad de
@@ -720,6 +761,16 @@ endbr32 | f3 0f 1e fb
 endbr64 | f3 0f 1e fa
 
 # Inc
+inc ah   | fe c4
+inc al   | fe c0
+inc bh   | fe c7
+inc bl   | fe c3
+inc bpl  | 40 fe c5
+inc ch   | fe c5
+inc cl   | fe c1
+inc dh   | fe c6
+inc dil  | 40 fe c7
+inc dl   | fe c2
 inc eax  | ff c0
 inc ebp  | ff c5
 inc ebx  | ff c3
@@ -729,20 +780,28 @@ inc edx  | ff c2
 inc esi  | ff c6
 inc esp  | ff c4
 inc r10  | 49 ff c2
+inc r10b | 41 fe c2
 inc r10d | 41 ff c2
 inc r11  | 49 ff c3
+inc r11b | 41 fe c3
 inc r11d | 41 ff c3
 inc r12  | 49 ff c4
+inc r12b | 41 fe c4
 inc r12d | 41 ff c4
 inc r13  | 49 ff c5
+inc r13b | 41 fe c5
 inc r13d | 41 ff c5
 inc r14  | 49 ff c6
+inc r14b | 41 fe c6
 inc r14d | 41 ff c6
 inc r15  | 49 ff c7
+inc r15b | 41 fe c7
 inc r15d | 41 ff c7
 inc r8   | 49 ff c0
+inc r8b  | 41 fe c0
 inc r8d  | 41 ff c0
 inc r9   | 49 ff c1
+inc r9b  | 41 fe c1
 inc r9d  | 41 ff c1
 inc rax  | 48 ff c0
 inc rbp  | 48 ff c5
@@ -752,8 +811,31 @@ inc rdi  | 48 ff c7
 inc rdx  | 48 ff c2
 inc rsi  | 48 ff c6
 inc rsp  | 48 ff c4
+inc sil  | 40 fe c6
+inc spl  | 40 fe c4
+#
+inc DWORD PTR [rax+0x12345678] | ff 80 78 56 34 12
+inc DWORD PTR [rax]            | ff 00
+inc DWORD PTR [rbp+0x12345678] | ff 85 78 56 34 12
+inc DWORD PTR [rbx+0x12345678] | ff 83 78 56 34 12
+inc DWORD PTR [rcx+0x12345678] | ff 81 78 56 34 12
+inc DWORD PTR [rdi+0x12345678] | ff 87 78 56 34 12
+inc DWORD PTR [rdx+0x12345678] | ff 82 78 56 34 12
+inc DWORD PTR [rsi+0x12345678] | ff 86 78 56 34 12
+inc DWORD PTR [rsp+0x12345678] | ff 84 24 78 56 34 12
+inc QWORD PTR [rcx+0x12345678] | 48 ff 81 78 56 34 12
 
 # Dec
+dec ah   | fe cc
+dec al   | fe c8
+dec bh   | fe cf
+dec bl   | fe cb
+dec bpl  | 40 fe cd
+dec ch   | fe cd
+dec cl   | fe c9
+dec dh   | fe ce
+dec dil  | 40 fe cf
+dec dl   | fe ca
 dec eax  | ff c8
 dec ebp  | ff cd
 dec ebx  | ff cb
@@ -763,20 +845,28 @@ dec edx  | ff ca
 dec esi  | ff ce
 dec esp  | ff cc
 dec r10  | 49 ff ca
+dec r10b | 41 fe ca
 dec r10d | 41 ff ca
 dec r11  | 49 ff cb
+dec r11b | 41 fe cb
 dec r11d | 41 ff cb
 dec r12  | 49 ff cc
+dec r12b | 41 fe cc
 dec r12d | 41 ff cc
 dec r13  | 49 ff cd
+dec r13b | 41 fe cd
 dec r13d | 41 ff cd
 dec r14  | 49 ff ce
+dec r14b | 41 fe ce
 dec r14d | 41 ff ce
 dec r15  | 49 ff cf
+dec r15b | 41 fe cf
 dec r15d | 41 ff cf
 dec r8   | 49 ff c8
+dec r8b  | 41 fe c8
 dec r8d  | 41 ff c8
 dec r9   | 49 ff c9
+dec r9b  | 41 fe c9
 dec r9d  | 41 ff c9
 dec rax  | 48 ff c8
 dec rbp  | 48 ff cd
@@ -786,6 +876,11 @@ dec rdi  | 48 ff cf
 dec rdx  | 48 ff ca
 dec rsi  | 48 ff ce
 dec rsp  | 48 ff cc
+dec sil  | 40 fe ce
+dec spl  | 40 fe cc
+#
+dec DWORD PTR [rsp+0x12345678] | ff 8c 24 78 56 34 12
+dec QWORD PTR [rcx+0x12345678] | 48 ff 89 78 56 34 12
 
 # Pshufd
 pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12
@@ -794,8 +889,19 @@ pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12
 pshufw mm0,mm1,0x12 | 0f 70 c1 12
 
 # Pxor
-pxor xmm1,xmm15 | 66 41 0f ef cf
-pxor xmm7,xmm7  | 66 0f ef ff
+pxor xmm1,xmm15                              | 66 41 0f ef cf
+pxor xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f ef a4 98 78 56 34 12
+pxor xmm7,xmm7                               | 66 0f ef ff
+
+# Por
+por xmm1,xmm15                              | 66 41 0f eb cf
+por xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f eb a4 98 78 56 34 12
+por xmm7,xmm7                               | 66 0f eb ff
+
+# Pand
+pand xmm1,xmm15                              | 66 41 0f db cf
+pand xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f db a4 98 78 56 34 12
+pand xmm7,xmm7                               | 66 0f db ff
 
 # Cvtsi2sd
 cvtsi2sd xmm2,rdi | f2 48 0f 2a d7
@@ -809,8 +915,22 @@ divsd xmm8,xmm11 | f2 45 0f 5e c3
 addsd xmm0,xmm0  | f2 0f 58 c0
 addsd xmm8,xmm11 | f2 45 0f 58 c3
 
+# Xorps
+xorps xmm0,xmm0  | 0f 57 c0
+xorps xmm8,xmm11 | 45 0f 57 c3
+
 # Ucomisd
 ucomisd xmm13,QWORD PTR [rip+0x12345678] | 66 44 0f 2e 2d 78 56 34 12
 
 # Ucomiss
 ucomiss xmm13,DWORD PTR [rip+0x12345678] | 44 0f 2e 2d 78 56 34 12
+
+# BTx
+bt edx,0x12  | 0f ba e2 12
+bt rdx,0x12  | 48 0f ba e2 12
+btc ecx,0x12 | 0f ba f9 12
+btc rcx,0x12 | 48 0f ba f9 12
+btr ebx,0x12 | 0f ba f3 12
+btr rbx,0x12 | 48 0f ba f3 12
+bts eax,0x12 | 0f ba e8 12
+bts rax,0x12 | 48 0f ba e8 12

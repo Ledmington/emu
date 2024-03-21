@@ -28,6 +28,26 @@ public enum Opcode {
     AND("and"),
 
     /**
+     * Bit test.
+     */
+    BT("bt"),
+
+    /**
+     * Bit test and complement.
+     */
+    BTC("btc"),
+
+    /**
+     * Bit test and reset.
+     */
+    BTR("btr"),
+
+    /**
+     * Bit test and set.
+     */
+    BTS("bts"),
+
+    /**
      * Call procedure.
      */
     CALL("call"),
@@ -41,6 +61,16 @@ public enum Opcode {
      * Convert doubleword to quadword.
      */
     CDQE("cdqe"),
+
+    /**
+     * Conditional move if above.
+     */
+    CMOVA("cmova"),
+
+    /**
+     * Conditional move if above or equal.
+     */
+    CMOVAE("cmovae"),
 
     /**
      * Conditional move if below or equal.
@@ -81,6 +111,11 @@ public enum Opcode {
      * Compare two operands.
      */
     CMP("cmp"),
+
+    /**
+     * CPU identification.
+     */
+    CPUID("cpuid"),
 
     /**
      * Convert doubleword integer to scalar double precision floating-point value.
@@ -238,7 +273,8 @@ public enum Opcode {
     MOVDQA("movdqa"),
 
     /**
-     * Move two packed single precision floating-point values to and from the high quadword of
+     * Move two packed single precision floating-point values to and from the high
+     * quadword of
      * an XMM register and memory.
      */
     MOVHPS("movhps"),
@@ -269,7 +305,8 @@ public enum Opcode {
     MOVSXD("movsxd"),
 
     /**
-     * Move unaligned packed single precision floating-point values into XMM register.
+     * Move unaligned packed single precision floating-point values into XMM
+     * register.
      */
     MOVUPS("movups"),
 
@@ -299,9 +336,19 @@ public enum Opcode {
     OR("or"),
 
     /**
+     * Logical AND (MMX/XMM registers).
+     */
+    PAND("pand"),
+
+    /**
      * Pop a value from the stack.
      */
     POP("pop"),
+
+    /**
+     * Logical OR (MMX/XMM registers).
+     */
+    POR("por"),
 
     /**
      * Push word, doubleword or quadword onto the stack.
@@ -359,6 +406,21 @@ public enum Opcode {
     SETE("sete"),
 
     /**
+     * Set byte if greater.
+     */
+    SETG("setg"),
+
+    /**
+     * Set byte if greater or equal.
+     */
+    SETGE("setge"),
+
+    /**
+     * Set byte if less.
+     */
+    SETL("setl"),
+
+    /**
      * Set byte if not equal.
      */
     SETNE("setne"),
@@ -389,12 +451,14 @@ public enum Opcode {
     TEST("test"),
 
     /**
-     * Unordered compare scalar double-precision floating-point values and set EFLAGS.
+     * Unordered compare scalar double-precision floating-point values and set
+     * EFLAGS.
      */
     UCOMISD("ucomisd"),
 
     /**
-     * Unordered compare scalar single-precision floating-point values and set EFLAGS.
+     * Unordered compare scalar single-precision floating-point values and set
+     * EFLAGS.
      */
     UCOMISS("ucomiss"),
 
@@ -406,7 +470,12 @@ public enum Opcode {
     /**
      * Logical XOR.
      */
-    XOR("xor");
+    XOR("xor"),
+
+    /**
+     * Bitwise logical XOR of single-precision ploating-point values.
+     */
+    XORPS("xorps");
 
     private final String mnemonic;
 
