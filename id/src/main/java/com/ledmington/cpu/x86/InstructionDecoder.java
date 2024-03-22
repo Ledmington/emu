@@ -1018,6 +1018,7 @@ public final class InstructionDecoder {
         final byte POP_ESI_OPCODE = (byte) 0x5e;
         final byte POP_EDI_OPCODE = (byte) 0x5f;
         final byte MOVSXD_OPCODE = (byte) 0x63;
+        final byte IMUL_R32_INDIRECT32_IMM32_OPCODE = (byte) 0x69;
         final byte PUSH_IMM8_OPCODE = (byte) 0x6a;
         final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
         final byte JB_DISP8_OPCODE = (byte) 0x72;
@@ -1157,6 +1158,26 @@ public final class InstructionDecoder {
                                 pref.rex().ModRMRMExtension(),
                                 false),
                         imm8());
+            }
+            case IMUL_R32_INDIRECT32_IMM32_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.IMUL,
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                false),
+                        parseIndirectOperand(
+                                        pref,
+                                        modrm,
+                                        Registers.fromCode(
+                                                modrm.rm(),
+                                                !pref.hasAddressSizeOverridePrefix(),
+                                                pref.rex().ModRMRMExtension(),
+                                                pref.hasOperandSizeOverridePrefix()))
+                                .build(),
+                        imm32());
             }
             case MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE -> {
                 final Operand op1 = IndirectOperand.builder()

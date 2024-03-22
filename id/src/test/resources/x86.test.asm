@@ -578,10 +578,12 @@ shl sil,0x1  | 40 d0 e6
 shl spl,0x1  | 40 d0 e4
 
 # Imul
-imul eax,ebx,0x12                         | 6b c3 12
-imul edi,DWORD PTR [rax+r12*8+0x12345678] | 42 0f af bc e0 78 56 34 12
-imul rbx,rbp                              | 48 0f af dd
-imul rdx,r9,0x58                          | 49 6b d1 58
+imul eax,ebx,0x12                                   | 6b c3 12
+imul edi,DWORD PTR [rax+r12*8+0x12345678]           | 42 0f af bc e0 78 56 34 12
+imul r9,QWORD PTR [r11+r12*4+0x12345678],0x7eadbeef | 4f 69 8c a3 78 56 34 12 ef be ad 7e
+imul r9,QWORD PTR [rax],0x7eadbeef                  | 4c 69 08 ef be ad 7e
+imul rbx,rbp                                        | 48 0f af dd
+imul rdx,r9,0x58                                    | 49 6b d1 58
 
 # Idiv
 idiv eax | f7 f8
