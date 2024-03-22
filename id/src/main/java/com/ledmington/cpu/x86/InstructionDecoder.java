@@ -95,12 +95,34 @@ public final class InstructionDecoder {
         return switch (modrm.reg()) {
             case 0 -> new Instruction(
                     Opcode.INC,
-                    Register8.fromByte(
-                            Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
+                    (modrm.mod() != (byte) 0x03)
+                            ? parseIndirectOperand(
+                                            pref,
+                                            modrm,
+                                            Registers.fromCode(
+                                                    modrm.rm(),
+                                                    !pref.hasAddressSizeOverridePrefix(),
+                                                    pref.rex().ModRMRMExtension(),
+                                                    pref.hasOperandSizeOverridePrefix()))
+                                    .ptrSize(pref.hasOperandSizeOverridePrefix() ? 16 : 8)
+                                    .build()
+                            : Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
             case 1 -> new Instruction(
                     Opcode.DEC,
-                    Register8.fromByte(
-                            Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
+                    (modrm.mod() != (byte) 0x03)
+                            ? parseIndirectOperand(
+                                            pref,
+                                            modrm,
+                                            Registers.fromCode(
+                                                    modrm.rm(),
+                                                    !pref.hasAddressSizeOverridePrefix(),
+                                                    pref.rex().ModRMRMExtension(),
+                                                    pref.hasOperandSizeOverridePrefix()))
+                                    .ptrSize(pref.hasOperandSizeOverridePrefix() ? 16 : 8)
+                                    .build()
+                            : Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
             case 2, 3, 4, 5, 6, 7 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
             default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
@@ -124,8 +146,11 @@ public final class InstructionDecoder {
                                                     modrm.rm(),
                                                     !pref.hasAddressSizeOverridePrefix(),
                                                     pref.rex().ModRMRMExtension(),
-                                                    pref.hasOperandSizeOverridePrefix()))
-                                    .ptrSize(pref.rex().isOperand64Bit() ? 64 : 32)
+                                                    false))
+                                    .ptrSize(
+                                            pref.hasOperandSizeOverridePrefix()
+                                                    ? 16
+                                                    : (pref.rex().isOperand64Bit() ? 64 : 32))
                                     .build()
                             : Registers.fromCode(
                                     modrm.rm(),
@@ -142,8 +167,11 @@ public final class InstructionDecoder {
                                                     modrm.rm(),
                                                     !pref.hasAddressSizeOverridePrefix(),
                                                     pref.rex().ModRMRMExtension(),
-                                                    pref.hasOperandSizeOverridePrefix()))
-                                    .ptrSize(pref.rex().isOperand64Bit() ? 64 : 32)
+                                                    false))
+                                    .ptrSize(
+                                            pref.hasOperandSizeOverridePrefix()
+                                                    ? 16
+                                                    : (pref.rex().isOperand64Bit() ? 64 : 32))
                                     .build()
                             : Registers.fromCode(
                                     modrm.rm(),
