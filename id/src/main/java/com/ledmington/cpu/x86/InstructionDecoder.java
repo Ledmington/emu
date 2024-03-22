@@ -477,6 +477,7 @@ public final class InstructionDecoder {
         final byte CMOVS_OPCODE = (byte) 0x48;
         final byte CMOVL_OPCODE = (byte) 0x4c;
         final byte CMOVGE_OPCODE = (byte) 0x4d;
+        final byte CMOVLE_OPCODE = (byte) 0x4e;
         final byte CMOVG_OPCODE = (byte) 0x4f;
         final byte XORPS_OPCODE = (byte) 0x57;
         final byte ADDSD_OPCODE = (byte) 0x58;
@@ -534,7 +535,7 @@ public final class InstructionDecoder {
             null,
             Opcode.CMOVL,
             Opcode.CMOVGE,
-            null,
+            Opcode.CMOVLE,
             Opcode.CMOVG
         };
 
@@ -844,6 +845,7 @@ public final class InstructionDecoder {
                     CMOVL_OPCODE,
                     CMOVGE_OPCODE,
                     CMOVG_OPCODE,
+                    CMOVLE_OPCODE,
                     CMOVA_OPCODE,
                     CMOVS_OPCODE -> {
                 final Opcode opcode = cmovOpcodes[BitUtils.and(opcodeSecondByte, (byte) 0x0f)];
