@@ -386,6 +386,11 @@ public enum Opcode {
     RET("ret"),
 
     /**
+     * Arithmetic shift right.
+     */
+    SAR("sar"),
+
+    /**
      * Integer subtraction with borrow.
      */
     SBB("sbb"),

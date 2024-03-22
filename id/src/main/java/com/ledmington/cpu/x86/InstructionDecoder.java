@@ -307,7 +307,7 @@ public final class InstructionDecoder {
                                     modrm.rm(),
                                     pref.rex().isOperand64Bit(),
                                     pref.rex().ModRMRMExtension(),
-                                    false)),
+                                    pref.hasOperandSizeOverridePrefix())),
                     op2);
             case (byte) 0x05 /* 101 */ -> new Instruction(
                     Opcode.SHR,
@@ -318,9 +318,20 @@ public final class InstructionDecoder {
                                     modrm.rm(),
                                     pref.rex().isOperand64Bit(),
                                     pref.rex().ModRMRMExtension(),
-                                    false)),
+                                    pref.hasOperandSizeOverridePrefix())),
                     op2);
             case (byte) 0x06 /* 110 */ -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+            case (byte) 0x07 /* 111 */ -> new Instruction(
+                    Opcode.SAR,
+                    reg8bit
+                            ? (Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()))
+                            : (Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    pref.hasOperandSizeOverridePrefix())),
+                    op2);
             default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
     }

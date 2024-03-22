@@ -539,6 +539,11 @@ shr rdx,0x12 | 48 c1 ea 12
 shr sil,0x1  | 40 d0 ee
 shr spl,0x1  | 40 d0 ec
 
+# Sar
+sar eax,cl | d3 f8
+sar rcx,cl | 48 d3 f9
+sar si,cl  | 66 d3 fe
+
 # Shl
 shl esi,0x12 | c1 e6 12
 shl r9b,0x12 | 41 c0 e1 12
