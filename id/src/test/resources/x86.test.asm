@@ -534,20 +534,48 @@ sbb rax,rax   | 48 19 c0
 
 # Shr
 shr bpl,0x1  | 40 d0 ed
+shr bx,0x12  | 66 c1 eb 12
+shr di,0x1   | 66 d1 ef
+shr eax,cl   | d3 e8
 shr ecx,0x12 | c1 e9 12
+shr edx,0x1  | d1 ea
+shr r11b,cl  | 41 d2 eb
+shr r9,0x1   | 49 d1 e9
+shr rcx,cl   | 48 d3 e9
 shr rdx,0x12 | 48 c1 ea 12
+shr si,cl    | 66 d3 ee
 shr sil,0x1  | 40 d0 ee
 shr spl,0x1  | 40 d0 ec
 
 # Sar
-sar eax,cl | d3 f8
-sar rcx,cl | 48 d3 f9
-sar si,cl  | 66 d3 fe
+sar bpl,0x1  | 40 d0 fd
+sar bx,0x12  | 66 c1 fb 12
+sar di,0x1   | 66 d1 ff
+sar eax,cl   | d3 f8
+sar ecx,0x12 | c1 f9 12
+sar edx,0x1  | d1 fa
+sar r11b,cl  | 41 d2 fb
+sar r9,0x1   | 49 d1 f9
+sar rcx,cl   | 48 d3 f9
+sar rdx,0x12 | 48 c1 fa 12
+sar si,cl    | 66 d3 fe
+sar sil,0x1  | 40 d0 fe
+sar spl,0x1  | 40 d0 fc
 
 # Shl
-shl esi,0x12 | c1 e6 12
-shl r9b,0x12 | 41 c0 e1 12
-shl rdx,0x99 | 48 c1 e2 99
+shl bpl,0x1  | 40 d0 e5
+shl bx,0x12  | 66 c1 e3 12
+shl di,0x1   | 66 d1 e7
+shl eax,cl   | d3 e0
+shl ecx,0x12 | c1 e1 12
+shl edx,0x1  | d1 e2
+shl r11b,cl  | 41 d2 e3
+shl r9,0x1   | 49 d1 e1
+shl rcx,cl   | 48 d3 e1
+shl rdx,0x12 | 48 c1 e2 12
+shl si,cl    | 66 d3 e6
+shl sil,0x1  | 40 d0 e6
+shl spl,0x1  | 40 d0 e4
 
 # Imul
 imul eax,ebx,0x12                         | 6b c3 12
