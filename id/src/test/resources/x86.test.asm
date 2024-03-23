@@ -997,3 +997,41 @@ bts rax,0x12 | 48 0f ba e8 12
 
 # Xgetbv
 xgetbv | 0f 01 d0
+
+# Xchg
+xchg al,cl   | 86 c8
+xchg bh,cl   | 86 cf
+xchg di,ax   | 66 97
+xchg ebp,eax | 95
+xchg ebx,eax | 93
+xchg ebx,r9d | 44 87 cb
+xchg ecx,eax | 91
+xchg edi,eax | 97
+xchg edx,eax | 92
+xchg esi,eax | 96
+xchg esp,eax | 94
+xchg r10,rax | 49 92
+xchg r11,rax | 49 93
+xchg r12,rax | 49 94
+xchg r13,rax | 49 95
+xchg r14,rax | 49 96
+xchg r15,rax | 49 97
+xchg r8,rax  | 49 90
+xchg r9,rax  | 49 91
+xchg r9d,eax | 41 91
+xchg rbp,rax | 48 95
+xchg rbx,r9  | 4c 87 cb
+xchg rbx,rax | 48 93
+xchg rbx,rcx | 48 87 cb
+xchg rcx,rax | 48 91
+xchg rdi,rax | 48 97
+xchg rdx,rax | 48 92
+xchg rsi,rax | 48 96
+xchg rsp,rax | 48 94
+xchg si,di   | 66 87 fe
+#
+xchg BYTE PTR [rax+rbx*2+0x12345678],ah   | 86 a4 58 78 56 34 12
+xchg BYTE PTR [rax+rbx*2+0x12345678],al   | 86 84 58 78 56 34 12
+xchg DWORD PTR [rax+rbx*2+0x12345678],eax | 87 84 58 78 56 34 12
+xchg QWORD PTR [rax+rbx*2+0x12345678],rax | 48 87 84 58 78 56 34 12
+xchg WORD PTR [rax+rbx*2+0x12345678],ax   | 66 87 84 58 78 56 34 12

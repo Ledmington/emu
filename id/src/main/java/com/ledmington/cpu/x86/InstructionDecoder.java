@@ -1086,12 +1086,21 @@ public final class InstructionDecoder {
         final byte JG_DISP8_OPCODE = (byte) 0x7f;
         final byte TEST_R8_OPCODE = (byte) 0x84;
         final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
+        final byte XCHG_INDIRECT8_R8_OPCODE = (byte) 0x86;
+        final byte XCHG_INDIRECT32_R32_OPCODE = (byte) 0x87;
         final byte MOV_MEM8_REG8_OPCODE = (byte) 0x88;
         final byte MOV_INDIRECT32_R32_OPCODE = (byte) 0x89;
         final byte MOV_R8_INDIRECT8_OPCODE = (byte) 0x8a;
         final byte MOV_R32_INDIRECT32_OPCODE = (byte) 0x8b;
         final byte LEA_OPCODE = (byte) 0x8d;
         final byte NOP_OPCODE = (byte) 0x90;
+        final byte XCHG_ECX_EAX_OPCODE = (byte) 0x91;
+        final byte XCHG_EDX_EAX_OPCODE = (byte) 0x92;
+        final byte XCHG_EBX_EAX_OPCODE = (byte) 0x93;
+        final byte XCHG_ESP_EAX_OPCODE = (byte) 0x94;
+        final byte XCHG_EBP_EAX_OPCODE = (byte) 0x95;
+        final byte XCHG_ESI_EAX_OPCODE = (byte) 0x96;
+        final byte XCHG_EDI_EAX_OPCODE = (byte) 0x97;
         final byte CDQE_OPCODE = (byte) 0x98;
         final byte CDQ_OPCODE = (byte) 0x99;
         final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
@@ -1127,7 +1136,9 @@ public final class InstructionDecoder {
         };
 
         return switch (opcodeFirstByte) {
-            case NOP_OPCODE -> new Instruction(Opcode.NOP);
+            case NOP_OPCODE -> pref.hasRexPrefix()
+                    ? new Instruction(Opcode.XCHG, Register64.R8, Register64.RAX)
+                    : new Instruction(Opcode.NOP);
             case RET_OPCODE -> new Instruction(Opcode.RET);
             case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
             case INT3_OPCODE -> new Instruction(Opcode.INT3);
@@ -1173,6 +1184,35 @@ public final class InstructionDecoder {
             case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, imm8());
             case TEST_EAX_IMM32_OPCODE -> new Instruction(
                     Opcode.TEST, pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX, imm32());
+            case XCHG_INDIRECT8_R8_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.XCHG,
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(pref, modrm, null).build()
+                                : Register8.fromByte(
+                                        Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
+                                        pref.hasRexPrefix()),
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
+            }
+            case XCHG_INDIRECT32_R32_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.XCHG,
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(pref, modrm, null).build()
+                                : Registers.fromCode(
+                                        modrm.rm(),
+                                        pref.rex().isOperand64Bit(),
+                                        pref.rex().ModRMRMExtension(),
+                                        pref.hasOperandSizeOverridePrefix()),
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()));
+            }
 
                 // jumps
             case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
@@ -1515,6 +1555,27 @@ public final class InstructionDecoder {
                             default -> throw new IllegalArgumentException("Invalid value");
                         };
                 yield new Instruction(pref.rex().isOperand64Bit() ? Opcode.MOVABS : Opcode.MOV, r, imm);
+            }
+
+                // XCHG
+            case XCHG_EBX_EAX_OPCODE,
+                    XCHG_ECX_EAX_OPCODE,
+                    XCHG_EDX_EAX_OPCODE,
+                    XCHG_ESI_EAX_OPCODE,
+                    XCHG_EDI_EAX_OPCODE,
+                    XCHG_ESP_EAX_OPCODE,
+                    XCHG_EBP_EAX_OPCODE -> {
+                final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+                yield new Instruction(
+                        Opcode.XCHG,
+                        Registers.fromCode(
+                                regByte,
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().opcodeRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()),
+                        pref.hasOperandSizeOverridePrefix()
+                                ? Register16.AX
+                                : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX));
             }
 
                 // PUSH 16/64-bit

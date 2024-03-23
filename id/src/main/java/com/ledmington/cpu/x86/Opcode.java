@@ -483,6 +483,11 @@ public enum Opcode {
     UD2("ud2"),
 
     /**
+     * Exchange.
+     */
+    XCHG("xchg"),
+
+    /**
      * Reads the state of an extended control register.
      */
     XGETBV("xgetbv"),
