@@ -478,6 +478,11 @@ public enum Opcode {
     UD2("ud2"),
 
     /**
+     * Reads the state of an extended control register.
+     */
+    XGETBV("xgetbv"),
+
+    /**
      * Logical XOR.
      */
     XOR("xor"),

@@ -984,3 +984,6 @@ btr ebx,0x12 | 0f ba f3 12
 btr rbx,0x12 | 48 0f ba f3 12
 bts eax,0x12 | 0f ba e8 12
 bts rax,0x12 | 48 0f ba e8 12
+
+# Xgetbv
+xgetbv | 0f 01 d0

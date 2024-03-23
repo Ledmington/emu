@@ -417,6 +417,25 @@ public final class InstructionDecoder {
                 });
     }
 
+    private Instruction parseExtendedOpcodeGroup7(
+            final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+        final ModRM modrm = modrm();
+
+        if (modrm.mod() == (byte) 0x03) {
+            return switch (modrm.reg()) {
+                case (byte) 0x02 /* 010 */ -> {
+                    yield switch (modrm.rm()) {
+                        case (byte) 0x00 /* 000 */ -> new Instruction(Opcode.XGETBV);
+                        default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+                    };
+                }
+                default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+            };
+        } else {
+            throw new RuntimeException("Not implemented");
+        }
+    }
+
     private Instruction parseExtendedOpcodeGroup8(
             final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
         final ModRM modrm = modrm();
@@ -460,6 +479,7 @@ public final class InstructionDecoder {
     }
 
     private Instruction parse2BytesOpcode(final byte opcodeFirstByte, final Prefixes pref) {
+        final byte GROUP7_OPCODE = (byte) 0x01;
         final byte UD2_OPCODE = (byte) 0x0b;
         final byte MOVSD_OPCODE = (byte) 0x10;
         final byte MOVUPS_OPCODE = (byte) 0x11;
@@ -562,6 +582,7 @@ public final class InstructionDecoder {
         logger.debug("Read multibyte opcode 0x%02x%02x", opcodeFirstByte, opcodeSecondByte);
 
         return switch (opcodeSecondByte) {
+            case GROUP7_OPCODE -> parseExtendedOpcodeGroup7(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP8_OPCODE -> parseExtendedOpcodeGroup8(opcodeFirstByte, opcodeSecondByte, pref);
 
             case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
