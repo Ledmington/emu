@@ -121,6 +121,11 @@ cmovae ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 43 8c 80 78 56 34 12
 cmovae r15,rcx                             | 4c 0f 43 f9
 cmovae rcx,r15                             | 49 0f 43 cf
 
+# Cmovb
+cmovb ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 42 8c 80 78 56 34 12
+cmovb r15,rcx                             | 4c 0f 42 f9
+cmovb rcx,r15                             | 49 0f 42 cf
+
 # Cmovbe
 cmovbe ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 46 8c 80 78 56 34 12
 cmovbe r15,rcx                             | 4c 0f 46 f9

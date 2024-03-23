@@ -489,6 +489,7 @@ public final class InstructionDecoder {
         final byte MOVAPx_INDIRECT128_R128_OPCODE = (byte) 0x29;
         final byte CVTSI2SD_OPCODE = (byte) 0x2a;
         final byte UCOMISx_OPCODE = (byte) 0x2e;
+        final byte CMOVB_OPCODE = (byte) 0x42;
         final byte CMOVAE_OPCODE = (byte) 0x43;
         final byte CMOVE_OPCODE = (byte) 0x44;
         final byte CMOVNE_OPCODE = (byte) 0x45;
@@ -543,7 +544,7 @@ public final class InstructionDecoder {
         final Opcode[] cmovOpcodes = new Opcode[] {
             null,
             null,
-            null,
+            Opcode.CMOVB,
             Opcode.CMOVAE,
             Opcode.CMOVE,
             Opcode.CMOVNE,
@@ -861,6 +862,7 @@ public final class InstructionDecoder {
 
             case CMOVE_OPCODE,
                     CMOVAE_OPCODE,
+                    CMOVB_OPCODE,
                     CMOVBE_OPCODE,
                     CMOVNE_OPCODE,
                     CMOVL_OPCODE,
