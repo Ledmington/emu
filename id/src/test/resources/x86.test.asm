@@ -108,8 +108,13 @@ jp 0x12345678 | 0f 8a 78 56 34 12
 # Jmp
 jmp 0x12                             | eb 12
 jmp 0x78563412                       | e9 12 34 56 78
+jmp DWORD PTR [r11]                  | 66 41 ff 2b
 jmp DWORD PTR [rax+rcx*4+0x12345678] | 66 ff ac 88 78 56 34 12
+jmp QWORD PTR [r11]                  | 41 ff 23
 jmp QWORD PTR [rax+rcx*4+0x12345678] | ff a4 88 78 56 34 12
+jmp WORD PTR [r11]                   | 66 41 ff 23
+jmp r11                              | 41 ff e3
+jmp rax                              | ff e0
 
 # Cmove
 cmove ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 44 8c 80 78 56 34 12

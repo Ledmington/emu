@@ -209,14 +209,39 @@ public final class InstructionDecoder {
                             .build());
             case (byte) 0x04 /* 100 */ -> new Instruction(
                     Opcode.JMP,
-                    parseIndirectOperand(pref, modrm, null)
-                            .ptrSize(pref.hasOperandSizeOverridePrefix() ? 32 : 64)
-                            .build());
+                    (modrm.mod() != (byte) 0x03)
+                            ? parseIndirectOperand(
+                                            pref,
+                                            modrm,
+                                            Registers.fromCode(
+                                                    modrm.rm(),
+                                                    !pref.hasAddressSizeOverridePrefix(),
+                                                    pref.rex().ModRMRMExtension(),
+                                                    false))
+                                    .ptrSize(pref.hasOperandSizeOverridePrefix() ? 16 : 64)
+                                    .build()
+                            : Registers.fromCode(
+                                    modrm.rm(), true,
+                                    pref.rex().ModRMRMExtension(), false));
             case (byte) 0x05 /* 101 */ -> new Instruction(
                     Opcode.JMP,
-                    parseIndirectOperand(pref, modrm, null)
-                            .ptrSize(pref.hasOperandSizeOverridePrefix() ? 32 : 64)
-                            .build());
+                    (modrm.mod() != (byte) 0x03)
+                            ? parseIndirectOperand(
+                                            pref,
+                                            modrm,
+                                            Registers.fromCode(
+                                                    modrm.rm(),
+                                                    !pref.hasAddressSizeOverridePrefix(),
+                                                    pref.rex().ModRMRMExtension(),
+                                                    false))
+                                    .ptrSize(
+                                            pref.hasAddressSizeOverridePrefix()
+                                                    ? 16
+                                                    : (pref.hasOperandSizeOverridePrefix() ? 32 : 64))
+                                    .build()
+                            : Registers.fromCode(
+                                    modrm.rm(), true,
+                                    pref.rex().ModRMRMExtension(), false));
             case (byte) 0x06 /* 110 */ -> new Instruction(
                     Opcode.PUSH,
                     parseIndirectOperand(
