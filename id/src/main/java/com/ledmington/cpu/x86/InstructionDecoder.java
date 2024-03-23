@@ -561,6 +561,14 @@ public final class InstructionDecoder {
         final byte GROUP8_OPCODE = (byte) 0xba;
         final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
         final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
+        final byte BSWAP_EAX_OPCODE = (byte) 0xc8;
+        final byte BSWAP_ECX_OPCODE = (byte) 0xc9;
+        final byte BSWAP_EDX_OPCODE = (byte) 0xca;
+        final byte BSWAP_EBX_OPCODE = (byte) 0xcb;
+        final byte BSWAP_ESI_OPCODE = (byte) 0xcc;
+        final byte BSWAP_EDI_OPCODE = (byte) 0xcd;
+        final byte BSWAP_ESP_OPCODE = (byte) 0xce;
+        final byte BSWAP_EBP_OPCODE = (byte) 0xcf;
         final byte MOVQ_INDIRECT_XMM_OPCODE = (byte) 0xd6;
         final byte PAND_OPCODE = (byte) 0xdb;
         final byte POR_OPCODE = (byte) 0xeb;
@@ -921,6 +929,23 @@ public final class InstructionDecoder {
                                         pref.rex().isOperand64Bit(),
                                         pref.rex().ModRMRMExtension(),
                                         pref.hasOperandSizeOverridePrefix()));
+            }
+            case BSWAP_EAX_OPCODE,
+                    BSWAP_EBX_OPCODE,
+                    BSWAP_ECX_OPCODE,
+                    BSWAP_EDX_OPCODE,
+                    BSWAP_ESI_OPCODE,
+                    BSWAP_EDI_OPCODE,
+                    BSWAP_ESP_OPCODE,
+                    BSWAP_EBP_OPCODE -> {
+                final byte regByte = BitUtils.and(opcodeSecondByte, (byte) 0x07);
+                yield new Instruction(
+                        Opcode.BSWAP,
+                        pref.rex().isOperand64Bit()
+                                ? Register64.fromByte(
+                                        Registers.combine(pref.rex().opcodeRegExtension(), regByte))
+                                : Register32.fromByte(
+                                        Registers.combine(pref.rex().opcodeRegExtension(), regByte)));
             }
             case UD2_OPCODE -> new Instruction(Opcode.UD2);
             case PUNPCKLDQ_OPCODE -> {

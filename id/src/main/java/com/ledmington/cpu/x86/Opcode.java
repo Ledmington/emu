@@ -28,6 +28,11 @@ public enum Opcode {
     AND("and"),
 
     /**
+     * Bit swap.
+     */
+    BSWAP("bswap"),
+
+    /**
      * Bit test.
      */
     BT("bt"),

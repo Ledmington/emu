@@ -1035,3 +1035,37 @@ xchg BYTE PTR [rax+rbx*2+0x12345678],al   | 86 84 58 78 56 34 12
 xchg DWORD PTR [rax+rbx*2+0x12345678],eax | 87 84 58 78 56 34 12
 xchg QWORD PTR [rax+rbx*2+0x12345678],rax | 48 87 84 58 78 56 34 12
 xchg WORD PTR [rax+rbx*2+0x12345678],ax   | 66 87 84 58 78 56 34 12
+
+# Bswap
+bswap eax  | 0f c8
+bswap ebp  | 0f cd
+bswap ebx  | 0f cb
+bswap ecx  | 0f c9
+bswap edi  | 0f cf
+bswap edx  | 0f ca
+bswap esi  | 0f ce
+bswap esp  | 0f cc
+bswap r10  | 49 0f ca
+bswap r10d | 41 0f ca
+bswap r11  | 49 0f cb
+bswap r11d | 41 0f cb
+bswap r12  | 49 0f cc
+bswap r12d | 41 0f cc
+bswap r13  | 49 0f cd
+bswap r13d | 41 0f cd
+bswap r14  | 49 0f ce
+bswap r14d | 41 0f ce
+bswap r15  | 49 0f cf
+bswap r15d | 41 0f cf
+bswap r8   | 49 0f c8
+bswap r8d  | 41 0f c8
+bswap r9   | 49 0f c9
+bswap r9d  | 41 0f c9
+bswap rax  | 48 0f c8
+bswap rbp  | 48 0f cd
+bswap rbx  | 48 0f cb
+bswap rcx  | 48 0f c9
+bswap rdi  | 48 0f cf
+bswap rdx  | 48 0f ca
+bswap rsi  | 48 0f ce
+bswap rsp  | 48 0f cc
