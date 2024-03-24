@@ -788,9 +788,12 @@ repnz movs DWORD PTR es:[edi],DWORD PTR ds:[esi] | 67 f2 a5
 repnz movs WORD PTR es:[edi],WORD PTR ds:[esi]   | 67 66 f2 a5
 
 # Rep stos
+rep stos BYTE PTR es:[edi],al   | 67 f3 aa
+rep stos BYTE PTR es:[rdi],al   | f3 aa
 rep stos DWORD PTR es:[rdi],eax | f3 ab
 rep stos QWORD PTR es:[edi],rax | 67 f3 48 ab
 rep stos QWORD PTR es:[rdi],rax | f3 48 ab
+stos BYTE PTR es:[edi],al       | 67 aa
 stos QWORD PTR es:[edi],rax     | 67 48 ab
 
 # Movdqa
