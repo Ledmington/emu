@@ -461,6 +461,35 @@ public final class InstructionDecoder {
         }
     }
 
+    private Instruction parseExtendedOpcodeGroup16(
+            final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+        final ModRM modrm = modrm();
+
+        if (modrm.mod() == (byte) 0x03 /* 11 */) {
+            throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+        }
+
+        final Opcode[] opcodes =
+                new Opcode[] {Opcode.PREFETCHNTA, Opcode.PREFETCHT0, Opcode.PREFETCHT1, Opcode.PREFETCHT2};
+
+        return switch (modrm.reg()) {
+            case 0, 1, 2, 3 -> new Instruction(
+                    opcodes[BitUtils.and(modrm.reg(), (byte) 0x03)],
+                    parseIndirectOperand(
+                                    pref,
+                                    modrm,
+                                    Registers.fromCode(
+                                            modrm.rm(),
+                                            !pref.hasAddressSizeOverridePrefix(),
+                                            pref.rex().ModRMRMExtension(),
+                                            false))
+                            .ptrSize(8)
+                            .build());
+            case 4, 5, 6, 7 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+            default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+        };
+    }
+
     private Instruction parseExtendedOpcodeGroup8(
             final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
         final ModRM modrm = modrm();
@@ -509,6 +538,7 @@ public final class InstructionDecoder {
         final byte MOVSD_OPCODE = (byte) 0x10;
         final byte MOVUPS_OPCODE = (byte) 0x11;
         final byte MOVHPS_OPCODE = (byte) 0x16;
+        final byte GROUP16_OPCODE = (byte) 0x18;
         final byte ENDBR_OPCODE = (byte) 0x1e;
         final byte MOVAPx_R128_R128_OPCODE = (byte) 0x28;
         final byte MOVAPx_INDIRECT128_R128_OPCODE = (byte) 0x29;
@@ -618,6 +648,7 @@ public final class InstructionDecoder {
         return switch (opcodeSecondByte) {
             case GROUP7_OPCODE -> parseExtendedOpcodeGroup7(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP8_OPCODE -> parseExtendedOpcodeGroup8(opcodeFirstByte, opcodeSecondByte, pref);
+            case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(opcodeFirstByte, opcodeSecondByte, pref);
 
             case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
             case JAE_DISP32_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of32(b.read4LittleEndian()));

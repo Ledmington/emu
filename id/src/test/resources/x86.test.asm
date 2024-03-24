@@ -1069,3 +1069,17 @@ bswap rdi  | 48 0f cf
 bswap rdx  | 48 0f ca
 bswap rsi  | 48 0f ce
 bswap rsp  | 48 0f cc
+
+# Prefetch
+prefetchnta BYTE PTR [eax]                 | 67 0f 18 00
+prefetchnta BYTE PTR [r9+r11*4+0x12345678] | 43 0f 18 84 99 78 56 34 12
+prefetchnta BYTE PTR [rax]                 | 0f 18 00
+prefetcht0 BYTE PTR [eax]                  | 67 0f 18 08
+prefetcht0 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 8c 99 78 56 34 12
+prefetcht0 BYTE PTR [rax]                  | 0f 18 08
+prefetcht1 BYTE PTR [eax]                  | 67 0f 18 10
+prefetcht1 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 94 99 78 56 34 12
+prefetcht1 BYTE PTR [rax]                  | 0f 18 10
+prefetcht2 BYTE PTR [eax]                  | 67 0f 18 18
+prefetcht2 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 9c 99 78 56 34 12
+prefetcht2 BYTE PTR [rax]                  | 0f 18 18

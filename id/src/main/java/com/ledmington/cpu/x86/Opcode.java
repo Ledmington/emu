@@ -366,11 +366,6 @@ public enum Opcode {
     POR("por"),
 
     /**
-     * Push word, doubleword or quadword onto the stack.
-     */
-    PUSH("push"),
-
-    /**
      * Unpack low-order doublewords.
      */
     PUNPCKLDQ("punpckldq"),
@@ -381,6 +376,34 @@ public enum Opcode {
     PUNPCKLQDQ("punpcklqdq"),
 
     /**
+     *  Non-temporal data—fetch data into location close to the processor, minimizing cache pollution.
+     * Pentium III processor: 1st-level cache
+     * Pentium 4 and Intel Xeon processor: 2nd-level cache
+     */
+    PREFETCHNTA("prefetchnta"),
+
+    /**
+     *  Temporal data—fetch data into all levels of cache hierarchy.
+     * Pentium III processor: 1st-level cache or 2nd-level cache
+     * Pentium 4 and Intel Xeon processor: 2nd-level cache
+     */
+    PREFETCHT0("prefetcht0"),
+
+    /**
+     * Temporal data—fetch data into level 2 cache and higher.
+     * Pentium III processor: 2nd-level cache
+     * Pentium 4 and Intel Xeon processor: 2nd-level cache
+     */
+    PREFETCHT1("prefetcht1"),
+
+    /**
+     * Temporal data—fetch data into level 2 cache and higher.
+     * Pentium III processor: 2nd-level cache
+     * Pentium 4 and Intel Xeon processor: 2nd-level cache
+     */
+    PREFETCHT2("prefetcht2"),
+
+    /**
      * Shuffle packed doublewords.
      */
     PSHUFD("pshufd"),
@@ -389,6 +412,11 @@ public enum Opcode {
      * Shuffle packed integer word in MMX register.
      */
     PSHUFW("pshufw"),
+
+    /**
+     * Push word, doubleword or quadword onto the stack.
+     */
+    PUSH("push"),
 
     /**
      * Logical XOR (MMX/XMM registers).
