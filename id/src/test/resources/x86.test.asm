@@ -408,38 +408,39 @@ movsx rsi,di                              | 48 0f bf f7
 movsxd rdx,DWORD PTR [r11+r15*4+0x12345678] | 4b 63 94 bb 78 56 34 12
 
 # Push
-push ax   | 66 50
-push bp   | 66 55
-push bx   | 66 53
-push cx   | 66 51
-push di   | 66 57
-push dx   | 66 52
-push r10  | 41 52
-push r10w | 66 41 52
-push r11  | 41 53
-push r11w | 66 41 53
-push r12  | 41 54
-push r12w | 66 41 54
-push r13  | 41 55
-push r13w | 66 41 55
-push r14  | 41 56
-push r14w | 66 41 56
-push r15  | 41 57
-push r15w | 66 41 57
-push r8   | 41 50
-push r8w  | 66 41 50
-push r9   | 41 51
-push r9w  | 66 41 51
-push rax  | 50
-push rbp  | 55
-push rbx  | 53
-push rcx  | 51
-push rdi  | 57
-push rdx  | 52
-push rsi  | 56
-push rsp  | 54
-push si   | 66 56
-push sp   | 66 54
+push 0x12345678 | 68 78 56 34 12
+push ax         | 66 50
+push bp         | 66 55
+push bx         | 66 53
+push cx         | 66 51
+push di         | 66 57
+push dx         | 66 52
+push r10        | 41 52
+push r10w       | 66 41 52
+push r11        | 41 53
+push r11w       | 66 41 53
+push r12        | 41 54
+push r12w       | 66 41 54
+push r13        | 41 55
+push r13w       | 66 41 55
+push r14        | 41 56
+push r14w       | 66 41 56
+push r15        | 41 57
+push r15w       | 66 41 57
+push r8         | 41 50
+push r8w        | 66 41 50
+push r9         | 41 51
+push r9w        | 66 41 51
+push rax        | 50
+push rbp        | 55
+push rbx        | 53
+push rcx        | 51
+push rdi        | 57
+push rdx        | 52
+push rsi        | 56
+push rsp        | 54
+push si         | 66 56
+push sp         | 66 54
 #
 push 0x12                              | 6a 12
 push QWORD PTR [edx]                   | 67 ff 32

@@ -1159,6 +1159,7 @@ public final class InstructionDecoder {
         final byte POP_ESI_OPCODE = (byte) 0x5e;
         final byte POP_EDI_OPCODE = (byte) 0x5f;
         final byte MOVSXD_OPCODE = (byte) 0x63;
+        final byte PUSH_IMM32_OPCODE = (byte) 0x68;
         final byte IMUL_R32_INDIRECT32_IMM32_OPCODE = (byte) 0x69;
         final byte PUSH_IMM8_OPCODE = (byte) 0x6a;
         final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
@@ -1341,6 +1342,7 @@ public final class InstructionDecoder {
                                 false),
                         imm8());
             }
+            case PUSH_IMM32_OPCODE -> new Instruction(Opcode.PUSH, imm32());
             case IMUL_R32_INDIRECT32_IMM32_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(
