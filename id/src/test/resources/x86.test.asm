@@ -1032,6 +1032,12 @@ pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12
 # Pshufw
 pshufw mm0,mm1,0x12 | 0f 70 c1 12
 
+# Shufpd
+shufpd xmm0,xmm1,0x12 | 66 0f c6 c1 12
+
+# Shufps
+shufps xmm0,xmm1,0x12 | 0f c6 c1 12
+
 # Pxor
 pxor xmm1,xmm15                              | 66 41 0f ef cf
 pxor xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f ef a4 98 78 56 34 12

@@ -538,6 +538,7 @@ public final class InstructionDecoder {
         final byte GROUP8_OPCODE = (byte) 0xba;
         final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
         final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
+        final byte SHUFPx_OPCODE = (byte) 0xc6;
         final byte BSWAP_EAX_OPCODE = (byte) 0xc8;
         final byte BSWAP_ECX_OPCODE = (byte) 0xc9;
         final byte BSWAP_EDX_OPCODE = (byte) 0xca;
@@ -695,6 +696,16 @@ public final class InstructionDecoder {
                         pref.hasOperandSizeOverridePrefix() ? Opcode.PSHUFD : Opcode.PSHUFW,
                         pref.hasOperandSizeOverridePrefix() ? RegisterXMM.fromByte(r1) : RegisterMMX.fromByte(r1),
                         pref.hasOperandSizeOverridePrefix() ? RegisterXMM.fromByte(r2) : RegisterMMX.fromByte(r2),
+                        imm8());
+            }
+            case SHUFPx_OPCODE -> {
+                final ModRM modrm = modrm();
+                final byte r1 = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                final byte r2 = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
+                yield new Instruction(
+                        pref.hasOperandSizeOverridePrefix() ? Opcode.SHUFPD : Opcode.SHUFPS,
+                        RegisterXMM.fromByte(r1),
+                        RegisterXMM.fromByte(r2),
                         imm8());
             }
             case MOVQ_OPCODE -> {

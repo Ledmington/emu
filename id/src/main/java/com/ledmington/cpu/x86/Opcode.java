@@ -499,6 +499,16 @@ public enum Opcode {
     SHR("shr"),
 
     /**
+     * Shuffles values in packed double-precision floating-point operands.
+     */
+    SHUFPD("shufpd"),
+
+    /**
+     * Shuffles values in packed single-precision floating-point operands.
+     */
+    SHUFPS("shufps"),
+
+    /**
      * Store string.
      */
     STOS("stos"),
