@@ -551,6 +551,7 @@ public final class InstructionDecoder {
         final byte PAND_OPCODE = (byte) 0xdb;
         final byte POR_OPCODE = (byte) 0xeb;
         final byte PXOR_OPCODE = (byte) 0xef;
+        final byte PSUBQ_OPCODE = (byte) 0xfb;
 
         final Opcode[] cmovOpcodes = new Opcode[] {
             null,
@@ -751,6 +752,17 @@ public final class InstructionDecoder {
                 final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
                 yield new Instruction(
                         Opcode.PADDQ,
+                        RegisterXMM.fromByte(r1Byte),
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(pref, modrm).build()
+                                : RegisterXMM.fromByte(r2Byte));
+            }
+            case PSUBQ_OPCODE -> {
+                final ModRM modrm = modrm();
+                final byte r1Byte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
+                yield new Instruction(
+                        Opcode.PSUBQ,
                         RegisterXMM.fromByte(r1Byte),
                         (modrm.mod() != (byte) 0x03)
                                 ? parseIndirectOperand(pref, modrm).build()

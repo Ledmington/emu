@@ -1053,6 +1053,12 @@ paddq xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f d4 a4 98 78 56 34 12
 paddq xmm4,XMMWORD PTR [rdi]                  | 66 0f d4 27
 paddq xmm7,xmm7                               | 66 0f d4 ff
 
+# Psubq
+psubq xmm1,xmm15                              | 66 41 0f fb cf
+psubq xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f fb a4 98 78 56 34 12
+psubq xmm4,XMMWORD PTR [rdi]                  | 66 0f fb 27
+psubq xmm7,xmm7                               | 66 0f fb ff
+
 # Cvtsi2sd
 cvtsi2sd xmm2,rdi | f2 48 0f 2a d7
 cvtsi2sd xmm8,eax | f2 44 0f 2a c0

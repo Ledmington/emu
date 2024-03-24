@@ -376,6 +376,11 @@ public enum Opcode {
     POR("por"),
 
     /**
+     * Subtract packed quadword integers.
+     */
+    PSUBQ("psubq"),
+
+    /**
      * Unpack low-order doublewords.
      */
     PUNPCKLDQ("punpckldq"),
