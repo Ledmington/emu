@@ -148,6 +148,11 @@ public enum Opcode {
     DEC("dec"),
 
     /**
+     * Unsigned divide.
+     */
+    DIV("div"),
+
+    /**
      * Divide scalar double-precision floating-point values.
      */
     DIVSD("divsd"),

@@ -618,6 +618,76 @@ idiv r9d | 41 f7 f9
 idiv rax | 48 f7 f8
 idiv rsi | 48 f7 fe
 
+# Div
+div ah   | f6 f4
+div al   | f6 f0
+div ax   | 66 f7 f0
+div bh   | f6 f7
+div bl   | f6 f3
+div bp   | 66 f7 f5
+div bpl  | 40 f6 f5
+div bx   | 66 f7 f3
+div ch   | f6 f5
+div cl   | f6 f1
+div cx   | 66 f7 f1
+div dh   | f6 f6
+div di   | 66 f7 f7
+div dil  | 40 f6 f7
+div dl   | f6 f2
+div dx   | 66 f7 f2
+div eax  | f7 f0
+div ebp  | f7 f5
+div ebx  | f7 f3
+div ecx  | f7 f1
+div edi  | f7 f7
+div edx  | f7 f2
+div esi  | f7 f6
+div esp  | f7 f4
+div r10  | 49 f7 f2
+div r10b | 41 f6 f2
+div r10d | 41 f7 f2
+div r10w | 66 41 f7 f2
+div r11  | 49 f7 f3
+div r11b | 41 f6 f3
+div r11d | 41 f7 f3
+div r11w | 66 41 f7 f3
+div r12  | 49 f7 f4
+div r12b | 41 f6 f4
+div r12d | 41 f7 f4
+div r12w | 66 41 f7 f4
+div r13  | 49 f7 f5
+div r13b | 41 f6 f5
+div r13d | 41 f7 f5
+div r13w | 66 41 f7 f5
+div r14  | 49 f7 f6
+div r14b | 41 f6 f6
+div r14d | 41 f7 f6
+div r14w | 66 41 f7 f6
+div r15  | 49 f7 f7
+div r15b | 41 f6 f7
+div r15d | 41 f7 f7
+div r15w | 66 41 f7 f7
+div r8   | 49 f7 f0
+div r8b  | 41 f6 f0
+div r8d  | 41 f7 f0
+div r8w  | 66 41 f7 f0
+div r9   | 49 f7 f1
+div r9b  | 41 f6 f1
+div r9d  | 41 f7 f1
+div r9w  | 66 41 f7 f1
+div rax  | 48 f7 f0
+div rbp  | 48 f7 f5
+div rbx  | 48 f7 f3
+div rcx  | 48 f7 f1
+div rdi  | 48 f7 f7
+div rdx  | 48 f7 f2
+div rsi  | 48 f7 f6
+div rsp  | 48 f7 f4
+div si   | 66 f7 f6
+div sil  | 40 f6 f6
+div sp   | 66 f7 f4
+div spl  | 40 f6 f4
+
 # Or
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
 or BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 08 8c 8b 78 56 34 12

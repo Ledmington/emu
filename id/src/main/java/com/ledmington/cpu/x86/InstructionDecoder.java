@@ -302,6 +302,18 @@ public final class InstructionDecoder {
                                         .build()
                                 : r);
             }
+            case (byte) 0x06 /* 110 */ -> new Instruction(
+                    Opcode.DIV,
+                    (opcodeFirstByte == (byte) 0xf6)
+                            ?
+                            // R8
+                            Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix())
+                            : Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    pref.hasOperandSizeOverridePrefix()));
             case (byte) 0x07 /* 111 */ -> new Instruction(
                     Opcode.IDIV,
                     Registers.fromCode(
