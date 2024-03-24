@@ -398,7 +398,7 @@ public final class InstructionDecoder {
 
         final boolean isRegister8Bit = opcodeFirstByte == (byte) 0x80 || opcodeFirstByte == (byte) 0x82;
         final int immediateBits =
-                pref.hasOperandSizeOverridePrefix() ? 16 : ((opcodeFirstByte == (byte) 0x81) ? 32 : 8);
+                (opcodeFirstByte != (byte) 0x81) ? 8 : (pref.hasOperandSizeOverridePrefix() ? 16 : 32);
         final boolean isIndirectOperandNeeded = modrm.mod() != (byte) 0x03;
         final byte regByte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
 
@@ -415,33 +415,47 @@ public final class InstructionDecoder {
                     default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
                 };
 
-        final Register r = (isRegister8Bit)
-                ? Register8.fromByte(regByte, pref.hasRexPrefix())
-                : (isIndirectOperandNeeded
-                        ? (pref.hasAddressSizeOverridePrefix()
-                                ? Register32.fromByte(regByte)
-                                : Register64.fromByte(regByte))
-                        : (Registers.fromCode(
-                                regByte,
-                                pref.rex().isOperand64Bit(),
-                                pref.rex().ModRMRMExtension(),
-                                pref.hasOperandSizeOverridePrefix())));
-
-        logger.debug(r.toString());
-
-        return new Instruction(
-                opcode,
-                isIndirectOperandNeeded
-                        ? parseIndirectOperand(pref, modrm, r)
-                                .ptrSize(pref.rex().isOperand64Bit() ? 64 : immediateBits)
-                                .build()
-                        : r,
-                switch (immediateBits) {
-                    case 8 -> imm8();
-                    case 16 -> imm16();
-                    case 32 -> imm32();
-                    default -> throw new IllegalArgumentException("Invalid value");
-                });
+        if (isRegister8Bit) {
+            // OP R8, imm8
+            return new Instruction(
+                    opcode,
+                    isIndirectOperandNeeded
+                            ? parseIndirectOperand(pref, modrm, null)
+                                    .ptrSize(pref.rex().isOperand64Bit() ? 64 : immediateBits)
+                                    .build()
+                            : Register8.fromByte(regByte, pref.hasRexPrefix()),
+                    imm8());
+        } else {
+            logger.debug("immediate bits: %,d", immediateBits);
+            return new Instruction(
+                    opcode,
+                    isIndirectOperandNeeded
+                            ? parseIndirectOperand(
+                                            pref,
+                                            modrm,
+                                            Registers.fromCode(
+                                                    modrm.rm(),
+                                                    !pref.hasAddressSizeOverridePrefix(),
+                                                    pref.rex().ModRMRMExtension(),
+                                                    pref.hasOperandSizeOverridePrefix()))
+                                    .ptrSize(
+                                            pref.hasOperandSizeOverridePrefix()
+                                                    ? 16
+                                                    : (pref.rex().isOperand64Bit() ? 64 : immediateBits))
+                                    .build()
+                            : Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    pref.hasOperandSizeOverridePrefix()),
+                    switch (immediateBits) {
+                        case 8 -> imm8();
+                        case 16 -> imm16();
+                        case 32 -> imm32();
+                        default -> throw new IllegalArgumentException(
+                                String.format("Invalid value of immediate bits: %,d", immediateBits));
+                    });
+        }
     }
 
     private Instruction parseExtendedOpcodeGroup7(

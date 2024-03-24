@@ -178,6 +178,7 @@ cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
 cmp BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 38 8c 8b 78 56 34 12
 cmp DWORD PTR [ebp-0xe8],r15d                  | 67 44 39 bd 18 ff ff ff
 cmp DWORD PTR [edi],0x12345678                 | 67 81 3f 78 56 34 12
+cmp DWORD PTR [r13+rcx*2+0x12],0x66778899      | 41 81 7c 4d 12 99 88 77 66
 cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
 cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
 cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
@@ -501,8 +502,10 @@ add esp,DWORD PTR [rax+rbx*4+0x12345678]  | 03 a4 98 78 56 34 12
 add r11d,DWORD PTR [rax+rbx*4+0x12345678] | 44 03 9c 98 78 56 34 12
 add r8,0x1                                | 49 83 c0 01
 add r8,r9                                 | 4d 01 c8
+add r9,0x12                               | 49 83 c1 12
 add r9,QWORD PTR [rax+rbx*4+0x12345678]   | 4c 03 8c 98 78 56 34 12
 add rax,0x1                               | 48 83 c0 01
+add rax,0x12                              | 48 83 c0 12
 add rax,0x12345678                        | 48 05 78 56 34 12
 add rsp,0x12345678                        | 48 81 c4 78 56 34 12
 add rsp,QWORD PTR [rax+rbx*4+0x12345678]  | 48 03 a4 98 78 56 34 12
