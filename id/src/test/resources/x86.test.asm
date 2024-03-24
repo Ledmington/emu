@@ -173,9 +173,11 @@ cmovle rdx,r15                             | 49 0f 4e d7
 
 # Cmp
 cmp BYTE PTR [eax],dh                          | 67 38 30
+cmp BYTE PTR [edi],0x77                        | 67 80 3f 77
 cmp BYTE PTR [r13+rcx*2+0x12],0x77             | 41 80 7c 4d 12 77
 cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
 cmp BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 38 8c 8b 78 56 34 12
+cmp BYTE PTR [rdi],0x77                        | 80 3f 77
 cmp DWORD PTR [ebp-0xe8],r15d                  | 67 44 39 bd 18 ff ff ff
 cmp DWORD PTR [edi],0x12345678                 | 67 81 3f 78 56 34 12
 cmp DWORD PTR [r13+rcx*2+0x12],0x66778899      | 41 81 7c 4d 12 99 88 77 66
@@ -184,9 +186,11 @@ cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
 cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
 cmp QWORD PTR [edi],0x12345678                 | 67 48 81 3f 78 56 34 12
 cmp QWORD PTR [rdi],0x12345678                 | 48 81 3f 78 56 34 12
+cmp WORD PTR [edi],0x7788                      | 67 66 81 3f 88 77
 cmp WORD PTR [r13+rcx*2+0x12],0x77             | 66 41 83 7c 4d 12 77
 cmp WORD PTR [r13+rcx*2+0x12],0x7788           | 66 41 81 7c 4d 12 88 77
 cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
+cmp WORD PTR [rdi],0x7788                      | 66 81 3f 88 77
 cmp al,0x99                                    | 3c 99
 cmp al,dh                                      | 38 f0
 cmp cx,0x1234                                  | 66 81 f9 34 12

@@ -420,7 +420,14 @@ public final class InstructionDecoder {
             return new Instruction(
                     opcode,
                     isIndirectOperandNeeded
-                            ? parseIndirectOperand(pref, modrm, null)
+                            ? parseIndirectOperand(
+                                            pref,
+                                            modrm,
+                                            Registers.fromCode(
+                                                    modrm.rm(),
+                                                    !pref.hasAddressSizeOverridePrefix(),
+                                                    pref.rex().ModRMRMExtension(),
+                                                    false))
                                     .ptrSize(pref.rex().isOperand64Bit() ? 64 : immediateBits)
                                     .build()
                             : Register8.fromByte(regByte, pref.hasRexPrefix()),
@@ -437,7 +444,7 @@ public final class InstructionDecoder {
                                                     modrm.rm(),
                                                     !pref.hasAddressSizeOverridePrefix(),
                                                     pref.rex().ModRMRMExtension(),
-                                                    pref.hasOperandSizeOverridePrefix()))
+                                                    false))
                                     .ptrSize(
                                             pref.hasOperandSizeOverridePrefix()
                                                     ? 16

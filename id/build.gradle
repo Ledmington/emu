@@ -58,7 +58,7 @@ testlogger {
 
 	showExceptions true
 	showStackTraces true
-	showFullStackTraces true
+	showFullStackTraces false
 	showCauses true
 
 	slowThreshold 2000
