@@ -356,6 +356,11 @@ public enum Opcode {
     OR("or"),
 
     /**
+     * Add packed quadword integers.
+     */
+    PADDQ("paddq"),
+
+    /**
      * Logical AND (MMX/XMM registers).
      */
     PAND("pand"),

@@ -634,6 +634,7 @@ public final class InstructionDecoder {
         final byte BSWAP_EDI_OPCODE = (byte) 0xcd;
         final byte BSWAP_ESP_OPCODE = (byte) 0xce;
         final byte BSWAP_EBP_OPCODE = (byte) 0xcf;
+        final byte PADDQ_OPCODE = (byte) 0xd4;
         final byte MOVQ_INDIRECT_XMM_OPCODE = (byte) 0xd6;
         final byte PAND_OPCODE = (byte) 0xdb;
         final byte POR_OPCODE = (byte) 0xeb;
@@ -883,6 +884,25 @@ public final class InstructionDecoder {
                                                         pref.rex().isOperand64Bit(),
                                                         pref.rex().ModRMRMExtension(),
                                                         pref.hasOperandSizeOverridePrefix()))
+                                        .build()
+                                : RegisterXMM.fromByte(r2Byte));
+            }
+            case PADDQ_OPCODE -> {
+                final ModRM modrm = modrm();
+                final byte r1Byte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
+                final byte r2Byte = Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm());
+                yield new Instruction(
+                        Opcode.PADDQ,
+                        RegisterXMM.fromByte(r1Byte),
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(
+                                                pref,
+                                                modrm,
+                                                Registers.fromCode(
+                                                        modrm.rm(),
+                                                        !pref.hasAddressSizeOverridePrefix(),
+                                                        pref.rex().ModRMRMExtension(),
+                                                        false))
                                         .build()
                                 : RegisterXMM.fromByte(r2Byte));
             }

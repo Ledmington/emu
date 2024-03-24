@@ -1047,6 +1047,12 @@ pand xmm1,xmm15                              | 66 41 0f db cf
 pand xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f db a4 98 78 56 34 12
 pand xmm7,xmm7                               | 66 0f db ff
 
+# Paddq
+paddq xmm1,xmm15                              | 66 41 0f d4 cf
+paddq xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f d4 a4 98 78 56 34 12
+paddq xmm4,XMMWORD PTR [rdi]                  | 66 0f d4 27
+paddq xmm7,xmm7                               | 66 0f d4 ff
+
 # Cvtsi2sd
 cvtsi2sd xmm2,rdi | f2 48 0f 2a d7
 cvtsi2sd xmm8,eax | f2 44 0f 2a c0
