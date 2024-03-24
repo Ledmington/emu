@@ -427,6 +427,8 @@ public final class InstructionDecoder {
                                 pref.rex().ModRMRMExtension(),
                                 pref.hasOperandSizeOverridePrefix())));
 
+        logger.debug(r.toString());
+
         return new Instruction(
                 opcode,
                 isIndirectOperandNeeded
