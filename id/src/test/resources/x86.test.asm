@@ -30,6 +30,11 @@ nop WORD PTR [eax]                     | 67 66 0f 1f 00
 nop WORD PTR [rax]                     | 66 0f 1f 00
 nop WORD PTR [rbx+r12*4+0x12345678]    | 66 42 0f 1f 84 a3 78 56 34 12
 nop WORD PTR cs:[rbx+r12*4+0x12345678] | 2e 66 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
 
 # Call
 # The output of these instructions is different from what you can see from other tools such as objdump

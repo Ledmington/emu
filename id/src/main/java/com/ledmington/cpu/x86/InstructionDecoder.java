@@ -1694,32 +1694,18 @@ public final class InstructionDecoder {
         boolean hasOperandSizeOverridePrefix = false;
         boolean hasAddressSizeOverridePrefix = false;
 
-        for (int i = 0; i < 4; i++) {
+        // FIXME: is there a better way to do this?
+        // (technically there is no limit to the number of prefixes an instruction can have)
+        while (true) {
             byte x = b.read1();
 
             if (isLegacyPrefixGroup1(x)) {
-                if (p1.isPresent()) {
-                    throw new IllegalStateException(
-                            String.format("Found duplicate legacy prefix group 1 at byte 0x%08x", b.position()));
-                }
                 p1 = Optional.of(x);
             } else if (isLegacyPrefixGroup2(x)) {
-                if (p2.isPresent()) {
-                    throw new IllegalStateException(
-                            String.format("Found duplicate legacy prefix group 2 at byte 0x%08x", b.position()));
-                }
                 p2 = Optional.of(x);
             } else if (isOperandSizeOverridePrefix(x)) {
-                if (hasOperandSizeOverridePrefix) {
-                    throw new IllegalStateException(
-                            String.format("Found duplicate operand size override prefix at byte 0x%08x", b.position()));
-                }
                 hasOperandSizeOverridePrefix = true;
             } else if (isAddressSizeOverridePrefix(x)) {
-                if (hasAddressSizeOverridePrefix) {
-                    throw new IllegalStateException(
-                            String.format("Found duplicate address size override prefix at byte 0x%08x", b.position()));
-                }
                 hasAddressSizeOverridePrefix = true;
             } else {
                 b.goBack(1);
