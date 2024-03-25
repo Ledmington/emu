@@ -1360,3 +1360,19 @@ xadd WORD PTR [rsi],dx                          | 66 0f c1 16
 # Pcmpeqd
 pcmpeqd xmm0,xmm0  | 66 0f 76 c0
 pcmpeqd xmm3,xmm11 | 66 41 0f 76 db
+
+# Rdrand
+rdrand ax   | 66 0f c7 f0
+rdrand eax  | 0f c7 f0
+rdrand r11  | 49 0f c7 f3
+rdrand r12d | 41 0f c7 f4
+rdrand r13w | 66 41 0f c7 f5
+rdrand rax  | 48 0f c7 f0
+
+# Rdseed
+rdseed ax   | 66 0f c7 f8
+rdseed eax  | 0f c7 f8
+rdseed r11  | 49 0f c7 fb
+rdseed r12d | 41 0f c7 fc
+rdseed r13w | 66 41 0f c7 fd
+rdseed rax  | 48 0f c7 f8

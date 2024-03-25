@@ -587,6 +587,7 @@ public final class InstructionDecoder {
         final byte XADD_INDIRECT8_R8_OPCODE = (byte) 0xc0;
         final byte XADD_INDIRECT32_R32_OPCODE = (byte) 0xc1;
         final byte SHUFPx_OPCODE = (byte) 0xc6;
+        final byte GROUP9_OPCODE = (byte) 0xc7;
         final byte BSWAP_EAX_OPCODE = (byte) 0xc8;
         final byte BSWAP_ECX_OPCODE = (byte) 0xc9;
         final byte BSWAP_EDX_OPCODE = (byte) 0xca;
@@ -646,6 +647,7 @@ public final class InstructionDecoder {
         return switch (opcodeSecondByte) {
             case GROUP7_OPCODE -> parseExtendedOpcodeGroup7(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP8_OPCODE -> parseExtendedOpcodeGroup8(opcodeFirstByte, opcodeSecondByte, pref);
+            case GROUP9_OPCODE -> parseExtendedOpcodeGroup9(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(opcodeFirstByte, opcodeSecondByte, pref);
 
             case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
@@ -1149,6 +1151,38 @@ public final class InstructionDecoder {
             }
             default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
+    }
+
+    private Instruction parseExtendedOpcodeGroup9(
+            final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+        final ModRM modrm = modrm();
+
+        if (modrm.mod() == (byte) 0x03) {
+            if (pref.p1().isPresent() && pref.p1().orElseThrow() == (byte) 0xf3) {
+                throw new IllegalArgumentException("Not implemented");
+            } else {
+                return switch (modrm.reg()) {
+                    case 0, 1, 2, 3, 4, 5 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+                    case 6 -> new Instruction(
+                            Opcode.RDRAND,
+                            Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    pref.hasOperandSizeOverridePrefix()));
+                    case 7 -> new Instruction(
+                            Opcode.RDSEED,
+                            Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    pref.hasOperandSizeOverridePrefix()));
+                    default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+                };
+            }
+        } else {
+            throw new IllegalArgumentException("Not implemented");
+        }
     }
 
     private Instruction parseSingleByteOpcode(final byte opcodeFirstByte, final Prefixes pref) {

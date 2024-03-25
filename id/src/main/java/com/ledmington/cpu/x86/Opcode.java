@@ -475,6 +475,16 @@ public enum Opcode {
     PXOR("pxor"),
 
     /**
+     * Read random number.
+     */
+    RDRAND("rdrand"),
+
+    /**
+     * Read random seed.
+     */
+    RDSEED("rdseed"),
+
+    /**
      * Return from procedure.
      */
     RET("ret"),
