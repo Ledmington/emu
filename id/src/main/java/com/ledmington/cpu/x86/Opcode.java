@@ -356,6 +356,11 @@ public enum Opcode {
     MOVZX("movzx"),
 
     /**
+     * Unsigned multiply.
+     */
+    MUL("mul"),
+
+    /**
      * Two's complement negation.
      */
     NEG("neg"),

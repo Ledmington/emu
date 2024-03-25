@@ -726,6 +726,76 @@ div QWORD PTR [rbx+r11*8+0x12345678] | 4a f7 b4 db 78 56 34 12
 div WORD PTR [rax]                   | 66 f7 30
 div WORD PTR [rbx+r11*8+0x12345678]  | 66 42 f7 b4 db 78 56 34 12
 
+# Mul
+mul ah   | f6 e4
+mul al   | f6 e0
+mul ax   | 66 f7 e0
+mul bh   | f6 e7
+mul bl   | f6 e3
+mul bp   | 66 f7 e5
+mul bpl  | 40 f6 e5
+mul bx   | 66 f7 e3
+mul ch   | f6 e5
+mul cl   | f6 e1
+mul cx   | 66 f7 e1
+mul dh   | f6 e6
+mul di   | 66 f7 e7
+mul dil  | 40 f6 e7
+mul dl   | f6 e2
+mul dx   | 66 f7 e2
+mul eax  | f7 e0
+mul ebp  | f7 e5
+mul ebx  | f7 e3
+mul ecx  | f7 e1
+mul edi  | f7 e7
+mul edx  | f7 e2
+mul esi  | f7 e6
+mul esp  | f7 e4
+mul r10  | 49 f7 e2
+mul r10b | 41 f6 e2
+mul r10d | 41 f7 e2
+mul r10w | 66 41 f7 e2
+mul r11  | 49 f7 e3
+mul r11b | 41 f6 e3
+mul r11d | 41 f7 e3
+mul r11w | 66 41 f7 e3
+mul r12  | 49 f7 e4
+mul r12b | 41 f6 e4
+mul r12d | 41 f7 e4
+mul r12w | 66 41 f7 e4
+mul r13  | 49 f7 e5
+mul r13b | 41 f6 e5
+mul r13d | 41 f7 e5
+mul r13w | 66 41 f7 e5
+mul r14  | 49 f7 e6
+mul r14b | 41 f6 e6
+mul r14d | 41 f7 e6
+mul r14w | 66 41 f7 e6
+mul r15  | 49 f7 e7
+mul r15b | 41 f6 e7
+mul r15d | 41 f7 e7
+mul r15w | 66 41 f7 e7
+mul r8   | 49 f7 e0
+mul r8b  | 41 f6 e0
+mul r8d  | 41 f7 e0
+mul r8w  | 66 41 f7 e0
+mul r9   | 49 f7 e1
+mul r9b  | 41 f6 e1
+mul r9d  | 41 f7 e1
+mul r9w  | 66 41 f7 e1
+mul rax  | 48 f7 e0
+mul rbp  | 48 f7 e5
+mul rbx  | 48 f7 e3
+mul rcx  | 48 f7 e1
+mul rdi  | 48 f7 e7
+mul rdx  | 48 f7 e2
+mul rsi  | 48 f7 e6
+mul rsp  | 48 f7 e4
+mul si   | 66 f7 e6
+mul sil  | 40 f6 e6
+mul sp   | 66 f7 e4
+mul spl  | 40 f6 e4
+
 # Or
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
 or BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 08 8c 8b 78 56 34 12
