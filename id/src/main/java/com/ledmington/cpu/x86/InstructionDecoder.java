@@ -670,8 +670,17 @@ public final class InstructionDecoder {
                     yield new Instruction(Opcode.ENDBR64);
                 } else if (x == (byte) 0xfb) {
                     yield new Instruction(Opcode.ENDBR32);
+                } else if (pref.p1().isPresent() && pref.p1().orElseThrow() == (byte) 0xf3) {
+                    final ModRM modrm = new ModRM(x);
+                    yield new Instruction(
+                            Opcode.RDSSPQ,
+                            Registers.fromCode(
+                                    modrm.rm(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRMExtension(),
+                                    false));
                 } else {
-                    throw new IllegalArgumentException("Invalid value");
+                    throw new IllegalArgumentException(String.format("Invalid value (0x%02x)", x));
                 }
             }
             case NOP_OPCODE -> {

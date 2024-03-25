@@ -485,6 +485,11 @@ public enum Opcode {
     RDSEED("rdseed"),
 
     /**
+     * Read shadow stack pointer.
+     */
+    RDSSPQ("rdsspq"),
+
+    /**
      * Return from procedure.
      */
     RET("ret"),

@@ -1381,3 +1381,7 @@ rdseed r11  | 49 0f c7 fb
 rdseed r12d | 41 0f c7 fc
 rdseed r13w | 66 41 0f c7 fd
 rdseed rax  | 48 0f c7 f8
+
+# Rdsspq
+rdsspq r11 | f3 49 0f 1e cb
+rdsspq rax | f3 48 0f 1e c8
