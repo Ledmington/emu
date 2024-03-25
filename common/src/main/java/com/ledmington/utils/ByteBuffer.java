@@ -52,6 +52,13 @@ public final class ByteBuffer {
     }
 
     /**
+     * Returns the amount of bytes in the buffer.
+     */
+    public int length() {
+        return b.length;
+    }
+
+    /**
      * Moves the cursor back by the given amunt of bytes.
      *
      * @param n

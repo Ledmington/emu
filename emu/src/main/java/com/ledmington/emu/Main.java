@@ -21,7 +21,7 @@ public final class Main {
             throw new IllegalArgumentException(String.format("File '%s' does not exist\n", filename));
         }
 
-        byte[] bytes = null;
+        byte[] bytes;
         try {
             bytes = Files.readAllBytes(Paths.get(filename));
         } catch (final IOException e) {
@@ -38,8 +38,12 @@ public final class Main {
         logger.info("ELF file parsed successfully");
 
         final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
-        final InstructionDecoder dec = new InstructionDecoder();
-        dec.decode(code, elf.getFileHeader().isLittleEndian());
+        final InstructionDecoder dec = new InstructionDecoder(code);
+        final Emulator emu = new Emulator(elf, dec);
+
+        logger.info(" ### Execution start ### ");
+        emu.run();
+        logger.info(" ### Execution end ### ");
     }
 
     public static void main(final String[] args) {

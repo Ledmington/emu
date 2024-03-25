@@ -23,21 +23,30 @@ public final class InstructionDecoder {
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
     private ByteBuffer b = null;
 
-    public InstructionDecoder() {}
-
-    public List<Instruction> decode(final byte[] code) {
-        return decode(code, false);
+    public InstructionDecoder(final byte[] code) {
+        this.b = new ByteBuffer(code);
     }
 
-    public List<Instruction> decode(final byte[] code, final boolean isLittleEndian) {
-        this.b = new ByteBuffer(code, isLittleEndian);
-        final int length = code.length;
+    public void goTo(final int position) {
+        this.b.setPosition(position);
+    }
+
+    public int position() {
+        return this.b.position();
+    }
+
+    public List<Instruction> decodeAll() {
+        return decodeAll(false);
+    }
+
+    public List<Instruction> decodeAll(final boolean isLittleEndian) {
+        final int length = this.b.length();
         logger.info("The code is %,d bytes long", length);
 
         final List<Instruction> instructions = new ArrayList<>();
         while (b.position() < length) {
             final int pos = b.position();
-            final Instruction inst = decodeInstruction();
+            final Instruction inst = decodeOne();
             { // Debugging info
                 final int codeLen = b.position() - pos;
                 final StringBuilder sb = new StringBuilder();
@@ -54,7 +63,7 @@ public final class InstructionDecoder {
         return instructions;
     }
 
-    private Instruction decodeInstruction() {
+    public Instruction decodeOne() {
         final Prefixes pref = parsePrefixes();
 
         final byte opcodeFirstByte = b.read1();
