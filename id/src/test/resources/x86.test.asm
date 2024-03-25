@@ -1339,6 +1339,24 @@ lock cmpxchg QWORD PTR [rsi],r9                    | f0 4c 0f b1 0e
 lock cmpxchg WORD PTR [rax+rbx*4+0x12345678],r15w  | 66 f0 44 0f b1 bc 98 78 56 34 12
 lock cmpxchg WORD PTR [rsi],dx                     | 66 f0 0f b1 16
 
+# Xadd
+lock xadd BYTE PTR [rax+rbx*4+0x12345678],dh    | f0 0f c0 b4 98 78 56 34 12
+lock xadd BYTE PTR [rsi],bpl                    | f0 40 0f c0 2e
+lock xadd DWORD PTR [rax+rbx*4+0x12345678],r10d | f0 44 0f c1 94 98 78 56 34 12
+lock xadd DWORD PTR [rsi],ecx                   | f0 0f c1 0e
+lock xadd QWORD PTR [rax+rbx*4+0x12345678],rdi  | f0 48 0f c1 bc 98 78 56 34 12
+lock xadd QWORD PTR [rsi],r9                    | f0 4c 0f c1 0e
+lock xadd WORD PTR [rax+rbx*4+0x12345678],r15w  | 66 f0 44 0f c1 bc 98 78 56 34 12
+lock xadd WORD PTR [rsi],dx                     | 66 f0 0f c1 16
+xadd BYTE PTR [rax+rbx*4+0x12345678],dh         | 0f c0 b4 98 78 56 34 12
+xadd BYTE PTR [rsi],bpl                         | 40 0f c0 2e
+xadd DWORD PTR [rax+rbx*4+0x12345678],r10d      | 44 0f c1 94 98 78 56 34 12
+xadd DWORD PTR [rsi],ecx                        | 0f c1 0e
+xadd QWORD PTR [rax+rbx*4+0x12345678],rdi       | 48 0f c1 bc 98 78 56 34 12
+xadd QWORD PTR [rsi],r9                         | 4c 0f c1 0e
+xadd WORD PTR [rax+rbx*4+0x12345678],r15w       | 66 44 0f c1 bc 98 78 56 34 12
+xadd WORD PTR [rsi],dx                          | 66 0f c1 16
+
 # Pcmpeqd
 pcmpeqd xmm0,xmm0  | 66 0f 76 c0
 pcmpeqd xmm3,xmm11 | 66 41 0f 76 db

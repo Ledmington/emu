@@ -584,6 +584,8 @@ public final class InstructionDecoder {
         final byte BTC_INDIRECT32_R32_OPCODE = (byte) 0xbb;
         final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
         final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
+        final byte XADD_INDIRECT8_R8_OPCODE = (byte) 0xc0;
+        final byte XADD_INDIRECT32_R32_OPCODE = (byte) 0xc1;
         final byte SHUFPx_OPCODE = (byte) 0xc6;
         final byte BSWAP_EAX_OPCODE = (byte) 0xc8;
         final byte BSWAP_ECX_OPCODE = (byte) 0xc9;
@@ -856,6 +858,45 @@ public final class InstructionDecoder {
                         RegisterXMM.fromByte(r1),
                         RegisterXMM.fromByte(r2),
                         imm8());
+            }
+            case XADD_INDIRECT8_R8_OPCODE -> {
+                final ModRM modrm = modrm();
+                if (pref.p1().isPresent() && pref.p1().orElseThrow() == (byte) 0xf0) {
+                    yield new Instruction(
+                            Prefix.LOCK,
+                            Opcode.XADD,
+                            parseIndirectOperand(pref, modrm).build(),
+                            Register8.fromByte(
+                                    Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()),
+                                    pref.hasRexPrefix()));
+                }
+                yield new Instruction(
+                        Opcode.XADD,
+                        parseIndirectOperand(pref, modrm).build(),
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
+            }
+            case XADD_INDIRECT32_R32_OPCODE -> {
+                final ModRM modrm = modrm();
+                if (pref.p1().isPresent() && pref.p1().orElseThrow() == (byte) 0xf0) {
+                    yield new Instruction(
+                            Prefix.LOCK,
+                            Opcode.XADD,
+                            parseIndirectOperand(pref, modrm).build(),
+                            Registers.fromCode(
+                                    modrm.reg(),
+                                    pref.rex().isOperand64Bit(),
+                                    pref.rex().ModRMRegExtension(),
+                                    pref.hasOperandSizeOverridePrefix()));
+                }
+                yield new Instruction(
+                        Opcode.XADD,
+                        parseIndirectOperand(pref, modrm).build(),
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()));
             }
             case MOVQ_OPCODE -> {
                 final ModRM modrm = modrm();

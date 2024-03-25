@@ -587,6 +587,11 @@ public enum Opcode {
     UD2("ud2"),
 
     /**
+     * Exchange and add.
+     */
+    XADD("xadd"),
+
+    /**
      * Exchange.
      */
     XCHG("xchg"),
