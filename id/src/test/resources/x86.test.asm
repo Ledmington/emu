@@ -507,6 +507,9 @@ ret | c3
 # Cpuid
 cpuid | 0f a2
 
+# Hlt
+hlt | f4
+
 # Add
 add DWORD PTR [eax+ebx*4+0x12345678],r8d  | 67 44 01 84 98 78 56 34 12
 add DWORD PTR [rax+rbx*4+0x12345678],r8d  | 44 01 84 98 78 56 34 12

@@ -173,6 +173,11 @@ public enum Opcode {
     ENDBR64("endbr64"),
 
     /**
+     * Halt.
+     */
+    HLT("hlt"),
+
+    /**
      * Signed divide.
      */
     IDIV("idiv"),

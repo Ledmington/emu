@@ -1200,6 +1200,7 @@ public final class InstructionDecoder {
         final byte CALL_OPCODE = (byte) 0xe8;
         final byte JMP_DISP32_OPCODE = (byte) 0xe9;
         final byte JMP_DISP8_OPCODE = (byte) 0xeb;
+        final byte HLT_OPCODE = (byte) 0xf4;
 
         final Opcode[] opcodeTable = new Opcode[] {
             Opcode.ADD, Opcode.OR, Opcode.ADC, Opcode.SBB, Opcode.AND, Opcode.SUB, Opcode.XOR, Opcode.CMP
@@ -1213,6 +1214,7 @@ public final class InstructionDecoder {
             case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
             case INT3_OPCODE -> new Instruction(Opcode.INT3);
             case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
+            case HLT_OPCODE -> new Instruction(Opcode.HLT);
             case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
             case MOV_R32_INDIRECT32_OPCODE -> parseRM(pref, Opcode.MOV);
