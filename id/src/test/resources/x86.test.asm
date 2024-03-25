@@ -19,6 +19,17 @@
 
 # No-op
 nop | 90
+#
+nop DWORD PTR [eax]                    | 67 0f 1f 00
+nop DWORD PTR [rax]                    | 0f 1f 00
+nop DWORD PTR [rbx+r12*4+0x12345678]   | 42 0f 1f 84 a3 78 56 34 12
+nop QWORD PTR [eax]                    | 67 48 0f 1f 00
+nop QWORD PTR [rax]                    | 48 0f 1f 00
+nop QWORD PTR [rbx+r12*4+0x12345678]   | 4a 0f 1f 84 a3 78 56 34 12
+nop WORD PTR [eax]                     | 67 66 0f 1f 00
+nop WORD PTR [rax]                     | 66 0f 1f 00
+nop WORD PTR [rbx+r12*4+0x12345678]    | 66 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x12345678] | 2e 66 42 0f 1f 84 a3 78 56 34 12
 
 # Call
 # The output of these instructions is different from what you can see from other tools such as objdump
@@ -520,7 +531,10 @@ adc cx,0x1234 | 66 81 d1 34 12
 
 # And
 and al,0x12                              | 24 12
+and al,BYTE PTR [rax+rbx*4+0x12345678]   | 22 84 98 78 56 34 12
+and ax,WORD PTR [rax+rbx*4+0x12345678]   | 66 23 84 98 78 56 34 12
 and cx,0x1234                            | 66 81 e1 34 12
+and dx,WORD PTR [r10]                    | 66 41 23 12
 and eax,0x12                             | 83 e0 12
 and eax,0x12345678                       | 25 78 56 34 12
 and eax,DWORD PTR [rax+rbx*4+0x12345678] | 23 84 98 78 56 34 12
@@ -533,6 +547,7 @@ and rax,0x12345678                       | 48 25 78 56 34 12
 and rax,QWORD PTR [rax+rbx*4+0x12345678] | 48 23 84 98 78 56 34 12
 and rcx,QWORD PTR [r10]                  | 49 23 0a
 and rdi,0xf0                             | 48 83 e7 f0
+and spl,BYTE PTR [r10]                   | 41 22 22
 
 # Sub
 sub DWORD PTR [eax+ebx*4+0x12345678],r8d  | 67 44 29 84 98 78 56 34 12
@@ -688,6 +703,15 @@ div si   | 66 f7 f6
 div sil  | 40 f6 f6
 div sp   | 66 f7 f4
 div spl  | 40 f6 f4
+#
+div BYTE PTR [rax]                   | f6 30
+div BYTE PTR [rbx+r11*8+0x12345678]  | 42 f6 b4 db 78 56 34 12
+div DWORD PTR [rax]                  | f7 30
+div DWORD PTR [rbx+r11*8+0x12345678] | 42 f7 b4 db 78 56 34 12
+div QWORD PTR [rax]                  | 48 f7 30
+div QWORD PTR [rbx+r11*8+0x12345678] | 4a f7 b4 db 78 56 34 12
+div WORD PTR [rax]                   | 66 f7 30
+div WORD PTR [rbx+r11*8+0x12345678]  | 66 42 f7 b4 db 78 56 34 12
 
 # Or
 or BYTE PTR [r11+r9*4+0x12345678],0x99        | 43 80 8c 8b 78 56 34 12 99
@@ -804,6 +828,8 @@ movdqa xmm2,XMMWORD PTR [rsp+r9*4+0x12345678] | 66 42 0f 6f 94 8c 78 56 34 12
 movaps XMMWORD PTR [rip+0x12345678],xmm6       | 0f 29 35 78 56 34 12
 movaps XMMWORD PTR [rsp+r11*4+0x12345678],xmm7 | 42 0f 29 bc 9c 78 56 34 12
 movaps xmm0,xmm0                               | 0f 28 c0
+movaps xmm6,XMMWORD PTR [rip+0x12345678]       | 0f 28 35 78 56 34 12
+movaps xmm7,XMMWORD PTR [rsp+r11*4+0x12345678] | 42 0f 28 bc 9c 78 56 34 12
 movaps xmm7,xmm5                               | 0f 28 fd
 
 # Movapd
@@ -1089,13 +1115,21 @@ ucomiss xmm13,DWORD PTR [rip+0x12345678] | 44 0f 2e 2d 78 56 34 12
 
 # BTx
 bt edx,0x12  | 0f ba e2 12
+bt edx,esi   | 0f a3 f2
 bt rdx,0x12  | 48 0f ba e2 12
+bt rdx,rdi   | 48 0f a3 fa
 btc ecx,0x12 | 0f ba f9 12
+btc ecx,r9d  | 44 0f bb c9
 btc rcx,0x12 | 48 0f ba f9 12
+btc rcx,r10  | 4c 0f bb d1
 btr ebx,0x12 | 0f ba f3 12
+btr ebx,r11d | 44 0f b3 db
 btr rbx,0x12 | 48 0f ba f3 12
+btr rbx,r12  | 4c 0f b3 e3
 bts eax,0x12 | 0f ba e8 12
+bts eax,r13d | 44 0f ab e8
 bts rax,0x12 | 48 0f ba e8 12
+bts rax,r14  | 4c 0f ab f0
 
 # Xgetbv
 xgetbv | 0f 01 d0
@@ -1185,3 +1219,25 @@ prefetcht1 BYTE PTR [rax]                  | 0f 18 10
 prefetcht2 BYTE PTR [eax]                  | 67 0f 18 18
 prefetcht2 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 9c 99 78 56 34 12
 prefetcht2 BYTE PTR [rax]                  | 0f 18 18
+
+# Cmpxchg
+cmpxchg BYTE PTR [rax+rbx*4+0x12345678],dh         | 0f b0 b4 98 78 56 34 12
+cmpxchg BYTE PTR [rsi],bpl                         | 40 0f b0 2e
+cmpxchg DWORD PTR [rax+rbx*4+0x12345678],r10d      | 44 0f b1 94 98 78 56 34 12
+cmpxchg DWORD PTR [rsi],ecx                        | 0f b1 0e
+cmpxchg QWORD PTR [rax+rbx*4+0x12345678],rdi       | 48 0f b1 bc 98 78 56 34 12
+cmpxchg QWORD PTR [rsi],r9                         | 4c 0f b1 0e
+cmpxchg WORD PTR [rax+rbx*4+0x12345678],r15w       | 66 44 0f b1 bc 98 78 56 34 12
+cmpxchg WORD PTR [rsi],dx                          | 66 0f b1 16
+lock cmpxchg BYTE PTR [rax+rbx*4+0x12345678],dh    | f0 0f b0 b4 98 78 56 34 12
+lock cmpxchg BYTE PTR [rsi],bpl                    | f0 40 0f b0 2e
+lock cmpxchg DWORD PTR [rax+rbx*4+0x12345678],r10d | f0 44 0f b1 94 98 78 56 34 12
+lock cmpxchg DWORD PTR [rsi],ecx                   | f0 0f b1 0e
+lock cmpxchg QWORD PTR [rax+rbx*4+0x12345678],rdi  | f0 48 0f b1 bc 98 78 56 34 12
+lock cmpxchg QWORD PTR [rsi],r9                    | f0 4c 0f b1 0e
+lock cmpxchg WORD PTR [rax+rbx*4+0x12345678],r15w  | 66 f0 44 0f b1 bc 98 78 56 34 12
+lock cmpxchg WORD PTR [rsi],dx                     | 66 f0 0f b1 16
+
+# Pcmpeqd
+pcmpeqd xmm0,xmm0  | 66 0f 76 c0
+pcmpeqd xmm3,xmm11 | 66 41 0f 76 db

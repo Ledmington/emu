@@ -62,11 +62,12 @@ public final class TestIncompleteInstruction extends X86Test {
         } catch (final ArrayIndexOutOfBoundsException aiooe) {
             // what we expected, we ignore and exit
             return;
-        } catch (final Exception ex) {
+        } catch (final Throwable t) {
             // something else was thrown
             fail(() -> String.format(
                     "Expected ArrayIndexOutOfBounds to be thrown but '%s' was thrown instead, with message '%s'",
-                    ex.getClass().getName(), ex.getMessage()));
+                    t == null ? "null" : t.getClass().getName(), t == null ? "null" : t.getMessage()));
+            return;
         }
 
         // if we reached here, nothing was thrown

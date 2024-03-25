@@ -128,6 +128,11 @@ public enum Opcode {
     CMP("cmp"),
 
     /**
+     * Compare and exchange.
+     */
+    CMPXCHG("cmpxchg"),
+
+    /**
      * CPU identification.
      */
     CPUID("cpuid"),
@@ -366,6 +371,11 @@ public enum Opcode {
     PAND("pand"),
 
     /**
+     * Compare packed doublewords for equal.
+     */
+    PCMPEQD("pcmpeqd"),
+
+    /**
      * Pop a value from the stack.
      */
     POP("pop"),
@@ -376,29 +386,15 @@ public enum Opcode {
     POR("por"),
 
     /**
-     * Subtract packed quadword integers.
-     */
-    PSUBQ("psubq"),
-
-    /**
-     * Unpack low-order doublewords.
-     */
-    PUNPCKLDQ("punpckldq"),
-
-    /**
-     * Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register.
-     */
-    PUNPCKLQDQ("punpcklqdq"),
-
-    /**
-     *  Non-temporal data—fetch data into location close to the processor, minimizing cache pollution.
+     * Non-temporal data—fetch data into location close to the processor, minimizing
+     * cache pollution.
      * Pentium III processor: 1st-level cache
      * Pentium 4 and Intel Xeon processor: 2nd-level cache
      */
     PREFETCHNTA("prefetchnta"),
 
     /**
-     *  Temporal data—fetch data into all levels of cache hierarchy.
+     * Temporal data—fetch data into all levels of cache hierarchy.
      * Pentium III processor: 1st-level cache or 2nd-level cache
      * Pentium 4 and Intel Xeon processor: 2nd-level cache
      */
@@ -427,6 +423,21 @@ public enum Opcode {
      * Shuffle packed integer word in MMX register.
      */
     PSHUFW("pshufw"),
+
+    /**
+     * Subtract packed quadword integers.
+     */
+    PSUBQ("psubq"),
+
+    /**
+     * Unpack low-order doublewords.
+     */
+    PUNPCKLDQ("punpckldq"),
+
+    /**
+     * Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register.
+     */
+    PUNPCKLQDQ("punpcklqdq"),
 
     /**
      * Push word, doubleword or quadword onto the stack.
