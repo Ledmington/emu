@@ -575,6 +575,7 @@ public final class InstructionDecoder {
         final byte CPUID_OPCODE = (byte) 0xa2;
         final byte BT_INDIRECT32_R32_OPCODE = (byte) 0xa3;
         final byte BTS_INDIRECT32_R32_OPCODE = (byte) 0xab;
+        final byte GROUP15_OPCODE = (byte) 0xae;
         final byte IMUL_OPCODE = (byte) 0xaf;
         final byte XCHG_INDIRECT8_R8_OPCODE = (byte) 0xb0;
         final byte XCHG_INDIRECT32_R32_OPCODE = (byte) 0xb1;
@@ -649,6 +650,7 @@ public final class InstructionDecoder {
             case GROUP7_OPCODE -> parseExtendedOpcodeGroup7(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP8_OPCODE -> parseExtendedOpcodeGroup8(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP9_OPCODE -> parseExtendedOpcodeGroup9(opcodeFirstByte, opcodeSecondByte, pref);
+            case GROUP15_OPCODE -> parseExtendedOpcodeGroup15(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(opcodeFirstByte, opcodeSecondByte, pref);
 
             case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
@@ -1162,6 +1164,22 @@ public final class InstructionDecoder {
             }
             default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         };
+    }
+
+    private Instruction parseExtendedOpcodeGroup15(
+            final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+        final ModRM modrm = modrm();
+
+        if (modrm.mod() != (byte) 0x03) {
+            throw new IllegalArgumentException("Not implemented");
+        } else {
+            return switch (modrm.reg()) {
+                case (byte) 0x05 /* 101 */ -> new Instruction(
+                        Opcode.INCSSPQ,
+                        Registers.fromCode(modrm.rm(), true, pref.rex().ModRMRMExtension(), false));
+                default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+            };
+        }
     }
 
     private Instruction parseExtendedOpcodeGroup9(

@@ -198,6 +198,11 @@ public enum Opcode {
     INC("inc"),
 
     /**
+     * Increment shadow stack pointer.
+     */
+    INCSSPQ("incsspq"),
+
+    /**
      * Call to interrupt procedure.
      */
     INT3("int3"),
