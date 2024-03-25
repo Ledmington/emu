@@ -118,6 +118,11 @@ public enum Opcode {
     CMOVNE("cmovne"),
 
     /**
+     * Conditional move if not signed.
+     */
+    CMOVNS("cmovns"),
+
+    /**
      * Conditional move if signed.
      */
     CMOVS("cmovs"),

@@ -511,6 +511,7 @@ public final class InstructionDecoder {
         final byte CMOVBE_OPCODE = (byte) 0x46;
         final byte CMOVA_OPCODE = (byte) 0x47;
         final byte CMOVS_OPCODE = (byte) 0x48;
+        final byte CMOVNS_OPCODE = (byte) 0x49;
         final byte CMOVL_OPCODE = (byte) 0x4c;
         final byte CMOVGE_OPCODE = (byte) 0x4d;
         final byte CMOVLE_OPCODE = (byte) 0x4e;
@@ -587,7 +588,7 @@ public final class InstructionDecoder {
             Opcode.CMOVBE,
             Opcode.CMOVA,
             Opcode.CMOVS,
-            null,
+            Opcode.CMOVNS,
             null,
             null,
             Opcode.CMOVL,
@@ -982,6 +983,7 @@ public final class InstructionDecoder {
                     CMOVB_OPCODE,
                     CMOVBE_OPCODE,
                     CMOVNE_OPCODE,
+                    CMOVNS_OPCODE,
                     CMOVL_OPCODE,
                     CMOVGE_OPCODE,
                     CMOVG_OPCODE,
