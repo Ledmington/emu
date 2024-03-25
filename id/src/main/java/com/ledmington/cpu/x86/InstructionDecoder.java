@@ -1145,8 +1145,8 @@ public final class InstructionDecoder {
         final byte JGE_DISP8_OPCODE = (byte) 0x7d;
         final byte JLE_DISP8_OPCODE = (byte) 0x7e;
         final byte JG_DISP8_OPCODE = (byte) 0x7f;
-        final byte TEST_R8_OPCODE = (byte) 0x84;
-        final byte TEST_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
+        final byte TEST_R8_R8_OPCODE = (byte) 0x84;
+        final byte TEST_R32_R32_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
         final byte XCHG_INDIRECT8_R8_OPCODE = (byte) 0x86;
         final byte XCHG_INDIRECT32_R32_OPCODE = (byte) 0x87;
         final byte MOV_MEM8_REG8_OPCODE = (byte) 0x88;
@@ -1225,8 +1225,30 @@ public final class InstructionDecoder {
                                 Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()),
                         parseIndirectOperand(pref, modrm).build());
             }
-            case TEST_R8_OPCODE -> parseSimple8Bit(pref, Opcode.TEST, false);
-            case TEST_OPCODE -> parseSimple(pref, Opcode.TEST, false);
+            case TEST_R8_R8_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.TEST,
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()),
+                        Register8.fromByte(
+                                Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
+            }
+            case TEST_R32_R32_OPCODE -> {
+                final ModRM modrm = modrm();
+                yield new Instruction(
+                        Opcode.TEST,
+                        Registers.fromCode(
+                                modrm.rm(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRMExtension(),
+                                pref.hasOperandSizeOverridePrefix()),
+                        Registers.fromCode(
+                                modrm.reg(),
+                                pref.rex().isOperand64Bit(),
+                                pref.rex().ModRMRegExtension(),
+                                pref.hasOperandSizeOverridePrefix()));
+            }
             case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, imm8());
             case TEST_EAX_IMM32_OPCODE -> new Instruction(
                     Opcode.TEST, pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX, imm32());
@@ -1865,36 +1887,6 @@ public final class InstructionDecoder {
 
     private boolean isExtendedOpcode(final byte opcode) {
         return opcode == (byte) 0x80 || opcode == (byte) 0x81 || opcode == (byte) 0x82 || opcode == (byte) 0x83;
-    }
-
-    // FIXME: delete this
-    private Instruction parseSimple(final Prefixes pref, final Opcode opcode, final boolean invertOperands) {
-        final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
-        final RexPrefix rexPrefix = pref.rex();
-        final ModRM modrm = modrm();
-        final Register operand1 = Registers.fromCode(
-                modrm.reg(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRegExtension(), hasOperandSizeOverridePrefix);
-        final Register operand2 = Registers.fromCode(
-                modrm.rm(), rexPrefix.isOperand64Bit(), rexPrefix.ModRMRMExtension(), hasOperandSizeOverridePrefix);
-
-        if (invertOperands) {
-            return new Instruction(opcode, operand1, operand2);
-        }
-        return new Instruction(opcode, operand2, operand1);
-    }
-
-    // FIXME: delete this
-    private Instruction parseSimple8Bit(final Prefixes pref, final Opcode opcode, final boolean invertOperands) {
-        final ModRM modrm = modrm();
-        final Register operand1 =
-                Register8.fromByte(Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix());
-        final Register operand2 =
-                Register8.fromByte(Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix());
-
-        if (invertOperands) {
-            return new Instruction(opcode, operand1, operand2);
-        }
-        return new Instruction(opcode, operand2, operand1);
     }
 
     private ModRM modrm() {
