@@ -979,6 +979,11 @@ seta BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 97 84 4a 78 56 34 12
 seta al                             | 0f 97 c0
 seta r8b                            | 41 0f 97 c0
 
+# Setle
+setle BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 9e 84 4a 78 56 34 12
+setle al                             | 0f 9e c0
+setle r8b                            | 41 0f 9e c0
+
 # Setbe
 setbe BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 96 84 4a 78 56 34 12
 setbe al                             | 0f 96 c0

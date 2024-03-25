@@ -540,6 +540,11 @@ public enum Opcode {
     SETL("setl"),
 
     /**
+     * Set byte if less or equal.
+     */
+    SETLE("setle"),
+
+    /**
      * Set byte if not equal.
      */
     SETNE("setne"),

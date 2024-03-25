@@ -570,6 +570,7 @@ public final class InstructionDecoder {
         final byte SETA_OPCODE = (byte) 0x97;
         final byte SETL_OPCODE = (byte) 0x9c;
         final byte SETGE_OPCODE = (byte) 0x9d;
+        final byte SETLE_OPCODE = (byte) 0x9e;
         final byte SETG_OPCODE = (byte) 0x9f;
         final byte CPUID_OPCODE = (byte) 0xa2;
         final byte BT_INDIRECT32_R32_OPCODE = (byte) 0xa3;
@@ -637,7 +638,7 @@ public final class InstructionDecoder {
             null,
             Opcode.SETL,
             Opcode.SETGE,
-            null,
+            Opcode.SETLE,
             Opcode.SETG
         };
 
@@ -686,6 +687,7 @@ public final class InstructionDecoder {
             }
             case SETE_OPCODE,
                     SETB_OPCODE,
+                    SETLE_OPCODE,
                     SETAE_OPCODE,
                     SETNE_OPCODE,
                     SETBE_OPCODE,
