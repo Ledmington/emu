@@ -1397,8 +1397,11 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.TEST,
-                        Register8.fromByte(
-                                Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()),
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(pref, modrm).build()
+                                : Register8.fromByte(
+                                        Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
+                                        pref.hasRexPrefix()),
                         Register8.fromByte(
                                 Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix()));
             }
@@ -1406,11 +1409,13 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.TEST,
-                        Registers.fromCode(
-                                modrm.rm(),
-                                pref.rex().isOperand64Bit(),
-                                pref.rex().ModRMRMExtension(),
-                                pref.hasOperandSizeOverridePrefix()),
+                        (modrm.mod() != (byte) 0x03)
+                                ? parseIndirectOperand(pref, modrm).build()
+                                : Registers.fromCode(
+                                        modrm.rm(),
+                                        pref.rex().isOperand64Bit(),
+                                        pref.rex().ModRMRMExtension(),
+                                        pref.hasOperandSizeOverridePrefix()),
                         Registers.fromCode(
                                 modrm.reg(),
                                 pref.rex().isOperand64Bit(),

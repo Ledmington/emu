@@ -53,7 +53,7 @@ application {
 }
 
 run {
-	args = ["/usr/bin/gcc"]
+	args = ["/usr/bin/g++"]
 }
 
 spotless {

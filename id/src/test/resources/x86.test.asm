@@ -866,11 +866,17 @@ neg eax                            | f7 d8
 neg rbx                            | 48 f7 db
 
 # Test
+test BYTE PTR [r11+rdx*4+0x12345678],0x12         | 41 f6 84 93 78 56 34 12 12
 test BYTE PTR [r11+rdx*4+0x12345678],0x99         | 41 f6 84 93 78 56 34 12 99
+test BYTE PTR [r11+rdx*4+0x12345678],r13b         | 45 84 ac 93 78 56 34 12
 test BYTE PTR [r11d+edx*4+0x12345678],0x99        | 67 41 f6 84 93 78 56 34 12 99
 test BYTE PTR [r15+0x40],0x8                      | 41 f6 47 40 08
 test DWORD PTR [r11+rdx*4+0x12345678],0xdeadbeef  | 41 f7 84 93 78 56 34 12 ef be ad de
+test DWORD PTR [r11+rdx*4+0x12345678],ebx         | 41 85 9c 93 78 56 34 12
 test DWORD PTR [r11d+edx*4+0x12345678],0xdeadbeef | 67 41 f7 84 93 78 56 34 12 ef be ad de
+test QWORD PTR [r11+rdx*4+0x12345678],rax         | 49 85 84 93 78 56 34 12
+test WORD PTR [r11+rdx*4+0x12345678],0x1234       | 66 41 f7 84 93 78 56 34 12 34 12
+test WORD PTR [r11+rdx*4+0x12345678],r12w         | 66 45 85 a4 93 78 56 34 12
 test al,0x12                                      | a8 12
 test ax,0x1234                                    | 66 a9 34 12
 test eax,0x12345678                               | a9 78 56 34 12
