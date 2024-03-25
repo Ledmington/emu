@@ -537,6 +537,7 @@ public final class InstructionDecoder {
         final byte JGE_DISP32_OPCODE = (byte) 0x8d;
         final byte JLE_DISP32_OPCODE = (byte) 0x8e;
         final byte JG_DISP32_OPCODE = (byte) 0x8f;
+        final byte SETB_OPCODE = (byte) 0x92;
         final byte SETE_OPCODE = (byte) 0x94;
         final byte SETNE_OPCODE = (byte) 0x95;
         final byte SETBE_OPCODE = (byte) 0x96;
@@ -595,7 +596,7 @@ public final class InstructionDecoder {
         final Opcode[] setOpcodes = new Opcode[] {
             null,
             null,
-            null,
+            Opcode.SETB,
             null,
             Opcode.SETE,
             Opcode.SETNE,
@@ -653,7 +654,14 @@ public final class InstructionDecoder {
                                                 : (pref.rex().isOperand64Bit() ? 64 : 32))
                                 .build());
             }
-            case SETE_OPCODE, SETNE_OPCODE, SETBE_OPCODE, SETA_OPCODE, SETL_OPCODE, SETGE_OPCODE, SETG_OPCODE -> {
+            case SETE_OPCODE,
+                    SETB_OPCODE,
+                    SETNE_OPCODE,
+                    SETBE_OPCODE,
+                    SETA_OPCODE,
+                    SETL_OPCODE,
+                    SETGE_OPCODE,
+                    SETG_OPCODE -> {
                 final Opcode opcode = setOpcodes[BitUtils.and(opcodeSecondByte, (byte) 0x0f)];
                 final ModRM modrm = modrm();
                 yield new Instruction(
