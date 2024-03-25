@@ -871,6 +871,10 @@ movhlps xmm3,xmm7 | 0f 12 df
 punpcklqdq xmm0,xmm0 | 66 0f 6c c0
 punpcklqdq xmm3,xmm9 | 66 41 0f 6c d9
 
+# Punpckhqdq
+punpckhqdq xmm0,xmm0 | 66 0f 6d c0
+punpckhqdq xmm3,xmm9 | 66 41 0f 6d d9
+
 # Punpckldq
 punpckldq xmm0,xmm0 | 66 0f 62 c0
 punpckldq xmm3,xmm9 | 66 41 0f 62 d9

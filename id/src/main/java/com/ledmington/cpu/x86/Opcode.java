@@ -440,6 +440,11 @@ public enum Opcode {
     PSUBQ("psubq"),
 
     /**
+     * Unpack high data.
+     */
+    PUNPCKHQDQ("punpckhqdq"),
+
+    /**
      * Unpack low-order doublewords.
      */
     PUNPCKLDQ("punpckldq"),
