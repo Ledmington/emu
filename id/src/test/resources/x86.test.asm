@@ -879,6 +879,11 @@ punpckhqdq xmm3,xmm9 | 66 41 0f 6d d9
 punpckldq xmm0,xmm0 | 66 0f 62 c0
 punpckldq xmm3,xmm9 | 66 41 0f 62 d9
 
+# Setae
+setae BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 93 84 4a 78 56 34 12
+setae al                             | 0f 93 c0
+setae r8b                            | 41 0f 93 c0
+
 # Setne
 setne BYTE PTR [rdx+r9*2+0x12345678] | 42 0f 95 84 4a 78 56 34 12
 setne al                             | 0f 95 c0

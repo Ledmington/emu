@@ -540,6 +540,7 @@ public final class InstructionDecoder {
         final byte JLE_DISP32_OPCODE = (byte) 0x8e;
         final byte JG_DISP32_OPCODE = (byte) 0x8f;
         final byte SETB_OPCODE = (byte) 0x92;
+        final byte SETAE_OPCODE = (byte) 0x93;
         final byte SETE_OPCODE = (byte) 0x94;
         final byte SETNE_OPCODE = (byte) 0x95;
         final byte SETBE_OPCODE = (byte) 0x96;
@@ -599,7 +600,7 @@ public final class InstructionDecoder {
             null,
             null,
             Opcode.SETB,
-            null,
+            Opcode.SETAE,
             Opcode.SETE,
             Opcode.SETNE,
             Opcode.SETBE,
@@ -658,6 +659,7 @@ public final class InstructionDecoder {
             }
             case SETE_OPCODE,
                     SETB_OPCODE,
+                    SETAE_OPCODE,
                     SETNE_OPCODE,
                     SETBE_OPCODE,
                     SETA_OPCODE,
