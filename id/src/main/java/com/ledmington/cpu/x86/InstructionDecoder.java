@@ -210,13 +210,25 @@ public final class InstructionDecoder {
         final ModRM modrm = new ModRM(opcodeSecondByte);
         logger.debug("ModR/M byte: 0x%02x", opcodeSecondByte);
 
+        final boolean isRegister8Bit = opcodeFirstByte == (byte) 0xf6;
+
         final boolean isIndirectOperandNeeded = modrm.mod() != (byte) 0x03;
 
         return switch (modrm.reg()) {
             case (byte) 0x00 /* 000 */ -> new Instruction(
                     Opcode.TEST,
-                    parseIndirectOperand(pref, modrm).build(),
-                    (opcodeFirstByte == (byte) 0xf6) ? imm8() : imm32());
+                    isIndirectOperandNeeded
+                            ? parseIndirectOperand(pref, modrm).build()
+                            : (isRegister8Bit
+                                    ? Register8.fromByte(
+                                            Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
+                                            pref.hasRexPrefix())
+                                    : Registers.fromCode(
+                                            modrm.rm(),
+                                            pref.rex().isOperand64Bit(),
+                                            pref.rex().ModRMRMExtension(),
+                                            pref.hasOperandSizeOverridePrefix())),
+                    isRegister8Bit ? imm8() : (pref.hasOperandSizeOverridePrefix() ? imm16() : imm32()));
             case (byte) 0x02 /* 010 */ -> new Instruction(
                     Opcode.NOT,
                     Registers.fromCode(
@@ -1407,7 +1419,11 @@ public final class InstructionDecoder {
             }
             case TEST_AL_IMM8_OPCODE -> new Instruction(Opcode.TEST, Register8.AL, imm8());
             case TEST_EAX_IMM32_OPCODE -> new Instruction(
-                    Opcode.TEST, pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX, imm32());
+                    Opcode.TEST,
+                    pref.hasOperandSizeOverridePrefix()
+                            ? Register16.AX
+                            : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX),
+                    pref.hasOperandSizeOverridePrefix() ? imm16() : imm32());
             case XCHG_INDIRECT8_R8_OPCODE -> {
                 final ModRM modrm = modrm();
                 yield new Instruction(

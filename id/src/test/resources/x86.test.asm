@@ -872,9 +872,12 @@ test BYTE PTR [r15+0x40],0x8                      | 41 f6 47 40 08
 test DWORD PTR [r11+rdx*4+0x12345678],0xdeadbeef  | 41 f7 84 93 78 56 34 12 ef be ad de
 test DWORD PTR [r11d+edx*4+0x12345678],0xdeadbeef | 67 41 f7 84 93 78 56 34 12 ef be ad de
 test al,0x12                                      | a8 12
+test ax,0x1234                                    | 66 a9 34 12
 test eax,0x12345678                               | a9 78 56 34 12
+test r9b,0x12                                     | 41 f6 c1 12
 test r9b,r9b                                      | 45 84 c9
 test r9d,r9d                                      | 45 85 c9
+test r9w,0x1234                                   | 66 41 f7 c1 34 12
 test r9w,r9w                                      | 66 45 85 c9
 test rax,0x12345678                               | 48 a9 78 56 34 12
 test rbx,rbx                                      | 48 85 db

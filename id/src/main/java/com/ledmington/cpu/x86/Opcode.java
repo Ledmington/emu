@@ -8,6 +8,11 @@ import java.util.Objects;
 public enum Opcode {
 
     /**
+     * ASCII adjust AX before division.
+     */
+    AAD("aad"),
+
+    /**
      * Add with carry.
      */
     ADC("adc"),
