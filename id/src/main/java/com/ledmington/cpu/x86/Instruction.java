@@ -34,6 +34,14 @@ public final class Instruction {
         this(null, opcode, ops);
     }
 
+    public Opcode opcode() {
+        return opcode;
+    }
+
+    public Operand op(final int i) {
+        return this.operands[i];
+    }
+
     /**
      * The number of bits "used" by this instruction, which not necessarily
      * corresponds to the size of the operands.
