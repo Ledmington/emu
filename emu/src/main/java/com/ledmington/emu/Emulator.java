@@ -15,15 +15,15 @@ public final class Emulator {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
-    private static final Map<Register,Integer> regIndex= ImmutableMap.<Register,Integer>builder()
-            .put(Register32.EAX,0).build();
+    private static final Map<Register, Integer> regIndex =
+            ImmutableMap.<Register, Integer>builder().put(Register32.EAX, 0).build();
 
     private final ELF elf;
     private final InstructionDecoder dec;
 
     private int rip;
 
-    private long[] r=new long[16];
+    private long[] r = new long[16];
 
     public Emulator(final ELF elf, final InstructionDecoder dec) {
         this.elf = Objects.requireNonNull(elf);
@@ -43,7 +43,7 @@ public final class Emulator {
                 case XOR -> {
                     final Register r1 = (Register) inst.op(0);
                     final Register r2 = (Register) inst.op(1);
-                    final int r1i=regIndex.get(r1);
+                    final int r1i = regIndex.get(r1);
                 }
                 default -> throw new IllegalStateException(String.format("Unknwon opcode %s", inst.opcode()));
             }

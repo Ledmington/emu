@@ -50,15 +50,15 @@ public final class TestIncompleteInstruction extends X86Test {
             code[i] = BitUtils.parseByte(parsed[i]);
         }
 
-        final InstructionDecoder id = new InstructionDecoder();
+        final InstructionDecoder id = new InstructionDecoder(code);
 
         // here we expect an ArrayIndexOutOfBoundsException to be thrown because,
         // like CPUs which break when requesting a new byte and not finding it,
         // the InstructionDecoder will ask for more bytes than are available and
         // the ByteBuffer will throw this exception.
-        List<Instruction> decoded = null;
+        List<Instruction> decoded;
         try {
-            decoded = id.decode(code);
+            decoded = id.decodeAll();
         } catch (final ArrayIndexOutOfBoundsException aiooe) {
             // what we expected, we ignore and exit
             return;
@@ -66,7 +66,7 @@ public final class TestIncompleteInstruction extends X86Test {
             // something else was thrown
             fail(() -> String.format(
                     "Expected ArrayIndexOutOfBounds to be thrown but '%s' was thrown instead, with message '%s'",
-                    t == null ? "null" : t.getClass().getName(), t == null ? "null" : t.getMessage()));
+                    t.getClass().getName(), t.getMessage()));
             return;
         }
 

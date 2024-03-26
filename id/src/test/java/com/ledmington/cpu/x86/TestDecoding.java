@@ -21,8 +21,8 @@ public final class TestDecoding extends X86Test {
             code[i] = BitUtils.parseByte(parsed[i]);
         }
 
-        final InstructionDecoder id = new InstructionDecoder();
-        final List<Instruction> instructions = id.decode(code);
+        final InstructionDecoder id = new InstructionDecoder(code);
+        final List<Instruction> instructions = id.decodeAll();
         assertNotNull(instructions, "InstructionDecoder returned a null List");
         final int codeLen = instructions.size();
         assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));
