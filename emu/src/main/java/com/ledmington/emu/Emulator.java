@@ -1,33 +1,31 @@
 package com.ledmington.emu;
 
-import java.util.Map;
 import java.util.Objects;
 
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.Register;
-import com.ledmington.cpu.x86.Register32;
+import com.ledmington.cpu.x86.Register8;
 import com.ledmington.elf.ELF;
-import com.ledmington.utils.ImmutableMap;
+import com.ledmington.elf.ProgBitsSection;
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
 public final class Emulator {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
-    private static final Map<Register, Integer> regIndex =
-            ImmutableMap.<Register, Integer>builder().put(Register32.EAX, 0).build();
-
     private final ELF elf;
     private final InstructionDecoder dec;
-
+    private final X86RegisterFile regs = new X86RegisterFile();
     private int rip;
 
     private long[] r = new long[16];
 
-    public Emulator(final ELF elf, final InstructionDecoder dec) {
+    public Emulator(final ELF elf) {
         this.elf = Objects.requireNonNull(elf);
-        this.dec = Objects.requireNonNull(dec);
+        final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
+        this.dec = new InstructionDecoder(code);
     }
 
     public void run() {
@@ -41,9 +39,13 @@ public final class Emulator {
             logger.debug(inst.toIntelSyntax());
             switch (inst.opcode()) {
                 case XOR -> {
-                    final Register r1 = (Register) inst.op(0);
-                    final Register r2 = (Register) inst.op(1);
-                    final int r1i = regIndex.get(r1);
+                    switch (((Register) inst.op(0)).bits()) {
+                        case 8 -> {
+                            final byte r1 = regs.get((Register8) inst.op(0));
+                            final byte r2 = regs.get((Register8) inst.op(1));
+                            regs.write((Register8) inst.op(0), BitUtils.xor(r1, r2));
+                        }
+                    }
                 }
                 default -> throw new IllegalStateException(String.format("Unknwon opcode %s", inst.opcode()));
             }

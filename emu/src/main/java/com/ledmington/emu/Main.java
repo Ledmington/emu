@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
-import com.ledmington.elf.ProgBitsSection;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -37,9 +35,7 @@ public final class Main {
         final ELF elf = parseELF(filename);
         logger.info("ELF file parsed successfully");
 
-        final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
-        final InstructionDecoder dec = new InstructionDecoder(code);
-        final Emulator emu = new Emulator(elf, dec);
+        final Emulator emu = new Emulator(elf);
 
         logger.info(" ### Execution start ### ");
         emu.run();
