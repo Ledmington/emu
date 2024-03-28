@@ -75,6 +75,10 @@ public final class BitUtils {
         return result;
     }
 
+    public static byte xor(final byte a, final byte b) {
+        return BitUtils.asByte(a ^ b);
+    }
+
     public static byte shr(final byte b, final int x) {
         return asByte((b >>> x) & (0x000000ff >>> x));
     }
