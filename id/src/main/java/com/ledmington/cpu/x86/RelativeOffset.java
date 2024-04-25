@@ -24,4 +24,8 @@ public final class RelativeOffset implements Operand {
     public String toIntelSyntax() {
         return String.format("0x%x", value);
     }
+
+    public long amount() {
+        return value;
+    }
 }

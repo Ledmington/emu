@@ -202,6 +202,10 @@ public final class IndirectOperand implements Operand {
         return this.ptrSize;
     }
 
+    public Register r1() {
+        return reg1;
+    }
+
     @Override
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();

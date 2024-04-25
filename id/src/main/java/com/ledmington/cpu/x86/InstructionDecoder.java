@@ -27,8 +27,8 @@ public final class InstructionDecoder {
         this.b = new ByteBuffer(code);
     }
 
-    public void goTo(final int position) {
-        this.b.setPosition(position);
+    public void goTo(final long rip) {
+        this.b.setPosition(BitUtils.asInt(rip));
     }
 
     public int position() {
@@ -1881,7 +1881,8 @@ public final class InstructionDecoder {
         boolean hasAddressSizeOverridePrefix = false;
 
         // FIXME: is there a better way to do this?
-        // (technically there is no limit to the number of prefixes an instruction can have)
+        // (technically there is no limit to the number of prefixes an instruction can
+        // have)
         while (true) {
             byte x = b.read1();
 

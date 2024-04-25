@@ -3,6 +3,7 @@ plugins {
 	id 'application'
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'com.github.ben-manes.versions' version '0.51.0'
+	id 'com.adarshr.test-logger' version '4.0.0'
 }
 
 repositories {
@@ -20,10 +21,15 @@ String fatJarPath = path("${project.layout.buildDirectory.get()}", "libs", "${fa
 String basePackage = "com.ledmington"
 String mainClassName = "${basePackage}.emu.Main"
 
+ext.junitVersion = "5.10.2"
 dependencies {
 	implementation project(':elf')
 	implementation project(':id')
 	implementation project(':utils')
+
+	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
 compileJava {
@@ -38,6 +44,39 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
+}
+
+test {
+	useJUnitPlatform()
+	minHeapSize = "128m"
+	maxHeapSize = "512m"
+}
+
+testlogger {
+	theme 'standard'
+	// theme 'mocha'
+	// theme 'mocha-parallel'
+
+	showExceptions true
+	showStackTraces true
+	showFullStackTraces false
+	showCauses true
+
+	slowThreshold 2000
+
+	showSummary true
+	showSimpleNames false
+	showPassed false
+	showSkipped true
+	showFailed true
+	showOnlySlow false
+
+	showStandardStreams true
+	showPassedStandardStreams false
+	showSkippedStandardStreams true
+	showFailedStandardStreams true
+
+	logLevel 'lifecycle'
 }
 
 application {
