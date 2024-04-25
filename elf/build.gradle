@@ -17,7 +17,7 @@ static def path(String... args) {
 
 ext.junitVersion = "5.10.2"
 dependencies {
-	implementation project(':common')
+	implementation project(':utils')
 
 	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
 	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"

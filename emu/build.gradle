@@ -23,7 +23,7 @@ String mainClassName = "${basePackage}.emu.Main"
 dependencies {
 	implementation project(':elf')
 	implementation project(':id')
-	implementation project(':common')
+	implementation project(':utils')
 }
 
 compileJava {

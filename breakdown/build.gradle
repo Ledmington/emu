@@ -14,7 +14,7 @@ static def path(String... args) {
 }
 
 dependencies {
-	implementation project(':common')
+	implementation project(':utils')
 	implementation project(':id')
 }
 
