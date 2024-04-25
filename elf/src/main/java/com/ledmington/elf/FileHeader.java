@@ -97,6 +97,10 @@ public final class FileHeader {
         return shstrtab_index;
     }
 
+    public FileType getType() {
+        return fileType;
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Format               : ");

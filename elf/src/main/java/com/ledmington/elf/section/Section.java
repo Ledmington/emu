@@ -1,4 +1,4 @@
-package com.ledmington.elf;
+package com.ledmington.elf.section;
 
 import java.util.Objects;
 
@@ -14,5 +14,9 @@ public abstract class Section {
 
     public String name() {
         return name;
+    }
+
+    public SectionHeader header() {
+        return sectionHeader;
     }
 }

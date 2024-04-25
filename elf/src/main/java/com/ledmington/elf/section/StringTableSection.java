@@ -1,7 +1,5 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.elf.Section;
-import com.ledmington.elf.SectionHeader;
 import com.ledmington.utils.ByteBuffer;
 
 public final class StringTableSection extends Section {

@@ -1,6 +1,5 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.elf.SectionHeader;
 import com.ledmington.utils.ByteBuffer;
 
 public final class GnuPropertySection extends NoteSection {

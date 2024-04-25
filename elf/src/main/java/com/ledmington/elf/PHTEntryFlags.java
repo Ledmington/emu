@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum PHTEntryFlags {
-    PF_X(0x00000001, "Executable", 'E'),
+    PF_X(0x00000001, "Executable", 'X'),
     PF_W(0x00000002, "Writable", 'W'),
     PF_R(0x00000004, "Readable", 'R');
 

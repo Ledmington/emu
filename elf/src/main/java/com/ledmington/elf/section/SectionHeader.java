@@ -1,4 +1,4 @@
-package com.ledmington.elf;
+package com.ledmington.elf.section;
 
 /**
  * This class is just a data holder.

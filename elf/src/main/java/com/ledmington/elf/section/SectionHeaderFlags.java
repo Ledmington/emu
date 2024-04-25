@@ -1,4 +1,4 @@
-package com.ledmington.elf;
+package com.ledmington.elf.section;
 
 public enum SectionHeaderFlags {
     SHF_WRITE(0x00000000000001L, "Writable", 'W'),
