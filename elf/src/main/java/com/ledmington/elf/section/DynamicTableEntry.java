@@ -1,4 +1,4 @@
-package com.ledmington.elf;
+package com.ledmington.elf.section;
 
 public final class DynamicTableEntry {
 

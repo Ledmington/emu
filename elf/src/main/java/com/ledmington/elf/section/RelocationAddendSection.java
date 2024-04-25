@@ -1,23 +1,26 @@
-package com.ledmington.elf;
+package com.ledmington.elf.section;
 
+import com.ledmington.elf.Section;
+import com.ledmington.elf.SectionHeader;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 
-public final class RelocationSection extends Section {
+public final class RelocationAddendSection extends Section {
 
-    private final RelocationEntry[] relocationTable;
+    private final RelocationAddendEntry[] relocationAddendTable;
 
-    public RelocationSection(
+    public RelocationAddendSection(
             final String name, final SectionHeader sectionHeader, final ByteBuffer b, final boolean is32Bit) {
         super(name, sectionHeader);
 
         b.setPosition((int) sectionHeader.fileOffset());
         final int nEntries = (int) (sectionHeader.size() / sectionHeader.entrySize());
-        this.relocationTable = new RelocationEntry[nEntries];
+        this.relocationAddendTable = new RelocationAddendEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
             final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            this.relocationTable[i] = new RelocationEntry(offset, info);
+            final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+            this.relocationAddendTable[i] = new RelocationAddendEntry(offset, info, addend);
         }
     }
 }

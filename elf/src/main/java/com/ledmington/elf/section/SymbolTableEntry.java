@@ -1,4 +1,4 @@
-package com.ledmington.elf;
+package com.ledmington.elf.section;
 
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;

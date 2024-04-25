@@ -1,5 +1,22 @@
 package com.ledmington.elf;
 
+import com.ledmington.elf.section.ConstructorsSection;
+import com.ledmington.elf.section.DestructorsSection;
+import com.ledmington.elf.section.DynamicSection;
+import com.ledmington.elf.section.DynamicSymbolTableSection;
+import com.ledmington.elf.section.GnuHashSection;
+import com.ledmington.elf.section.GnuPropertySection;
+import com.ledmington.elf.section.GnuVersionRequirementsSection;
+import com.ledmington.elf.section.GnuVersionSection;
+import com.ledmington.elf.section.InterpreterPathSection;
+import com.ledmington.elf.section.NoBitsSection;
+import com.ledmington.elf.section.NoteSection;
+import com.ledmington.elf.section.NullSection;
+import com.ledmington.elf.section.ProgBitsSection;
+import com.ledmington.elf.section.RelocationAddendSection;
+import com.ledmington.elf.section.RelocationSection;
+import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.SymbolTableSection;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
