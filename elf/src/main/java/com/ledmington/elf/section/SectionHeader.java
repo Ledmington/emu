@@ -64,6 +64,10 @@ public final class SectionHeader {
         return entrySize;
     }
 
+    public long virtualAddress() {
+        return virtualAddress;
+    }
+
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("Name offset     : ");

@@ -29,19 +29,23 @@ public final class ELFParser {
 
     private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
 
-    // A collection of standard section names
-    private static final String SECTION_NAMES_TABLE_NAME = ".shstrtab";
-    private static final String STRING_TABLE_NAME = ".strtab";
-    private static final String SYMBOL_TABLE_NAME = ".symtab";
-    private static final String INTERP_SECTION_NAME = ".interp";
-    private static final String DYNAMIC_SYMBOL_TABLE_NAME = ".dynsym";
-    private static final String GNU_PROPERTY_NAME = ".note.gnu.property";
-    private static final String GNU_VERSYM_NAME = ".gnu.version";
-    private static final String GNU_VERNEED_NAME = ".gnu.version_r";
-
     private ByteBuffer b;
 
     public ELFParser() {}
+
+    public ELF parse(final byte[] bytes) {
+        this.b = new ByteBuffer(bytes);
+
+        final FileHeader fileHeader = parseFileHeader();
+
+        final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
+
+        final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
+
+        final Section[] sectionTable = parseSectionTable(fileHeader, sectionHeaderTable);
+
+        return new ELF(fileHeader, programHeaderTable, sectionTable);
+    }
 
     private FileHeader parseFileHeader() {
         final int magicNumber = b.read4();
@@ -180,7 +184,7 @@ public final class ELFParser {
         final long alignment = b.read8();
         if (alignment != 0
                 && Long.bitCount(alignment) != 1
-                && segmentVirtualAddress % alignment != segmentOffset % alignment) {
+                && (segmentVirtualAddress % alignment) != (segmentOffset % alignment)) {
             if (alignment != 0 && Long.bitCount(alignment) != 1) {
                 throw new IllegalArgumentException(String.format(
                         "Wrong value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
@@ -305,63 +309,46 @@ public final class ELFParser {
 
             if (typeName.equals(SectionHeaderType.SHT_NULL.name())) {
                 sectionTable[k] = new NullSection(entry);
-            } else if (name.equals(SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_SYMTAB.name())) {
+            } else if (name.equals(".symtab") || typeName.equals(SectionHeaderType.SHT_SYMTAB.name())) {
                 sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
-            } else if (name.equals(SECTION_NAMES_TABLE_NAME)
-                    || name.equals(STRING_TABLE_NAME)
+            } else if (name.equals(".shstrtab")
+                    || name.equals(".strtab")
                     || typeName.equals(SectionHeaderType.SHT_STRTAB.name())) {
                 sectionTable[k] = new StringTableSection(name, entry, b);
-            } else if (name.equals(INTERP_SECTION_NAME)) {
-                sectionTable[k] = new InterpreterPathSection(name, entry, b);
-            } else if (name.equals(DYNAMIC_SYMBOL_TABLE_NAME) || typeName.equals(SectionHeaderType.SHT_DYNSYM.name())) {
+            } else if (name.equals(".dynsym") || typeName.equals(SectionHeaderType.SHT_DYNSYM.name())) {
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.name())) {
-                if (name.equals(GNU_PROPERTY_NAME)) {
-                    sectionTable[k] = new GnuPropertySection(name, entry, b);
-                } else {
-                    sectionTable[k] = new NoteSection(name, entry, b);
-                }
+                sectionTable[k] = name.equals(".note.gnu.property")
+                        ? new GnuPropertySection(name, entry, b)
+                        : new NoteSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.name())) {
                 sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.name())) {
-                sectionTable[k] = new ProgBitsSection(name, entry, b);
+                sectionTable[k] = name.equals(".interp")
+                        ? new InterpreterPathSection(name, entry, b)
+                        : new ProgBitsSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.name())) {
-                sectionTable[k] = new NoBitsSection(name, entry, b);
+                sectionTable[k] = new NoBitsSection(name, entry);
             } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.name())) {
                 sectionTable[k] = new DynamicSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_RELA.name())) {
                 sectionTable[k] = new RelocationAddendSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.name())) {
                 sectionTable[k] = new RelocationSection(name, entry, b, fileHeader.is32Bit());
-            } else if (name.equals(GNU_VERSYM_NAME)) {
+            } else if (name.equals(".gnu.version")) {
                 sectionTable[k] = new GnuVersionSection(name, entry, b);
-            } else if (name.equals(GNU_VERNEED_NAME)) {
+            } else if (name.equals(".gnu.version_r")) {
                 sectionTable[k] = new GnuVersionRequirementsSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.name())) {
                 sectionTable[k] = new ConstructorsSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.name())) {
                 sectionTable[k] = new DestructorsSection(name, entry, b);
             } else {
-                logger.warning(String.format(
-                        "Don't know how to parse section n.%,d with type %s and name '%s'", k, typeName, name));
-                sectionTable[k] = null;
+                throw new IllegalArgumentException(String.format(
+                        "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));
             }
         }
 
         return sectionTable;
-    }
-
-    public ELF parse(final byte[] bytes) {
-        this.b = new ByteBuffer(bytes);
-
-        final FileHeader fileHeader = parseFileHeader();
-
-        final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
-
-        final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
-
-        final Section[] sectionTable = parseSectionTable(fileHeader, sectionHeaderTable);
-
-        return new ELF(fileHeader, programHeaderTable, sectionTable);
     }
 }

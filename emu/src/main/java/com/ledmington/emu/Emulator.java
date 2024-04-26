@@ -44,8 +44,6 @@ public final class Emulator {
         this.dec = new InstructionDecoder(code);
 
         final ProgBitsSection dataSection = (ProgBitsSection) elf.getFirstSectionByName(".data");
-
-        logger.info(elf.toString());
     }
 
     public void run() {
@@ -105,7 +103,9 @@ public final class Emulator {
 
         logger.debug("Loading ELF sections into memory");
         for (final Section sec : elf.sections()) {
-            //
+            if (sec.header().size() != 0) {
+                mem.loadSection(sec);
+            }
         }
     }
 }

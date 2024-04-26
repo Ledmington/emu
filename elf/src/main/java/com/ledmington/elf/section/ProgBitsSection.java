@@ -2,9 +2,9 @@ package com.ledmington.elf.section;
 
 import com.ledmington.utils.ByteBuffer;
 
-public final class ProgBitsSection extends Section {
+public class ProgBitsSection extends Section {
 
-    private final byte[] content;
+    protected final byte[] content;
 
     public ProgBitsSection(final String name, final SectionHeader sectionHeader, final ByteBuffer b) {
         super(name, sectionHeader);
