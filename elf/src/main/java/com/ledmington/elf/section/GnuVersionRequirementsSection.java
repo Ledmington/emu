@@ -1,6 +1,6 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
  * Reference <a href=
@@ -9,7 +9,8 @@ import com.ledmington.utils.ByteBuffer;
  */
 public final class GnuVersionRequirementsSection extends Section {
 
-    public GnuVersionRequirementsSection(final String name, final SectionHeader sectionHeader, final ByteBuffer b) {
+    public GnuVersionRequirementsSection(
+            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         super(name, sectionHeader);
     }
 }

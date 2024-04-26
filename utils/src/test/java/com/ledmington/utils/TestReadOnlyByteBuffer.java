@@ -7,16 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public final class TestByteBuffer {
+public final class TestReadOnlyByteBuffer {
 
     private final byte[] arr = new byte[] {
         (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67, (byte) 0x89, (byte) 0xab, (byte) 0xcd, (byte) 0xef
     };
-    private ByteBuffer bb;
+    private ReadOnlyByteBuffer bb;
 
     @BeforeEach
     public void setup() {
-        this.bb = new ByteBuffer(this.arr);
+        this.bb = new ReadOnlyByteBuffer(this.arr);
     }
 
     @Test

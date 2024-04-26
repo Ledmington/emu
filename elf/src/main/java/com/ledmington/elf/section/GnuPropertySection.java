@@ -1,9 +1,9 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class GnuPropertySection extends NoteSection {
-    public GnuPropertySection(final String name, final SectionHeader entry, final ByteBuffer b) {
+    public GnuPropertySection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
         super(name, entry, b);
 
         if (this.owner.length() != 4 || !this.owner.equals("GNU\0")) {

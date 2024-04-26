@@ -1,12 +1,12 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class StringTableSection extends Section {
 
     private final char[] table;
 
-    public StringTableSection(final String name, final SectionHeader entry, final ByteBuffer b) {
+    public StringTableSection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
         super(name, entry);
 
         final int start = (int) entry.fileOffset();

@@ -1,12 +1,13 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class SymbolTableSection extends Section {
 
     private final SymbolTableEntry[] symbolTable;
 
-    public SymbolTableSection(final String name, final SectionHeader entry, final ByteBuffer b, final boolean is32Bit) {
+    public SymbolTableSection(
+            final String name, final SectionHeader entry, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         super(name, entry);
 
         final int start = (int) entry.fileOffset();

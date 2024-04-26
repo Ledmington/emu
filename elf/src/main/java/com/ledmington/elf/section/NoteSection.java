@@ -1,6 +1,6 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
 public sealed class NoteSection extends Section permits GnuPropertySection {
@@ -11,7 +11,7 @@ public sealed class NoteSection extends Section permits GnuPropertySection {
     protected final String description;
     protected final int type;
 
-    public NoteSection(final String name, final SectionHeader entry, final ByteBuffer b) {
+    public NoteSection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
         super(name, entry);
 
         b.setPosition((int) entry.fileOffset());

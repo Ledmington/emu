@@ -22,19 +22,19 @@ import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.SymbolTableSection;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class ELFParser {
 
     private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
 
-    private ByteBuffer b;
+    private ReadOnlyByteBuffer b;
 
     public ELFParser() {}
 
     public ELF parse(final byte[] bytes) {
-        this.b = new ByteBuffer(bytes);
+        this.b = new ReadOnlyByteBuffer(bytes);
 
         final FileHeader fileHeader = parseFileHeader();
 

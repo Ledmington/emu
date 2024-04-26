@@ -1,6 +1,6 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
  * Reference <a href=
@@ -11,7 +11,7 @@ public final class GnuVersionSection extends Section {
 
     private final short[] versions;
 
-    public GnuVersionSection(final String name, final SectionHeader sectionHeader, final ByteBuffer b) {
+    public GnuVersionSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         super(name, sectionHeader);
 
         b.setPosition((int) sectionHeader.fileOffset());

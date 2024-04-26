@@ -5,17 +5,17 @@ import java.util.Objects;
 /**
  * A buffer which allows reading with endianness.
  */
-public final class ByteBuffer {
+public final class ReadOnlyByteBuffer {
 
     private final byte[] b;
     private boolean isLittleEndian;
     private int i;
 
-    public ByteBuffer(final byte[] b) {
+    public ReadOnlyByteBuffer(final byte[] b) {
         this(b, false);
     }
 
-    public ByteBuffer(final byte[] b, final boolean isLittleEndian) {
+    public ReadOnlyByteBuffer(final byte[] b, final boolean isLittleEndian) {
         this.b = Objects.requireNonNull(b);
         this.i = 0;
         this.isLittleEndian = isLittleEndian;
@@ -200,7 +200,7 @@ public final class ByteBuffer {
         if (!this.getClass().equals(other.getClass())) {
             return false;
         }
-        final ByteBuffer bb = (ByteBuffer) other;
+        final ReadOnlyByteBuffer bb = (ReadOnlyByteBuffer) other;
         if (this.b.length != bb.b.length) {
             return false;
         }

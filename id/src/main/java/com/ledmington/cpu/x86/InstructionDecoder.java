@@ -9,8 +9,8 @@ import com.ledmington.cpu.x86.Instruction.Prefix;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ByteBuffer;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual
@@ -21,10 +21,10 @@ import com.ledmington.utils.MiniLogger;
 public final class InstructionDecoder {
 
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
-    private ByteBuffer b = null;
+    private ReadOnlyByteBuffer b = null;
 
     public InstructionDecoder(final byte[] code) {
-        this.b = new ByteBuffer(code);
+        this.b = new ReadOnlyByteBuffer(code);
     }
 
     public void goTo(final long rip) {

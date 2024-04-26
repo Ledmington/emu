@@ -1,13 +1,13 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class DynamicSymbolTableSection extends Section {
 
     private final SymbolTableEntry[] symbolTable;
 
     public DynamicSymbolTableSection(
-            final String name, final SectionHeader entry, final ByteBuffer b, final boolean is32Bit) {
+            final String name, final SectionHeader entry, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         super(name, entry);
 
         final int start = (int) entry.fileOffset();

@@ -1,14 +1,14 @@
 package com.ledmington.elf.section;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class RelocationSection extends Section {
 
     private final RelocationEntry[] relocationTable;
 
     public RelocationSection(
-            final String name, final SectionHeader sectionHeader, final ByteBuffer b, final boolean is32Bit) {
+            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         super(name, sectionHeader);
 
         b.setPosition((int) sectionHeader.fileOffset());

@@ -55,7 +55,7 @@ public final class TestIncompleteInstruction extends X86Test {
         // here we expect an ArrayIndexOutOfBoundsException to be thrown because,
         // like CPUs which break when requesting a new byte and not finding it,
         // the InstructionDecoder will ask for more bytes than are available and
-        // the ByteBuffer will throw this exception.
+        // the ReadOnlyByteBuffer will throw this exception.
         List<Instruction> decoded;
         try {
             decoded = id.decodeAll();
