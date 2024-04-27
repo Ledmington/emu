@@ -12,7 +12,7 @@ public final class SectionHeader {
     private final long virtualAddress;
     private final long fileOffset;
     private final long size;
-    private final int sh_link;
+    private final int linkedSectionIndex;
     private final int sh_info;
     private final long alignment;
     private final long entrySize;
@@ -24,7 +24,7 @@ public final class SectionHeader {
             long virtualAddress,
             long fileOffset,
             long size,
-            int sh_link,
+            int linkedSectionIndex,
             int sh_info,
             long alignment,
             long entrySize) {
@@ -34,7 +34,7 @@ public final class SectionHeader {
         this.virtualAddress = virtualAddress;
         this.fileOffset = fileOffset;
         this.size = size;
-        this.sh_link = sh_link;
+        this.linkedSectionIndex = linkedSectionIndex;
         this.sh_info = sh_info;
         this.alignment = alignment;
         this.entrySize = entrySize;
@@ -90,8 +90,8 @@ public final class SectionHeader {
         sb.append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset));
         sb.append("Size on file    : ");
         sb.append(String.format("%,d bytes\n", size));
-        sb.append("sh_link         : ");
-        sb.append(String.format("%,d (0x%08x)\n", sh_link, sh_link));
+        sb.append("linkedSectionIndex         : ");
+        sb.append(String.format("%,d (0x%08x)\n", linkedSectionIndex, linkedSectionIndex));
         sb.append("sh_info         : ");
         sb.append(String.format("%,d (0x%08x)\n", sh_info, sh_info));
         sb.append("Alignment       : ");

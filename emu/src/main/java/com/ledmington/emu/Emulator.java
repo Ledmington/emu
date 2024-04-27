@@ -21,6 +21,9 @@ import com.ledmington.emu.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
+/**
+ * A useful reference <a href="https://linuxgazette.net/84/hawk.html">here</a>.
+ */
 public final class Emulator {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
@@ -42,14 +45,13 @@ public final class Emulator {
 
         final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
         this.dec = new InstructionDecoder(code);
+        this.rip = elf.getFileHeader().entryPointVirtualAddress();
 
         final ProgBitsSection dataSection = (ProgBitsSection) elf.getFirstSectionByName(".data");
     }
 
     public void run() {
         loadELF();
-
-        rip = 0L;
 
         while (true) {
             dec.goTo(rip);
@@ -65,6 +67,8 @@ public final class Emulator {
                             final byte r2 = regFile.get((Register8) inst.op(1));
                             regFile.set((Register8) inst.op(0), BitUtils.xor(r1, r2));
                         }
+                        default -> throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when XOR has %,d bits", ((Register) inst.op(0)).bits()));
                     }
                 }
                 case JMP -> {
@@ -79,9 +83,10 @@ public final class Emulator {
                 case MOV -> {
                     final Register64 dest = (Register64) inst.op(0);
                     final Register64 src = (Register64) inst.op(1);
-                    regFile.set(dest, regFile.get(dest));
+                    regFile.set(dest, regFile.get(src));
                 }
-                default -> throw new IllegalStateException(String.format("Unknwon opcode %s", inst.opcode()));
+                default -> throw new IllegalStateException(
+                        String.format("Unknwon instruction %s", inst.toIntelSyntax()));
             }
         }
     }
@@ -89,21 +94,27 @@ public final class Emulator {
     private void loadELF() {
         logger.debug("Loading ELF segments into memory");
         for (final PHTEntry phte : elf.programHeader()) {
-            if (phte.type() != PHTEntryType.PT_LOAD) {
+            if (phte.type() != PHTEntryType.PT_LOAD && phte.segmentMemorySize() != 0) {
                 // This segment is not loadable
                 continue;
             }
-            mem.setPermissions(
-                    phte.segmentVirtualAddress(),
-                    phte.segmentVirtualAddress() + phte.segmentMemorySize(),
-                    phte.isReadable(),
-                    phte.isWriteable(),
-                    phte.isExecutable());
+
+            final long start = phte.segmentVirtualAddress();
+            final long end = phte.segmentVirtualAddress() + phte.segmentMemorySize();
+            logger.debug(
+                    "Setting permissions of %,d bytes starting from 0x%016x to %s",
+                    end - start,
+                    start,
+                    (phte.isReadable() ? "R" : "")
+                            + (phte.isWriteable() ? "W" : "")
+                            + (phte.isExecutable() ? "X" : ""));
+            mem.setPermissions(start, end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
         }
 
         logger.debug("Loading ELF sections into memory");
         for (final Section sec : elf.sections()) {
             if (sec.header().size() != 0) {
+                logger.debug("Loading section '%s' into memory", sec.name());
                 mem.loadSection(sec);
             }
         }

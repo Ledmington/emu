@@ -13,7 +13,7 @@ public final class FileHeader {
     private final byte ABIVersion;
     private final FileType fileType;
     private final ISA isa;
-    private final long entryAddress;
+    private final long entryPointVirtualAddress;
     private final long programHeaderTableOffset;
     private final long sectionHeaderTableOffset;
     private final int flags;
@@ -32,7 +32,7 @@ public final class FileHeader {
             byte ABIVersion,
             FileType fileType,
             ISA isa,
-            long entryAddress,
+            long entryPointVirtualAddress,
             long programHeaderTableOffset,
             long sectionHeaderTableOffset,
             int flags,
@@ -49,7 +49,7 @@ public final class FileHeader {
         this.ABIVersion = ABIVersion;
         this.fileType = fileType;
         this.isa = isa;
-        this.entryAddress = entryAddress;
+        this.entryPointVirtualAddress = entryPointVirtualAddress;
         this.programHeaderTableOffset = programHeaderTableOffset;
         this.sectionHeaderTableOffset = sectionHeaderTableOffset;
         this.flags = flags;
@@ -63,10 +63,6 @@ public final class FileHeader {
 
     public boolean is32Bit() {
         return is32Bit;
-    }
-
-    public boolean isLittleEndian() {
-        return isLittleEndian;
     }
 
     public short nProgramHeaderTableEntries() {
@@ -93,62 +89,55 @@ public final class FileHeader {
         return sectionHeaderTableEntrySize;
     }
 
-    public short shstrtab_index() {
-        return shstrtab_index;
-    }
-
     public FileType getType() {
         return fileType;
     }
 
+    public long entryPointVirtualAddress() {
+        return entryPointVirtualAddress;
+    }
+
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("Format               : ");
-        sb.append(is32Bit ? "32 bit\n" : "64 bit\n");
-        sb.append("Endianness           : ");
-        sb.append(isLittleEndian ? "2's complement, little endian\n" : "2's complement, big endian\n");
-        sb.append("Version              : ");
-        sb.append(version);
-        sb.append('\n');
-        sb.append("OS ABI               : ");
-        sb.append(osabi.OSName());
-        sb.append('\n');
-        sb.append("ABI version          : ");
-        sb.append(ABIVersion);
-        sb.append('\n');
-        sb.append("File type            : ");
-        sb.append(fileType.fileTypeName());
-        sb.append('\n');
-        sb.append("ISA                  : ");
-        sb.append(isa.ISAName());
-        sb.append('\n');
-        sb.append("Entry point address  : ");
-        sb.append(String.format("0x%016x", entryAddress));
-        if (entryAddress == 0x0L) {
-            sb.append(" (none)");
-        }
-        sb.append('\n');
-        sb.append("PHT offset           : ");
-        sb.append(String.format("%,d (bytes into file)\n", programHeaderTableOffset));
-        sb.append("SHT offset           : ");
-        sb.append(String.format("%,d (bytes into file)\n", sectionHeaderTableOffset));
-        sb.append("Flags                : ");
-        sb.append(String.format("0x%08x\n", flags));
-        sb.append("Size of this header  : ");
-        sb.append(String.format("%,d (bytes)\n", headerSize));
-        sb.append("PHTE size            : ");
-        sb.append(String.format("%,d (bytes)\n", programHeaderTableEntrySize));
-        sb.append("PHT entries          : ");
-        sb.append(nProgramHeaderTableEntries);
-        sb.append('\n');
-        sb.append("SHTE size            : ");
-        sb.append(String.format("%,d (bytes)\n", sectionHeaderTableEntrySize));
-        sb.append("SHT entries          : ");
-        sb.append(nSectionHeaderTableEntries);
-        sb.append('\n');
-        sb.append("SHTE names idx       : ");
-        sb.append(shstrtab_index);
-        sb.append('\n');
-        return sb.toString();
+        return "Format               : " + (is32Bit ? "32 bit\n" : "64 bit\n")
+                + "Endianness           : "
+                + (isLittleEndian ? "2's complement, little endian\n" : "2's complement, big endian\n")
+                + "Version              : "
+                + version
+                + '\n'
+                + "OS ABI               : "
+                + osabi.OSName()
+                + '\n'
+                + "ABI version          : "
+                + ABIVersion
+                + '\n'
+                + "File type            : "
+                + fileType.fileTypeName()
+                + '\n'
+                + "ISA                  : "
+                + isa.ISAName()
+                + '\n'
+                + "Entry point address  : "
+                + String.format("0x%016x\n", entryPointVirtualAddress)
+                + "PHT offset           : "
+                + String.format("%,d (bytes into file)\n", programHeaderTableOffset)
+                + "SHT offset           : "
+                + String.format("%,d (bytes into file)\n", sectionHeaderTableOffset)
+                + "Flags                : "
+                + String.format("0x%08x\n", flags)
+                + "Size of this header  : "
+                + String.format("%,d (bytes)\n", headerSize)
+                + "PHTE size            : "
+                + String.format("%,d (bytes)\n", programHeaderTableEntrySize)
+                + "PHT entries          : "
+                + nProgramHeaderTableEntries
+                + '\n'
+                + "SHTE size            : "
+                + String.format("%,d (bytes)\n", sectionHeaderTableEntrySize)
+                + "SHT entries          : "
+                + nSectionHeaderTableEntries
+                + '\n'
+                + "SHTE names idx       : "
+                + shstrtab_index
+                + '\n';
     }
 }

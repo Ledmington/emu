@@ -93,7 +93,7 @@ public final class MemoryController implements Memory {
     public void loadSection(final Section sec) {
         Objects.requireNonNull(sec);
 
-        // TODO: optimize into a kind of memcpy
+        // TODO: optimize this function into a kind of memcpy
         final long startVirtualAddress = sec.header().virtualAddress();
 
         switch (sec) {

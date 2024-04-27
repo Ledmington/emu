@@ -110,7 +110,7 @@ public final class ELFParser {
                     ELFVersion_2, ELFVersion_2));
         }
 
-        final long entryPoint = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+        final long entryPointVirtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         final long PHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
@@ -143,7 +143,7 @@ public final class ELFParser {
                 ABIVersion,
                 FileType.fromCode(fileType),
                 ISA.fromCode(isa),
-                entryPoint,
+                entryPointVirtualAddress,
                 PHTOffset,
                 SHTOffset,
                 flags,
@@ -233,7 +233,7 @@ public final class ELFParser {
 
         final long size = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
-        final int sh_link = b.read4();
+        final int linkedSectionIndex = b.read4();
 
         final int sh_info = b.read4();
 
@@ -252,7 +252,7 @@ public final class ELFParser {
                 virtualAddress,
                 fileOffset,
                 size,
-                sh_link,
+                linkedSectionIndex,
                 sh_info,
                 alignment,
                 entrySize);
