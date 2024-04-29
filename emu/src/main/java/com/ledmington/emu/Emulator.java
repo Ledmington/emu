@@ -94,48 +94,50 @@ public final class Emulator {
             logger.debug(inst.toIntelSyntax());
             switch (inst.opcode()) {
                 case XOR -> {
-                    switch (((Register) inst.op(0)).bits()) {
+                    switch (((Register) inst.firstOperand()).bits()) {
                         case 8 -> {
-                            final byte r1 = regFile.get((Register8) inst.op(0));
-                            final byte r2 = regFile.get((Register8) inst.op(1));
-                            regFile.set((Register8) inst.op(0), BitUtils.xor(r1, r2));
+                            final byte r1 = regFile.get((Register8) inst.firstOperand());
+                            final byte r2 = regFile.get((Register8) inst.secondOperand());
+                            regFile.set((Register8) inst.firstOperand(), BitUtils.xor(r1, r2));
                         }
                         case 32 -> {
-                            final int r1 = regFile.get((Register32) inst.op(0));
-                            final int r2 = regFile.get((Register32) inst.op(1));
-                            regFile.set((Register32) inst.op(0), r1 ^ r2);
+                            final int r1 = regFile.get((Register32) inst.firstOperand());
+                            final int r2 = regFile.get((Register32) inst.secondOperand());
+                            regFile.set((Register32) inst.firstOperand(), r1 ^ r2);
                         }
                         default -> throw new IllegalArgumentException(String.format(
-                                "Don't know what to do when XOR has %,d bits", ((Register) inst.op(0)).bits()));
+                                "Don't know what to do when XOR has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
                     }
                 }
                 case AND -> {
-                    switch (((Register) inst.op(0)).bits()) {
+                    switch (((Register) inst.firstOperand()).bits()) {
                         case 64 -> {
-                            final Register64 r = (Register64) inst.op(0);
-                            final long imm64 = ((Immediate) inst.op(1)).asLong();
+                            final Register64 r = (Register64) inst.firstOperand();
+                            final long imm64 = ((Immediate) inst.secondOperand()).asLong();
                             regFile.set(r, regFile.get(r) & imm64);
                         }
                         default -> throw new IllegalArgumentException(String.format(
-                                "Don't know what to do when XOR has %,d bits", ((Register) inst.op(0)).bits()));
+                                "Don't know what to do when XOR has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
                     }
                 }
                 case JMP -> this.instructionFetcher.setPosition(
-                        this.instructionFetcher.position() + ((RelativeOffset) inst.op(0)).amount());
+                        this.instructionFetcher.position() + ((RelativeOffset) inst.firstOperand()).amount());
                 case MOV -> {
-                    final Register64 dest = (Register64) inst.op(0);
-                    final Register64 src = (Register64) inst.op(1);
+                    final Register64 dest = (Register64) inst.firstOperand();
+                    final Register64 src = (Register64) inst.secondOperand();
                     regFile.set(dest, regFile.get(src));
                 }
                 case PUSH -> {
-                    final Register64 src = (Register64) inst.op(0);
+                    final Register64 src = (Register64) inst.firstOperand();
                     final long rsp = regFile.get(Register64.RSP);
                     mem.write(rsp, regFile.get(src));
                     // the stack "grows downward"
                     regFile.set(Register64.RSP, rsp - 8L);
                 }
                 case POP -> {
-                    final Register64 dest = (Register64) inst.op(0);
+                    final Register64 dest = (Register64) inst.firstOperand();
                     final long rsp = regFile.get(Register64.RSP);
                     regFile.set(dest, mem.read8(rsp));
                     // the stack "grows downward"

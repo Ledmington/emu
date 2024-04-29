@@ -1,6 +1,5 @@
 package com.ledmington.cpu.x86;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -16,29 +15,85 @@ public final class Instruction {
 
     private final Prefix prefix;
     private final Opcode opcode;
-    private final Operand[] operands;
+    private final Operand firstOperand;
+    private final Operand secondOperand;
+    private final Operand thirdOperand;
 
-    public Instruction(final Prefix prefix, final Opcode opcode, final Operand... ops) {
+    public Instruction(
+            final Prefix prefix,
+            final Opcode opcode,
+            final Operand firstOperand,
+            final Operand secondOperand,
+            final Operand thirdOperand) {
         this.prefix = prefix;
         this.opcode = Objects.requireNonNull(opcode);
-        this.operands = new Operand[Objects.requireNonNull(ops, "Cannot have null array of operands").length];
-        for (int i = 0; i < ops.length; i++) {
-            final int finalI = i;
-            this.operands[i] =
-                    Objects.requireNonNull(ops[i], () -> String.format("The %,d-th operand was null", finalI));
+        this.firstOperand = firstOperand;
+        if (firstOperand == null && secondOperand != null) {
+            throw new IllegalArgumentException(String.format(
+                    "Cannot have an x86 instruction with a second operand (%s) but not a first", secondOperand));
         }
+        this.secondOperand = secondOperand;
+        if (thirdOperand != null && (firstOperand == null || secondOperand == null)) {
+            throw new IllegalArgumentException(String.format(
+                    "Cannot have an x86 instruction with a third operand (%s) but not a first or a second",
+                    thirdOperand));
+        }
+        this.thirdOperand = thirdOperand;
     }
 
-    public Instruction(final Opcode opcode, final Operand... ops) {
-        this(null, opcode, ops);
+    public Instruction(
+            final Prefix prefix, final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
+        this(prefix, opcode, firstOperand, secondOperand, null);
+    }
+
+    public Instruction(final Prefix prefix, final Opcode opcode, final Operand firstOperand) {
+        this(prefix, opcode, firstOperand, null, null);
+    }
+
+    public Instruction(final Prefix prefix, final Opcode opcode) {
+        this(prefix, opcode, null, null, null);
+    }
+
+    public Instruction(
+            final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
+        this(null, opcode, firstOperand, secondOperand, thirdOperand);
+    }
+
+    public Instruction(final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
+        this(null, opcode, firstOperand, secondOperand, null);
+    }
+
+    public Instruction(final Opcode opcode, final Operand firstOperand) {
+        this(null, opcode, firstOperand, null, null);
+    }
+
+    public Instruction(final Opcode opcode) {
+        this(null, opcode, null, null, null);
     }
 
     public Opcode opcode() {
         return opcode;
     }
 
-    public Operand op(final int i) {
-        return this.operands[i];
+    public Operand firstOperand() {
+        if (firstOperand == null) {
+            throw new IllegalArgumentException("No first operand");
+        }
+        return firstOperand;
+    }
+
+    public Operand secondOperand() {
+        if (secondOperand == null) {
+            throw new IllegalArgumentException("No second operand");
+        }
+        return secondOperand;
+    }
+
+    public Operand thirdOperand() {
+        if (thirdOperand == null) {
+            throw new IllegalArgumentException("No third operand");
+        }
+        return thirdOperand;
     }
 
     /**
@@ -54,16 +109,26 @@ public final class Instruction {
      */
     public int bits() {
         // here it is assumed that all "first-class" registers involved have the same size
-        for (final Operand op : operands) {
-            if (op instanceof Register r) {
-                return r.bits();
-            }
-            if (op instanceof Immediate imm) {
-                return imm.bits();
-            }
+        if (firstOperand instanceof Register r) {
+            return r.bits();
+        }
+        if (firstOperand instanceof Immediate imm) {
+            return imm.bits();
+        }
+        if (secondOperand instanceof Register r) {
+            return r.bits();
+        }
+        if (secondOperand instanceof Immediate imm) {
+            return imm.bits();
+        }
+        if (thirdOperand instanceof Register r) {
+            return r.bits();
+        }
+        if (thirdOperand instanceof Immediate imm) {
+            return imm.bits();
         }
 
-        if (operands.length > 0 && operands[0] instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
+        if (firstOperand != null && firstOperand instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
             return io.explicitPtrSize();
         }
 
@@ -101,25 +166,30 @@ public final class Instruction {
         }
         sb.append(opcode.mnemonic());
 
-        if (operands.length > 0) {
-            sb.append(' ');
-            sb.append(operandString(operands[0]));
-
-            for (int i = 1; i < operands.length; i++) {
-                sb.append(',');
-                sb.append(operandString(operands[i]));
+        if (firstOperand != null) {
+            sb.append(' ').append(operandString(firstOperand));
+            if (secondOperand != null) {
+                sb.append(',').append(operandString(secondOperand));
+                if (thirdOperand != null) {
+                    sb.append(',').append(operandString(thirdOperand));
+                }
             }
         }
+
         return sb.toString();
     }
 
     @Override
     public String toString() {
-        if (operands.length == 0) {
-            return "Instruction(prefix=" + prefix.toString() + ";opcode=" + opcode.toString() + ")";
-        }
-        return "Instruction(prefix=" + prefix.toString() + ";opcode=" + opcode.toString() + ";operands="
-                + Arrays.stream(operands).toList() + ")";
+        return "Instruction(prefix=" + prefix.toString() + ";opcode=" + opcode.toString()
+                + (firstOperand == null
+                        ? ""
+                        : ";operands=[" + firstOperand
+                                + (secondOperand == null
+                                        ? ""
+                                        : "," + secondOperand + (thirdOperand == null ? "" : "," + thirdOperand))
+                                + "]")
+                + ")";
     }
 
     @Override
@@ -127,9 +197,9 @@ public final class Instruction {
         int h = 17;
         h = 31 * h + prefix.hashCode();
         h = 31 * h + opcode.hashCode();
-        for (final Operand op : this.operands) {
-            h = 31 * h + op.hashCode();
-        }
+        h = 31 * h + firstOperand.hashCode();
+        h = 31 * h + secondOperand.hashCode();
+        h = 31 * h + thirdOperand.hashCode();
         return h;
     }
 
@@ -145,6 +215,10 @@ public final class Instruction {
             return false;
         }
         final Instruction o = (Instruction) other;
-        return this.prefix == o.prefix && this.opcode.equals(o.opcode) && Arrays.equals(this.operands, o.operands);
+        return this.prefix.equals(o.prefix)
+                && this.opcode.equals(o.opcode)
+                && this.firstOperand.equals(o.firstOperand)
+                && this.secondOperand.equals(o.secondOperand)
+                && this.thirdOperand.equals(o.thirdOperand);
     }
 }
