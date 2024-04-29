@@ -81,6 +81,19 @@ public final class MemoryController implements Memory {
         return this.mem.read(address);
     }
 
+    public long read8(final long address) {
+        long x = 0x0000000000000000L;
+        x |= BitUtils.asLong(read(address));
+        x |= (BitUtils.asLong(read(address + 1L)) << 8);
+        x |= (BitUtils.asLong(read(address + 2L)) << 16);
+        x |= (BitUtils.asLong(read(address + 3L)) << 24);
+        x |= (BitUtils.asLong(read(address + 4L)) << 32);
+        x |= (BitUtils.asLong(read(address + 5L)) << 40);
+        x |= (BitUtils.asLong(read(address + 6L)) << 48);
+        x |= (BitUtils.asLong(read(address + 7L)) << 56);
+        return x;
+    }
+
     /**
      * This behaves exactly like a normal read but check execute permissions instead
      * of read permissions.
@@ -100,6 +113,17 @@ public final class MemoryController implements Memory {
                     String.format("Attempted write of value 0x%02x at non-writeable address 0x%x", value, address));
         }
         mem.write(address, value);
+    }
+
+    public void write(final long address, final long value) {
+        write(address, BitUtils.asByte(value >> 56));
+        write(address + 1L, BitUtils.asByte(value >> 48));
+        write(address + 2L, BitUtils.asByte(value >> 40));
+        write(address + 3L, BitUtils.asByte(value >> 32));
+        write(address + 4L, BitUtils.asByte(value >> 24));
+        write(address + 5L, BitUtils.asByte(value >> 16));
+        write(address + 6L, BitUtils.asByte(value >> 8));
+        write(address + 7L, BitUtils.asByte(value));
     }
 
     /**

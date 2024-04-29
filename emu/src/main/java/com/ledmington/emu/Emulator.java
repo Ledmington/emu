@@ -80,6 +80,9 @@ public final class Emulator {
                 .map(sec -> sec.header().virtualAddress() + sec.header().sectionSize())
                 .max(Long::compare)
                 .orElseThrow();
+        logger.debug(
+                "Setting stack size to %,d bytes (%.3f MiB) starting at 0x%x",
+                allocatedMemory, (double) allocatedMemory / 1_048_576.0, highestAddress + allocatedMemory);
         mem.setPermissions(highestAddress, highestAddress + allocatedMemory, true, true, false);
         regFile.set(Register64.RSP, highestAddress + allocatedMemory);
 
@@ -124,10 +127,17 @@ public final class Emulator {
                     final Register64 src = (Register64) inst.op(1);
                     regFile.set(dest, regFile.get(src));
                 }
+                case PUSH -> {
+                    final Register64 src = (Register64) inst.op(0);
+                    final long rsp = regFile.get(Register64.RSP);
+                    mem.write(rsp, regFile.get(src));
+                    // the stack "grows downward"
+                    regFile.set(Register64.RSP, rsp - 8L);
+                }
                 case POP -> {
                     final Register64 dest = (Register64) inst.op(0);
                     final long rsp = regFile.get(Register64.RSP);
-                    regFile.set(dest, mem.read(rsp));
+                    regFile.set(dest, mem.read8(rsp));
                     // the stack "grows downward"
                     regFile.set(Register64.RSP, rsp + 8L);
                 }
