@@ -16,7 +16,7 @@ public final class IntervalArray {
         public Block(final long start, final long end) {
             if (end < start) {
                 throw new IllegalArgumentException(
-                        String.format("Invalid start (0x%016x) and end (0x%016x) of a block", start, end));
+                        String.format("Invalid start (0x%x) and end (0x%x) of a block", start, end));
             }
             this.start = start;
             this.end = end;

@@ -20,6 +20,6 @@ public final class RandomAccessMemory implements Memory {
 
     @Override
     public void write(final long address, final byte value) {
-        //
+        m.put(address, value);
     }
 }

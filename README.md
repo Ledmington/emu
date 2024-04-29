@@ -6,4 +6,5 @@ The project is divided as follows:
 - `elf` : ELF file parser
 - `id` : Instruction Decoder (currently only X86)
 - `breakdown` : utility for development of `id`
-- `common` : various common components
+- `utils` : various utility components
+

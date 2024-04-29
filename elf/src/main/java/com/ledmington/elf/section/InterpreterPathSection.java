@@ -10,15 +10,17 @@ public final class InterpreterPathSection extends ProgBitsSection {
         super(name, sectionHeader, b);
 
         this.interpreterFilePath = null;
-        /*final int start = (int) sectionHeader.fileOffset();
-        b.setPosition(start);
-
-        final StringBuilder sb = new StringBuilder();
-        char c = (char) b.read1();
-        while (c != '\0') {
-            sb.append(c);
-            c = (char) b.read1();
-        }
-        this.interpreterFilePath = sb.toString();*/
+        /*
+         * final int start = (int) sectionHeader.fileOffset();
+         * b.setPosition(start);
+         *
+         * final StringBuilder sb = new StringBuilder();
+         * char c = (char) b.read1();
+         * while (c != '\0') {
+         * sb.append(c);
+         * c = (char) b.read1();
+         * }
+         * this.interpreterFilePath = sb.toString();
+         */
     }
 }

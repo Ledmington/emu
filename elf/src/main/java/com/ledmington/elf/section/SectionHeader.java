@@ -9,9 +9,23 @@ public final class SectionHeader {
     private final int nameOffset;
     private final SectionHeaderType type;
     private final long flags;
+
+    /**
+     * Contains the virtual address of the beginning of the section in
+     * memory. If the section is not allocated to the memory image of the
+     * program, this field should be zero.
+     */
     private final long virtualAddress;
+
     private final long fileOffset;
-    private final long size;
+
+    /**
+     * Size in bytes of the section.
+     * This is the amount of space occupied in the file, except for SHT_NO_BITS
+     * sections.
+     */
+    private final long sectionSize;
+
     private final int linkedSectionIndex;
     private final int sh_info;
     private final long alignment;
@@ -23,7 +37,7 @@ public final class SectionHeader {
             long flags,
             long virtualAddress,
             long fileOffset,
-            long size,
+            long sectionSize,
             int linkedSectionIndex,
             int sh_info,
             long alignment,
@@ -33,7 +47,7 @@ public final class SectionHeader {
         this.flags = flags;
         this.virtualAddress = virtualAddress;
         this.fileOffset = fileOffset;
-        this.size = size;
+        this.sectionSize = sectionSize;
         this.linkedSectionIndex = linkedSectionIndex;
         this.sh_info = sh_info;
         this.alignment = alignment;
@@ -48,8 +62,8 @@ public final class SectionHeader {
         return fileOffset;
     }
 
-    public long size() {
-        return size;
+    public long sectionSize() {
+        return sectionSize;
     }
 
     public SectionHeaderType type() {
@@ -89,7 +103,7 @@ public final class SectionHeader {
         sb.append("Offset on file  : ");
         sb.append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset));
         sb.append("Size on file    : ");
-        sb.append(String.format("%,d bytes\n", size));
+        sb.append(String.format("%,d bytes\n", sectionSize));
         sb.append("linkedSectionIndex         : ");
         sb.append(String.format("%,d (0x%08x)\n", linkedSectionIndex, linkedSectionIndex));
         sb.append("sh_info         : ");

@@ -3,7 +3,7 @@ package com.ledmington.elf.section;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
-public sealed class NoteSection extends Section permits GnuPropertySection {
+public sealed class NoteSection extends LoadableSection permits GnuPropertySection {
 
     protected final byte[] ownerBytes;
     protected final String owner;
@@ -17,9 +17,10 @@ public sealed class NoteSection extends Section permits GnuPropertySection {
         b.setPosition((int) entry.fileOffset());
 
         /*
-         * TODO: For some reason, even though on the ELF64 reference says that the fields
-         *  of a SHT_NOTE section are all 8-byte words and aligned on 8-byte boundaries, here
-         *  the only code that works is the one which uses 4-byte words regardless of the actual ELF_CLASS.
+         * TODO: For some reason, even though on the ELF64 reference says that the
+         * fields of a SHT_NOTE section are all 8-byte words and aligned on 8-byte
+         * boundaries, here the only code that works is the one which uses 4-byte words
+         * regardless of the actual ELF_CLASS.
          */
         final int namesz = b.read4();
         final int descsz = b.read4();
@@ -38,6 +39,7 @@ public sealed class NoteSection extends Section permits GnuPropertySection {
         this.description = new String(descriptionBytes);
     }
 
+    @Override
     public byte[] content() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(4 + 4 + 4 + ownerBytes.length + descriptionBytes.length);
         bb.write(ownerBytes.length);

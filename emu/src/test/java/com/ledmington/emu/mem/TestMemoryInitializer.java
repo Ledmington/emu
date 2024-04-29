@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,8 +27,9 @@ public final class TestMemoryInitializer {
     public void random() {
         final Memory mem = new RandomAccessMemory(MemoryInitializer.random());
         assertTrue(
-                LongStream.range(0, 100)
-                                .mapToObj(mem::read)
+                Stream.generate(() -> rng.nextLong())
+                                .map(x -> mem.read(x))
+                                .limit(100)
                                 .collect(Collectors.toSet())
                                 .size()
                         > 1,

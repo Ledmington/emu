@@ -1,5 +1,7 @@
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
 
 /**
@@ -7,68 +9,84 @@ import com.ledmington.utils.BitUtils;
  */
 public final class Immediate implements Operand {
 
+    private static enum Type {
+        BYTE,
+        SHORT,
+        INT,
+        LONG
+    }
+
     private final long value;
-    private final int bits;
+    private final Type type;
 
-    private Immediate(final long value, final int bits) {
-        if (bits != 8 && bits != 16 && bits != 32 && bits != 64) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid value of bits: expected 8, 16, 32 or 64 but was %,d", bits));
-        }
-
+    private Immediate(final long value, final Type type) {
         this.value = value;
-        this.bits = bits;
+        this.type = Objects.requireNonNull(type);
     }
 
     /**
      * Creates an immediate value of 1 byte.
+     *
      * @param b
-     *      The 1-byte immediate.
+     *          The 1-byte immediate.
      */
     public Immediate(final byte b) {
-        this(BitUtils.asLong(b), 8);
+        this((long) b, Type.BYTE);
     }
 
     /**
      * Creates an immediate value of 2 bytes.
+     *
      * @param s
-     *      The 2-bytes immediate.
+     *          The 2-bytes immediate.
      */
     public Immediate(final short s) {
-        this(BitUtils.asLong(s), 16);
+        this((long) s, Type.SHORT);
     }
 
     /**
      * Creates an immediate value of 4 bytes.
+     *
      * @param x
-     *      The 4-bytes immediate.
+     *          The 4-bytes immediate.
      */
     public Immediate(final int x) {
-        this(BitUtils.asLong(x), 32);
+        this((long) x, Type.INT);
     }
 
     /**
      * Creates an immediate value of 8 bytes.
+     *
      * @param x
-     *      The 8-bytes immediate.
+     *          The 8-bytes immediate.
      */
     public Immediate(final long x) {
-        this(x, 64);
+        this(x, Type.LONG);
     }
 
     public int bits() {
-        return bits;
+        return switch (type) {
+            case BYTE -> 8;
+            case SHORT -> 16;
+            case INT -> 32;
+            case LONG -> 64;
+        };
+    }
+
+    public long asLong() {
+        if (type != Type.LONG) {
+            throw new IllegalArgumentException(String.format("This immediate is not 64 bits"));
+        }
+        return value;
     }
 
     @Override
     public String toIntelSyntax() {
-        return switch (bits) {
-            case 8 -> String.format("0x%x", BitUtils.asByte(value));
-            case 16 -> String.format("0x%x", BitUtils.asShort(value));
-            case 32 -> String.format("0x%x", BitUtils.asInt(value));
-            case 64 -> String.format("0x%x", value);
-            default -> throw new IllegalStateException(
-                    String.format("Invalid value of bits: expected 8, 16, 32 or 64 but was %,d", bits));
+        return switch (type) {
+            case BYTE -> String.format("0x%02x", BitUtils.asByte(value));
+            case SHORT -> String.format("0x%04x", BitUtils.asShort(value));
+            case INT -> String.format("0x%08x", BitUtils.asInt(value));
+            case LONG -> String.format("0x%016x", value);
         };
     }
 
@@ -79,7 +97,9 @@ public final class Immediate implements Operand {
 
     @Override
     public int hashCode() {
-        return (int) (value >>> 32) * 31 + BitUtils.asInt(value);
+        int h = 17;
+        h = 31 * h + (BitUtils.asInt(value) ^ BitUtils.asInt(value >>> 32));
+        return h;
     }
 
     @Override
@@ -94,6 +114,6 @@ public final class Immediate implements Operand {
             return false;
         }
         final Immediate imm = (Immediate) other;
-        return this.value == imm.value && this.bits == imm.bits;
+        return this.value == imm.value && this.type == imm.type;
     }
 }

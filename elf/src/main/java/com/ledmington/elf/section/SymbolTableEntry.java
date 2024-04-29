@@ -30,6 +30,14 @@ public final class SymbolTableEntry {
         }
     }
 
+    public int nameOffset() {
+        return nameOffset;
+    }
+
+    public short sectionTableIndex() {
+        return sectionTableIndex;
+    }
+
     public long value() {
         return value;
     }

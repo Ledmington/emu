@@ -2,15 +2,19 @@ package com.ledmington.emu.mem;
 
 import java.util.Objects;
 
-import com.ledmington.elf.section.NoteSection;
-import com.ledmington.elf.section.ProgBitsSection;
+import com.ledmington.elf.section.LoadableSection;
+import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
+import com.ledmington.utils.MiniLogger;
 
 /**
  * This is the part of the memory which checks permissions
  */
 public final class MemoryController implements Memory {
+
+    private static final MiniLogger logger = MiniLogger.getLogger("mem");
 
     private final Memory mem;
     private final IntervalArray canRead = new IntervalArray();
@@ -46,7 +50,7 @@ public final class MemoryController implements Memory {
             final boolean executable) {
         if (endBlockAddress < startBlockAddress) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid endBlockAddress (0x%016x) was less than startBlockAddress (0x%016x)",
+                    "Invalid endBlockAddress (0x%x) was less than startBlockAddress (0x%x)",
                     startBlockAddress, endBlockAddress));
         }
 
@@ -72,8 +76,19 @@ public final class MemoryController implements Memory {
     @Override
     public byte read(final long address) {
         if (!canRead.get(address)) {
+            throw new IllegalArgumentException(String.format("Attempted read at non-readable address 0x%x", address));
+        }
+        return this.mem.read(address);
+    }
+
+    /**
+     * This behaves exactly like a normal read but check execute permissions instead
+     * of read permissions.
+     */
+    public byte readCode(final long address) {
+        if (!canExecute.get(address)) {
             throw new IllegalArgumentException(
-                    String.format("Attempted read at non-readable address 0x%016x", address));
+                    String.format("Attempted execute at non-executable address 0x%x", address));
         }
         return this.mem.read(address);
     }
@@ -82,7 +97,7 @@ public final class MemoryController implements Memory {
     public void write(final long address, final byte value) {
         if (!canWrite.get(address)) {
             throw new IllegalArgumentException(
-                    String.format("Attempted write of value 0x%02x at non-writeable address 0x%016x", value, address));
+                    String.format("Attempted write of value 0x%02x at non-writeable address 0x%x", value, address));
         }
         mem.write(address, value);
     }
@@ -93,23 +108,27 @@ public final class MemoryController implements Memory {
     public void loadSection(final Section sec) {
         Objects.requireNonNull(sec);
 
-        // TODO: optimize this function into a kind of memcpy
-        final long startVirtualAddress = sec.header().virtualAddress();
-
-        switch (sec) {
-            case ProgBitsSection pbs -> {
-                final byte[] content = pbs.content();
-                for (long i = 0L; i < sec.header().size(); i++) {
-                    mem.write(startVirtualAddress + i, content[(int) i]);
-                }
+        if (sec instanceof NoBitsSection) {
+            // allocate uninitialized data blocks
+            final long startVirtualAddress = sec.header().virtualAddress();
+            final long size = sec.header().sectionSize();
+            logger.debug(
+                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+                    sec.name(), startVirtualAddress, startVirtualAddress + size, size);
+            for (long i = 0L; i < size; i++) {
+                mem.write(startVirtualAddress + i, (byte) 0x00);
             }
-            case NoteSection ns -> {
-                final byte[] content = ns.content();
-                for (long i = 0L; i < sec.header().size(); i++) {
-                    mem.write(startVirtualAddress + i, content[(int) i]);
-                }
+        } else if (sec instanceof LoadableSection ls) {
+            final long startVirtualAddress = sec.header().virtualAddress();
+            final byte[] content = ls.content();
+            logger.debug(
+                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+                    sec.name(), startVirtualAddress, startVirtualAddress + content.length, content.length);
+            for (int i = 0; i < content.length; i++) {
+                mem.write(startVirtualAddress + BitUtils.asLong(i), content[i]);
             }
-            default -> throw new IllegalArgumentException(String.format(
+        } else {
+            throw new IllegalArgumentException(String.format(
                     "Don't know what to do with section '%s' of type %s",
                     sec.name(), sec.header().type().name()));
         }

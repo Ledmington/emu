@@ -1,5 +1,6 @@
 package com.ledmington.emu;
 
+import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.utils.BitUtils;
@@ -62,6 +63,52 @@ public final class X86RegisterFile {
             case "r15b" -> gpr[15] = (gpr[15] & 0xffffffffffffff00L) | BitUtils.asLong(v);
             default -> throw new IllegalArgumentException(
                     String.format("Invalid 8-bit register '%s'", r.toIntelSyntax()));
+        }
+    }
+
+    public int get(final Register32 r) {
+        return switch (r.toIntelSyntax()) {
+            case "eax" -> BitUtils.asInt(gpr[0]);
+            case "ebx" -> BitUtils.asInt(gpr[1]);
+            case "ecx" -> BitUtils.asInt(gpr[2]);
+            case "edx" -> BitUtils.asInt(gpr[3]);
+            case "esp" -> BitUtils.asInt(gpr[4]);
+            case "ebp" -> BitUtils.asInt(gpr[5]);
+            case "esi" -> BitUtils.asInt(gpr[6]);
+            case "edi" -> BitUtils.asInt(gpr[7]);
+            case "r8d" -> BitUtils.asInt(gpr[8]);
+            case "r9d" -> BitUtils.asInt(gpr[9]);
+            case "r10d" -> BitUtils.asInt(gpr[10]);
+            case "r11d" -> BitUtils.asInt(gpr[11]);
+            case "r12d" -> BitUtils.asInt(gpr[12]);
+            case "r13d" -> BitUtils.asInt(gpr[13]);
+            case "r14d" -> BitUtils.asInt(gpr[14]);
+            case "r15d" -> BitUtils.asInt(gpr[15]);
+            default -> throw new IllegalArgumentException(
+                    String.format("Invalid 32-bit register '%s'", r.toIntelSyntax()));
+        };
+    }
+
+    public void set(final Register32 r, final int v) {
+        switch (r.toIntelSyntax()) {
+            case "eax" -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "ebx" -> gpr[1] = (gpr[1] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "ecx" -> gpr[2] = (gpr[2] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "edx" -> gpr[3] = (gpr[3] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "esp" -> gpr[4] = (gpr[4] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "ebp" -> gpr[5] = (gpr[5] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "esi" -> gpr[6] = (gpr[6] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "edi" -> gpr[7] = (gpr[7] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r8d" -> gpr[8] = (gpr[8] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r9d" -> gpr[9] = (gpr[9] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r10d" -> gpr[10] = (gpr[10] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r11d" -> gpr[11] = (gpr[11] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r12d" -> gpr[12] = (gpr[12] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r13d" -> gpr[13] = (gpr[13] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r14d" -> gpr[14] = (gpr[14] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "r15d" -> gpr[15] = (gpr[15] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            default -> throw new IllegalArgumentException(
+                    String.format("Invalid 32-bit register '%s'", r.toIntelSyntax()));
         }
     }
 

@@ -7,6 +7,7 @@ import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
+import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.utils.BitUtils;
@@ -44,11 +45,41 @@ public final class TestX86RegisterFile {
         Register8.SIL,
         Register8.DIL
     };
+    private static final Register32[] all32BitRegisters = new Register32[] {
+        Register32.EAX,
+        Register32.EBX,
+        Register32.ECX,
+        Register32.EDX,
+        Register32.ESP,
+        Register32.EBP,
+        Register32.ESI,
+        Register32.EDI,
+        Register32.R8D,
+        Register32.R9D,
+        Register32.R10D,
+        Register32.R11D,
+        Register32.R12D,
+        Register32.R13D,
+        Register32.R14D,
+        Register32.R15D
+    };
     private static final Register64[] all64BitRegisters = new Register64[] {
-        Register64.RAX, Register64.RBX, Register64.RCX, Register64.RDX, Register64.RSP, Register64.RBP, Register64.RSI,
-                Register64.RDI,
-        Register64.R8, Register64.R9, Register64.R10, Register64.R11, Register64.R12, Register64.R13, Register64.R14,
-                Register64.R15
+        Register64.RAX,
+        Register64.RBX,
+        Register64.RCX,
+        Register64.RDX,
+        Register64.RSP,
+        Register64.RBP,
+        Register64.RSI,
+        Register64.RDI,
+        Register64.R8,
+        Register64.R9,
+        Register64.R10,
+        Register64.R11,
+        Register64.R12,
+        Register64.R13,
+        Register64.R14,
+        Register64.R15
     };
 
     @BeforeEach
@@ -83,6 +114,31 @@ public final class TestX86RegisterFile {
                 continue;
             }
             assertEquals((byte) 0x00, regFile.get(other));
+        }
+    }
+
+    private static Stream<Arguments> all32BitsRegisters() {
+        return Arrays.stream(all32BitRegisters).map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource("all32BitsRegisters")
+    public void initiallyAllZero(final Register32 r) {
+        assertEquals(0x00000000, regFile.get(r));
+    }
+
+    @ParameterizedTest
+    @MethodSource("all32BitsRegisters")
+    public void setToValue(final Register32 r) {
+        final int x = rng.nextInt();
+        regFile.set(r, x);
+        assertEquals(x, regFile.get(r));
+
+        for (final Register32 other : all32BitRegisters) {
+            if (r == other) {
+                continue;
+            }
+            assertEquals(0x00000000, regFile.get(other));
         }
     }
 

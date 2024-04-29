@@ -12,11 +12,11 @@ public abstract class Section {
         this.sectionHeader = Objects.requireNonNull(sectionHeader);
     }
 
-    public String name() {
+    public final String name() {
         return name;
     }
 
-    public SectionHeader header() {
+    public final SectionHeader header() {
         return sectionHeader;
     }
 }

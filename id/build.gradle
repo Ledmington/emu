@@ -121,6 +121,9 @@ tasks.register('formatTestFiles', JavaExec) {
 	dependsOn spotlessApply
 	classpath sourceSets.test.runtimeClasspath
 	mainClass = "FormatTestFiles"
+	javaLauncher = javaToolchains.launcherFor {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
 }
 
 pmd {

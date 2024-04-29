@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public final class TestReadOnlyByteBuffer {
+public final class TestReadOnlyByteBufferV1 {
 
     private final byte[] arr = new byte[] {
         (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67, (byte) 0x89, (byte) 0xab, (byte) 0xcd, (byte) 0xef
@@ -16,7 +16,7 @@ public final class TestReadOnlyByteBuffer {
 
     @BeforeEach
     public void setup() {
-        this.bb = new ReadOnlyByteBuffer(this.arr);
+        this.bb = new ReadOnlyByteBufferV1(this.arr);
     }
 
     @Test
@@ -104,16 +104,16 @@ public final class TestReadOnlyByteBuffer {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7})
-    public void setPosition(int pos) {
+    @ValueSource(longs = {0, 1, 2, 3, 4, 5, 6, 7})
+    public void setPosition(long pos) {
         bb.setPosition(pos);
         assertEquals(pos, bb.position());
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7})
-    public void randomRead(int pos) {
+    @ValueSource(longs = {0, 1, 2, 3, 4, 5, 6, 7})
+    public void randomRead(long pos) {
         bb.setPosition(pos);
-        assertEquals(arr[pos], bb.read1());
+        assertEquals(arr[(int) pos], bb.read1());
     }
 }

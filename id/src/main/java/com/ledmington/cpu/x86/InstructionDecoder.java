@@ -2,6 +2,7 @@ package com.ledmington.cpu.x86;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.ledmington.cpu.x86.IndirectOperand.IndirectOperandBuilder;
@@ -11,6 +12,7 @@ import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual
@@ -23,32 +25,27 @@ public final class InstructionDecoder {
     private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
     private ReadOnlyByteBuffer b = null;
 
+    public InstructionDecoder(final ReadOnlyByteBuffer b) {
+        this.b = Objects.requireNonNull(b);
+    }
+
     public InstructionDecoder(final byte[] code) {
-        this.b = new ReadOnlyByteBuffer(code);
+        this(new ReadOnlyByteBufferV1(code));
     }
 
-    public void goTo(final long rip) {
-        this.b.setPosition(BitUtils.asInt(rip));
+    public List<Instruction> decodeAll(final int nBytesToDecode) {
+        return decodeAll(nBytesToDecode, false);
     }
 
-    public int position() {
-        return this.b.position();
-    }
-
-    public List<Instruction> decodeAll() {
-        return decodeAll(false);
-    }
-
-    public List<Instruction> decodeAll(final boolean isLittleEndian) {
-        final int length = this.b.length();
-        logger.info("The code is %,d bytes long", length);
+    public List<Instruction> decodeAll(final int nBytesToDecode, final boolean isLittleEndian) {
+        logger.info("The code is %,d bytes long", nBytesToDecode);
 
         final List<Instruction> instructions = new ArrayList<>();
-        while (b.position() < length) {
-            final int pos = b.position();
+        while (b.position() < nBytesToDecode) {
+            final long pos = b.position();
             final Instruction inst = decodeOne();
             { // Debugging info
-                final int codeLen = b.position() - pos;
+                final long codeLen = b.position() - pos;
                 final StringBuilder sb = new StringBuilder();
                 b.setPosition(pos);
                 sb.append(String.format("%02x", b.read1()));
@@ -346,7 +343,7 @@ public final class InstructionDecoder {
         final Operand op2 = (opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xc1)
                 ? imm8()
                 : ((opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd1)
-                        ? new Immediate(1)
+                        ? new Immediate((byte) 1)
                         : Register8.CL);
         final boolean reg8bit =
                 opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd2;
@@ -427,28 +424,59 @@ public final class InstructionDecoder {
                             : Register8.fromByte(regByte, pref.hasRexPrefix()),
                     imm8());
         } else {
-            logger.debug("immediate bits: %,d", immediateBits);
-            return new Instruction(
-                    opcode,
-                    isIndirectOperandNeeded
-                            ? parseIndirectOperand(pref, modrm)
-                                    .ptrSize(
-                                            pref.hasOperandSizeOverridePrefix()
-                                                    ? 16
-                                                    : (pref.rex().isOperand64Bit() ? 64 : immediateBits))
-                                    .build()
-                            : Registers.fromCode(
-                                    modrm.rm(),
-                                    pref.rex().isOperand64Bit(),
-                                    pref.rex().ModRMRMExtension(),
-                                    pref.hasOperandSizeOverridePrefix()),
-                    switch (immediateBits) {
-                        case 8 -> imm8();
-                        case 16 -> imm16();
-                        case 32 -> imm32();
-                        default -> throw new IllegalArgumentException(
-                                String.format("Invalid value of immediate bits: %,d", immediateBits));
-                    });
+            final Operand r = isIndirectOperandNeeded
+                    ? parseIndirectOperand(pref, modrm)
+                            .ptrSize(
+                                    pref.hasOperandSizeOverridePrefix()
+                                            ? 16
+                                            : (pref.rex().isOperand64Bit() ? 64 : immediateBits))
+                            .build()
+                    : Registers.fromCode(
+                            modrm.rm(),
+                            pref.rex().isOperand64Bit(),
+                            pref.rex().ModRMRMExtension(),
+                            pref.hasOperandSizeOverridePrefix());
+            final int operandBits =
+                    (r instanceof IndirectOperand) ? (((IndirectOperand) r).explicitPtrSize()) : ((Register) r).bits();
+
+            final Immediate imm;
+            if (immediateBits == 8) {
+                if (operandBits == 8) {
+                    imm = imm8();
+                } else if (operandBits == 16) {
+                    imm = new Immediate((short) b.read1());
+                } else if (operandBits == 32) {
+                    imm = new Immediate((int) b.read1());
+                } else if (operandBits == 64) {
+                    imm = new Immediate((long) b.read1());
+                } else {
+                    throw new IllegalArgumentException(String.format(
+                            "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
+                }
+            } else if (immediateBits == 16) {
+                if (operandBits == 16) {
+                    imm = imm16();
+                } else if (operandBits == 32) {
+                    imm = new Immediate((int) b.read2LE());
+                } else if (operandBits == 64) {
+                    imm = new Immediate((long) b.read2LE());
+                } else {
+                    throw new IllegalArgumentException(String.format(
+                            "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
+                }
+            } else if (immediateBits == 32) {
+                if (operandBits == 32) {
+                    imm = imm32();
+                } else if (operandBits == 64) {
+                    imm = new Immediate((long) b.read4LE());
+                } else {
+                    throw new IllegalArgumentException(String.format(
+                            "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
+                }
+            } else {
+                throw new RuntimeException("error");
+            }
+            return new Instruction(opcode, r, imm);
         }
     }
 
@@ -674,19 +702,19 @@ public final class InstructionDecoder {
             case GROUP15_OPCODE -> parseExtendedOpcodeGroup15(opcodeFirstByte, opcodeSecondByte, pref);
             case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(opcodeFirstByte, opcodeSecondByte, pref);
 
-            case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LittleEndian()));
-            case JAE_DISP32_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of32(b.read4LittleEndian()));
-            case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LittleEndian()));
-            case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of32(b.read4LittleEndian()));
-            case JBE_DISP32_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of32(b.read4LittleEndian()));
-            case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LittleEndian()));
-            case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LittleEndian()));
-            case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LittleEndian()));
-            case JP_DISP32_OPCODE -> new Instruction(Opcode.JP, RelativeOffset.of32(b.read4LittleEndian()));
-            case JL_DISP32_OPCODE -> new Instruction(Opcode.JL, RelativeOffset.of32(b.read4LittleEndian()));
-            case JGE_DISP32_OPCODE -> new Instruction(Opcode.JGE, RelativeOffset.of32(b.read4LittleEndian()));
-            case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LittleEndian()));
-            case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of32(b.read4LittleEndian()));
+            case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of32(b.read4LE()));
+            case JAE_DISP32_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of32(b.read4LE()));
+            case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of32(b.read4LE()));
+            case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of32(b.read4LE()));
+            case JBE_DISP32_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of32(b.read4LE()));
+            case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of32(b.read4LE()));
+            case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of32(b.read4LE()));
+            case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of32(b.read4LE()));
+            case JP_DISP32_OPCODE -> new Instruction(Opcode.JP, RelativeOffset.of32(b.read4LE()));
+            case JL_DISP32_OPCODE -> new Instruction(Opcode.JL, RelativeOffset.of32(b.read4LE()));
+            case JGE_DISP32_OPCODE -> new Instruction(Opcode.JGE, RelativeOffset.of32(b.read4LE()));
+            case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of32(b.read4LE()));
+            case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of32(b.read4LE()));
             case ENDBR_OPCODE -> {
                 final byte x = b.read1();
                 if (x == (byte) 0xfa) {
@@ -1469,7 +1497,7 @@ public final class InstructionDecoder {
             }
 
                 // jumps
-            case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LittleEndian()));
+            case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of32(b.read4LE()));
             case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of8(b.read1()));
             case JB_DISP8_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of8(b.read1()));
             case JAE_DISP8_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of8(b.read1()));
@@ -1485,7 +1513,7 @@ public final class InstructionDecoder {
             case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of8(b.read1()));
             case JG_DISP8_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of8(b.read1()));
 
-            case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LittleEndian()));
+            case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of32(b.read4LE()));
 
             case IMUL_REG_REG_IMM8_OPCODE -> {
                 final ModRM modrm = modrm();
@@ -1895,7 +1923,7 @@ public final class InstructionDecoder {
             } else if (isAddressSizeOverridePrefix(x)) {
                 hasAddressSizeOverridePrefix = true;
             } else {
-                b.goBack(1);
+                b.setPosition(b.position() - 1);
                 break;
             }
         }
@@ -1908,7 +1936,7 @@ public final class InstructionDecoder {
             logger.debug("Found REX prefix: 0x%02x -> %s", rexByte, rexPrefix);
         } else {
             rexPrefix = new RexPrefix((byte) 0x40);
-            b.goBack(1);
+            b.setPosition(b.position() - 1);
         }
 
         return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix);
@@ -2047,7 +2075,7 @@ public final class InstructionDecoder {
             if ((modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05)
                     || (modrm.mod() == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
                     || modrm.mod() == (byte) 0x02) {
-                final int disp32 = b.read4LittleEndian();
+                final int disp32 = b.read4LE();
                 iob.displacement(disp32);
             } else if (modrm.mod() == (byte) 0x01) {
                 final byte disp8 = b.read1();
@@ -2079,15 +2107,15 @@ public final class InstructionDecoder {
     }
 
     private Immediate imm16() {
-        return new Immediate(b.read2LittleEndian());
+        return new Immediate(b.read2LE());
     }
 
     private Immediate imm32() {
-        return new Immediate(b.read4LittleEndian());
+        return new Immediate(b.read4LE());
     }
 
     private Immediate imm64() {
-        return new Immediate(b.read8LittleEndian());
+        return new Immediate(b.read8LE());
     }
 
     private boolean isLegacyPrefixGroup1(final byte prefix) {

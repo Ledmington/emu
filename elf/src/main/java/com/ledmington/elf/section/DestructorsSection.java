@@ -1,9 +1,12 @@
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ReadOnlyByteBuffer;
-
-public final class DestructorsSection extends Section {
-    public DestructorsSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+public final class DestructorsSection extends LoadableSection {
+    public DestructorsSection(final String name, final SectionHeader sectionHeader) {
         super(name, sectionHeader);
+    }
+
+    @Override
+    public byte[] content() {
+        return new byte[0];
     }
 }

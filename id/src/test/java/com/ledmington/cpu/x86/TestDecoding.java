@@ -22,7 +22,7 @@ public final class TestDecoding extends X86Test {
         }
 
         final InstructionDecoder id = new InstructionDecoder(code);
-        final List<Instruction> instructions = id.decodeAll();
+        final List<Instruction> instructions = id.decodeAll(code.length);
         assertNotNull(instructions, "InstructionDecoder returned a null List");
         final int codeLen = instructions.size();
         assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));

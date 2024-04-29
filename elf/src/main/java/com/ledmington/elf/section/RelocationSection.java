@@ -12,7 +12,7 @@ public final class RelocationSection extends Section {
         super(name, sectionHeader);
 
         b.setPosition((int) sectionHeader.fileOffset());
-        final int nEntries = (int) (sectionHeader.size() / sectionHeader.entrySize());
+        final int nEntries = (int) (sectionHeader.sectionSize() / sectionHeader.entrySize());
         this.relocationTable = new RelocationEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
             final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();

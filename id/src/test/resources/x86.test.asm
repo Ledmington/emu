@@ -205,8 +205,8 @@ cmp DWORD PTR [r13+rcx*2+0x12],0x66778899      | 41 81 7c 4d 12 99 88 77 66
 cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
 cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
 cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
-cmp QWORD PTR [edi],0x12345678                 | 67 48 81 3f 78 56 34 12
-cmp QWORD PTR [rdi],0x12345678                 | 48 81 3f 78 56 34 12
+cmp QWORD PTR [edi],0x0000000012345678         | 67 48 81 3f 78 56 34 12
+cmp QWORD PTR [rdi],0x0000000012345678         | 48 81 3f 78 56 34 12
 cmp WORD PTR [edi],0x7788                      | 67 66 81 3f 88 77
 cmp WORD PTR [r13+rcx*2+0x12],0x77             | 66 41 83 7c 4d 12 77
 cmp WORD PTR [r13+rcx*2+0x12],0x7788           | 66 41 81 7c 4d 12 88 77
@@ -525,18 +525,18 @@ add WORD PTR [rax+rbx*4+0x12345678],r8w   | 66 44 01 84 98 78 56 34 12
 add al,0x99                               | 04 99
 add ax,0x1234                             | 66 05 34 12
 add cx,0x1234                             | 66 81 c1 34 12
+add eax,0x00000018                        | 83 c0 18
 add eax,0x12345678                        | 05 78 56 34 12
-add eax,0x18                              | 83 c0 18
 add esp,DWORD PTR [rax+rbx*4+0x12345678]  | 03 a4 98 78 56 34 12
 add r11d,DWORD PTR [rax+rbx*4+0x12345678] | 44 03 9c 98 78 56 34 12
-add r8,0x1                                | 49 83 c0 01
+add r8,0x0000000000000001                 | 49 83 c0 01
 add r8,r9                                 | 4d 01 c8
-add r9,0x12                               | 49 83 c1 12
+add r9,0x0000000000000012                 | 49 83 c1 12
 add r9,QWORD PTR [rax+rbx*4+0x12345678]   | 4c 03 8c 98 78 56 34 12
-add rax,0x1                               | 48 83 c0 01
-add rax,0x12                              | 48 83 c0 12
-add rax,0x12345678                        | 48 05 78 56 34 12
-add rsp,0x12345678                        | 48 81 c4 78 56 34 12
+add rax,0x0000000000000001                | 48 83 c0 01
+add rax,0x0000000000000012                | 48 83 c0 12
+add rax,0x0000000012345678                | 48 05 78 56 34 12
+add rsp,0x0000000012345678                | 48 81 c4 78 56 34 12
 add rsp,QWORD PTR [rax+rbx*4+0x12345678]  | 48 03 a4 98 78 56 34 12
 
 # Adc
@@ -547,19 +547,28 @@ and al,0x12                              | 24 12
 and al,BYTE PTR [rax+rbx*4+0x12345678]   | 22 84 98 78 56 34 12
 and ax,WORD PTR [rax+rbx*4+0x12345678]   | 66 23 84 98 78 56 34 12
 and cx,0x1234                            | 66 81 e1 34 12
+and di,0x00f0                            | 66 81 e7 f0 00
+and di,0xfff0                            | 66 83 e7 f0
 and dx,WORD PTR [r10]                    | 66 41 23 12
-and eax,0x12                             | 83 e0 12
+and eax,0x00000012                       | 83 e0 12
 and eax,0x12345678                       | 25 78 56 34 12
 and eax,DWORD PTR [rax+rbx*4+0x12345678] | 23 84 98 78 56 34 12
 and ecx,DWORD PTR [r10]                  | 41 23 0a
-and edi,0x12                             | 83 e7 12
+and edi,0x00000012                       | 83 e7 12
+and edi,0x000000f0                       | 81 e7 f0 00 00 00
+and edi,0xfffffff0                       | 83 e7 f0
 and r12,r13                              | 4d 21 ec
-and r15d,0x1f                            | 41 83 e7 1f
-and rax,0x12                             | 48 83 e0 12
-and rax,0x12345678                       | 48 25 78 56 34 12
+and r15d,0x0000001f                      | 41 83 e7 1f
+and rax,0x0000000000000012               | 48 83 e0 12
+and rax,0x0000000012345678               | 48 25 78 56 34 12
 and rax,QWORD PTR [rax+rbx*4+0x12345678] | 48 23 84 98 78 56 34 12
 and rcx,QWORD PTR [r10]                  | 49 23 0a
-and rdi,0xf0                             | 48 83 e7 f0
+and rdi,0x0000000000000012               | 48 83 e7 12
+and rdi,0x0000000078563412               | 48 81 e7 12 34 56 78
+and rdi,0xffffffff98badcfe               | 48 81 e7 fe dc ba 98
+and rdi,0xfffffffffffffff0               | 48 81 e7 f0 00 00 00
+and rdi,0xfffffffffffffff0               | 48 83 e7 f0
+and rdi,0xfffffffffffffffe               | 48 83 e7 fe
 and spl,BYTE PTR [r10]                   | 41 22 22
 
 # Sub
@@ -569,13 +578,13 @@ sub QWORD PTR [rax+rbx*4+0x12345678],r9   | 4c 29 8c 98 78 56 34 12
 sub QWORD PTR [rax+rbx*4+0x12345678],rsp  | 48 29 a4 98 78 56 34 12
 sub WORD PTR [rax+rbx*4+0x12345678],r8w   | 66 44 29 84 98 78 56 34 12
 sub cx,0x1234                             | 66 81 e9 34 12
-sub esi,0x12                              | 83 ee 12
+sub esi,0x00000012                        | 83 ee 12
 sub esp,DWORD PTR [rax+rbx*4+0x12345678]  | 2b a4 98 78 56 34 12
 sub r11d,DWORD PTR [rax+rbx*4+0x12345678] | 44 2b 9c 98 78 56 34 12
 sub r8,r9                                 | 4d 29 c8
 sub r9,QWORD PTR [rax+rbx*4+0x12345678]   | 4c 2b 8c 98 78 56 34 12
-sub rdi,0x12                              | 48 83 ef 12
-sub rsp,0x12345678                        | 48 81 ec 78 56 34 12
+sub rdi,0x0000000000000012                | 48 83 ef 12
+sub rsp,0x0000000012345678                | 48 81 ec 78 56 34 12
 sub rsp,QWORD PTR [rax+rbx*4+0x12345678]  | 48 2b a4 98 78 56 34 12
 
 # Sbb
@@ -587,49 +596,49 @@ sbb r12d,r12d | 45 19 e4
 sbb rax,rax   | 48 19 c0
 
 # Shr
-shr bpl,0x1  | 40 d0 ed
+shr bpl,0x01 | 40 d0 ed
 shr bx,0x12  | 66 c1 eb 12
-shr di,0x1   | 66 d1 ef
+shr di,0x01  | 66 d1 ef
 shr eax,cl   | d3 e8
 shr ecx,0x12 | c1 e9 12
-shr edx,0x1  | d1 ea
+shr edx,0x01 | d1 ea
 shr r11b,cl  | 41 d2 eb
-shr r9,0x1   | 49 d1 e9
+shr r9,0x01  | 49 d1 e9
 shr rcx,cl   | 48 d3 e9
 shr rdx,0x12 | 48 c1 ea 12
 shr si,cl    | 66 d3 ee
-shr sil,0x1  | 40 d0 ee
-shr spl,0x1  | 40 d0 ec
+shr sil,0x01 | 40 d0 ee
+shr spl,0x01 | 40 d0 ec
 
 # Sar
-sar bpl,0x1  | 40 d0 fd
+sar bpl,0x01 | 40 d0 fd
 sar bx,0x12  | 66 c1 fb 12
-sar di,0x1   | 66 d1 ff
+sar di,0x01  | 66 d1 ff
 sar eax,cl   | d3 f8
 sar ecx,0x12 | c1 f9 12
-sar edx,0x1  | d1 fa
+sar edx,0x01 | d1 fa
 sar r11b,cl  | 41 d2 fb
-sar r9,0x1   | 49 d1 f9
+sar r9,0x01  | 49 d1 f9
 sar rcx,cl   | 48 d3 f9
 sar rdx,0x12 | 48 c1 fa 12
 sar si,cl    | 66 d3 fe
-sar sil,0x1  | 40 d0 fe
-sar spl,0x1  | 40 d0 fc
+sar sil,0x01 | 40 d0 fe
+sar spl,0x01 | 40 d0 fc
 
 # Shl
-shl bpl,0x1  | 40 d0 e5
+shl bpl,0x01 | 40 d0 e5
 shl bx,0x12  | 66 c1 e3 12
-shl di,0x1   | 66 d1 e7
+shl di,0x01  | 66 d1 e7
 shl eax,cl   | d3 e0
 shl ecx,0x12 | c1 e1 12
-shl edx,0x1  | d1 e2
+shl edx,0x01 | d1 e2
 shl r11b,cl  | 41 d2 e3
-shl r9,0x1   | 49 d1 e1
+shl r9,0x01  | 49 d1 e1
 shl rcx,cl   | 48 d3 e1
 shl rdx,0x12 | 48 c1 e2 12
 shl si,cl    | 66 d3 e6
-shl sil,0x1  | 40 d0 e6
-shl spl,0x1  | 40 d0 e4
+shl sil,0x01 | 40 d0 e6
+shl spl,0x01 | 40 d0 e4
 
 # Imul
 imul eax,ebx,0x12                                   | 6b c3 12
@@ -806,24 +815,25 @@ or WORD PTR [r11+r9*4+0x12345678],0xbeef      | 66 43 81 8c 8b 78 56 34 12 ef be
 or al,0x12                                    | 0c 12
 or cl,0x12                                    | 80 c9 12
 or cx,0x1234                                  | 66 81 c9 34 12
-or eax,0x12                                   | 83 c8 12
+or eax,0x00000012                             | 83 c8 12
 or eax,0x12345678                             | 0d 78 56 34 12
 or eax,DWORD PTR [rax+rbx*4+0x12345678]       | 0b 84 98 78 56 34 12
 or ecx,DWORD PTR [r10]                        | 41 0b 0a
-or edi,0x12                                   | 83 cf 12
-or rax,0x12                                   | 48 83 c8 12
-or rax,0x12345678                             | 48 0d 78 56 34 12
+or edi,0x00000012                             | 83 cf 12
+or rax,0x0000000000000012                     | 48 83 c8 12
+or rax,0x0000000012345678                     | 48 0d 78 56 34 12
+or rax,0xfffffffffffffffe                     | 48 83 c8 fe
 or rax,QWORD PTR [rax+rbx*4+0x12345678]       | 48 0b 84 98 78 56 34 12
 or rcx,QWORD PTR [r10]                        | 49 0b 0a
-or rdi,0x12                                   | 48 83 cf 12
+or rdi,0x0000000000000012                     | 48 83 cf 12
 
 # Xor
-xor cx,0x1234      | 66 81 f1 34 12
-xor eax,0x12       | 83 f0 12
-xor eax,0x12345678 | 35 78 56 34 12
-xor ebx,0x12345678 | 81 f3 78 56 34 12
-xor r8,0x12        | 49 83 f0 12
-xor r8,0x12345678  | 49 81 f0 78 56 34 12
+xor cx,0x1234             | 66 81 f1 34 12
+xor eax,0x00000012        | 83 f0 12
+xor eax,0x12345678        | 35 78 56 34 12
+xor ebx,0x12345678        | 81 f3 78 56 34 12
+xor r8,0x0000000000000012 | 49 83 f0 12
+xor r8,0x0000000012345678 | 49 81 f0 78 56 34 12
 
 # Not
 not eax  | f7 d0
@@ -870,7 +880,7 @@ test BYTE PTR [r11+rdx*4+0x12345678],0x12         | 41 f6 84 93 78 56 34 12 12
 test BYTE PTR [r11+rdx*4+0x12345678],0x99         | 41 f6 84 93 78 56 34 12 99
 test BYTE PTR [r11+rdx*4+0x12345678],r13b         | 45 84 ac 93 78 56 34 12
 test BYTE PTR [r11d+edx*4+0x12345678],0x99        | 67 41 f6 84 93 78 56 34 12 99
-test BYTE PTR [r15+0x40],0x8                      | 41 f6 47 40 08
+test BYTE PTR [r15+0x40],0x08                     | 41 f6 47 40 08
 test DWORD PTR [r11+rdx*4+0x12345678],0xdeadbeef  | 41 f7 84 93 78 56 34 12 ef be ad de
 test DWORD PTR [r11+rdx*4+0x12345678],ebx         | 41 85 9c 93 78 56 34 12
 test DWORD PTR [r11d+edx*4+0x12345678],0xdeadbeef | 67 41 f7 84 93 78 56 34 12 ef be ad de
@@ -1014,7 +1024,7 @@ setge al                             | 0f 9d c0
 setge r8b                            | 41 0f 9d c0
 
 # Movabs
-movabs rcx,0xdeadbeef         | 48 b9 ef be ad de 00 00 00 00
+movabs rcx,0x00000000deadbeef | 48 b9 ef be ad de 00 00 00 00
 movabs rdx,0xdeadbeefcafebabe | 48 ba be ba fe ca ef be ad de
 
 # Movups

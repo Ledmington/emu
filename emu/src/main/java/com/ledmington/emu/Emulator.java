@@ -1,11 +1,13 @@
 package com.ledmington.emu;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-import com.ledmington.cpu.x86.IndirectOperand;
+import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.cpu.x86.RelativeOffset;
@@ -13,13 +15,13 @@ import com.ledmington.elf.ELF;
 import com.ledmington.elf.FileType;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
-import com.ledmington.elf.section.ProgBitsSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.emu.mem.MemoryController;
 import com.ledmington.emu.mem.MemoryInitializer;
 import com.ledmington.emu.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
  * A useful reference <a href="https://linuxgazette.net/84/hawk.html">here</a>.
@@ -29,34 +31,62 @@ public final class Emulator {
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
     private final ELF elf;
-    private final InstructionDecoder dec;
     private final MemoryController mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()));
     private final X86RegisterFile regFile = new X86RegisterFile();
-    private long rip;
+    private final ReadOnlyByteBuffer instructionFetcher = new ReadOnlyByteBuffer(false) {
+
+        private long instructionPointer = 0L;
+
+        @Override
+        public void setPosition(final long newPosition) {
+            this.instructionPointer = newPosition;
+        }
+
+        @Override
+        public long position() {
+            return instructionPointer;
+        }
+
+        @Override
+        protected byte read() {
+            return mem.readCode(instructionPointer);
+        }
+    };
+    private final InstructionDecoder dec = new InstructionDecoder(this.instructionFetcher);
 
     public Emulator(final ELF elf) {
         this.elf = Objects.requireNonNull(elf);
+    }
 
+    public void run() {
         if (elf.getFileHeader().getType() != FileType.ET_EXEC) {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF file type: expected ET_EXEC but was %s",
                     elf.getFileHeader().getType()));
         }
 
-        final byte[] code = ((ProgBitsSection) elf.getFirstSectionByName(".text")).content();
-        this.dec = new InstructionDecoder(code);
-        this.rip = elf.getFileHeader().entryPointVirtualAddress();
+        this.instructionFetcher.setPosition(elf.getFileHeader().entryPointVirtualAddress());
+        logger.debug("Entry point virtual address : 0x%x", elf.getFileHeader().entryPointVirtualAddress());
 
-        final ProgBitsSection dataSection = (ProgBitsSection) elf.getFirstSectionByName(".data");
-    }
-
-    public void run() {
         loadELF();
 
+        // TODO: load argc and argv (command-line arguments)
+
+        // TODO: load environment variables
+
+        // setup stack
+        final long allocatedMemory = 1L << 30; // 1 GB
+        final long highestAddress = Arrays.stream(elf.sections())
+                .map(sec -> sec.header().virtualAddress() + sec.header().sectionSize())
+                .max((a, b) -> Long.compare(a, b))
+                .orElseThrow();
+        mem.setPermissions(highestAddress, highestAddress + allocatedMemory, true, true, false);
+        regFile.set(Register64.RSP, highestAddress + allocatedMemory);
+
         while (true) {
-            dec.goTo(rip);
+            // dec.goTo(this.instructionFetcher.position());
             final Instruction inst = dec.decodeOne();
-            rip = dec.position();
+            // this.instructionFetcher.setPosition(dec.position());
 
             logger.debug(inst.toIntelSyntax());
             switch (inst.opcode()) {
@@ -67,23 +97,44 @@ public final class Emulator {
                             final byte r2 = regFile.get((Register8) inst.op(1));
                             regFile.set((Register8) inst.op(0), BitUtils.xor(r1, r2));
                         }
+                        case 32 -> {
+                            final int r1 = regFile.get((Register32) inst.op(0));
+                            final int r2 = regFile.get((Register32) inst.op(1));
+                            regFile.set((Register32) inst.op(0), r1 ^ r2);
+                        }
+                        default -> throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when XOR has %,d bits", ((Register) inst.op(0)).bits()));
+                    }
+                }
+                case AND -> {
+                    switch (((Register) inst.op(0)).bits()) {
+                        case 64 -> {
+                            final Register64 r = (Register64) inst.op(0);
+                            final long imm64 = ((Immediate) inst.op(1)).asLong();
+                            regFile.set(r, regFile.get(r) & imm64);
+                        }
                         default -> throw new IllegalArgumentException(String.format(
                                 "Don't know what to do when XOR has %,d bits", ((Register) inst.op(0)).bits()));
                     }
                 }
                 case JMP -> {
-                    rip += ((RelativeOffset) inst.op(0)).amount();
-                }
-                case LEA -> {
-                    final Register64 dest = (Register64) inst.op(0);
-                    final IndirectOperand src = (IndirectOperand) inst.op(1);
-                    final long addr = (src.r1() == null ? 0L : regFile.get((Register64) src.r1()));
-                    regFile.set(dest, addr);
+                    this.instructionFetcher.setPosition(
+                            this.instructionFetcher.position() + ((RelativeOffset) inst.op(0)).amount());
                 }
                 case MOV -> {
                     final Register64 dest = (Register64) inst.op(0);
                     final Register64 src = (Register64) inst.op(1);
                     regFile.set(dest, regFile.get(src));
+                }
+                case POP -> {
+                    final Register64 dest = (Register64) inst.op(0);
+                    final long rsp = regFile.get(Register64.RSP);
+                    regFile.set(dest, mem.read(rsp));
+                    // the stack "grows downward"
+                    regFile.set(Register64.RSP, rsp + 8L);
+                }
+                case ENDBR64 -> {
+                    logger.warning("ENDBR64 not implemented");
                 }
                 default -> throw new IllegalStateException(
                         String.format("Unknwon instruction %s", inst.toIntelSyntax()));
@@ -94,17 +145,18 @@ public final class Emulator {
     private void loadELF() {
         logger.debug("Loading ELF segments into memory");
         for (final PHTEntry phte : elf.programHeader()) {
-            if (phte.type() != PHTEntryType.PT_LOAD && phte.segmentMemorySize() != 0) {
+            if (phte.type() != PHTEntryType.PT_LOAD) {
                 // This segment is not loadable
                 continue;
             }
 
             final long start = phte.segmentVirtualAddress();
-            final long end = phte.segmentVirtualAddress() + phte.segmentMemorySize();
+            final long end = phte.segmentVirtualAddress() + phte.segmentMemorySize() - 1;
             logger.debug(
-                    "Setting permissions of %,d bytes starting from 0x%016x to %s",
-                    end - start,
+                    "Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
                     start,
+                    end,
+                    end - start,
                     (phte.isReadable() ? "R" : "")
                             + (phte.isWriteable() ? "W" : "")
                             + (phte.isExecutable() ? "X" : ""));
@@ -113,8 +165,7 @@ public final class Emulator {
 
         logger.debug("Loading ELF sections into memory");
         for (final Section sec : elf.sections()) {
-            if (sec.header().size() != 0) {
-                logger.debug("Loading section '%s' into memory", sec.name());
+            if (sec.header().sectionSize() != 0) {
                 mem.loadSection(sec);
             }
         }

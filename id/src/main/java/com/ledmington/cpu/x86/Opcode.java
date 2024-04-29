@@ -178,7 +178,7 @@ public enum Opcode {
     ENDBR32("endbr32"),
 
     /**
-     * Terminate an indirect branch in 32-bit mode.
+     * Terminate an indirect branch in 64-bit mode.
      */
     ENDBR64("endbr64"),
 

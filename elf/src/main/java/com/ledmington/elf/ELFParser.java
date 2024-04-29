@@ -24,6 +24,7 @@ import com.ledmington.elf.section.SymbolTableSection;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class ELFParser {
 
@@ -34,7 +35,7 @@ public final class ELFParser {
     public ELFParser() {}
 
     public ELF parse(final byte[] bytes) {
-        this.b = new ReadOnlyByteBuffer(bytes);
+        this.b = new ReadOnlyByteBufferV1(bytes);
 
         final FileHeader fileHeader = parseFileHeader();
 
@@ -340,9 +341,9 @@ public final class ELFParser {
             } else if (name.equals(".gnu.version_r")) {
                 sectionTable[k] = new GnuVersionRequirementsSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.name())) {
-                sectionTable[k] = new ConstructorsSection(name, entry, b);
+                sectionTable[k] = new ConstructorsSection(name, entry);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.name())) {
-                sectionTable[k] = new DestructorsSection(name, entry, b);
+                sectionTable[k] = new DestructorsSection(name, entry);
             } else {
                 throw new IllegalArgumentException(String.format(
                         "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));
