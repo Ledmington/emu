@@ -2,7 +2,6 @@ package com.ledmington.cpu.x86;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * High-level representation of an x86 instruction.
@@ -15,12 +14,12 @@ public final class Instruction {
         REPNZ
     }
 
-    private final Optional<Prefix> pref;
+    private final Prefix prefix;
     private final Opcode opcode;
     private final Operand[] operands;
 
-    public Instruction(final Prefix pref, final Opcode opcode, final Operand... ops) {
-        this.pref = (pref == null) ? Optional.empty() : Optional.of(pref);
+    public Instruction(final Prefix prefix, final Opcode opcode, final Operand... ops) {
+        this.prefix = prefix;
         this.opcode = Objects.requireNonNull(opcode);
         this.operands = new Operand[Objects.requireNonNull(ops, "Cannot have null array of operands").length];
         for (int i = 0; i < ops.length; i++) {
@@ -97,8 +96,8 @@ public final class Instruction {
 
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
-        if (this.pref.isPresent()) {
-            sb.append(this.pref.orElseThrow().name().toLowerCase()).append(' ');
+        if (this.prefix != null) {
+            sb.append(this.prefix.name().toLowerCase()).append(' ');
         }
         sb.append(opcode.mnemonic());
 
@@ -117,15 +116,16 @@ public final class Instruction {
     @Override
     public String toString() {
         if (operands.length == 0) {
-            return "Instruction(opcode=" + opcode.toString() + ")";
+            return "Instruction(prefix=" + prefix.toString() + ";opcode=" + opcode.toString() + ")";
         }
-        return "Instruction(opcode=" + opcode.toString() + ";operands="
+        return "Instruction(prefix=" + prefix.toString() + ";opcode=" + opcode.toString() + ";operands="
                 + Arrays.stream(operands).toList() + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
+        h = 31 * h + prefix.hashCode();
         h = 31 * h + opcode.hashCode();
         for (final Operand op : this.operands) {
             h = 31 * h + op.hashCode();
@@ -145,6 +145,6 @@ public final class Instruction {
             return false;
         }
         final Instruction o = (Instruction) other;
-        return this.opcode.equals(o.opcode) && Arrays.equals(this.operands, o.operands);
+        return this.prefix == o.prefix && this.opcode.equals(o.opcode) && Arrays.equals(this.operands, o.operands);
     }
 }

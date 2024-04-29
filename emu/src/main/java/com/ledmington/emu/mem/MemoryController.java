@@ -30,7 +30,7 @@ public final class MemoryController implements Memory {
      * {@code startBlockAddress} (inclusive) and ending at {@code endBlockAddress}
      * (exclusive).
      *
-     * @param startBLockAddress
+     * @param startBlockAddress
      *                          The start (inclusive) of the memory block.
      * @param endBlockAddress
      *                          The end (exclusive) of the memory block.

@@ -75,10 +75,10 @@ public final class Emulator {
         // TODO: load environment variables
 
         // setup stack
-        final long allocatedMemory = 1L << 30; // 1 GB
+        final long allocatedMemory = 1L << 30; // 1 GiB
         final long highestAddress = Arrays.stream(elf.sections())
                 .map(sec -> sec.header().virtualAddress() + sec.header().sectionSize())
-                .max((a, b) -> Long.compare(a, b))
+                .max(Long::compare)
                 .orElseThrow();
         mem.setPermissions(highestAddress, highestAddress + allocatedMemory, true, true, false);
         regFile.set(Register64.RSP, highestAddress + allocatedMemory);
@@ -117,10 +117,8 @@ public final class Emulator {
                                 "Don't know what to do when XOR has %,d bits", ((Register) inst.op(0)).bits()));
                     }
                 }
-                case JMP -> {
-                    this.instructionFetcher.setPosition(
-                            this.instructionFetcher.position() + ((RelativeOffset) inst.op(0)).amount());
-                }
+                case JMP -> this.instructionFetcher.setPosition(
+                        this.instructionFetcher.position() + ((RelativeOffset) inst.op(0)).amount());
                 case MOV -> {
                     final Register64 dest = (Register64) inst.op(0);
                     final Register64 src = (Register64) inst.op(1);
@@ -133,9 +131,7 @@ public final class Emulator {
                     // the stack "grows downward"
                     regFile.set(Register64.RSP, rsp + 8L);
                 }
-                case ENDBR64 -> {
-                    logger.warning("ENDBR64 not implemented");
-                }
+                case ENDBR64 -> logger.warning("ENDBR64 not implemented");
                 default -> throw new IllegalStateException(
                         String.format("Unknwon instruction %s", inst.toIntelSyntax()));
             }
