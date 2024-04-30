@@ -43,16 +43,43 @@ public final class Main {
     }
 
     public static void main(final String[] args) {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-        if (args.length == 0) {
-            logger.error("expected 1 argument");
-            System.exit(-1);
-        }
-        if (args.length > 1) {
-            logger.warning("Expected 1 argument but received %,d, the others will be ignored\n", args.length);
-        }
+        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
-        final String filename = args[0];
+        String filename = null;
+
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-h") || args[i].equals("--help")) {
+                System.out.println(String.join(
+                        "\n",
+                        "",
+                        " emu - CPU emulator",
+                        "",
+                        " Usage: emu [-v|-vv] FILE",
+                        "",
+                        " Command line options:",
+                        "",
+                        " -h, --help  Shows this help message and exits.",
+                        " -q, --quiet Sets the verbosity level to ERROR.",
+                        " -v          Sets the verbosity level to INFO.",
+                        " -vv         Sets the verbosity level to DEBUG.",
+                        " FILE       The ELF executable file to emulate.",
+                        ""));
+                System.exit(0);
+            } else if (args[i].equals("-q") || args[i].equals("--quiet")) {
+                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+            } else if (args[i].equals("-v")) {
+                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+            } else if (args[i].equals("-vv")) {
+                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+            } else {
+                if (filename != null) {
+                    System.err.println("Cannot set filename twice");
+                    System.exit(-1);
+                } else {
+                    filename = args[i];
+                }
+            }
+        }
 
         try {
             run(filename);

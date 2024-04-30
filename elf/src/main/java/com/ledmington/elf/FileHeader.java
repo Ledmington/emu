@@ -89,7 +89,7 @@ public final class FileHeader {
         return sectionHeaderTableEntrySize;
     }
 
-    public FileType getType() {
+    public FileType fileType() {
         return fileType;
     }
 

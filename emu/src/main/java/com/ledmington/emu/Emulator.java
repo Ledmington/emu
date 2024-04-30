@@ -59,14 +59,14 @@ public final class Emulator {
     }
 
     public void run() {
-        if (elf.getFileHeader().getType() != FileType.ET_EXEC) {
+        if (elf.fileHeader().fileType() != FileType.ET_EXEC && elf.fileHeader().fileType() != FileType.ET_DYN) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid ELF file type: expected ET_EXEC but was %s",
-                    elf.getFileHeader().getType()));
+                    "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
+                    elf.fileHeader().fileType()));
         }
 
-        this.instructionFetcher.setPosition(elf.getFileHeader().entryPointVirtualAddress());
-        logger.debug("Entry point virtual address : 0x%x", elf.getFileHeader().entryPointVirtualAddress());
+        this.instructionFetcher.setPosition(elf.fileHeader().entryPointVirtualAddress());
+        logger.debug("Entry point virtual address : 0x%x", elf.fileHeader().entryPointVirtualAddress());
 
         loadELF();
 
@@ -75,16 +75,17 @@ public final class Emulator {
         // TODO: load environment variables
 
         // setup stack
-        final long allocatedMemory = 1L << 30; // 1 GiB
+        final long allocatedMemory = 100_000_000L; // 100 MB
         final long highestAddress = Arrays.stream(elf.sections())
                 .map(sec -> sec.header().virtualAddress() + sec.header().sectionSize())
                 .max(Long::compare)
                 .orElseThrow();
         logger.debug(
-                "Setting stack size to %,d bytes (%.3f MiB) starting at 0x%x",
-                allocatedMemory, (double) allocatedMemory / 1_048_576.0, highestAddress + allocatedMemory);
+                "Setting stack size to %,d bytes (%.3f MB) starting at 0x%x",
+                allocatedMemory, (double) allocatedMemory / 1_000_000.0, highestAddress + allocatedMemory);
         mem.setPermissions(highestAddress, highestAddress + allocatedMemory, true, true, false);
-        regFile.set(Register64.RSP, highestAddress + allocatedMemory);
+        // we make RSP point at the last 8 bytes of allocated memory
+        regFile.set(Register64.RSP, highestAddress + allocatedMemory - 8L);
 
         while (true) {
             // dec.goTo(this.instructionFetcher.position());

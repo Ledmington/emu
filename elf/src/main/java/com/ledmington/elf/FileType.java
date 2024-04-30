@@ -24,9 +24,9 @@ public enum FileType {
     ET_EXEC((short) 0x0002, "Executable file"),
 
     /**
-     * Shared object.
+     * Shared object or Position-Independent Executable file.
      */
-    ET_DYN((short) 0x0003, "Shared object"),
+    ET_DYN((short) 0x0003, "Shared object or Position-Independent Executable file"),
 
     /**
      * Core file.
