@@ -11,7 +11,7 @@ public final class Registers {
      * 0000b000
      */
     public static byte combine(final boolean b, final byte x) {
-        return BitUtils.asByte(x | (b ? ((byte) 0x08) : 0));
+        return BitUtils.asByte(x | (b ? ((byte) 0b00001000) : 0));
     }
 
     public static Register fromCode(

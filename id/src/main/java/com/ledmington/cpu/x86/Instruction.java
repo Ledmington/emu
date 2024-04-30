@@ -46,14 +46,6 @@ public final class Instruction {
         this(prefix, opcode, firstOperand, secondOperand, null);
     }
 
-    public Instruction(final Prefix prefix, final Opcode opcode, final Operand firstOperand) {
-        this(prefix, opcode, firstOperand, null, null);
-    }
-
-    public Instruction(final Prefix prefix, final Opcode opcode) {
-        this(prefix, opcode, null, null, null);
-    }
-
     public Instruction(
             final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
         this(null, opcode, firstOperand, secondOperand, thirdOperand);
@@ -87,13 +79,6 @@ public final class Instruction {
             throw new IllegalArgumentException("No second operand");
         }
         return secondOperand;
-    }
-
-    public Operand thirdOperand() {
-        if (thirdOperand == null) {
-            throw new IllegalArgumentException("No third operand");
-        }
-        return thirdOperand;
     }
 
     /**

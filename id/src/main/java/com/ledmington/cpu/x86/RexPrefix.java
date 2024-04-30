@@ -60,10 +60,6 @@ public final class RexPrefix {
         return b;
     }
 
-    public boolean extension() {
-        return b;
-    }
-
     public boolean SIBBaseExtension() {
         return b;
     }

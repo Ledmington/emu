@@ -9,7 +9,7 @@ import com.ledmington.utils.BitUtils;
  */
 public final class Immediate implements Operand {
 
-    private static enum Type {
+    private enum Type {
         BYTE,
         SHORT,
         INT,
@@ -31,7 +31,7 @@ public final class Immediate implements Operand {
      *          The 1-byte immediate.
      */
     public Immediate(final byte b) {
-        this((long) b, Type.BYTE);
+        this(b, Type.BYTE);
     }
 
     /**
@@ -41,7 +41,7 @@ public final class Immediate implements Operand {
      *          The 2-bytes immediate.
      */
     public Immediate(final short s) {
-        this((long) s, Type.SHORT);
+        this(s, Type.SHORT);
     }
 
     /**
@@ -51,7 +51,7 @@ public final class Immediate implements Operand {
      *          The 4-bytes immediate.
      */
     public Immediate(final int x) {
-        this((long) x, Type.INT);
+        this(x, Type.INT);
     }
 
     /**
@@ -75,7 +75,7 @@ public final class Immediate implements Operand {
 
     public long asLong() {
         if (type != Type.LONG) {
-            throw new IllegalArgumentException(String.format("This immediate is not 64 bits"));
+            throw new IllegalArgumentException("This immediate is not 64 bits");
         }
         return value;
     }

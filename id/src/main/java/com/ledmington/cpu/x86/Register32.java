@@ -90,11 +90,6 @@ public final class Register32 extends Register {
      */
     public static final Register32 EIP = new Register32("eip");
 
-    /**
-     * The zero register EIZ.
-     */
-    public static final Register32 EIZ = new Register32("eiz");
-
     private Register32(final String mnemonic) {
         super(mnemonic);
     }

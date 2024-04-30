@@ -9,17 +9,17 @@ public final class SIB {
     private final byte base;
 
     public static byte extractScale(final byte sib) {
-        final byte SIB_SCALE_MASK = (byte) 0xc0; // 11000000
+        final byte SIB_SCALE_MASK = (byte) 0b11000000;
         return BitUtils.shr(BitUtils.and(sib, SIB_SCALE_MASK), 6);
     }
 
     public static byte extractIndex(final byte sib) {
-        final byte SIB_INDEX_MASK = (byte) 0x38; // 00111000
+        final byte SIB_INDEX_MASK = (byte) 0b00111000;
         return BitUtils.shr(BitUtils.and(sib, SIB_INDEX_MASK), 3);
     }
 
     public static byte extractBase(final byte sib) {
-        final byte SIB_BASE_MASK = (byte) 0x07; // 00000111
+        final byte SIB_BASE_MASK = (byte) 0b00000111;
         return BitUtils.and(sib, SIB_BASE_MASK);
     }
 

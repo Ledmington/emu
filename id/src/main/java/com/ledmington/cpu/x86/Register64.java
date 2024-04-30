@@ -90,11 +90,6 @@ public final class Register64 extends Register {
      */
     public static final Register64 RIP = new Register64("rip");
 
-    /**
-     * The zero register RIZ.
-     */
-    public static final Register64 RIZ = new Register64("riz");
-
     private Register64(final String mnemonic) {
         super(mnemonic);
     }
