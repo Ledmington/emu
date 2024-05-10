@@ -9,10 +9,10 @@ import java.util.Objects;
 public final class Instruction {
 
     private final InstructionPrefix prefix;
-    private final Opcode opcode;
-    private final Operand firstOperand;
-    private final Operand secondOperand;
-    private final Operand thirdOperand;
+    private final Opcode code;
+    private final Operand op1;
+    private final Operand op2;
+    private final Operand op3;
 
     public Instruction(
             final InstructionPrefix prefix,
@@ -21,19 +21,19 @@ public final class Instruction {
             final Operand secondOperand,
             final Operand thirdOperand) {
         this.prefix = prefix;
-        this.opcode = Objects.requireNonNull(opcode);
-        this.firstOperand = firstOperand;
+        this.code = Objects.requireNonNull(opcode);
+        this.op1 = firstOperand;
         if (firstOperand == null && secondOperand != null) {
             throw new IllegalArgumentException(String.format(
                     "Cannot have an x86 instruction with a second operand (%s) but not a first", secondOperand));
         }
-        this.secondOperand = secondOperand;
+        this.op2 = secondOperand;
         if (thirdOperand != null && (firstOperand == null || secondOperand == null)) {
             throw new IllegalArgumentException(String.format(
                     "Cannot have an x86 instruction with a third operand (%s) but not a first or a second",
                     thirdOperand));
         }
-        this.thirdOperand = thirdOperand;
+        this.op3 = thirdOperand;
     }
 
     public Instruction(
@@ -62,21 +62,21 @@ public final class Instruction {
     }
 
     public Opcode opcode() {
-        return opcode;
+        return code;
     }
 
     public Operand firstOperand() {
-        if (firstOperand == null) {
+        if (op1 == null) {
             throw new IllegalArgumentException("No first operand");
         }
-        return firstOperand;
+        return op1;
     }
 
     public Operand secondOperand() {
-        if (secondOperand == null) {
+        if (op2 == null) {
             throw new IllegalArgumentException("No second operand");
         }
-        return secondOperand;
+        return op2;
     }
 
     /**
@@ -93,26 +93,26 @@ public final class Instruction {
     public int bits() {
         // here it is assumed that all "first-class" registers involved have the same
         // size
-        if (firstOperand instanceof Register r) {
+        if (op1 instanceof Register r) {
             return r.bits();
         }
-        if (firstOperand instanceof Immediate imm) {
+        if (op1 instanceof Immediate imm) {
             return imm.bits();
         }
-        if (secondOperand instanceof Register r) {
+        if (op2 instanceof Register r) {
             return r.bits();
         }
-        if (secondOperand instanceof Immediate imm) {
+        if (op2 instanceof Immediate imm) {
             return imm.bits();
         }
-        if (thirdOperand instanceof Register r) {
+        if (op3 instanceof Register r) {
             return r.bits();
         }
-        if (thirdOperand instanceof Immediate imm) {
+        if (op3 instanceof Immediate imm) {
             return imm.bits();
         }
 
-        if (firstOperand != null && firstOperand instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
+        if (op1 != null && op1 instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
             return io.explicitPtrSize();
         }
 
@@ -133,7 +133,7 @@ public final class Instruction {
     }
 
     private String operandString(final Operand op) {
-        if (op instanceof IndirectOperand io && opcode != Opcode.LEA) {
+        if (op instanceof IndirectOperand io && code != Opcode.LEA) {
             if (io.hasExplicitPtrSize()) {
                 return sizeToPointerType(io.explicitPtrSize()) + " PTR " + op.toIntelSyntax();
             }
@@ -148,14 +148,14 @@ public final class Instruction {
         if (this.prefix != null) {
             sb.append(this.prefix.name().toLowerCase(Locale.US)).append(' ');
         }
-        sb.append(opcode.mnemonic());
+        sb.append(code.mnemonic());
 
-        if (firstOperand != null) {
-            sb.append(' ').append(operandString(firstOperand));
-            if (secondOperand != null) {
-                sb.append(',').append(operandString(secondOperand));
-                if (thirdOperand != null) {
-                    sb.append(',').append(operandString(thirdOperand));
+        if (op1 != null) {
+            sb.append(' ').append(operandString(op1));
+            if (op2 != null) {
+                sb.append(',').append(operandString(op2));
+                if (op3 != null) {
+                    sb.append(',').append(operandString(op3));
                 }
             }
         }
@@ -165,14 +165,10 @@ public final class Instruction {
 
     @Override
     public String toString() {
-        return "Instruction(prefix=" + prefix.toString() + ";opcode=" + opcode.toString()
-                + (firstOperand == null
+        return "Instruction(prefix=" + prefix.toString() + ";opcode=" + code.toString()
+                + (op1 == null
                         ? ""
-                        : ";operands=[" + firstOperand
-                                + (secondOperand == null
-                                        ? ""
-                                        : "," + secondOperand + (thirdOperand == null ? "" : "," + thirdOperand))
-                                + "]")
+                        : ";operands=[" + op1 + (op2 == null ? "" : "," + op2 + (op3 == null ? "" : "," + op3)) + "]")
                 + ")";
     }
 
@@ -180,10 +176,10 @@ public final class Instruction {
     public int hashCode() {
         int h = 17;
         h = 31 * h + prefix.hashCode();
-        h = 31 * h + opcode.hashCode();
-        h = 31 * h + firstOperand.hashCode();
-        h = 31 * h + secondOperand.hashCode();
-        h = 31 * h + thirdOperand.hashCode();
+        h = 31 * h + code.hashCode();
+        h = 31 * h + op1.hashCode();
+        h = 31 * h + op2.hashCode();
+        h = 31 * h + op3.hashCode();
         return h;
     }
 
@@ -200,9 +196,9 @@ public final class Instruction {
         }
         final Instruction o = (Instruction) other;
         return this.prefix.equals(o.prefix)
-                && this.opcode.equals(o.opcode)
-                && this.firstOperand.equals(o.firstOperand)
-                && this.secondOperand.equals(o.secondOperand)
-                && this.thirdOperand.equals(o.thirdOperand);
+                && this.code.equals(o.code)
+                && this.op1.equals(o.op1)
+                && this.op2.equals(o.op2)
+                && this.op3.equals(o.op3);
     }
 }

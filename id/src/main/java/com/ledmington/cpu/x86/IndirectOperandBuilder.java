@@ -61,7 +61,7 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
-    public IndirectOperandBuilder ptrSize(final int ptrSize) {
+    public IndirectOperandBuilder pointerSize(final int ptrSize) {
         if (this.ptrSize != 0) {
             throw new IllegalStateException("Cannot define PTR size twice");
         }

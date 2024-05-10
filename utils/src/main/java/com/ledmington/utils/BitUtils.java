@@ -59,20 +59,16 @@ public final class BitUtils {
         return s;
     }
 
-    public static byte and(final byte a, final byte... others) {
-        byte result = a;
-        for (final byte b : others) {
-            result = asByte(result & b);
-        }
-        return result;
+    public static byte and(final byte a, final byte b) {
+        return asByte(a & b);
     }
 
-    public static byte or(final byte a, final byte... others) {
-        byte result = a;
-        for (final byte b : others) {
-            result = asByte(result | b);
-        }
-        return result;
+    public static byte or(final byte a, final byte b) {
+        return asByte(a | b);
+    }
+
+    public static byte or(final byte a, final byte b, final byte c, final byte d, final byte e) {
+        return asByte(a | b | c | d | e);
     }
 
     public static byte xor(final byte a, final byte b) {

@@ -58,6 +58,7 @@ public final class IndirectOperand implements Operand {
     @Override
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
+        boolean shouldAddSign = false;
         if (reg2 != null && reg2 instanceof SegmentRegister sr) {
             sb.append(sr.segment().toIntelSyntax()).append(':');
         }
@@ -67,12 +68,15 @@ public final class IndirectOperand implements Operand {
             if (reg2 != null) {
                 sb.append('+');
             }
+            shouldAddSign = true;
         }
         if (reg2 != null) {
             sb.append(reg2.toIntelSyntax());
+            shouldAddSign = true;
         }
         if (constant != 0 && constant != 1) {
             sb.append('*').append(constant);
+            shouldAddSign = true;
         }
         if (displacement != null) {
             long d = displacement;
@@ -83,7 +87,7 @@ public final class IndirectOperand implements Operand {
                     case INT -> (~BitUtils.asInt(d)) + 1;
                     case LONG -> (~d) + 1;};
             }
-            if (sb.length() > 1) {
+            if (shouldAddSign) {
                 sb.append((displacement < 0) ? '-' : '+');
             }
             sb.append(String.format("0x%x", d));
