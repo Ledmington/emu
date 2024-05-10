@@ -40,6 +40,8 @@ nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 66 66 2e 42 0f 1f 84 a3 78 56 
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'call rip+0x....'
+call 0x78563412         | e8 12 34 56 78
+call 0xfffffffff8563412 | e8 12 34 56 f8
 call 0xffffffffffffff18 | e8 18 ff ff ff
 # the following ones are calls with registers (as offsets?)
 call r10 | 41 ff d2
@@ -61,11 +63,15 @@ call rsp | ff d4
 #
 call DWORD PTR [ebx]                    | 66 67 ff 1b
 call DWORD PTR [ebx]                    | 67 66 ff 1b
+call DWORD PTR [r11+r12*4+0x12345678]   | 66 43 ff 9c a3 78 56 34 12
 call DWORD PTR [r11d+r12d*4+0x12345678] | 67 66 43 ff 9c a3 78 56 34 12
 call DWORD PTR [rsp]                    | 66 ff 1c 24
 call QWORD PTR [eax]                    | 67 ff 10
+call QWORD PTR [r11+r12*4+0x12345678]   | 43 ff 94 a3 78 56 34 12
 call QWORD PTR [rdx]                    | ff 12
 call WORD PTR [ecx]                     | 67 66 ff 11
+call WORD PTR [r11+r12*4+0x12345678]    | 66 43 ff 94 a3 78 56 34 12
+call WORD PTR [r11d+r12d*4+0x12345678]  | 67 66 43 ff 94 a3 78 56 34 12
 call WORD PTR [rsi]                     | 66 ff 16
 
 # Cdq
