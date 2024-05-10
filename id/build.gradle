@@ -128,7 +128,7 @@ tasks.register('formatTestFiles', JavaExec) {
 
 pmd {
 	consoleOutput = true
-	toolVersion = "6.55.0"
+	toolVersion = "7.1.0"
 	rulesMinimumPriority = 5
 	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
 	threads = 4
