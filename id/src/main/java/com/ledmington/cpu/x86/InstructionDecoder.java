@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.ledmington.cpu.x86.Instruction.Prefix;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.utils.BitUtils;
@@ -846,7 +845,7 @@ public final class InstructionDecoder {
                 final Operand op2 = Register8.fromByte(
                         Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix());
                 if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
-                    yield new Instruction(Prefix.LOCK, Opcode.CMPXCHG, op1, op2);
+                    yield new Instruction(InstructionPrefix.LOCK, Opcode.CMPXCHG, op1, op2);
                 }
                 yield new Instruction(Opcode.CMPXCHG, op1, op2);
             }
@@ -859,7 +858,7 @@ public final class InstructionDecoder {
                         pref.rex().ModRMRegExtension(),
                         pref.hasOperandSizeOverridePrefix());
                 if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
-                    yield new Instruction(Prefix.LOCK, Opcode.CMPXCHG, op1, op2);
+                    yield new Instruction(InstructionPrefix.LOCK, Opcode.CMPXCHG, op1, op2);
                 }
                 yield new Instruction(Opcode.CMPXCHG, op1, op2);
             }
@@ -923,7 +922,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
                     yield new Instruction(
-                            Prefix.LOCK,
+                            InstructionPrefix.LOCK,
                             Opcode.XADD,
                             parseIndirectOperand(pref, modrm).build(),
                             Register8.fromByte(
@@ -940,7 +939,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
                     yield new Instruction(
-                            Prefix.LOCK,
+                            InstructionPrefix.LOCK,
                             Opcode.XADD,
                             parseIndirectOperand(pref, modrm).build(),
                             Registers.fromCode(
@@ -1555,11 +1554,11 @@ public final class InstructionDecoder {
                 logger.debug(pref.toString());
                 if (pref.p1().isPresent()) {
                     if (pref.p1().orElseThrow() == REPNE_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.MOVS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REPNZ, Opcode.MOVS, op1, op2);
                     } else if (pref.p1().orElseThrow() == REP_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REP, Opcode.MOVS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REP, Opcode.MOVS, op1, op2);
                     } else {
-                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.MOVS, op1, op2);
+                        yield new Instruction(InstructionPrefix.LOCK, Opcode.MOVS, op1, op2);
                     }
                 } else {
                     yield new Instruction(Opcode.MOVS, op1, op2);
@@ -1580,11 +1579,11 @@ public final class InstructionDecoder {
                 logger.debug(pref.toString());
                 if (pref.p1().isPresent()) {
                     if (pref.p1().orElseThrow() == REPNE_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.MOVS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REPNZ, Opcode.MOVS, op1, op2);
                     } else if (pref.p1().orElseThrow() == REP_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REP, Opcode.MOVS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REP, Opcode.MOVS, op1, op2);
                     } else {
-                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.MOVS, op1, op2);
+                        yield new Instruction(InstructionPrefix.LOCK, Opcode.MOVS, op1, op2);
                     }
                 } else {
                     yield new Instruction(Opcode.MOVS, op1, op2);
@@ -1598,11 +1597,11 @@ public final class InstructionDecoder {
                 final Operand op2 = Register8.AL;
                 if (pref.p1().isPresent()) {
                     if (pref.p1().orElseThrow() == REPNE_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.STOS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REPNZ, Opcode.STOS, op1, op2);
                     } else if (pref.p1().orElseThrow() == REP_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REP, Opcode.STOS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REP, Opcode.STOS, op1, op2);
                     } else {
-                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.STOS, op1, op2);
+                        yield new Instruction(InstructionPrefix.LOCK, Opcode.STOS, op1, op2);
                     }
                 } else {
                     yield new Instruction(Opcode.STOS, op1, op2);
@@ -1616,11 +1615,11 @@ public final class InstructionDecoder {
                 final Operand op2 = pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX;
                 if (pref.p1().isPresent()) {
                     if (pref.p1().orElseThrow() == REPNE_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REPNZ, Opcode.STOS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REPNZ, Opcode.STOS, op1, op2);
                     } else if (pref.p1().orElseThrow() == REP_PREFIX) {
-                        yield new Instruction(Instruction.Prefix.REP, Opcode.STOS, op1, op2);
+                        yield new Instruction(InstructionPrefix.REP, Opcode.STOS, op1, op2);
                     } else {
-                        yield new Instruction(Instruction.Prefix.LOCK, Opcode.STOS, op1, op2);
+                        yield new Instruction(InstructionPrefix.LOCK, Opcode.STOS, op1, op2);
                     }
                 } else {
                     yield new Instruction(Opcode.STOS, op1, op2);
@@ -2082,10 +2081,10 @@ public final class InstructionDecoder {
                     || (modrm.mod() == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
                     || modrm.mod() == (byte) 0x02) {
                 final int disp32 = b.read4LE();
-                iob.displacement(disp32);
+                iob.disp(disp32);
             } else if (modrm.mod() == (byte) 0x01) {
                 final byte disp8 = b.read1();
-                iob.displacement(disp8);
+                iob.disp(disp8);
             }
         }
 

@@ -8,20 +8,14 @@ import java.util.Objects;
  */
 public final class Instruction {
 
-    public enum Prefix {
-        LOCK,
-        REP,
-        REPNZ
-    }
-
-    private final Prefix prefix;
+    private final InstructionPrefix prefix;
     private final Opcode opcode;
     private final Operand firstOperand;
     private final Operand secondOperand;
     private final Operand thirdOperand;
 
     public Instruction(
-            final Prefix prefix,
+            final InstructionPrefix prefix,
             final Opcode opcode,
             final Operand firstOperand,
             final Operand secondOperand,
@@ -43,7 +37,10 @@ public final class Instruction {
     }
 
     public Instruction(
-            final Prefix prefix, final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
+            final InstructionPrefix prefix,
+            final Opcode opcode,
+            final Operand firstOperand,
+            final Operand secondOperand) {
         this(prefix, opcode, firstOperand, secondOperand, null);
     }
 
