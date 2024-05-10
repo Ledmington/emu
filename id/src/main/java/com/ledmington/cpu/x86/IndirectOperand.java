@@ -1,7 +1,6 @@
 package com.ledmington.cpu.x86;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import com.ledmington.utils.BitUtils;
 
@@ -20,7 +19,7 @@ public final class IndirectOperand implements Operand {
     private final Register reg1;
     private final int constant;
     private final Register reg2;
-    private final Optional<Long> displacement;
+    private final Long displacement;
     private final DisplacementType displacementType;
     private final int ptrSize;
 
@@ -32,13 +31,13 @@ public final class IndirectOperand implements Operand {
             final Register reg1,
             final Register reg2,
             final int constant,
-            final Optional<Long> displacement,
+            final Long displacement,
             final DisplacementType displacementType,
             final int ptrSize) {
         this.reg1 = reg1;
         this.constant = constant;
         this.reg2 = reg2;
-        this.displacement = Objects.requireNonNull(displacement);
+        this.displacement = displacement;
         this.displacementType = Objects.requireNonNull(displacementType);
         this.ptrSize = ptrSize;
 
@@ -54,10 +53,6 @@ public final class IndirectOperand implements Operand {
 
     public int explicitPtrSize() {
         return this.ptrSize;
-    }
-
-    public Register r1() {
-        return reg1;
     }
 
     @Override
@@ -77,12 +72,11 @@ public final class IndirectOperand implements Operand {
             sb.append(reg2.toIntelSyntax());
         }
         if (constant != 0 && constant != 1) {
-            sb.append('*');
-            sb.append(constant);
+            sb.append('*').append(constant);
         }
-        if (displacement.isPresent()) {
-            long d = displacement.orElseThrow();
-            if (displacement.orElseThrow() < 0) {
+        if (displacement != null) {
+            long d = displacement;
+            if (displacement < 0) {
                 d = switch (displacementType) {
                     case BYTE -> (~BitUtils.asByte(d)) + 1;
                     case SHORT -> (~BitUtils.asShort(d)) + 1;
@@ -90,7 +84,7 @@ public final class IndirectOperand implements Operand {
                     case LONG -> (~d) + 1;};
             }
             if (sb.length() > 1) {
-                sb.append((displacement.orElseThrow() < 0) ? '-' : '+');
+                sb.append((displacement < 0) ? '-' : '+');
             }
             sb.append(String.format("0x%x", d));
         }
@@ -100,11 +94,11 @@ public final class IndirectOperand implements Operand {
 
     @Override
     public String toString() {
-        return "IndirectOperand(" + "reg1="
+        return "IndirectOperand(reg1="
                 + ((reg1 == null) ? "null" : reg1.toString())
-                + ";" + "reg2="
-                + reg2.toString() + ";" + "constant="
-                + constant + ";" + "displacement="
+                + ";reg2="
+                + reg2.toString() + ";constant="
+                + constant + ";displacement="
                 + displacement.toString()
                 + ")";
     }
