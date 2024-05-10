@@ -1,5 +1,6 @@
 package com.ledmington.cpu.x86;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -93,7 +94,8 @@ public final class Instruction {
      * return 0.
      */
     public int bits() {
-        // here it is assumed that all "first-class" registers involved have the same size
+        // here it is assumed that all "first-class" registers involved have the same
+        // size
         if (firstOperand instanceof Register r) {
             return r.bits();
         }
@@ -147,7 +149,7 @@ public final class Instruction {
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
         if (this.prefix != null) {
-            sb.append(this.prefix.name().toLowerCase()).append(' ');
+            sb.append(this.prefix.name().toLowerCase(Locale.US)).append(' ');
         }
         sb.append(opcode.mnemonic());
 

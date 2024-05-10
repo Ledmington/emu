@@ -636,13 +636,13 @@ public enum Opcode {
      */
     XORPS("xorps");
 
-    private final String mnemonic;
+    private final String mnemonicString;
 
-    Opcode(final String mnemonic) {
-        this.mnemonic = Objects.requireNonNull(mnemonic);
+    Opcode(final String mnemonicString) {
+        this.mnemonicString = Objects.requireNonNull(mnemonicString);
     }
 
     public String mnemonic() {
-        return mnemonic;
+        return mnemonicString;
     }
 }

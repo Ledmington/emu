@@ -4,9 +4,9 @@ import com.ledmington.utils.BitUtils;
 
 public final class SIB {
 
-    private final byte scale;
-    private final byte index;
-    private final byte base;
+    private final byte scaleByte;
+    private final byte indexByte;
+    private final byte baseByte;
 
     public static byte extractScale(final byte sib) {
         final byte SIB_SCALE_MASK = (byte) 0b11000000;
@@ -24,29 +24,36 @@ public final class SIB {
     }
 
     public SIB(final byte s) {
-        this.scale = extractScale(s);
-        this.index = extractIndex(s);
-        this.base = extractBase(s);
+        this.scaleByte = extractScale(s);
+        this.indexByte = extractIndex(s);
+        this.baseByte = extractBase(s);
     }
 
     public byte scale() {
-        return scale;
+        return scaleByte;
     }
 
     public byte index() {
-        return index;
+        return indexByte;
     }
 
     public byte base() {
-        return base;
+        return baseByte;
+    }
+
+    @Override
+    public String toString() {
+        return "scale:" + BitUtils.toBinaryString(scaleByte).substring(6, 8) + " index:"
+                + BitUtils.toBinaryString(indexByte).substring(5, 8) + " base:"
+                + BitUtils.toBinaryString(baseByte).substring(5, 8);
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + BitUtils.asInt(scale);
-        h = 31 * h + BitUtils.asInt(index);
-        h = 31 * h + BitUtils.asInt(base);
+        h = 31 * h + BitUtils.asInt(scaleByte);
+        h = 31 * h + BitUtils.asInt(indexByte);
+        h = 31 * h + BitUtils.asInt(baseByte);
         return h;
     }
 
@@ -62,13 +69,6 @@ public final class SIB {
             return false;
         }
         final SIB s = (SIB) other;
-        return this.scale == s.scale && this.index == s.index && this.base == s.base;
-    }
-
-    @Override
-    public String toString() {
-        return "scale:" + BitUtils.toBinaryString(scale).substring(6, 8) + " index:"
-                + BitUtils.toBinaryString(index).substring(5, 8) + " base:"
-                + BitUtils.toBinaryString(base).substring(5, 8);
+        return this.scaleByte == s.scaleByte && this.indexByte == s.indexByte && this.baseByte == s.baseByte;
     }
 }

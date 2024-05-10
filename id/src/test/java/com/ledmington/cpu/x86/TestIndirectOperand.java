@@ -72,7 +72,7 @@ public final class TestIndirectOperand {
 
     @ParameterizedTest
     @MethodSource("correctIndirectOperands")
-    void correct(final IndirectOperand.IndirectOperandBuilder iob, final String expected) {
+    void correct(final IndirectOperandBuilder iob, final String expected) {
         final IndirectOperand io = iob.build();
         assertEquals(expected, io.toIntelSyntax());
     }
@@ -89,7 +89,7 @@ public final class TestIndirectOperand {
 
     @ParameterizedTest
     @MethodSource("wrongIndirectOperands")
-    void correct(final IndirectOperand.IndirectOperandBuilder iob) {
+    void correct(final IndirectOperandBuilder iob) {
         assertThrows(IllegalStateException.class, iob::build);
     }
 }

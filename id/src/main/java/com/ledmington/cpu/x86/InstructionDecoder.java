@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.ledmington.cpu.x86.IndirectOperand.IndirectOperandBuilder;
 import com.ledmington.cpu.x86.Instruction.Prefix;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
@@ -1650,7 +1649,7 @@ public final class InstructionDecoder {
                     CMP_INDIRECT8_R8_OPCODE -> {
                 final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x00) {
-                    throw new IllegalArgumentException("Invalid value");
+                    invalidValue();
                 }
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
@@ -1678,7 +1677,7 @@ public final class InstructionDecoder {
                     CMP_INDIRECT32_R32_OPCODE -> {
                 final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x01) {
-                    throw new IllegalArgumentException("Invalid value");
+                    invalidValue();
                 }
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
@@ -1697,7 +1696,7 @@ public final class InstructionDecoder {
                     CMP_R8_INDIRECT8_OPCODE -> {
                 final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x02) {
-                    throw new IllegalArgumentException("Invalid value");
+                    invalidValue();
                 }
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
@@ -1725,7 +1724,7 @@ public final class InstructionDecoder {
                     CMP_R32_INDIRECT32_OPCODE -> {
                 final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != 0b00000011) {
-                    throw new IllegalArgumentException("Invalid value");
+                    invalidValue();
                 }
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
@@ -1744,7 +1743,7 @@ public final class InstructionDecoder {
                     CMP_AL_IMM8_OPCODE -> {
                 final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x04) {
-                    throw new IllegalArgumentException("Invalid value");
+                    invalidValue();
                 }
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
@@ -1763,7 +1762,7 @@ public final class InstructionDecoder {
                     CMP_EAX_IMM32_OPCODE -> {
                 final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x05) {
-                    throw new IllegalArgumentException("Invalid value");
+                    invalidValue();
                 }
 
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
@@ -1830,14 +1829,20 @@ public final class InstructionDecoder {
                             case 16 -> Register16.fromByte(regByte);
                             case 32 -> Register32.fromByte(regByte);
                             case 64 -> Register64.fromByte(regByte);
-                            default -> throw new IllegalArgumentException("Invalid value");
+                            default -> {
+                                invalidValue();
+                                yield null;
+                            }
                         };
                 final Immediate imm =
                         switch (size) {
                             case 16 -> imm16();
                             case 32 -> imm32();
                             case 64 -> imm64();
-                            default -> throw new IllegalArgumentException("Invalid value");
+                            default -> {
+                                invalidValue();
+                                yield null;
+                            }
                         };
                 yield new Instruction(pref.rex().isOperand64Bit() ? Opcode.MOVABS : Opcode.MOV, r, imm);
             }
@@ -1911,6 +1916,10 @@ public final class InstructionDecoder {
                     String.format("Found an unrecognized REP prefix at byte 0x%08x", b.position()));
             default -> throw new UnknownOpcode(opcodeFirstByte);
         };
+    }
+
+    private void invalidValue() {
+        throw new IllegalArgumentException("Invalid value");
     }
 
     private Prefixes parsePrefixes() {
@@ -2005,7 +2014,7 @@ public final class InstructionDecoder {
             throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
         }
 
-        final IndirectOperand.IndirectOperandBuilder iob = parseIndirectOperand(pref, modrm);
+        final IndirectOperandBuilder iob = parseIndirectOperand(pref, modrm);
 
         logger.debug("Using pointer size: %,d", pointerSize);
         iob.ptrSize(pointerSize);
@@ -2034,7 +2043,7 @@ public final class InstructionDecoder {
                 modrm.rm(), !pref.hasAddressSizeOverridePrefix(), pref.rex().ModRMRMExtension(), false);
         final RexPrefix rexPrefix = pref.rex();
         final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
-        final IndirectOperand.IndirectOperandBuilder iob = IndirectOperand.builder();
+        final IndirectOperandBuilder iob = IndirectOperand.builder();
         SIB sib;
         if (modrm.mod() != 0b00000011 && modrm.rm() == 0b00000100) {
             // SIB needed
@@ -2084,18 +2093,22 @@ public final class InstructionDecoder {
     }
 
     private boolean isExtendedOpcode(final byte opcode) {
-        return opcode == (byte) 0x80 || opcode == (byte) 0x81 || opcode == (byte) 0x82 || opcode == (byte) 0x83;
+        /*
+         * The extended opcodes are 0x80, 0x81, 0x82, 0x83.
+         * So the mask to be used is 0xfc (11111100).
+         */
+        final byte extendedOpcodeMask = (byte) 0b11111100;
+        final byte expectedBits = (byte) 0b10000000;
+        return BitUtils.and(opcode, extendedOpcodeMask) == expectedBits;
     }
 
     private ModRM modrm() {
         final byte m = b.read1();
-        logger.debug("Read ModRM byte : 0x%02x", m);
         return new ModRM(m);
     }
 
     private SIB sib() {
         final byte s = b.read1();
-        logger.debug("Read SIB byte : 0x%02x", s);
         return new SIB(s);
     }
 

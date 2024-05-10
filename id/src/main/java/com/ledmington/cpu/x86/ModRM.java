@@ -4,49 +4,56 @@ import com.ledmington.utils.BitUtils;
 
 public final class ModRM {
 
-    private final byte mod;
-    private final byte reg;
-    private final byte rm;
+    private final byte modByte;
+    private final byte regByte;
+    private final byte rmByte;
 
     private static byte extractMod(final byte m) {
-        final byte MODRM_MOD_MASK = (byte) 0xc0; // 11000000
+        final byte MODRM_MOD_MASK = (byte) 0b11000000;
         return BitUtils.shr(BitUtils.and(m, MODRM_MOD_MASK), 6);
     }
 
     private static byte extractReg(final byte m) {
-        final byte MODRM_REG_MASK = (byte) 0x38; // 00111000
+        final byte MODRM_REG_MASK = (byte) 0b00111000;
         return BitUtils.shr(BitUtils.and(m, MODRM_REG_MASK), 3);
     }
 
     private static byte extractRM(final byte m) {
-        final byte MODRM_RM_MASK = (byte) 0x07; // 00000111
+        final byte MODRM_RM_MASK = (byte) 0b00000111;
         return BitUtils.and(m, MODRM_RM_MASK);
     }
 
     public ModRM(final byte m) {
-        this.mod = extractMod(m);
-        this.reg = extractReg(m);
-        this.rm = extractRM(m);
+        this.modByte = extractMod(m);
+        this.regByte = extractReg(m);
+        this.rmByte = extractRM(m);
     }
 
     public byte mod() {
-        return mod;
+        return modByte;
     }
 
     public byte reg() {
-        return reg;
+        return regByte;
     }
 
     public byte rm() {
-        return rm;
+        return rmByte;
+    }
+
+    @Override
+    public String toString() {
+        return "mod:" + BitUtils.toBinaryString(modByte).substring(6, 8) + " reg:"
+                + BitUtils.toBinaryString(regByte).substring(5, 8) + " r/m:"
+                + BitUtils.toBinaryString(rmByte).substring(5, 8);
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + BitUtils.asInt(mod);
-        h = 31 * h + BitUtils.asInt(reg);
-        h = 31 * h + BitUtils.asInt(rm);
+        h = 31 * h + BitUtils.asInt(modByte);
+        h = 31 * h + BitUtils.asInt(regByte);
+        h = 31 * h + BitUtils.asInt(rmByte);
         return h;
     }
 
@@ -62,13 +69,6 @@ public final class ModRM {
             return false;
         }
         final ModRM m = (ModRM) other;
-        return this.mod == m.mod && this.reg == m.reg && this.rm == m.rm;
-    }
-
-    @Override
-    public String toString() {
-        return "mod:" + BitUtils.toBinaryString(mod).substring(6, 8) + " reg:"
-                + BitUtils.toBinaryString(reg).substring(5, 8) + " r/m:"
-                + BitUtils.toBinaryString(rm).substring(5, 8);
+        return this.modByte == m.modByte && this.regByte == m.regByte && this.rmByte == m.rmByte;
     }
 }

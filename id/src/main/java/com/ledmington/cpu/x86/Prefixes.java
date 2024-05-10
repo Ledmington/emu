@@ -9,6 +9,8 @@ public record Prefixes(
         boolean hasAddressSizeOverridePrefix,
         boolean hasRexPrefix,
         RexPrefix rex) {
+
+    @Override
     public String toString() {
         return "Prefixes[p1=" + (p1.isPresent() ? String.format("0x%02x", p1.orElseThrow()) : p1) + ", p2="
                 + (p2.isPresent() ? String.format("0x%02x", p2.orElseThrow()) : p2) + ", hasOperandSizeOverridePrefix="
