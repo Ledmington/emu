@@ -25,9 +25,6 @@ public final class InstructionDecoder {
     private static final byte MULTIBYTE_OPCODE_PREFIX = (byte) 0x0f;
     private static final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
     private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
-    private static final byte LOCK_PREFIX = (byte) 0xf0;
-    private static final byte REPNE_PREFIX = (byte) 0xf2; // REPNE / REPNZ
-    private static final byte REP_PREFIX = (byte) 0xf3; // REP / REPE / REPZ
 
     private final ReadOnlyByteBuffer b;
 
@@ -671,7 +668,7 @@ public final class InstructionDecoder {
                     yield new Instruction(Opcode.ENDBR64);
                 } else if (x == (byte) 0xfb) {
                     yield new Instruction(Opcode.ENDBR32);
-                } else if (pref.p1().isPresent() && pref.p1().orElseThrow() == REP_PREFIX) {
+                } else if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
                     final ModRM modrm = new ModRM(x);
                     yield new Instruction(
                             Opcode.RDSSPQ,
@@ -806,10 +803,8 @@ public final class InstructionDecoder {
                 final Operand op1 = parseIndirectOperand(pref, modrm).build();
                 final Operand op2 = Register8.fromByte(
                         Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()), pref.hasRexPrefix());
-                if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
-                    yield new Instruction(InstructionPrefix.LOCK, Opcode.CMPXCHG, op1, op2);
-                }
-                yield new Instruction(Opcode.CMPXCHG, op1, op2);
+
+                yield new Instruction(pref.p1().orElse(null), Opcode.CMPXCHG, op1, op2);
             }
             case XCHG_INDIRECT32_R32_OPCODE -> {
                 final ModRM modrm = modrm();
@@ -819,10 +814,7 @@ public final class InstructionDecoder {
                         pref.rex().isOperand64Bit(),
                         pref.rex().ModRMRegExtension(),
                         pref.hasOperandSizeOverridePrefix());
-                if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
-                    yield new Instruction(InstructionPrefix.LOCK, Opcode.CMPXCHG, op1, op2);
-                }
-                yield new Instruction(Opcode.CMPXCHG, op1, op2);
+                yield new Instruction(pref.p1().orElse(null), Opcode.CMPXCHG, op1, op2);
             }
 
             case MOVZX_BYTE_PTR_OPCODE, MOVZX_WORD_PTR_OPCODE, MOVSX_BYTE_PTR_OPCODE, MOVSX_WORD_PTR_OPCODE -> {
@@ -884,16 +876,8 @@ public final class InstructionDecoder {
             }
             case XADD_INDIRECT8_R8_OPCODE -> {
                 final ModRM modrm = modrm();
-                if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
-                    yield new Instruction(
-                            InstructionPrefix.LOCK,
-                            Opcode.XADD,
-                            parseIndirectOperand(pref, modrm).build(),
-                            Register8.fromByte(
-                                    Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg()),
-                                    pref.hasRexPrefix()));
-                }
                 yield new Instruction(
+                        pref.p1().orElse(null),
                         Opcode.XADD,
                         parseIndirectOperand(pref, modrm).build(),
                         Register8.fromByte(
@@ -901,18 +885,8 @@ public final class InstructionDecoder {
             }
             case XADD_INDIRECT32_R32_OPCODE -> {
                 final ModRM modrm = modrm();
-                if (pref.p1().isPresent() && pref.p1().orElseThrow() == LOCK_PREFIX) {
-                    yield new Instruction(
-                            InstructionPrefix.LOCK,
-                            Opcode.XADD,
-                            parseIndirectOperand(pref, modrm).build(),
-                            Registers.fromCode(
-                                    modrm.reg(),
-                                    pref.rex().isOperand64Bit(),
-                                    pref.rex().ModRMRegExtension(),
-                                    pref.hasOperandSizeOverridePrefix()));
-                }
                 yield new Instruction(
+                        pref.p1().orElse(null),
                         Opcode.XADD,
                         parseIndirectOperand(pref, modrm).build(),
                         Registers.fromCode(
@@ -1196,7 +1170,7 @@ public final class InstructionDecoder {
         final ModRM modrm = modrm();
 
         if (modrm.mod() == 0b00000011) {
-            if (pref.p1().isPresent() && pref.p1().orElseThrow() == REP_PREFIX) {
+            if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
                 throw new IllegalArgumentException("Not implemented");
             } else {
                 return switch (modrm.reg()) {
@@ -1517,9 +1491,9 @@ public final class InstructionDecoder {
                         .build();
                 logger.debug(pref.toString());
                 if (pref.p1().isPresent()) {
-                    if (pref.p1().orElseThrow() == REPNE_PREFIX) {
+                    if (pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
                         yield new Instruction(InstructionPrefix.REPNZ, Opcode.MOVS, op1, op2);
-                    } else if (pref.p1().orElseThrow() == REP_PREFIX) {
+                    } else if (pref.p1().orElseThrow() == InstructionPrefix.REP) {
                         yield new Instruction(InstructionPrefix.REP, Opcode.MOVS, op1, op2);
                     } else {
                         yield new Instruction(InstructionPrefix.LOCK, Opcode.MOVS, op1, op2);
@@ -1542,9 +1516,9 @@ public final class InstructionDecoder {
                         .build();
                 logger.debug(pref.toString());
                 if (pref.p1().isPresent()) {
-                    if (pref.p1().orElseThrow() == REPNE_PREFIX) {
+                    if (pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
                         yield new Instruction(InstructionPrefix.REPNZ, Opcode.MOVS, op1, op2);
-                    } else if (pref.p1().orElseThrow() == REP_PREFIX) {
+                    } else if (pref.p1().orElseThrow() == InstructionPrefix.REP) {
                         yield new Instruction(InstructionPrefix.REP, Opcode.MOVS, op1, op2);
                     } else {
                         yield new Instruction(InstructionPrefix.LOCK, Opcode.MOVS, op1, op2);
@@ -1560,9 +1534,9 @@ public final class InstructionDecoder {
                         .build();
                 final Operand op2 = Register8.AL;
                 if (pref.p1().isPresent()) {
-                    if (pref.p1().orElseThrow() == REPNE_PREFIX) {
+                    if (pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
                         yield new Instruction(InstructionPrefix.REPNZ, Opcode.STOS, op1, op2);
-                    } else if (pref.p1().orElseThrow() == REP_PREFIX) {
+                    } else if (pref.p1().orElseThrow() == InstructionPrefix.REP) {
                         yield new Instruction(InstructionPrefix.REP, Opcode.STOS, op1, op2);
                     } else {
                         yield new Instruction(InstructionPrefix.LOCK, Opcode.STOS, op1, op2);
@@ -1578,9 +1552,9 @@ public final class InstructionDecoder {
                         .build();
                 final Operand op2 = pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX;
                 if (pref.p1().isPresent()) {
-                    if (pref.p1().orElseThrow() == REPNE_PREFIX) {
+                    if (pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
                         yield new Instruction(InstructionPrefix.REPNZ, Opcode.STOS, op1, op2);
-                    } else if (pref.p1().orElseThrow() == REP_PREFIX) {
+                    } else if (pref.p1().orElseThrow() == InstructionPrefix.REP) {
                         yield new Instruction(InstructionPrefix.REP, Opcode.STOS, op1, op2);
                     } else {
                         yield new Instruction(InstructionPrefix.LOCK, Opcode.STOS, op1, op2);
@@ -1871,11 +1845,11 @@ public final class InstructionDecoder {
                     String.format("Found an unrecognized operand size override prefix at byte 0x%08x", b.position()));
             case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized address size override prefix at byte 0x%08x", b.position()));
-            case LOCK_PREFIX -> throw new IllegalArgumentException(
+            case (byte) 0xf0 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.position()));
-            case REPNE_PREFIX -> throw new IllegalArgumentException(
+            case (byte) 0xf2 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.position()));
-            case REP_PREFIX -> throw new IllegalArgumentException(
+            case (byte) 0xf3 -> throw new IllegalArgumentException(
                     String.format("Found an unrecognized REP prefix at byte 0x%08x", b.position()));
             default -> throw new UnknownOpcode(opcodeFirstByte);
         };
@@ -1886,7 +1860,7 @@ public final class InstructionDecoder {
     }
 
     private Prefixes parsePrefixes() {
-        Optional<Byte> p1 = Optional.empty(); // Legacy Prefix Group 1
+        Optional<InstructionPrefix> p1 = Optional.empty(); // Legacy Prefix Group 1
         Optional<Byte> p2 = Optional.empty(); // Legacy Prefix Group 2
         boolean hasOperandSizeOverridePrefix = false;
         boolean hasAddressSizeOverridePrefix = false;
@@ -1898,7 +1872,7 @@ public final class InstructionDecoder {
             byte x = b.read1();
 
             if (isLegacyPrefixGroup1(x)) {
-                p1 = Optional.of(x);
+                p1 = Optional.of(InstructionPrefix.fromByte(x));
             } else if (isLegacyPrefixGroup2(x)) {
                 p2 = Optional.of(x);
             } else if (isOperandSizeOverridePrefix(x)) {
@@ -2092,7 +2066,9 @@ public final class InstructionDecoder {
     }
 
     private boolean isLegacyPrefixGroup1(final byte prefix) {
-        return prefix == LOCK_PREFIX || prefix == REPNE_PREFIX || prefix == REP_PREFIX;
+        return prefix == InstructionPrefix.LOCK.code
+                || prefix == InstructionPrefix.REPNZ.code
+                || prefix == InstructionPrefix.REP.code;
     }
 
     private boolean isLegacyPrefixGroup2(final byte prefix) {
