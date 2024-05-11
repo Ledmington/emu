@@ -1,5 +1,7 @@
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 public final class IndirectOperandBuilder {
 
     private Register baseRegister = null;
@@ -7,7 +9,7 @@ public final class IndirectOperandBuilder {
     private Register indexRegister = null;
     private Long displacement = null;
     private DisplacementType displacementType = DisplacementType.LONG;
-    private int ptrSize = 0;
+    private PointerSize ptrSize = null;
     private boolean alreadyBuilt = false;
 
     public IndirectOperandBuilder() {}
@@ -61,16 +63,12 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
-    public IndirectOperandBuilder pointerSize(final int ptrSize) {
-        if (this.ptrSize != 0) {
+    public IndirectOperandBuilder pointer(final PointerSize ptrSize) {
+        if (this.ptrSize != null) {
             throw new IllegalStateException("Cannot define PTR size twice");
         }
 
-        if (ptrSize != 8 && ptrSize != 16 && ptrSize != 32 && ptrSize != 64 && ptrSize != 128) {
-            throw new IllegalArgumentException(String.format("Invalid argument for ptrSize: %,d", ptrSize));
-        }
-
-        this.ptrSize = ptrSize;
+        this.ptrSize = Objects.requireNonNull(ptrSize);
         return this;
     }
 

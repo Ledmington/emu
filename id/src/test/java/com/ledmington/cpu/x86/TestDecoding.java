@@ -26,7 +26,7 @@ public final class TestDecoding extends X86Test {
         assertNotNull(instructions, "InstructionDecoder returned a null List");
         final int codeLen = instructions.size();
         assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));
-        final String decoded = instructions.get(0).toIntelSyntax();
+        final String decoded = instructions.getFirst().toIntelSyntax();
         assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
     }
 }

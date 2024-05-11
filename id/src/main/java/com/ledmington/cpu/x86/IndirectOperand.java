@@ -21,7 +21,7 @@ public final class IndirectOperand implements Operand {
     private final Register reg2;
     private final Long displacement;
     private final DisplacementType displacementType;
-    private final int ptrSize;
+    private final PointerSize ptrSize;
 
     public static IndirectOperandBuilder builder() {
         return new IndirectOperandBuilder();
@@ -33,7 +33,7 @@ public final class IndirectOperand implements Operand {
             final int constant,
             final Long displacement,
             final DisplacementType displacementType,
-            final int ptrSize) {
+            final PointerSize ptrSize) {
         this.reg1 = reg1;
         this.constant = constant;
         this.reg2 = reg2;
@@ -48,11 +48,11 @@ public final class IndirectOperand implements Operand {
     }
 
     public boolean hasExplicitPtrSize() {
-        return this.ptrSize != 0;
+        return this.ptrSize != null;
     }
 
     public int explicitPtrSize() {
-        return this.ptrSize;
+        return (this.ptrSize == null) ? 0 : this.ptrSize.size();
     }
 
     @Override
