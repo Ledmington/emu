@@ -1,40 +1,39 @@
 package com.ledmington.utils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
- * TODO: this can be optimized into a segment tree.
+ * A class to contain list of ranges of boolean values.
  */
+// TODO: this can be optimized into a segment tree.
 public final class IntervalArray {
 
-    private static final class Block {
-
-        private final long start;
-        private final long end;
-
-        public Block(final long start, final long end) {
+    private record Block(long start, long end) {
+        private Block {
             if (end < start) {
                 throw new IllegalArgumentException(
                         String.format("Invalid start (0x%x) and end (0x%x) of a block", start, end));
             }
-            this.start = start;
-            this.end = end;
-        }
-
-        private long start() {
-            return start;
-        }
-
-        private long end() {
-            return end;
         }
     }
 
     private final List<Block> blocks = new ArrayList<>();
 
+    /**
+     * Creates an empty IntervalArray.
+     */
     public IntervalArray() {}
 
+    /**
+     * Returns the value stored at the given address.
+     *
+     * @param address
+     *      The address of the value.
+     * @return
+     *      True is the value is present, false otherwise.
+     */
     public boolean get(final long address) {
         for (final Block b : blocks) {
             if (address >= b.start() && address <= b.end()) {
@@ -46,7 +45,7 @@ public final class IntervalArray {
 
     private void sortBlocks() {
         // sorting by the starting address is sufficient
-        blocks.sort((a, b) -> Long.compare(a.start(), b.start()));
+        blocks.sort(Comparator.comparingLong(Block::start));
     }
 
     private void mergeBlocks() {
@@ -63,13 +62,23 @@ public final class IntervalArray {
         }
     }
 
+    /**
+     * Sets the boolean value at the given address to true. Does not throw exceptions in case it is already true. It is equivalent to calling {@code set(address, address)}.
+     *
+     * @param address
+     *      The address of the value.
+     */
     public void set(final long address) {
         set(address, address);
     }
 
     /**
-     * Sets the boolean values in the given range to true. Does not throw
-     * exceptions in case it is already true.
+     * Sets the boolean values in the given range to true. Does not throw exceptions in case it is already true.
+     *
+     * @param startAddress
+     *      The start (inclusive) of the range.
+     * @param endAddress
+     *      The end (inclusive) of the range.
      */
     public void set(final long startAddress, final long endAddress) {
         blocks.add(new Block(startAddress, endAddress));
@@ -77,6 +86,12 @@ public final class IntervalArray {
         mergeBlocks();
     }
 
+    /**
+     * Sets the boolean value at the given address to false. Does not throw exceptions in case it is already false. It is equivalent to calling {@code reset(address, address)}.
+     *
+     * @param address
+     *      The address of the value.
+     */
     public void reset(final long address) {
         reset(address, address);
     }
@@ -84,19 +99,23 @@ public final class IntervalArray {
     /**
      * Sets the boolean values in the given range to false. Does not throw
      * exceptions in case it is already false.
+     *
+     * @param startAddress
+     *      The start (inclusive) of the range.
+     * @param endAddress
+     *      The end (inclusive) of the range.
      */
     public void reset(final long startAddress, final long endAddress) {
         for (int i = 0; i < blocks.size(); i++) {
             if (blocks.get(i).start() <= startAddress) {
+                final Block curr = blocks.get(i);
                 if (blocks.get(i).end() >= endAddress) {
                     // the given range fits entirely in this block
-                    final Block curr = blocks.get(i);
                     blocks.remove(i);
                     blocks.add(i, new Block(curr.start(), startAddress - 1));
                     blocks.add(i + 1, new Block(endAddress + 1, curr.end()));
                 } else {
                     // the given range takes up only the right "half" of this block
-                    final Block curr = blocks.get(i);
                     blocks.set(i, new Block(curr.start(), startAddress - 1));
                 }
             } else {

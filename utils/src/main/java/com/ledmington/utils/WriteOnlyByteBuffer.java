@@ -1,24 +1,53 @@
 package com.ledmington.utils;
 
+/**
+ * A ByteBuffer which allows only write operations.
+ */
 public final class WriteOnlyByteBuffer {
 
     private final byte[] v;
     private final boolean isLittleEndian;
     private int i = 0;
 
+    /**
+     * Creates an empty WriteOnlyByteBuffer with the given length and the given endianness.
+     *
+     * @param length
+     *      The length of the underlying array.
+     * @param isLittleEndian
+     *      The endianness: true for little-endian, false for big-endian.
+     */
     public WriteOnlyByteBuffer(final int length, final boolean isLittleEndian) {
         this.v = new byte[length];
         this.isLittleEndian = isLittleEndian;
     }
 
+    /**
+     * Creates an little-endian WriteOnlyByteBuffer with the given length. It is equivalent to calling {@code new WriteOnlyByteBuffer(length, false)}.
+     *
+     * @param length
+     *      The length of the underlying array.
+     */
     public WriteOnlyByteBuffer(final int length) {
         this(length, false);
     }
 
+    /**
+     * Writes the given byte at the current position.
+     *
+     * @param x
+     *      The byte to be written.
+     */
     public void write(final byte x) {
         v[i++] = x;
     }
 
+    /**
+     * Writes the given short with the current endianness.
+     *
+     * @param x
+     *      The short to be written.
+     */
     public void write(final short x) {
         if (isLittleEndian) {
             writeLE(x);
@@ -37,6 +66,12 @@ public final class WriteOnlyByteBuffer {
         v[i++] = (byte) (x & ((short) 0x00ff));
     }
 
+    /**
+     * Writes the given int with the current endianness.
+     *
+     * @param x
+     *      The int to be written.
+     */
     public void write(final int x) {
         if (isLittleEndian) {
             writeLE(x);
@@ -59,6 +94,12 @@ public final class WriteOnlyByteBuffer {
         v[i++] = (byte) (x & 0x000000ff);
     }
 
+    /**
+     * Writes the given long with the current endianness.
+     *
+     * @param x
+     *      The long to be written.
+     */
     public void write(final long x) {
         if (isLittleEndian) {
             writeLE(x);
@@ -89,11 +130,33 @@ public final class WriteOnlyByteBuffer {
         v[i++] = (byte) (x & 0x00000000000000ffL);
     }
 
+    /**
+     * Writes the given array of bytes. It is equivalent to doing
+     * <code>
+     *     for (int i=0; i&lt;arr.length; i++) {
+     *         write(arr[i]);
+     *     }
+     * </code>
+     *
+     * @param arr
+     *      The array of bytes to be written.
+     */
     public void write(final byte[] arr) {
         System.arraycopy(arr, 0, v, i, arr.length);
         i += arr.length;
     }
 
+    /**
+     * Writes the given array of ints witht he current endianness. It is equivalent to doing
+     * <code>
+     *     for (int i=0; i&lt;arr.length; i++) {
+     *         write(arr[i]);
+     *     }
+     * </code>
+     *
+     * @param arr
+     *      The array of ints to be written.
+     */
     public void write(final int[] arr) {
         if (isLittleEndian) {
             for (final int x : arr) {
@@ -106,6 +169,12 @@ public final class WriteOnlyByteBuffer {
         }
     }
 
+    /**
+     * Returns the underlying array.
+     *
+     * @return
+     *      The underlying array.
+     */
     public byte[] array() {
         return v;
     }

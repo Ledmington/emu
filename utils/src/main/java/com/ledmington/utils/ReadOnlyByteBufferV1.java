@@ -1,19 +1,34 @@
 package com.ledmington.utils;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * A buffer which allows reading with endianness.
+ * A buffer which allows reading with endianness. This implementation uses a byte array.
  */
 public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     private final byte[] b;
     private long position;
 
+    /**
+     * Creates a little-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new ReadOnlyByteBuffer(b, false)}.
+     *
+     * @param b
+     *      The byte array ot be used.
+     */
     public ReadOnlyByteBufferV1(final byte[] b) {
         this(b, false);
     }
 
+    /**
+     * Creates a ReadOnlyByteBufferV1 with the given array and the given endianness.
+     *
+     * @param b
+     *      The byte array ot be used.
+     * @param isLittleEndian
+     *      The endianness: true for little-endian, false for big-endian.
+     */
     public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian) {
         super(isLittleEndian);
         this.b = Objects.requireNonNull(b);
@@ -37,7 +52,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     @Override
     public String toString() {
-        return "ByteBuffer[b=" + b.toString() + ";i=" + position + ";isLittleEndian=" + isLittleEndian + "]";
+        return "ByteBuffer[b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLittleEndian + "]";
     }
 
     @Override
