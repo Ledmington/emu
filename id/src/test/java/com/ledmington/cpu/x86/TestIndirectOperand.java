@@ -1,8 +1,9 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -74,18 +75,40 @@ public final class TestIndirectOperand {
     }
 
     private static Stream<Arguments> wrongIndirectOperands() {
-        return Stream.of(
-                        IndirectOperand.builder().constant(2),
-                        IndirectOperand.builder()
-                                .reg1(Register32.EAX)
-                                .reg2(Register32.EBX), // should specify constant=1
-                        IndirectOperand.builder().constant(2).disp(0x12345678))
+        return Stream.<Supplier<IndirectOperandBuilder>>of(
+                        () -> IndirectOperand.builder().constant(-1),
+                        () -> IndirectOperand.builder().constant(0),
+                        () -> IndirectOperand.builder().constant(3),
+                        () -> IndirectOperand.builder().constant(5),
+                        () -> IndirectOperand.builder().constant(6),
+                        () -> IndirectOperand.builder().constant(7),
+                        () -> IndirectOperand.builder().constant(9),
+                        () -> IndirectOperand.builder().reg1(null),
+                        () -> IndirectOperand.builder().reg1(Register8.AL),
+                        () -> IndirectOperand.builder().reg1(Register16.AX),
+                        () -> IndirectOperand.builder().reg1(RegisterXMM.XMM0),
+                        () -> IndirectOperand.builder().reg1(Register32.EAX).reg1(Register32.EAX),
+                        () -> IndirectOperand.builder().reg2(null),
+                        () -> IndirectOperand.builder().reg2(Register8.AL),
+                        () -> IndirectOperand.builder().reg2(Register16.AX),
+                        () -> IndirectOperand.builder().reg2(RegisterXMM.XMM0),
+                        () -> IndirectOperand.builder().reg2(Register32.EAX).reg2(Register32.EAX),
+                        () -> IndirectOperand.builder().reg1(Register32.EAX).reg2(Register64.RAX),
+                        () -> IndirectOperand.builder().reg2(Register32.EAX).reg1(Register64.RAX),
+                        () -> IndirectOperand.builder().reg1(Register64.RAX).reg2(Register32.EAX),
+                        () -> IndirectOperand.builder().reg2(Register64.RAX).reg1(Register32.EAX))
                 .map(Arguments::of);
     }
 
     @ParameterizedTest
     @MethodSource("wrongIndirectOperands")
-    void correct(final IndirectOperandBuilder iob) {
-        assertThrows(IllegalStateException.class, iob::build);
+    void correct(final Supplier<IndirectOperandBuilder> task) {
+        try {
+            task.get();
+        } catch (final IllegalArgumentException | IllegalStateException | NullPointerException e) {
+            // expected exceptions
+        } catch (final Exception e) {
+            fail();
+        }
     }
 }

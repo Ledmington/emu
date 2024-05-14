@@ -18,6 +18,15 @@ public final class IndirectOperandBuilder {
         if (this.baseRegister != null) {
             throw new IllegalStateException("Cannot define reg1 twice");
         }
+        Objects.requireNonNull(r);
+        if (r.bits() != 32 && r.bits() != 64) {
+            throw new IllegalArgumentException(r + " is an invalid base register");
+        }
+        if (indexRegister != null && r.bits() != indexRegister.bits()) {
+            throw new IllegalArgumentException(String.format(
+                    "Cannot mix %,d-bit and %,d-bit registers (%s, %s)",
+                    r.bits(), indexRegister.bits(), r, indexRegister));
+        }
         this.baseRegister = r;
         return this;
     }
@@ -26,6 +35,9 @@ public final class IndirectOperandBuilder {
         if (this.c != null) {
             throw new IllegalStateException("Cannot define constant twice");
         }
+        if (c != 1 && c != 2 && c != 4 && c != 8) {
+            throw new IllegalArgumentException(String.format("Invalid indirect operand index constant %,d", c));
+        }
         this.c = c;
         return this;
     }
@@ -33,6 +45,15 @@ public final class IndirectOperandBuilder {
     public IndirectOperandBuilder reg2(final Register r) {
         if (this.indexRegister != null) {
             throw new IllegalStateException("Cannot define reg2 twice");
+        }
+        Objects.requireNonNull(r);
+        if (r.bits() != 32 && r.bits() != 64) {
+            throw new IllegalArgumentException(r + " is an invalid index register");
+        }
+        if (baseRegister != null && r.bits() != baseRegister.bits()) {
+            throw new IllegalArgumentException(String.format(
+                    "Cannot mix %,d-bit and %,d-bit registers (%s, %s)",
+                    baseRegister.bits(), r.bits(), baseRegister, r));
         }
         this.indexRegister = r;
         return this;

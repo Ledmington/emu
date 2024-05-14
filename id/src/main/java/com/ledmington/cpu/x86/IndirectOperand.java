@@ -6,12 +6,19 @@ import com.ledmington.utils.BitUtils;
 
 /**
  * This class maps the following cases:
+ * <p>
  * [reg2]
+ * <p>
  * [reg2 + displacement]
+ * <p>
  * [reg2 * constant]
+ * <p>
  * [reg2 * constant + displacement]
+ * <p>
  * [displacement]
+ * <p>
  * [reg1 + reg2 * constant]
+ * <p>
  * [reg1 + reg2 * constant + displacement]
  */
 public final class IndirectOperand implements Operand {
@@ -27,7 +34,7 @@ public final class IndirectOperand implements Operand {
         return new IndirectOperandBuilder();
     }
 
-    public IndirectOperand(
+    IndirectOperand(
             final Register reg1,
             final Register reg2,
             final int constant,
@@ -40,11 +47,22 @@ public final class IndirectOperand implements Operand {
         this.displacement = displacement;
         this.displacementType = Objects.requireNonNull(displacementType);
         this.ptrSize = ptrSize;
+    }
 
-        if (constant != 0 && Integer.bitCount(constant) != 1) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid 'constant' value: expected 0 or a power of two but was %,d", constant));
-        }
+    public Register base() {
+        return reg1;
+    }
+
+    public Register index() {
+        return reg2;
+    }
+
+    public long scale() {
+        return constant;
+    }
+
+    public long getDisplacement() {
+        return displacement;
     }
 
     public boolean hasExplicitPtrSize() {
@@ -52,7 +70,7 @@ public final class IndirectOperand implements Operand {
     }
 
     public int explicitPtrSize() {
-        return (this.ptrSize == null) ? 0 : this.ptrSize.size();
+        return hasExplicitPtrSize() ? ptrSize.size() : 0;
     }
 
     @Override
