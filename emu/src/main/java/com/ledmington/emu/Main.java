@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
+import com.ledmington.emu.mem.MemoryInitializer;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -54,7 +55,7 @@ public final class Main {
                         "",
                         " emu - CPU emulator",
                         "",
-                        " Usage: emu [-v|-vv] FILE",
+                        " Usage: emu [OPTIONS] FILE",
                         "",
                         " Command line options:",
                         "",
@@ -62,6 +63,10 @@ public final class Main {
                         " -q, --quiet Sets the verbosity level to ERROR.",
                         " -v          Sets the verbosity level to INFO.",
                         " -vv         Sets the verbosity level to DEBUG.",
+                        "",
+                        " --mem-init-random  Uninitialized memory has random values (default).",
+                        " --mem-init-zero    Uninitialized memory contains binary zero.",
+                        "",
                         " FILE       The ELF executable file to emulate.",
                         ""));
                 System.exit(0);
@@ -71,6 +76,10 @@ public final class Main {
                 MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
             } else if (args[i].equals("-vv")) {
                 MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+            } else if (args[i].equals("--mem-init-random")) {
+                EmulatorConstants.setMemoryInitializer(() -> MemoryInitializer.random());
+            } else if (args[i].equals("--mem-init-zero")) {
+                EmulatorConstants.setMemoryInitializer(() -> MemoryInitializer.zero());
             } else {
                 if (filename != null) {
                     System.err.println("Cannot set filename twice");

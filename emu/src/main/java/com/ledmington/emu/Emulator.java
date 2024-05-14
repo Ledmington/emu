@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.Register;
@@ -17,7 +18,6 @@ import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.section.Section;
 import com.ledmington.emu.mem.MemoryController;
-import com.ledmington.emu.mem.MemoryInitializer;
 import com.ledmington.emu.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -31,30 +31,29 @@ public final class Emulator {
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
     private final ELF elf;
-    private final MemoryController mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()));
+    private final MemoryController mem;
     private final X86RegisterFile regFile = new X86RegisterFile();
     private final ReadOnlyByteBuffer instructionFetcher = new ReadOnlyByteBuffer(false) {
 
-        private long instructionPointer = 0L;
-
         @Override
         public void setPosition(final long newPosition) {
-            this.instructionPointer = newPosition;
+            regFile.set(Register64.RIP, newPosition);
         }
 
         @Override
         public long position() {
-            return instructionPointer;
+            return regFile.get(Register64.RIP);
         }
 
         @Override
         protected byte read() {
-            return mem.readCode(instructionPointer);
+            return mem.readCode(regFile.get(Register64.RIP));
         }
     };
     private final InstructionDecoder dec = new InstructionDecoder(this.instructionFetcher);
 
     public Emulator(final ELF elf) {
+        this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));
         this.elf = Objects.requireNonNull(elf);
     }
 
@@ -112,15 +111,24 @@ public final class Emulator {
                     }
                 }
                 case AND -> {
-                    switch (((Register) inst.firstOperand()).bits()) {
-                        case 64 -> {
-                            final Register64 r = (Register64) inst.firstOperand();
-                            final long imm64 = ((Immediate) inst.secondOperand()).asLong();
-                            regFile.set(r, regFile.get(r) & imm64);
+                    switch (inst.firstOperand()) {
+                        case IndirectOperand io -> {
+                            final long result = computeIndirectOperand(io);
+                            throw new Error("Not implemented");
                         }
-                        default -> throw new IllegalArgumentException(String.format(
-                                "Don't know what to do when XOR has %,d bits",
-                                ((Register) inst.firstOperand()).bits()));
+                        case Register r -> {
+                            switch (r.bits()) {
+                                case 64 -> {
+                                    final Register64 r64 = (Register64) r;
+                                    final long imm64 = ((Immediate) inst.secondOperand()).asLong();
+                                    regFile.set(r64, regFile.get(r64) & imm64);
+                                }
+                                default -> throw new IllegalArgumentException(
+                                        String.format("Don't know what to do when AND has %,d bits", r.bits()));
+                            }
+                        }
+                        default -> throw new IllegalArgumentException(
+                                String.format("Unknown type of first operand '%s'", inst.firstOperand()));
                     }
                 }
                 case JMP -> this.instructionFetcher.setPosition(
@@ -144,11 +152,29 @@ public final class Emulator {
                     // the stack "grows downward"
                     regFile.set(Register64.RSP, rsp + 8L);
                 }
+                case LEA -> {
+                    final Register64 dest = (Register64) inst.firstOperand();
+                    final IndirectOperand src = (IndirectOperand) inst.secondOperand();
+                    final long result = computeIndirectOperand(src);
+                    regFile.set(dest, result);
+                }
+                case CALL -> {
+                    // TODO: check this
+                    final IndirectOperand src = (IndirectOperand) inst.firstOperand();
+                    final long result = computeIndirectOperand(src);
+                    regFile.set(Register64.RIP, result);
+                }
                 case ENDBR64 -> logger.warning("ENDBR64 not implemented");
                 default -> throw new IllegalStateException(
                         String.format("Unknwon instruction %s", inst.toIntelSyntax()));
             }
         }
+    }
+
+    private long computeIndirectOperand(final IndirectOperand io) {
+        return ((io.base() == null) ? 0L : regFile.get((Register64) io.base()))
+                + ((io.index() == null) ? 0L : regFile.get((Register64) io.index())) * io.scale()
+                + io.getDisplacement();
     }
 
     private void loadELF() {
