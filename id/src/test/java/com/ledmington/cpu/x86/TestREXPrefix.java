@@ -15,11 +15,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public final class TestREXPrefix {
+final class TestREXPrefix {
 
-    private static Stream<Arguments> wrongPrefixes() {
+    static Stream<Arguments> wrongPrefixes() {
         return IntStream.range(0, 256)
-                .mapToObj(x -> BitUtils.asByte(x))
+                .mapToObj(BitUtils::asByte)
                 .filter(x -> BitUtils.and((byte) 0xf0, x) != (byte) 0x40)
                 .map(Arguments::of);
     }
@@ -31,7 +31,7 @@ public final class TestREXPrefix {
         assertThrows(IllegalArgumentException.class, () -> new RexPrefix(rex));
     }
 
-    private static Stream<Arguments> correctPrefixes() {
+    static Stream<Arguments> correctPrefixes() {
         final List<Arguments> args = new ArrayList<>();
         final boolean[] v = new boolean[] {false, true};
         for (final boolean w : v) {

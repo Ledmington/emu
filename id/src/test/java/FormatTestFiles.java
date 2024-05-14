@@ -12,7 +12,7 @@ import java.util.Set;
 
 public final class FormatTestFiles {
 
-    private static final record TestCase(String mnemonic, String hex) {}
+    private record TestCase(String mnemonic, String hex) {}
 
     public static void main(final String[] args) {
         if (args.length > 0) {
@@ -75,7 +75,7 @@ public final class FormatTestFiles {
                     lines.add(s);
                     isGroupEnded = false;
                 } else {
-                    lines.get(lines.size() - 1).add(line.strip());
+                    lines.getLast().add(line.strip());
                 }
             }
         } catch (final IOException e) {
@@ -112,7 +112,7 @@ public final class FormatTestFiles {
         }
 
         // Last empty line
-        if (!allLines.get(allLines.size() - 1).isEmpty()) {
+        if (!allLines.getLast().isEmpty()) {
             allLines.add("");
         }
 

@@ -10,13 +10,13 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
-public final class TestMemoryInitializer {
+final class TestMemoryInitializer {
 
     private static final RandomGenerator rng =
             RandomGeneratorFactory.getDefault().create(System.nanoTime());
 
     @Test
-    public void zero() {
+    void zero() {
         final Memory mem = new RandomAccessMemory(MemoryInitializer.zero());
         for (int i = 0; i < 100; i++) {
             assertEquals((byte) 0x00, mem.read(rng.nextLong()));
@@ -24,15 +24,15 @@ public final class TestMemoryInitializer {
     }
 
     @Test
-    public void random() {
+    void random() {
         final Memory mem = new RandomAccessMemory(MemoryInitializer.random());
         assertTrue(
-                Stream.generate(() -> rng.nextLong())
-                                .map(x -> mem.read(x))
+                Stream.generate(rng::nextLong)
+                                .map(mem::read)
                                 .limit(100)
                                 .collect(Collectors.toSet())
                                 .size()
                         > 1,
-                () -> "mem.read() returned always the same value");
+                "mem.read() returned always the same value");
     }
 }

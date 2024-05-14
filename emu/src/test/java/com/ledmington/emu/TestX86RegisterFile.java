@@ -18,7 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public final class TestX86RegisterFile {
+final class TestX86RegisterFile {
 
     private static final RandomGenerator rng =
             RandomGeneratorFactory.getDefault().create(System.nanoTime());
@@ -85,28 +85,28 @@ public final class TestX86RegisterFile {
     };
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         regFile = new X86RegisterFile();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         regFile = null;
     }
 
-    private static Stream<Arguments> all8BitsRegisters() {
+    static Stream<Arguments> all8BitsRegisters() {
         return Arrays.stream(all8BitRegisters).map(Arguments::of);
     }
 
     @ParameterizedTest
     @MethodSource("all8BitsRegisters")
-    public void initiallyAllZero(final Register8 r) {
+    void initiallyAllZero(final Register8 r) {
         assertEquals((byte) 0x00, regFile.get(r));
     }
 
     @ParameterizedTest
     @MethodSource("all8BitsRegisters")
-    public void setToValue(final Register8 r) {
+    void setToValue(final Register8 r) {
         final byte x = BitUtils.asByte(rng.nextInt(1, 256));
         regFile.set(r, x);
         assertEquals(x, regFile.get(r));
@@ -119,44 +119,44 @@ public final class TestX86RegisterFile {
         }
     }
 
-    private static Stream<Arguments> all32BitsRegisters() {
+    static Stream<Arguments> all32BitsRegisters() {
         return Arrays.stream(all32BitRegisters).map(Arguments::of);
     }
 
     @ParameterizedTest
     @MethodSource("all32BitsRegisters")
-    public void initiallyAllZero(final Register32 r) {
+    void initiallyAllZero(final Register32 r) {
         assertEquals(0x00000000, regFile.get(r));
     }
 
     @ParameterizedTest
     @MethodSource("all32BitsRegisters")
-    public void setToValue(final Register32 r) {
+    void setToValue(final Register32 r) {
         final int x = rng.nextInt();
         regFile.set(r, x);
         assertEquals(x, regFile.get(r));
 
         for (final Register32 other : all32BitRegisters) {
-            if (r == other) {
+            if (r.equals(other)) {
                 continue;
             }
             assertEquals(0x00000000, regFile.get(other));
         }
     }
 
-    private static Stream<Arguments> all64BitsRegisters() {
+    static Stream<Arguments> all64BitsRegisters() {
         return Arrays.stream(all64BitRegisters).map(Arguments::of);
     }
 
     @ParameterizedTest
     @MethodSource("all64BitsRegisters")
-    public void initiallyAllZero(final Register64 r) {
+    void initiallyAllZero(final Register64 r) {
         assertEquals(0x0000000000000000L, regFile.get(r));
     }
 
     @ParameterizedTest
     @MethodSource("all64BitsRegisters")
-    public void setToValue(final Register64 r) {
+    void setToValue(final Register64 r) {
         final long x = rng.nextLong(1, Long.MAX_VALUE);
         regFile.set(r, x);
         assertEquals(x, regFile.get(r));

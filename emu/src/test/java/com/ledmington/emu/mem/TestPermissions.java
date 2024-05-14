@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class TestPermissions {
+final class TestPermissions {
 
     private static final RandomGenerator rng =
             RandomGeneratorFactory.getDefault().create(System.nanoTime());
@@ -20,28 +20,28 @@ public final class TestPermissions {
     private MemoryController mem;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()));
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         mem = null;
     }
 
     @Test
-    public void cantDoAnythingByDefault() {
-        Stream.generate(() -> rng.nextLong())
+    void cantDoAnythingByDefault() {
+        Stream.generate(rng::nextLong)
                 .distinct()
                 .limit(100)
                 .forEach(x -> assertThrows(IllegalArgumentException.class, () -> mem.read(x)));
 
-        Stream.generate(() -> rng.nextLong())
+        Stream.generate(rng::nextLong)
                 .distinct()
                 .limit(100)
                 .forEach(x -> assertThrows(IllegalArgumentException.class, () -> mem.readCode(x)));
 
-        Stream.generate(() -> rng.nextLong())
+        Stream.generate(rng::nextLong)
                 .distinct()
                 .limit(100)
                 .forEach(x -> assertThrows(
@@ -49,7 +49,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canRead() {
+    void canRead() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, true, false, false);
@@ -63,7 +63,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canWrite() {
+    void canWrite() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, false, true, false);
@@ -77,7 +77,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canReadAndWrite() {
+    void canReadAndWrite() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, true, true, false);
@@ -91,7 +91,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canExecute() {
+    void canExecute() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, false, false, true);
@@ -105,7 +105,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canReadAndExecute() {
+    void canReadAndExecute() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, true, false, true);
@@ -119,7 +119,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canWriteAndExecute() {
+    void canWriteAndExecute() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, false, true, true);
@@ -133,7 +133,7 @@ public final class TestPermissions {
     }
 
     @Test
-    public void canReadWriteAndExecute() {
+    void canReadWriteAndExecute() {
         final long start = rng.nextLong();
         final long end = start + 100L;
         mem.setPermissions(start, end, true, true, true);

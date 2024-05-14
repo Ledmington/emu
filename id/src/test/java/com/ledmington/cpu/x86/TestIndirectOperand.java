@@ -10,8 +10,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public final class TestIndirectOperand {
-    private static Stream<Arguments> correctIndirectOperands() {
+final class TestIndirectOperand {
+    static Stream<Arguments> correctIndirectOperands() {
         return Stream.of(
                 Arguments.of(IndirectOperand.builder().reg2(Register32.EAX), "[eax]"),
                 Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp((byte) 0x12), "[eax+0x12]"),
@@ -74,7 +74,7 @@ public final class TestIndirectOperand {
         assertEquals(expected, io.toIntelSyntax());
     }
 
-    private static Stream<Arguments> wrongIndirectOperands() {
+    static Stream<Arguments> wrongIndirectOperands() {
         return Stream.<Supplier<IndirectOperandBuilder>>of(
                         () -> IndirectOperand.builder().constant(-1),
                         () -> IndirectOperand.builder().constant(0),

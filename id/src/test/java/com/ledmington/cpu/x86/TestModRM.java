@@ -8,9 +8,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public final class TestModRM {
+final class TestModRM {
 
-    private static Stream<Arguments> mods() {
+    static Stream<Arguments> mods() {
         return Stream.of(
                 Arguments.of((byte) 0x00, (byte) 0x00),
                 Arguments.of((byte) 0x40, (byte) 0x01),
@@ -24,7 +24,7 @@ public final class TestModRM {
         assertEquals(expected, new ModRM(m).mod());
     }
 
-    private static Stream<Arguments> regs() {
+    static Stream<Arguments> regs() {
         return Stream.of(
                 Arguments.of((byte) 0x00, (byte) 0x00),
                 Arguments.of((byte) 0x08, (byte) 0x01),
@@ -42,7 +42,7 @@ public final class TestModRM {
         assertEquals(expected, new ModRM(m).reg());
     }
 
-    private static Stream<Arguments> rms() {
+    static Stream<Arguments> rms() {
         return Stream.of(
                 Arguments.of((byte) 0x00, (byte) 0x00),
                 Arguments.of((byte) 0x01, (byte) 0x01),

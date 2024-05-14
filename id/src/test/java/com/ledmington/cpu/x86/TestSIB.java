@@ -8,9 +8,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public final class TestSIB {
+final class TestSIB {
 
-    private static Stream<Arguments> scales() {
+    static Stream<Arguments> scales() {
         return Stream.of(
                 Arguments.of((byte) 0x00, (byte) 0x00),
                 Arguments.of((byte) 0x40, (byte) 0x01),
@@ -24,7 +24,7 @@ public final class TestSIB {
         assertEquals(expected, new SIB(m).scale());
     }
 
-    private static Stream<Arguments> indexes() {
+    static Stream<Arguments> indexes() {
         return Stream.of(
                 Arguments.of((byte) 0x00, (byte) 0x00),
                 Arguments.of((byte) 0x08, (byte) 0x01),
@@ -42,7 +42,7 @@ public final class TestSIB {
         assertEquals(expected, new SIB(m).index());
     }
 
-    private static Stream<Arguments> bases() {
+    static Stream<Arguments> bases() {
         return Stream.of(
                 Arguments.of((byte) 0x00, (byte) 0x00),
                 Arguments.of((byte) 0x01, (byte) 0x01),

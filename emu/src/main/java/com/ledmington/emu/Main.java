@@ -48,44 +48,42 @@ public final class Main {
 
         String filename = null;
 
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-h") || args[i].equals("--help")) {
-                System.out.println(String.join(
-                        "\n",
-                        "",
-                        " emu - CPU emulator",
-                        "",
-                        " Usage: emu [OPTIONS] FILE",
-                        "",
-                        " Command line options:",
-                        "",
-                        " -h, --help  Shows this help message and exits.",
-                        " -q, --quiet Sets the verbosity level to ERROR.",
-                        " -v          Sets the verbosity level to INFO.",
-                        " -vv         Sets the verbosity level to DEBUG.",
-                        "",
-                        " --mem-init-random  Uninitialized memory has random values (default).",
-                        " --mem-init-zero    Uninitialized memory contains binary zero.",
-                        "",
-                        " FILE       The ELF executable file to emulate.",
-                        ""));
-                System.exit(0);
-            } else if (args[i].equals("-q") || args[i].equals("--quiet")) {
-                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-            } else if (args[i].equals("-v")) {
-                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
-            } else if (args[i].equals("-vv")) {
-                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-            } else if (args[i].equals("--mem-init-random")) {
-                EmulatorConstants.setMemoryInitializer(() -> MemoryInitializer.random());
-            } else if (args[i].equals("--mem-init-zero")) {
-                EmulatorConstants.setMemoryInitializer(() -> MemoryInitializer.zero());
-            } else {
-                if (filename != null) {
-                    System.err.println("Cannot set filename twice");
-                    System.exit(-1);
-                } else {
-                    filename = args[i];
+        for (final String arg : args) {
+            switch (arg) {
+                case "-h", "--help" -> {
+                    System.out.println(String.join(
+                            "\n",
+                            "",
+                            " emu - CPU emulator",
+                            "",
+                            " Usage: emu [OPTIONS] FILE",
+                            "",
+                            " Command line options:",
+                            "",
+                            " -h, --help  Shows this help message and exits.",
+                            " -q, --quiet Sets the verbosity level to ERROR.",
+                            " -v          Sets the verbosity level to INFO.",
+                            " -vv         Sets the verbosity level to DEBUG.",
+                            "",
+                            " --mem-init-random  Uninitialized memory has random values (default).",
+                            " --mem-init-zero    Uninitialized memory contains binary zero.",
+                            "",
+                            " FILE       The ELF executable file to emulate.",
+                            ""));
+                    System.exit(0);
+                }
+                case "-q", "--quiet" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+                case "-v" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+                case "-vv" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+                case "--mem-init-random" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
+                case "--mem-init-zero" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+                default -> {
+                    if (filename != null) {
+                        System.err.println("Cannot set filename twice");
+                        System.exit(-1);
+                    } else {
+                        filename = arg;
+                    }
                 }
             }
         }

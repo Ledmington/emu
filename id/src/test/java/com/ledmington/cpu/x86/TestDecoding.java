@@ -10,7 +10,7 @@ import com.ledmington.utils.BitUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public final class TestDecoding extends X86Test {
+final class TestDecoding extends X86Test {
 
     @ParameterizedTest
     @MethodSource("instructions")

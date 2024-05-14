@@ -17,13 +17,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.provider.Arguments;
 
-public abstract class X86Test {
+public class X86Test {
 
     private static final String testInputFileName = "x86.test.asm";
-    private static List<Arguments> args = null;
+    private static List<Arguments> args;
 
     @BeforeAll
-    public static void setup() {
+    static void setup() {
         MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
 
         if (args == null) {
@@ -36,7 +36,7 @@ public abstract class X86Test {
                         StandardCharsets.UTF_8);
                 final BufferedReader br = new BufferedReader(reader);
                 int i = 0;
-                for (String line; (line = br.readLine()) != null; i++) {
+                for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
                     if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
                         continue;
                     }
@@ -49,6 +49,8 @@ public abstract class X86Test {
                     }
                     args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
                 }
+
+                br.close();
             } catch (final IOException e) {
                 throw new RuntimeException(e);
             }
@@ -56,10 +58,9 @@ public abstract class X86Test {
     }
 
     @AfterAll
-    public static void teardown() {
+    static void teardown() {
         if (args != null) {
             args.clear();
-            args = null;
         }
     }
 
