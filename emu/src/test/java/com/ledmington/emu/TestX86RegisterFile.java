@@ -61,7 +61,8 @@ public final class TestX86RegisterFile {
         Register32.R12D,
         Register32.R13D,
         Register32.R14D,
-        Register32.R15D
+        Register32.R15D,
+        Register32.EIP
     };
     private static final Register64[] all64BitRegisters = new Register64[] {
         Register64.RAX,
@@ -79,7 +80,8 @@ public final class TestX86RegisterFile {
         Register64.R12,
         Register64.R13,
         Register64.R14,
-        Register64.R15
+        Register64.R15,
+        Register64.RIP
     };
 
     @BeforeEach

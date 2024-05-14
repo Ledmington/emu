@@ -1,8 +1,12 @@
 package com.ledmington.cpu.x86;
 
+import com.ledmington.utils.BitUtils;
+
 /**
  * An offset relative to the current (at run-time) value of
  * the Instruction Pointer register.
+ * Equivalent to an IndirectOperand with only the instruction pointer as the
+ * base.
  */
 public final class RelativeOffset implements Operand {
 
@@ -27,5 +31,31 @@ public final class RelativeOffset implements Operand {
 
     public long amount() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return "RelativeOffset(" + value + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + (BitUtils.asInt(value >>> 32) ^ BitUtils.asInt(value));
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        return this.value == ((RelativeOffset) other).value;
     }
 }

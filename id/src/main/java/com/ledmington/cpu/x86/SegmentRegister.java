@@ -23,7 +23,7 @@ public final class SegmentRegister extends Register {
 
     @Override
     public int bits() {
-        // FIXME
-        throw new Error("Not implemented");
+        // TODO: check this
+        return reg.bits();
     }
 }

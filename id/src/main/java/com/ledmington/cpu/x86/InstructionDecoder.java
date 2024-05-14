@@ -1589,7 +1589,8 @@ public final class InstructionDecoder {
                     SBB_INDIRECT8_R8_OPCODE,
                     SUB_INDIRECT8_R8_OPCODE,
                     CMP_INDIRECT8_R8_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
+                // thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x00) {
                     invalidValue();
                 }
@@ -1617,7 +1618,8 @@ public final class InstructionDecoder {
                     SBB_INDIRECT32_R32_OPCODE,
                     SUB_INDIRECT32_R32_OPCODE,
                     CMP_INDIRECT32_R32_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
+                // thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x01) {
                     invalidValue();
                 }
@@ -1636,7 +1638,8 @@ public final class InstructionDecoder {
                     SBB_R8_INDIRECT8_OPCODE,
                     SUB_R8_INDIRECT8_OPCODE,
                     CMP_R8_INDIRECT8_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
+                // thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x02) {
                     invalidValue();
                 }
@@ -1664,7 +1667,8 @@ public final class InstructionDecoder {
                     SBB_R32_INDIRECT32_OPCODE,
                     SUB_R32_INDIRECT32_OPCODE,
                     CMP_R32_INDIRECT32_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
+                // thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != 0b00000011) {
                     invalidValue();
                 }
@@ -1683,7 +1687,8 @@ public final class InstructionDecoder {
                     SBB_AL_IMM8_OPCODE,
                     SUB_AL_IMM8_OPCODE,
                     CMP_AL_IMM8_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
+                // thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x04) {
                     invalidValue();
                 }
@@ -1702,7 +1707,8 @@ public final class InstructionDecoder {
                     SBB_EAX_IMM32_OPCODE,
                     SUB_EAX_IMM32_OPCODE,
                     CMP_EAX_IMM32_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
+                // thing)
                 if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x05) {
                     invalidValue();
                 }
@@ -1895,7 +1901,6 @@ public final class InstructionDecoder {
         final boolean isREX = RexPrefix.isREXPrefix(rexByte);
         if (isREX) {
             rexPrefix = new RexPrefix(rexByte);
-            logger.debug("Found REX prefix: 0x%02x -> %s", rexByte, rexPrefix);
         } else {
             rexPrefix = new RexPrefix((byte) 0x40);
             b.setPosition(b.position() - 1);

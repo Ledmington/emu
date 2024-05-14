@@ -10,6 +10,9 @@ public final class X86RegisterFile {
     // General-purpose registers
     private final long[] gpr = new long[16];
 
+    // instruction pointer
+    private long rip = 0L;
+
     public X86RegisterFile() {}
 
     public byte get(final Register8 r) {
@@ -84,6 +87,7 @@ public final class X86RegisterFile {
             case "r13d" -> BitUtils.asInt(gpr[13]);
             case "r14d" -> BitUtils.asInt(gpr[14]);
             case "r15d" -> BitUtils.asInt(gpr[15]);
+            case "eip" -> BitUtils.asInt(rip);
             default -> throw new IllegalArgumentException(
                     String.format("Invalid 32-bit register '%s'", r.toIntelSyntax()));
         };
@@ -107,6 +111,7 @@ public final class X86RegisterFile {
             case "r13d" -> gpr[13] = (gpr[13] & 0xffffffff00000000L) | BitUtils.asLong(v);
             case "r14d" -> gpr[14] = (gpr[14] & 0xffffffff00000000L) | BitUtils.asLong(v);
             case "r15d" -> gpr[15] = (gpr[15] & 0xffffffff00000000L) | BitUtils.asLong(v);
+            case "eip" -> rip = (rip & 0xffffffff00000000L) | BitUtils.asLong(v);
             default -> throw new IllegalArgumentException(
                     String.format("Invalid 32-bit register '%s'", r.toIntelSyntax()));
         }
@@ -130,6 +135,7 @@ public final class X86RegisterFile {
             case "r13" -> gpr[13];
             case "r14" -> gpr[14];
             case "r15" -> gpr[15];
+            case "rip" -> rip;
             default -> throw new IllegalArgumentException(
                     String.format("Invalid 64-bit register '%s'", r.toIntelSyntax()));
         };
@@ -153,6 +159,7 @@ public final class X86RegisterFile {
             case "r13" -> gpr[13] = v;
             case "r14" -> gpr[14] = v;
             case "r15" -> gpr[15] = v;
+            case "rip" -> rip = v;
             default -> throw new IllegalArgumentException(
                     String.format("Invalid 64-bit register '%s'", r.toIntelSyntax()));
         }
