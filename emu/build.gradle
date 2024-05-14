@@ -1,6 +1,7 @@
 plugins {
 	id 'java'
 	id 'application'
+	id 'pmd'
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'com.github.ben-manes.versions' version '0.51.0'
 	id 'com.adarshr.test-logger' version '4.0.0'
@@ -38,6 +39,12 @@ compileJava {
 	options.compilerArgs << '-Werror'
 	options.deprecation = true
 	options.encoding = 'UTF-8'
+}
+
+javadoc {
+	failOnError = true
+	title "emu-v${version}"
+	options.addBooleanOption('Werror', true)
 }
 
 java {
@@ -125,9 +132,6 @@ spotless {
 
 tasks.compileJava.dependsOn(spotlessApply)
 
-// Disable javadoc for now
-tasks.javadoc.enabled = false
-
 tasks.register('fatJar', Jar) {
 	group 'distribution'
 	description 'Builds the fat jar of the application'
@@ -152,3 +156,14 @@ tasks.register('fatJar', Jar) {
 		println String.format("Fat jar size: %.3f MB", (double) new File(fatJarPath).length() / 1_000_000.0)
 	}
 }
+
+pmd {
+	consoleOutput = true
+	toolVersion = "7.1.0"
+	rulesMinimumPriority = 5
+	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
+	threads = 4
+}
+
+tasks.build.dependsOn(fatJar)
+tasks.build.dependsOn(javadoc)

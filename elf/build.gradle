@@ -1,6 +1,7 @@
 plugins {
 	id 'java'
 	id 'java-library'
+	id 'pmd'
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'com.adarshr.test-logger' version '4.0.0'
 	id 'com.github.ben-manes.versions' version '0.51.0'
@@ -103,4 +104,13 @@ spotless {
 	}
 }
 
+pmd {
+	consoleOutput = true
+	toolVersion = "7.1.0"
+	rulesMinimumPriority = 5
+	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
+	threads = 4
+}
+
 tasks.compileJava.dependsOn(spotlessApply)
+tasks.build.dependsOn(javadoc)

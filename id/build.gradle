@@ -36,7 +36,7 @@ compileJava {
 javadoc {
 	failOnError = true
 	title "id-v${version}"
-	// options.addBooleanOption('Werror', true)
+	options.addBooleanOption('Werror', true)
 }
 
 java {
@@ -133,3 +133,5 @@ pmd {
 	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
 	threads = 4
 }
+
+tasks.build.dependsOn(javadoc)
