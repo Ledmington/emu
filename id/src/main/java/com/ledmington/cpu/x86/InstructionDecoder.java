@@ -40,11 +40,11 @@ public final class InstructionDecoder {
         logger.info("The code is %,d bytes long", nBytesToDecode);
 
         final List<Instruction> instructions = new ArrayList<>();
-        while (b.position() < nBytesToDecode) {
-            final long pos = b.position();
+        while (b.getPosition() < nBytesToDecode) {
+            final long pos = b.getPosition();
             final Instruction inst = decodeOne();
             { // Debugging info
-                final long codeLen = b.position() - pos;
+                final long codeLen = b.getPosition() - pos;
                 final StringBuilder sb = new StringBuilder();
                 b.setPosition(pos);
                 sb.append(String.format("%02x", b.read1()));
@@ -1852,16 +1852,16 @@ public final class InstructionDecoder {
 
             case LEA_OPCODE -> parseRM(pref, Opcode.LEA);
 
-            case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized operand size override prefix at byte 0x%08x", b.position()));
-            case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized address size override prefix at byte 0x%08x", b.position()));
+            case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(String.format(
+                    "Found an unrecognized operand size override prefix at byte 0x%08x", b.getPosition()));
+            case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(String.format(
+                    "Found an unrecognized address size override prefix at byte 0x%08x", b.getPosition()));
             case (byte) 0xf0 -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.position()));
+                    String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.getPosition()));
             case (byte) 0xf2 -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.position()));
+                    String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.getPosition()));
             case (byte) 0xf3 -> throw new IllegalArgumentException(
-                    String.format("Found an unrecognized REP prefix at byte 0x%08x", b.position()));
+                    String.format("Found an unrecognized REP prefix at byte 0x%08x", b.getPosition()));
             default -> throw new UnknownOpcode(opcodeFirstByte);
         };
     }
@@ -1891,7 +1891,7 @@ public final class InstructionDecoder {
             } else if (isAddressSizeOverridePrefix(x)) {
                 hasAddressSizeOverridePrefix = true;
             } else {
-                b.setPosition(b.position() - 1);
+                b.setPosition(b.getPosition() - 1);
                 break;
             }
         }
@@ -1903,7 +1903,7 @@ public final class InstructionDecoder {
             rexPrefix = new RexPrefix(rexByte);
         } else {
             rexPrefix = new RexPrefix((byte) 0x40);
-            b.setPosition(b.position() - 1);
+            b.setPosition(b.getPosition() - 1);
         }
 
         return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix);

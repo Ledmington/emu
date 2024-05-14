@@ -43,7 +43,7 @@ public final class Breakdown {
         final int codeLength = hexCode.length() / 2;
         final byte[] binary = new byte[codeLength];
         for (int i = 0; i < codeLength; i++) {
-            binary[i] = BitUtils.parseByte(hexCode.substring(i * 2, i * 2 + 2));
+            binary[i] = BitUtils.asByte(Integer.parseInt(hexCode.substring(i * 2, i * 2 + 2), 16));
         }
 
         breakdown(binary);

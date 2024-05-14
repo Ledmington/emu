@@ -2,7 +2,7 @@ package com.ledmington.utils;
 
 /**
  * An abstract class for a ByteBuffer which allows only read operations.
- * Most methods are already implemented which call on the {@link #read()}, {@link #position()} and {@link #setPosition(long)} methods.
+ * Most methods are already implemented which call on the {@link #read()}, {@link #getPosition()} and {@link #setPosition(long)} methods.
  */
 public abstract class ReadOnlyByteBuffer {
 
@@ -55,7 +55,7 @@ public abstract class ReadOnlyByteBuffer {
      * @return
      *      The current position in the buffer.
      */
-    public abstract long position();
+    public abstract long getPosition();
 
     /**
      * Reads 1 byte from the buffer.
@@ -73,7 +73,7 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final byte read1() {
         final byte x = read();
-        setPosition(position() + 1L);
+        setPosition(getPosition() + 1L);
         return x;
     }
 

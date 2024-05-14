@@ -14,7 +14,7 @@ import java.util.Map;
 public final class MapBuilder<K, V> {
 
     private final Map<K, V> m = new HashMap<>();
-    private boolean alreadyBuilt = false;
+    private boolean alreadyBuilt;
 
     /**
      * Creates and empty Map.

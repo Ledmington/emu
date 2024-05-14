@@ -36,7 +36,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     }
 
     @Override
-    public long position() {
+    public long getPosition() {
         return position;
     }
 

@@ -7,7 +7,7 @@ public final class WriteOnlyByteBuffer {
 
     private final byte[] v;
     private final boolean isLittleEndian;
-    private int i = 0;
+    private int i;
 
     /**
      * Creates an empty WriteOnlyByteBuffer with the given length and the given endianness.

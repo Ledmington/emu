@@ -18,7 +18,7 @@ public final class TestDecoding extends X86Test {
         final String[] parsed = hexCode.split(" ");
         final byte[] code = new byte[parsed.length];
         for (int i = 0; i < parsed.length; i++) {
-            code[i] = BitUtils.parseByte(parsed[i]);
+            code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
         }
 
         final InstructionDecoder id = new InstructionDecoder(code);

@@ -142,7 +142,8 @@ public final class MiniLogger {
 
         final String coloredHeader = getFormattedHeader(tag);
 
-        final StringBuilder sb = new StringBuilder(coloredHeader + ' ');
+        final StringBuilder sb = new StringBuilder();
+        sb.append(coloredHeader).append(' ');
         for (final char c : msg.toCharArray()) {
             sb.append(c);
             if (c == '\n') {

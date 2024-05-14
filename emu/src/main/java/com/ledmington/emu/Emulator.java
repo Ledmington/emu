@@ -41,7 +41,7 @@ public final class Emulator {
         }
 
         @Override
-        public long position() {
+        public long getPosition() {
             return regFile.get(Register64.RIP);
         }
 
@@ -132,7 +132,7 @@ public final class Emulator {
                     }
                 }
                 case JMP -> this.instructionFetcher.setPosition(
-                        this.instructionFetcher.position() + ((RelativeOffset) inst.firstOperand()).amount());
+                        this.instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).amount());
                 case MOV -> {
                     final Register64 dest = (Register64) inst.firstOperand();
                     final Register64 src = (Register64) inst.secondOperand();

@@ -128,8 +128,9 @@ public final class BitUtils {
      */
     public static String toBinaryString(final byte b) {
         String s = Integer.toBinaryString(asInt(b));
-        if (s.length() < 8) {
-            s = "0".repeat(8 - s.length()) + s;
+        final int byteLength = 8;
+        if (s.length() < byteLength) {
+            s = "0".repeat(byteLength - s.length()) + s;
         }
         return s;
     }

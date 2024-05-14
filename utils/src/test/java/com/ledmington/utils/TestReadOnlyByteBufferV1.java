@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public final class TestReadOnlyByteBufferV1 {
+final class TestReadOnlyByteBufferV1 {
 
     private final byte[] arr = new byte[] {
         (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67, (byte) 0x89, (byte) 0xab, (byte) 0xcd, (byte) 0xef
@@ -15,12 +15,12 @@ public final class TestReadOnlyByteBufferV1 {
     private ReadOnlyByteBuffer bb;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         this.bb = new ReadOnlyByteBufferV1(this.arr);
     }
 
     @Test
-    public void bytesBE() {
+    void bytesBE() {
         bb.setEndianness(false);
         assertEquals((byte) 0x01, bb.read1());
         assertEquals((byte) 0x23, bb.read1());
@@ -33,7 +33,7 @@ public final class TestReadOnlyByteBufferV1 {
     }
 
     @Test
-    public void bytesLE() {
+    void bytesLE() {
         bb.setEndianness(true);
         assertEquals((byte) 0x01, bb.read1());
         assertEquals((byte) 0x23, bb.read1());
@@ -46,7 +46,7 @@ public final class TestReadOnlyByteBufferV1 {
     }
 
     @Test
-    public void wordsBE() {
+    void wordsBE() {
         bb.setEndianness(false);
         assertEquals((short) 0x0123, bb.read2());
         assertEquals((short) 0x4567, bb.read2());
@@ -55,7 +55,7 @@ public final class TestReadOnlyByteBufferV1 {
     }
 
     @Test
-    public void wordsLE() {
+    void wordsLE() {
         bb.setEndianness(true);
         assertEquals((short) 0x2301, bb.read2());
         assertEquals((short) 0x6745, bb.read2());
@@ -64,55 +64,55 @@ public final class TestReadOnlyByteBufferV1 {
     }
 
     @Test
-    public void doubleWordsBE() {
+    void doubleWordsBE() {
         bb.setEndianness(false);
         assertEquals(0x01234567, bb.read4());
         assertEquals(0x89abcdef, bb.read4());
     }
 
     @Test
-    public void doubleWordsLE() {
+    void doubleWordsLE() {
         bb.setEndianness(true);
         assertEquals(0x67452301, bb.read4());
         assertEquals(0xefcdab89, bb.read4());
     }
 
     @Test
-    public void doubleWordsAsQuadWordsBE() {
+    void doubleWordsAsQuadWordsBE() {
         bb.setEndianness(false);
         assertEquals(0x0000000001234567L, BitUtils.asLong(bb.read4()));
         assertEquals(0x0000000089abcdefL, BitUtils.asLong(bb.read4()));
     }
 
     @Test
-    public void doubleWordsAsQuadWordsLE() {
+    void doubleWordsAsQuadWordsLE() {
         bb.setEndianness(true);
         assertEquals(0x0000000067452301L, BitUtils.asLong(bb.read4()));
         assertEquals(0x00000000efcdab89L, BitUtils.asLong(bb.read4()));
     }
 
     @Test
-    public void quadWordsBE() {
+    void quadWordsBE() {
         bb.setEndianness(false);
         assertEquals(0x0123456789abcdefL, bb.read8());
     }
 
     @Test
-    public void quadWordsLE() {
+    void quadWordsLE() {
         bb.setEndianness(true);
         assertEquals(0xefcdab8967452301L, bb.read8());
     }
 
     @ParameterizedTest
     @ValueSource(longs = {0, 1, 2, 3, 4, 5, 6, 7})
-    public void setPosition(long pos) {
+    void setPosition(long pos) {
         bb.setPosition(pos);
-        assertEquals(pos, bb.position());
+        assertEquals(pos, bb.getPosition());
     }
 
     @ParameterizedTest
     @ValueSource(longs = {0, 1, 2, 3, 4, 5, 6, 7})
-    public void randomRead(long pos) {
+    void randomRead(long pos) {
         bb.setPosition(pos);
         assertEquals(arr[(int) pos], bb.read1());
     }

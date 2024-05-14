@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class TestIntervalArray {
+final class TestIntervalArray {
 
     private static final RandomGenerator rng =
             RandomGeneratorFactory.getDefault().create(System.nanoTime());
@@ -30,25 +30,26 @@ public final class TestIntervalArray {
     }
 
     @Test
-    public void initiallyAllFalse() {
-        Stream.generate(() -> rng.nextLong()).distinct().limit(100).forEach(x -> {
-            assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
-        });
+    void initiallyAllFalse() {
+        Stream.generate(rng::nextLong)
+                .distinct()
+                .limit(100)
+                .forEach(x -> assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x)));
     }
 
     @Test
-    public void setAndGet() {
+    void setAndGet() {
         ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-        Stream.generate(() -> rng.nextLong()).distinct().limit(100).forEach(x -> {
+        Stream.generate(rng::nextLong).distinct().limit(100).forEach(x -> {
             ia.set(x);
             assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", x));
         });
     }
 
     @Test
-    public void setTwiceAndGet() {
+    void setTwiceAndGet() {
         ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-        Stream.generate(() -> rng.nextLong()).distinct().limit(100).forEach(x -> {
+        Stream.generate(rng::nextLong).distinct().limit(100).forEach(x -> {
             ia.set(x);
             ia.set(x);
             assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", x));
@@ -56,10 +57,10 @@ public final class TestIntervalArray {
     }
 
     @Test
-    public void resetAndGet() {
+    void resetAndGet() {
         ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
         final List<Long> addresses =
-                Stream.generate(() -> rng.nextLong()).distinct().limit(100).toList();
+                Stream.generate(rng::nextLong).distinct().limit(100).toList();
         for (final long x : addresses) {
             ia.reset(x);
             assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
@@ -67,10 +68,10 @@ public final class TestIntervalArray {
     }
 
     @Test
-    public void resetTwiceAndGet() {
+    void resetTwiceAndGet() {
         ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
         final List<Long> addresses =
-                Stream.generate(() -> rng.nextLong()).distinct().limit(100).toList();
+                Stream.generate(rng::nextLong).distinct().limit(100).toList();
         for (final long x : addresses) {
             ia.reset(x);
             ia.reset(x);

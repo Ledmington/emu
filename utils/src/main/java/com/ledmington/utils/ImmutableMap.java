@@ -1,7 +1,6 @@
 package com.ledmington.utils;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,13 +37,6 @@ public final class ImmutableMap<K, V> implements Map<K, V> {
      */
     public static <X, Y> MapBuilder<X, Y> builder() {
         return new MapBuilder<>();
-    }
-
-    /**
-     * Creates an empty ImmutableMap.
-     */
-    public ImmutableMap() {
-        this.m = new HashMap<>();
     }
 
     /**
@@ -115,5 +107,31 @@ public final class ImmutableMap<K, V> implements Map<K, V> {
     @Override
     public Collection<V> values() {
         return m.values();
+    }
+
+    @Override
+    public String toString() {
+        return m.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + m.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        return this.m.equals(((ImmutableMap<?, ?>) other).m);
     }
 }

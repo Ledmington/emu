@@ -85,7 +85,7 @@ public final class ELFParser {
         for (int idx = 0; idx < 7; idx++) {
             final byte x = b.read1();
             if (x != (byte) 0x00) {
-                logger.warning("Byte %d (0x%08x) of EI_PAD was not 0x00 but 0x%02x", idx, b.position(), x);
+                logger.warning("Byte %d (0x%08x) of EI_PAD was not 0x00 but 0x%02x", idx, b.getPosition(), x);
             }
         }
 

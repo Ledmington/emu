@@ -107,9 +107,10 @@ public final class IntervalArray {
      */
     public void reset(final long startAddress, final long endAddress) {
         for (int i = 0; i < blocks.size(); i++) {
-            if (blocks.get(i).start() <= startAddress) {
-                final Block curr = blocks.get(i);
-                if (blocks.get(i).end() >= endAddress) {
+            final Block curr = blocks.get(i);
+            if (curr.start() <= startAddress) {
+
+                if (curr.end() >= endAddress) {
                     // the given range fits entirely in this block
                     blocks.remove(i);
                     blocks.add(i, new Block(curr.start(), startAddress - 1));
@@ -119,9 +120,8 @@ public final class IntervalArray {
                     blocks.set(i, new Block(curr.start(), startAddress - 1));
                 }
             } else {
-                if (blocks.get(i).end() >= endAddress) {
+                if (curr.end() >= endAddress) {
                     // the given range takes up only the left "half" of this block
-                    final Block curr = blocks.get(i);
                     blocks.set(i, new Block(endAddress + 1, curr.end()));
                 } else {
                     // the given range completely contains this block
