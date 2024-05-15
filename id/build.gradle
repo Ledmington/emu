@@ -131,7 +131,8 @@ pmd {
 	toolVersion = "7.1.0"
 	rulesMinimumPriority = 5
 	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
-	threads = 4
+	threads = 1
+	incrementalAnalysis = true
 }
 
 tasks.build.dependsOn(javadoc)
