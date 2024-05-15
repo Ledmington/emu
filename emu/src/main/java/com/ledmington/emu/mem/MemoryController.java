@@ -154,7 +154,7 @@ public final class MemoryController implements Memory {
         } else {
             throw new IllegalArgumentException(String.format(
                     "Don't know what to do with section '%s' of type %s",
-                    sec.name(), sec.header().type().name()));
+                    sec.name(), sec.header().type().getName()));
         }
     }
 }

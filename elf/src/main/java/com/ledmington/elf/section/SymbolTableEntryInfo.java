@@ -22,17 +22,14 @@ public final class SymbolTableEntryInfo {
     }
 
     public byte toByte() {
-        return (byte) ((bind.code() << 4) | (type.code()));
+        return (byte) ((bind.getCode() << 4) | (type.getCode()));
     }
 
-    public SymbolTableEntryBind bind() {
-        return bind;
-    }
-
-    public SymbolTableEntryType type() {
+    public SymbolTableEntryType getType() {
         return type;
     }
 
+    @Override
     public String toString() {
         return bind + " " + type;
     }

@@ -49,7 +49,8 @@ public final class IntervalArray {
     }
 
     private void mergeBlocks() {
-        for (int i = 0; i < blocks.size() - 1; i++) {
+        int i = 0;
+        while (i < blocks.size() - 1) {
             final Block curr = blocks.get(i);
             final Block next = blocks.get(i + 1);
             if (curr.end() >= next.start()) {
@@ -57,7 +58,8 @@ public final class IntervalArray {
                 blocks.remove(i);
                 blocks.remove(i);
                 blocks.add(i, new Block(curr.start(), next.end()));
-                i--;
+            } else {
+                i++;
             }
         }
     }

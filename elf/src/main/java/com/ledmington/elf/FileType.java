@@ -37,21 +37,37 @@ public enum FileType {
 
     static {
         for (final FileType x : FileType.values()) {
-            if (codeToFileType.containsKey(x.code())) {
+            if (codeToFileType.containsKey(x.getCode())) {
                 throw new IllegalStateException(String.format(
                         "ELF file type enum value with code %d (0x%02x) and name '%s' already exists",
-                        x.code(), x.code(), x.fileTypeName()));
+                        x.getCode(), x.getCode(), x.getName()));
             }
-            codeToFileType.put(x.code(), x);
+            codeToFileType.put(x.getCode(), x);
         }
     }
 
-    public static boolean isValid(final short fileType) {
-        return codeToFileType.containsKey(fileType)
-                || (fileType >= (short) 0xfe00 && fileType <= (short) 0xfeff)
-                || (fileType >= (short) 0xff00 && fileType <= (short) 0xffff);
+    /**
+     * Checks whether the given code corresponds to a known ELF file type.
+     *
+     * @param code
+     *      The code to be checked.
+     * @return
+     *      True if an ELF file type corresponding to the given code exists, false otherwise.
+     */
+    public static boolean isValid(final short code) {
+        return codeToFileType.containsKey(code)
+                || (code >= (short) 0xfe00 && code <= (short) 0xfeff)
+                || (code >= (short) 0xff00 && code <= (short) 0xffff);
     }
 
+    /**
+     * Returns the {@link FileType} corresponding to the given code.
+     *
+     * @param code
+     *      The code representing the FileType.
+     * @return
+     *      The FileType object corresponding to the given code.
+     */
     public static FileType fromCode(final short code) {
         if (!codeToFileType.containsKey(code)) {
             throw new IllegalArgumentException(String.format("Unknown ELF file type identifier: 0x%02x", code));
@@ -67,11 +83,23 @@ public enum FileType {
         this.fileTypeName = fileTypeName;
     }
 
-    public short code() {
+    /**
+     * Hexadecimal 16-bits code.
+     *
+     * @return
+     *      The code of this FileType object.
+     */
+    public short getCode() {
         return code;
     }
 
-    public String fileTypeName() {
+    /**
+     * Name of the FileType.
+     *
+     * @return
+     *      A string representation of this FileType object.
+     */
+    public String getName() {
         return fileTypeName;
     }
 }

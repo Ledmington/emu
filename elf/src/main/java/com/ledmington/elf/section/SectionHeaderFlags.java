@@ -18,7 +18,7 @@ public enum SectionHeaderFlags {
 
     public static boolean isValid(long flags) {
         for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-            flags = flags & (~f.code());
+            flags = flags & (~f.getCode());
         }
         return flags == 0L;
     }
@@ -33,15 +33,15 @@ public enum SectionHeaderFlags {
         this.id = id;
     }
 
-    public long code() {
+    public long getCode() {
         return code;
     }
 
-    public String description() {
+    public String getDescription() {
         return description;
     }
 
-    public char id() {
+    public char getId() {
         return id;
     }
 }

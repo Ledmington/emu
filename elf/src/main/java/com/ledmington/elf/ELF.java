@@ -1,5 +1,6 @@
 package com.ledmington.elf;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.Section;
@@ -20,6 +21,16 @@ public final class ELF {
     private final PHTEntry[] programHeaderTable;
     private final Section[] sectionTable;
 
+    /**
+     * Creates an ELF object.
+     *
+     * @param fileHeader
+     *      The file header containing general information about the file.
+     * @param programHeaderTable
+     *      The program header table containing information about memory segments.
+     * @param sectionTable
+     *      The section table containing information about file sections.
+     */
     public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section[] sectionTable) {
         this.fileHeader = Objects.requireNonNull(fileHeader);
         this.programHeaderTable = Objects.requireNonNull(programHeaderTable);
@@ -30,18 +41,6 @@ public final class ELF {
         return fileHeader;
     }
 
-    public Section getFirstSectionByName(final String sectionName) {
-        Objects.requireNonNull(sectionName);
-
-        for (final Section s : sectionTable) {
-            if (s.name().equals(sectionName)) {
-                return s;
-            }
-        }
-
-        throw new IllegalArgumentException(String.format("No section found with name '%s'", sectionName));
-    }
-
     public PHTEntry[] programHeader() {
         return programHeaderTable;
     }
@@ -50,25 +49,51 @@ public final class ELF {
         return sectionTable;
     }
 
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append(" --- File Header --- \n");
-        sb.append(fileHeader);
-        sb.append('\n');
-        sb.append(" --- Program Header Table --- \n\n");
+        sb.append(" --- File Header --- \n")
+                .append(fileHeader)
+                .append('\n')
+                .append(" --- Program Header Table --- \n\n");
         for (int i = 0; i < programHeaderTable.length; i++) {
-            sb.append(String.format("PHT entry n.%,d\n", i));
-            sb.append(programHeaderTable[i].toString());
-            sb.append('\n');
+            sb.append(String.format("PHT entry n.%,d\n", i))
+                    .append(programHeaderTable[i].toString())
+                    .append('\n');
         }
-        sb.append(" --- End of Program Header Table --- \n\n");
-        sb.append(" --- Section Table --- \n\n");
+        sb.append(" --- End of Program Header Table --- \n\n").append(" --- Section Table --- \n\n");
         for (int i = 0; i < sectionTable.length; i++) {
-            sb.append(String.format("Section n.%,d\n", i));
-            sb.append(sectionTable[i].toString());
-            sb.append('\n');
+            sb.append(String.format("Section n.%,d\n", i))
+                    .append(sectionTable[i].toString())
+                    .append('\n');
         }
         sb.append(" --- End of Section Table --- \n");
         return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + fileHeader.hashCode();
+        h = 31 * h + Arrays.hashCode(programHeaderTable);
+        h = 31 * h + Arrays.hashCode(sectionTable);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final ELF elf = (ELF) other;
+        return this.fileHeader.equals(elf.fileHeader)
+                && Arrays.equals(this.programHeaderTable, elf.programHeaderTable)
+                && Arrays.equals(this.sectionTable, elf.sectionTable);
     }
 }

@@ -1,5 +1,7 @@
 package com.ledmington.elf;
 
+import com.ledmington.utils.HashUtils;
+
 /**
  * This class is just a data holder.
  * No check is performed in the constructor on the given data.
@@ -97,6 +99,7 @@ public final class FileHeader {
         return entryPointVirtualAddress;
     }
 
+    @Override
     public String toString() {
         return "Format               : " + (is32Bit ? "32 bit\n" : "64 bit\n")
                 + "Endianness           : "
@@ -111,10 +114,10 @@ public final class FileHeader {
                 + ABIVersion
                 + '\n'
                 + "File type            : "
-                + fileType.fileTypeName()
+                + fileType.getName()
                 + '\n'
                 + "ISA                  : "
-                + isa.ISAName()
+                + isa.getName()
                 + '\n'
                 + "Entry point address  : "
                 + String.format("0x%016x\n", entryPointVirtualAddress)
@@ -139,5 +142,59 @@ public final class FileHeader {
                 + "SHTE names idx       : "
                 + shstrtab_index
                 + '\n';
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + HashUtils.hash(is32Bit ? 1 : 0);
+        h = 31 * h + HashUtils.hash(isLittleEndian ? 1 : 0);
+        h = 31 * h + HashUtils.hash(version);
+        h = 31 * h + osabi.hashCode();
+        h = 31 * h + HashUtils.hash(ABIVersion);
+        h = 31 * h + fileType().hashCode();
+        h = 31 * h + isa.hashCode();
+        h = 31 * h + HashUtils.hash(entryPointVirtualAddress);
+        h = 31 * h + HashUtils.hash(programHeaderTableOffset);
+        h = 31 * h + HashUtils.hash(sectionHeaderTableOffset);
+        h = 31 * h + flags;
+        h = 31 * h + HashUtils.hash(headerSize);
+        h = 31 * h + HashUtils.hash(programHeaderTableEntrySize);
+        h = 31 * h + HashUtils.hash(nProgramHeaderTableEntries);
+        h = 31 * h + HashUtils.hash(sectionHeaderTableEntrySize);
+        h = 31 * h + HashUtils.hash(nSectionHeaderTableEntries);
+        h = 31 * h + HashUtils.hash(shstrtab_index);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final FileHeader fh = (FileHeader) other;
+        return this.is32Bit == fh.is32Bit
+                && this.isLittleEndian == fh.isLittleEndian
+                && this.version == fh.version
+                && this.osabi.equals(fh.osabi)
+                && this.ABIVersion == fh.ABIVersion
+                && this.fileType.equals(fh.fileType)
+                && this.isa.equals(fh.isa)
+                && this.entryPointVirtualAddress == fh.entryPointVirtualAddress
+                && this.programHeaderTableOffset == fh.programHeaderTableOffset
+                && this.sectionHeaderTableOffset == fh.sectionHeaderTableOffset
+                && this.flags == fh.flags
+                && this.headerSize == fh.headerSize
+                && this.programHeaderTableEntrySize == fh.programHeaderTableEntrySize
+                && this.nProgramHeaderTableEntries == fh.nProgramHeaderTableEntries
+                && this.sectionHeaderTableEntrySize == fh.sectionHeaderTableEntrySize
+                && this.nSectionHeaderTableEntries == fh.nSectionHeaderTableEntries
+                && this.shstrtab_index == fh.shstrtab_index;
     }
 }

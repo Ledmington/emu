@@ -3,6 +3,9 @@ package com.ledmington.elf;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The OS Application Binary Interface used for creating the ELF file.
+ */
 public enum OSABI {
     SYSTEM_V((byte) 0x00, "System V"),
     HP_UX((byte) 0x01, "HP-UX"),

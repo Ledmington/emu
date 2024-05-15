@@ -38,13 +38,13 @@ public final class DynamicSection extends LoadableSection {
     @Override
     public byte[] content() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(dynamicTable.length * (is32Bit ? 8 : 16));
-        for (int i = 0; i < dynamicTable.length; i++) {
+        for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
             if (is32Bit) {
-                bb.write(BitUtils.asInt(dynamicTable[i].tag().code()));
-                bb.write(BitUtils.asInt(dynamicTable[i].content()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.tag().code()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.content()));
             } else {
-                bb.write(dynamicTable[i].tag().code());
-                bb.write(dynamicTable[i].content());
+                bb.write(dynamicTableEntry.tag().code());
+                bb.write(dynamicTableEntry.content());
             }
         }
         return bb.array();

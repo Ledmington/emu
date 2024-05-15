@@ -70,10 +70,6 @@ public final class SectionHeader {
         return type;
     }
 
-    public long alignment() {
-        return alignment;
-    }
-
     public long entrySize() {
         return entrySize;
     }
@@ -82,40 +78,39 @@ public final class SectionHeader {
         return virtualAddress;
     }
 
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("Name offset     : ");
-        sb.append(String.format("%,d (0x%08x)\n", nameOffset, nameOffset));
-        sb.append("Type            : ");
-        sb.append(String.format("%s (%s)\n", type.name(), type.description()));
-        sb.append("Flags           : ");
-        sb.append(String.format("0x%016x ", flags));
+        sb.append("Name offset     : ")
+                .append(String.format("%,d (0x%08x)\n", nameOffset, nameOffset))
+                .append("Type            : ")
+                .append(String.format("%s (%s)\n", type.getName(), type.getDescription()))
+                .append("Flags           : ")
+                .append(String.format("0x%016x ", flags));
         {
             for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-                if ((flags & f.code()) != 0L) {
-                    sb.append(f.id());
+                if ((flags & f.getCode()) != 0L) {
+                    sb.append(f.getId());
                 }
             }
         }
-        sb.append('\n');
-        sb.append("Virtual address : ");
-        sb.append(String.format("0x%016x\n", virtualAddress));
-        sb.append("Offset on file  : ");
-        sb.append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset));
-        sb.append("Size on file    : ");
-        sb.append(String.format("%,d bytes\n", sectionSize));
-        sb.append("linkedSectionIndex         : ");
-        sb.append(String.format("%,d (0x%08x)\n", linkedSectionIndex, linkedSectionIndex));
-        sb.append("sh_info         : ");
-        sb.append(String.format("%,d (0x%08x)\n", sh_info, sh_info));
-        sb.append("Alignment       : ");
-        sb.append(alignment);
+        sb.append('\n')
+                .append("Virtual address : ")
+                .append(String.format("0x%016x\n", virtualAddress))
+                .append("Offset on file  : ")
+                .append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset))
+                .append("Size on file    : ")
+                .append(String.format("%,d bytes\n", sectionSize))
+                .append("linkedSectionIndex         : ")
+                .append(String.format("%,d (0x%08x)\n", linkedSectionIndex, linkedSectionIndex))
+                .append("sh_info         : ")
+                .append(String.format("%,d (0x%08x)\n", sh_info, sh_info))
+                .append("Alignment       : ")
+                .append(alignment);
         if (alignment == 0 || alignment == 1) {
             sb.append(" (no alignment)");
         }
-        sb.append('\n');
-        sb.append("Entry size      : ");
-        sb.append(String.format("%,d bytes\n", entrySize));
+        sb.append('\n').append("Entry size      : ").append(String.format("%,d bytes\n", entrySize));
         return sb.toString();
     }
 }

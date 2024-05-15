@@ -70,7 +70,7 @@ public final class IndirectOperand implements Operand {
     }
 
     public int explicitPtrSize() {
-        return hasExplicitPtrSize() ? ptrSize.size() : 0;
+        return hasExplicitPtrSize() ? ptrSize.getSize() : 0;
     }
 
     @Override

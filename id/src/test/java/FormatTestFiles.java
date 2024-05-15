@@ -42,7 +42,7 @@ public final class FormatTestFiles {
                 new BufferedReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_8))) {
             int lineIndex = 0;
             boolean isGroupEnded = false;
-            for (String line; (line = br.readLine()) != null; lineIndex++) {
+            for (String line = br.readLine(); line != null; line = br.readLine(), lineIndex++) {
                 // empty lines are added as they are
                 if (line.isEmpty()) {
                     lines.add(Set.of(""));

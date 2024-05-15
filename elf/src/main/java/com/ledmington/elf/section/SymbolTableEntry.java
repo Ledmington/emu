@@ -30,30 +30,31 @@ public final class SymbolTableEntry {
         }
     }
 
-    public int nameOffset() {
+    public int getNameOffset() {
         return nameOffset;
     }
 
-    public short sectionTableIndex() {
+    public short getSectionTableIndex() {
         return sectionTableIndex;
     }
 
-    public long value() {
+    public long getValue() {
         return value;
     }
 
-    public long size() {
+    public long getSize() {
         return size;
     }
 
-    public SymbolTableEntryInfo info() {
+    public SymbolTableEntryInfo getInfo() {
         return info;
     }
 
-    public SymbolTableEntryVisibility visibility() {
+    public SymbolTableEntryVisibility getVisibility() {
         return visibility;
     }
 
+    @Override
     public String toString() {
         return "Name offset         : " + String.format("0x%08x\n", nameOffset)
                 + "Section table index : "

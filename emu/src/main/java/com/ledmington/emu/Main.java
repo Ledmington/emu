@@ -29,7 +29,7 @@ public final class Main {
 
         logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
 
-        return new ELFParser().parse(bytes);
+        return ELFParser.parse(bytes);
     }
 
     private static void run(final String filename) {

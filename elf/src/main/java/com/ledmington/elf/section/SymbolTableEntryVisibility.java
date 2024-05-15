@@ -36,14 +36,15 @@ public final class SymbolTableEntryVisibility {
         codeToVisibility.put(code, this);
     }
 
-    public byte code() {
+    public byte getCode() {
         return code;
     }
 
-    public String name() {
+    public String getName() {
         return name;
     }
 
+    @Override
     public String toString() {
         return name;
     }

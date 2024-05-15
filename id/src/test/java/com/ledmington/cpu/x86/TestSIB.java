@@ -21,7 +21,12 @@ final class TestSIB {
     @ParameterizedTest
     @MethodSource("scales")
     void parseScale(final byte m, final byte expected) {
-        assertEquals(expected, new SIB(m).scale());
+        final byte actual = new SIB(m).scale();
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Expected scale of SIB byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
     }
 
     static Stream<Arguments> indexes() {
@@ -39,7 +44,12 @@ final class TestSIB {
     @ParameterizedTest
     @MethodSource("indexes")
     void parseIndex(final byte m, final byte expected) {
-        assertEquals(expected, new SIB(m).index());
+        final byte actual = new SIB(m).index();
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Expected index of SIB byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
     }
 
     static Stream<Arguments> bases() {
@@ -57,6 +67,11 @@ final class TestSIB {
     @ParameterizedTest
     @MethodSource("bases")
     void parseBases(final byte m, final byte expected) {
-        assertEquals(expected, new SIB(m).base());
+        final byte actual = new SIB(m).base();
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Expected base of SIB byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
     }
 }

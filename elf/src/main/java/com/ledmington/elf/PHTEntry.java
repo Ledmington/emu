@@ -1,9 +1,5 @@
 package com.ledmington.elf;
 
-/**
- * This class is just a data holder.
- * No check is performed in the constructor on the given data.
- */
 public final class PHTEntry {
 
     private final PHTEntryType type;
@@ -67,6 +63,7 @@ public final class PHTEntry {
         return executable;
     }
 
+    @Override
     public String toString() {
         return "Segment type           : " + type
                 + '\n'

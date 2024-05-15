@@ -30,12 +30,12 @@ public final class ELFParser {
 
     private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
 
-    private ReadOnlyByteBuffer b;
+    private static ReadOnlyByteBuffer b;
 
-    public ELFParser() {}
+    private ELFParser() {}
 
-    public ELF parse(final byte[] bytes) {
-        this.b = new ReadOnlyByteBufferV1(bytes);
+    public static ELF parse(final byte[] bytes) {
+        b = new ReadOnlyByteBufferV1(bytes);
 
         final FileHeader fileHeader = parseFileHeader();
 
@@ -48,7 +48,7 @@ public final class ELFParser {
         return new ELF(fileHeader, programHeaderTable, sectionTable);
     }
 
-    private FileHeader parseFileHeader() {
+    private static FileHeader parseFileHeader() {
         final int magicNumber = b.read4();
         if (magicNumber != 0x7f454c46) {
             throw new IllegalArgumentException(
@@ -156,7 +156,7 @@ public final class ELFParser {
                 namesSectionHeaderTableEntryIndex);
     }
 
-    private PHTEntry parseProgramHeaderEntry(final boolean is32Bit) {
+    private static PHTEntry parseProgramHeaderEntry(final boolean is32Bit) {
         final int segmentType = b.read4();
         if (!PHTEntryType.isValid(segmentType)) {
             throw new IllegalArgumentException(
@@ -183,18 +183,14 @@ public final class ELFParser {
         }
 
         final long alignment = b.read8();
-        if (alignment != 0
-                && Long.bitCount(alignment) != 1
-                && (segmentVirtualAddress % alignment) != (segmentOffset % alignment)) {
-            if (alignment != 0 && Long.bitCount(alignment) != 1) {
-                throw new IllegalArgumentException(String.format(
-                        "Wrong value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
-                        alignment, alignment));
-            } else {
-                throw new IllegalArgumentException(String.format(
-                        "Wrong value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
-                        segmentVirtualAddress, alignment, segmentOffset, alignment));
-            }
+        if (alignment != 0 && Long.bitCount(alignment) != 1) {
+            throw new IllegalArgumentException(String.format(
+                    "Wrong value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
+                    alignment, alignment));
+        } else if ((segmentVirtualAddress % alignment) != (segmentOffset % alignment)) {
+            throw new IllegalArgumentException(String.format(
+                    "Wrong value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
+                    segmentVirtualAddress, alignment, segmentOffset, alignment));
         }
 
         return new PHTEntry(
@@ -208,7 +204,7 @@ public final class ELFParser {
                 alignment);
     }
 
-    private SectionHeader parseSectionHeaderEntry(final boolean is32Bit) {
+    private static SectionHeader parseSectionHeaderEntry(final boolean is32Bit) {
         final int nameOffset = b.read4();
 
         final int type = b.read4();
@@ -220,12 +216,11 @@ public final class ELFParser {
         if (!SectionHeaderFlags.isValid(flags)) {
             final StringBuilder sb = new StringBuilder();
             for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-                if ((flags & f.code()) != 0L) {
-                    sb.append(f.id());
+                if ((flags & f.getCode()) != 0L) {
+                    sb.append(f.getId());
                 }
             }
-            throw new IllegalArgumentException(
-                    String.format("Invalid flags value: was 0x%016x (%s)", flags, sb.toString()));
+            throw new IllegalArgumentException(String.format("Invalid flags value: was 0x%016x (%s)", flags, sb));
         }
 
         final long virtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
@@ -259,7 +254,7 @@ public final class ELFParser {
                 entrySize);
     }
 
-    private PHTEntry[] parseProgramHeaderTable(final FileHeader fileHeader) {
+    private static PHTEntry[] parseProgramHeaderTable(final FileHeader fileHeader) {
         final int nPHTEntries = fileHeader.nProgramHeaderTableEntries();
         final PHTEntry[] programHeaderTable = new PHTEntry[nPHTEntries];
         final int PHTOffset = (int) fileHeader.programHeaderTableOffset();
@@ -274,7 +269,7 @@ public final class ELFParser {
         return programHeaderTable;
     }
 
-    private SectionHeader[] parseSectionHeaderTable(final FileHeader fileHeader) {
+    private static SectionHeader[] parseSectionHeaderTable(final FileHeader fileHeader) {
         final int nSHTEntries = fileHeader.nSectionHeaderTableEntries();
         final SectionHeader[] sectionHeaderTable = new SectionHeader[nSHTEntries];
         final int SHTOffset = (int) fileHeader.sectionHeaderTableOffset();
@@ -289,7 +284,7 @@ public final class ELFParser {
         return sectionHeaderTable;
     }
 
-    private Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader[] sectionHeaderTable) {
+    private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader[] sectionHeaderTable) {
         final Section[] sectionTable = new Section[fileHeader.nSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].fileOffset();
@@ -305,44 +300,44 @@ public final class ELFParser {
             }
             final String name = sb.toString();
 
-            final String typeName = entry.type().name();
+            final String typeName = entry.type().getName();
             logger.debug("Parsing %s (%s)", name, typeName);
 
-            if (typeName.equals(SectionHeaderType.SHT_NULL.name())) {
+            if (typeName.equals(SectionHeaderType.SHT_NULL.getName())) {
                 sectionTable[k] = new NullSection(entry);
-            } else if (name.equals(".symtab") || typeName.equals(SectionHeaderType.SHT_SYMTAB.name())) {
+            } else if (name.equals(".symtab") || typeName.equals(SectionHeaderType.SHT_SYMTAB.getName())) {
                 sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (name.equals(".shstrtab")
                     || name.equals(".strtab")
-                    || typeName.equals(SectionHeaderType.SHT_STRTAB.name())) {
+                    || typeName.equals(SectionHeaderType.SHT_STRTAB.getName())) {
                 sectionTable[k] = new StringTableSection(name, entry, b);
-            } else if (name.equals(".dynsym") || typeName.equals(SectionHeaderType.SHT_DYNSYM.name())) {
+            } else if (name.equals(".dynsym") || typeName.equals(SectionHeaderType.SHT_DYNSYM.getName())) {
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
-            } else if (typeName.equals(SectionHeaderType.SHT_NOTE.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
                 sectionTable[k] = name.equals(".note.gnu.property")
                         ? new GnuPropertySection(name, entry, b)
                         : new NoteSection(name, entry, b);
-            } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
-            } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {
                 sectionTable[k] = name.equals(".interp")
                         ? new InterpreterPathSection(name, entry, b)
                         : new ProgBitsSection(name, entry, b);
-            } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.getName())) {
                 sectionTable[k] = new NoBitsSection(name, entry);
-            } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
                 sectionTable[k] = new DynamicSection(name, entry, b, fileHeader.is32Bit());
-            } else if (typeName.equals(SectionHeaderType.SHT_RELA.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_RELA.getName())) {
                 sectionTable[k] = new RelocationAddendSection(name, entry, b, fileHeader.is32Bit());
-            } else if (typeName.equals(SectionHeaderType.SHT_REL.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_REL.getName())) {
                 sectionTable[k] = new RelocationSection(name, entry, b, fileHeader.is32Bit());
             } else if (name.equals(".gnu.version")) {
                 sectionTable[k] = new GnuVersionSection(name, entry, b);
             } else if (name.equals(".gnu.version_r")) {
                 sectionTable[k] = new GnuVersionRequirementsSection(name, entry, b);
-            } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, entry);
-            } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.name())) {
+            } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
                 sectionTable[k] = new DestructorsSection(name, entry);
             } else {
                 throw new IllegalArgumentException(String.format(

@@ -28,15 +28,15 @@ public final class RelocationAddendSection extends LoadableSection {
     @Override
     public byte[] content() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(relocationAddendTable.length * (is32Bit ? 12 : 24));
-        for (int i = 0; i < relocationAddendTable.length; i++) {
+        for (final RelocationAddendEntry relocationAddendEntry : relocationAddendTable) {
             if (is32Bit) {
-                bb.write(BitUtils.asInt(relocationAddendTable[i].offset()));
-                bb.write(BitUtils.asInt(relocationAddendTable[i].info()));
-                bb.write(BitUtils.asInt(relocationAddendTable[i].addend()));
+                bb.write(BitUtils.asInt(relocationAddendEntry.offset()));
+                bb.write(BitUtils.asInt(relocationAddendEntry.info()));
+                bb.write(BitUtils.asInt(relocationAddendEntry.addend()));
             } else {
-                bb.write(relocationAddendTable[i].offset());
-                bb.write(relocationAddendTable[i].info());
-                bb.write(relocationAddendTable[i].addend());
+                bb.write(relocationAddendEntry.offset());
+                bb.write(relocationAddendEntry.info());
+                bb.write(relocationAddendEntry.addend());
             }
         }
         return bb.array();

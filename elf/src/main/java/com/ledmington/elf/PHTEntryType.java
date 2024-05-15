@@ -34,20 +34,20 @@ public final class PHTEntryType {
     public static final PHTEntryType PT_HIUSER = new PHTEntryType(0xffffffff, "Unknown (Application specific)", false);
 
     public static boolean isValid(final int code) {
-        return codeToType.containsKey(code) || (code >= PT_LOOS.code());
+        return codeToType.containsKey(code) || (code >= PT_LOOS.getCode());
     }
 
     public static PHTEntryType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
-            if (code >= PT_LOOS.code() && code <= PT_HIOS.code()) {
+            if (code >= PT_LOOS.getCode() && code <= PT_HIOS.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
                 return new PHTEntryType(code, String.format("0x%08x (OS specific)", code), false);
             }
-            if (code >= PT_LOPROC.code() && code <= PT_HIPROC.code()) {
+            if (code >= PT_LOPROC.getCode() && code <= PT_HIPROC.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
                 return new PHTEntryType(code, String.format("0x%08x (OS specific)", code), false);
             }
-            if (code >= PT_LOUSER.code() && code <= PT_HIUSER.code()) {
+            if (code >= PT_LOUSER.getCode() && code <= PT_HIUSER.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
                 return new PHTEntryType(code, String.format("0x%08x (OS specific)", code), false);
             }
@@ -77,14 +77,11 @@ public final class PHTEntryType {
         this(code, description, true);
     }
 
-    public int code() {
+    public int getCode() {
         return code;
     }
 
-    public String description() {
-        return description;
-    }
-
+    @Override
     public String toString() {
         return description;
     }

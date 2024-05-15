@@ -64,21 +64,21 @@ public final class SectionHeaderType {
             new SectionHeaderType(0xffffffff, "SHT_HIUSER", "Unknown (Application specific)", false);
 
     public static boolean isValid(final int code) {
-        return codeToType.containsKey(code) || code >= SHT_LOOS.code();
+        return codeToType.containsKey(code) || code >= SHT_LOOS.getCode();
     }
 
     public static SectionHeaderType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
-            if (code >= SHT_LOOS.code() && code <= SHT_HIOS.code()) {
+            if (code >= SHT_LOOS.getCode() && code <= SHT_HIOS.getCode()) {
                 logger.warning("Unknown SHT entry type found: 0x%08x", code);
                 return new SectionHeaderType(code, "Unknown", String.format("0x%08x (OS specific)", code), false);
             }
-            if (code >= SHT_LOPROC.code() && code <= SHT_HIPROC.code()) {
+            if (code >= SHT_LOPROC.getCode() && code <= SHT_HIPROC.getCode()) {
                 logger.warning("Unknown SHT entry type found: 0x%08x", code);
                 return new SectionHeaderType(
                         code, "Unknown", String.format("0x%08x (Processor specific)", code), false);
             }
-            if (code >= SHT_LOUSER.code() && code <= SHT_HIUSER.code()) {
+            if (code >= SHT_LOUSER.getCode() && code <= SHT_HIUSER.getCode()) {
                 logger.warning("Unknown SHT entry type found: 0x%08x", code);
                 return new SectionHeaderType(
                         code, "Unknown", String.format("0x%08x (Application specific)", code), false);
@@ -111,15 +111,15 @@ public final class SectionHeaderType {
         this(code, name, description, true);
     }
 
-    public int code() {
+    public int getCode() {
         return code;
     }
 
-    public String name() {
+    public String getName() {
         return name;
     }
 
-    public String description() {
+    public String getDescription() {
         return description;
     }
 }

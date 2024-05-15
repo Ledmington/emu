@@ -170,12 +170,14 @@ public final class WriteOnlyByteBuffer {
     }
 
     /**
-     * Returns the underlying array.
+     * Returns a copy of the underlying array.
      *
      * @return
-     *      The underlying array.
+     *      A copy of the underlying array.
      */
     public byte[] array() {
-        return v;
+        final byte[] w = new byte[v.length];
+        System.arraycopy(v, 0, w, 0, v.length);
+        return w;
     }
 }

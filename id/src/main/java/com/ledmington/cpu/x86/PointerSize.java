@@ -13,7 +13,7 @@ public enum PointerSize {
         this.size = size;
     }
 
-    public int size() {
+    public int getSize() {
         return size;
     }
 
