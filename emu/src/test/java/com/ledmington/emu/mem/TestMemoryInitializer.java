@@ -19,7 +19,12 @@ final class TestMemoryInitializer {
     void zero() {
         final Memory mem = new RandomAccessMemory(MemoryInitializer.zero());
         for (int i = 0; i < 100; i++) {
-            assertEquals((byte) 0x00, mem.read(rng.nextLong()));
+            final long address = rng.nextLong();
+            assertEquals(
+                    (byte) 0x00,
+                    mem.read(address),
+                    () -> String.format(
+                            "Expected read at 0x%016x to return 0 but was 0x%02x", address, mem.read(address)));
         }
     }
 

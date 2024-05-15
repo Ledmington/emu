@@ -12,7 +12,6 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.utils.BitUtils;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -89,11 +88,6 @@ final class TestX86RegisterFile {
         regFile = new X86RegisterFile();
     }
 
-    @AfterEach
-    void teardown() {
-        regFile = null;
-    }
-
     static Stream<Arguments> all8BitsRegisters() {
         return Arrays.stream(all8BitRegisters).map(Arguments::of);
     }
@@ -101,7 +95,10 @@ final class TestX86RegisterFile {
     @ParameterizedTest
     @MethodSource("all8BitsRegisters")
     void initiallyAllZero(final Register8 r) {
-        assertEquals((byte) 0x00, regFile.get(r));
+        assertEquals(
+                (byte) 0x00,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be initially zero but was 0x%02x", r, regFile.get(r)));
     }
 
     @ParameterizedTest
@@ -109,13 +106,26 @@ final class TestX86RegisterFile {
     void setToValue(final Register8 r) {
         final byte x = BitUtils.asByte(rng.nextInt(1, 256));
         regFile.set(r, x);
-        assertEquals(x, regFile.get(r));
+        assertEquals(
+                x,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be 0x%02x but was 0x%02x", r, x, regFile.get(r)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("all8BitsRegisters")
+    void setToValueShouldNotChangeOtherRegisters(final Register8 r) {
+        final byte x = BitUtils.asByte(rng.nextInt(1, 256));
+        regFile.set(r, x);
 
         for (final Register8 other : all8BitRegisters) {
-            if (r == other) {
+            if (r.equals(other)) {
                 continue;
             }
-            assertEquals((byte) 0x00, regFile.get(other));
+            assertEquals(
+                    (byte) 0x00,
+                    regFile.get(other),
+                    () -> String.format("Expected register %s to be zero but was 0x%02x", other, regFile.get(other)));
         }
     }
 
@@ -126,7 +136,10 @@ final class TestX86RegisterFile {
     @ParameterizedTest
     @MethodSource("all32BitsRegisters")
     void initiallyAllZero(final Register32 r) {
-        assertEquals(0x00000000, regFile.get(r));
+        assertEquals(
+                0x00000000,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be initially zero but was 0x%08x", r, regFile.get(r)));
     }
 
     @ParameterizedTest
@@ -134,13 +147,26 @@ final class TestX86RegisterFile {
     void setToValue(final Register32 r) {
         final int x = rng.nextInt();
         regFile.set(r, x);
-        assertEquals(x, regFile.get(r));
+        assertEquals(
+                x,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be 0x%08x but was 0x%08x", r, x, regFile.get(r)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("all32BitsRegisters")
+    void setToValueShouldNotChangeOtherRegisters(final Register32 r) {
+        final int x = rng.nextInt();
+        regFile.set(r, x);
 
         for (final Register32 other : all32BitRegisters) {
             if (r.equals(other)) {
                 continue;
             }
-            assertEquals(0x00000000, regFile.get(other));
+            assertEquals(
+                    0x00000000,
+                    regFile.get(other),
+                    () -> String.format("Expected register %s to be zero but was 0x%08x", other, regFile.get(other)));
         }
     }
 
@@ -151,7 +177,10 @@ final class TestX86RegisterFile {
     @ParameterizedTest
     @MethodSource("all64BitsRegisters")
     void initiallyAllZero(final Register64 r) {
-        assertEquals(0x0000000000000000L, regFile.get(r));
+        assertEquals(
+                0x0000000000000000L,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be initially zero but was 0x%016x", r, regFile.get(r)));
     }
 
     @ParameterizedTest
@@ -159,13 +188,27 @@ final class TestX86RegisterFile {
     void setToValue(final Register64 r) {
         final long x = rng.nextLong(1, Long.MAX_VALUE);
         regFile.set(r, x);
-        assertEquals(x, regFile.get(r));
+        assertEquals(
+                x,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be 0x%016x but was 0x%016x", r, x, regFile.get(r)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("all64BitsRegisters")
+    void setToValueShouldNotChangeOtherRegisters(final Register64 r) {
+        final long x = rng.nextLong(1, Long.MAX_VALUE);
+        regFile.set(r, x);
 
         for (final Register64 other : all64BitRegisters) {
-            if (r == other) {
+            if (r.equals(other)) {
                 continue;
             }
-            assertEquals(0x0000000000000000L, regFile.get(other));
+            assertEquals(
+                    0x0000000000000000L,
+                    regFile.get(other),
+                    () -> String.format(
+                            "Expected register %s to be initially zero but was 0x%016x", other, regFile.get(other)));
         }
     }
 }

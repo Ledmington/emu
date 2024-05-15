@@ -1,14 +1,16 @@
 package com.ledmington.emu.mem;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Set;
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.ledmington.utils.BitUtils;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,28 +26,34 @@ final class TestPermissions {
         mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()));
     }
 
-    @AfterEach
-    void teardown() {
-        mem = null;
+    @Test
+    void cantReadByDefault() {
+        final Set<Long> positions =
+                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+
+        for (final long address : positions) {
+            assertThrows(IllegalArgumentException.class, () -> mem.read(address));
+        }
     }
 
     @Test
-    void cantDoAnythingByDefault() {
-        Stream.generate(rng::nextLong)
-                .distinct()
-                .limit(100)
-                .forEach(x -> assertThrows(IllegalArgumentException.class, () -> mem.read(x)));
+    void cantExecuteByDefault() {
+        final Set<Long> positions =
+                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
-        Stream.generate(rng::nextLong)
-                .distinct()
-                .limit(100)
-                .forEach(x -> assertThrows(IllegalArgumentException.class, () -> mem.readCode(x)));
+        for (final long address : positions) {
+            assertThrows(IllegalArgumentException.class, () -> mem.readCode(address));
+        }
+    }
 
-        Stream.generate(rng::nextLong)
-                .distinct()
-                .limit(100)
-                .forEach(x -> assertThrows(
-                        IllegalArgumentException.class, () -> mem.write(x, BitUtils.asByte(rng.nextInt()))));
+    @Test
+    void cantWriteByDefault() {
+        final Set<Long> positions =
+                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+
+        for (final long address : positions) {
+            assertThrows(IllegalArgumentException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
+        }
     }
 
     @Test
@@ -55,8 +63,8 @@ final class TestPermissions {
         mem.setPermissions(start, end, true, false, false);
 
         for (long i = start; i <= end; i++) {
-            mem.read(i);
             final long finalI = i;
+            assertDoesNotThrow(() -> mem.read(finalI));
             assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
             assertThrows(IllegalArgumentException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
@@ -69,8 +77,8 @@ final class TestPermissions {
         mem.setPermissions(start, end, false, true, false);
 
         for (long i = start; i <= end; i++) {
-            mem.write(i, BitUtils.asByte(rng.nextInt()));
             final long finalI = i;
+            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
             assertThrows(IllegalArgumentException.class, () -> mem.read(finalI));
             assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
         }
@@ -83,9 +91,9 @@ final class TestPermissions {
         mem.setPermissions(start, end, true, true, false);
 
         for (long i = start; i <= end; i++) {
-            mem.read(i);
-            mem.write(i, BitUtils.asByte(rng.nextInt()));
             final long finalI = i;
+            assertDoesNotThrow(() -> mem.read(finalI));
+            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
             assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
         }
     }
@@ -97,8 +105,8 @@ final class TestPermissions {
         mem.setPermissions(start, end, false, false, true);
 
         for (long i = start; i <= end; i++) {
-            mem.readCode(i);
             final long finalI = i;
+            assertDoesNotThrow(() -> mem.readCode(finalI));
             assertThrows(IllegalArgumentException.class, () -> mem.read(finalI));
             assertThrows(IllegalArgumentException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
@@ -111,9 +119,9 @@ final class TestPermissions {
         mem.setPermissions(start, end, true, false, true);
 
         for (long i = start; i <= end; i++) {
-            mem.read(i);
-            mem.readCode(i);
             final long finalI = i;
+            assertDoesNotThrow(() -> mem.read(finalI));
+            assertDoesNotThrow(() -> mem.readCode(finalI));
             assertThrows(IllegalArgumentException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
     }
@@ -125,9 +133,9 @@ final class TestPermissions {
         mem.setPermissions(start, end, false, true, true);
 
         for (long i = start; i <= end; i++) {
-            mem.readCode(i);
-            mem.write(i, BitUtils.asByte(rng.nextInt()));
             final long finalI = i;
+            assertDoesNotThrow(() -> mem.readCode(finalI));
+            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
             assertThrows(IllegalArgumentException.class, () -> mem.read(finalI));
         }
     }
@@ -139,9 +147,10 @@ final class TestPermissions {
         mem.setPermissions(start, end, true, true, true);
 
         for (long i = start; i <= end; i++) {
-            mem.readCode(i);
-            mem.read(i);
-            mem.write(i, BitUtils.asByte(rng.nextInt()));
+            final long finalI = i;
+            assertDoesNotThrow(() -> mem.readCode(finalI));
+            assertDoesNotThrow(() -> mem.read(finalI));
+            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
     }
 }
