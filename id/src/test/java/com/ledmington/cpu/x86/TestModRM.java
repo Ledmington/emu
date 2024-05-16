@@ -21,7 +21,12 @@ final class TestModRM {
     @ParameterizedTest
     @MethodSource("mods")
     void parseMod(final byte m, final byte expected) {
-        assertEquals(expected, new ModRM(m).mod());
+        final byte actual = new ModRM(m).mod();
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Expected mod of ModR/M byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
     }
 
     static Stream<Arguments> regs() {
@@ -39,7 +44,12 @@ final class TestModRM {
     @ParameterizedTest
     @MethodSource("regs")
     void parseReg(final byte m, final byte expected) {
-        assertEquals(expected, new ModRM(m).reg());
+        final byte actual = new ModRM(m).reg();
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Expected reg of ModR/M byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
     }
 
     static Stream<Arguments> rms() {
@@ -57,6 +67,11 @@ final class TestModRM {
     @ParameterizedTest
     @MethodSource("rms")
     void parseRM(final byte m, final byte expected) {
-        assertEquals(expected, new ModRM(m).rm());
+        final byte actual = new ModRM(m).rm();
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Expected RM of ModR/M byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
     }
 }

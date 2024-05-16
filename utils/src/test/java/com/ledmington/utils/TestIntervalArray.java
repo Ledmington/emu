@@ -8,7 +8,6 @@ import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,11 +21,6 @@ final class TestIntervalArray {
     @BeforeEach
     public void setup() {
         ia = new IntervalArray();
-    }
-
-    @AfterEach
-    public void teardown() {
-        ia = null;
     }
 
     @Test

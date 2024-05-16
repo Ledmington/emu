@@ -51,7 +51,7 @@ public final class ELF {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(1_000);
         sb.append(" --- File Header --- \n")
                 .append(fileHeader)
                 .append('\n')

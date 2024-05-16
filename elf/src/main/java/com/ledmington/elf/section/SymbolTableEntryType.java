@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.MiniLogger;
 
 public final class SymbolTableEntryType {
@@ -74,5 +75,28 @@ public final class SymbolTableEntryType {
     @Override
     public String toString() {
         return name;
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + HashUtils.hash(code);
+        h = 31 * h + name.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SymbolTableEntryType stet = (SymbolTableEntryType) other;
+        return this.code == stet.code && this.name.equals(stet.name);
     }
 }

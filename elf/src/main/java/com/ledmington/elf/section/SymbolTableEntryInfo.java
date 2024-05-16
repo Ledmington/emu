@@ -33,4 +33,27 @@ public final class SymbolTableEntryInfo {
     public String toString() {
         return bind + " " + type;
     }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + bind.hashCode();
+        h = 31 * h + type.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SymbolTableEntryInfo stei = (SymbolTableEntryInfo) other;
+        return this.bind.equals(stei.bind) && this.type.equals(stei.type);
+    }
 }

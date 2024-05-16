@@ -26,42 +26,38 @@ public class X86Test {
     static void setup() {
         MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
 
-        if (args == null) {
-            args = new ArrayList<>();
-            final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-            try (final InputStream is = classloader.getResourceAsStream(testInputFileName)) {
-                final InputStreamReader reader = new InputStreamReader(
-                        Objects.requireNonNull(
-                                is, () -> String.format("The InputStream for file '%s' was null", testInputFileName)),
-                        StandardCharsets.UTF_8);
-                final BufferedReader br = new BufferedReader(reader);
-                int i = 0;
-                for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
-                    if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
-                        continue;
-                    }
-
-                    final String[] splitted = line.split("\\|");
-
-                    if (splitted.length != 2) {
-                        throw new IllegalArgumentException(
-                                String.format("Line %,d: '%s' is not formatted correctly", i, line));
-                    }
-                    args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
+        args = new ArrayList<>();
+        final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        try (final InputStream is = classloader.getResourceAsStream(testInputFileName)) {
+            final InputStreamReader reader = new InputStreamReader(
+                    Objects.requireNonNull(
+                            is, () -> String.format("The InputStream for file '%s' was null", testInputFileName)),
+                    StandardCharsets.UTF_8);
+            final BufferedReader br = new BufferedReader(reader);
+            int i = 0;
+            for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
+                if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
+                    continue;
                 }
 
-                br.close();
-            } catch (final IOException e) {
-                throw new RuntimeException(e);
+                final String[] splitted = line.split("\\|");
+
+                if (splitted.length != 2) {
+                    throw new IllegalArgumentException(
+                            String.format("Line %,d: '%s' is not formatted correctly", i, line));
+                }
+                args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
             }
+
+            br.close();
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @AfterAll
     static void teardown() {
-        if (args != null) {
-            args.clear();
-        }
+        args.clear();
     }
 
     static Stream<Arguments> instructions() {

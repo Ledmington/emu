@@ -67,35 +67,35 @@ public final class FileHeader {
         return is32Bit;
     }
 
-    public short nProgramHeaderTableEntries() {
+    public short getNumProgramHeaderTableEntries() {
         return nProgramHeaderTableEntries;
     }
 
-    public short nSectionHeaderTableEntries() {
+    public short getNumSectionHeaderTableEntries() {
         return nSectionHeaderTableEntries;
     }
 
-    public long programHeaderTableOffset() {
+    public long getProgramHeaderTableOffset() {
         return programHeaderTableOffset;
     }
 
-    public short programHeaderTableEntrySize() {
+    public short getProgramHeaderTableEntrySize() {
         return programHeaderTableEntrySize;
     }
 
-    public long sectionHeaderTableOffset() {
+    public long getSectionHeaderTableOffset() {
         return sectionHeaderTableOffset;
     }
 
-    public short sectionHeaderTableEntrySize() {
+    public short getSectionHeaderTableEntrySize() {
         return sectionHeaderTableEntrySize;
     }
 
-    public FileType fileType() {
+    public FileType getFileType() {
         return fileType;
     }
 
-    public long entryPointVirtualAddress() {
+    public long getEntryPointVirtualAddress() {
         return entryPointVirtualAddress;
     }
 
@@ -152,7 +152,7 @@ public final class FileHeader {
         h = 31 * h + HashUtils.hash(version);
         h = 31 * h + osabi.hashCode();
         h = 31 * h + HashUtils.hash(ABIVersion);
-        h = 31 * h + fileType().hashCode();
+        h = 31 * h + fileType.hashCode();
         h = 31 * h + isa.hashCode();
         h = 31 * h + HashUtils.hash(entryPointVirtualAddress);
         h = 31 * h + HashUtils.hash(programHeaderTableOffset);

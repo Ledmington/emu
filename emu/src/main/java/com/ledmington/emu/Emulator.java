@@ -58,14 +58,15 @@ public final class Emulator {
     }
 
     public void run() {
-        if (elf.fileHeader().fileType() != FileType.ET_EXEC && elf.fileHeader().fileType() != FileType.ET_DYN) {
+        if (elf.fileHeader().getFileType() != FileType.ET_EXEC
+                && elf.fileHeader().getFileType() != FileType.ET_DYN) {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-                    elf.fileHeader().fileType()));
+                    elf.fileHeader().getFileType()));
         }
 
-        this.instructionFetcher.setPosition(elf.fileHeader().entryPointVirtualAddress());
-        logger.debug("Entry point virtual address : 0x%x", elf.fileHeader().entryPointVirtualAddress());
+        this.instructionFetcher.setPosition(elf.fileHeader().getEntryPointVirtualAddress());
+        logger.debug("Entry point virtual address : 0x%x", elf.fileHeader().getEntryPointVirtualAddress());
 
         loadELF();
 

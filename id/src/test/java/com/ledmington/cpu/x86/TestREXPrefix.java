@@ -57,9 +57,11 @@ final class TestREXPrefix {
     @MethodSource("correctPrefixes")
     void correct(final boolean w, final boolean r, final boolean x, final boolean b, final byte rex) {
         final RexPrefix rp = new RexPrefix(rex);
-        assertEquals(w, rp.w());
-        assertEquals(r, rp.r());
-        assertEquals(x, rp.x());
-        assertEquals(b, rp.b());
+        final String expected = (w ? "W" : "") + (r ? "R" : "") + (x ? "X" : "") + (b ? "B" : "");
+        final String actual = (rp.w() ? "W" : "") + (rp.r() ? "R" : "") + (rp.x() ? "X" : "") + (rp.b() ? "B" : "");
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format("Expected REX prefix 0x%02x to be equal to %s but was %s", rex, expected, actual));
     }
 }

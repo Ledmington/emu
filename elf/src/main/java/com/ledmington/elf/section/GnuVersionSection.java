@@ -26,8 +26,8 @@ public final class GnuVersionSection extends LoadableSection {
     @Override
     public byte[] content() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(versions.length * 2);
-        for (int i = 0; i < versions.length; i++) {
-            bb.write(versions[i]);
+        for (final short version : versions) {
+            bb.write(version);
         }
         return bb.array();
     }

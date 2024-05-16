@@ -80,7 +80,7 @@ public final class SectionHeader {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(1_000);
         sb.append("Name offset     : ")
                 .append(String.format("%,d (0x%08x)\n", nameOffset, nameOffset))
                 .append("Type            : ")
@@ -94,8 +94,7 @@ public final class SectionHeader {
                 }
             }
         }
-        sb.append('\n')
-                .append("Virtual address : ")
+        sb.append("\nVirtual address : ")
                 .append(String.format("0x%016x\n", virtualAddress))
                 .append("Offset on file  : ")
                 .append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset))
@@ -110,7 +109,7 @@ public final class SectionHeader {
         if (alignment == 0 || alignment == 1) {
             sb.append(" (no alignment)");
         }
-        sb.append('\n').append("Entry size      : ").append(String.format("%,d bytes\n", entrySize));
+        sb.append("\nEntry size      : ").append(String.format("%,d bytes\n", entrySize));
         return sb.toString();
     }
 }

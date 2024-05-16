@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.ledmington.utils.HashUtils;
+
 public final class SymbolTableEntryVisibility {
 
     private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
@@ -47,5 +49,28 @@ public final class SymbolTableEntryVisibility {
     @Override
     public String toString() {
         return name;
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + HashUtils.hash(code);
+        h = 31 * h + name.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SymbolTableEntryVisibility stev = (SymbolTableEntryVisibility) other;
+        return this.code == stev.code && this.name.equals(stev.name);
     }
 }

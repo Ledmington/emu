@@ -255,10 +255,10 @@ public final class ELFParser {
     }
 
     private static PHTEntry[] parseProgramHeaderTable(final FileHeader fileHeader) {
-        final int nPHTEntries = fileHeader.nProgramHeaderTableEntries();
+        final int nPHTEntries = fileHeader.getNumProgramHeaderTableEntries();
         final PHTEntry[] programHeaderTable = new PHTEntry[nPHTEntries];
-        final int PHTOffset = (int) fileHeader.programHeaderTableOffset();
-        final int PHTEntrySize = fileHeader.programHeaderTableEntrySize();
+        final int PHTOffset = (int) fileHeader.getProgramHeaderTableOffset();
+        final int PHTEntrySize = fileHeader.getProgramHeaderTableEntrySize();
 
         for (int k = 0; k < nPHTEntries; k++) {
             b.setPosition(PHTOffset + k * PHTEntrySize);
@@ -270,10 +270,10 @@ public final class ELFParser {
     }
 
     private static SectionHeader[] parseSectionHeaderTable(final FileHeader fileHeader) {
-        final int nSHTEntries = fileHeader.nSectionHeaderTableEntries();
+        final int nSHTEntries = fileHeader.getNumSectionHeaderTableEntries();
         final SectionHeader[] sectionHeaderTable = new SectionHeader[nSHTEntries];
-        final int SHTOffset = (int) fileHeader.sectionHeaderTableOffset();
-        final int SHTEntrySize = fileHeader.sectionHeaderTableEntrySize();
+        final int SHTOffset = (int) fileHeader.getSectionHeaderTableOffset();
+        final int SHTEntrySize = fileHeader.getSectionHeaderTableEntrySize();
 
         for (int k = 0; k < nSHTEntries; k++) {
             b.setPosition(SHTOffset + k * SHTEntrySize);
@@ -285,7 +285,7 @@ public final class ELFParser {
     }
 
     private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader[] sectionHeaderTable) {
-        final Section[] sectionTable = new Section[fileHeader.nSectionHeaderTableEntries()];
+        final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].fileOffset();
         for (int k = 0; k < sectionHeaderTable.length; k++) {
@@ -334,7 +334,7 @@ public final class ELFParser {
             } else if (name.equals(".gnu.version")) {
                 sectionTable[k] = new GnuVersionSection(name, entry, b);
             } else if (name.equals(".gnu.version_r")) {
-                sectionTable[k] = new GnuVersionRequirementsSection(name, entry, b);
+                sectionTable[k] = new GnuVersionRequirementsSection(name, entry);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, entry);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {

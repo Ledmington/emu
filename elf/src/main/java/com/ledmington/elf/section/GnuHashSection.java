@@ -44,11 +44,11 @@ public final class GnuHashSection extends LoadableSection {
         bb.write(symOffset);
         bb.write(bloom.length);
         bb.write(bloomShift);
-        for (int i = 0; i < bloom.length; i++) {
+        for (final long l : bloom) {
             if (is32Bit) {
-                bb.write(BitUtils.asInt(bloom[i]));
+                bb.write(BitUtils.asInt(l));
             } else {
-                bb.write(bloom[i]);
+                bb.write(l);
             }
         }
         bb.write(buckets);
