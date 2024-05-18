@@ -36,7 +36,11 @@ final class TestBitUtils {
     @MethodSource("SHRbytes")
     void shiftRight(final byte expected, final byte input, final int shift) {
         final byte result = BitUtils.shr(input, shift);
-        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(
+                expected,
+                result,
+                () -> String.format(
+                        "Expected 0x%02x >>> %,d to be 0x%02x but was 0x%02x", input, shift, expected, result));
     }
 
     private static Stream<Arguments> ANDbytes() {
@@ -56,7 +60,11 @@ final class TestBitUtils {
     @MethodSource("ANDbytes")
     void bitwiseAnd(final byte expected, final byte input1, final byte input2) {
         final byte result = BitUtils.and(input1, input2);
-        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(
+                expected,
+                result,
+                () -> String.format(
+                        "Expected 0x%02x AND 0x%02x to be 0x%02x but was 0x%02x", input1, input2, expected, result));
     }
 
     private static Stream<Arguments> ORbytes() {
@@ -76,7 +84,11 @@ final class TestBitUtils {
     @MethodSource("ORbytes")
     void bitwiseOr(final byte expected, final byte input1, final byte input2) {
         final byte result = BitUtils.or(input1, input2);
-        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(
+                expected,
+                result,
+                () -> String.format(
+                        "Expected 0x%02x OR 0x%02x to be 0x%02x but was 0x%02x", input1, input2, expected, result));
     }
 
     private static Stream<Arguments> XORbytes() {
@@ -94,6 +106,10 @@ final class TestBitUtils {
     @MethodSource("XORbytes")
     void bitwiseXor(final byte expected, final byte input1, final byte input2) {
         final byte result = BitUtils.xor(input1, input2);
-        Assertions.assertEquals(expected, result, String.format("Expected 0x%02x but was 0x%02x", expected, result));
+        Assertions.assertEquals(
+                expected,
+                result,
+                () -> String.format(
+                        "Expected 0x%02x XOR 0x%02x to be 0x%02x but was 0x%02x", input1, input2, expected, result));
     }
 }

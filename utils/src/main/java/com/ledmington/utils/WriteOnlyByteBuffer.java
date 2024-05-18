@@ -147,7 +147,7 @@ public final class WriteOnlyByteBuffer {
     }
 
     /**
-     * Writes the given array of ints witht he current endianness. It is equivalent to doing
+     * Writes the given array of ints with the current endianness. It is equivalent to doing
      * <code>
      *     for (int i=0; i&lt;arr.length; i++) {
      *         write(arr[i]);
@@ -157,7 +157,7 @@ public final class WriteOnlyByteBuffer {
      * @param arr
      *      The array of ints to be written.
      */
-    public void write(final int[] arr) {
+    public void write(final int... arr) {
         if (isLittleEndian) {
             for (final int x : arr) {
                 writeLE(x);

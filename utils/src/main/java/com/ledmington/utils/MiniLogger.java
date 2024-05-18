@@ -17,6 +17,7 @@ public final class MiniLogger {
             ? new PrintWriter(System.out)
             : System.console().writer();
     private static LoggingLevel minimumLevel = LoggingLevel.DEBUG;
+    private static final char NEWLINE = '\n';
 
     /**
      * Specifies the level for all MiniLoggers.
@@ -68,16 +69,6 @@ public final class MiniLogger {
     public static void setMinimumLevel(final LoggingLevel level) {
         Objects.requireNonNull(level);
         minimumLevel = level;
-    }
-
-    /**
-     * Returns the currently set minimum logging level.
-     *
-     * @return
-     *      The minimum logging level.
-     */
-    public static LoggingLevel getLoggingLevel() {
-        return minimumLevel;
     }
 
     /**
@@ -146,7 +137,7 @@ public final class MiniLogger {
         sb.append(coloredHeader).append(' ');
         for (final char c : msg.toCharArray()) {
             sb.append(c);
-            if (c == '\n') {
+            if (c == NEWLINE) {
                 sb.append(coloredHeader).append(' ');
             }
         }

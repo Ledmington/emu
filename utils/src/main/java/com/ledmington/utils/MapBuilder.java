@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A useful class to build an {@link ImmutableMap<K,V>}.
+ * A useful class to build an {@link ImmutableMap}.
  *
  * @param <K>
  *            The type of key objects.
@@ -49,7 +49,7 @@ public final class MapBuilder<K, V> {
      * @return
      *         A new ImmutableMap.
      */
-    public ImmutableMap<K, V> build() {
+    public Map<K, V> build() {
         assertNotBuilt();
         alreadyBuilt = true;
         return new ImmutableMap<>(m);
