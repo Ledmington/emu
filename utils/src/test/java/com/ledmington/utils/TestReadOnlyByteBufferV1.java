@@ -2,6 +2,9 @@ package com.ledmington.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.random.RandomGenerator;
+import java.util.random.RandomGeneratorFactory;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,111 +12,121 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 final class TestReadOnlyByteBufferV1 {
 
-    private final byte[] arr = new byte[] {
-        (byte) 0x01, (byte) 0x23, (byte) 0x45, (byte) 0x67, (byte) 0x89, (byte) 0xab, (byte) 0xcd, (byte) 0xef
-    };
-    private ReadOnlyByteBuffer bb;
+    private static final RandomGenerator rng =
+            RandomGeneratorFactory.getDefault().create(System.nanoTime());
+    private byte[] arr;
 
     @BeforeEach
     void setup() {
-        this.bb = new ReadOnlyByteBufferV1(this.arr);
+        this.arr = new byte[200];
+        for (int i = 0; i < arr.length; i++) {
+            this.arr[i] = BitUtils.asByte(rng.nextInt());
+        }
     }
 
-    @Test
-    void bytesBE() {
-        bb.setEndianness(false);
-        assertEquals((byte) 0x01, bb.read1());
-        assertEquals((byte) 0x23, bb.read1());
-        assertEquals((byte) 0x45, bb.read1());
-        assertEquals((byte) 0x67, bb.read1());
-        assertEquals((byte) 0x89, bb.read1());
-        assertEquals((byte) 0xab, bb.read1());
-        assertEquals((byte) 0xcd, bb.read1());
-        assertEquals((byte) 0xef, bb.read1());
-    }
-
-    @Test
-    void bytesLE() {
-        bb.setEndianness(true);
-        assertEquals((byte) 0x01, bb.read1());
-        assertEquals((byte) 0x23, bb.read1());
-        assertEquals((byte) 0x45, bb.read1());
-        assertEquals((byte) 0x67, bb.read1());
-        assertEquals((byte) 0x89, bb.read1());
-        assertEquals((byte) 0xab, bb.read1());
-        assertEquals((byte) 0xcd, bb.read1());
-        assertEquals((byte) 0xef, bb.read1());
-    }
-
-    @Test
-    void wordsBE() {
-        bb.setEndianness(false);
-        assertEquals((short) 0x0123, bb.read2());
-        assertEquals((short) 0x4567, bb.read2());
-        assertEquals((short) 0x89ab, bb.read2());
-        assertEquals((short) 0xcdef, bb.read2());
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void bytes(final boolean endianness) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+        for (int i = 0; i < arr.length; i++) {
+            final int finalI = i;
+            final byte expected = arr[i];
+            final byte actual = bb.read1();
+            assertEquals(
+                    expected,
+                    actual,
+                    () -> String.format(
+                            "Expected to read 0x%02x but was 0x%02x, at position %,d", expected, actual, finalI));
+        }
     }
 
     @Test
     void wordsLE() {
-        bb.setEndianness(true);
-        assertEquals((short) 0x2301, bb.read2());
-        assertEquals((short) 0x6745, bb.read2());
-        assertEquals((short) 0xab89, bb.read2());
-        assertEquals((short) 0xefcd, bb.read2());
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, true);
+        for (int i = 0; i < arr.length; i += 2) {
+            final short expected = BitUtils.asShort((BitUtils.asShort(arr[i + 1]) << 8) | BitUtils.asShort(arr[i]));
+            final short actual = bb.read2();
+            assertEquals(
+                    expected, actual, () -> String.format("Expected to read 0x%04x but was 0x%04x", expected, actual));
+        }
     }
 
     @Test
-    void doubleWordsBE() {
-        bb.setEndianness(false);
-        assertEquals(0x01234567, bb.read4());
-        assertEquals(0x89abcdef, bb.read4());
+    void wordsBE() {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false);
+        for (int i = 0; i < arr.length; i += 2) {
+            final short expected = BitUtils.asShort((BitUtils.asShort(arr[i]) << 8) | BitUtils.asShort(arr[i + 1]));
+            final short actual = bb.read2();
+            assertEquals(
+                    expected, actual, () -> String.format("Expected to read 0x%04x but was 0x%04x", expected, actual));
+        }
     }
 
     @Test
     void doubleWordsLE() {
-        bb.setEndianness(true);
-        assertEquals(0x67452301, bb.read4());
-        assertEquals(0xefcdab89, bb.read4());
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false);
+        for (int i = 0; i < arr.length; i += 4) {
+            final int expected = BitUtils.asInt(arr[i])
+                    | (BitUtils.asInt(arr[i + 1]) << 8)
+                    | (BitUtils.asInt(arr[i + 2]) << 16)
+                    | (BitUtils.asInt(arr[i + 3]) << 24);
+            final int actual = bb.read4();
+            assertEquals(
+                    expected, actual, () -> String.format("Expected to read 0x%08x but was 0x%08x", expected, actual));
+        }
     }
 
     @Test
-    void doubleWordsAsQuadWordsBE() {
-        bb.setEndianness(false);
-        assertEquals(0x0000000001234567L, BitUtils.asLong(bb.read4()));
-        assertEquals(0x0000000089abcdefL, BitUtils.asLong(bb.read4()));
-    }
-
-    @Test
-    void doubleWordsAsQuadWordsLE() {
-        bb.setEndianness(true);
-        assertEquals(0x0000000067452301L, BitUtils.asLong(bb.read4()));
-        assertEquals(0x00000000efcdab89L, BitUtils.asLong(bb.read4()));
-    }
-
-    @Test
-    void quadWordsBE() {
-        bb.setEndianness(false);
-        assertEquals(0x0123456789abcdefL, bb.read8());
+    void doubleWordsBE() {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, true);
+        for (int i = 0; i < arr.length; i += 4) {
+            final int expected = (BitUtils.asInt(arr[i]) << 24)
+                    | (BitUtils.asInt(arr[i + 1]) << 16)
+                    | (BitUtils.asInt(arr[i + 2]) << 8)
+                    | BitUtils.asInt(arr[i + 3]);
+            final int actual = bb.read4();
+            assertEquals(
+                    expected, actual, () -> String.format("Expected to read 0x%08x but was 0x%08x", expected, actual));
+        }
     }
 
     @Test
     void quadWordsLE() {
-        bb.setEndianness(true);
-        assertEquals(0xefcdab8967452301L, bb.read8());
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false);
+        for (int i = 0; i < arr.length; i += 8) {
+            final long expected = (BitUtils.asLong(arr[i + 7]) << 56)
+                    | (BitUtils.asLong(arr[i + 6]) << 48)
+                    | (BitUtils.asLong(arr[i + 5]) << 40)
+                    | (BitUtils.asLong(arr[i + 4]) << 32)
+                    | (BitUtils.asLong(arr[i + 3]) << 24)
+                    | (BitUtils.asLong(arr[i + 2]) << 16)
+                    | (BitUtils.asLong(arr[i + 1]) << 8)
+                    | BitUtils.asLong(arr[i]);
+            final long actual = bb.read8();
+            assertEquals(
+                    expected,
+                    actual,
+                    () -> String.format("Expected to read 0x%016x but was 0x%016x", expected, actual));
+        }
     }
 
-    @ParameterizedTest
-    @ValueSource(longs = {0, 1, 2, 3, 4, 5, 6, 7})
-    void setPosition(long pos) {
-        bb.setPosition(pos);
-        assertEquals(pos, bb.getPosition());
-    }
-
-    @ParameterizedTest
-    @ValueSource(longs = {0, 1, 2, 3, 4, 5, 6, 7})
-    void randomRead(long pos) {
-        bb.setPosition(pos);
-        assertEquals(arr[(int) pos], bb.read1());
+    @Test
+    void quadWordsBE() {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, true);
+        for (int i = 0; i < arr.length; i += 8) {
+            final long expected = (BitUtils.asLong(arr[i]) << 56)
+                    | (BitUtils.asLong(arr[i + 1]) << 48)
+                    | (BitUtils.asLong(arr[i + 2]) << 40)
+                    | (BitUtils.asLong(arr[i + 3]) << 32)
+                    | (BitUtils.asLong(arr[i + 4]) << 24)
+                    | (BitUtils.asLong(arr[i + 5]) << 16)
+                    | (BitUtils.asLong(arr[i + 6]) << 8)
+                    | BitUtils.asLong(arr[i + 7]);
+            final long actual = bb.read8();
+            assertEquals(
+                    expected,
+                    actual,
+                    () -> String.format("Expected to read 0x%016x but was 0x%016x", expected, actual));
+        }
     }
 }

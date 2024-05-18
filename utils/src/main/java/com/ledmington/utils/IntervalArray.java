@@ -30,9 +30,9 @@ public final class IntervalArray {
      * Returns the value stored at the given address.
      *
      * @param address
-     *      The address of the value.
+     *                The address of the value.
      * @return
-     *      True is the value is present, false otherwise.
+     *         True is the value is present, false otherwise.
      */
     public boolean get(final long address) {
         for (final Block b : blocks) {
@@ -65,22 +65,25 @@ public final class IntervalArray {
     }
 
     /**
-     * Sets the boolean value at the given address to true. Does not throw exceptions in case it is already true. It is equivalent to calling {@code set(address, address)}.
+     * Sets the boolean value at the given address to true. Does not throw
+     * exceptions in case it is already true. It is equivalent to calling
+     * {@code set(address, address)}.
      *
      * @param address
-     *      The address of the value.
+     *                The address of the value.
      */
     public void set(final long address) {
         set(address, address);
     }
 
     /**
-     * Sets the boolean values in the given range to true. Does not throw exceptions in case it is already true.
+     * Sets the boolean values in the given range to true. Does not throw exceptions
+     * in case it is already true.
      *
      * @param startAddress
-     *      The start (inclusive) of the range.
+     *                     The start (inclusive) of the range.
      * @param endAddress
-     *      The end (inclusive) of the range.
+     *                     The end (inclusive) of the range.
      */
     public void set(final long startAddress, final long endAddress) {
         blocks.add(new Block(startAddress, endAddress));
@@ -89,10 +92,12 @@ public final class IntervalArray {
     }
 
     /**
-     * Sets the boolean value at the given address to false. Does not throw exceptions in case it is already false. It is equivalent to calling {@code reset(address, address)}.
+     * Sets the boolean value at the given address to false. Does not throw
+     * exceptions in case it is already false. It is equivalent to calling
+     * {@code reset(address, address)}.
      *
      * @param address
-     *      The address of the value.
+     *                The address of the value.
      */
     public void reset(final long address) {
         reset(address, address);
@@ -103,12 +108,13 @@ public final class IntervalArray {
      * exceptions in case it is already false.
      *
      * @param startAddress
-     *      The start (inclusive) of the range.
+     *                     The start (inclusive) of the range.
      * @param endAddress
-     *      The end (inclusive) of the range.
+     *                     The end (inclusive) of the range.
      */
     public void reset(final long startAddress, final long endAddress) {
-        for (int i = 0; i < blocks.size(); i++) {
+        int i = 0;
+        while (i < blocks.size()) {
             final Block curr = blocks.get(i);
             if (curr.start() <= startAddress) {
 
@@ -121,14 +127,15 @@ public final class IntervalArray {
                     // the given range takes up only the right "half" of this block
                     blocks.set(i, new Block(curr.start(), startAddress - 1));
                 }
+                i++;
             } else {
                 if (curr.end() >= endAddress) {
                     // the given range takes up only the left "half" of this block
                     blocks.set(i, new Block(endAddress + 1, curr.end()));
+                    i++;
                 } else {
                     // the given range completely contains this block
                     blocks.remove(i);
-                    i--;
                 }
             }
         }
