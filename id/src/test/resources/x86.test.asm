@@ -22,27 +22,27 @@ nop | 90
 #
 nop DWORD PTR [eax]                    | 67 0f 1f 00
 nop DWORD PTR [rax]                    | 0f 1f 00
-nop DWORD PTR [rbx+r12*4+0x12345678]   | 42 0f 1f 84 a3 78 56 34 12
+nop DWORD PTR [rbx+r12*4+0x78563412]   | 42 0f 1f 84 a3 78 56 34 12
 nop QWORD PTR [eax]                    | 67 48 0f 1f 00
 nop QWORD PTR [rax]                    | 48 0f 1f 00
-nop QWORD PTR [rbx+r12*4+0x12345678]   | 4a 0f 1f 84 a3 78 56 34 12
+nop QWORD PTR [rbx+r12*4+0x78563412]   | 4a 0f 1f 84 a3 78 56 34 12
 nop WORD PTR [eax]                     | 67 66 0f 1f 00
 nop WORD PTR [rax]                     | 66 0f 1f 00
-nop WORD PTR [rbx+r12*4+0x12345678]    | 66 42 0f 1f 84 a3 78 56 34 12
-nop WORD PTR cs:[rbx+r12*4+0x12345678] | 2e 66 42 0f 1f 84 a3 78 56 34 12
-nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 2e 42 0f 1f 84 a3 78 56 34 12
-nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 2e 42 0f 1f 84 a3 78 56 34 12
-nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
-nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
-nop WORD PTR cs:[rbx+r12*4+0x12345678] | 66 66 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR [rbx+r12*4+0x78563412]    | 66 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x78563412] | 2e 66 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x78563412] | 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x78563412] | 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x78563412] | 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x78563412] | 66 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
+nop WORD PTR cs:[rbx+r12*4+0x78563412] | 66 66 66 66 66 2e 42 0f 1f 84 a3 78 56 34 12
 
 # Call
 # The output of these instructions is different from what you can see from other tools such as objdump
 # because here we keep the addition to the instruction pointer implicit.
 # In reality, it would look like 'call rip+0x....'
-call 0x78563412         | e8 12 34 56 78
-call 0xfffffffff8563412 | e8 12 34 56 f8
-call 0xffffffffffffff18 | e8 18 ff ff ff
+call 0x12345678         | e8 12 34 56 78
+call 0xfffffffff8563412 | e8 f8 56 34 12
+call 0xffffffffffffff18 | e8 ff ff ff 18
 # the following ones are calls with registers (as offsets?)
 call r10 | 41 ff d2
 call r11 | 41 ff d3
@@ -63,15 +63,15 @@ call rsp | ff d4
 #
 call DWORD PTR [ebx]                    | 66 67 ff 1b
 call DWORD PTR [ebx]                    | 67 66 ff 1b
-call DWORD PTR [r11+r12*4+0x12345678]   | 66 43 ff 9c a3 78 56 34 12
-call DWORD PTR [r11d+r12d*4+0x12345678] | 67 66 43 ff 9c a3 78 56 34 12
+call DWORD PTR [r11+r12*4+0x78563412]   | 66 43 ff 9c a3 78 56 34 12
+call DWORD PTR [r11d+r12d*4+0x78563412] | 67 66 43 ff 9c a3 78 56 34 12
 call DWORD PTR [rsp]                    | 66 ff 1c 24
 call QWORD PTR [eax]                    | 67 ff 10
-call QWORD PTR [r11+r12*4+0x12345678]   | 43 ff 94 a3 78 56 34 12
+call QWORD PTR [r11+r12*4+0x78563412]   | 43 ff 94 a3 78 56 34 12
 call QWORD PTR [rdx]                    | ff 12
 call WORD PTR [ecx]                     | 67 66 ff 11
-call WORD PTR [r11+r12*4+0x12345678]    | 66 43 ff 94 a3 78 56 34 12
-call WORD PTR [r11d+r12d*4+0x12345678]  | 67 66 43 ff 94 a3 78 56 34 12
+call WORD PTR [r11+r12*4+0x78563412]    | 66 43 ff 94 a3 78 56 34 12
+call WORD PTR [r11d+r12d*4+0x78563412]  | 67 66 43 ff 94 a3 78 56 34 12
 call WORD PTR [rsi]                     | 66 ff 16
 
 # Cdq
@@ -90,111 +90,111 @@ cdqe | 48 98
 # In reality, it would look like 'jXX rip+0x....'
 # Ja
 ja 0x12       | 77 12
-ja 0x78563412 | 0f 87 12 34 56 78
+ja 0x12345678 | 0f 87 12 34 56 78
 # Jae
 jae 0x12       | 73 12
-jae 0x78563412 | 0f 83 12 34 56 78
+jae 0x12345678 | 0f 83 12 34 56 78
 # Jb
 jb 0x12       | 72 12
-jb 0x12345678 | 0f 82 78 56 34 12
+jb 0x78563412 | 0f 82 78 56 34 12
 # Jbe
 jbe 0x12       | 76 12
-jbe 0x78563412 | 0f 86 12 34 56 78
+jbe 0x12345678 | 0f 86 12 34 56 78
 # Jg
 jg 0x12       | 7f 12
-jg 0x78563412 | 0f 8f 12 34 56 78
+jg 0x12345678 | 0f 8f 12 34 56 78
 # Je
 je 0x12       | 74 12
-je 0x78563412 | 0f 84 12 34 56 78
+je 0x12345678 | 0f 84 12 34 56 78
 # Jl
 jl 0x12       | 7c 12
-jl 0x12345678 | 0f 8c 78 56 34 12
+jl 0x78563412 | 0f 8c 78 56 34 12
 # Jle
 jle 0x12       | 7e 12
-jle 0x12345678 | 0f 8e 78 56 34 12
+jle 0x78563412 | 0f 8e 78 56 34 12
 # Jge
 jge 0x12       | 7d 12
-jge 0x12345678 | 0f 8d 78 56 34 12
+jge 0x78563412 | 0f 8d 78 56 34 12
 # Jne
 jne 0x12       | 75 12
-jne 0x12345678 | 0f 85 78 56 34 12
+jne 0x78563412 | 0f 85 78 56 34 12
 # Jns
 jns 0x12       | 79 12
-jns 0x12345678 | 0f 89 78 56 34 12
+jns 0x78563412 | 0f 89 78 56 34 12
 # Js
 js 0x12       | 78 12
-js 0x12345678 | 0f 88 78 56 34 12
+js 0x78563412 | 0f 88 78 56 34 12
 # Jp
 jp 0x12       | 7a 12
-jp 0x12345678 | 0f 8a 78 56 34 12
+jp 0x78563412 | 0f 8a 78 56 34 12
 # Jmp
 jmp 0x12                             | eb 12
-jmp 0x78563412                       | e9 12 34 56 78
+jmp 0x12345678                      | e9 12 34 56 78
 jmp DWORD PTR [r11]                  | 66 41 ff 2b
-jmp DWORD PTR [rax+rcx*4+0x12345678] | 66 ff ac 88 78 56 34 12
+jmp DWORD PTR [rax+rcx*4+0x78563412] | 66 ff ac 88 78 56 34 12
 jmp QWORD PTR [r11]                  | 41 ff 23
-jmp QWORD PTR [rax+rcx*4+0x12345678] | ff a4 88 78 56 34 12
+jmp QWORD PTR [rax+rcx*4+0x78563412] | ff a4 88 78 56 34 12
 jmp WORD PTR [r11]                   | 66 41 ff 23
 jmp r11                              | 41 ff e3
 jmp rax                              | ff e0
 
 # Cmove
-cmove ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 44 8c 80 78 56 34 12
+cmove ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 44 8c 80 78 56 34 12
 cmove r15,rcx                             | 4c 0f 44 f9
 cmove rcx,r15                             | 49 0f 44 cf
 
 # Cmovns
-cmovns ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 49 8c 80 78 56 34 12
+cmovns ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 49 8c 80 78 56 34 12
 cmovns r15,rcx                             | 4c 0f 49 f9
 cmovns rcx,r15                             | 49 0f 49 cf
 
 # Cmovae
-cmovae ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 43 8c 80 78 56 34 12
+cmovae ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 43 8c 80 78 56 34 12
 cmovae r15,rcx                             | 4c 0f 43 f9
 cmovae rcx,r15                             | 49 0f 43 cf
 
 # Cmovb
-cmovb ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 42 8c 80 78 56 34 12
+cmovb ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 42 8c 80 78 56 34 12
 cmovb r15,rcx                             | 4c 0f 42 f9
 cmovb rcx,r15                             | 49 0f 42 cf
 
 # Cmovbe
-cmovbe ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 46 8c 80 78 56 34 12
+cmovbe ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 46 8c 80 78 56 34 12
 cmovbe r15,rcx                             | 4c 0f 46 f9
 cmovbe rcx,r15                             | 49 0f 46 cf
 
 # Cmovne
-cmovne ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 45 8c 80 78 56 34 12
+cmovne ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 45 8c 80 78 56 34 12
 cmovne r15,rdx                             | 4c 0f 45 fa
 cmovne rdx,r15                             | 49 0f 45 d7
 
 # Cmovg
-cmovg ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4f 8c 80 78 56 34 12
+cmovg ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 4f 8c 80 78 56 34 12
 cmovg r15,rdx                             | 4c 0f 4f fa
 cmovg rdx,r15                             | 49 0f 4f d7
 
 # Cmovge
-cmovge ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4d 8c 80 78 56 34 12
+cmovge ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 4d 8c 80 78 56 34 12
 cmovge r15,rdx                             | 4c 0f 4d fa
 cmovge rdx,r15                             | 49 0f 4d d7
 
 # Cmovs
-cmovs ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 48 8c 80 78 56 34 12
+cmovs ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 48 8c 80 78 56 34 12
 cmovs ecx,eax                             | 0f 48 c8
 cmovs edx,r9d                             | 41 0f 48 d1
 
 # Cmova
-cmova ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 47 8c 80 78 56 34 12
+cmova ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 47 8c 80 78 56 34 12
 cmova ecx,eax                             | 0f 47 c8
 cmova edx,r9d                             | 41 0f 47 d1
 
 # Cmovl
-cmovl ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4c 8c 80 78 56 34 12
+cmovl ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 4c 8c 80 78 56 34 12
 cmovl r15,rdx                             | 4c 0f 4c fa
 cmovl rdx,r15                             | 49 0f 4c d7
 
 # Cmovle
-cmovle ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 4e 8c 80 78 56 34 12
+cmovle ecx,DWORD PTR [r8+rax*4+0x78563412] | 41 0f 4e 8c 80 78 56 34 12
 cmovle r15,rdx                             | 4c 0f 4e fa
 cmovle rdx,r15                             | 49 0f 4e d7
 
@@ -202,55 +202,55 @@ cmovle rdx,r15                             | 49 0f 4e d7
 cmp BYTE PTR [eax],dh                          | 67 38 30
 cmp BYTE PTR [edi],0x77                        | 67 80 3f 77
 cmp BYTE PTR [r13+rcx*2+0x12],0x77             | 41 80 7c 4d 12 77
-cmp BYTE PTR [r9+rcx*4+0x12345678],0x99        | 41 80 bc 89 78 56 34 12 99
-cmp BYTE PTR [rbx+r9*4+0x12345678],r9b         | 46 38 8c 8b 78 56 34 12
+cmp BYTE PTR [r9+rcx*4+0x78563412],0x99        | 41 80 bc 89 78 56 34 12 99
+cmp BYTE PTR [rbx+r9*4+0x78563412],r9b         | 46 38 8c 8b 78 56 34 12
 cmp BYTE PTR [rdi],0x77                        | 80 3f 77
 cmp DWORD PTR [ebp-0xe8],r15d                  | 67 44 39 bd 18 ff ff ff
-cmp DWORD PTR [edi],0x12345678                 | 67 81 3f 78 56 34 12
-cmp DWORD PTR [r13+rcx*2+0x12],0x66778899      | 41 81 7c 4d 12 99 88 77 66
-cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef | 41 81 bc 89 78 56 34 12 ef be ad de
+cmp DWORD PTR [edi],0x78563412                 | 67 81 3f 78 56 34 12
+cmp DWORD PTR [r13+rcx*2+0x12],0x99887766      | 41 81 7c 4d 12 99 88 77 66
+cmp DWORD PTR [r9+rcx*4+0x78563412],0xdeadbeef | 41 81 bc 89 78 56 34 12 de ad be ef
 cmp DWORD PTR [rbp-0xe8],r15d                  | 44 39 bd 18 ff ff ff
-cmp DWORD PTR [rdi],0x12345678                 | 81 3f 78 56 34 12
-cmp QWORD PTR [edi],0x0000000012345678         | 67 48 81 3f 78 56 34 12
-cmp QWORD PTR [rdi],0x0000000012345678         | 48 81 3f 78 56 34 12
-cmp WORD PTR [edi],0x7788                      | 67 66 81 3f 88 77
+cmp DWORD PTR [rdi],0x78563412                 | 81 3f 78 56 34 12
+cmp QWORD PTR [edi],0x0000000078563412         | 67 48 81 3f 78 56 34 12
+cmp QWORD PTR [rdi],0x0000000078563412         | 48 81 3f 78 56 34 12
+cmp WORD PTR [edi],0x8877                      | 67 66 81 3f 88 77
 cmp WORD PTR [r13+rcx*2+0x12],0x0077           | 66 41 83 7c 4d 12 77
-cmp WORD PTR [r13+rcx*2+0x12],0x7788           | 66 41 81 7c 4d 12 88 77
-cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
+cmp WORD PTR [r13+rcx*2+0x12],0x8877           | 66 41 81 7c 4d 12 88 77
+cmp WORD PTR [r9+rcx*4+0x78563412],0xbeef      | 66 41 81 bc 89 78 56 34 12 be ef
 cmp WORD PTR [rdi],0x7788                      | 66 81 3f 88 77
 cmp al,0x99                                    | 3c 99
 cmp al,dh                                      | 38 f0
 cmp cx,0x1234                                  | 66 81 f9 34 12
 cmp dh,0x99                                    | 80 fe 99
 cmp eax,0x12345678                             | 3d 78 56 34 12
-cmp ebp,DWORD PTR [rbx+r9*4+0x12345678]        | 42 3b ac 8b 78 56 34 12
+cmp ebp,DWORD PTR [rbx+r9*4+0x78563412]        | 42 3b ac 8b 78 56 34 12
 cmp edi,0x12345678                             | 81 ff 78 56 34 12
 cmp esp,r13d                                   | 44 39 ec
 cmp r8b,0x12                                   | 41 80 f8 12
 cmp r8w,dx                                     | 66 41 39 d0
-cmp rax,0x0000000012345678                     | 48 3d 78 56 34 12
-cmp rdi,0x0000000012345678                     | 48 81 ff 78 56 34 12
+cmp rax,0x0000000078563412                     | 48 3d 78 56 34 12
+cmp rdi,0x0000000078563412                     | 48 81 ff 78 56 34 12
 cmp rsp,r8                                     | 4c 39 c4
 cmp sp,r13w                                    | 66 44 39 ec
 
 # Lea
-lea ax,[ebx+ecx*4+0x12345678]   | 67 66 8d 84 8b 78 56 34 12
-lea cx,[rbx+rcx*4+0x12345678]   | 66 8d 8c 8b 78 56 34 12
+lea ax,[ebx+ecx*4+0x78563412]   | 67 66 8d 84 8b 78 56 34 12
+lea cx,[rbx+rcx*4+0x78563412]   | 66 8d 8c 8b 78 56 34 12
 lea eax,[ebx]                   | 67 8d 03
 lea eax,[rbx]                   | 8d 03
 lea ecx,[rdx+rbp*2]             | 8d 0c 6a
-lea esi,[edi+r12d*2+0x12345678] | 67 42 8d b4 67 78 56 34 12
-lea r10w,[ebx+ecx*4+0x12345678] | 66 67 44 8d 94 8b 78 56 34 12
-lea r10w,[ebx+ecx*4+0x12345678] | 67 66 44 8d 94 8b 78 56 34 12
-lea r13d,[rdi+r8*4+0x12345678]  | 46 8d ac 87 78 56 34 12
-lea r14w,[rbx+rcx*4+0x12345678] | 66 44 8d b4 8b 78 56 34 12
+lea esi,[edi+r12d*2+0x78563412] | 67 42 8d b4 67 78 56 34 12
+lea r10w,[ebx+ecx*4+0x78563412] | 66 67 44 8d 94 8b 78 56 34 12
+lea r10w,[ebx+ecx*4+0x78563412] | 67 66 44 8d 94 8b 78 56 34 12
+lea r13d,[rdi+r8*4+0x78563412]  | 46 8d ac 87 78 56 34 12
+lea r14w,[rbx+rcx*4+0x78563412] | 66 44 8d b4 8b 78 56 34 12
 lea r9d,[edx+ebp*2]             | 67 44 8d 0c 6a
 lea rax,[ebx]                   | 67 48 8d 03
 lea rax,[rbx]                   | 48 8d 03
 lea rcx,[edx+ebp*2]             | 67 48 8d 0c 6a
 lea rcx,[rdx+rbp*2]             | 48 8d 0c 6a
-lea rsi,[edi+r9d*2+0x12345678]  | 67 4a 8d b4 4f 78 56 34 12
-lea rsi,[rdi+r8*4+0x12345678]   | 4a 8d b4 87 78 56 34 12
+lea rsi,[edi+r9d*2+0x78563412]  | 67 4a 8d b4 4f 78 56 34 12
+lea rsi,[rdi+r8*4+0x78563412]   | 4a 8d b4 87 78 56 34 12
 
 # Mov
 mov r10d,r10d | 45 89 d2
@@ -395,21 +395,21 @@ mov rsp,rdx | 48 89 d4
 mov rsp,rsi | 48 89 f4
 mov rsp,rsp | 48 89 e4
 #
-mov BYTE PTR [r11+r8*4+0x12345678],0x99        | 43 c6 84 83 78 56 34 12 99
+mov BYTE PTR [r11+r8*4+0x78563412],0x99        | 43 c6 84 83 78 56 34 12 99
 mov BYTE PTR [rdi],bl                          | 88 1f
-mov BYTE PTR [rsp+rcx*4+0x12345678],bh         | 88 bc 8c 78 56 34 12
-mov BYTE PTR [rsp+rcx*4+0x12345678],cl         | 88 8c 8c 78 56 34 12
-mov BYTE PTR [rsp+rcx*4+0x12345678],dil        | 40 88 bc 8c 78 56 34 12
-mov BYTE PTR [rsp+rcx*4+0x12345678],r9b        | 44 88 8c 8c 78 56 34 12
-mov DWORD PTR [r11+r8*4+0x12345678],0xdeadbeef | 43 c7 84 83 78 56 34 12 ef be ad de
-mov DWORD PTR [rbp+0x7eadbeef],0x12345678      | c7 85 ef be ad 7e 78 56 34 12
-mov QWORD PTR [rbp+0x7eadbeef],0x12345678      | 48 c7 85 ef be ad 7e 78 56 34 12
-mov QWORD PTR [rbp+r9*4+0x12345678],rsi        | 4a 89 b4 8d 78 56 34 12
-mov WORD PTR [r11+r8*4+0x12345678],0xbeef      | 66 43 c7 84 83 78 56 34 12 ef be
-mov al,BYTE PTR [rax+rbx*8+0x12345678]         | 8a 84 d8 78 56 34 12
-mov esi,0x12345678                             | be 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x78563412],bh         | 88 bc 8c 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x78563412],cl         | 88 8c 8c 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x78563412],dil        | 40 88 bc 8c 78 56 34 12
+mov BYTE PTR [rsp+rcx*4+0x78563412],r9b        | 44 88 8c 8c 78 56 34 12
+mov DWORD PTR [r11+r8*4+0x78563412],0xdeadbeef | 43 c7 84 83 78 56 34 12 de ad be ef
+mov DWORD PTR [rbp+0x7eadbeef],0x78563412      | c7 85 7e ad be ef 78 56 34 12
+mov QWORD PTR [rbp+0x7eadbeef],0x78563412      | 48 c7 85 7e ad be ef 78 56 34 12
+mov QWORD PTR [rbp+r9*4+0x78563412],rsi        | 4a 89 b4 8d 78 56 34 12
+mov WORD PTR [r11+r8*4+0x78563412],0xbeef      | 66 43 c7 84 83 78 56 34 12 be ef
+mov al,BYTE PTR [rax+rbx*8+0x78563412]         | 8a 84 d8 78 56 34 12
+mov esi,0x78563412                             | be 78 56 34 12
 mov r11b,0x12                                  | 41 b3 12
-mov r8w,0x1234                                 | 66 41 b8 34 12
+mov r8w,0x1234                                 | 66 41 b8 12 34
 mov r9,0x12345678                              | 49 c7 c1 78 56 34 12
 mov rsi,QWORD PTR [rbp+r9*4+0x12345678]        | 4a 8b b4 8d 78 56 34 12
 
@@ -1175,12 +1175,12 @@ dec rsp  | 48 ff cc
 dec sil  | 40 fe ce
 dec spl  | 40 fe cc
 #
-dec BYTE PTR [rax+0x12345678]  | fe 88 78 56 34 12
+dec BYTE PTR [rax+0x78563412]  | fe 88 78 56 34 12
 dec BYTE PTR [rax]             | fe 08
-dec DWORD PTR [rsp+0x12345678] | ff 8c 24 78 56 34 12
+dec DWORD PTR [rsp+0x78563412] | ff 8c 24 78 56 34 12
 dec QWORD PTR [rax]            | 48 ff 08
-dec QWORD PTR [rcx+0x12345678] | 48 ff 89 78 56 34 12
-dec WORD PTR [rax+0x12345678]  | 66 ff 88 78 56 34 12
+dec QWORD PTR [rcx+0x78563412] | 48 ff 89 78 56 34 12
+dec WORD PTR [rax+0x78563412]  | 66 ff 88 78 56 34 12
 dec WORD PTR [rax]             | 66 ff 08
 
 # Pshufd
@@ -1197,28 +1197,28 @@ shufps xmm0,xmm1,0x12 | 0f c6 c1 12
 
 # Pxor
 pxor xmm1,xmm15                              | 66 41 0f ef cf
-pxor xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f ef a4 98 78 56 34 12
+pxor xmm4,XMMWORD PTR [rax+r11*4+0x78563412] | 66 42 0f ef a4 98 78 56 34 12
 pxor xmm7,xmm7                               | 66 0f ef ff
 
 # Por
 por xmm1,xmm15                              | 66 41 0f eb cf
-por xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f eb a4 98 78 56 34 12
+por xmm4,XMMWORD PTR [rax+r11*4+0x78563412] | 66 42 0f eb a4 98 78 56 34 12
 por xmm7,xmm7                               | 66 0f eb ff
 
 # Pand
 pand xmm1,xmm15                              | 66 41 0f db cf
-pand xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f db a4 98 78 56 34 12
+pand xmm4,XMMWORD PTR [rax+r11*4+0x78563412] | 66 42 0f db a4 98 78 56 34 12
 pand xmm7,xmm7                               | 66 0f db ff
 
 # Paddq
 paddq xmm1,xmm15                              | 66 41 0f d4 cf
-paddq xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f d4 a4 98 78 56 34 12
+paddq xmm4,XMMWORD PTR [rax+r11*4+0x78563412] | 66 42 0f d4 a4 98 78 56 34 12
 paddq xmm4,XMMWORD PTR [rdi]                  | 66 0f d4 27
 paddq xmm7,xmm7                               | 66 0f d4 ff
 
 # Psubq
 psubq xmm1,xmm15                              | 66 41 0f fb cf
-psubq xmm4,XMMWORD PTR [rax+r11*4+0x12345678] | 66 42 0f fb a4 98 78 56 34 12
+psubq xmm4,XMMWORD PTR [rax+r11*4+0x78563412] | 66 42 0f fb a4 98 78 56 34 12
 psubq xmm4,XMMWORD PTR [rdi]                  | 66 0f fb 27
 psubq xmm7,xmm7                               | 66 0f fb ff
 
@@ -1239,10 +1239,10 @@ xorps xmm0,xmm0  | 0f 57 c0
 xorps xmm8,xmm11 | 45 0f 57 c3
 
 # Ucomisd
-ucomisd xmm13,QWORD PTR [rip+0x12345678] | 66 44 0f 2e 2d 78 56 34 12
+ucomisd xmm13,QWORD PTR [rip+0x78563412] | 66 44 0f 2e 2d 78 56 34 12
 
 # Ucomiss
-ucomiss xmm13,DWORD PTR [rip+0x12345678] | 44 0f 2e 2d 78 56 34 12
+ucomiss xmm13,DWORD PTR [rip+0x78563412] | 44 0f 2e 2d 78 56 34 12
 
 # BTx
 bt edx,0x12  | 0f ba e2 12
@@ -1297,11 +1297,11 @@ xchg rsi,rax | 48 96
 xchg rsp,rax | 48 94
 xchg si,di   | 66 87 fe
 #
-xchg BYTE PTR [rax+rbx*2+0x12345678],ah   | 86 a4 58 78 56 34 12
-xchg BYTE PTR [rax+rbx*2+0x12345678],al   | 86 84 58 78 56 34 12
-xchg DWORD PTR [rax+rbx*2+0x12345678],eax | 87 84 58 78 56 34 12
-xchg QWORD PTR [rax+rbx*2+0x12345678],rax | 48 87 84 58 78 56 34 12
-xchg WORD PTR [rax+rbx*2+0x12345678],ax   | 66 87 84 58 78 56 34 12
+xchg BYTE PTR [rax+rbx*2+0x78563412],ah   | 86 a4 58 78 56 34 12
+xchg BYTE PTR [rax+rbx*2+0x78563412],al   | 86 84 58 78 56 34 12
+xchg DWORD PTR [rax+rbx*2+0x78563412],eax | 87 84 58 78 56 34 12
+xchg QWORD PTR [rax+rbx*2+0x78563412],rax | 48 87 84 58 78 56 34 12
+xchg WORD PTR [rax+rbx*2+0x78563412],ax   | 66 87 84 58 78 56 34 12
 
 # Bswap
 bswap eax  | 0f c8
@@ -1339,52 +1339,52 @@ bswap rsp  | 48 0f cc
 
 # Prefetch
 prefetchnta BYTE PTR [eax]                 | 67 0f 18 00
-prefetchnta BYTE PTR [r9+r11*4+0x12345678] | 43 0f 18 84 99 78 56 34 12
+prefetchnta BYTE PTR [r9+r11*4+0x78563412] | 43 0f 18 84 99 78 56 34 12
 prefetchnta BYTE PTR [rax]                 | 0f 18 00
 prefetcht0 BYTE PTR [eax]                  | 67 0f 18 08
-prefetcht0 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 8c 99 78 56 34 12
+prefetcht0 BYTE PTR [r9+r11*4+0x78563412]  | 43 0f 18 8c 99 78 56 34 12
 prefetcht0 BYTE PTR [rax]                  | 0f 18 08
 prefetcht1 BYTE PTR [eax]                  | 67 0f 18 10
-prefetcht1 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 94 99 78 56 34 12
+prefetcht1 BYTE PTR [r9+r11*4+0x78563412]  | 43 0f 18 94 99 78 56 34 12
 prefetcht1 BYTE PTR [rax]                  | 0f 18 10
 prefetcht2 BYTE PTR [eax]                  | 67 0f 18 18
-prefetcht2 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 9c 99 78 56 34 12
+prefetcht2 BYTE PTR [r9+r11*4+0x78563412]  | 43 0f 18 9c 99 78 56 34 12
 prefetcht2 BYTE PTR [rax]                  | 0f 18 18
 
 # Cmpxchg
-cmpxchg BYTE PTR [rax+rbx*4+0x12345678],dh         | 0f b0 b4 98 78 56 34 12
+cmpxchg BYTE PTR [rax+rbx*4+0x78563412],dh         | 0f b0 b4 98 78 56 34 12
 cmpxchg BYTE PTR [rsi],bpl                         | 40 0f b0 2e
-cmpxchg DWORD PTR [rax+rbx*4+0x12345678],r10d      | 44 0f b1 94 98 78 56 34 12
+cmpxchg DWORD PTR [rax+rbx*4+0x78563412],r10d      | 44 0f b1 94 98 78 56 34 12
 cmpxchg DWORD PTR [rsi],ecx                        | 0f b1 0e
-cmpxchg QWORD PTR [rax+rbx*4+0x12345678],rdi       | 48 0f b1 bc 98 78 56 34 12
+cmpxchg QWORD PTR [rax+rbx*4+0x78563412],rdi       | 48 0f b1 bc 98 78 56 34 12
 cmpxchg QWORD PTR [rsi],r9                         | 4c 0f b1 0e
-cmpxchg WORD PTR [rax+rbx*4+0x12345678],r15w       | 66 44 0f b1 bc 98 78 56 34 12
+cmpxchg WORD PTR [rax+rbx*4+0x78563412],r15w       | 66 44 0f b1 bc 98 78 56 34 12
 cmpxchg WORD PTR [rsi],dx                          | 66 0f b1 16
-lock cmpxchg BYTE PTR [rax+rbx*4+0x12345678],dh    | f0 0f b0 b4 98 78 56 34 12
+lock cmpxchg BYTE PTR [rax+rbx*4+0x78563412],dh    | f0 0f b0 b4 98 78 56 34 12
 lock cmpxchg BYTE PTR [rsi],bpl                    | f0 40 0f b0 2e
-lock cmpxchg DWORD PTR [rax+rbx*4+0x12345678],r10d | f0 44 0f b1 94 98 78 56 34 12
+lock cmpxchg DWORD PTR [rax+rbx*4+0x78563412],r10d | f0 44 0f b1 94 98 78 56 34 12
 lock cmpxchg DWORD PTR [rsi],ecx                   | f0 0f b1 0e
-lock cmpxchg QWORD PTR [rax+rbx*4+0x12345678],rdi  | f0 48 0f b1 bc 98 78 56 34 12
+lock cmpxchg QWORD PTR [rax+rbx*4+0x78563412],rdi  | f0 48 0f b1 bc 98 78 56 34 12
 lock cmpxchg QWORD PTR [rsi],r9                    | f0 4c 0f b1 0e
-lock cmpxchg WORD PTR [rax+rbx*4+0x12345678],r15w  | 66 f0 44 0f b1 bc 98 78 56 34 12
+lock cmpxchg WORD PTR [rax+rbx*4+0x78563412],r15w  | 66 f0 44 0f b1 bc 98 78 56 34 12
 lock cmpxchg WORD PTR [rsi],dx                     | 66 f0 0f b1 16
 
 # Xadd
-lock xadd BYTE PTR [rax+rbx*4+0x12345678],dh    | f0 0f c0 b4 98 78 56 34 12
+lock xadd BYTE PTR [rax+rbx*4+0x78563412],dh    | f0 0f c0 b4 98 78 56 34 12
 lock xadd BYTE PTR [rsi],bpl                    | f0 40 0f c0 2e
-lock xadd DWORD PTR [rax+rbx*4+0x12345678],r10d | f0 44 0f c1 94 98 78 56 34 12
+lock xadd DWORD PTR [rax+rbx*4+0x78563412],r10d | f0 44 0f c1 94 98 78 56 34 12
 lock xadd DWORD PTR [rsi],ecx                   | f0 0f c1 0e
-lock xadd QWORD PTR [rax+rbx*4+0x12345678],rdi  | f0 48 0f c1 bc 98 78 56 34 12
+lock xadd QWORD PTR [rax+rbx*4+0x78563412],rdi  | f0 48 0f c1 bc 98 78 56 34 12
 lock xadd QWORD PTR [rsi],r9                    | f0 4c 0f c1 0e
-lock xadd WORD PTR [rax+rbx*4+0x12345678],r15w  | 66 f0 44 0f c1 bc 98 78 56 34 12
+lock xadd WORD PTR [rax+rbx*4+0x78563412],r15w  | 66 f0 44 0f c1 bc 98 78 56 34 12
 lock xadd WORD PTR [rsi],dx                     | 66 f0 0f c1 16
-xadd BYTE PTR [rax+rbx*4+0x12345678],dh         | 0f c0 b4 98 78 56 34 12
+xadd BYTE PTR [rax+rbx*4+0x78563412],dh         | 0f c0 b4 98 78 56 34 12
 xadd BYTE PTR [rsi],bpl                         | 40 0f c0 2e
-xadd DWORD PTR [rax+rbx*4+0x12345678],r10d      | 44 0f c1 94 98 78 56 34 12
+xadd DWORD PTR [rax+rbx*4+0x78563412],r10d      | 44 0f c1 94 98 78 56 34 12
 xadd DWORD PTR [rsi],ecx                        | 0f c1 0e
-xadd QWORD PTR [rax+rbx*4+0x12345678],rdi       | 48 0f c1 bc 98 78 56 34 12
+xadd QWORD PTR [rax+rbx*4+0x78563412],rdi       | 48 0f c1 bc 98 78 56 34 12
 xadd QWORD PTR [rsi],r9                         | 4c 0f c1 0e
-xadd WORD PTR [rax+rbx*4+0x12345678],r15w       | 66 44 0f c1 bc 98 78 56 34 12
+xadd WORD PTR [rax+rbx*4+0x78563412],r15w       | 66 44 0f c1 bc 98 78 56 34 12
 xadd WORD PTR [rsi],dx                          | 66 0f c1 16
 
 # Pcmpeqd
