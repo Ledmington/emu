@@ -1,8 +1,23 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.utils;
 
-/**
- * A ByteBuffer which allows only write operations.
- */
+/** A ByteBuffer which allows only write operations. */
 public final class WriteOnlyByteBuffer {
 
     private final byte[] v;
@@ -12,10 +27,8 @@ public final class WriteOnlyByteBuffer {
     /**
      * Creates an empty WriteOnlyByteBuffer with the given length and the given endianness.
      *
-     * @param length
-     *      The length of the underlying array.
-     * @param isLittleEndian
-     *      The endianness: true for little-endian, false for big-endian.
+     * @param length The length of the underlying array.
+     * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
      */
     public WriteOnlyByteBuffer(final int length, final boolean isLittleEndian) {
         this.v = new byte[length];
@@ -23,10 +36,10 @@ public final class WriteOnlyByteBuffer {
     }
 
     /**
-     * Creates an little-endian WriteOnlyByteBuffer with the given length. It is equivalent to calling {@code new WriteOnlyByteBuffer(length, false)}.
+     * Creates an little-endian WriteOnlyByteBuffer with the given length. It is equivalent to calling {@code new
+     * WriteOnlyByteBuffer(length, false)}.
      *
-     * @param length
-     *      The length of the underlying array.
+     * @param length The length of the underlying array.
      */
     public WriteOnlyByteBuffer(final int length) {
         this(length, false);
@@ -35,8 +48,7 @@ public final class WriteOnlyByteBuffer {
     /**
      * Writes the given byte at the current position.
      *
-     * @param x
-     *      The byte to be written.
+     * @param x The byte to be written.
      */
     public void write(final byte x) {
         v[i++] = x;
@@ -45,8 +57,7 @@ public final class WriteOnlyByteBuffer {
     /**
      * Writes the given short with the current endianness.
      *
-     * @param x
-     *      The short to be written.
+     * @param x The short to be written.
      */
     public void write(final short x) {
         if (isLittleEndian) {
@@ -69,8 +80,7 @@ public final class WriteOnlyByteBuffer {
     /**
      * Writes the given int with the current endianness.
      *
-     * @param x
-     *      The int to be written.
+     * @param x The int to be written.
      */
     public void write(final int x) {
         if (isLittleEndian) {
@@ -97,8 +107,7 @@ public final class WriteOnlyByteBuffer {
     /**
      * Writes the given long with the current endianness.
      *
-     * @param x
-     *      The long to be written.
+     * @param x The long to be written.
      */
     public void write(final long x) {
         if (isLittleEndian) {
@@ -131,15 +140,13 @@ public final class WriteOnlyByteBuffer {
     }
 
     /**
-     * Writes the given array of bytes. It is equivalent to doing
-     * <code>
+     * Writes the given array of bytes. It is equivalent to doing <code>
      *     for (int i=0; i&lt;arr.length; i++) {
      *         write(arr[i]);
      *     }
      * </code>
      *
-     * @param arr
-     *      The array of bytes to be written.
+     * @param arr The array of bytes to be written.
      */
     public void write(final byte[] arr) {
         System.arraycopy(arr, 0, v, i, arr.length);
@@ -147,15 +154,13 @@ public final class WriteOnlyByteBuffer {
     }
 
     /**
-     * Writes the given array of ints with the current endianness. It is equivalent to doing
-     * <code>
+     * Writes the given array of ints with the current endianness. It is equivalent to doing <code>
      *     for (int i=0; i&lt;arr.length; i++) {
      *         write(arr[i]);
      *     }
      * </code>
      *
-     * @param arr
-     *      The array of ints to be written.
+     * @param arr The array of ints to be written.
      */
     public void write(final int... arr) {
         if (isLittleEndian) {
@@ -172,8 +177,7 @@ public final class WriteOnlyByteBuffer {
     /**
      * Returns a copy of the underlying array.
      *
-     * @return
-     *      A copy of the underlying array.
+     * @return A copy of the underlying array.
      */
     public byte[] array() {
         final byte[] w = new byte[v.length];

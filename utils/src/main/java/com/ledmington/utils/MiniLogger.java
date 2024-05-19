@@ -1,3 +1,20 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.utils;
 
 import java.io.PrintWriter;
@@ -6,8 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Personal implementation of a simple Logger
- * that mimics the behavior of the {@link java.util.logging.Logger} class.
+ * Personal implementation of a simple Logger that mimics the behavior of the {@link java.util.logging.Logger} class.
  */
 public final class MiniLogger {
 
@@ -19,38 +35,26 @@ public final class MiniLogger {
     private static LoggingLevel minimumLevel = LoggingLevel.DEBUG;
     private static final char NEWLINE = '\n';
 
-    /**
-     * Specifies the level for all MiniLoggers.
-     */
+    /** Specifies the level for all MiniLoggers. */
     public enum LoggingLevel {
-        /**
-         * The lowest level, useful for testing and debugging.
-         */
+        /** The lowest level, useful for testing and debugging. */
         DEBUG,
 
-        /**
-         * Generally used for logging basic stuff.
-         */
+        /** Generally used for logging basic stuff. */
         INFO,
 
-        /**
-         * Useful for logging unexpected changes at runtime.
-         */
+        /** Useful for logging unexpected changes at runtime. */
         WARNING,
 
-        /**
-         * Generally used for critical errors and exceptions. Cannot be disabled.
-         */
+        /** Generally used for critical errors and exceptions. Cannot be disabled. */
         ERROR
     }
 
     /**
      * Returns a new MiniLogger with the given name.
      *
-     * @param name
-     *      The name of the MiniLogger.
-     * @return
-     *      A new MiniLogger instance.
+     * @param name The name of the MiniLogger.
+     * @return A new MiniLogger instance.
      */
     public static MiniLogger getLogger(final String name) {
         Objects.requireNonNull(name);
@@ -63,8 +67,7 @@ public final class MiniLogger {
     /**
      * Sets the minimum logging level for all MiniLogger instances.
      *
-     * @param level
-     *      The new logging level.
+     * @param level The new logging level.
      */
     public static void setMinimumLevel(final LoggingLevel level) {
         Objects.requireNonNull(level);
@@ -74,9 +77,7 @@ public final class MiniLogger {
     /**
      * Allows to change Where the output will go.
      *
-     * @param pw
-     *      A non-null PrintWriter. Defaults to System.console().writer() if available,
-     *      otherwise System.out.
+     * @param pw A non-null PrintWriter. Defaults to System.console().writer() if available, otherwise System.out.
      */
     public static void setWriter(final PrintWriter pw) {
         stdout = Objects.requireNonNull(pw);
@@ -148,8 +149,7 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level DEBUG.
      *
-     * @param msg
-     *      The string to be printed.
+     * @param msg The string to be printed.
      */
     public void debug(final String msg) {
         if (minimumLevel != LoggingLevel.DEBUG) {
@@ -161,10 +161,8 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level DEBUG.
      *
-     * @param formatString
-     *      The string to be formatted.
-     * @param args
-     *      The arguments to be placed inside the string.
+     * @param formatString The string to be formatted.
+     * @param args The arguments to be placed inside the string.
      */
     public void debug(final String formatString, final Object... args) {
         if (minimumLevel != LoggingLevel.DEBUG) {
@@ -176,8 +174,7 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level INFO.
      *
-     * @param msg
-     *      The string to be printed.
+     * @param msg The string to be printed.
      */
     public void info(final String msg) {
         if (minimumLevel == LoggingLevel.WARNING || minimumLevel == LoggingLevel.ERROR) {
@@ -189,10 +186,8 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level INFO.
      *
-     * @param formatString
-     *      The string to be formatted.
-     * @param args
-     *      The arguments to be placed inside the string.
+     * @param formatString The string to be formatted.
+     * @param args The arguments to be placed inside the string.
      */
     public void info(final String formatString, final Object... args) {
         if (minimumLevel == LoggingLevel.WARNING || minimumLevel == LoggingLevel.ERROR) {
@@ -204,8 +199,7 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level WARNING.
      *
-     * @param msg
-     *      The string to be printed.
+     * @param msg The string to be printed.
      */
     public void warning(final String msg) {
         if (minimumLevel == LoggingLevel.ERROR) {
@@ -217,10 +211,8 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level WARNING.
      *
-     * @param formatString
-     *      The string to be formatted.
-     * @param args
-     *      The arguments to be placed inside the string.
+     * @param formatString The string to be formatted.
+     * @param args The arguments to be placed inside the string.
      */
     public void warning(final String formatString, final Object... args) {
         if (minimumLevel == LoggingLevel.ERROR) {
@@ -232,8 +224,7 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level ERROR.
      *
-     * @param msg
-     *      The string to be printed.
+     * @param msg The string to be printed.
      */
     public void error(final String msg) {
         log(msg, LoggingLevel.ERROR);
@@ -242,10 +233,8 @@ public final class MiniLogger {
     /**
      * Logs a message with logging level ERROR.
      *
-     * @param formatString
-     *      The string to be formatted.
-     * @param args
-     *      The arguments to be placed inside the string.
+     * @param formatString The string to be formatted.
+     * @param args The arguments to be placed inside the string.
      */
     public void error(final String formatString, final Object... args) {
         log(String.format(formatString, args), LoggingLevel.ERROR);
@@ -254,8 +243,7 @@ public final class MiniLogger {
     /**
      * Logs the given Throwable with logging level ERROR.
      *
-     * @param t
-     *      The Throwable to be logged.
+     * @param t The Throwable to be logged.
      */
     @SuppressWarnings("PMD.GuardLogStatement")
     public void error(final Throwable t) {

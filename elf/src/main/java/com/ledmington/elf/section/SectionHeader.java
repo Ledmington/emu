@@ -1,9 +1,23 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.elf.section;
 
-/**
- * This class is just a data holder.
- * No check is performed in the constructor on the given data.
- */
+/** This class is just a data holder. No check is performed in the constructor on the given data. */
 public final class SectionHeader {
 
     private final int nameOffset;
@@ -11,18 +25,15 @@ public final class SectionHeader {
     private final long flags;
 
     /**
-     * Contains the virtual address of the beginning of the section in
-     * memory. If the section is not allocated to the memory image of the
-     * program, this field should be zero.
+     * Contains the virtual address of the beginning of the section in memory. If the section is not allocated to the
+     * memory image of the program, this field should be zero.
      */
     private final long virtualAddress;
 
     private final long fileOffset;
 
     /**
-     * Size in bytes of the section.
-     * This is the amount of space occupied in the file, except for SHT_NO_BITS
-     * sections.
+     * Size in bytes of the section. This is the amount of space occupied in the file, except for SHT_NO_BITS sections.
      */
     private final long sectionSize;
 

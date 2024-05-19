@@ -1,3 +1,20 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.emu.mem;
 
 import java.util.Objects;
@@ -9,9 +26,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
 import com.ledmington.utils.MiniLogger;
 
-/**
- * This is the part of the memory which checks permissions
- */
+/** This is the part of the memory which checks permissions */
 public final class MemoryController implements Memory {
 
     private static final MiniLogger logger = MiniLogger.getLogger("mem");
@@ -26,21 +41,14 @@ public final class MemoryController implements Memory {
     }
 
     /**
-     * Sets the given permissions of the contiguous block of memory starting at
-     * {@code startBlockAddress} (inclusive) and ending at {@code endBlockAddress}
-     * (exclusive).
+     * Sets the given permissions of the contiguous block of memory starting at {@code startBlockAddress} (inclusive)
+     * and ending at {@code endBlockAddress} (exclusive).
      *
-     * @param startBlockAddress
-     *                          The start (inclusive) of the memory block.
-     * @param endBlockAddress
-     *                          The end (exclusive) of the memory block.
-     * @param readable
-     *                          If this block should be readable.
-     * @param writeable
-     *                          If this block should be writeable.
-     * @param executable
-     *                          If this block should be executable (i.e. containing
-     *                          code).
+     * @param startBlockAddress The start (inclusive) of the memory block.
+     * @param endBlockAddress The end (exclusive) of the memory block.
+     * @param readable If this block should be readable.
+     * @param writeable If this block should be writeable.
+     * @param executable If this block should be executable (i.e. containing code).
      */
     public void setPermissions(
             final long startBlockAddress,
@@ -94,10 +102,7 @@ public final class MemoryController implements Memory {
         return x;
     }
 
-    /**
-     * This behaves exactly like a normal read but check execute permissions instead
-     * of read permissions.
-     */
+    /** This behaves exactly like a normal read but check execute permissions instead of read permissions. */
     public byte readCode(final long address) {
         if (!canExecute.get(address)) {
             throw new IllegalArgumentException(
@@ -126,9 +131,7 @@ public final class MemoryController implements Memory {
         write(address + 7L, BitUtils.asByte(value));
     }
 
-    /**
-     * Loads the given section into memory without checking write permissions.
-     */
+    /** Loads the given section into memory without checking write permissions. */
     public void loadSection(final Section sec) {
         Objects.requireNonNull(sec);
 

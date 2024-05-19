@@ -1,3 +1,20 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.utils;
 
 import java.util.Collection;
@@ -5,14 +22,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An immutable wrapper for the {@link java.util.Map} interface. This means that
- * operations like put, putAll, clear, remove throw
- * UnsupportedOperationException.
+ * An immutable wrapper for the {@link java.util.Map} interface. This means that operations like put, putAll, clear,
+ * remove throw UnsupportedOperationException.
  *
- * @param <K>
- *            The type of the key objects.
- * @param <V>
- *            The type of the value objects.
+ * @param <K> The type of the key objects.
+ * @param <V> The type of the value objects.
  */
 public final class ImmutableMap<K, V> implements Map<K, V> {
 
@@ -23,17 +37,12 @@ public final class ImmutableMap<K, V> implements Map<K, V> {
     private final Map<K, V> m;
 
     /**
-     * Returns a new MapBuilder.
-     * Sometimes, the type inference system needs a hint about the type of this map
-     * like this:
+     * Returns a new MapBuilder. Sometimes, the type inference system needs a hint about the type of this map like this:
      * {@code ImmutableMap.<String,Integer>builder()}
      *
-     * @return
-     *         A new MapBuilder.
-     * @param <X>
-     *            The type of key objects.
-     * @param <Y>
-     *            The type of element objects.
+     * @return A new MapBuilder.
+     * @param <X> The type of key objects.
+     * @param <Y> The type of element objects.
      */
     public static <X, Y> MapBuilder<X, Y> builder() {
         return new MapBuilder<>();
@@ -42,8 +51,7 @@ public final class ImmutableMap<K, V> implements Map<K, V> {
     /**
      * Wraps the given Map with an Immutable interface.
      *
-     * @param m
-     *          The Map to be wrapped and used as Immutable.
+     * @param m The Map to be wrapped and used as Immutable.
      */
     public ImmutableMap(final Map<K, V> m) {
         this.m = m;

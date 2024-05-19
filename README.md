@@ -7,4 +7,3 @@ The project is divided as follows:
 - `id` : Instruction Decoder (currently only X86)
 - `breakdown` : utility for development of `id`
 - `utils` : various utility components
-

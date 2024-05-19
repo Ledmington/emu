@@ -1,93 +1,74 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.cpu.x86;
 
-/**
- * An x86 32-bit general-purpose register.
- */
+/** An x86 32-bit general-purpose register. */
 public final class Register32 extends Register {
 
-    /**
-     * The register EAX.
-     */
+    /** The register EAX. */
     public static final Register32 EAX = new Register32("eax");
 
-    /**
-     * The register EBX.
-     */
+    /** The register EBX. */
     public static final Register32 EBX = new Register32("ebx");
 
-    /**
-     * The register ECX.
-     */
+    /** The register ECX. */
     public static final Register32 ECX = new Register32("ecx");
 
-    /**
-     * The register EDX.
-     */
+    /** The register EDX. */
     public static final Register32 EDX = new Register32("edx");
 
-    /**
-     * The register ESI.
-     */
+    /** The register ESI. */
     public static final Register32 ESI = new Register32("esi");
 
-    /**
-     * The register EDI.
-     */
+    /** The register EDI. */
     public static final Register32 EDI = new Register32("edi");
 
-    /**
-     * The register ESP.
-     */
+    /** The register ESP. */
     public static final Register32 ESP = new Register32("esp");
 
-    /**
-     * The register EBP.
-     */
+    /** The register EBP. */
     public static final Register32 EBP = new Register32("ebp");
 
-    /**
-     * The register R8D.
-     */
+    /** The register R8D. */
     public static final Register32 R8D = new Register32("r8d");
 
-    /**
-     * The register R9D.
-     */
+    /** The register R9D. */
     public static final Register32 R9D = new Register32("r9d");
 
-    /**
-     * The register R10D.
-     */
+    /** The register R10D. */
     public static final Register32 R10D = new Register32("r10d");
 
-    /**
-     * The register R11D.
-     */
+    /** The register R11D. */
     public static final Register32 R11D = new Register32("r11d");
 
-    /**
-     * The register R12D.
-     */
+    /** The register R12D. */
     public static final Register32 R12D = new Register32("r12d");
 
-    /**
-     * The register R13D.
-     */
+    /** The register R13D. */
     public static final Register32 R13D = new Register32("r13d");
 
-    /**
-     * The register R14D.
-     */
+    /** The register R14D. */
     public static final Register32 R14D = new Register32("r14d");
 
-    /**
-     * The register R15D.
-     */
+    /** The register R15D. */
     public static final Register32 R15D = new Register32("r15d");
 
-    /**
-     * The instruction pointer register EIP.
-     */
+    /** The instruction pointer register EIP. */
     public static final Register32 EIP = new Register32("eip");
 
     private Register32(final String mnemonic) {

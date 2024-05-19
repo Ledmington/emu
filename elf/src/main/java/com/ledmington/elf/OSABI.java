@@ -1,11 +1,26 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.elf;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * The OS Application Binary Interface used for creating the ELF file.
- */
+/** The OS Application Binary Interface used for creating the ELF file. */
 public enum OSABI {
     SYSTEM_V((byte) 0x00, "System V"),
     HP_UX((byte) 0x01, "HP-UX"),
@@ -43,10 +58,8 @@ public enum OSABI {
     /**
      * Checks whether the given code corresponds to an existing OS ABI object.
      *
-     * @param code
-     *      The code to look for.
-     * @return
-     *      True if an OSABI object exists, false otherwise.
+     * @param code The code to look for.
+     * @return True if an OSABI object exists, false otherwise.
      */
     public static boolean isValid(final byte code) {
         return codeToABI.containsKey(code);
@@ -55,10 +68,8 @@ public enum OSABI {
     /**
      * Finds the OSABI object corresponding to the given code.
      *
-     * @param code
-     *      The code to look for.
-     * @return
-     *      The OSABI object.
+     * @param code The code to look for.
+     * @return The OSABI object.
      */
     public static OSABI fromCode(final byte code) {
         if (!codeToABI.containsKey(code)) {
@@ -78,8 +89,7 @@ public enum OSABI {
     /**
      * Hexadecimal 1-byte code.
      *
-     * @return
-     *      The code of this OSABI object.
+     * @return The code of this OSABI object.
      */
     public byte getCode() {
         return this.code;
@@ -88,8 +98,7 @@ public enum OSABI {
     /**
      * Name of the OS ABI.
      *
-     * @return
-     *      A String representation of this OS ABI object.
+     * @return A String representation of this OS ABI object.
      */
     public String getName() {
         return this.OSName;

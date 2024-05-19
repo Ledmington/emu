@@ -1,3 +1,20 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.elf;
 
 import java.util.Arrays;
@@ -6,14 +23,10 @@ import java.util.Objects;
 import com.ledmington.elf.section.Section;
 
 /**
- * This class is just a data holder.
- * No check (other than non-null) is performed in the constructor on the given
- * data.
- * <p>
- * References:
- * <a href="http://www.skyfree.org/linux/references/ELF_Format.pdf">32 bit</a>
- * and
- * <a href="https://uclibc.org/docs/elf-64-gen.pdf">64 bit</a>.
+ * This class is just a data holder. No check (other than non-null) is performed in the constructor on the given data.
+ *
+ * <p>References: <a href="http://www.skyfree.org/linux/references/ELF_Format.pdf">32 bit</a> and <a
+ * href="https://uclibc.org/docs/elf-64-gen.pdf">64 bit</a>.
  */
 public final class ELF {
 
@@ -24,12 +37,9 @@ public final class ELF {
     /**
      * Creates an ELF object.
      *
-     * @param fileHeader
-     *      The file header containing general information about the file.
-     * @param programHeaderTable
-     *      The program header table containing information about memory segments.
-     * @param sectionTable
-     *      The section table containing information about file sections.
+     * @param fileHeader The file header containing general information about the file.
+     * @param programHeaderTable The program header table containing information about memory segments.
+     * @param sectionTable The section table containing information about file sections.
      */
     public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section[] sectionTable) {
         this.fileHeader = Objects.requireNonNull(fileHeader);

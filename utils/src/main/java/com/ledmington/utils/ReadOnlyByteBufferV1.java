@@ -1,23 +1,36 @@
+/*
+* emu - Processor Emulator
+* Copyright (C) 2023-2024 Filippo Barbari <filippo.barbari@gmail.com>
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.ledmington.utils;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-/**
- * A buffer which allows reading with endianness. This implementation uses a
- * byte array.
- */
+/** A buffer which allows reading with endianness. This implementation uses a byte array. */
 public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     private final byte[] b;
     private long position;
 
     /**
-     * Creates a little-endian ReadOnlyByteBufferV1 with the given array. It is
-     * equivalent to calling {@code new ReadOnlyByteBuffer(b, false)}.
+     * Creates a little-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
+     * ReadOnlyByteBuffer(b, false)}.
      *
-     * @param b
-     *          The byte array ot be used.
+     * @param b The byte array ot be used.
      */
     public ReadOnlyByteBufferV1(final byte[] b) {
         this(b, false);
@@ -26,11 +39,8 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     /**
      * Creates a ReadOnlyByteBufferV1 with the given array and the given endianness.
      *
-     * @param b
-     *                       The byte array ot be used.
-     * @param isLittleEndian
-     *                       The endianness: true for little-endian, false for
-     *                       big-endian.
+     * @param b The byte array ot be used.
+     * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
      */
     public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian) {
         super(isLittleEndian);
