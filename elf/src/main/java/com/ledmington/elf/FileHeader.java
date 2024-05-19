@@ -23,7 +23,7 @@ import com.ledmington.utils.HashUtils;
 public final class FileHeader {
 
     private final boolean bits;
-    private final boolean isLittleEndian;
+    private final boolean endianness;
     private final byte version;
     private final OSABI osabi;
     private final byte ABIVersion;
@@ -59,7 +59,7 @@ public final class FileHeader {
             short nSectionHeaderTableEntries,
             short shstrtab_index) {
         this.bits = is32Bit;
-        this.isLittleEndian = isLittleEndian;
+        this.endianness = isLittleEndian;
         this.version = version;
         this.osabi = osabi;
         this.ABIVersion = ABIVersion;
@@ -79,6 +79,30 @@ public final class FileHeader {
 
     public boolean is32Bit() {
         return bits;
+    }
+
+    public boolean isLittleEndian() {
+        return endianness;
+    }
+
+    public OSABI getOSABI() {
+        return osabi;
+    }
+
+    public byte getABIVersion() {
+        return ABIVersion;
+    }
+
+    public ISA getISA() {
+        return isa;
+    }
+
+    public int getVersion() {
+        return 1;
+    }
+
+    public int getFlags() {
+        return flags;
     }
 
     public short getNumProgramHeaderTableEntries() {
@@ -113,48 +137,40 @@ public final class FileHeader {
         return entryPointVirtualAddress;
     }
 
+    public int getHeaderSize() {
+        return headerSize;
+    }
+
     @Override
     public String toString() {
-        return "Format               : " + (bits ? "32 bit" : "64 bit")
-                + "\nEndianness           : "
-                + (isLittleEndian ? "2's complement, little endian" : "2's complement, big endian")
-                + "\nVersion              : "
-                + version
-                + "\nOS ABI               : "
-                + osabi.getName()
-                + "\nABI version          : "
-                + ABIVersion
-                + "\nFile type            : "
-                + fileType.getName()
-                + "\nISA                  : "
-                + isa.getName()
-                + "\nEntry point address  : "
-                + String.format("0x%016x", entryPointVirtualAddress)
-                + "\nPHT offset           : "
-                + String.format("%,d (bytes into file)", programHeaderTableOffset)
-                + "\nSHT offset           : "
-                + String.format("%,d (bytes into file)", sectionHeaderTableOffset)
-                + "\nFlags                : "
-                + String.format("0x%08x", flags)
-                + "\nSize of this header  : "
-                + String.format("%,d (bytes)", headerSize)
-                + "\nPHTE size            : "
-                + String.format("%,d (bytes)", programHeaderTableEntrySize)
-                + "\nPHT entries          : "
-                + nProgramHeaderTableEntries
-                + "\nSHTE size            : "
-                + String.format("%,d (bytes)", sectionHeaderTableEntrySize)
-                + "\nSHT entries          : "
-                + nSectionHeaderTableEntries
-                + "\nSHTE names idx       : "
-                + shstrtab_index;
+        return "FileHeader(bits=" + bits + ";endianness="
+                + endianness + ";version="
+                + version + ";OSABI="
+                + osabi + ";ABIVersion="
+                + ABIVersion + ";fileType="
+                + fileType + ";isa="
+                + isa + ";entryPointVirtualAddress="
+                + entryPointVirtualAddress + ";programHeaderTableOffset="
+                + programHeaderTableOffset + ";sectionHeaderTableOffset="
+                + sectionHeaderTableOffset + ";flags="
+                + flags + ";headerSize="
+                + headerSize + ";programHeaderTableEntrySize="
+                + programHeaderTableEntrySize + ";nProgramHeaderTableEntries="
+                + nProgramHeaderTableEntries + ";sectionHeaderTableEntrySize="
+                + sectionHeaderTableEntrySize + ";nSectionHeaderTableEntries="
+                + nSectionHeaderTableEntries + ";shstrtab_index="
+                + shstrtab_index + ')';
+    }
+
+    public int getSectionHeaderStringTableIndex() {
+        return shstrtab_index;
     }
 
     @Override
     public int hashCode() {
         int h = 17;
         h = 31 * h + HashUtils.hash(bits);
-        h = 31 * h + HashUtils.hash(isLittleEndian);
+        h = 31 * h + HashUtils.hash(endianness);
         h = 31 * h + HashUtils.hash(version);
         h = 31 * h + osabi.hashCode();
         h = 31 * h + HashUtils.hash(ABIVersion);
@@ -186,7 +202,7 @@ public final class FileHeader {
         }
         final FileHeader fh = (FileHeader) other;
         return this.bits == fh.bits
-                && this.isLittleEndian == fh.isLittleEndian
+                && this.endianness == fh.endianness
                 && this.version == fh.version
                 && this.osabi.equals(fh.osabi)
                 && this.ABIVersion == fh.ABIVersion

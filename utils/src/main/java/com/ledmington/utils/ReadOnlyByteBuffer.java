@@ -101,8 +101,9 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final short read2LE() {
         short x = (short) 0x0000;
-        x |= BitUtils.asShort(read1());
-        x |= BitUtils.asShort(read1() << 8);
+        x |= BitUtils.asShort(read());
+        x |= BitUtils.asShort(read() << 8);
+        setPosition(getPosition() + 2L);
         return x;
     }
 
@@ -113,8 +114,9 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final short read2BE() {
         short x = (short) 0x0000;
-        x |= BitUtils.asShort(read1() << 8);
-        x |= BitUtils.asShort(read1());
+        x |= BitUtils.asShort(read() << 8);
+        x |= BitUtils.asShort(read());
+        setPosition(getPosition() + 2L);
         return x;
     }
 
@@ -134,10 +136,11 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final int read4LE() {
         int x = 0x00000000;
-        x |= (BitUtils.asInt(read1()) << 24);
-        x |= (BitUtils.asInt(read1()) << 16);
-        x |= (BitUtils.asInt(read1()) << 8);
-        x |= BitUtils.asInt(read1());
+        x |= (BitUtils.asInt(read()) << 24);
+        x |= (BitUtils.asInt(read()) << 16);
+        x |= (BitUtils.asInt(read()) << 8);
+        x |= BitUtils.asInt(read());
+        setPosition(getPosition() + 4L);
         return x;
     }
 
@@ -148,10 +151,11 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final int read4BE() {
         int x = 0x00000000;
-        x |= BitUtils.asInt(read1());
-        x |= (BitUtils.asInt(read1()) << 8);
-        x |= (BitUtils.asInt(read1()) << 16);
-        x |= (BitUtils.asInt(read1()) << 24);
+        x |= BitUtils.asInt(read());
+        x |= (BitUtils.asInt(read()) << 8);
+        x |= (BitUtils.asInt(read()) << 16);
+        x |= (BitUtils.asInt(read()) << 24);
+        setPosition(getPosition() + 4L);
         return x;
     }
 
@@ -171,14 +175,15 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final long read8LE() {
         long x = 0x0000000000000000L;
-        x |= (BitUtils.asLong(read1()) << 56);
-        x |= (BitUtils.asLong(read1()) << 48);
-        x |= (BitUtils.asLong(read1()) << 40);
-        x |= (BitUtils.asLong(read1()) << 32);
-        x |= (BitUtils.asLong(read1()) << 24);
-        x |= (BitUtils.asLong(read1()) << 16);
-        x |= (BitUtils.asLong(read1()) << 8);
-        x |= BitUtils.asLong(read1());
+        x |= (BitUtils.asLong(read()) << 56);
+        x |= (BitUtils.asLong(read()) << 48);
+        x |= (BitUtils.asLong(read()) << 40);
+        x |= (BitUtils.asLong(read()) << 32);
+        x |= (BitUtils.asLong(read()) << 24);
+        x |= (BitUtils.asLong(read()) << 16);
+        x |= (BitUtils.asLong(read()) << 8);
+        x |= BitUtils.asLong(read());
+        setPosition(getPosition() + 8L);
         return x;
     }
 
@@ -189,14 +194,15 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final long read8BE() {
         long x = 0x0000000000000000L;
-        x |= BitUtils.asLong(read1());
-        x |= (BitUtils.asLong(read1()) << 8);
-        x |= (BitUtils.asLong(read1()) << 16);
-        x |= (BitUtils.asLong(read1()) << 24);
-        x |= (BitUtils.asLong(read1()) << 32);
-        x |= (BitUtils.asLong(read1()) << 40);
-        x |= (BitUtils.asLong(read1()) << 48);
-        x |= (BitUtils.asLong(read1()) << 56);
+        x |= BitUtils.asLong(read());
+        x |= (BitUtils.asLong(read()) << 8);
+        x |= (BitUtils.asLong(read()) << 16);
+        x |= (BitUtils.asLong(read()) << 24);
+        x |= (BitUtils.asLong(read()) << 32);
+        x |= (BitUtils.asLong(read()) << 40);
+        x |= (BitUtils.asLong(read()) << 48);
+        x |= (BitUtils.asLong(read()) << 56);
+        setPosition(getPosition() + 8L);
         return x;
     }
 }

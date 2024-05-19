@@ -65,7 +65,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     @Override
     public String toString() {
-        return "ByteBuffer[b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE + "]";
+        return "ByteBuffer(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE + ")";
     }
 
     @Override

@@ -80,7 +80,7 @@ public final class ELFParser {
             throw new IllegalArgumentException(
                     String.format("Invalid endianness, expected 1 or 2 but was %,d (0x%02x)", endianness, endianness));
         }
-        final boolean isLittleEndian = endianness == 1;
+        final boolean isLittleEndian = (endianness == 1);
         b.setEndianness(isLittleEndian);
 
         final byte ELFVersion = b.read1();
@@ -119,7 +119,7 @@ public final class ELFParser {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF e_version, expected 1 but was %,d (0x%08x)", ELFVersion_2, ELFVersion_2));
         }
-        if (ELFVersion != ELFVersion_2) {
+        if (BitUtils.asInt(ELFVersion) != ELFVersion_2) {
             throw new IllegalArgumentException(String.format(
                     "ERROR: wrong ELF version, expected to be equal to EI_VERSION byte but was %,d (0x%08x)",
                     ELFVersion_2, ELFVersion_2));
