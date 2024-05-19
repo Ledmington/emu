@@ -22,5 +22,5 @@ public abstract class LoadableSection extends Section {
         super(name, sectionHeader);
     }
 
-    public abstract byte[] content();
+    public abstract byte[] getContent();
 }

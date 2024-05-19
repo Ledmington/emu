@@ -31,8 +31,8 @@ public final class GnuVersionSection extends LoadableSection {
     public GnuVersionSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         super(name, sectionHeader);
 
-        b.setPosition((int) sectionHeader.fileOffset());
-        final int nEntries = (int) (sectionHeader.sectionSize() / 2);
+        b.setPosition((int) sectionHeader.getFileOffset());
+        final int nEntries = (int) (sectionHeader.getSectionSize() / 2);
         this.versions = new short[nEntries];
         for (int i = 0; i < nEntries; i++) {
             versions[i] = b.read2();
@@ -40,7 +40,7 @@ public final class GnuVersionSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(versions.length * 2);
         for (final short version : versions) {
             bb.write(version);

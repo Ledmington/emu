@@ -15,19 +15,20 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.elf.section;
+package com.ledmington.elf;
 
-/**
- * Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
- * Paragraph 2.7.4.
- */
-public final class GnuVersionRequirementsSection extends LoadableSection {
-    public GnuVersionRequirementsSection(final String name, final SectionHeader sectionHeader) {
-        super(name, sectionHeader);
-    }
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-    @Override
-    public byte[] getContent() {
-        throw new Error("Not implemented");
+import org.junit.jupiter.api.Test;
+
+final class TestISA {
+    @Test
+    void allABIAreValid() {
+        for (final ISA isa : ISA.values()) {
+            assertTrue(
+                    ISA.isValid(isa.getCode()),
+                    () -> String.format(
+                            "Expected ISA object %s with code 0x%04x to be valid but wasn't", isa, isa.getCode()));
+        }
     }
 }

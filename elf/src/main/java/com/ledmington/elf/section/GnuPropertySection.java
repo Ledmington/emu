@@ -23,7 +23,7 @@ public final class GnuPropertySection extends NoteSection {
     public GnuPropertySection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
         super(name, entry, b);
 
-        if (this.owner.length() != 4 || !this.owner.equals("GNU\0")) {
+        if (this.owner.length() != 4 || !"GNU\0".equals(this.owner)) {
             throw new IllegalArgumentException(String.format(
                     "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", this.owner));
         }

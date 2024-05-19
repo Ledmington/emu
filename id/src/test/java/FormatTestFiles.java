@@ -17,11 +17,12 @@
 */
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,11 +30,13 @@ import java.util.Set;
 
 public final class FormatTestFiles {
 
+    private static final PrintWriter out = System.console().writer();
+
     private record TestCase(String mnemonic, String hex) {}
 
     public static void main(final String[] args) {
         if (args.length > 0) {
-            System.out.println("Command-line arguments were provided but not needed. Ignoring them.");
+            out.println("Command-line arguments were provided but not needed. Ignoring them.");
         }
 
         final String testInputFileName = "x86.test.asm";
@@ -55,8 +58,7 @@ public final class FormatTestFiles {
          */
         final List<Set<String>> lines = new ArrayList<>();
 
-        try (final BufferedReader br =
-                new BufferedReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_8))) {
+        try (final BufferedReader br = Files.newBufferedReader(Path.of(filepath), StandardCharsets.UTF_8)) {
             int lineIndex = 0;
             boolean isGroupEnded = false;
             for (String line = br.readLine(); line != null; line = br.readLine(), lineIndex++) {
@@ -99,7 +101,7 @@ public final class FormatTestFiles {
             throw new RuntimeException(e);
         }
 
-        System.out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
+        out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
 
         final List<String> allLines = new ArrayList<>();
 

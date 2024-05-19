@@ -28,7 +28,7 @@ public final class X86RegisterFile {
     private final long[] gpr = new long[16];
 
     // instruction pointer
-    private long rip = 0L;
+    private long rip;
 
     public X86RegisterFile() {}
 

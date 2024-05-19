@@ -26,8 +26,8 @@ public final class StringTableSection extends LoadableSection {
     public StringTableSection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
         super(name, entry);
 
-        final int start = (int) entry.fileOffset();
-        final int size = (int) entry.sectionSize();
+        final int start = (int) entry.getFileOffset();
+        final int size = (int) entry.getSectionSize();
         b.setPosition(start);
         this.table = new char[size];
         for (int i = 0; i < size; i++) {
@@ -36,7 +36,7 @@ public final class StringTableSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final byte[] v = new byte[table.length];
         for (int i = 0; i < table.length; i++) {
             v[i] = (byte) table[i];

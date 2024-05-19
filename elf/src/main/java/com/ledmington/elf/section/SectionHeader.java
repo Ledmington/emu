@@ -65,27 +65,27 @@ public final class SectionHeader {
         this.entrySize = entrySize;
     }
 
-    public int nameOffset() {
+    public int getNameOffset() {
         return nameOffset;
     }
 
-    public long fileOffset() {
+    public long getFileOffset() {
         return fileOffset;
     }
 
-    public long sectionSize() {
+    public long getSectionSize() {
         return sectionSize;
     }
 
-    public SectionHeaderType type() {
+    public SectionHeaderType getType() {
         return type;
     }
 
-    public long entrySize() {
+    public long getEntrySize() {
         return entrySize;
     }
 
-    public long virtualAddress() {
+    public long getVirtualAddress() {
         return virtualAddress;
     }
 

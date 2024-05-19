@@ -21,13 +21,13 @@ import java.util.Objects;
 
 public final class IndirectOperandBuilder {
 
-    private Register baseRegister = null;
-    private Integer c = null;
-    private Register indexRegister = null;
-    private Long displacement = null;
+    private Register baseRegister;
+    private Integer c;
+    private Register indexRegister;
+    private Long displacement;
     private DisplacementType displacementType = DisplacementType.LONG;
-    private PointerSize ptrSize = null;
-    private boolean alreadyBuilt = false;
+    private PointerSize ptrSize;
+    private boolean alreadyBuilt;
 
     public IndirectOperandBuilder() {}
 

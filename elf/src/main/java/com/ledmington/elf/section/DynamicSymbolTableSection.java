@@ -31,10 +31,10 @@ public final class DynamicSymbolTableSection extends LoadableSection {
         super(name, entry);
         this.is32Bit = is32Bit;
 
-        final int start = (int) entry.fileOffset();
-        final int size = (int) entry.sectionSize();
+        final int start = (int) entry.getFileOffset();
+        final int size = (int) entry.getSectionSize();
         b.setPosition(start);
-        final int symtabEntrySize = (int) entry.entrySize(); // 16 bytes for 32-bits, 24 bytes for 64-bits
+        final int symtabEntrySize = (int) entry.getEntrySize(); // 16 bytes for 32-bits, 24 bytes for 64-bits
 
         final int nEntries = size / symtabEntrySize;
         this.symbolTable = new SymbolTableEntry[nEntries];
@@ -44,7 +44,7 @@ public final class DynamicSymbolTableSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(symbolTable.length * (is32Bit ? 16 : 24));
         for (final SymbolTableEntry ste : symbolTable) {
             if (is32Bit) {

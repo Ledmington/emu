@@ -62,11 +62,11 @@ public final class PHTEntryType {
             }
             if (code >= PT_LOPROC.getCode() && code <= PT_HIPROC.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(code, String.format("0x%08x (OS specific)", code), false);
+                return new PHTEntryType(code, String.format("0x%08x (Processor specific)", code), false);
             }
             if (code >= PT_LOUSER.getCode() && code <= PT_HIUSER.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(code, String.format("0x%08x (OS specific)", code), false);
+                return new PHTEntryType(code, String.format("0x%08x (Application specific)", code), false);
             }
             throw new IllegalArgumentException(String.format("Unknown ELF PHT entry type identifier: 0x%02x", code));
         }

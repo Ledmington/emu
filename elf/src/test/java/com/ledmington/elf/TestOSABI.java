@@ -21,11 +21,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public final class TestOSABI {
+final class TestOSABI {
     @Test
     void allABIAreValid() {
         for (final OSABI abi : OSABI.values()) {
-            assertTrue(OSABI.isValid(abi.getCode()));
+            assertTrue(
+                    OSABI.isValid(abi.getCode()),
+                    () -> String.format(
+                            "Expected OS ABI object %s with code 0x%02x to be valid but wasn't", abi, abi.getCode()));
         }
     }
 }

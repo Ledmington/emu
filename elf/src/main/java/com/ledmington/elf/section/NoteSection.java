@@ -31,7 +31,7 @@ public sealed class NoteSection extends LoadableSection permits GnuPropertySecti
     public NoteSection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
         super(name, entry);
 
-        b.setPosition((int) entry.fileOffset());
+        b.setPosition((int) entry.getFileOffset());
 
         /*
          * TODO: For some reason, even though on the ELF64 reference says that the
@@ -57,7 +57,7 @@ public sealed class NoteSection extends LoadableSection permits GnuPropertySecti
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(4 + 4 + 4 + ownerBytes.length + descriptionBytes.length);
         bb.write(ownerBytes.length);
         bb.write(descriptionBytes.length);

@@ -31,8 +31,8 @@ public final class RelocationAddendSection extends LoadableSection {
         super(name, sectionHeader);
 
         this.is32Bit = is32Bit;
-        b.setPosition((int) sectionHeader.fileOffset());
-        final int nEntries = (int) (sectionHeader.sectionSize() / sectionHeader.entrySize());
+        b.setPosition((int) sectionHeader.getFileOffset());
+        final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
         this.relocationAddendTable = new RelocationAddendEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
             final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
@@ -43,7 +43,7 @@ public final class RelocationAddendSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(relocationAddendTable.length * (is32Bit ? 12 : 24));
         for (final RelocationAddendEntry relocationAddendEntry : relocationAddendTable) {
             if (is32Bit) {

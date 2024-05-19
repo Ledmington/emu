@@ -73,15 +73,15 @@ public final class Emulator {
     }
 
     public void run() {
-        if (elf.fileHeader().getFileType() != FileType.ET_EXEC
-                && elf.fileHeader().getFileType() != FileType.ET_DYN) {
+        if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
+                && elf.getFileHeader().getFileType() != FileType.ET_DYN) {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-                    elf.fileHeader().getFileType()));
+                    elf.getFileHeader().getFileType()));
         }
 
-        this.instructionFetcher.setPosition(elf.fileHeader().getEntryPointVirtualAddress());
-        logger.debug("Entry point virtual address : 0x%x", elf.fileHeader().getEntryPointVirtualAddress());
+        this.instructionFetcher.setPosition(elf.getFileHeader().getEntryPointVirtualAddress());
+        logger.debug("Entry point virtual address : 0x%x", elf.getFileHeader().getEntryPointVirtualAddress());
 
         loadELF();
 
@@ -91,8 +91,9 @@ public final class Emulator {
 
         // setup stack
         final long allocatedMemory = 100_000_000L; // 100 MB
-        final long highestAddress = Arrays.stream(elf.sections())
-                .map(sec -> sec.getHeader().virtualAddress() + sec.getHeader().sectionSize())
+        final long highestAddress = Arrays.stream(elf.getSectionTable())
+                .map(sec ->
+                        sec.getHeader().getVirtualAddress() + sec.getHeader().getSectionSize())
                 .max(Long::compare)
                 .orElseThrow();
         logger.debug(
@@ -129,17 +130,16 @@ public final class Emulator {
                 case AND -> {
                     switch (inst.firstOperand()) {
                         case IndirectOperand io -> {
-                            final long result = computeIndirectOperand(io);
+                            // final long result = computeIndirectOperand(io);
                             throw new Error("Not implemented");
                         }
                         case Register r -> {
-                            switch (r.bits()) {
-                                case 64 -> {
-                                    final Register64 r64 = (Register64) r;
-                                    final long imm64 = ((Immediate) inst.secondOperand()).asLong();
-                                    regFile.set(r64, regFile.get(r64) & imm64);
-                                }
-                                default -> throw new IllegalArgumentException(
+                            if (r.bits() == 64) {
+                                final Register64 r64 = (Register64) r;
+                                final long imm64 = ((Immediate) inst.secondOperand()).asLong();
+                                regFile.set(r64, regFile.get(r64) & imm64);
+                            } else {
+                                throw new IllegalArgumentException(
                                         String.format("Don't know what to do when AND has %,d bits", r.bits()));
                             }
                         }
@@ -195,14 +195,14 @@ public final class Emulator {
 
     private void loadELF() {
         logger.debug("Loading ELF segments into memory");
-        for (final PHTEntry phte : elf.programHeader()) {
-            if (phte.type() != PHTEntryType.PT_LOAD) {
+        for (final PHTEntry phte : elf.getProgramHeaderTable()) {
+            if (phte.getType() != PHTEntryType.PT_LOAD) {
                 // This segment is not loadable
                 continue;
             }
 
-            final long start = phte.segmentVirtualAddress();
-            final long end = phte.segmentVirtualAddress() + phte.segmentMemorySize() - 1;
+            final long start = phte.getSegmentVirtualAddress();
+            final long end = phte.getSegmentVirtualAddress() + phte.getSegmentMemorySize() - 1;
             logger.debug(
                     "Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
                     start,
@@ -215,8 +215,8 @@ public final class Emulator {
         }
 
         logger.debug("Loading ELF sections into memory");
-        for (final Section sec : elf.sections()) {
-            if (sec.getHeader().sectionSize() != 0) {
+        for (final Section sec : elf.getSectionTable()) {
+            if (sec.getHeader().getSectionSize() != 0) {
                 mem.loadSection(sec);
             }
         }

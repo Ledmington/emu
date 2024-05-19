@@ -62,3 +62,5 @@ tasks.register('fatJar', Jar) {
         printf "Fat jar size: %.3f MB\n", new File(fatJarPath).length() / 1_000_000L
     }
 }
+
+tasks.build.dependsOn(fatJar)

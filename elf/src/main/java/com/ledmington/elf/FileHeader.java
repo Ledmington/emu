@@ -22,7 +22,7 @@ import com.ledmington.utils.HashUtils;
 /** This class is just a data holder. No check is performed in the constructor on the given data. */
 public final class FileHeader {
 
-    private final boolean is32Bit;
+    private final boolean bits;
     private final boolean isLittleEndian;
     private final byte version;
     private final OSABI osabi;
@@ -58,7 +58,7 @@ public final class FileHeader {
             short sectionHeaderTableEntrySize,
             short nSectionHeaderTableEntries,
             short shstrtab_index) {
-        this.is32Bit = is32Bit;
+        this.bits = is32Bit;
         this.isLittleEndian = isLittleEndian;
         this.version = version;
         this.osabi = osabi;
@@ -78,7 +78,7 @@ public final class FileHeader {
     }
 
     public boolean is32Bit() {
-        return is32Bit;
+        return bits;
     }
 
     public short getNumProgramHeaderTableEntries() {
@@ -115,7 +115,7 @@ public final class FileHeader {
 
     @Override
     public String toString() {
-        return "Format               : " + (is32Bit ? "32 bit" : "64 bit")
+        return "Format               : " + (bits ? "32 bit" : "64 bit")
                 + "\nEndianness           : "
                 + (isLittleEndian ? "2's complement, little endian" : "2's complement, big endian")
                 + "\nVersion              : "
@@ -153,7 +153,7 @@ public final class FileHeader {
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + HashUtils.hash(is32Bit);
+        h = 31 * h + HashUtils.hash(bits);
         h = 31 * h + HashUtils.hash(isLittleEndian);
         h = 31 * h + HashUtils.hash(version);
         h = 31 * h + osabi.hashCode();
@@ -185,7 +185,7 @@ public final class FileHeader {
             return false;
         }
         final FileHeader fh = (FileHeader) other;
-        return this.is32Bit == fh.is32Bit
+        return this.bits == fh.bits
                 && this.isLittleEndian == fh.isLittleEndian
                 && this.version == fh.version
                 && this.osabi.equals(fh.osabi)

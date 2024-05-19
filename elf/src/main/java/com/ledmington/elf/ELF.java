@@ -41,37 +41,38 @@ public final class ELF {
      * @param programHeaderTable The program header table containing information about memory segments.
      * @param sectionTable The section table containing information about file sections.
      */
-    public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section[] sectionTable) {
+    public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section... sectionTable) {
         this.fileHeader = Objects.requireNonNull(fileHeader);
         this.programHeaderTable = Objects.requireNonNull(programHeaderTable);
         this.sectionTable = Objects.requireNonNull(sectionTable);
     }
 
-    public FileHeader fileHeader() {
+    public FileHeader getFileHeader() {
         return fileHeader;
     }
 
-    public PHTEntry[] programHeader() {
-        return programHeaderTable;
+    public PHTEntry[] getProgramHeaderTable() {
+        final PHTEntry[] v = new PHTEntry[programHeaderTable.length];
+        System.arraycopy(programHeaderTable, 0, v, 0, programHeaderTable.length);
+        return v;
     }
 
-    public Section[] sections() {
-        return sectionTable;
+    public Section[] getSectionTable() {
+        final Section[] v = new Section[sectionTable.length];
+        System.arraycopy(sectionTable, 0, v, 0, sectionTable.length);
+        return v;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(1_000);
-        sb.append(" --- File Header --- \n")
-                .append(fileHeader)
-                .append('\n')
-                .append(" --- Program Header Table --- \n\n");
+        sb.append(" --- File Header --- \n").append(fileHeader).append("\n --- Program Header Table --- \n\n");
         for (int i = 0; i < programHeaderTable.length; i++) {
             sb.append(String.format("PHT entry n.%,d\n", i))
                     .append(programHeaderTable[i].toString())
                     .append('\n');
         }
-        sb.append(" --- End of Program Header Table --- \n\n").append(" --- Section Table --- \n\n");
+        sb.append(" --- End of Program Header Table --- \n\n --- Section Table --- \n\n");
         for (int i = 0; i < sectionTable.length; i++) {
             sb.append(String.format("Section n.%,d\n", i))
                     .append(sectionTable[i].toString())

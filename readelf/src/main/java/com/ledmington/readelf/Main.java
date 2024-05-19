@@ -17,8 +17,13 @@
 */
 package com.ledmington.readelf;
 
+import java.io.PrintWriter;
+
 public final class Main {
+
+    private static final PrintWriter out = System.console().writer();
+
     public static void main(final String[] args) {
-        System.out.println("Hello world!");
+        out.println("Hello world!");
     }
 }

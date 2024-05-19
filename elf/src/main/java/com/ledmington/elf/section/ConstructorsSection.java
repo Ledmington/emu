@@ -23,7 +23,7 @@ public final class ConstructorsSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
-        return new byte[0];
+    public byte[] getContent() {
+        throw new Error("Not implemented");
     }
 }

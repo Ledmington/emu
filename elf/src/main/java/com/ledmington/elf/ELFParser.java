@@ -62,7 +62,8 @@ public final class ELFParser {
 
     private static FileHeader parseFileHeader() {
         final int magicNumber = b.read4LE();
-        if (magicNumber != 0x7f454c46) {
+        final int ELF_MAGIC_NUMBER = 0x7f454c46;
+        if (magicNumber != ELF_MAGIC_NUMBER) {
             throw new IllegalArgumentException(
                     String.format("Invalid magic number, expected 0x7f454c46 but was 0x%08x", magicNumber));
         }
@@ -295,13 +296,13 @@ public final class ELFParser {
         return sectionHeaderTable;
     }
 
-    private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader[] sectionHeaderTable) {
+    private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
         final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
-        final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].fileOffset();
+        final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].getFileOffset();
         for (int k = 0; k < sectionHeaderTable.length; k++) {
             final SectionHeader entry = sectionHeaderTable[k];
-            b.setPosition(shstr_offset + entry.nameOffset());
+            b.setPosition(shstr_offset + entry.getNameOffset());
 
             final StringBuilder sb = new StringBuilder();
             char c = (char) b.read1();
@@ -311,27 +312,27 @@ public final class ELFParser {
             }
             final String name = sb.toString();
 
-            final String typeName = entry.type().getName();
+            final String typeName = entry.getType().getName();
             logger.debug("Parsing %s (%s)", name, typeName);
 
             if (typeName.equals(SectionHeaderType.SHT_NULL.getName())) {
                 sectionTable[k] = new NullSection(entry);
-            } else if (name.equals(".symtab") || typeName.equals(SectionHeaderType.SHT_SYMTAB.getName())) {
+            } else if (".symtab".equals(name) || typeName.equals(SectionHeaderType.SHT_SYMTAB.getName())) {
                 sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
-            } else if (name.equals(".shstrtab")
-                    || name.equals(".strtab")
+            } else if (".shstrtab".equals(name)
+                    || ".strtab".equals(name)
                     || typeName.equals(SectionHeaderType.SHT_STRTAB.getName())) {
                 sectionTable[k] = new StringTableSection(name, entry, b);
-            } else if (name.equals(".dynsym") || typeName.equals(SectionHeaderType.SHT_DYNSYM.getName())) {
+            } else if (".dynsym".equals(name) || typeName.equals(SectionHeaderType.SHT_DYNSYM.getName())) {
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
-                sectionTable[k] = name.equals(".note.gnu.property")
+                sectionTable[k] = ".note.gnu.property".equals(name)
                         ? new GnuPropertySection(name, entry, b)
                         : new NoteSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {
-                sectionTable[k] = name.equals(".interp")
+                sectionTable[k] = ".interp".equals(name)
                         ? new InterpreterPathSection(name, entry, b)
                         : new ProgBitsSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.getName())) {
@@ -342,9 +343,9 @@ public final class ELFParser {
                 sectionTable[k] = new RelocationAddendSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.getName())) {
                 sectionTable[k] = new RelocationSection(name, entry, b, fileHeader.is32Bit());
-            } else if (name.equals(".gnu.version")) {
+            } else if (".gnu.version".equals(name)) {
                 sectionTable[k] = new GnuVersionSection(name, entry, b);
-            } else if (name.equals(".gnu.version_r")) {
+            } else if (".gnu.version_r".equals(name)) {
                 sectionTable[k] = new GnuVersionRequirementsSection(name, entry);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, entry);

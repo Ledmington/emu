@@ -31,9 +31,9 @@ public final class DynamicSection extends LoadableSection {
         super(name, sectionHeader);
 
         this.is32Bit = is32Bit;
-        b.setPosition((int) sectionHeader.fileOffset());
+        b.setPosition((int) sectionHeader.getFileOffset());
         final int entrySize = is32Bit ? 8 : 16;
-        final int nEntries = (int) sectionHeader.sectionSize() / entrySize;
+        final int nEntries = (int) sectionHeader.getSectionSize() / entrySize;
 
         final DynamicTableEntry[] tmp = new DynamicTableEntry[nEntries];
         int i = 0;
@@ -53,14 +53,14 @@ public final class DynamicSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(dynamicTable.length * (is32Bit ? 8 : 16));
         for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
             if (is32Bit) {
-                bb.write(BitUtils.asInt(dynamicTableEntry.getTag().code()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.getTag().getCode()));
                 bb.write(BitUtils.asInt(dynamicTableEntry.getContent()));
             } else {
-                bb.write(dynamicTableEntry.getTag().code());
+                bb.write(dynamicTableEntry.getTag().getCode());
                 bb.write(dynamicTableEntry.getContent());
             }
         }

@@ -40,6 +40,7 @@ public final class InstructionDecoder {
     private static final byte MULTIBYTE_OPCODE_PREFIX = (byte) 0x0f;
     private static final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
     private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
+    private static final byte MODRM_MOD_NO_DISP = (byte) 0b00000011;
 
     private final ReadOnlyByteBuffer b;
 
@@ -114,7 +115,7 @@ public final class InstructionDecoder {
         return switch (modrm.reg()) {
             case 0 -> new Instruction(
                     Opcode.INC,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             pref.hasOperandSizeOverridePrefix()
@@ -125,7 +126,7 @@ public final class InstructionDecoder {
                                     Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()), pref.hasRexPrefix()));
             case 1 -> new Instruction(
                     Opcode.DEC,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             pref.hasOperandSizeOverridePrefix()
@@ -147,7 +148,7 @@ public final class InstructionDecoder {
         return switch (modrm.reg()) {
             case 0b00000000 -> new Instruction(
                     Opcode.INC,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             pref.hasOperandSizeOverridePrefix()
@@ -163,7 +164,7 @@ public final class InstructionDecoder {
                                     pref.hasOperandSizeOverridePrefix()));
             case 0b00000001 -> new Instruction(
                     Opcode.DEC,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             pref.hasOperandSizeOverridePrefix()
@@ -184,7 +185,7 @@ public final class InstructionDecoder {
                         !pref.hasAddressSizeOverridePrefix(),
                         pref.rex().ModRMRMExtension(),
                         false);
-                yield (modrm.mod() != 0b00000011) // indirect operand needed
+                yield (modrm.mod() != MODRM_MOD_NO_DISP) // indirect operand needed
                         ? (new Instruction(
                                 Opcode.CALL,
                                 parseIndirectOperand(pref, modrm)
@@ -206,7 +207,7 @@ public final class InstructionDecoder {
                             .build());
             case 0b00000100 -> new Instruction(
                     Opcode.JMP,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             pref.hasOperandSizeOverridePrefix()
@@ -218,7 +219,7 @@ public final class InstructionDecoder {
                                     pref.rex().ModRMRMExtension(), false));
             case 0b00000101 -> new Instruction(
                     Opcode.JMP,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             pref.hasAddressSizeOverridePrefix()
@@ -247,7 +248,7 @@ public final class InstructionDecoder {
 
         final boolean isRegister8Bit = opcodeFirstByte == (byte) 0xf6;
 
-        final boolean isIndirectOperandNeeded = modrm.mod() != 0b00000011;
+        final boolean isIndirectOperandNeeded = modrm.mod() != MODRM_MOD_NO_DISP;
 
         return switch (modrm.reg()) {
             case 0b000 -> new Instruction(
@@ -290,7 +291,7 @@ public final class InstructionDecoder {
             }
             case 0b00000100 -> new Instruction(
                     Opcode.MUL,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             (opcodeFirstByte == (byte) 0xf6)
@@ -314,7 +315,7 @@ public final class InstructionDecoder {
                                             pref.hasOperandSizeOverridePrefix())));
             case 0b00000110 -> new Instruction(
                     Opcode.DIV,
-                    (modrm.mod() != 0b00000011)
+                    (modrm.mod() != MODRM_MOD_NO_DISP)
                             ? parseIndirectOperand(pref, modrm)
                                     .pointer(
                                             (opcodeFirstByte == (byte) 0xf6)
@@ -498,7 +499,7 @@ public final class InstructionDecoder {
     private Instruction parseExtendedOpcodeGroup7(final byte opcodeFirstByte, final byte opcodeSecondByte) {
         final ModRM modrm = modrm();
 
-        if (modrm.mod() == 0b00000011) {
+        if (modrm.mod() == MODRM_MOD_NO_DISP) {
             if (modrm.reg() == 0b00000010) {
                 if (modrm.rm() == 0b00000000) {
                     return new Instruction(Opcode.XGETBV);
@@ -517,7 +518,7 @@ public final class InstructionDecoder {
             final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
         final ModRM modrm = modrm();
 
-        if (modrm.mod() == 0b00000011) {
+        if (modrm.mod() == MODRM_MOD_NO_DISP) {
             throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
         }
 
@@ -763,7 +764,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         opcode,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm)
                                         .pointer(PointerSize.BYTE_PTR)
                                         .build()
@@ -782,7 +783,7 @@ public final class InstructionDecoder {
                                 pref.rex().isOperand64Bit(),
                                 pref.rex().ModRMRegExtension(),
                                 pref.hasOperandSizeOverridePrefix()),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Registers.fromCode(
                                         modrm.rm(),
@@ -886,7 +887,7 @@ public final class InstructionDecoder {
                 final Register r1 = Registers.fromCode(
                         modrm.reg(), pref.rex().isOperand64Bit(), pref.rex().ModRMRegExtension(), false);
 
-                if (modrm.mod() != 0b00000011) { // indirect operand needed
+                if (modrm.mod() != MODRM_MOD_NO_DISP) { // indirect operand needed
                     yield new Instruction(
                             opcode,
                             r1,
@@ -958,7 +959,7 @@ public final class InstructionDecoder {
                         pref.hasOperandSizeOverridePrefix()
                                 ? RegisterXMM.fromByte(regByte)
                                 : RegisterMMX.fromByte(regByte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : r1);
             }
@@ -1006,7 +1007,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.PAND,
                         RegisterXMM.fromByte(r1Byte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : RegisterXMM.fromByte(r2Byte));
             }
@@ -1017,7 +1018,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.PADDQ,
                         RegisterXMM.fromByte(r1Byte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : RegisterXMM.fromByte(r2Byte));
             }
@@ -1028,7 +1029,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.PSUBQ,
                         RegisterXMM.fromByte(r1Byte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : RegisterXMM.fromByte(r2Byte));
             }
@@ -1039,7 +1040,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.POR,
                         RegisterXMM.fromByte(r1Byte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : RegisterXMM.fromByte(r2Byte));
             }
@@ -1050,7 +1051,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         Opcode.PXOR,
                         RegisterXMM.fromByte(r1Byte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : RegisterXMM.fromByte(r2Byte));
             }
@@ -1085,7 +1086,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         pref.hasOperandSizeOverridePrefix() ? Opcode.MOVAPD : Opcode.MOVAPS,
                         RegisterXMM.fromByte(r1Byte),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : RegisterXMM.fromByte(r2Byte));
             }
@@ -1119,7 +1120,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         opcode,
                         r1,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Registers.fromCode(
                                         modrm.rm(),
@@ -1215,7 +1216,7 @@ public final class InstructionDecoder {
             final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
         final ModRM modrm = modrm();
 
-        if (modrm.mod() != 0b00000011) {
+        if (modrm.mod() != MODRM_MOD_NO_DISP) {
             throw new IllegalArgumentException("Not implemented");
         }
 
@@ -1232,7 +1233,7 @@ public final class InstructionDecoder {
             final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
         final ModRM modrm = modrm();
 
-        if (modrm.mod() != 0b00000011) {
+        if (modrm.mod() != MODRM_MOD_NO_DISP) {
             throw new IllegalArgumentException("Not implemented");
         }
 
@@ -1428,7 +1429,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.TEST,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Register8.fromByte(
                                         Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
@@ -1440,7 +1441,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.TEST,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Registers.fromCode(
                                         modrm.rm(),
@@ -1464,7 +1465,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.XCHG,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Register8.fromByte(
                                         Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
@@ -1476,7 +1477,7 @@ public final class InstructionDecoder {
                 final ModRM modrm = modrm();
                 yield new Instruction(
                         Opcode.XCHG,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Registers.fromCode(
                                         modrm.rm(),
@@ -1616,7 +1617,7 @@ public final class InstructionDecoder {
                 final byte regByte = Registers.combine(pref.rex().ModRMRegExtension(), modrm.reg());
                 yield new Instruction(
                         opcode,
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Register8.fromByte(
                                         Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
@@ -1666,7 +1667,7 @@ public final class InstructionDecoder {
                 yield new Instruction(
                         opcode,
                         Register8.fromByte(regByte, pref.hasRexPrefix()),
-                        (modrm.mod() != 0b00000011)
+                        (modrm.mod() != MODRM_MOD_NO_DISP)
                                 ? parseIndirectOperand(pref, modrm).build()
                                 : Register8.fromByte(
                                         Registers.combine(pref.rex().ModRMRMExtension(), modrm.rm()),
@@ -1736,7 +1737,8 @@ public final class InstructionDecoder {
                         : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX);
                 final int immediateBits = pref.hasOperandSizeOverridePrefix() ? 16 : 32;
                 final Immediate imm;
-                if (immediateBits == 16) {
+                if (pref.hasOperandSizeOverridePrefix()) {
+                    // 16-bit immediate
                     if (r.bits() == 16) {
                         imm = imm16();
                     } else if (r.bits() == 32) {
@@ -1746,7 +1748,7 @@ public final class InstructionDecoder {
                         imm = new Immediate((long) b.read2LE());
                     }
                 } else {
-                    // immediateBits == 32
+                    // 32-bit immediate
                     if (r.bits() == 32) {
                         imm = imm32();
                     } else {
@@ -1929,7 +1931,7 @@ public final class InstructionDecoder {
         final ModRM modrm = modrm();
         return new Instruction(
                 opcode,
-                (modrm.mod() != 0b00000011)
+                (modrm.mod() != MODRM_MOD_NO_DISP)
                         ? parseIndirectOperand(pref, modrm).build()
                         : Registers.fromCode(
                                 modrm.rm(),
@@ -1946,7 +1948,7 @@ public final class InstructionDecoder {
     // Parses an instruction like OP RXX,Indirect
     private Instruction parseRM(final Prefixes pref, final Opcode opcode) {
         final ModRM modrm = modrm();
-        final boolean isIndirectOperandNeeded = modrm.mod() != 0b00000011;
+        final boolean isIndirectOperandNeeded = modrm.mod() != MODRM_MOD_NO_DISP;
         return new Instruction(
                 opcode,
                 Registers.fromCode(
@@ -1980,7 +1982,7 @@ public final class InstructionDecoder {
 
         iob.pointer(pointerSize);
 
-        if (mod != 0b00000011) {
+        if (mod != MODRM_MOD_NO_DISP) {
             // indirect operand needed
             operand1 = iob.build();
         } else {
@@ -2006,7 +2008,7 @@ public final class InstructionDecoder {
         final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
         final IndirectOperandBuilder iob = IndirectOperand.builder();
         SIB sib;
-        if (modrm.mod() != 0b00000011 && modrm.rm() == 0b00000100) {
+        if (modrm.mod() != MODRM_MOD_NO_DISP && modrm.rm() == 0b00000100) {
             // SIB needed
             sib = sib();
 
@@ -2037,7 +2039,7 @@ public final class InstructionDecoder {
         }
         iob.reg2((Register) operand2);
 
-        if (modrm.mod() != 0b00000011) {
+        if (modrm.mod() != MODRM_MOD_NO_DISP) {
             // indirect operand needed
             if ((modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05)
                     || (modrm.mod() == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)

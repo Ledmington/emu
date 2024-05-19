@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -30,6 +31,7 @@ import com.ledmington.utils.MiniLogger;
 public final class Main {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
+    private static final PrintWriter out = System.console().writer();
 
     private static ELF parseELF(final String filename) {
         final File file = new File(filename);
@@ -41,7 +43,7 @@ public final class Main {
         try {
             bytes = Files.readAllBytes(Paths.get(filename));
         } catch (final IOException e) {
-            throw new IllegalStateException(String.format("There was an error reading file '%s'\n", filename));
+            throw new RuntimeException(e);
         }
 
         logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
@@ -60,6 +62,7 @@ public final class Main {
         logger.info(" ### Execution end ### ");
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
@@ -68,7 +71,7 @@ public final class Main {
         for (final String arg : args) {
             switch (arg) {
                 case "-h", "--help" -> {
-                    System.out.println(String.join(
+                    out.println(String.join(
                             "\n",
                             "",
                             " emu - CPU emulator",
@@ -96,7 +99,7 @@ public final class Main {
                 case "--mem-init-zero" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
                 default -> {
                     if (filename != null) {
-                        System.err.println("Cannot set filename twice");
+                        out.println("Cannot set filename twice");
                         System.exit(-1);
                     } else {
                         filename = arg;

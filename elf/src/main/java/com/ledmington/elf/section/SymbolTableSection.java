@@ -27,8 +27,8 @@ public final class SymbolTableSection extends Section {
             final String name, final SectionHeader entry, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         super(name, entry);
 
-        final int start = (int) entry.fileOffset();
-        final int size = (int) entry.sectionSize();
+        final int start = (int) entry.getFileOffset();
+        final int size = (int) entry.getSectionSize();
         b.setPosition(start);
         final int symtabEntrySize = is32Bit ? 16 : 24;
 

@@ -28,8 +28,8 @@ public final class RelocationSection extends Section {
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         super(name, sectionHeader);
 
-        b.setPosition((int) sectionHeader.fileOffset());
-        final int nEntries = (int) (sectionHeader.sectionSize() / sectionHeader.entrySize());
+        b.setPosition((int) sectionHeader.getFileOffset());
+        final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
         this.relocationTable = new RelocationEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
             final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();

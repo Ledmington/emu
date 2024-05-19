@@ -37,6 +37,6 @@ public final class DynamicTableEntry {
 
     @Override
     public String toString() {
-        return String.format("0x%016x %-12s 0x%016x", tag.code(), tag.name(), content);
+        return String.format("0x%016x %-12s 0x%016x", tag.getCode(), tag.getName(), content);
     }
 }

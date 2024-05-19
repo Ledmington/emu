@@ -33,11 +33,12 @@ public enum SectionHeaderFlags {
     SHF_ORDERED(0x0000000004000000L, "Special ordering requirement (Solaris)", 'x'),
     SHF_EXCLUDE(0x0000000008000000L, "Section is excluded unless referenced or allocated (Solaris)", 'E');
 
-    public static boolean isValid(long flags) {
+    public static boolean isValid(final long flags) {
+        long x = flags;
         for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-            flags = flags & (~f.getCode());
+            x = x & (~f.getCode());
         }
-        return flags == 0L;
+        return x == 0L;
     }
 
     private final long code;

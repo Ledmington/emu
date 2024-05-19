@@ -17,6 +17,8 @@
 */
 package com.ledmington.elf;
 
+import java.util.Objects;
+
 public final class PHTEntry {
 
     private final PHTEntryType type;
@@ -39,7 +41,7 @@ public final class PHTEntry {
             long segmentFileSize,
             long segmentMemorySize,
             long alignment) {
-        this.type = type;
+        this.type = Objects.requireNonNull(type);
         this.readable = (flags & PHTEntryFlags.PF_R.getCode()) != 0;
         this.writeable = (flags & PHTEntryFlags.PF_W.getCode()) != 0;
         this.executable = (flags & PHTEntryFlags.PF_X.getCode()) != 0;
@@ -57,15 +59,15 @@ public final class PHTEntry {
         this.alignment = alignment;
     }
 
-    public PHTEntryType type() {
+    public PHTEntryType getType() {
         return type;
     }
 
-    public long segmentVirtualAddress() {
+    public long getSegmentVirtualAddress() {
         return segmentVirtualAddress;
     }
 
-    public long segmentMemorySize() {
+    public long getSegmentMemorySize() {
         return segmentMemorySize;
     }
 
@@ -84,10 +86,9 @@ public final class PHTEntry {
     @Override
     public String toString() {
         return "Segment type           : " + type
-                + '\n'
-                + "Flags                  : "
-                + (readable ? 'R' : ' ') + (writeable ? 'W' : ' ') + (executable ? 'X' : ' ') + "\n"
-                + "Offset                 : "
+                + "\nFlags                  : "
+                + (readable ? 'R' : ' ') + (writeable ? 'W' : ' ') + (executable ? 'X' : ' ')
+                + "\nOffset                 : "
                 + String.format("0x%016x\n", segmentOffset)
                 + "Virtual address        : "
                 + String.format("0x%016x\n", segmentVirtualAddress)

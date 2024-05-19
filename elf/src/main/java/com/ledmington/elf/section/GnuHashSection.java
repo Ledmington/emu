@@ -35,7 +35,7 @@ public final class GnuHashSection extends LoadableSection {
 
         this.is32Bit = is32Bit;
 
-        b.setPosition((int) sectionHeader.fileOffset());
+        b.setPosition((int) sectionHeader.getFileOffset());
 
         final int nBuckets = b.read4();
         this.symOffset = b.read4();
@@ -54,7 +54,7 @@ public final class GnuHashSection extends LoadableSection {
     }
 
     @Override
-    public byte[] content() {
+    public byte[] getContent() {
         final WriteOnlyByteBuffer bb =
                 new WriteOnlyByteBuffer(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
         bb.write(buckets.length);
