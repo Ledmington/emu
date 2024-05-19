@@ -7,3 +7,5 @@ include 'emu'
 include 'elf'
 include 'id'
 include 'utils'
+include 'readelf'
+
