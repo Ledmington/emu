@@ -1,136 +1,43 @@
 plugins {
-	id 'java'
 	id 'application'
-	id 'pmd'
-	id 'com.diffplug.spotless' version '6.25.0'
-	id 'com.github.ben-manes.versions' version '0.51.0'
-	id 'com.adarshr.test-logger' version '4.0.0'
 }
 
-repositories {
-	mavenCentral()
+// utility function
+static def path(final String ...s) {
+	return String.join(File.separator, s);
 }
 
-static def path(String... args) {
-	return String.join(File.separator, args)
-}
-
-String version = '0.1.0'
-String fatJarBaseName = "emu-v${version}"
+String fatJarBaseName = "${appNameLowerCase}-emu"
 String fatJarName = "${fatJarBaseName}.jar"
-String fatJarPath = path("${project.layout.buildDirectory.get()}", "libs", "${fatJarName}")
-String basePackage = "com.ledmington"
+String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "libs", "${fatJarName}")
 String mainClassName = "${basePackage}.emu.Main"
 
-ext.junitVersion = "5.10.2"
 dependencies {
 	implementation project(':elf')
 	implementation project(':id')
 	implementation project(':utils')
-
-	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
-	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-}
-
-compileJava {
-	options.compilerArgs << '-Xdiags:verbose'
-	options.compilerArgs << '-Xlint:all'
-	options.compilerArgs << '-Werror'
-	options.deprecation = true
-	options.encoding = 'UTF-8'
-}
-
-javadoc {
-	failOnError = true
-	title "emu-v${version}"
-	options.addBooleanOption('Werror', true)
-}
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-test {
-	useJUnitPlatform()
-	minHeapSize = "128m"
-	maxHeapSize = "512m"
-}
-
-testlogger {
-	theme 'standard'
-	// theme 'mocha'
-	// theme 'mocha-parallel'
-
-	showExceptions true
-	showStackTraces true
-	showFullStackTraces false
-	showCauses true
-
-	slowThreshold 2000
-
-	showSummary true
-	showSimpleNames false
-	showPassed false
-	showSkipped true
-	showFailed true
-	showOnlySlow false
-
-	showStandardStreams true
-	showPassedStandardStreams false
-	showSkippedStandardStreams true
-	showFailedStandardStreams true
-
-	logLevel 'lifecycle'
 }
 
 application {
-	mainClass = 'com.ledmington.emu.Main'
-	applicationDefaultJvmArgs = [
-			"-Xms2G",
-			"-Xmx2G",
-			// "-XX:+PrintCompilation",
-			//"-XX:+PrintInlining",
-			//"-XX:+LogCompilation",
-			//"-XX:LogFile=jvm_compilation_log"
-	]
+	mainClass = mainClassName
 }
 
 run {
 	args = [
-			//"/usr/bin/g++"
+			// "/usr/bin/gcc"
+	]
+	jvmArgs = [
+			// "-ea",
+			// "-esa",
+			// "-XX:+TieredCompilation",
+			// "-XX:+PrintCompilation"
 	]
 }
 
-spotless {
-	format 'misc', {
-		target '*.gradle', '*.md', '.gitignore'
-		trimTrailingWhitespace()
-		indentWithTabs()
-		endWithNewline()
-		setEncoding('utf-8')
-	}
-
-	java {
-		target fileTree('.') {
-			include path('**', '*.java')
-			exclude path('**', 'build', '**'), path('**', 'build-*', '**'), path('**', 'bin', '**')
-		}
-		removeUnusedImports()
-		formatAnnotations()
-		trimTrailingWhitespace()
-		endWithNewline()
-		setEncoding('utf-8')
-		palantirJavaFormat('2.39.0')
-
-		// check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
-		importOrder('java', 'javax', 'javafx', 'com', 'org', group as String)
-	}
+// utility function
+static def getDate() {
+	return new Date().format('yyyyMMddHHmmss')
 }
-
-tasks.compileJava.dependsOn(spotlessApply)
 
 tasks.register('fatJar', Jar) {
 	group 'distribution'
@@ -142,29 +49,17 @@ tasks.register('fatJar', Jar) {
 	}
 	duplicatesStrategy = 'include'
 	manifest {
-		archiveBaseName = fatJarBaseName
+		archiveBaseName = appNameLowerCase
 		attributes(
-				//"Implementation-Title": "Gradle",
-				"Implementation-Version": version,
+				// "Implementation-Title": "Gradle",
+				// "Implementation-Version": version,
 				"Main-Class": "$mainClassName"
 		)
 	}
 	archiveBaseName = "${fatJarBaseName}"
 
 	doLast {
-		println "The fat jar is ${fatJarPath}"
-		println String.format("Fat jar size: %.3f MB", (double) new File(fatJarPath).length() / 1_000_000.0)
+		printf "The fat jar is %s\n", fatJarPath
+		printf "Fat jar size: %.3f MB\n", new File(fatJarPath).length() / 1_000_000L
 	}
 }
-
-pmd {
-	consoleOutput = true
-	toolVersion = "7.1.0"
-	rulesMinimumPriority = 5
-	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
-	threads = 1
-	incrementalAnalysis = true
-}
-
-tasks.build.dependsOn(fatJar)
-tasks.build.dependsOn(javadoc)

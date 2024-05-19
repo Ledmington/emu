@@ -1,139 +1,59 @@
 plugins {
-	id 'java'
 	id 'java-library'
-	id 'pmd'
-	id 'com.diffplug.spotless' version '6.25.0'
-	id 'com.adarshr.test-logger' version '4.0.0'
-	id 'com.github.ben-manes.versions' version '0.51.0'
-	id 'de.undercouch.download' version '5.5.0'
+	id 'info.solidsoft.pitest' version '1.15.0'
+	id 'me.champeau.jmh' version '0.7.2'
 }
 
-repositories {
-	mavenCentral()
-}
-
-static def path(String... args) {
-	return String.join(File.separator, args)
-}
-
-ext.junitVersion = "5.10.2"
 dependencies {
 	implementation project(':utils')
-
-	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
-	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 }
 
-compileJava {
-	options.compilerArgs << '-Xdiags:verbose'
-	options.compilerArgs << '-Xlint:all'
-	options.compilerArgs << '-Werror'
-	options.deprecation = true
-	options.encoding = 'UTF-8'
+pitest {
+	targetClasses.set(['com.ledmington.cpu.x86.*'])
+	targetTests.set(['com.ledmington.cpu.x86.*'])
+	pitestVersion = '1.15.0'
+	junit5PluginVersion = '1.2.0'
+	threads = 4
+	outputFormats.set(['XML', 'HTML'])
+	useClasspathFile = true     // useful with bigger projects on Windows
+	verbose = true
+	timestampedReports = false
 }
 
-javadoc {
-	failOnError = true
-	title "id-v${version}"
-	options.addBooleanOption('Werror', true)
+jmh {
+	//includes = ['some regular expression'] // include pattern (regular expression) for benchmarks to be executed
+	//excludes = ['some regular expression'] // exclude pattern (regular expression) for benchmarks to be executed
+	iterations = 10 // Number of measurement iterations to do.
+	//benchmarkMode = ['thrpt','ss'] // Benchmark mode. Available modes are: [Throughput/thrpt, AverageTime/avgt, SampleTime/sample, SingleShotTime/ss, All/all]
+	//batchSize = 1 // Batch size: number of benchmark method calls per operation. (some benchmark modes can ignore this setting)
+	fork = 2 // How many times to forks a single benchmark. Use 0 to disable forking altogether
+	failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
+	forceGC = false // Should JMH force GC between iterations?
+	//jvm = 'myjvm' // Custom JVM to use when forking.
+	jvmArgs = [/*'--add-modules', 'jdk.incubator.vector'*/]
+	//jvmArgsAppend = ['Custom JVM args to use when forking (append these)']
+	//jvmArgsPrepend =[ 'Custom JVM args to use when forking (prepend these)']
+	//humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
+	resultsFile = project.file("${project.layout.buildDirectory.get()}/reports/jmh/results.txt") // results file
+	//operationsPerInvocation = 10 // Operations per invocation.
+	//benchmarkParameters =  [:] // Benchmark parameters.
+	//profilers = [] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
+	//timeOnIteration = '1s' // Time to spend at each measurement iteration.
+	resultFormat = 'TEXT' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
+	//synchronizeIterations = true // Synchronize iterations?
+	threads = 1 // Number of worker threads to run with.
+	//threadGroups = [2,3,4] //Override thread group distribution for asymmetric benchmarks.
+	//jmhTimeout = '1s' // Timeout for benchmark iteration.
+	//timeUnit = 'ms' // Output time unit. Available time units are: [m, s, ms, us, ns].
+	verbosity = 'EXTRA' // Verbosity mode. Available modes are: [SILENT, NORMAL, EXTRA]
+	//warmup = '1s' // Time to spend at each warmup iteration.
+	//warmupBatchSize = 10 // Warmup batch size: number of benchmark method calls per operation.
+	//warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
+	//warmupIterations = 1 // Number of warmup iterations to do.
+	//warmupMode = 'INDI' // Warmup mode for warming up selected benchmarks. Warmup modes are: [INDI, BULK, BULK_INDI].
+	//warmupBenchmarks = ['.*Warmup'] // Warmup benchmarks to include in the run in addition to already selected. JMH will not measure these benchmarks, but only use them for the warmup.
+	zip64 = true // Use ZIP64 format for bigger archives
+	jmhVersion = '1.37' // Specifies JMH version
+	//includeTests = true // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
+	//duplicateClassesStrategy = DuplicatesStrategy.FAIL // Strategy to apply when encountering duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
 }
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-test {
-	useJUnitPlatform()
-	minHeapSize = "128m"
-	maxHeapSize = "512m"
-}
-
-testlogger {
-	theme 'standard'
-	// theme 'mocha'
-	// theme 'mocha-parallel'
-
-	showExceptions true
-	showStackTraces true
-	showFullStackTraces false
-	showCauses true
-
-	slowThreshold 2000
-
-	showSummary true
-	showSimpleNames false
-	showPassed false
-	showSkipped true
-	showFailed true
-	showOnlySlow false
-
-	showStandardStreams true
-	showPassedStandardStreams false
-	showSkippedStandardStreams true
-	showFailedStandardStreams true
-
-	logLevel 'lifecycle'
-}
-
-spotless {
-	format 'misc', {
-		target '*.gradle', '*.md', '.gitignore'
-		trimTrailingWhitespace()
-		indentWithTabs()
-		endWithNewline()
-		setEncoding('utf-8')
-	}
-
-	java {
-		target fileTree('.') {
-			include path('**', '*.java')
-			exclude path('**', 'build', '**'), path('**', 'build-*', '**'), path('**', 'bin', '**')
-		}
-		removeUnusedImports()
-		formatAnnotations()
-		trimTrailingWhitespace()
-		endWithNewline()
-		setEncoding('utf-8')
-		palantirJavaFormat('2.39.0')
-
-		// check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
-		importOrder('java', 'javax', 'javafx', 'com', 'org', group as String)
-	}
-}
-
-tasks.compileJava.dependsOn(spotlessApply)
-
-tasks.register('downloadManual', Download) {
-	group 'utilities'
-	description 'Downloads the Intel Software Developer Manual in the project root directory'
-	src "https://cdrdv2-public.intel.com/812392/325462-sdm-vol-1-2abcd-3abcd-4.pdf"
-	dest new File(project.getRootDir(), "intel-developer-manual.pdf")
-	overwrite false
-	acceptAnyCertificate true
-}
-
-tasks.register('formatTestFiles', JavaExec) {
-	group 'utilities'
-	description 'Formats in-place the test asm files inside app/test/resources'
-	dependsOn spotlessApply
-	classpath sourceSets.test.runtimeClasspath
-	mainClass = "FormatTestFiles"
-	javaLauncher = javaToolchains.launcherFor {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-pmd {
-	consoleOutput = true
-	toolVersion = "7.1.0"
-	rulesMinimumPriority = 5
-	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
-	threads = 1
-	incrementalAnalysis = true
-}
-
-tasks.test.dependsOn(formatTestFiles)
-tasks.build.dependsOn(javadoc)

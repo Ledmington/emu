@@ -1,0 +1,188 @@
+plugins {
+    id 'java'
+    id 'pmd'
+    id 'jacoco'
+    id 'com.adarshr.test-logger' version '4.0.0'
+    id 'com.diffplug.spotless' version '6.25.0'
+    id 'com.github.ben-manes.versions' version '0.51.0'
+    id 'de.undercouch.download' version '5.6.0'
+}
+
+static def path(String... args) {
+    return String.join(File.separator, args)
+}
+
+// Tunables
+ext.basePackage = 'com.ledmington'
+def version = '0.0.0'
+String appDescription = 'Processor Emulator'
+String author = 'Filippo Barbari'
+String authorMail = 'filippo.barbari@gmail.com'
+String appName = 'emu'
+ext.appNameLowerCase = appName.toLowerCase(Locale.US)
+
+ext.junitVersion = "5.10.2"
+// End tunables
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'pmd'
+    apply plugin: 'jacoco'
+    apply plugin: 'com.adarshr.test-logger'
+    apply plugin: 'com.github.ben-manes.versions'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << '-Xdiags:verbose'
+        options.compilerArgs << '-Xlint:all'
+        options.compilerArgs << '-Werror'
+        options.deprecation = true
+        options.encoding = 'UTF-8'
+    }
+
+    javadoc {
+        failOnError = true
+        title "emu-v${version}-doc"
+        options.encoding = 'UTF-8'
+        options.addBooleanOption('Werror', true)
+    }
+
+    test {
+        useJUnitPlatform()
+        // failFast true
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test // tests are required to run before generating the report
+        reports {
+            xml.required = true
+            csv.required = true
+            html.required = true
+            html.outputLocation = layout.buildDirectory.dir('jacoco')
+        }
+    }
+
+    jacoco {
+        toolVersion = "0.8.11"
+        reportsDirectory = layout.buildDirectory.dir('jacoco')
+    }
+
+    testlogger {
+        theme 'standard'
+        // theme 'mocha'
+        // theme 'mocha-parallel'
+
+        showExceptions true
+        showStackTraces true
+        showFullStackTraces false
+        showCauses true
+
+        slowThreshold 2000
+
+        showSummary true
+        showSimpleNames false
+        showPassed true
+        showSkipped true
+        showFailed true
+        showOnlySlow false
+
+        showStandardStreams true
+        showPassedStandardStreams true
+        showSkippedStandardStreams true
+        showFailedStandardStreams true
+
+        logLevel 'lifecycle'
+    }
+
+    pmd {
+        consoleOutput = true
+        toolVersion = "7.1.0"
+        rulesMinimumPriority = 5
+        ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
+        threads = 1
+        incrementalAnalysis = true
+    }
+
+    // cleanup tasks
+    clean.dependsOn('cleanDLLs', 'cleanDyLibs', 'cleanLogs', 'cleanSOs', 'cleanBin')
+    tasks.register('cleanDLLs', Delete) {
+        delete fileTree(dir: project.projectDir, include: '*.dll')
+    }
+    tasks.register('cleanDyLibs', Delete) {
+        delete fileTree(dir: project.projectDir, include: '*.dylib')
+    }
+    tasks.register('cleanLogs', Delete) {
+        delete fileTree(dir: project.projectDir, include: 'hs_err_pid*.log')
+    }
+    tasks.register('cleanSOs', Delete) {
+        delete fileTree(dir: project.projectDir, include: '*.so')
+    }
+    tasks.register('cleanBin', Delete) {
+        delete "${project.projectDir}/bin"
+    }
+}
+
+spotless {
+    format 'misc', {
+        target '*.md', '.gitignore', '.gitattributes'
+        trimTrailingWhitespace()
+        indentWithTabs()
+        endWithNewline()
+        setEncoding('utf-8')
+    }
+
+    java {
+        target fileTree('.') {
+            include path('**', '*.java')
+            exclude path('**', 'build', '**'), path('**', 'build-*', '**'), path('**', 'bin', '**')
+        }
+        removeUnusedImports()
+        formatAnnotations()
+        trimTrailingWhitespace()
+        endWithNewline()
+        setEncoding('utf-8')
+        palantirJavaFormat('2.46.0').formatJavadoc(true)
+
+        // check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
+        importOrder('java', 'javax', 'javafx', 'com', 'com.ledmington', 'org', group as String)
+
+        licenseHeader String.join("\n",
+                "/*",
+                "* ${appName} - ${appDescription}",
+                "* Copyright (C) 2023-${new Date().format('yyyy')} ${author} <${authorMail}>",
+                "*",
+                "* This program is free software: you can redistribute it and/or modify",
+                "* it under the terms of the GNU General Public License as published by",
+                "* the Free Software Foundation, either version 3 of the License, or",
+                "* (at your option) any later version.",
+                "*",
+                "* This program is distributed in the hope that it will be useful,",
+                "* but WITHOUT ANY WARRANTY; without even the implied warranty of",
+                "* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the",
+                "* GNU General Public License for more details.",
+                "*",
+                "* You should have received a copy of the GNU General Public License",
+                "* along with this program.  If not, see <http://www.gnu.org/licenses/>.",
+                "*/",
+        )
+    }
+}
+
+allprojects.each { it.tasks.compileJava.dependsOn(spotlessApply) }
+tasks.build.dependsOn(javadoc)
