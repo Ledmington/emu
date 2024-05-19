@@ -24,7 +24,7 @@ public final class DynamicSection extends LoadableSection {
             long tag = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             long content = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             tmp[i] = new DynamicTableEntry(tag, content);
-            if (tmp[i].tag().equals(DynamicTableEntryTag.DT_NULL)) {
+            if (tmp[i].getTag().equals(DynamicTableEntryTag.DT_NULL)) {
                 break;
             }
             i++;
@@ -40,11 +40,11 @@ public final class DynamicSection extends LoadableSection {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(dynamicTable.length * (is32Bit ? 8 : 16));
         for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
             if (is32Bit) {
-                bb.write(BitUtils.asInt(dynamicTableEntry.tag().code()));
-                bb.write(BitUtils.asInt(dynamicTableEntry.content()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.getTag().code()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.getContent()));
             } else {
-                bb.write(dynamicTableEntry.tag().code());
-                bb.write(dynamicTableEntry.content());
+                bb.write(dynamicTableEntry.getTag().code());
+                bb.write(dynamicTableEntry.getContent());
             }
         }
         return bb.array();

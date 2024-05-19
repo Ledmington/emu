@@ -5,18 +5,18 @@ import java.util.Objects;
 public abstract class Section {
 
     private final String name;
-    private final SectionHeader sectionHeader;
+    private final SectionHeader header;
 
     protected Section(final String name, final SectionHeader sectionHeader) {
         this.name = Objects.requireNonNull(name);
-        this.sectionHeader = Objects.requireNonNull(sectionHeader);
+        this.header = Objects.requireNonNull(sectionHeader);
     }
 
-    public final String name() {
+    public final String getName() {
         return name;
     }
 
-    public final SectionHeader header() {
-        return sectionHeader;
+    public final SectionHeader getHeader() {
+        return header;
     }
 }

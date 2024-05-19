@@ -134,27 +134,27 @@ public final class MemoryController implements Memory {
 
         if (sec instanceof NoBitsSection) {
             // allocate uninitialized data blocks
-            final long startVirtualAddress = sec.header().virtualAddress();
-            final long size = sec.header().sectionSize();
+            final long startVirtualAddress = sec.getHeader().virtualAddress();
+            final long size = sec.getHeader().sectionSize();
             logger.debug(
                     "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                    sec.name(), startVirtualAddress, startVirtualAddress + size, size);
+                    sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
             for (long i = 0L; i < size; i++) {
                 mem.write(startVirtualAddress + i, (byte) 0x00);
             }
         } else if (sec instanceof LoadableSection ls) {
-            final long startVirtualAddress = sec.header().virtualAddress();
+            final long startVirtualAddress = sec.getHeader().virtualAddress();
             final byte[] content = ls.content();
             logger.debug(
                     "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                    sec.name(), startVirtualAddress, startVirtualAddress + content.length, content.length);
+                    sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
             for (int i = 0; i < content.length; i++) {
                 mem.write(startVirtualAddress + BitUtils.asLong(i), content[i]);
             }
         } else {
             throw new IllegalArgumentException(String.format(
                     "Don't know what to do with section '%s' of type %s",
-                    sec.name(), sec.header().type().getName()));
+                    sec.getName(), sec.getHeader().type().getName()));
         }
     }
 }

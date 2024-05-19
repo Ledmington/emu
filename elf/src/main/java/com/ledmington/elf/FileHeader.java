@@ -101,54 +101,46 @@ public final class FileHeader {
 
     @Override
     public String toString() {
-        return "Format               : " + (is32Bit ? "32 bit\n" : "64 bit\n")
-                + "Endianness           : "
-                + (isLittleEndian ? "2's complement, little endian\n" : "2's complement, big endian\n")
-                + "Version              : "
+        return "Format               : " + (is32Bit ? "32 bit" : "64 bit")
+                + "\nEndianness           : "
+                + (isLittleEndian ? "2's complement, little endian" : "2's complement, big endian")
+                + "\nVersion              : "
                 + version
-                + '\n'
-                + "OS ABI               : "
-                + osabi.OSName()
-                + '\n'
-                + "ABI version          : "
+                + "\nOS ABI               : "
+                + osabi.getName()
+                + "\nABI version          : "
                 + ABIVersion
-                + '\n'
-                + "File type            : "
+                + "\nFile type            : "
                 + fileType.getName()
-                + '\n'
-                + "ISA                  : "
+                + "\nISA                  : "
                 + isa.getName()
-                + '\n'
-                + "Entry point address  : "
-                + String.format("0x%016x\n", entryPointVirtualAddress)
-                + "PHT offset           : "
-                + String.format("%,d (bytes into file)\n", programHeaderTableOffset)
-                + "SHT offset           : "
-                + String.format("%,d (bytes into file)\n", sectionHeaderTableOffset)
-                + "Flags                : "
-                + String.format("0x%08x\n", flags)
-                + "Size of this header  : "
-                + String.format("%,d (bytes)\n", headerSize)
-                + "PHTE size            : "
-                + String.format("%,d (bytes)\n", programHeaderTableEntrySize)
-                + "PHT entries          : "
+                + "\nEntry point address  : "
+                + String.format("0x%016x", entryPointVirtualAddress)
+                + "\nPHT offset           : "
+                + String.format("%,d (bytes into file)", programHeaderTableOffset)
+                + "\nSHT offset           : "
+                + String.format("%,d (bytes into file)", sectionHeaderTableOffset)
+                + "\nFlags                : "
+                + String.format("0x%08x", flags)
+                + "\nSize of this header  : "
+                + String.format("%,d (bytes)", headerSize)
+                + "\nPHTE size            : "
+                + String.format("%,d (bytes)", programHeaderTableEntrySize)
+                + "\nPHT entries          : "
                 + nProgramHeaderTableEntries
-                + '\n'
-                + "SHTE size            : "
-                + String.format("%,d (bytes)\n", sectionHeaderTableEntrySize)
-                + "SHT entries          : "
+                + "\nSHTE size            : "
+                + String.format("%,d (bytes)", sectionHeaderTableEntrySize)
+                + "\nSHT entries          : "
                 + nSectionHeaderTableEntries
-                + '\n'
-                + "SHTE names idx       : "
-                + shstrtab_index
-                + '\n';
+                + "\nSHTE names idx       : "
+                + shstrtab_index;
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + HashUtils.hash(is32Bit ? 1 : 0);
-        h = 31 * h + HashUtils.hash(isLittleEndian ? 1 : 0);
+        h = 31 * h + HashUtils.hash(is32Bit);
+        h = 31 * h + HashUtils.hash(isLittleEndian);
         h = 31 * h + HashUtils.hash(version);
         h = 31 * h + osabi.hashCode();
         h = 31 * h + HashUtils.hash(ABIVersion);

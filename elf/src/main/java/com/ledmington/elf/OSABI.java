@@ -31,19 +31,35 @@ public enum OSABI {
 
     static {
         for (final OSABI x : OSABI.values()) {
-            if (codeToABI.containsKey(x.code())) {
+            if (codeToABI.containsKey(x.getCode())) {
                 throw new IllegalStateException(String.format(
                         "OSABI enum value with code %d (0x%02x) and name '%s' already exists",
-                        x.code(), x.code(), x.OSName()));
+                        x.getCode(), x.getCode(), x.getName()));
             }
-            codeToABI.put(x.code(), x);
+            codeToABI.put(x.getCode(), x);
         }
     }
 
+    /**
+     * Checks whether the given code corresponds to an existing OS ABI object.
+     *
+     * @param code
+     *      The code to look for.
+     * @return
+     *      True if an OSABI object exists, false otherwise.
+     */
     public static boolean isValid(final byte code) {
         return codeToABI.containsKey(code);
     }
 
+    /**
+     * Finds the OSABI object corresponding to the given code.
+     *
+     * @param code
+     *      The code to look for.
+     * @return
+     *      The OSABI object.
+     */
     public static OSABI fromCode(final byte code) {
         if (!codeToABI.containsKey(code)) {
             throw new IllegalArgumentException(String.format("Unknown ELF OS/ABI identifier: 0x%02x", code));
@@ -59,11 +75,23 @@ public enum OSABI {
         this.OSName = OSName;
     }
 
-    public byte code() {
+    /**
+     * Hexadecimal 1-byte code.
+     *
+     * @return
+     *      The code of this OSABI object.
+     */
+    public byte getCode() {
         return this.code;
     }
 
-    public String OSName() {
+    /**
+     * Name of the OS ABI.
+     *
+     * @return
+     *      A String representation of this OS ABI object.
+     */
+    public String getName() {
         return this.OSName;
     }
 }

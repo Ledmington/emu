@@ -23,11 +23,12 @@ public final class PHTEntry {
             long segmentMemorySize,
             long alignment) {
         this.type = type;
-        this.readable = (flags & PHTEntryFlags.PF_R.code()) != 0;
-        this.writeable = (flags & PHTEntryFlags.PF_W.code()) != 0;
-        this.executable = (flags & PHTEntryFlags.PF_X.code()) != 0;
+        this.readable = (flags & PHTEntryFlags.PF_R.getCode()) != 0;
+        this.writeable = (flags & PHTEntryFlags.PF_W.getCode()) != 0;
+        this.executable = (flags & PHTEntryFlags.PF_X.getCode()) != 0;
 
-        if ((flags & ~(PHTEntryFlags.PF_R.code() | PHTEntryFlags.PF_W.code() | PHTEntryFlags.PF_X.code())) != 0) {
+        if ((flags & ~(PHTEntryFlags.PF_R.getCode() | PHTEntryFlags.PF_W.getCode() | PHTEntryFlags.PF_X.getCode()))
+                != 0) {
             throw new IllegalArgumentException(String.format("Invalid PHT Entry flags 0x%08x", flags));
         }
 

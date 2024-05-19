@@ -10,11 +10,11 @@ public final class DynamicTableEntry {
         this.content = content;
     }
 
-    public DynamicTableEntryTag tag() {
+    public DynamicTableEntryTag getTag() {
         return tag;
     }
 
-    public long content() {
+    public long getContent() {
         return content;
     }
 

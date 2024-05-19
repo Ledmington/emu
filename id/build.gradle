@@ -135,4 +135,5 @@ pmd {
 	incrementalAnalysis = true
 }
 
+tasks.test.dependsOn(formatTestFiles)
 tasks.build.dependsOn(javadoc)

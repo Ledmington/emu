@@ -77,7 +77,7 @@ public final class Emulator {
         // setup stack
         final long allocatedMemory = 100_000_000L; // 100 MB
         final long highestAddress = Arrays.stream(elf.sections())
-                .map(sec -> sec.header().virtualAddress() + sec.header().sectionSize())
+                .map(sec -> sec.getHeader().virtualAddress() + sec.getHeader().sectionSize())
                 .max(Long::compare)
                 .orElseThrow();
         logger.debug(
@@ -201,7 +201,7 @@ public final class Emulator {
 
         logger.debug("Loading ELF sections into memory");
         for (final Section sec : elf.sections()) {
-            if (sec.header().sectionSize() != 0) {
+            if (sec.getHeader().sectionSize() != 0) {
                 mem.loadSection(sec);
             }
         }

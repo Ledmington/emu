@@ -12,12 +12,12 @@ public enum PHTEntryFlags {
 
     static {
         for (final PHTEntryFlags x : PHTEntryFlags.values()) {
-            if (codeToFlags.containsKey(x.code())) {
+            if (codeToFlags.containsKey(x.getCode())) {
                 throw new IllegalStateException(String.format(
                         "PHT flags enum value with code %d (0x%02x) and description '%s' already exists",
-                        x.code(), x.code(), x.description()));
+                        x.getCode(), x.getCode(), x.getDescription()));
             }
-            codeToFlags.put(x.code(), x);
+            codeToFlags.put(x.getCode(), x);
         }
     }
 
@@ -31,15 +31,15 @@ public enum PHTEntryFlags {
         this.id = id;
     }
 
-    public int code() {
+    public int getCode() {
         return code;
     }
 
-    public String description() {
+    public String getDescription() {
         return description;
     }
 
-    public char id() {
+    public char getId() {
         return id;
     }
 }
