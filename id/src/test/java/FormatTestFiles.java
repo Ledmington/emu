@@ -17,12 +17,11 @@
 */
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,13 +29,11 @@ import java.util.Set;
 
 public final class FormatTestFiles {
 
-    private static final PrintWriter out = System.console().writer();
-
     private record TestCase(String mnemonic, String hex) {}
 
     public static void main(final String[] args) {
         if (args.length > 0) {
-            out.println("Command-line arguments were provided but not needed. Ignoring them.");
+            System.out.println("Command-line arguments were provided but not needed. Ignoring them.");
         }
 
         final String testInputFileName = "x86.test.asm";
@@ -101,7 +98,7 @@ public final class FormatTestFiles {
             throw new RuntimeException(e);
         }
 
-        out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
+        System.out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
 
         final List<String> allLines = new ArrayList<>();
 
@@ -139,9 +136,8 @@ public final class FormatTestFiles {
     }
 
     private static void writeAllLines(final List<String> lines, final String filePath) {
-        try (final FileOutputStream fos = new FileOutputStream(filePath)) {
-            fos.write(String.join("\n", lines).getBytes(StandardCharsets.UTF_8));
-            fos.flush();
+        try {
+            Files.writeString(Path.of(filePath), String.join("\n", lines), StandardOpenOption.WRITE);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }

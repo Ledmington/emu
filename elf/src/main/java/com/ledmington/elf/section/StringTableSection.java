@@ -17,22 +17,38 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class StringTableSection extends LoadableSection {
+public final class StringTableSection implements LoadableSection {
 
+    private final String name;
+    private final SectionHeader header;
     private final char[] table;
 
-    public StringTableSection(final String name, final SectionHeader entry, final ReadOnlyByteBuffer b) {
-        super(name, entry);
+    public StringTableSection(final String name, final SectionHeader header, final ReadOnlyByteBuffer b) {
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(header);
 
-        final int start = (int) entry.getFileOffset();
-        final int size = (int) entry.getSectionSize();
+        final int start = (int) header.getFileOffset();
+        final int size = (int) header.getSectionSize();
         b.setPosition(start);
         this.table = new char[size];
         for (int i = 0; i < size; i++) {
             table[i] = (char) b.read1();
         }
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
     }
 
     @Override
@@ -42,5 +58,34 @@ public final class StringTableSection extends LoadableSection {
             v[i] = (byte) table[i];
         }
         return v;
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(table);
+        return h;
+    }
+
+    @Override
+    public String toString() {
+        return "StringTableSection(name=" + name + ";header=" + header + ";table=" + new String(table) + ")";
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final StringTableSection sts = (StringTableSection) other;
+        return this.name.equals(sts.name) && this.header.equals(sts.header) && Arrays.equals(this.table, sts.table);
     }
 }

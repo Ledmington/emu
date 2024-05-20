@@ -456,42 +456,39 @@ public final class InstructionDecoder {
             final int operandBits =
                     (r instanceof IndirectOperand) ? (((IndirectOperand) r).explicitPtrSize()) : ((Register) r).bits();
 
-            final Immediate imm;
-            if (immediateBits == 8) {
-                if (operandBits == 8) {
-                    imm = imm8();
-                } else if (operandBits == 16) {
-                    imm = new Immediate((short) b.read1());
-                } else if (operandBits == 32) {
-                    imm = new Immediate((int) b.read1());
-                } else if (operandBits == 64) {
-                    imm = new Immediate((long) b.read1());
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                            "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
-                }
-            } else if (immediateBits == 16) {
-                if (operandBits == 16) {
-                    imm = imm16();
-                } else if (operandBits == 32) {
-                    imm = new Immediate((int) b.read2LE());
-                } else if (operandBits == 64) {
-                    imm = new Immediate((long) b.read2LE());
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                            "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
-                }
-            } else {
-                // immediateBits == 32
-                if (operandBits == 32) {
-                    imm = imm32();
-                } else if (operandBits == 64) {
-                    imm = new Immediate((long) b.read4LE());
-                } else {
-                    throw new IllegalArgumentException(String.format(
-                            "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
-                }
-            }
+            final Immediate imm =
+                    switch (immediateBits) {
+                        case 8 -> {
+                            yield switch (operandBits) {
+                                case 8 -> imm8();
+                                case 16 -> new Immediate((short) b.read1());
+                                case 32 -> new Immediate((int) b.read1());
+                                case 64 -> new Immediate((long) b.read1());
+                                default -> throw new IllegalArgumentException(String.format(
+                                        "Immediate bits were %,d and operand bits were %,d",
+                                        immediateBits, operandBits));
+                            };
+                        }
+                        case 16 -> {
+                            yield switch (operandBits) {
+                                case 16 -> imm16();
+                                case 32 -> new Immediate((int) b.read2LE());
+                                case 64 -> new Immediate((long) b.read2LE());
+                                default -> throw new IllegalArgumentException(String.format(
+                                        "Immediate bits were %,d and operand bits were %,d",
+                                        immediateBits, operandBits));
+                            };
+                        }
+                        default -> {
+                            yield switch (operandBits) {
+                                case 32 -> imm32();
+                                case 64 -> new Immediate((long) b.read4LE());
+                                default -> throw new IllegalArgumentException(String.format(
+                                        "Immediate bits were %,d and operand bits were %,d",
+                                        immediateBits, operandBits));
+                            };
+                        }
+                    };
             return new Instruction(opcode, r, imm);
         }
     }
@@ -1234,11 +1231,11 @@ public final class InstructionDecoder {
         final ModRM modrm = modrm();
 
         if (modrm.mod() != MODRM_MOD_NO_DISP) {
-            throw new IllegalArgumentException("Not implemented");
+            throw new Error("Not implemented");
         }
 
         if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
-            throw new IllegalArgumentException("Not implemented");
+            throw new Error("Not implemented");
         }
 
         final Opcode opcode =

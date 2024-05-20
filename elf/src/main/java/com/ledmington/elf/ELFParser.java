@@ -61,7 +61,7 @@ public final class ELFParser {
     }
 
     private static FileHeader parseFileHeader() {
-        final int magicNumber = b.read4LE();
+        final int magicNumber = b.read4BE();
         final int ELF_MAGIC_NUMBER = 0x7f454c46;
         if (magicNumber != ELF_MAGIC_NUMBER) {
             throw new IllegalArgumentException(
