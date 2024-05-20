@@ -19,11 +19,12 @@ package com.ledmington.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -45,9 +46,11 @@ final class TestReadOnlyByteBufferV1 {
     @ValueSource(booleans = {false, true})
     void bytes(final boolean endianness) {
         final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+        final ByteBuffer ref = ByteBuffer.wrap(arr);
+        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
         for (int i = 0; i < arr.length; i++) {
             final int finalI = i;
-            final byte expected = arr[i];
+            final byte expected = ref.get();
             final byte actual = bb.read1();
             assertEquals(
                     expected,
@@ -57,88 +60,42 @@ final class TestReadOnlyByteBufferV1 {
         }
     }
 
-    @Test
-    void wordsLE() {
-        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, true);
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void words(final boolean endianness) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+        final ByteBuffer ref = ByteBuffer.wrap(arr);
+        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
         for (int i = 0; i < arr.length; i += 2) {
-            final short expected = BitUtils.asShort((BitUtils.asShort(arr[i + 1]) << 8) | BitUtils.asShort(arr[i]));
+            final short expected = ref.getShort();
             final short actual = bb.read2();
             assertEquals(
                     expected, actual, () -> String.format("Expected to read 0x%04x but was 0x%04x", expected, actual));
         }
     }
 
-    @Test
-    void wordsBE() {
-        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false);
-        for (int i = 0; i < arr.length; i += 2) {
-            final short expected = BitUtils.asShort((BitUtils.asShort(arr[i]) << 8) | BitUtils.asShort(arr[i + 1]));
-            final short actual = bb.read2();
-            assertEquals(
-                    expected, actual, () -> String.format("Expected to read 0x%04x but was 0x%04x", expected, actual));
-        }
-    }
-
-    @Test
-    void doubleWordsLE() {
-        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false);
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void doubleWords(final boolean endianness) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+        final ByteBuffer ref = ByteBuffer.wrap(arr);
+        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
         for (int i = 0; i < arr.length; i += 4) {
-            final int expected = BitUtils.asInt(arr[i])
-                    | (BitUtils.asInt(arr[i + 1]) << 8)
-                    | (BitUtils.asInt(arr[i + 2]) << 16)
-                    | (BitUtils.asInt(arr[i + 3]) << 24);
+            final int expected = ref.getInt();
             final int actual = bb.read4();
             assertEquals(
                     expected, actual, () -> String.format("Expected to read 0x%08x but was 0x%08x", expected, actual));
         }
     }
 
-    @Test
-    void doubleWordsBE() {
-        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, true);
-        for (int i = 0; i < arr.length; i += 4) {
-            final int expected = (BitUtils.asInt(arr[i]) << 24)
-                    | (BitUtils.asInt(arr[i + 1]) << 16)
-                    | (BitUtils.asInt(arr[i + 2]) << 8)
-                    | BitUtils.asInt(arr[i + 3]);
-            final int actual = bb.read4();
-            assertEquals(
-                    expected, actual, () -> String.format("Expected to read 0x%08x but was 0x%08x", expected, actual));
-        }
-    }
-
-    @Test
-    void quadWordsLE() {
-        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false);
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void quadWords(final boolean endianness) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+        final ByteBuffer ref = ByteBuffer.wrap(arr);
+        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
         for (int i = 0; i < arr.length; i += 8) {
-            final long expected = (BitUtils.asLong(arr[i + 7]) << 56)
-                    | (BitUtils.asLong(arr[i + 6]) << 48)
-                    | (BitUtils.asLong(arr[i + 5]) << 40)
-                    | (BitUtils.asLong(arr[i + 4]) << 32)
-                    | (BitUtils.asLong(arr[i + 3]) << 24)
-                    | (BitUtils.asLong(arr[i + 2]) << 16)
-                    | (BitUtils.asLong(arr[i + 1]) << 8)
-                    | BitUtils.asLong(arr[i]);
-            final long actual = bb.read8();
-            assertEquals(
-                    expected,
-                    actual,
-                    () -> String.format("Expected to read 0x%016x but was 0x%016x", expected, actual));
-        }
-    }
-
-    @Test
-    void quadWordsBE() {
-        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, true);
-        for (int i = 0; i < arr.length; i += 8) {
-            final long expected = (BitUtils.asLong(arr[i]) << 56)
-                    | (BitUtils.asLong(arr[i + 1]) << 48)
-                    | (BitUtils.asLong(arr[i + 2]) << 40)
-                    | (BitUtils.asLong(arr[i + 3]) << 32)
-                    | (BitUtils.asLong(arr[i + 4]) << 24)
-                    | (BitUtils.asLong(arr[i + 5]) << 16)
-                    | (BitUtils.asLong(arr[i + 6]) << 8)
-                    | BitUtils.asLong(arr[i + 7]);
+            final long expected = ref.getLong();
             final long actual = bb.read8();
             assertEquals(
                     expected,

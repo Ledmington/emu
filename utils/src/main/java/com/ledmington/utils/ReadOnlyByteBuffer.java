@@ -134,10 +134,10 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final int read4LE() {
         int x = 0x00000000;
-        x |= (BitUtils.asInt(read1()) << 24);
-        x |= (BitUtils.asInt(read1()) << 16);
-        x |= (BitUtils.asInt(read1()) << 8);
         x |= BitUtils.asInt(read1());
+        x |= (BitUtils.asInt(read1()) << 8);
+        x |= (BitUtils.asInt(read1()) << 16);
+        x |= (BitUtils.asInt(read1()) << 24);
         return x;
     }
 
@@ -148,10 +148,10 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final int read4BE() {
         int x = 0x00000000;
-        x |= BitUtils.asInt(read1());
-        x |= (BitUtils.asInt(read1()) << 8);
-        x |= (BitUtils.asInt(read1()) << 16);
         x |= (BitUtils.asInt(read1()) << 24);
+        x |= (BitUtils.asInt(read1()) << 16);
+        x |= (BitUtils.asInt(read1()) << 8);
+        x |= BitUtils.asInt(read1());
         return x;
     }
 
@@ -171,14 +171,14 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final long read8LE() {
         long x = 0x0000000000000000L;
-        x |= (BitUtils.asLong(read1()) << 56);
-        x |= (BitUtils.asLong(read1()) << 48);
-        x |= (BitUtils.asLong(read1()) << 40);
-        x |= (BitUtils.asLong(read1()) << 32);
-        x |= (BitUtils.asLong(read1()) << 24);
-        x |= (BitUtils.asLong(read1()) << 16);
-        x |= (BitUtils.asLong(read1()) << 8);
         x |= BitUtils.asLong(read1());
+        x |= (BitUtils.asLong(read1()) << 8);
+        x |= (BitUtils.asLong(read1()) << 16);
+        x |= (BitUtils.asLong(read1()) << 24);
+        x |= (BitUtils.asLong(read1()) << 32);
+        x |= (BitUtils.asLong(read1()) << 40);
+        x |= (BitUtils.asLong(read1()) << 48);
+        x |= (BitUtils.asLong(read1()) << 56);
         return x;
     }
 
@@ -189,14 +189,14 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final long read8BE() {
         long x = 0x0000000000000000L;
-        x |= BitUtils.asLong(read1());
-        x |= (BitUtils.asLong(read1()) << 8);
-        x |= (BitUtils.asLong(read1()) << 16);
-        x |= (BitUtils.asLong(read1()) << 24);
-        x |= (BitUtils.asLong(read1()) << 32);
-        x |= (BitUtils.asLong(read1()) << 40);
-        x |= (BitUtils.asLong(read1()) << 48);
         x |= (BitUtils.asLong(read1()) << 56);
+        x |= (BitUtils.asLong(read1()) << 48);
+        x |= (BitUtils.asLong(read1()) << 40);
+        x |= (BitUtils.asLong(read1()) << 32);
+        x |= (BitUtils.asLong(read1()) << 24);
+        x |= (BitUtils.asLong(read1()) << 16);
+        x |= (BitUtils.asLong(read1()) << 8);
+        x |= BitUtils.asLong(read1());
         return x;
     }
 }
