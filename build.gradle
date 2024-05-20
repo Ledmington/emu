@@ -103,7 +103,7 @@ allprojects {
         showOnlySlow false
 
         showStandardStreams true
-        showPassedStandardStreams true
+        showPassedStandardStreams false
         showSkippedStandardStreams true
         showFailedStandardStreams true
 
@@ -116,12 +116,7 @@ allprojects {
         rulesMinimumPriority = 5
         threads = 1
         incrementalAnalysis = true
-        ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml", "category/java/performance.xml"]
-        pmdMain {
-            excludes = [
-                '**/GuardLogStatement*'
-            ]
-        }
+        ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "ruleset.xml"))
     }
 
     // cleanup tasks
