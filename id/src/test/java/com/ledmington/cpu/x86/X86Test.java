@@ -19,8 +19,9 @@ package com.ledmington.cpu.x86;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -45,8 +46,12 @@ public class X86Test {
         args = new ArrayList<>();
         final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         try (final BufferedReader br =
-                Files.newBufferedReader(Path.of(Objects.requireNonNull(classloader.getResource(testInputFileName))
-                        .getPath()))) {
+                Files.newBufferedReader(Paths.get(Objects.requireNonNull(classloader.getResource(testInputFileName))
+                                .toURI())
+                        .toFile()
+                        .toPath()
+                        .normalize()
+                        .toAbsolutePath())) {
             int i = 0;
             for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
                 if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
@@ -61,7 +66,7 @@ public class X86Test {
                 }
                 args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
             }
-        } catch (final IOException e) {
+        } catch (final IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
