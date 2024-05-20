@@ -83,7 +83,7 @@ final class TestSIB {
 
     @ParameterizedTest
     @MethodSource("bases")
-    void parseBases(final byte m, final byte expected) {
+    void parseBase(final byte m, final byte expected) {
         final byte actual = new SIB(m).base();
         assertEquals(
                 expected,

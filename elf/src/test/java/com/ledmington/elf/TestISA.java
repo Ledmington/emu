@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 final class TestISA {
     @Test
-    void allABIAreValid() {
+    void allISAAreValid() {
         for (final ISA isa : ISA.values()) {
             assertTrue(
                     ISA.isValid(isa.getCode()),
