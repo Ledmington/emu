@@ -17,19 +17,25 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
-public final class RelocationAddendSection extends LoadableSection {
+public final class RelocationAddendSection implements LoadableSection {
 
+    private final String name;
+    private final SectionHeader header;
     private final boolean is32Bit;
     private final RelocationAddendEntry[] relocationAddendTable;
 
     public RelocationAddendSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        super(name, sectionHeader);
-
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
         b.setPosition((int) sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
@@ -40,6 +46,16 @@ public final class RelocationAddendSection extends LoadableSection {
             final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             this.relocationAddendTable[i] = new RelocationAddendEntry(offset, info, addend);
         }
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
     }
 
     @Override
@@ -57,5 +73,39 @@ public final class RelocationAddendSection extends LoadableSection {
             }
         }
         return bb.array();
+    }
+
+    @Override
+    public String toString() {
+        return "RelocationAddendSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit
+                + ";relocationAddendTable=" + Arrays.toString(relocationAddendTable) + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + HashUtils.hash(is32Bit);
+        h = 31 * h + Arrays.hashCode(relocationAddendTable);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final RelocationAddendSection ras = (RelocationAddendSection) other;
+        return this.name.equals(ras.name)
+                && this.header.equals(ras.header)
+                && this.is32Bit == ras.is32Bit
+                && Arrays.equals(this.relocationAddendTable, ras.relocationAddendTable);
     }
 }

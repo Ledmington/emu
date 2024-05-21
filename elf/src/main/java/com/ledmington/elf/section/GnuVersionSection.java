@@ -17,6 +17,9 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
@@ -24,12 +27,15 @@ import com.ledmington.utils.WriteOnlyByteBuffer;
  * Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
  * Paragraph 2.7.2.
  */
-public final class GnuVersionSection extends LoadableSection {
+public final class GnuVersionSection implements LoadableSection {
 
+    private final String name;
+    private final SectionHeader header;
     private final short[] versions;
 
     public GnuVersionSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        super(name, sectionHeader);
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition((int) sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / 2);
@@ -40,11 +46,52 @@ public final class GnuVersionSection extends LoadableSection {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
+    }
+
+    @Override
     public byte[] getContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(versions.length * 2);
         for (final short version : versions) {
             bb.write(version);
         }
         return bb.array();
+    }
+
+    @Override
+    public String toString() {
+        return "GnuVersionSection(name=" + name + ";header=" + header + ";versions=" + Arrays.toString(versions) + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(versions);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final GnuVersionSection gvs = (GnuVersionSection) other;
+        return this.name.equals(gvs.name)
+                && this.header.equals(gvs.header)
+                && Arrays.equals(this.versions, gvs.versions);
     }
 }

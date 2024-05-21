@@ -17,18 +17,24 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class SymbolTableSection extends Section {
+public final class SymbolTableSection implements Section {
 
+    private final String name;
+    private final SectionHeader header;
     private final SymbolTableEntry[] symbolTable;
 
     public SymbolTableSection(
-            final String name, final SectionHeader entry, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        super(name, entry);
+            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
 
-        final int start = (int) entry.getFileOffset();
-        final int size = (int) entry.getSectionSize();
+        final int start = (int) sectionHeader.getFileOffset();
+        final int size = (int) sectionHeader.getSectionSize();
         b.setPosition(start);
         final int symtabEntrySize = is32Bit ? 16 : 24;
 
@@ -37,5 +43,47 @@ public final class SymbolTableSection extends Section {
         for (int i = 0; i < nEntries; i++) {
             symbolTable[i] = new SymbolTableEntry(b, is32Bit);
         }
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
+    }
+
+    @Override
+    public String toString() {
+        return "SymbolTableSection(name=" + name + ";header=" + header + ";symbolTable=" + Arrays.toString(symbolTable)
+                + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(symbolTable);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SymbolTableSection sts = (SymbolTableSection) other;
+        return this.name.equals(sts.name)
+                && this.header.equals(sts.header)
+                && Arrays.equals(this.symbolTable, sts.symbolTable);
     }
 }

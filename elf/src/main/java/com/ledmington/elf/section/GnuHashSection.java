@@ -17,12 +17,18 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
-public final class GnuHashSection extends LoadableSection {
+public final class GnuHashSection implements LoadableSection {
 
+    private final String name;
+    private final SectionHeader header;
     private final boolean is32Bit;
     private final int symOffset;
     private final int bloomShift;
@@ -31,8 +37,8 @@ public final class GnuHashSection extends LoadableSection {
 
     public GnuHashSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        super(name, sectionHeader);
-
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
 
         b.setPosition((int) sectionHeader.getFileOffset());
@@ -54,6 +60,16 @@ public final class GnuHashSection extends LoadableSection {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
+    }
+
+    @Override
     public byte[] getContent() {
         final WriteOnlyByteBuffer bb =
                 new WriteOnlyByteBuffer(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
@@ -70,5 +86,50 @@ public final class GnuHashSection extends LoadableSection {
         }
         bb.write(buckets);
         return bb.array();
+    }
+
+    @Override
+    public String toString() {
+        return "GnuHashSection(name=" + name + ";header="
+                + header + ";is32Bit="
+                + is32Bit + ";symOffset="
+                + symOffset + ";bloomShift="
+                + bloomShift + ";bloom="
+                + Arrays.toString(bloom) + ";buckets="
+                + Arrays.toString(buckets) + ')';
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + HashUtils.hash(is32Bit);
+        h = 31 * h + symOffset;
+        h = 31 * h + bloomShift;
+        h = 31 * h + Arrays.hashCode(bloom);
+        h = 31 * h + Arrays.hashCode(buckets);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final GnuHashSection ghs = (GnuHashSection) other;
+        return this.name.equals(ghs.name)
+                && this.header.equals(ghs.header)
+                && this.is32Bit == ghs.is32Bit
+                && this.symOffset == ghs.symOffset
+                && this.bloomShift == ghs.bloomShift
+                && Arrays.equals(this.bloom, ghs.bloom)
+                && Arrays.equals(this.buckets, ghs.buckets);
     }
 }

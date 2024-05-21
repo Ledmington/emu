@@ -17,6 +17,8 @@
 */
 package com.ledmington.elf;
 
+import com.ledmington.elf.section.BasicNoteSection;
+import com.ledmington.elf.section.BasicProgBitsSection;
 import com.ledmington.elf.section.ConstructorsSection;
 import com.ledmington.elf.section.DestructorsSection;
 import com.ledmington.elf.section.DynamicSection;
@@ -27,9 +29,7 @@ import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.NoBitsSection;
-import com.ledmington.elf.section.NoteSection;
 import com.ledmington.elf.section.NullSection;
-import com.ledmington.elf.section.ProgBitsSection;
 import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.RelocationSection;
 import com.ledmington.elf.section.Section;
@@ -328,13 +328,13 @@ public final class ELFParser {
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
                 sectionTable[k] = ".note.gnu.property".equals(name)
                         ? new GnuPropertySection(name, entry, b)
-                        : new NoteSection(name, entry, b);
+                        : new BasicNoteSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {
                 sectionTable[k] = ".interp".equals(name)
                         ? new InterpreterPathSection(name, entry, b)
-                        : new ProgBitsSection(name, entry, b);
+                        : new BasicProgBitsSection(name, entry, b);
             } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.getName())) {
                 sectionTable[k] = new NoBitsSection(name, entry);
             } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {

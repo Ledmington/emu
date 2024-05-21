@@ -17,30 +17,47 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
-public final class DynamicSymbolTableSection extends LoadableSection {
+public final class DynamicSymbolTableSection implements LoadableSection {
 
+    private final String name;
+    private final SectionHeader header;
     private final boolean is32Bit;
     private final SymbolTableEntry[] symbolTable;
 
     public DynamicSymbolTableSection(
-            final String name, final SectionHeader entry, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        super(name, entry);
+            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
 
-        final int start = (int) entry.getFileOffset();
-        final int size = (int) entry.getSectionSize();
+        final int start = (int) sectionHeader.getFileOffset();
+        final int size = (int) sectionHeader.getSectionSize();
         b.setPosition(start);
-        final int symtabEntrySize = (int) entry.getEntrySize(); // 16 bytes for 32-bits, 24 bytes for 64-bits
+        final int symtabEntrySize = (int) sectionHeader.getEntrySize(); // 16 bytes for 32-bits, 24 bytes for 64-bits
 
         final int nEntries = size / symtabEntrySize;
         this.symbolTable = new SymbolTableEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
             symbolTable[i] = new SymbolTableEntry(b, is32Bit);
         }
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
     }
 
     @Override
@@ -64,5 +81,39 @@ public final class DynamicSymbolTableSection extends LoadableSection {
             }
         }
         return bb.array();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + HashUtils.hash(is32Bit);
+        h = 31 * h + Arrays.hashCode(symbolTable);
+        return h;
+    }
+
+    @Override
+    public String toString() {
+        return "DynamicSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit + ";symbolTable="
+                + symbolTable + ")";
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final DynamicSymbolTableSection dsts = (DynamicSymbolTableSection) other;
+        return this.name.equals(dsts.name)
+                && this.header.equals(dsts.header)
+                && this.is32Bit == dsts.is32Bit
+                && Arrays.equals(this.symbolTable, dsts.symbolTable);
     }
 }

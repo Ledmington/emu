@@ -17,13 +17,58 @@
 */
 package com.ledmington.elf.section;
 
-public final class DestructorsSection extends LoadableSection {
+import java.util.Objects;
+
+public final class DestructorsSection implements LoadableSection {
+
+    private final String name;
+    private final SectionHeader header;
+
     public DestructorsSection(final String name, final SectionHeader sectionHeader) {
-        super(name, sectionHeader);
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
     }
 
     @Override
     public byte[] getContent() {
         throw new Error("Not implemented");
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        return h;
+    }
+
+    @Override
+    public String toString() {
+        return "DestructorsSection(name=" + name + ";header=" + header + ")";
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final DestructorsSection ds = (DestructorsSection) other;
+        return this.name.equals(ds.name) && this.header.equals(ds.header);
     }
 }

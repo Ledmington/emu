@@ -17,17 +17,62 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Objects;
+
 /**
  * Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
  * Paragraph 2.7.4.
  */
-public final class GnuVersionRequirementsSection extends LoadableSection {
+public final class GnuVersionRequirementsSection implements LoadableSection {
+
+    private final String name;
+    private final SectionHeader header;
+
     public GnuVersionRequirementsSection(final String name, final SectionHeader sectionHeader) {
-        super(name, sectionHeader);
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
     }
 
     @Override
     public byte[] getContent() {
         throw new Error("Not implemented");
+    }
+
+    @Override
+    public String toString() {
+        return "GnuVersionRequirementsSection(name=" + name + ";header=" + header + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final GnuVersionRequirementsSection gvrs = (GnuVersionRequirementsSection) other;
+        return this.name.equals(gvrs.name) && this.header.equals(gvrs);
     }
 }

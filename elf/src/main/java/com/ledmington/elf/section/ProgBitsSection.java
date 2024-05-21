@@ -17,27 +17,4 @@
 */
 package com.ledmington.elf.section;
 
-import com.ledmington.utils.ReadOnlyByteBuffer;
-
-public class ProgBitsSection extends LoadableSection {
-
-    protected final byte[] content;
-
-    public ProgBitsSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        super(name, sectionHeader);
-
-        b.setPosition((int) sectionHeader.getFileOffset());
-        final int size = (int) sectionHeader.getSectionSize();
-        this.content = new byte[size];
-        for (int i = 0; i < size; i++) {
-            this.content[i] = b.read1();
-        }
-    }
-
-    @Override
-    public byte[] getContent() {
-        final byte[] v = new byte[content.length];
-        System.arraycopy(content, 0, v, 0, content.length);
-        return v;
-    }
-}
+public interface ProgBitsSection extends LoadableSection {}

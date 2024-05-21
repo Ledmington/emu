@@ -17,16 +17,22 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class RelocationSection extends Section {
+public final class RelocationSection implements Section {
 
+    private final String name;
+    private final SectionHeader header;
     private final RelocationEntry[] relocationTable;
 
     public RelocationSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        super(name, sectionHeader);
+        this.name = Objects.requireNonNull(name);
+        this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition((int) sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
@@ -36,5 +42,47 @@ public final class RelocationSection extends Section {
             final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             this.relocationTable[i] = new RelocationEntry(offset, info);
         }
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SectionHeader getHeader() {
+        return header;
+    }
+
+    @Override
+    public String toString() {
+        return "RelocationSection(name=" + name + ";header=" + header + ";relocationTable="
+                + Arrays.toString(relocationTable) + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(relocationTable);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final RelocationSection rs = (RelocationSection) other;
+        return this.name.equals(rs.name)
+                && this.header.equals(rs.header)
+                && Arrays.equals(this.relocationTable, rs.relocationTable);
     }
 }

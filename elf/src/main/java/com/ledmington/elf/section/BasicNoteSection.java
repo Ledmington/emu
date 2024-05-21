@@ -21,30 +21,14 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class InterpreterPathSection implements ProgBitsSection {
+public final class BasicNoteSection implements NoteSection {
 
     private final String name;
     private final SectionHeader header;
-    private final String interpreterFilePath;
 
-    public InterpreterPathSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+    public BasicNoteSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
-
-        final int start = (int) sectionHeader.getFileOffset();
-        b.setPosition(start);
-
-        final StringBuilder sb = new StringBuilder();
-        char c = (char) b.read1();
-        while (c != '\0') {
-            sb.append(c);
-            c = (char) b.read1();
-        }
-        this.interpreterFilePath = sb.toString();
-    }
-
-    public String getInterpreterFilePath() {
-        return interpreterFilePath;
     }
 
     @Override
@@ -59,13 +43,12 @@ public final class InterpreterPathSection implements ProgBitsSection {
 
     @Override
     public byte[] getContent() {
-        return interpreterFilePath.getBytes();
+        throw new Error("Not implemented");
     }
 
     @Override
     public String toString() {
-        return "InterpreterPathSection(name=" + name + ";header=" + header + ";interpreterPath=" + interpreterFilePath
-                + ")";
+        return "BasicNoteSection(name=" + name + ";header=" + header + ")";
     }
 
     @Override
@@ -73,7 +56,6 @@ public final class InterpreterPathSection implements ProgBitsSection {
         int h = 17;
         h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
-        h = 31 * h + interpreterFilePath.hashCode();
         return h;
     }
 
@@ -85,12 +67,10 @@ public final class InterpreterPathSection implements ProgBitsSection {
         if (this == other) {
             return true;
         }
-        if (!this.getClass().equals(other.getClass())) {
+        if (this.getClass().equals(other.getClass())) {
             return false;
         }
-        final InterpreterPathSection ips = (InterpreterPathSection) other;
-        return this.name.equals(ips.name)
-                && this.header.equals(ips.header)
-                && this.interpreterFilePath.equals(ips.interpreterFilePath);
+        final BasicNoteSection bns = (BasicNoteSection) other;
+        return name.equals(bns.name) && header.equals(bns.header);
     }
 }
