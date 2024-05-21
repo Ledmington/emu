@@ -24,7 +24,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew --console=plain --no-daemon build
 
   dependency-submission:
     runs-on: ubuntu-latest
