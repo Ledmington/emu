@@ -34,7 +34,7 @@ public final class RelocationSection implements Section {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition((int) sectionHeader.getFileOffset());
+        b.setPosition(sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
         this.relocationTable = new RelocationEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {

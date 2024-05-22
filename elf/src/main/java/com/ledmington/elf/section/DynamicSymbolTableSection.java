@@ -38,13 +38,18 @@ public final class DynamicSymbolTableSection implements LoadableSection {
         this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
 
-        final int start = (int) sectionHeader.getFileOffset();
-        final int size = (int) sectionHeader.getSectionSize();
-        b.setPosition(start);
-        final int symtabEntrySize = (int) sectionHeader.getEntrySize(); // 16 bytes for 32-bits, 24 bytes for 64-bits
+        final long size = sectionHeader.getSectionSize();
+        b.setPosition(sectionHeader.getFileOffset());
+        final long symtabEntrySize = sectionHeader.getEntrySize(); // 16 bytes for 32-bits, 24 bytes for 64-bits
 
-        final int nEntries = size / symtabEntrySize;
-        this.symbolTable = new SymbolTableEntry[nEntries];
+        if (symtabEntrySize != (is32Bit ? 16 : 24)) {
+            throw new IllegalArgumentException(String.format(
+                    "Wrong dynamic symbol table entry size: expected %,d but was %,d",
+                    is32Bit ? 16 : 24, symtabEntrySize));
+        }
+
+        final long nEntries = size / symtabEntrySize;
+        this.symbolTable = new SymbolTableEntry[(int) nEntries];
         for (int i = 0; i < nEntries; i++) {
             symbolTable[i] = new SymbolTableEntry(b, is32Bit);
         }

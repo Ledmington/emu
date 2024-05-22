@@ -173,26 +173,22 @@ public final class ELFParser {
                     String.format("Invalid segment type value, was %,d (0x%08x)", segmentType, segmentType));
         }
 
-        int flags = 0x00000000;
+        int flags = 0;
         if (!is32Bit) {
             flags = b.read4();
         }
 
         final long segmentOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long segmentVirtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long segmentPhysicalAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long segmentSizeOnFile = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long segmentSizeInMemory = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         if (is32Bit) {
             flags = b.read4();
         }
 
-        final long alignment = b.read8();
+        final long alignment = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         if (alignment != 0 && Long.bitCount(alignment) != 1) {
             throw new IllegalArgumentException(String.format(
                     "Invalid value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
@@ -201,6 +197,10 @@ public final class ELFParser {
             throw new IllegalArgumentException(String.format(
                     "Invalid value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
                     segmentVirtualAddress, alignment, segmentOffset, alignment));
+        }
+        if (alignment != 1) {
+            throw new Error(String.format(
+                    "Don't know what to do when alignment is not 1: it was %,d (0x%016x)", alignment, alignment));
         }
 
         return new PHTEntry(
@@ -249,6 +249,10 @@ public final class ELFParser {
             throw new IllegalArgumentException(String.format(
                     "Invalid value for alignment: expected a power of two but was %,d (0x%016x)",
                     alignment, alignment));
+        }
+        if (alignment != 1) {
+            throw new Error(String.format(
+                    "Don't know what to do when alignment is not 1: it was %,d (0x%016x)", alignment, alignment));
         }
 
         final long entrySize = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
@@ -327,8 +331,8 @@ public final class ELFParser {
                 sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
                 sectionTable[k] = ".note.gnu.property".equals(name)
-                        ? new GnuPropertySection(name, entry, b)
-                        : new BasicNoteSection(name, entry, b);
+                        ? new GnuPropertySection(entry, b, fileHeader.is32Bit())
+                        : new BasicNoteSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {

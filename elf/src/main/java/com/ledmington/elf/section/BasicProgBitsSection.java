@@ -32,7 +32,7 @@ public final class BasicProgBitsSection implements ProgBitsSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition((int) sectionHeader.getFileOffset());
+        b.setPosition(sectionHeader.getFileOffset());
         final int size = (int) sectionHeader.getSectionSize();
         this.content = new byte[size];
         for (int i = 0; i < size; i++) {

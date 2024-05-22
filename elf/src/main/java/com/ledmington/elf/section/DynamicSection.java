@@ -37,7 +37,7 @@ public final class DynamicSection implements LoadableSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
-        b.setPosition((int) sectionHeader.getFileOffset());
+        b.setPosition(sectionHeader.getFileOffset());
         final int entrySize = is32Bit ? 8 : 16;
         final int nEntries = (int) sectionHeader.getSectionSize() / entrySize;
 

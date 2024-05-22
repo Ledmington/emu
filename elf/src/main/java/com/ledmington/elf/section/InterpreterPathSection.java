@@ -31,8 +31,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        final int start = (int) sectionHeader.getFileOffset();
-        b.setPosition(start);
+        b.setPosition(sectionHeader.getFileOffset());
 
         final StringBuilder sb = new StringBuilder();
         char c = (char) b.read1();

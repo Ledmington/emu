@@ -33,13 +33,12 @@ public final class SymbolTableSection implements Section {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        final int start = (int) sectionHeader.getFileOffset();
-        final int size = (int) sectionHeader.getSectionSize();
-        b.setPosition(start);
+        final long size = sectionHeader.getSectionSize();
+        b.setPosition(sectionHeader.getFileOffset());
         final int symtabEntrySize = is32Bit ? 16 : 24;
 
-        final int nEntries = size / symtabEntrySize;
-        this.symbolTable = new SymbolTableEntry[nEntries];
+        final long nEntries = size / symtabEntrySize;
+        this.symbolTable = new SymbolTableEntry[(int) nEntries];
         for (int i = 0; i < nEntries; i++) {
             symbolTable[i] = new SymbolTableEntry(b, is32Bit);
         }

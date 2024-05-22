@@ -105,26 +105,32 @@ public final class FileHeader {
         return flags;
     }
 
+    /** Returns the number of PHT entries in the file. */
     public short getNumProgramHeaderTableEntries() {
         return nProgramHeaderTableEntries;
     }
 
+    /** Returns the number of SHT entries in the file. */
     public short getNumSectionHeaderTableEntries() {
         return nSectionHeaderTableEntries;
     }
 
+    /** Returns the offset in the file where the Program Header Table starts. */
     public long getProgramHeaderTableOffset() {
         return programHeaderTableOffset;
     }
 
+    /** Returns the size of each PHT entry. */
     public short getProgramHeaderTableEntrySize() {
         return programHeaderTableEntrySize;
     }
 
+    /** Returns the offset in the file where the Section Header Table starts. */
     public long getSectionHeaderTableOffset() {
         return sectionHeaderTableOffset;
     }
 
+    /** Returns the size of each SHT entry. */
     public short getSectionHeaderTableEntrySize() {
         return sectionHeaderTableEntrySize;
     }

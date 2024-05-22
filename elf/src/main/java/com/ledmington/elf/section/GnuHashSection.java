@@ -41,7 +41,7 @@ public final class GnuHashSection implements LoadableSection {
         this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
 
-        b.setPosition((int) sectionHeader.getFileOffset());
+        b.setPosition(sectionHeader.getFileOffset());
 
         final int nBuckets = b.read4();
         this.symOffset = b.read4();

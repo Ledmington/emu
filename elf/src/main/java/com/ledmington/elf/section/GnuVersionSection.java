@@ -37,7 +37,7 @@ public final class GnuVersionSection implements LoadableSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition((int) sectionHeader.getFileOffset());
+        b.setPosition(sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / 2);
         this.versions = new short[nEntries];
         for (int i = 0; i < nEntries; i++) {

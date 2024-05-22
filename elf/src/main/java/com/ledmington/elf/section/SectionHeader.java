@@ -23,20 +23,9 @@ public final class SectionHeader {
     private final int nameOffset;
     private final SectionHeaderType type;
     private final long flags;
-
-    /**
-     * Contains the virtual address of the beginning of the section in memory. If the section is not allocated to the
-     * memory image of the program, this field should be zero.
-     */
     private final long virtualAddress;
-
     private final long fileOffset;
-
-    /**
-     * Size in bytes of the section. This is the amount of space occupied in the file, except for SHT_NO_BITS sections.
-     */
     private final long sectionSize;
-
     private final int linkedSectionIndex;
     private final int sh_info;
     private final long alignment;
@@ -65,6 +54,10 @@ public final class SectionHeader {
         this.entrySize = entrySize;
     }
 
+    /**
+     * Returns the name of the section. Its value is an index into the section header string table section, giving the
+     * location of a null-terminated string.
+     */
     public int getNameOffset() {
         return nameOffset;
     }
@@ -73,6 +66,9 @@ public final class SectionHeader {
         return fileOffset;
     }
 
+    /**
+     * Size in bytes of the section. This is the amount of space occupied in the file, except for SHT_NO_BITS sections.
+     */
     public long getSectionSize() {
         return sectionSize;
     }
@@ -81,10 +77,17 @@ public final class SectionHeader {
         return type;
     }
 
+    /**
+     * Returns the size in bytes of each entry. Returns 0 if the section does not hold a table of fixed-size entries.
+     */
     public long getEntrySize() {
         return entrySize;
     }
 
+    /**
+     * Returns the virtual address of the beginning of the section in memory. If the section is not allocated to the
+     * memory image of the program, this field should be zero.
+     */
     public long getVirtualAddress() {
         return virtualAddress;
     }

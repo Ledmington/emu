@@ -17,6 +17,7 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -25,10 +26,21 @@ public final class BasicNoteSection implements NoteSection {
 
     private final String name;
     private final SectionHeader header;
+    private final NoteSectionEntry[] entries;
 
-    public BasicNoteSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+    public BasicNoteSection(
+            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
+
+        if (header.getEntrySize() != 0) {
+            throw new IllegalArgumentException(String.format(
+                    "The %s section doesn't have fixed-size entries but its header says they should be %,d bytes each",
+                    name, header.getEntrySize()));
+        }
+
+        b.setPosition(sectionHeader.getFileOffset());
+        this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
     }
 
     @Override
@@ -48,7 +60,7 @@ public final class BasicNoteSection implements NoteSection {
 
     @Override
     public String toString() {
-        return "BasicNoteSection(name=" + name + ";header=" + header + ")";
+        return "BasicNoteSection(name=" + name + ";header=" + header + ";entries=" + Arrays.toString(entries) + ")";
     }
 
     @Override
@@ -56,6 +68,7 @@ public final class BasicNoteSection implements NoteSection {
         int h = 17;
         h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(entries);
         return h;
     }
 
@@ -71,6 +84,6 @@ public final class BasicNoteSection implements NoteSection {
             return false;
         }
         final BasicNoteSection bns = (BasicNoteSection) other;
-        return name.equals(bns.name) && header.equals(bns.header);
+        return name.equals(bns.name) && header.equals(bns.header) && Arrays.equals(this.entries, bns.entries);
     }
 }

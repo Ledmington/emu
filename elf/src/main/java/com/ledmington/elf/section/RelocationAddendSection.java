@@ -37,7 +37,7 @@ public final class RelocationAddendSection implements LoadableSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
-        b.setPosition((int) sectionHeader.getFileOffset());
+        b.setPosition(sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
         this.relocationAddendTable = new RelocationAddendEntry[nEntries];
         for (int i = 0; i < nEntries; i++) {
