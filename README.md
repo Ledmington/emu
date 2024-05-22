@@ -1,7 +1,5 @@
-# Emu
+# Emu - a processor emulator.
 ![Build](https://github.com/Ledmington/emu/actions/workflows/build.yaml/badge.svg)
-
-A processor emulator.
 
 The project is divided as follows:
 - `emu` : the actual emulator
