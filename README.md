@@ -1,5 +1,5 @@
 # Emu
-[![Build](https://github.com/Ledmington/emu/actions/workflows/build/badge.svg)](https://github.com/Ledmington/emu/actions/workflows/build/badge.svg)
+![Build](https://github.com/Ledmington/emu/actions/workflows/build.yaml/badge.svg)
 
 A processor emulator.
 
