@@ -103,4 +103,48 @@ final class TestReadOnlyByteBufferV1 {
                     () -> String.format("Expected to read 0x%016x but was 0x%016x", expected, actual));
         }
     }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 4, 8})
+    void byteAlignment(final int alignment) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+        while (bb.getPosition() < arr.length) {
+            final long start = bb.getPosition();
+            bb.read1();
+            assertEquals(Math.max(start + 1L, start + alignment), bb.getPosition());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 4, 8})
+    void wordAlignment(final int alignment) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+        while (bb.getPosition() + 1 < arr.length) {
+            final long start = bb.getPosition();
+            bb.read2();
+            assertEquals(Math.max(start + 2L, start + alignment), bb.getPosition());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 4, 8})
+    void doubleWordAlignment(final int alignment) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+        while (bb.getPosition() + 3 < arr.length) {
+            final long start = bb.getPosition();
+            bb.read4();
+            assertEquals(Math.max(start + 4L, start + alignment), bb.getPosition());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 4, 8})
+    void quadWordAlignment(final int alignment) {
+        final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+        while (bb.getPosition() + 7 < arr.length) {
+            final long start = bb.getPosition();
+            bb.read8();
+            assertEquals(Math.max(start + 8L, start + alignment), bb.getPosition());
+        }
+    }
 }

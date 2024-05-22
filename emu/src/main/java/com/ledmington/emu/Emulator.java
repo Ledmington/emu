@@ -48,7 +48,7 @@ public final class Emulator {
     private final ELF elf;
     private final MemoryController mem;
     private final X86RegisterFile regFile = new X86RegisterFile();
-    private final ReadOnlyByteBuffer instructionFetcher = new ReadOnlyByteBuffer(false) {
+    private final ReadOnlyByteBuffer instructionFetcher = new ReadOnlyByteBuffer(false, 1) {
 
         @Override
         public void setPosition(final long newPosition) {

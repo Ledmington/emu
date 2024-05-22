@@ -28,12 +28,23 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     /**
      * Creates a little-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
-     * ReadOnlyByteBuffer(b, false)}.
+     * ReadOnlyByteBufferV1(b, false, 1)}.
      *
      * @param b The byte array ot be used.
      */
     public ReadOnlyByteBufferV1(final byte[] b) {
-        this(b, false);
+        this(b, false, 1L);
+    }
+
+    /**
+     * Creates a ReadOnlyByteBufferV1 with the given array and the given endianness. Equivalent to calling {@code new
+     * ReadOnlyByteBufferV1(b, e, 1)}.
+     *
+     * @param b The byte array ot be used.
+     * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
+     */
+    public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian) {
+        this(b, isLittleEndian, 1L);
     }
 
     /**
@@ -42,8 +53,8 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
      * @param b The byte array ot be used.
      * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
      */
-    public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian) {
-        super(isLittleEndian);
+    public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian, final long alignment) {
+        super(isLittleEndian, alignment);
         this.b = Objects.requireNonNull(b);
         this.position = 0L;
     }
