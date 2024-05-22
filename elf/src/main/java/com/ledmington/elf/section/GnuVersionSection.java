@@ -29,12 +29,10 @@ import com.ledmington.utils.WriteOnlyByteBuffer;
  */
 public final class GnuVersionSection implements LoadableSection {
 
-    private final String name;
     private final SectionHeader header;
     private final short[] versions;
 
-    public GnuVersionSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.name = Objects.requireNonNull(name);
+    public GnuVersionSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
@@ -47,7 +45,7 @@ public final class GnuVersionSection implements LoadableSection {
 
     @Override
     public String getName() {
-        return name;
+        return ".gnu.version";
     }
 
     @Override
@@ -66,13 +64,12 @@ public final class GnuVersionSection implements LoadableSection {
 
     @Override
     public String toString() {
-        return "GnuVersionSection(name=" + name + ";header=" + header + ";versions=" + Arrays.toString(versions) + ")";
+        return "GnuVersionSection(header=" + header + ";versions=" + Arrays.toString(versions) + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
         h = 31 * h + Arrays.hashCode(versions);
         return h;
@@ -90,8 +87,6 @@ public final class GnuVersionSection implements LoadableSection {
             return false;
         }
         final GnuVersionSection gvs = (GnuVersionSection) other;
-        return this.name.equals(gvs.name)
-                && this.header.equals(gvs.header)
-                && Arrays.equals(this.versions, gvs.versions);
+        return this.header.equals(gvs.header) && Arrays.equals(this.versions, gvs.versions);
     }
 }

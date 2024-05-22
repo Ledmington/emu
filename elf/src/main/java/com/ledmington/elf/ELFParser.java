@@ -305,8 +305,8 @@ public final class ELFParser {
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].getFileOffset();
         for (int k = 0; k < sectionHeaderTable.length; k++) {
-            final SectionHeader entry = sectionHeaderTable[k];
-            b.setPosition(shstr_offset + entry.getNameOffset());
+            final SectionHeader sectionHeader = sectionHeaderTable[k];
+            b.setPosition(shstr_offset + sectionHeader.getNameOffset());
 
             final StringBuilder sb = new StringBuilder();
             char c = (char) b.read1();
@@ -316,45 +316,45 @@ public final class ELFParser {
             }
             final String name = sb.toString();
 
-            final String typeName = entry.getType().getName();
+            final String typeName = sectionHeader.getType().getName();
             logger.debug("Parsing %s (%s)", name, typeName);
 
             if (typeName.equals(SectionHeaderType.SHT_NULL.getName())) {
-                sectionTable[k] = new NullSection(entry);
+                sectionTable[k] = new NullSection(sectionHeader);
             } else if (".symtab".equals(name) || typeName.equals(SectionHeaderType.SHT_SYMTAB.getName())) {
-                sectionTable[k] = new SymbolTableSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new SymbolTableSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (".shstrtab".equals(name)
                     || ".strtab".equals(name)
                     || typeName.equals(SectionHeaderType.SHT_STRTAB.getName())) {
-                sectionTable[k] = new StringTableSection(name, entry, b);
+                sectionTable[k] = new StringTableSection(name, sectionHeader, b);
             } else if (".dynsym".equals(name) || typeName.equals(SectionHeaderType.SHT_DYNSYM.getName())) {
-                sectionTable[k] = new DynamicSymbolTableSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new DynamicSymbolTableSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
                 sectionTable[k] = ".note.gnu.property".equals(name)
-                        ? new GnuPropertySection(entry, b, fileHeader.is32Bit())
-                        : new BasicNoteSection(name, entry, b, fileHeader.is32Bit());
+                        ? new GnuPropertySection(sectionHeader, b, fileHeader.is32Bit())
+                        : new BasicNoteSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
-                sectionTable[k] = new GnuHashSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new GnuHashSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {
                 sectionTable[k] = ".interp".equals(name)
-                        ? new InterpreterPathSection(name, entry, b)
-                        : new BasicProgBitsSection(name, entry, b);
+                        ? new InterpreterPathSection(sectionHeader, b)
+                        : new BasicProgBitsSection(name, sectionHeader, b);
             } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.getName())) {
-                sectionTable[k] = new NoBitsSection(name, entry);
+                sectionTable[k] = new NoBitsSection(name, sectionHeader);
             } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
-                sectionTable[k] = new DynamicSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new DynamicSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_RELA.getName())) {
-                sectionTable[k] = new RelocationAddendSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new RelocationAddendSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.getName())) {
-                sectionTable[k] = new RelocationSection(name, entry, b, fileHeader.is32Bit());
+                sectionTable[k] = new RelocationSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (".gnu.version".equals(name)) {
-                sectionTable[k] = new GnuVersionSection(name, entry, b);
+                sectionTable[k] = new GnuVersionSection(sectionHeader, b);
             } else if (".gnu.version_r".equals(name)) {
-                sectionTable[k] = new GnuVersionRequirementsSection(name, entry);
+                sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
-                sectionTable[k] = new ConstructorsSection(name, entry);
+                sectionTable[k] = new ConstructorsSection(name, sectionHeader);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
-                sectionTable[k] = new DestructorsSection(name, entry);
+                sectionTable[k] = new DestructorsSection(name, sectionHeader);
             } else {
                 throw new IllegalArgumentException(String.format(
                         "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));

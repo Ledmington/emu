@@ -25,17 +25,15 @@ import java.util.Objects;
  */
 public final class GnuVersionRequirementsSection implements LoadableSection {
 
-    private final String name;
     private final SectionHeader header;
 
-    public GnuVersionRequirementsSection(final String name, final SectionHeader sectionHeader) {
-        this.name = Objects.requireNonNull(name);
+    public GnuVersionRequirementsSection(final SectionHeader sectionHeader) {
         this.header = Objects.requireNonNull(sectionHeader);
     }
 
     @Override
     public String getName() {
-        return name;
+        return ".gnu.version_r";
     }
 
     @Override
@@ -50,13 +48,12 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 
     @Override
     public String toString() {
-        return "GnuVersionRequirementsSection(name=" + name + ";header=" + header + ")";
+        return "GnuVersionRequirementsSection(header=" + header + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
         return h;
     }
@@ -73,6 +70,6 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
             return false;
         }
         final GnuVersionRequirementsSection gvrs = (GnuVersionRequirementsSection) other;
-        return this.name.equals(gvrs.name) && this.header.equals(gvrs);
+        return this.header.equals(gvrs);
     }
 }

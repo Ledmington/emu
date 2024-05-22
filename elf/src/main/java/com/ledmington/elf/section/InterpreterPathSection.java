@@ -23,12 +23,10 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class InterpreterPathSection implements ProgBitsSection {
 
-    private final String name;
     private final SectionHeader header;
     private final String interpreterFilePath;
 
-    public InterpreterPathSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.name = Objects.requireNonNull(name);
+    public InterpreterPathSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
@@ -48,7 +46,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
 
     @Override
     public String getName() {
-        return name;
+        return ".interp";
     }
 
     @Override
@@ -63,14 +61,12 @@ public final class InterpreterPathSection implements ProgBitsSection {
 
     @Override
     public String toString() {
-        return "InterpreterPathSection(name=" + name + ";header=" + header + ";interpreterPath=" + interpreterFilePath
-                + ")";
+        return "InterpreterPathSection(header=" + header + ";interpreterPath=" + interpreterFilePath + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
         h = 31 * h + interpreterFilePath.hashCode();
         return h;
@@ -88,8 +84,6 @@ public final class InterpreterPathSection implements ProgBitsSection {
             return false;
         }
         final InterpreterPathSection ips = (InterpreterPathSection) other;
-        return this.name.equals(ips.name)
-                && this.header.equals(ips.header)
-                && this.interpreterFilePath.equals(ips.interpreterFilePath);
+        return this.header.equals(ips.header) && this.interpreterFilePath.equals(ips.interpreterFilePath);
     }
 }
