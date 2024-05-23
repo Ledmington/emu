@@ -37,6 +37,7 @@ public final class GnuPropertySection implements NoteSection {
         }
 
         b.setPosition(sectionHeader.getFileOffset());
+        b.setAlignment(sectionHeader.getAlignment());
         this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
 
         if (entries.length != 1) {

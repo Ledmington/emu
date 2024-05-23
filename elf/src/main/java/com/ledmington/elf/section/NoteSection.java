@@ -31,11 +31,8 @@ public interface NoteSection extends LoadableSection {
 
         while (b.getPosition() - start < length) {
             final long namesz = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            System.out.printf("namesz : 0x%016x\n", namesz);
             final long descsz = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            System.out.printf("descsz : 0x%016x\n", descsz);
             final long type = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            System.out.printf("type : 0x%016x\n", type);
 
             final byte[] nameBytes = new byte[BitUtils.asInt(namesz)];
             for (int i = 0; i < namesz; i++) {

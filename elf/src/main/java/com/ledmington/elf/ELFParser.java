@@ -198,10 +198,6 @@ public final class ELFParser {
                     "Invalid value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
                     segmentVirtualAddress, alignment, segmentOffset, alignment));
         }
-        if (alignment != 1) {
-            throw new Error(String.format(
-                    "Don't know what to do when alignment is not 1: it was %,d (0x%016x)", alignment, alignment));
-        }
 
         return new PHTEntry(
                 PHTEntryType.fromCode(segmentType),
@@ -249,10 +245,6 @@ public final class ELFParser {
             throw new IllegalArgumentException(String.format(
                     "Invalid value for alignment: expected a power of two but was %,d (0x%016x)",
                     alignment, alignment));
-        }
-        if (alignment != 1) {
-            throw new Error(String.format(
-                    "Don't know what to do when alignment is not 1: it was %,d (0x%016x)", alignment, alignment));
         }
 
         final long entrySize = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();

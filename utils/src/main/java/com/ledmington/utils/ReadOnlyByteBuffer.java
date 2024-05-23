@@ -37,13 +37,7 @@ public abstract class ReadOnlyByteBuffer {
     protected ReadOnlyByteBuffer(final boolean isLittleEndian, final long alignment) {
         this.isLE = isLittleEndian;
 
-        if (alignment < 1) {
-            throw new IllegalArgumentException(String.format("Invalid alignment: must be >=1 but was %,d", alignment));
-        }
-        if (Long.bitCount(alignment) != 1) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid alignment: must be a power of two but was %,d", alignment));
-        }
+        checkAlignment(alignment);
         this.alignment = alignment;
     }
 
@@ -63,6 +57,18 @@ public abstract class ReadOnlyByteBuffer {
      */
     public final void setEndianness(final boolean isLittleEndian) {
         this.isLE = isLittleEndian;
+    }
+
+    private void checkAlignment(final long alignment) {
+        if (alignment <= 0 || Long.bitCount(alignment) != 1) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid alignment: expected a power of two >0 but was %,d", alignment));
+        }
+    }
+
+    public void setAlignment(final long newAlignment) {
+        checkAlignment(newAlignment);
+        this.alignment = newAlignment;
     }
 
     /**

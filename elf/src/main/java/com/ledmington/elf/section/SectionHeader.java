@@ -92,6 +92,10 @@ public final class SectionHeader {
         return virtualAddress;
     }
 
+    public long getAlignment() {
+        return alignment;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(1_000);
