@@ -19,6 +19,7 @@ package com.ledmington.elf;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.ledmington.utils.MiniLogger;
 
@@ -27,28 +28,36 @@ public final class PHTEntryType {
     private static final MiniLogger logger = MiniLogger.getLogger("pht-entry-type");
     private static final Map<Integer, PHTEntryType> codeToType = new HashMap<>();
 
-    public static final PHTEntryType PT_NULL = new PHTEntryType(0x00000000, "Unused");
-    public static final PHTEntryType PT_LOAD = new PHTEntryType(0x00000001, "Loadable");
-    public static final PHTEntryType PT_DYNAMIC = new PHTEntryType(0x00000002, "Dynamic linking info");
-    public static final PHTEntryType PT_INTERP = new PHTEntryType(0x00000003, "Interpreter info");
-    public static final PHTEntryType PT_NOTE = new PHTEntryType(0x00000004, "Auxiliary info");
-    public static final PHTEntryType PT_SHLIB = new PHTEntryType(0x00000005, "Reserved");
-    public static final PHTEntryType PT_PHDR = new PHTEntryType(0x00000006, "Program header table");
-    public static final PHTEntryType PT_TLS = new PHTEntryType(0x00000007, "Thread-Local Storage template");
+    public static final PHTEntryType PT_NULL = new PHTEntryType(0x00000000, "NULL", "Unused");
+    public static final PHTEntryType PT_LOAD = new PHTEntryType(0x00000001, "LOAD", "Loadable");
+    public static final PHTEntryType PT_DYNAMIC = new PHTEntryType(0x00000002, "DYNAMIC", "Dynamic linking info");
+    public static final PHTEntryType PT_INTERP = new PHTEntryType(0x00000003, "INTERP", "Interpreter info");
+    public static final PHTEntryType PT_NOTE = new PHTEntryType(0x00000004, "NOTE", "Auxiliary info");
+    public static final PHTEntryType PT_SHLIB = new PHTEntryType(0x00000005, "SHLIB", "Reserved");
+    public static final PHTEntryType PT_PHDR = new PHTEntryType(0x00000006, "PHDR", "Program header table");
+    public static final PHTEntryType PT_TLS = new PHTEntryType(0x00000007, "TLS", "Thread-Local Storage template");
 
-    public static final PHTEntryType PT_LOOS = new PHTEntryType(0x60000000, "Unknown (OS specific)", false);
-    public static final PHTEntryType PT_GNU_EH_FRAME = new PHTEntryType(0x6474e550, "Exception handling");
-    public static final PHTEntryType PT_GNU_STACK = new PHTEntryType(0x6474e551, "Stack executablity");
-    public static final PHTEntryType PT_GNU_RELRO = new PHTEntryType(0x6474e552, "Read-only after relocation");
+    public static final PHTEntryType PT_LOOS =
+            new PHTEntryType(0x60000000, "OS-specific", "Unknown (OS specific)", false);
+    public static final PHTEntryType PT_GNU_EH_FRAME =
+            new PHTEntryType(0x6474e550, "GNU_EH_FRAME", "Exception handling");
+    public static final PHTEntryType PT_GNU_STACK = new PHTEntryType(0x6474e551, "GNU_STACK", "Stack executablity");
+    public static final PHTEntryType PT_GNU_RELRO =
+            new PHTEntryType(0x6474e552, "GNU_RELRO", "Read-only after relocation");
     public static final PHTEntryType PT_GNU_PROPERTY =
-            new PHTEntryType(0x6474e553, ".note.gnu.property notes sections");
-    public static final PHTEntryType PT_HIOS = new PHTEntryType(0x6fffffff, "Unknown (OS specific)", false);
+            new PHTEntryType(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections");
+    public static final PHTEntryType PT_HIOS =
+            new PHTEntryType(0x6fffffff, "OS-specific", "Unknown (OS specific)", false);
 
-    public static final PHTEntryType PT_LOPROC = new PHTEntryType(0x70000000, "Unknown (Processor specific)", false);
-    public static final PHTEntryType PT_HIPROC = new PHTEntryType(0x7fffffff, "Unknown (Processor specific)", false);
+    public static final PHTEntryType PT_LOPROC =
+            new PHTEntryType(0x70000000, "CPU-specific", "Unknown (Processor specific)", false);
+    public static final PHTEntryType PT_HIPROC =
+            new PHTEntryType(0x7fffffff, "CPU-specific", "Unknown (Processor specific)", false);
 
-    public static final PHTEntryType PT_LOUSER = new PHTEntryType(0x80000000, "Unknown (Application specific)", false);
-    public static final PHTEntryType PT_HIUSER = new PHTEntryType(0xffffffff, "Unknown (Application specific)", false);
+    public static final PHTEntryType PT_LOUSER =
+            new PHTEntryType(0x80000000, "Application-specific", "Unknown (Application specific)", false);
+    public static final PHTEntryType PT_HIUSER =
+            new PHTEntryType(0xffffffff, "Application-specific", "Unknown (Application specific)", false);
 
     public static boolean isValid(final int code) {
         return codeToType.containsKey(code) || (code >= PT_LOOS.getCode());
@@ -58,15 +67,17 @@ public final class PHTEntryType {
         if (!codeToType.containsKey(code)) {
             if (code >= PT_LOOS.getCode() && code <= PT_HIOS.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(code, String.format("0x%08x (OS specific)", code), false);
+                return new PHTEntryType(code, "OS-specific", String.format("0x%08x (OS specific)", code), false);
             }
             if (code >= PT_LOPROC.getCode() && code <= PT_HIPROC.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(code, String.format("0x%08x (Processor specific)", code), false);
+                return new PHTEntryType(
+                        code, "CPU-specific", String.format("0x%08x (Processor specific)", code), false);
             }
             if (code >= PT_LOUSER.getCode() && code <= PT_HIUSER.getCode()) {
                 logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(code, String.format("0x%08x (Application specific)", code), false);
+                return new PHTEntryType(
+                        code, "Application-specific", String.format("0x%08x (Application specific)", code), false);
             }
             throw new IllegalArgumentException(String.format("Unknown ELF PHT entry type identifier: 0x%02x", code));
         }
@@ -74,11 +85,13 @@ public final class PHTEntryType {
     }
 
     private final int code;
+    private final String name;
     private final String description;
 
-    private PHTEntryType(final int code, final String description, final boolean addToMap) {
+    private PHTEntryType(final int code, final String name, final String description, final boolean addToMap) {
         this.code = code;
-        this.description = description;
+        this.name = Objects.requireNonNull(name);
+        this.description = Objects.requireNonNull(description);
 
         if (addToMap) {
             if (codeToType.containsKey(code)) {
@@ -90,16 +103,15 @@ public final class PHTEntryType {
         }
     }
 
-    private PHTEntryType(final int code, final String description) {
-        this(code, description, true);
+    private PHTEntryType(final int code, final String name, final String description) {
+        this(code, name, description, true);
     }
 
     public int getCode() {
         return code;
     }
 
-    @Override
-    public String toString() {
-        return description;
+    public String getName() {
+        return name;
     }
 }

@@ -44,7 +44,13 @@ public final class ELF {
     public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section... sectionTable) {
         this.fileHeader = Objects.requireNonNull(fileHeader);
         this.programHeaderTable = Objects.requireNonNull(programHeaderTable);
+        for (final PHTEntry phte : programHeaderTable) {
+            Objects.requireNonNull(phte);
+        }
         this.sectionTable = Objects.requireNonNull(sectionTable);
+        for (final Section s : sectionTable) {
+            Objects.requireNonNull(s);
+        }
     }
 
     public FileHeader getFileHeader() {
@@ -61,6 +67,15 @@ public final class ELF {
         final Section[] v = new Section[sectionTable.length];
         System.arraycopy(sectionTable, 0, v, 0, sectionTable.length);
         return v;
+    }
+
+    public Section getFirstSectionByName(final String name) {
+        for (final Section s : sectionTable) {
+            if (s.getName().equals(name)) {
+                return s;
+            }
+        }
+        throw new IllegalArgumentException(String.format("No section foudn with name '%s'", name));
     }
 
     @Override

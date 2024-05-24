@@ -22,7 +22,7 @@ import java.util.Map;
 
 /** The OS Application Binary Interface used for creating the ELF file. */
 public enum OSABI {
-    SYSTEM_V((byte) 0x00, "System V"),
+    SYSTEM_V((byte) 0x00, "UNIX - System V"),
     HP_UX((byte) 0x01, "HP-UX"),
     NetBSD((byte) 0x02, "NetBSD"),
     Linux((byte) 0x03, "Linux"),

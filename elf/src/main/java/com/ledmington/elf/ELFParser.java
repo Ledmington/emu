@@ -231,13 +231,9 @@ public final class ELFParser {
         }
 
         final long virtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long fileOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long size = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final int linkedSectionIndex = b.read4();
-
         final int sh_info = b.read4();
 
         final long alignment = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();

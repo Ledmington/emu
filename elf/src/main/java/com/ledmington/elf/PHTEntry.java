@@ -63,14 +63,6 @@ public final class PHTEntry {
         return type;
     }
 
-    public long getSegmentVirtualAddress() {
-        return segmentVirtualAddress;
-    }
-
-    public long getSegmentMemorySize() {
-        return segmentMemorySize;
-    }
-
     public boolean isReadable() {
         return readable;
     }
@@ -81,6 +73,30 @@ public final class PHTEntry {
 
     public boolean isExecutable() {
         return executable;
+    }
+
+    public long getSegmentOffset() {
+        return segmentOffset;
+    }
+
+    public long getSegmentVirtualAddress() {
+        return segmentVirtualAddress;
+    }
+
+    public long getSegmentPhysicalAddress() {
+        return segmentPhysicalAddress;
+    }
+
+    public long getSegmentMemorySize() {
+        return segmentMemorySize;
+    }
+
+    public long getSegmentFileSize() {
+        return segmentFileSize;
+    }
+
+    public long getAlignment() {
+        return alignment;
     }
 
     @Override

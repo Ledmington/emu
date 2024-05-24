@@ -29,10 +29,18 @@ public interface NoteSection extends LoadableSection {
         final long start = b.getPosition();
         final List<NoteSectionEntry> entries = new ArrayList<>();
 
+        /*
+         * For some reason, even though on the ELF64 reference (available here
+         * https://uclibc.org/docs/elf-64-gen.pdf) says that the fields of a
+         * SHT_NOTE section mute be 8-byte words and aligned on 8-byte boundaries, here
+         * the only code that works is the one which uses 4-byte words regardless of the
+         * actual ELF_CLASS.
+         */
+        b.setAlignment(1L);
         while (b.getPosition() - start < length) {
-            final long namesz = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            final long descsz = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            final long type = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+            final long namesz = BitUtils.asLong(b.read4());
+            final long descsz = BitUtils.asLong(b.read4());
+            final long type = BitUtils.asLong(b.read4());
 
             final byte[] nameBytes = new byte[BitUtils.asInt(namesz)];
             for (int i = 0; i < namesz; i++) {
@@ -40,35 +48,13 @@ public interface NoteSection extends LoadableSection {
             }
             final String name = new String(nameBytes);
 
-            // ensure alignment to 4 byte boundary for 32 bits (8 byte for 64 bits)
-            if (is32Bit) {
-                final long here = b.getPosition();
-                final long processed = here - start;
-                b.setPosition(here + ((processed + 4) & 0xfc));
-            } else {
-                final long here = b.getPosition();
-                final long processed = here - start;
-                b.setPosition(here + ((processed + 8) & 0xf8));
-            }
-
             final byte[] descriptionBytes = new byte[BitUtils.asInt(descsz)];
             for (int i = 0; i < descsz; i++) {
                 descriptionBytes[i] = b.read1();
             }
             final String description = new String(descriptionBytes);
 
-            // ensure alignment to 4 byte boundary for 32 bits (8 byte for 64 bits)
-            if (is32Bit) {
-                final long here = b.getPosition();
-                final long processed = here - start;
-                b.setPosition(here + ((processed + 4) & 0xfc));
-            } else {
-                final long here = b.getPosition();
-                final long processed = here - start;
-                b.setPosition(here + ((processed + 8) & 0xf8));
-            }
-
-            entries.add(new NoteSectionEntry(type, name, description));
+            entries.add(new NoteSectionEntry(name, description, type));
         }
 
         return entries.toArray(new NoteSectionEntry[0]);

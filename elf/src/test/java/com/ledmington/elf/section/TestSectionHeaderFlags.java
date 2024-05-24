@@ -17,4 +17,19 @@
 */
 package com.ledmington.elf.section;
 
-public final record NoteSectionEntry(String name, String description, long type) {}
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
+class TestSectionHeaderFlags {
+    @Test
+    void allSHFlagsAreValid() {
+        for (final SectionHeaderFlags shf : SectionHeaderFlags.values()) {
+            assertTrue(
+                    SectionHeaderFlags.isValid(shf.getCode()),
+                    () -> String.format(
+                            "Expected section header flags object %s with code 0x%02x to be valid but wasn't",
+                            shf, shf.getCode()));
+        }
+    }
+}

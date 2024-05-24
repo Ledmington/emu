@@ -40,6 +40,7 @@ public final class BasicNoteSection implements NoteSection {
         }
 
         b.setPosition(sectionHeader.getFileOffset());
+        b.setAlignment(sectionHeader.getAlignment());
         this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
     }
 

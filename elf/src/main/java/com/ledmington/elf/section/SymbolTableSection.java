@@ -22,7 +22,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class SymbolTableSection implements Section {
+public final class SymbolTableSection implements SymbolTable {
 
     private final String name;
     private final SectionHeader header;
@@ -52,6 +52,11 @@ public final class SymbolTableSection implements Section {
     @Override
     public SectionHeader getHeader() {
         return header;
+    }
+
+    @Override
+    public SymbolTableEntry[] getSymbolTable() {
+        return symbolTable;
     }
 
     @Override

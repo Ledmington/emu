@@ -30,7 +30,7 @@ public enum ISA {
     AT_T_WE_32100((short) 0x0001, "AT&T WE 32100"),
 
     /** AMD x86_64. */
-    AMD_X86_64((short) 0x003e, "AMD x86-64");
+    AMD_X86_64((short) 0x003e, "Advanced Micro Devices X86-64");
 
     private static final Map<Short, ISA> codeToISA = new HashMap<>();
 

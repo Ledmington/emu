@@ -27,46 +27,44 @@ public final class SectionHeaderType {
     private static final MiniLogger logger = MiniLogger.getLogger("sht-entry-type");
     private static final Map<Integer, SectionHeaderType> codeToType = new HashMap<>();
 
-    public static final SectionHeaderType SHT_NULL = new SectionHeaderType(0x00000000, "SHT_NULL", "Entry unused");
-    public static final SectionHeaderType SHT_PROGBITS =
-            new SectionHeaderType(0x00000001, "SHT_PROGBITS", "Program data");
-    public static final SectionHeaderType SHT_SYMTAB = new SectionHeaderType(0x00000002, "SHT_SYMTAB", "Symbol table");
-    public static final SectionHeaderType SHT_STRTAB = new SectionHeaderType(0x00000003, "SHT_STRTAB", "String table");
+    public static final SectionHeaderType SHT_NULL = new SectionHeaderType(0x00000000, "NULL", "Entry unused");
+    public static final SectionHeaderType SHT_PROGBITS = new SectionHeaderType(0x00000001, "PROGBITS", "Program data");
+    public static final SectionHeaderType SHT_SYMTAB = new SectionHeaderType(0x00000002, "SYMTAB", "Symbol table");
+    public static final SectionHeaderType SHT_STRTAB = new SectionHeaderType(0x00000003, "STRTAB", "String table");
     public static final SectionHeaderType SHT_RELA =
-            new SectionHeaderType(0x00000004, "SHT_RELA", "Relocation entries with addends");
-    public static final SectionHeaderType SHT_HASH = new SectionHeaderType(0x00000005, "SHT_HASH", "Symbol Hash table");
+            new SectionHeaderType(0x00000004, "RELA", "Relocation entries with addends");
+    public static final SectionHeaderType SHT_HASH = new SectionHeaderType(0x00000005, "HASH", "Symbol Hash table");
     public static final SectionHeaderType SHT_DYNAMIC =
-            new SectionHeaderType(0x00000006, "SHT_DYNAMIC", "Dynamic linking info");
-    public static final SectionHeaderType SHT_NOTE = new SectionHeaderType(0x00000007, "SHT_NOTE", "Notes");
+            new SectionHeaderType(0x00000006, "DYNAMIC", "Dynamic linking info");
+    public static final SectionHeaderType SHT_NOTE = new SectionHeaderType(0x00000007, "NOTE", "Notes");
     public static final SectionHeaderType SHT_NOBITS =
-            new SectionHeaderType(0x00000008, "SHT_NOBITS", "Program space with no data (bss)");
+            new SectionHeaderType(0x00000008, "NOBITS", "Program space with no data (bss)");
     public static final SectionHeaderType SHT_REL =
-            new SectionHeaderType(0x00000009, "SHT_REL", "Relocation entries (no addends)");
-    public static final SectionHeaderType SHT_SHLIB = new SectionHeaderType(0x0000000a, "SHT_SHLIB", "Reserved");
+            new SectionHeaderType(0x00000009, "REL", "Relocation entries (no addends)");
+    public static final SectionHeaderType SHT_SHLIB = new SectionHeaderType(0x0000000a, "SHLIB", "Reserved");
     public static final SectionHeaderType SHT_DYNSYM =
-            new SectionHeaderType(0x0000000b, "SHT_DYNSYM", "Dynamic linker symbol table");
+            new SectionHeaderType(0x0000000b, "DYNSYM", "Dynamic linker symbol table");
     public static final SectionHeaderType SHT_INIT_ARRAY =
-            new SectionHeaderType(0x0000000e, "SHT_INIT_ARRAY", "Array of constructors");
+            new SectionHeaderType(0x0000000e, "INIT_ARRAY", "Array of constructors");
     public static final SectionHeaderType SHT_FINI_ARRAY =
-            new SectionHeaderType(0x0000000f, "SHT_FINI_ARRAY", "Array of destructors");
+            new SectionHeaderType(0x0000000f, "FINI_ARRAY", "Array of destructors");
     public static final SectionHeaderType SHT_PREINIT_ARRAY =
-            new SectionHeaderType(0x00000010, "SHT_PREINIT_ARRAY", "Array of pre-constructors");
-    public static final SectionHeaderType SHT_GROUP = new SectionHeaderType(0x00000011, "SHT_GROUP", "Section group");
+            new SectionHeaderType(0x00000010, "PREINIT_ARRAY", "Array of pre-constructors");
+    public static final SectionHeaderType SHT_GROUP = new SectionHeaderType(0x00000011, "GROUP", "Section group");
     public static final SectionHeaderType SHT_SYMTAB_SHNDX =
-            new SectionHeaderType(0x00000012, "SHT_SYMTAB_SHNDX", "Extended section indices");
-    public static final SectionHeaderType SHT_NUM =
-            new SectionHeaderType(0x00000013, "SHT_NUM", "Number of defined types");
+            new SectionHeaderType(0x00000012, "SYMTAB_SHNDX", "Extended section indices");
+    public static final SectionHeaderType SHT_NUM = new SectionHeaderType(0x00000013, "NUM", "Number of defined types");
 
     public static final SectionHeaderType SHT_LOOS =
             new SectionHeaderType(0x60000000, "SHT_LOOS", "Unknown (OS specific)", false);
     public static final SectionHeaderType SHT_GNU_HASH =
-            new SectionHeaderType(0x6ffffff6, "SHT_GNU_HASH", "GNU Hash table");
+            new SectionHeaderType(0x6ffffff6, "GNU_HASH", "GNU Hash table");
     public static final SectionHeaderType SHT_GNU_verdef =
-            new SectionHeaderType(0x6ffffffd, "SHT_GNU_verdef", "GNU version symbol definitions");
+            new SectionHeaderType(0x6ffffffd, "GNU_verdef", "GNU version symbol definitions");
     public static final SectionHeaderType SHT_GNU_verneed =
-            new SectionHeaderType(0x6ffffffe, "SHT_GNU_verneed", "GNU version symbol needed elements");
+            new SectionHeaderType(0x6ffffffe, "VERNEED", "GNU version symbol needed elements");
     public static final SectionHeaderType SHT_GNU_versym =
-            new SectionHeaderType(0x6fffffff, "SHT_GNU_versym", "GNU version symbol table");
+            new SectionHeaderType(0x6fffffff, "VERSYM", "GNU version symbol table");
     public static final SectionHeaderType SHT_HIOS =
             new SectionHeaderType(0x6fffffff, "SHT_HIOS", "Unknown (OS specific)", false);
 

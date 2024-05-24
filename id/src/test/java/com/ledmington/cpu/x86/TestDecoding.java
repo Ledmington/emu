@@ -22,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 
-import com.ledmington.utils.BitUtils;
-
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.ledmington.utils.BitUtils;
 
 final class TestDecoding extends X86Test {
 

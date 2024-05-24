@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.MiniLogger.LoggingLevel;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.provider.Arguments;
+
+import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.MiniLogger.LoggingLevel;
 
 public class X86Test {
 

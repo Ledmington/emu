@@ -26,10 +26,10 @@ import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.ledmington.utils.BitUtils;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.ledmington.utils.BitUtils;
 
 final class TestPermissions {
 

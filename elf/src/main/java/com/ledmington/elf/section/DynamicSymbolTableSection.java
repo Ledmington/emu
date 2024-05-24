@@ -25,7 +25,7 @@ import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 
-public final class DynamicSymbolTableSection implements LoadableSection {
+public final class DynamicSymbolTableSection implements LoadableSection, SymbolTable {
 
     private final String name;
     private final SectionHeader header;
@@ -63,6 +63,11 @@ public final class DynamicSymbolTableSection implements LoadableSection {
     @Override
     public SectionHeader getHeader() {
         return header;
+    }
+
+    @Override
+    public SymbolTableEntry[] getSymbolTable() {
+        return symbolTable;
     }
 
     @Override

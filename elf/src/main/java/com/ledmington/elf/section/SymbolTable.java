@@ -17,4 +17,6 @@
 */
 package com.ledmington.elf.section;
 
-public final record NoteSectionEntry(String name, String description, long type) {}
+public interface SymbolTable extends Section {
+    SymbolTableEntry[] getSymbolTable();
+}

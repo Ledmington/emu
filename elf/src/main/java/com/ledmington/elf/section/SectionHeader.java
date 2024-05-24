@@ -27,7 +27,7 @@ public final class SectionHeader {
     private final long fileOffset;
     private final long sectionSize;
     private final int linkedSectionIndex;
-    private final int sh_info;
+    private final int info;
     private final long alignment;
     private final long entrySize;
 
@@ -49,7 +49,7 @@ public final class SectionHeader {
         this.fileOffset = fileOffset;
         this.sectionSize = sectionSize;
         this.linkedSectionIndex = linkedSectionIndex;
-        this.sh_info = sh_info;
+        this.info = sh_info;
         this.alignment = alignment;
         this.entrySize = entrySize;
     }
@@ -77,6 +77,10 @@ public final class SectionHeader {
         return type;
     }
 
+    public long getFlags() {
+        return flags;
+    }
+
     /**
      * Returns the size in bytes of each entry. Returns 0 if the section does not hold a table of fixed-size entries.
      */
@@ -96,38 +100,19 @@ public final class SectionHeader {
         return alignment;
     }
 
+    public int getLinkedSectionIndex() {
+        return linkedSectionIndex;
+    }
+
+    public int getInfo() {
+        return info;
+    }
+
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder(1_000);
-        sb.append("Name offset     : ")
-                .append(String.format("%,d (0x%08x)\n", nameOffset, nameOffset))
-                .append("Type            : ")
-                .append(String.format("%s (%s)\n", type.getName(), type.getDescription()))
-                .append("Flags           : ")
-                .append(String.format("0x%016x ", flags));
-        {
-            for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-                if ((flags & f.getCode()) != 0L) {
-                    sb.append(f.getId());
-                }
-            }
-        }
-        sb.append("\nVirtual address : ")
-                .append(String.format("0x%016x\n", virtualAddress))
-                .append("Offset on file  : ")
-                .append(String.format("%,d (0x%016x)\n", fileOffset, fileOffset))
-                .append("Size on file    : ")
-                .append(String.format("%,d bytes\n", sectionSize))
-                .append("linkedSectionIndex         : ")
-                .append(String.format("%,d (0x%08x)\n", linkedSectionIndex, linkedSectionIndex))
-                .append("sh_info         : ")
-                .append(String.format("%,d (0x%08x)\n", sh_info, sh_info))
-                .append("Alignment       : ")
-                .append(alignment);
-        if (alignment == 0 || alignment == 1) {
-            sb.append(" (no alignment)");
-        }
-        sb.append("\nEntry size      : ").append(String.format("%,d bytes\n", entrySize));
-        return sb.toString();
+        return "SectionHeader(nameOffset=" + nameOffset + ";type=" + type + ";flags=" + flags + ";virtualAddress="
+                + virtualAddress + ";fileOffset=" + fileOffset + ";size="
+                + sectionSize + ";linkedSectionIndex=" + linkedSectionIndex + ";info=" + info + ";alignment="
+                + alignment + ";entrySize=" + entrySize + ")";
     }
 }

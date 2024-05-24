@@ -24,15 +24,15 @@ import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
-import com.ledmington.cpu.x86.Register32;
-import com.ledmington.cpu.x86.Register64;
-import com.ledmington.cpu.x86.Register8;
-import com.ledmington.utils.BitUtils;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.ledmington.cpu.x86.Register32;
+import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.Register8;
+import com.ledmington.utils.BitUtils;
 
 final class TestX86RegisterFile {
 

@@ -42,6 +42,10 @@ public final class SymbolTableEntryInfo {
         return (byte) ((bind.getCode() << 4) | (type.getCode()));
     }
 
+    public SymbolTableEntryBind getBind() {
+        return bind;
+    }
+
     public SymbolTableEntryType getType() {
         return type;
     }
