@@ -44,8 +44,8 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class Main {
 
-    private static final PrintWriter out = System.console() != null ? System.console().writer()
-            : new PrintWriter(System.out);
+    private static final PrintWriter out =
+            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
 
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -160,7 +160,7 @@ public final class Main {
                     System.exit(-1);
                     break;
 
-                // TODO: add the other CLI flags
+                    // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -336,7 +336,8 @@ public final class Main {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
                                 final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd = sectionStart + s.getHeader().getSectionSize();
+                                final long sectionEnd =
+                                        sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;
