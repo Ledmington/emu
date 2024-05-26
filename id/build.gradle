@@ -58,6 +58,15 @@ jmh {
 	//duplicateClassesStrategy = DuplicatesStrategy.FAIL // Strategy to apply when encountering duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
 }
 
+tasks.register('downloadIntelManual', Download) {
+	group 'utilities'
+	description 'Downloads the Intel Software Developer Manual in the project root directory'
+	src "https://cdrdv2-public.intel.com/812392/325462-sdm-vol-1-2abcd-3abcd-4.pdf"
+	dest new File(project.getRootDir(), "intel-developer-manual.pdf")
+	overwrite false
+	acceptAnyCertificate true
+}
+
 tasks.register('formatTestFiles', JavaExec) {
 	group 'utilities'
 	description 'Formats in-place the test asm files inside app/test/resources'
