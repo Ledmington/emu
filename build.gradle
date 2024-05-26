@@ -184,5 +184,7 @@ spotless {
     }
 }
 
-allprojects.each { it.tasks.compileJava.dependsOn(spotlessApply) }
-tasks.build.dependsOn(javadoc)
+allprojects.each {
+    it.tasks.compileJava.dependsOn(spotlessApply)
+    it.tasks.build.dependsOn(it.tasks.javadoc)
+}
