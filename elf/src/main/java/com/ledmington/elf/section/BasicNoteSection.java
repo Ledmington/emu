@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** Implementation of a "non-special" {@code .note*} ELF section. */
 public final class BasicNoteSection implements NoteSection {
 
     private final String name;

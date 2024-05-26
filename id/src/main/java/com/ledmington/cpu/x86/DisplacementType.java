@@ -21,5 +21,5 @@ public enum DisplacementType {
     BYTE,
     SHORT,
     INT,
-    LONG;
+    LONG
 }

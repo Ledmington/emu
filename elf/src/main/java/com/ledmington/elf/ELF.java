@@ -53,29 +53,50 @@ public final class ELF {
         }
     }
 
+    /**
+     * Returns the File Header of this ELF file object.
+     *
+     * @return The File Header.
+     */
     public FileHeader getFileHeader() {
         return fileHeader;
     }
 
+    /**
+     * Returns the Program Header Table of this ELF file object.
+     *
+     * @return The Program Header Table.
+     */
     public PHTEntry[] getProgramHeaderTable() {
         final PHTEntry[] v = new PHTEntry[programHeaderTable.length];
         System.arraycopy(programHeaderTable, 0, v, 0, programHeaderTable.length);
         return v;
     }
 
+    /**
+     * Returns the Section Table of this ELF file object.
+     *
+     * @return The Section Table.
+     */
     public Section[] getSectionTable() {
         final Section[] v = new Section[sectionTable.length];
         System.arraycopy(sectionTable, 0, v, 0, sectionTable.length);
         return v;
     }
 
+    /**
+     * Looks for a section with the given name inside the Section Table and returns it.
+     *
+     * @param name The name of the section to look for.
+     * @return The first Section encountered such that {@code s.getName().equals(name)} returns true.
+     */
     public Section getFirstSectionByName(final String name) {
         for (final Section s : sectionTable) {
             if (s.getName().equals(name)) {
                 return s;
             }
         }
-        throw new IllegalArgumentException(String.format("No section foudn with name '%s'", name));
+        throw new IllegalArgumentException(String.format("No section found with name '%s'", name));
     }
 
     @Override

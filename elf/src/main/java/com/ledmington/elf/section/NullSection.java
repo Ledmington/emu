@@ -27,7 +27,7 @@ public final class NullSection implements Section {
     /**
      * Creates a Null section with the given section header entry.
      *
-     * @param entry The section header entry corresponding to this section.
+     * @param sectionHeader The section header entry corresponding to this section.
      */
     public NullSection(final SectionHeader sectionHeader) {
         this.header = Objects.requireNonNull(sectionHeader);

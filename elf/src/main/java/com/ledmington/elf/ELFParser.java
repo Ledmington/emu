@@ -42,6 +42,7 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
+/** A parser of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
 public final class ELFParser {
 
     private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
@@ -50,6 +51,12 @@ public final class ELFParser {
 
     private ELFParser() {}
 
+    /**
+     * Parses the given byte-array and returns an ELF file object.
+     *
+     * @param bytes The byte-array to be parsed.
+     * @return An ELF file object.
+     */
     public static ELF parse(final byte[] bytes) {
         b = new ReadOnlyByteBufferV1(bytes);
         final FileHeader fileHeader = parseFileHeader();

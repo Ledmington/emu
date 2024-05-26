@@ -17,6 +17,13 @@
 */
 package com.ledmington.elf.section;
 
+/** This type represents an ELF Section which can be loaded into memory upon ELF execution. */
 public interface LoadableSection extends Section {
+
+    /**
+     * Returns the binary content of this section when it needs to be loaded into memory for execution.
+     *
+     * @return A non-null byte array with the section's content.
+     */
     byte[] getContent();
 }

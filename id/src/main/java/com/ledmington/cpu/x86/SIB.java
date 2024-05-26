@@ -19,6 +19,10 @@ package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
 
+/**
+ * This class represents an x86 SIB (Scale-Index-Base) byte, used for representing indirect operands inside x86
+ * instructions.
+ */
 public final class SIB {
 
     private final byte scaleByte;

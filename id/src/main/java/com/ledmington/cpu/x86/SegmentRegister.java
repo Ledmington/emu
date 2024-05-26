@@ -19,6 +19,10 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
+/**
+ * This class represents a pair of an x86 segment register and a general-purpose x86 register, used for representing
+ * string operands inside x86 instructions.
+ */
 public final class SegmentRegister extends Register {
 
     private final Register16 seg;
@@ -42,5 +46,33 @@ public final class SegmentRegister extends Register {
     public int bits() {
         // TODO: check this
         return reg.bits();
+    }
+
+    @Override
+    public String toString() {
+        return "SegmentRegister(seg=" + seg + ";reg=" + reg + ')';
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + seg.hashCode();
+        h = 31 * h + reg.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SegmentRegister sr = (SegmentRegister) other;
+        return this.seg.equals(sr.seg) && this.reg.equals(sr.reg);
     }
 }

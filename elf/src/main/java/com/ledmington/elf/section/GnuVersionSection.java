@@ -38,6 +38,12 @@ public final class GnuVersionSection implements LoadableSection {
     private final SectionHeader header;
     private final short[] versions;
 
+    /**
+     * Creates a GNU Version section with the given header and parses the content from the ReadOnlyByteBuffer b.
+     *
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read the contents from.
+     */
     public GnuVersionSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 

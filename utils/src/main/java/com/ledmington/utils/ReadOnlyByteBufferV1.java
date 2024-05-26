@@ -48,10 +48,12 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     }
 
     /**
-     * Creates a ReadOnlyByteBufferV1 with the given array and the given endianness.
+     * Creates a ReadOnlyByteBufferV1 with the given array, the given endianness and the given alignment.
      *
      * @param b The byte array ot be used.
      * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
+     * @param alignment
+     *      The byte alignment to be used while reading.
      */
     public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian, final long alignment) {
         super(isLittleEndian, alignment);

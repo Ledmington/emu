@@ -105,46 +105,84 @@ public final class FileHeader {
         return flags;
     }
 
-    /** Returns the number of PHT entries in the file. */
+    /**
+     * Returns the number of PHT entries in the file.
+     *
+     * @return The number of PHT entries.
+     */
     public short getNumProgramHeaderTableEntries() {
         return nProgramHeaderTableEntries;
     }
 
-    /** Returns the number of SHT entries in the file. */
+    /**
+     * Returns the number of SHT entries in the file.
+     *
+     * @return The number of SHT entries.
+     */
     public short getNumSectionHeaderTableEntries() {
         return nSectionHeaderTableEntries;
     }
 
-    /** Returns the offset in the file where the Program Header Table starts. */
+    /**
+     * Returns the offset in the file where the Program Header Table starts.
+     *
+     * @return The PHT file offset.
+     */
     public long getProgramHeaderTableOffset() {
         return programHeaderTableOffset;
     }
 
-    /** Returns the size of each PHT entry. */
+    /**
+     * Returns the size of each PHT entry.
+     *
+     * @return The PHT entry size.
+     */
     public short getProgramHeaderTableEntrySize() {
         return programHeaderTableEntrySize;
     }
 
-    /** Returns the offset in the file where the Section Header Table starts. */
+    /**
+     * Returns the offset in the file where the Section Header Table starts.
+     *
+     * @return The SHT file offset.
+     */
     public long getSectionHeaderTableOffset() {
         return sectionHeaderTableOffset;
     }
 
-    /** Returns the size of each SHT entry. */
+    /**
+     * Returns the size of each SHT entry.
+     *
+     * @return The SHT entry size.
+     */
     public short getSectionHeaderTableEntrySize() {
         return sectionHeaderTableEntrySize;
     }
 
+    /**
+     * Returns the type of this ELF file object.
+     *
+     * @return The ELF file type.
+     */
     public FileType getFileType() {
         return fileType;
     }
 
+    /**
+     * Returns the virtual address of the entry point of this file.
+     *
+     * @return The entry point virtual address.
+     */
     public long getEntryPointVirtualAddress() {
         return entryPointVirtualAddress;
     }
 
     public int getHeaderSize() {
         return headerSize;
+    }
+
+    public int getSectionHeaderStringTableIndex() {
+        return shstrtab_index;
     }
 
     @Override
@@ -166,10 +204,6 @@ public final class FileHeader {
                 + sectionHeaderTableEntrySize + ";nSectionHeaderTableEntries="
                 + nSectionHeaderTableEntries + ";shstrtab_index="
                 + shstrtab_index + ')';
-    }
-
-    public int getSectionHeaderStringTableIndex() {
-        return shstrtab_index;
     }
 
     @Override

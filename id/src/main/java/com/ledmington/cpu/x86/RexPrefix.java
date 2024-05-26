@@ -19,6 +19,7 @@ package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
 
+/** This class represents an x86 REX prefix byte, used for extending the operands of an x86 instructions. */
 public final class RexPrefix {
 
     private static final byte REX_PREFIX_MASK = (byte) 0b11110000;
