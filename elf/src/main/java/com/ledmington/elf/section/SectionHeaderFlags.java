@@ -18,6 +18,7 @@
 package com.ledmington.elf.section;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public enum SectionHeaderFlags {
@@ -36,15 +37,17 @@ public enum SectionHeaderFlags {
     SHF_ORDERED(0x0000000004000000L, "Special ordering requirement (Solaris)", 'x'),
     SHF_EXCLUDE(0x0000000008000000L, "Section is excluded unless referenced or allocated (Solaris)", 'E');
 
+    private static final long SHF_MASK =
+            Arrays.stream(SectionHeaderFlags.values()).map(shf -> shf.getCode()).reduce(0L, (a, b) -> a | b);
+
     public static boolean isValid(final long flags) {
-        long x = flags;
-        for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-            x = x & (~f.getCode());
-        }
-        return x == 0L;
+        return (flags & SHF_MASK) != 0L;
     }
 
     public static SectionHeaderFlags[] fromLong(final long flags) {
+        if (!isValid(flags)) {
+            throw new IllegalArgumentException(String.format("Invalid SHF flags 0x%016x", flags));
+        }
         final List<SectionHeaderFlags> shf = new ArrayList<>();
         for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
             if ((flags & f.getCode()) != 0L) { // NOPMD

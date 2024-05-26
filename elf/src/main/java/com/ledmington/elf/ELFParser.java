@@ -34,7 +34,6 @@ import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.RelocationSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.SymbolTableSection;
@@ -221,15 +220,6 @@ public final class ELFParser {
         }
 
         final long flags = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-        if (!SectionHeaderFlags.isValid(flags)) {
-            final StringBuilder sb = new StringBuilder();
-            for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-                if ((flags & f.getCode()) != 0L) {
-                    sb.append(f.getId());
-                }
-            }
-            throw new IllegalArgumentException(String.format("Invalid flags value: was 0x%016x (%s)", flags, sb));
-        }
 
         final long virtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         final long fileOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();

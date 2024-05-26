@@ -17,6 +17,7 @@
 */
 package com.ledmington.cpu.x86;
 
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
@@ -35,12 +36,12 @@ import com.ledmington.utils.BitUtils;
 final class TestIncompleteInstruction extends X86Test {
 
     static Stream<Arguments> incompleteInstructions() {
-        final Set<String> validInstructions =
-                instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
+        final Set<String> validInstructions = instructions().map(arg -> ((String) arg.get()[1]).strip())
+                .collect(Collectors.toSet());
         return validInstructions.stream()
                 .flatMap(hexCode -> {
                     final String[] splitted = hexCode.split(" ");
-                    if (splitted.length == 1) {
+                    if (splitted.length == 1) { // NOPMD
                         return Stream.of();
                     }
                     // for each instruction, we generate all prefixes that do not represent other
@@ -69,11 +70,11 @@ final class TestIncompleteInstruction extends X86Test {
 
         final InstructionDecoder id = new InstructionDecoderV1(code);
 
-        // here we expect an ArrayIndexOutOfBoundsException to be thrown because,
+        // Here we expect an ArrayIndexOutOfBoundsException to be thrown because,
         // like CPUs which break when requesting a new byte and not finding it,
         // the InstructionDecoder will ask for more bytes than are available and
         // the ReadOnlyByteBufferV1 will throw this exception.
-        List<Instruction> decoded;
+        final List<Instruction> decoded;
         try {
             decoded = id.decodeAll(code.length);
         } catch (final ArrayIndexOutOfBoundsException aiooe) {
