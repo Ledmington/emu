@@ -134,8 +134,7 @@ public final class Emulator {
                             throw new Error("Not implemented");
                         }
                         case Register r -> {
-                            if (r.bits() == 64) {
-                                final Register64 r64 = (Register64) r;
+                            if (r instanceof Register64 r64) {
                                 final long imm64 = ((Immediate) inst.secondOperand()).asLong();
                                 regFile.set(r64, regFile.get(r64) & imm64);
                             } else {

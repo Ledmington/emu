@@ -115,7 +115,8 @@ public final class ELFParser {
         }
 
         final int ELFVersion_2 = b.read4();
-        if (ELFVersion_2 != 1) {
+        final int currentELFVersion = 1;
+        if (ELFVersion_2 != currentELFVersion) {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF e_version, expected 1 but was %,d (0x%08x)", ELFVersion_2, ELFVersion_2));
         }

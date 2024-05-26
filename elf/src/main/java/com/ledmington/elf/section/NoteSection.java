@@ -24,6 +24,8 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public interface NoteSection extends LoadableSection {
+
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     static NoteSectionEntry[] loadNoteSectionEntries(
             final boolean is32Bit, final ReadOnlyByteBuffer b, final long length) {
         final long start = b.getPosition();
@@ -32,9 +34,12 @@ public interface NoteSection extends LoadableSection {
         /*
          * For some reason, even though on the ELF64 reference (available here
          * https://uclibc.org/docs/elf-64-gen.pdf) says that the fields of a
-         * SHT_NOTE section mute be 8-byte words and aligned on 8-byte boundaries, here
+         * SHT_NOTE section must be 8-byte words and aligned on 8-byte boundaries, here
          * the only code that works is the one which uses 4-byte words regardless of the
          * actual ELF_CLASS.
+         *
+         * See
+         * https://stackoverflow.com/questions/78531879
          */
         b.setAlignment(1L);
         while (b.getPosition() - start < length) {

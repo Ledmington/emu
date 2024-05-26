@@ -111,7 +111,13 @@ final class TestReadOnlyByteBufferV1 {
         while (bb.getPosition() < arr.length) {
             final long start = bb.getPosition();
             bb.read1();
-            assertEquals(Math.max(start + 1L, start + alignment), bb.getPosition());
+            final long alignedPosition = Math.max(start + 1L, start + alignment);
+            assertEquals(
+                    alignedPosition,
+                    bb.getPosition(),
+                    () -> String.format(
+                            "Expected position to be aligned to %d-bytes boundary at %,d after reading a byte, but was %,d",
+                            alignment, alignedPosition, bb.getPosition()));
         }
     }
 
@@ -122,7 +128,13 @@ final class TestReadOnlyByteBufferV1 {
         while (bb.getPosition() + 1 < arr.length) {
             final long start = bb.getPosition();
             bb.read2();
-            assertEquals(Math.max(start + 2L, start + alignment), bb.getPosition());
+            final long alignedPosition = Math.max(start + 2L, start + alignment);
+            assertEquals(
+                    alignedPosition,
+                    bb.getPosition(),
+                    () -> String.format(
+                            "Expected position to be aligned to %d-bytes boundary at %,d after reading a short, but was %,d",
+                            alignment, alignedPosition, bb.getPosition()));
         }
     }
 
@@ -133,7 +145,13 @@ final class TestReadOnlyByteBufferV1 {
         while (bb.getPosition() + 3 < arr.length) {
             final long start = bb.getPosition();
             bb.read4();
-            assertEquals(Math.max(start + 4L, start + alignment), bb.getPosition());
+            final long alignedPosition = Math.max(start + 4L, start + alignment);
+            assertEquals(
+                    alignedPosition,
+                    bb.getPosition(),
+                    () -> String.format(
+                            "Expected position to be aligned to %d-bytes boundary at %,d after reading an int, but was %,d",
+                            alignment, alignedPosition, bb.getPosition()));
         }
     }
 
@@ -144,7 +162,13 @@ final class TestReadOnlyByteBufferV1 {
         while (bb.getPosition() + 7 < arr.length) {
             final long start = bb.getPosition();
             bb.read8();
-            assertEquals(Math.max(start + 8L, start + alignment), bb.getPosition());
+            final long alignedPosition = Math.max(start + 8L, start + alignment);
+            assertEquals(
+                    alignedPosition,
+                    bb.getPosition(),
+                    () -> String.format(
+                            "Expected position to be aligned to %d-bytes boundary at %,d after reading a long, but was %,d",
+                            alignment, alignedPosition, bb.getPosition()));
         }
     }
 }

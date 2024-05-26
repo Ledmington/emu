@@ -33,7 +33,6 @@ import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.SymbolTable;
 import com.ledmington.elf.section.SymbolTableEntry;
@@ -273,8 +272,7 @@ public final class Main {
                     sh.getFileOffset(),
                     sh.getSectionSize(),
                     sh.getEntrySize(),
-                    Arrays.stream(SectionHeaderFlags.values())
-                            .filter(shf -> (sh.getFlags() & shf.getCode()) != 0L)
+                    Arrays.stream(sh.getFlags())
                             .map(shf -> shf.getId())
                             .collect(Collector.of(
                                     StringBuilder::new,

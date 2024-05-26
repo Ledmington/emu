@@ -67,7 +67,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 
     @Override
     public SymbolTableEntry[] getSymbolTable() {
-        return symbolTable;
+        return Arrays.copyOf(symbolTable, symbolTable.length);
     }
 
     @Override

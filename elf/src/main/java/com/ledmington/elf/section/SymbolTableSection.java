@@ -56,7 +56,7 @@ public final class SymbolTableSection implements SymbolTable {
 
     @Override
     public SymbolTableEntry[] getSymbolTable() {
-        return symbolTable;
+        return Arrays.copyOf(symbolTable, symbolTable.length);
     }
 
     @Override

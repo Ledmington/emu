@@ -31,19 +31,19 @@ public final class SymbolTableEntry {
 
     public SymbolTableEntry(final ReadOnlyByteBuffer b, final boolean is32Bit) {
         if (is32Bit) {
-            nameOffset = b.read4();
-            value = BitUtils.asLong(b.read4());
-            size = BitUtils.asLong(b.read4());
-            info = SymbolTableEntryInfo.fromByte(b.read1());
-            visibility = SymbolTableEntryVisibility.fromByte(b.read1());
-            sectionTableIndex = b.read2();
+            this.nameOffset = b.read4();
+            this.value = BitUtils.asLong(b.read4());
+            this.size = BitUtils.asLong(b.read4());
+            this.info = SymbolTableEntryInfo.fromByte(b.read1());
+            this.visibility = SymbolTableEntryVisibility.fromByte(b.read1());
+            this.sectionTableIndex = b.read2();
         } else {
-            nameOffset = b.read4();
-            info = SymbolTableEntryInfo.fromByte(b.read1());
-            visibility = SymbolTableEntryVisibility.fromByte(b.read1());
-            sectionTableIndex = b.read2();
-            value = b.read8();
-            size = b.read8();
+            this.nameOffset = b.read4();
+            this.info = SymbolTableEntryInfo.fromByte(b.read1());
+            this.visibility = SymbolTableEntryVisibility.fromByte(b.read1());
+            this.sectionTableIndex = b.read2();
+            this.value = b.read8();
+            this.size = b.read8();
         }
     }
 

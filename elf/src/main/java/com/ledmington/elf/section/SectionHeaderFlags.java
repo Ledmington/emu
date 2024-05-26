@@ -17,6 +17,9 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum SectionHeaderFlags {
     SHF_WRITE(0x00000000000001L, "Writable", 'W'),
     SHF_ALLOC(0x00000000000002L, "Occupies memory during execution", 'A'),
@@ -39,6 +42,16 @@ public enum SectionHeaderFlags {
             x = x & (~f.getCode());
         }
         return x == 0L;
+    }
+
+    public static SectionHeaderFlags[] fromLong(final long flags) {
+        final List<SectionHeaderFlags> shf = new ArrayList<>();
+        for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
+            if ((flags & f.getCode()) != 0L) { // NOPMD
+                shf.add(f);
+            }
+        }
+        return shf.toArray(new SectionHeaderFlags[0]);
     }
 
     private final long code;

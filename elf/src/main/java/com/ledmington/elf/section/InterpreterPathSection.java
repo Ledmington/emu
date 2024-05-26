@@ -30,11 +30,13 @@ public final class InterpreterPathSection implements ProgBitsSection {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
-        if (sectionHeader.getAlignment() != 1L) {
+        final long expectedAlignment = 1L;
+        if (sectionHeader.getAlignment() != expectedAlignment) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid alignment for .interp section: expected 1 but was %,d", sectionHeader.getAlignment()));
+                    "Invalid alignment for .interp section: expected %,d but was %,d",
+                    expectedAlignment, sectionHeader.getAlignment()));
         }
-        b.setAlignment(1L);
+        b.setAlignment(expectedAlignment);
 
         final StringBuilder sb = new StringBuilder();
         char c = (char) b.read1();

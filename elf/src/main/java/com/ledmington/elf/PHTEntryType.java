@@ -114,4 +114,8 @@ public final class PHTEntryType {
     public String getName() {
         return name;
     }
+
+    public String getDescription() {
+        return description;
+    }
 }

@@ -1732,7 +1732,6 @@ public final class InstructionDecoder {
                 final Register r = pref.hasOperandSizeOverridePrefix()
                         ? Register16.AX
                         : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX);
-                final int immediateBits = pref.hasOperandSizeOverridePrefix() ? 16 : 32;
                 final Immediate imm;
                 if (pref.hasOperandSizeOverridePrefix()) {
                     // 16-bit immediate

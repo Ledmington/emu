@@ -17,12 +17,17 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
+import java.util.Objects;
+
+import com.ledmington.utils.HashUtils;
+
 /** This class is just a data holder. No check is performed in the constructor on the given data. */
 public final class SectionHeader {
 
     private final int nameOffset;
     private final SectionHeaderType type;
-    private final long flags;
+    private final SectionHeaderFlags[] flags;
     private final long virtualAddress;
     private final long fileOffset;
     private final long sectionSize;
@@ -44,7 +49,7 @@ public final class SectionHeader {
             long entrySize) {
         this.nameOffset = nameOffset;
         this.type = type;
-        this.flags = flags;
+        this.flags = Objects.requireNonNull(SectionHeaderFlags.fromLong(flags));
         this.virtualAddress = virtualAddress;
         this.fileOffset = fileOffset;
         this.sectionSize = sectionSize;
@@ -77,8 +82,8 @@ public final class SectionHeader {
         return type;
     }
 
-    public long getFlags() {
-        return flags;
+    public SectionHeaderFlags[] getFlags() {
+        return Arrays.copyOf(flags, flags.length);
     }
 
     /**
@@ -110,9 +115,50 @@ public final class SectionHeader {
 
     @Override
     public String toString() {
-        return "SectionHeader(nameOffset=" + nameOffset + ";type=" + type + ";flags=" + flags + ";virtualAddress="
+        return "SectionHeader(nameOffset=" + nameOffset + ";type=" + type + ";flags=" + Arrays.toString(flags)
+                + ";virtualAddress="
                 + virtualAddress + ";fileOffset=" + fileOffset + ";size="
                 + sectionSize + ";linkedSectionIndex=" + linkedSectionIndex + ";info=" + info + ";alignment="
                 + alignment + ";entrySize=" + entrySize + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + nameOffset;
+        h = 31 * h + type.hashCode();
+        h = 31 * h + Arrays.hashCode(flags);
+        h = 31 * h + HashUtils.hash(virtualAddress);
+        h = 31 * h + HashUtils.hash(fileOffset);
+        h = 31 * h + HashUtils.hash(sectionSize);
+        h = 31 * h + linkedSectionIndex;
+        h = 31 * h + info;
+        h = 31 * h + HashUtils.hash(alignment);
+        h = 31 * h + HashUtils.hash(entrySize);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SectionHeader sh = (SectionHeader) other;
+        return this.nameOffset == sh.nameOffset
+                && this.type.equals(sh.type)
+                && Arrays.equals(this.flags, sh.flags)
+                && this.virtualAddress == sh.virtualAddress
+                && this.fileOffset == sh.fileOffset
+                && this.sectionSize == sh.sectionSize
+                && this.linkedSectionIndex == sh.linkedSectionIndex
+                && this.info == sh.info
+                && this.alignment == sh.alignment
+                && this.entrySize == sh.entrySize;
     }
 }
