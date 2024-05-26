@@ -33,7 +33,7 @@ public final class IndirectOperandBuilder {
 
     public IndirectOperandBuilder reg1(final Register r) {
         if (this.baseRegister != null) {
-            throw new IllegalStateException("Cannot define reg1 twice");
+            throw new IllegalArgumentException("Cannot define reg1 twice");
         }
         Objects.requireNonNull(r);
         if (r.bits() != 32 && r.bits() != 64) {
@@ -50,7 +50,7 @@ public final class IndirectOperandBuilder {
 
     public IndirectOperandBuilder constant(final int c) {
         if (this.c != null) {
-            throw new IllegalStateException("Cannot define constant twice");
+            throw new IllegalArgumentException("Cannot define constant twice");
         }
         if (c != 1 && c != 2 && c != 4 && c != 8) {
             throw new IllegalArgumentException(String.format("Invalid indirect operand index constant %,d", c));
@@ -61,7 +61,7 @@ public final class IndirectOperandBuilder {
 
     public IndirectOperandBuilder reg2(final Register r) {
         if (this.indexRegister != null) {
-            throw new IllegalStateException("Cannot define reg2 twice");
+            throw new IllegalArgumentException("Cannot define reg2 twice");
         }
         Objects.requireNonNull(r);
         if (r.bits() != 32 && r.bits() != 64) {
@@ -94,7 +94,7 @@ public final class IndirectOperandBuilder {
 
     private IndirectOperandBuilder disp(final long disp, final DisplacementType displacementType) {
         if (this.displacement != null) {
-            throw new IllegalStateException("Cannot define displacement twice");
+            throw new IllegalArgumentException("Cannot define displacement twice");
         }
         this.displacement = disp;
         this.displacementType = displacementType;
@@ -103,7 +103,7 @@ public final class IndirectOperandBuilder {
 
     public IndirectOperandBuilder pointer(final PointerSize ptrSize) {
         if (this.ptrSize != null) {
-            throw new IllegalStateException("Cannot define PTR size twice");
+            throw new IllegalArgumentException("Cannot define PTR size twice");
         }
 
         this.ptrSize = Objects.requireNonNull(ptrSize);
@@ -112,13 +112,13 @@ public final class IndirectOperandBuilder {
 
     public IndirectOperand build() {
         if (alreadyBuilt) {
-            throw new IllegalStateException("Cannot build the same IndirectOperandBuilder twice");
+            throw new IllegalArgumentException("Cannot build the same IndirectOperandBuilder twice");
         }
         alreadyBuilt = true;
 
         if (baseRegister != null) {
             if (indexRegister == null || c == null) {
-                throw new IllegalStateException("Cannot build an IndirectOperand with reg1=" + baseRegister + ", "
+                throw new IllegalArgumentException("Cannot build an IndirectOperand with reg1=" + baseRegister + ", "
                         + (indexRegister == null ? "no reg2" : "reg2=" + indexRegister) + ", "
                         + (c == null ? "no constant" : "constant=" + c) + ", "
                         + (displacement == null ? "no displacement" : "displacement=" + displacement));
@@ -128,14 +128,15 @@ public final class IndirectOperandBuilder {
         } else {
             if (c != null) {
                 if (indexRegister == null) {
-                    throw new IllegalStateException("Cannot build an IndirectOperand with no reg1, no reg2, constant="
-                            + c + ", " + (displacement == null ? "no displacement" : "displacement=" + displacement));
+                    throw new IllegalArgumentException(
+                            "Cannot build an IndirectOperand with no reg1, no reg2, constant=" + c + ", "
+                                    + (displacement == null ? "no displacement" : "displacement=" + displacement));
                 }
 
                 return new IndirectOperand(null, indexRegister, c, displacement, displacementType, ptrSize);
             } else {
                 if (indexRegister == null && displacement == null) {
-                    throw new IllegalStateException(
+                    throw new IllegalArgumentException(
                             "Cannot build an IndirectOperand with no reg1, no reg2, no constant, no displacement");
                 }
 
@@ -151,9 +152,9 @@ public final class IndirectOperandBuilder {
 
     @Override
     public String toString() {
-        return "IndirectOperandBuilder(" + (baseRegister == null ? "no reg1" : "reg1=" + baseRegister) + ", "
-                + (indexRegister == null ? "no reg2" : "reg2=" + indexRegister) + ", "
-                + (c == null ? "no constant" : "constant=" + c) + ", "
-                + (displacement == null ? "no displacement" : "displacement=" + displacement) + ")";
+        return "IndirectOperandBuilder(reg1=" + baseRegister + ";reg2=" + indexRegister + ";constant=" + c
+                + ";displacement="
+                + displacement + ";displacementType="
+                + displacementType + ";ptrSize=" + ptrSize + ";alreadyBuilt=" + alreadyBuilt + ")";
     }
 }

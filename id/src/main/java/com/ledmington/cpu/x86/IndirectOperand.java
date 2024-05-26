@@ -139,7 +139,7 @@ public final class IndirectOperand implements Operand {
                 + ";reg2="
                 + reg2.toString() + ";constant="
                 + constant + ";displacement="
-                + displacement.toString()
+                + displacement.toString() + ";displacementType=" + displacementType + ";ptrSize=" + ptrSize
                 + ")";
     }
 
@@ -150,6 +150,8 @@ public final class IndirectOperand implements Operand {
         h = 31 * h + constant;
         h = 31 * h + reg2.hashCode();
         h = 31 * h + displacement.hashCode();
+        h = 31 * h + displacementType.hashCode();
+        h = 31 * h + ptrSize.hashCode();
         return h;
     }
 
@@ -168,6 +170,8 @@ public final class IndirectOperand implements Operand {
         return this.reg1.equals(io.reg1)
                 && this.constant == io.constant
                 && this.reg2.equals(io.reg2)
-                && this.displacement.equals(io.displacement);
+                && this.displacement.equals(io.displacement)
+                && this.displacementType.equals(io.displacementType)
+                && this.ptrSize.equals(io.ptrSize);
     }
 }

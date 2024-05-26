@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class X86Test {
 
     private static final String testInputFileName = "x86.test.asm";
@@ -59,8 +60,8 @@ public class X86Test {
                 }
 
                 final String[] splitted = line.split("\\|");
-
-                if (splitted.length != 2) {
+                final int expectedSides = 2;
+                if (splitted.length != expectedSides) {
                     throw new IllegalArgumentException(
                             String.format("Line %,d: '%s' is not formatted correctly", i, line));
                 }

@@ -33,6 +33,7 @@ import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.SymbolTable;
 import com.ledmington.elf.section.SymbolTableEntry;
@@ -72,8 +73,7 @@ public final class Main {
                     displayFileHeader = true;
                     break;
                 case "-a", "--all":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-l", "--program-headers", "--segments":
                     displayProgramHeaders = true;
@@ -82,12 +82,10 @@ public final class Main {
                     displaySectionHeaders = true;
                     break;
                 case "-g", "--section-groups":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-t", "--section-details":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-e", "--headers":
                     displayFileHeader = true;
@@ -100,63 +98,49 @@ public final class Main {
                     displaySymbolTable = true;
                     break;
                 case "--dyn-syms":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "--lto-syms":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-n", "--notes":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-r", "--relocs":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-u", "--unwind":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-d", "--dynamic":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-V", "--version-info":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-A", "--arch-specific":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-c", "--archive-index":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-D", "--use-dynamic":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-L", "--lint", "--enable-checks":
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-x":
                     // --hex-dump=<number|name>
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-p":
                     // --string-dump=<number|name>
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
                 case "-R":
                     // --relocated-dump=<number|name>
-                    System.out.println("This flag is not implemented yet");
-                    System.exit(-1);
+                    notImplemented();
                     break;
 
                     // TODO: add the other CLI flags
@@ -224,6 +208,11 @@ public final class Main {
         System.exit(0);
     }
 
+    private static void notImplemented() {
+        out.println("This flag is not implemented yet");
+        System.exit(-1);
+    }
+
     private static void printSymbolTable(final SymbolTable s) {
         final SymbolTableEntry[] st = s.getSymbolTable();
         out.printf("Symbol table '%s' contains %d entries:\n", s.getName(), st.length);
@@ -273,7 +262,7 @@ public final class Main {
                     sh.getSectionSize(),
                     sh.getEntrySize(),
                     Arrays.stream(sh.getFlags())
-                            .map(shf -> shf.getId())
+                            .map(SectionHeaderFlags::getId)
                             .collect(Collector.of(
                                     StringBuilder::new,
                                     StringBuilder::append,
@@ -284,10 +273,13 @@ public final class Main {
                     sh.getAlignment());
         }
 
-        out.println("Key to Flags:\n" + "  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n"
-                + "  L (link order), O (extra OS processing required), G (group), T (TLS),\n"
-                + "  C (compressed), x (unknown), o (OS specific), E (exclude),\n"
-                + "  D (mbind), l (large), p (processor specific)");
+        out.println(
+                """
+				Key to Flags:
+				  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+				  L (link order), O (extra OS processing required), G (group), T (TLS),
+				  C (compressed), x (unknown), o (OS specific), E (exclude),
+				  D (mbind), l (large), p (processor specific)""");
     }
 
     private static void printProgramHeaders(final ELF elf) {
@@ -340,7 +332,7 @@ public final class Main {
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;
                             })
-                            .map(s -> s.getName())
+                            .map(Section::getName)
                             .collect(Collectors.joining(" ")));
         }
     }

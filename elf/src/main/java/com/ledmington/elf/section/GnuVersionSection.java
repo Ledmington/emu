@@ -29,6 +29,12 @@ import com.ledmington.utils.WriteOnlyByteBuffer;
  */
 public final class GnuVersionSection implements LoadableSection {
 
+    private static final String standardName = ".gnu.version";
+
+    public static String getStandardName() {
+        return standardName;
+    }
+
     private final SectionHeader header;
     private final short[] versions;
 
@@ -45,7 +51,7 @@ public final class GnuVersionSection implements LoadableSection {
 
     @Override
     public String getName() {
-        return ".gnu.version";
+        return standardName;
     }
 
     @Override

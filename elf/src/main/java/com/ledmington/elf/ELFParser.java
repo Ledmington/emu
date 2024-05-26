@@ -279,6 +279,16 @@ public final class ELFParser {
         return sectionHeaderTable;
     }
 
+    private static String readZeroTerminatedString() {
+        final StringBuilder sb = new StringBuilder();
+        char c = (char) b.read1();
+        while (c != '\0') {
+            sb.append(c);
+            c = (char) b.read1();
+        }
+        return sb.toString();
+    }
+
     private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
         final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
@@ -287,13 +297,7 @@ public final class ELFParser {
             final SectionHeader sectionHeader = sectionHeaderTable[k];
             b.setPosition(shstr_offset + sectionHeader.getNameOffset());
 
-            final StringBuilder sb = new StringBuilder();
-            char c = (char) b.read1();
-            while (c != '\0') {
-                sb.append(c);
-                c = (char) b.read1();
-            }
-            final String name = sb.toString();
+            final String name = readZeroTerminatedString();
 
             final String typeName = sectionHeader.getType().getName();
             logger.debug("Parsing %s (%s)", name, typeName);
@@ -326,9 +330,9 @@ public final class ELFParser {
                 sectionTable[k] = new RelocationAddendSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.getName())) {
                 sectionTable[k] = new RelocationSection(name, sectionHeader, b, fileHeader.is32Bit());
-            } else if (".gnu.version".equals(name)) {
+            } else if (GnuVersionSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionSection(sectionHeader, b);
-            } else if (".gnu.version_r".equals(name)) {
+            } else if (GnuVersionRequirementsSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, sectionHeader);

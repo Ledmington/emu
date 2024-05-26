@@ -17,8 +17,7 @@
 */
 package com.ledmington.cpu.x86;
 
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,8 +35,8 @@ import com.ledmington.utils.BitUtils;
 final class TestIncompleteInstruction extends X86Test {
 
     static Stream<Arguments> incompleteInstructions() {
-        final Set<String> validInstructions = instructions().map(arg -> ((String) arg.get()[1]).strip())
-                .collect(Collectors.toSet());
+        final Set<String> validInstructions =
+                instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
         return validInstructions.stream()
                 .flatMap(hexCode -> {
                     final String[] splitted = hexCode.split(" ");
@@ -74,23 +73,6 @@ final class TestIncompleteInstruction extends X86Test {
         // like CPUs which break when requesting a new byte and not finding it,
         // the InstructionDecoder will ask for more bytes than are available and
         // the ReadOnlyByteBufferV1 will throw this exception.
-        final List<Instruction> decoded;
-        try {
-            decoded = id.decodeAll(code.length);
-        } catch (final ArrayIndexOutOfBoundsException aiooe) {
-            // what we expected, we ignore and exit
-            return;
-        } catch (final Throwable t) {
-            // something else was thrown
-            fail(() -> String.format(
-                    "Expected ArrayIndexOutOfBounds to be thrown but '%s' was thrown instead, with message '%s'",
-                    t.getClass().getName(), t.getMessage()));
-            return;
-        }
-
-        // if we reached here, nothing was thrown
-        fail(String.format(
-                "Expected ArrayIndexOutOfBounds to be thrown but nothing was thrown. The input was decoded into a list of %,d instructions: %s",
-                decoded.size(), decoded.stream().map(Instruction::toIntelSyntax).toList()));
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> id.decodeAll(code.length));
     }
 }

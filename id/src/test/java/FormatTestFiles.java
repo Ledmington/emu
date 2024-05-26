@@ -18,6 +18,7 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,13 +28,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidInstantiatingObjectsInLoops"})
 public final class FormatTestFiles {
+
+    private static final PrintWriter out =
+            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
 
     private record TestCase(String mnemonic, String hex) {}
 
     public static void main(final String[] args) {
         if (args.length > 0) {
-            System.out.println("Command-line arguments were provided but not needed. Ignoring them.");
+            out.println("Command-line arguments were provided but not needed. Ignoring them.");
         }
 
         final String testInputFileName = "x86.test.asm";
@@ -98,7 +103,7 @@ public final class FormatTestFiles {
             throw new RuntimeException(e);
         }
 
-        System.out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
+        out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
 
         final List<String> allLines = new ArrayList<>();
 

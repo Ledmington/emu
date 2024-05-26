@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import com.ledmington.utils.BitUtils;
 
+@SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 final class TestPermissions {
 
     private static final RandomGenerator rng =
@@ -82,8 +83,9 @@ final class TestPermissions {
         for (long i = start; i <= end; i++) {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.read(finalI));
-            //  assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
-            // assertThrows(IllegalArgumentException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+            // assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
+            // assertThrows(IllegalArgumentException.class, () -> mem.write(finalI,
+            // BitUtils.asByte(rng.nextInt())));
         }
     }
 

@@ -4,7 +4,9 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>Emu ruleset</description>
-    <rule ref="category/java/errorprone.xml"></rule>
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="DoNotTerminateVM" />
+    </rule>
     <rule ref="category/java/bestpractices.xml">
         <exclude name="GuardLogStatement" />
     </rule>

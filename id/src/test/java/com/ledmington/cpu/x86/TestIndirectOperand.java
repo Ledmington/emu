@@ -18,7 +18,7 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -88,7 +88,11 @@ final class TestIndirectOperand {
     @MethodSource("correctIndirectOperands")
     void correct(final IndirectOperandBuilder iob, final String expected) {
         final IndirectOperand io = iob.build();
-        assertEquals(expected, io.toIntelSyntax());
+        assertEquals(
+                expected,
+                io.toIntelSyntax(),
+                () -> String.format(
+                        "Expected indirect operand '%s' to be '%s' but wasn't", io.toIntelSyntax(), expected));
     }
 
     static Stream<Arguments> wrongIndirectOperands() {
@@ -100,12 +104,10 @@ final class TestIndirectOperand {
                         () -> IndirectOperand.builder().constant(6),
                         () -> IndirectOperand.builder().constant(7),
                         () -> IndirectOperand.builder().constant(9),
-                        () -> IndirectOperand.builder().reg1(null),
                         () -> IndirectOperand.builder().reg1(Register8.AL),
                         () -> IndirectOperand.builder().reg1(Register16.AX),
                         () -> IndirectOperand.builder().reg1(RegisterXMM.XMM0),
                         () -> IndirectOperand.builder().reg1(Register32.EAX).reg1(Register32.EAX),
-                        () -> IndirectOperand.builder().reg2(null),
                         () -> IndirectOperand.builder().reg2(Register8.AL),
                         () -> IndirectOperand.builder().reg2(Register16.AX),
                         () -> IndirectOperand.builder().reg2(RegisterXMM.XMM0),
@@ -120,12 +122,6 @@ final class TestIndirectOperand {
     @ParameterizedTest
     @MethodSource("wrongIndirectOperands")
     void correct(final Supplier<IndirectOperandBuilder> task) {
-        try {
-            task.get();
-        } catch (final IllegalArgumentException | IllegalStateException | NullPointerException e) {
-            // expected exceptions
-        } catch (final Exception e) {
-            fail();
-        }
+        assertThrows(IllegalArgumentException.class, task::get);
     }
 }

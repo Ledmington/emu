@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
@@ -52,6 +54,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         this(new ReadOnlyByteBufferV1(code));
     }
 
+    @Override
     public List<Instruction> decodeAll(final int nBytesToDecode) {
         logger.info("The code is %,d bytes long", nBytesToDecode);
 
@@ -61,13 +64,14 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
             final Instruction inst = decodeOne();
             { // Debugging info
                 final long codeLen = b.getPosition() - pos;
-                final StringBuilder sb = new StringBuilder();
                 b.setPosition(pos);
-                sb.append(String.format("%02x", b.read1()));
-                for (int i = 1; i < codeLen; i++) {
-                    sb.append(String.format(" %02x", b.read1()));
-                }
-                logger.info("%08x: %-24s %s", pos, sb.toString(), inst.toIntelSyntax());
+                logger.info(
+                        "%08x: %-24s %s",
+                        pos,
+                        IntStream.range(0, (int) codeLen)
+                                .mapToObj(i -> String.format("%02x", b.read1()))
+                                .collect(Collectors.joining(" ")),
+                        inst.toIntelSyntax());
             }
             instructions.add(inst);
         }
@@ -75,6 +79,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         return instructions;
     }
 
+    @Override
     public Instruction decodeOne() {
         final Prefixes pref = parsePrefixes();
 
@@ -357,14 +362,15 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         final int immediateBits =
                 pref.hasOperandSizeOverridePrefix() ? 16 : ((opcodeFirstByte == (byte) 0xc6) ? 8 : 32);
 
-        if (modrm.reg() == 0b00000000) {
-            return parseMOV(
-                    pref,
-                    modrm,
-                    immediateBits,
-                    pref.rex().isOperand64Bit() ? PointerSize.QWORD_PTR : PointerSize.fromSize(immediateBits));
+        final byte zeroReg = 0b00000000;
+        if (modrm.reg() != zeroReg) {
+            throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         }
-        throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+        return parseMOV(
+                pref,
+                modrm,
+                immediateBits,
+                pref.rex().isOperand64Bit() ? PointerSize.QWORD_PTR : PointerSize.fromSize(immediateBits));
     }
 
     private Instruction parseExtendedOpcodeGroup2(final byte opcodeFirstByte, final Prefixes pref) {
@@ -458,36 +464,27 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
             final Immediate imm =
                     switch (immediateBits) {
-                        case 8 -> {
-                            yield switch (operandBits) {
-                                case 8 -> imm8();
-                                case 16 -> new Immediate((short) b.read1());
-                                case 32 -> new Immediate((int) b.read1());
-                                case 64 -> new Immediate((long) b.read1());
-                                default -> throw new IllegalArgumentException(String.format(
-                                        "Immediate bits were %,d and operand bits were %,d",
-                                        immediateBits, operandBits));
-                            };
-                        }
-                        case 16 -> {
-                            yield switch (operandBits) {
-                                case 16 -> imm16();
-                                case 32 -> new Immediate((int) b.read2LE());
-                                case 64 -> new Immediate((long) b.read2LE());
-                                default -> throw new IllegalArgumentException(String.format(
-                                        "Immediate bits were %,d and operand bits were %,d",
-                                        immediateBits, operandBits));
-                            };
-                        }
-                        default -> {
-                            yield switch (operandBits) {
-                                case 32 -> imm32();
-                                case 64 -> new Immediate((long) b.read4LE());
-                                default -> throw new IllegalArgumentException(String.format(
-                                        "Immediate bits were %,d and operand bits were %,d",
-                                        immediateBits, operandBits));
-                            };
-                        }
+                        case 8 -> switch (operandBits) {
+                            case 8 -> imm8();
+                            case 16 -> new Immediate((short) b.read1());
+                            case 32 -> new Immediate((int) b.read1());
+                            case 64 -> new Immediate((long) b.read1());
+                            default -> throw new IllegalArgumentException(String.format(
+                                    "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
+                        };
+                        case 16 -> switch (operandBits) {
+                            case 16 -> imm16();
+                            case 32 -> new Immediate((int) b.read2LE());
+                            case 64 -> new Immediate((long) b.read2LE());
+                            default -> throw new IllegalArgumentException(String.format(
+                                    "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
+                        };
+                        default -> switch (operandBits) {
+                            case 32 -> imm32();
+                            case 64 -> new Immediate((long) b.read4LE());
+                            default -> throw new IllegalArgumentException(String.format(
+                                    "Immediate bits were %,d and operand bits were %,d", immediateBits, operandBits));
+                        };
                     };
             return new Instruction(opcode, r, imm);
         }
@@ -496,19 +493,15 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
     private Instruction parseExtendedOpcodeGroup7(final byte opcodeFirstByte, final byte opcodeSecondByte) {
         final ModRM modrm = modrm();
 
-        if (modrm.mod() == MODRM_MOD_NO_DISP) {
-            if (modrm.reg() == 0b00000010) {
-                if (modrm.rm() == 0b00000000) {
-                    return new Instruction(Opcode.XGETBV);
-                }
+        if (modrm.mod() != MODRM_MOD_NO_DISP) {
+            notImplemented();
+        }
 
-                throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
-            }
-
+        if (modrm.reg() != 0b00000010 || modrm.rm() != 0b00000000) {
             throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         }
 
-        throw new Error("Not implemented");
+        return new Instruction(Opcode.XGETBV);
     }
 
     private Instruction parseExtendedOpcodeGroup16(
@@ -1217,13 +1210,13 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
             throw new IllegalArgumentException("Not implemented");
         }
 
-        if (modrm.reg() == 0b00000101) {
-            return new Instruction(
-                    Opcode.INCSSPQ,
-                    Registers.fromCode(modrm.rm(), true, pref.rex().ModRMRMExtension(), false));
+        final byte INCSSPQOpcode = 0b00000101;
+        if (modrm.reg() != INCSSPQOpcode) {
+            throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
         }
 
-        throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+        return new Instruction(
+                Opcode.INCSSPQ, Registers.fromCode(modrm.rm(), true, pref.rex().ModRMRMExtension(), false));
     }
 
     private Instruction parseExtendedOpcodeGroup9(
@@ -1231,11 +1224,11 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         final ModRM modrm = modrm();
 
         if (modrm.mod() != MODRM_MOD_NO_DISP) {
-            throw new Error("Not implemented");
+            notImplemented();
         }
 
         if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
-            throw new Error("Not implemented");
+            notImplemented();
         }
 
         final Opcode opcode =
@@ -1602,9 +1595,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                     SBB_INDIRECT8_R8_OPCODE,
                     SUB_INDIRECT8_R8_OPCODE,
                     CMP_INDIRECT8_R8_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
-                // thing)
-                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x00) {
+                // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111;
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000000) {
                     invalidValue();
                 }
                 final byte m2 = (byte) 0b00111000; // (the inverse of m1)
@@ -1631,12 +1624,12 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                     SBB_INDIRECT32_R32_OPCODE,
                     SUB_INDIRECT32_R32_OPCODE,
                     CMP_INDIRECT32_R32_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
-                // thing)
-                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x01) {
+                // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111;
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000001) {
                     invalidValue();
                 }
-                final byte m2 = (byte) 0b00111000; // (the inverse of m1)
+                final byte m2 = ~m1;
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
                 final Opcode opcode = opcodeTable[opcodeByte];
                 yield parseMR(pref, opcode);
@@ -1651,12 +1644,12 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                     SBB_R8_INDIRECT8_OPCODE,
                     SUB_R8_INDIRECT8_OPCODE,
                     CMP_R8_INDIRECT8_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
-                // thing)
-                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x02) {
+                // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111;
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000010) {
                     invalidValue();
                 }
-                final byte m2 = (byte) 0b00111000; // (the inverse of m1)
+                final byte m2 = ~m1;
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
                 final Opcode opcode = opcodeTable[opcodeByte];
                 final ModRM modrm = modrm();
@@ -1680,12 +1673,12 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                     SBB_R32_INDIRECT32_OPCODE,
                     SUB_R32_INDIRECT32_OPCODE,
                     CMP_R32_INDIRECT32_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
-                // thing)
-                if (BitUtils.and(opcodeFirstByte, m1) != 0b00000011) {
+                // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111;
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000011) {
                     invalidValue();
                 }
-                final byte m2 = (byte) 0b00111000; // (the inverse of m1)
+                final byte m2 = ~m1;
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
                 final Opcode opcode = opcodeTable[opcodeByte];
                 yield parseRM(pref, opcode);
@@ -1700,12 +1693,12 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                     SBB_AL_IMM8_OPCODE,
                     SUB_AL_IMM8_OPCODE,
                     CMP_AL_IMM8_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
-                // thing)
-                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x04) {
+                // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111;
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000100) {
                     invalidValue();
                 }
-                final byte m2 = (byte) 0b00111000; // (the inverse of m1)
+                final byte m2 = ~m1;
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
                 final Opcode opcode = opcodeTable[opcodeByte];
                 yield new Instruction(opcode, Register8.AL, imm8());
@@ -1720,13 +1713,12 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                     SBB_EAX_IMM32_OPCODE,
                     SUB_EAX_IMM32_OPCODE,
                     CMP_EAX_IMM32_OPCODE -> {
-                final byte m1 = (byte) 0b11000111; // (just to check that we are doing the correct
-                // thing)
-                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0x05) {
+                // (just to check that we are doing the correct thing)
+                final byte m1 = (byte) 0b11000111;
+                if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000101) {
                     invalidValue();
                 }
-
-                final byte m2 = (byte) 0b00111000; // (the inverse of m1)
+                final byte m2 = ~m1;
                 final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
                 final Opcode opcode = opcodeTable[opcodeByte];
                 final Register r = pref.hasOperandSizeOverridePrefix()
@@ -1734,23 +1726,16 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
                         : (pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX);
                 final Immediate imm;
                 if (pref.hasOperandSizeOverridePrefix()) {
-                    // 16-bit immediate
-                    if (r.bits() == 16) {
-                        imm = imm16();
-                    } else if (r.bits() == 32) {
-                        imm = new Immediate((int) b.read2LE());
-                    } else {
-                        // r.bits() == 64
-                        imm = new Immediate((long) b.read2LE());
-                    }
+                    imm = switch (r.bits()) {
+                        case 16 -> imm16();
+                        case 32 -> new Immediate((int) b.read2LE());
+                        default -> new Immediate((long) b.read2LE());
+                    };
                 } else {
-                    // 32-bit immediate
-                    if (r.bits() == 32) {
-                        imm = imm32();
-                    } else {
-                        // r.bits() == 64
-                        imm = new Immediate((long) b.read4LE());
-                    }
+                    imm = switch (r.bits()) {
+                        case 32 -> imm32();
+                        default -> new Immediate((long) b.read4LE());
+                    };
                 }
                 yield new Instruction(opcode, r, imm);
             }
@@ -2024,7 +2009,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
             }
         } else {
             // SIB not needed
-            sib = null;
+            sib = new SIB((byte) 0x00);
             if (modrm.mod() == (byte) 0x00 && operand2.toIntelSyntax().endsWith("bp")) {
                 operand2 = hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP;
             }
@@ -2037,8 +2022,8 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
         if (modrm.mod() != MODRM_MOD_NO_DISP) {
             // indirect operand needed
-            if ((modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05)
-                    || (modrm.mod() == (byte) 0x00 && sib != null && sib.base() == (byte) 0x05)
+            if (modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05
+                    || modrm.mod() == (byte) 0x00 && sib.base() == (byte) 0x05
                     || modrm.mod() == (byte) 0x02) {
                 final int disp32 = b.read4LE();
                 iob.disp(disp32);
@@ -2087,6 +2072,11 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         return new Immediate(b.read8LE());
     }
 
+    // TODO: remove when not needed
+    private void notImplemented() {
+        throw new Error("Not implemented");
+    }
+
     private boolean isLegacyPrefixGroup1(final byte prefix) {
         return prefix == InstructionPrefix.LOCK.code
                 || prefix == InstructionPrefix.REPNZ.code
@@ -2122,5 +2112,32 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
     private boolean isMultibyteOpcode(final byte opcode) {
         return opcode == MULTIBYTE_OPCODE_PREFIX;
+    }
+
+    @Override
+    public String toString() {
+        return "InstructionDecoderV1(b=" + b.toString() + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + b.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final InstructionDecoderV1 id = (InstructionDecoderV1) other;
+        return this.b.equals(id.b);
     }
 }

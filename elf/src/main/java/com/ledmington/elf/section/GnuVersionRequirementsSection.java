@@ -25,6 +25,12 @@ import java.util.Objects;
  */
 public final class GnuVersionRequirementsSection implements LoadableSection {
 
+    private static final String standardName = ".gnu.version_r";
+
+    public static String getStandardName() {
+        return standardName;
+    }
+
     private final SectionHeader header;
 
     public GnuVersionRequirementsSection(final SectionHeader sectionHeader) {
@@ -33,7 +39,7 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 
     @Override
     public String getName() {
-        return ".gnu.version_r";
+        return standardName;
     }
 
     @Override

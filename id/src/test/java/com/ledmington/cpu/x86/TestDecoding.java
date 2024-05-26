@@ -27,6 +27,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.utils.BitUtils;
 
+@SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 final class TestDecoding extends X86Test {
 
     @ParameterizedTest

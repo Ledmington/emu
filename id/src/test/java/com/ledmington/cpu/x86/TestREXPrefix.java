@@ -43,8 +43,15 @@ final class TestREXPrefix {
 
     @ParameterizedTest
     @MethodSource("wrongPrefixes")
-    void error(final byte rex) {
-        assertFalse(RexPrefix.isREXPrefix(rex));
+    void invalidREXPrefix(final byte rex) {
+        assertFalse(
+                RexPrefix.isREXPrefix(rex),
+                () -> String.format("Expected byte 0x%02x to not be a valid REX prefix but it was", rex));
+    }
+
+    @ParameterizedTest
+    @MethodSource("wrongPrefixes")
+    void errorOnInvalidREXPrefix(final byte rex) {
         assertThrows(IllegalArgumentException.class, () -> new RexPrefix(rex));
     }
 

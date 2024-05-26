@@ -40,13 +40,14 @@ public final class GnuPropertySection implements NoteSection {
         b.setAlignment(sectionHeader.getAlignment());
         this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
 
-        if (entries.length != 1) {
+        final int expectedEntries = 1;
+        if (entries.length != expectedEntries) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid .note.gnu.property section: expected 1 note entry but found %,d: %s",
-                    entries.length, Arrays.toString(entries)));
+                    "Invalid .note.gnu.property section: expected %,d note entry but found %,d: %s",
+                    expectedEntries, entries.length, Arrays.toString(entries)));
         }
 
-        if (entries[0].name().length() != 4 || !"GNU\0".equals(entries[0].name())) {
+        if (!"GNU\0".equals(entries[0].name())) {
             throw new IllegalArgumentException(String.format(
                     "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", entries[0].name()));
         }
