@@ -24,6 +24,7 @@ import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
@@ -65,7 +66,7 @@ public final class Emulator {
             return mem.readCode(regFile.get(Register64.RIP));
         }
     };
-    private final InstructionDecoder dec = new InstructionDecoder(this.instructionFetcher);
+    private final InstructionDecoder dec = new InstructionDecoderV1(this.instructionFetcher);
 
     public Emulator(final ELF elf) {
         this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));

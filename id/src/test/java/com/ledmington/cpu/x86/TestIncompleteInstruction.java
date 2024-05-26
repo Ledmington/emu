@@ -67,7 +67,7 @@ final class TestIncompleteInstruction extends X86Test {
             code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
         }
 
-        final InstructionDecoder id = new InstructionDecoder(code);
+        final InstructionDecoder id = new InstructionDecoderV1(code);
 
         // here we expect an ArrayIndexOutOfBoundsException to be thrown because,
         // like CPUs which break when requesting a new byte and not finding it,

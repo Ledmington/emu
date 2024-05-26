@@ -38,7 +38,7 @@ final class TestDecoding extends X86Test {
             code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
         }
 
-        final InstructionDecoder id = new InstructionDecoder(code);
+        final InstructionDecoder id = new InstructionDecoderV1(code);
         final List<Instruction> instructions = id.decodeAll(code.length);
         assertNotNull(instructions, "InstructionDecoder returned a null List");
         final int codeLen = instructions.size();
