@@ -38,8 +38,9 @@ public enum SectionHeaderFlags {
     SHF_ORDERED(0x0000000004000000L, "ORDERED", "Special ordering requirement (Solaris)", 'x'),
     SHF_EXCLUDE(0x0000000008000000L, "EXCLUDE", "Section is excluded unless referenced or allocated (Solaris)", 'E');
 
-    private static final long SHF_MASK =
-            Arrays.stream(SectionHeaderFlags.values()).map(shf -> shf.getCode()).reduce(0L, (a, b) -> a | b);
+    private static final long SHF_MASK = Arrays.stream(SectionHeaderFlags.values())
+            .map(SectionHeaderFlags::getCode)
+            .reduce(0L, (a, b) -> a | b);
 
     public static boolean isValid(final long flags) {
         return (flags & (~SHF_MASK)) == 0L;
@@ -51,7 +52,7 @@ public enum SectionHeaderFlags {
         }
         final List<SectionHeaderFlags> shf = new ArrayList<>();
         for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
-            if ((flags & f.getCode()) != 0L) { // NOPMD
+            if ((flags & f.code) != 0L) { // NOPMD
                 shf.add(f);
             }
         }
@@ -84,5 +85,10 @@ public enum SectionHeaderFlags {
 
     public char getId() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "SectionHeaderFlags(code=" + code + ";name=" + name + ";description=" + description + ";id=" + id + ')';
     }
 }

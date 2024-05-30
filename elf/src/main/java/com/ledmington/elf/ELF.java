@@ -28,11 +28,7 @@ import com.ledmington.elf.section.Section;
  * <p>References: <a href="https://uclibc.org/docs/elf.pdf">32 bit</a> and <a
  * href="https://uclibc.org/docs/elf-64-gen.pdf">64 bit</a>.
  */
-public final class ELF {
-
-    private final FileHeader fileHeader;
-    private final PHTEntry[] programHeaderTable;
-    private final Section[] sectionTable;
+public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section... sectionTable) {
 
     /**
      * Creates an ELF object.
@@ -58,7 +54,8 @@ public final class ELF {
      *
      * @return The File Header.
      */
-    public FileHeader getFileHeader() {
+    @Override
+    public FileHeader fileHeader() {
         return fileHeader;
     }
 
@@ -67,7 +64,8 @@ public final class ELF {
      *
      * @return The Program Header Table.
      */
-    public PHTEntry[] getProgramHeaderTable() {
+    @Override
+    public PHTEntry[] programHeaderTable() {
         final PHTEntry[] v = new PHTEntry[programHeaderTable.length];
         System.arraycopy(programHeaderTable, 0, v, 0, programHeaderTable.length);
         return v;
@@ -78,7 +76,8 @@ public final class ELF {
      *
      * @return The Section Table.
      */
-    public Section[] getSectionTable() {
+    @Override
+    public Section[] sectionTable() {
         final Section[] v = new Section[sectionTable.length];
         System.arraycopy(sectionTable, 0, v, 0, sectionTable.length);
         return v;

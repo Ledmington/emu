@@ -46,12 +46,12 @@ public enum OSABI {
 
     static {
         for (final OSABI x : OSABI.values()) {
-            if (codeToABI.containsKey(x.getCode())) {
+            if (codeToABI.containsKey(x.code)) {
                 throw new IllegalStateException(String.format(
                         "OSABI enum value with code %d (0x%02x) and name '%s' already exists",
-                        x.getCode(), x.getCode(), x.getName()));
+                        x.code, x.code, x.OSName));
             }
-            codeToABI.put(x.getCode(), x);
+            codeToABI.put(x.code, x);
         }
     }
 
@@ -102,5 +102,10 @@ public enum OSABI {
      */
     public String getName() {
         return this.OSName;
+    }
+
+    @Override
+    public String toString() {
+        return "OSABI(code=" + code + ";OSName=" + OSName + ')';
     }
 }

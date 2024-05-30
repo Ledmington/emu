@@ -29,12 +29,12 @@ public enum PHTEntryFlags {
 
     static {
         for (final PHTEntryFlags x : PHTEntryFlags.values()) {
-            if (codeToFlags.containsKey(x.getCode())) {
+            if (codeToFlags.containsKey(x.code)) {
                 throw new IllegalStateException(String.format(
                         "PHT flags enum value with code %d (0x%02x) and description '%s' already exists",
-                        x.getCode(), x.getCode(), x.getDescription()));
+                        x.code, x.code, x.description));
             }
-            codeToFlags.put(x.getCode(), x);
+            codeToFlags.put(x.code, x);
         }
     }
 
@@ -58,5 +58,10 @@ public enum PHTEntryFlags {
 
     public char getId() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "PHTEntryFlags(code=" + code + ";description=" + description + ";id=" + id + ')';
     }
 }

@@ -47,11 +47,11 @@ public final class SymbolTableEntryType {
 
     public static SymbolTableEntryType fromCode(final byte code) {
         if (!codeToType.containsKey(code)) {
-            if (code >= STT_LOOS.getCode() && code <= STT_HIOS.getCode()) {
+            if (code >= STT_LOOS.code && code <= STT_HIOS.code) {
                 logger.warning("Unknown Symbol table entry type found: 0x%02x", code);
                 return new SymbolTableEntryType(code, "OS-specific", false);
             }
-            if (code >= STT_LOPROC.getCode() && code <= STT_HIPROC.getCode()) {
+            if (code >= STT_LOPROC.code && code <= STT_HIPROC.code) {
                 logger.warning("Unknown Symbol table entry type found: 0x%02x", code);
                 return new SymbolTableEntryType(code, "Processor-specific", false);
             }
@@ -91,7 +91,7 @@ public final class SymbolTableEntryType {
 
     @Override
     public String toString() {
-        return name;
+        return "SymbolTableEntryType(code=" + code + ";name=" + name + ')';
     }
 
     @Override

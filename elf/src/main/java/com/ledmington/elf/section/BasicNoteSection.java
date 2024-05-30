@@ -94,7 +94,7 @@ public final class BasicNoteSection implements NoteSection {
         if (this == other) {
             return true;
         }
-        if (this.getClass().equals(other.getClass())) {
+        if (!this.getClass().equals(other.getClass())) {
             return false;
         }
         final BasicNoteSection bns = (BasicNoteSection) other;

@@ -70,8 +70,9 @@ public interface NoteSection extends LoadableSection {
     @Override
     default byte[] getContent() {
         final NoteSectionEntry[] entries = getEntries();
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(
-                Arrays.stream(entries).mapToInt(e -> e.getAlignedSize()).sum());
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(Arrays.stream(entries)
+                .mapToInt(NoteSectionEntry::getAlignedSize)
+                .sum());
         int runningTotal = 0;
         for (final NoteSectionEntry nse : entries) {
             bb.write(nse.name().length());

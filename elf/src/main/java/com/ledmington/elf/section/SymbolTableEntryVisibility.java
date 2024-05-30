@@ -65,7 +65,7 @@ public final class SymbolTableEntryVisibility {
 
     @Override
     public String toString() {
-        return name;
+        return "SymbolTableEntryVisibility(code=" + code + ";name=" + name + ')';
     }
 
     @Override

@@ -84,11 +84,11 @@ public final class DynamicTableEntryTag {
 
     public static DynamicTableEntryTag fromCode(final long code) {
         if (!codeToTag.containsKey(code)) {
-            if (code >= DT_LOOS.getCode() && code <= DT_HIOS.getCode()) {
+            if (code >= DT_LOOS.code && code <= DT_HIOS.code) {
                 logger.warning("Unknown Dynamic table entry tag found: 0x%016x", code);
                 return new DynamicTableEntryTag(code, "OS-specific", false);
             }
-            if (code >= DT_LOPROC.getCode() && code <= DT_HIPROC.getCode()) {
+            if (code >= DT_LOPROC.code && code <= DT_HIPROC.code) {
                 logger.warning("Unknown Dynamic table entry tag found: 0x%016x", code);
                 return new DynamicTableEntryTag(code, "Processor-specific", false);
             }
@@ -124,5 +124,10 @@ public final class DynamicTableEntryTag {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "DynamicTableEntryTag(code=" + code + ";name=" + name + ')';
     }
 }

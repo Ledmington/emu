@@ -76,6 +76,6 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
             return false;
         }
         final GnuVersionRequirementsSection gvrs = (GnuVersionRequirementsSection) other;
-        return this.header.equals(gvrs);
+        return this.header.equals(gvrs.header);
     }
 }

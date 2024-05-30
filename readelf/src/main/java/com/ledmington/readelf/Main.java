@@ -258,7 +258,7 @@ public final class Main {
     }
 
     private static void printNoteSections(final ELF elf) {
-        for (final Section s : elf.getSectionTable()) {
+        for (final Section s : elf.sectionTable()) {
             if (!s.getName().startsWith(".note")) {
                 continue;
             }
@@ -284,7 +284,7 @@ public final class Main {
                 + //
                 "       Flags");
 
-        final Section[] sections = elf.getSectionTable();
+        final Section[] sections = elf.sectionTable();
         for (int i = 0; i < sections.length; i++) {
             final Section s = sections[i];
             final SectionHeader sh = s.getHeader();
@@ -331,7 +331,7 @@ public final class Main {
                           [Nr] Name              Type             Address           Offset
                                Size              EntSize          Flags  Link  Info  Align""");
 
-        final Section[] sections = elf.getSectionTable();
+        final Section[] sections = elf.sectionTable();
         for (int i = 0; i < sections.length; i++) {
             final Section s = sections[i];
             final SectionHeader sh = s.getHeader();
@@ -372,7 +372,7 @@ public final class Main {
                           Type           Offset             VirtAddr           PhysAddr
                                          FileSiz            MemSiz              Flags  Align""");
 
-        final PHTEntry[] pht = elf.getProgramHeaderTable();
+        final PHTEntry[] pht = elf.programHeaderTable();
         for (final PHTEntry phte : pht) {
             out.printf(
                     "  %-14s 0x%016x 0x%016x 0x%016x\n                 0x%016x 0x%016x  %3s    0x%x\n",
@@ -398,8 +398,8 @@ public final class Main {
         out.println(" Section to Segment mapping:\n" + //
                 "  Segment Sections...");
 
-        final PHTEntry[] pht = elf.getProgramHeaderTable();
-        final Section[] sections = elf.getSectionTable();
+        final PHTEntry[] pht = elf.programHeaderTable();
+        final Section[] sections = elf.sectionTable();
         for (int i = 0; i < pht.length; i++) {
             final PHTEntry phte = pht[i];
             out.printf(
@@ -449,53 +449,45 @@ public final class Main {
                     bb.read1(),
                     bb.read1());
         }
-        out.printf(
-                "  Class:                             %s\n", elf.getFileHeader().is32Bit() ? "ELF32" : "ELF64");
+        out.printf("  Class:                             %s\n", elf.fileHeader().is32Bit() ? "ELF32" : "ELF64");
         out.printf(
                 "  Data:                              %s\n",
-                elf.getFileHeader().isLittleEndian() ? "2's complement, little-endian" : "2's complement, big-endian");
+                elf.fileHeader().isLittleEndian() ? "2's complement, little-endian" : "2's complement, big-endian");
         out.println("  Version:                           1 (current)");
         out.printf(
                 "  OS/ABI:                            %s\n",
-                elf.getFileHeader().getOSABI().getName());
-        out.printf(
-                "  ABI Version:                       %s\n", elf.getFileHeader().getABIVersion());
+                elf.fileHeader().getOSABI().getName());
+        out.printf("  ABI Version:                       %s\n", elf.fileHeader().getABIVersion());
         out.printf(
                 "  Type:                              %s\n",
-                elf.getFileHeader().getFileType().getName());
+                elf.fileHeader().getFileType().getName());
         out.printf(
                 "  Machine:                           %s\n",
-                elf.getFileHeader().getISA().getName());
+                elf.fileHeader().getISA().getName());
         out.printf(
-                "  Version:                           0x%x\n",
-                elf.getFileHeader().getVersion());
+                "  Version:                           0x%x\n", elf.fileHeader().getVersion());
         out.printf(
-                "  Entry point address:               0x%x\n",
-                elf.getFileHeader().getEntryPointVirtualAddress());
+                "  Entry point address:               0x%x\n", elf.fileHeader().getEntryPointVirtualAddress());
         out.printf(
                 "  Start of program headers:          %d (bytes into file)\n",
-                elf.getFileHeader().getProgramHeaderTableOffset());
+                elf.fileHeader().getProgramHeaderTableOffset());
         out.printf(
                 "  Start of section headers:          %d (bytes into file)\n",
-                elf.getFileHeader().getSectionHeaderTableOffset());
+                elf.fileHeader().getSectionHeaderTableOffset());
         out.printf(
-                "  Flags:                             0x%x\n",
-                elf.getFileHeader().getFlags());
+                "  Flags:                             0x%x\n", elf.fileHeader().getFlags());
         out.printf(
                 "  Size of this header:               %d (bytes)\n",
-                elf.getFileHeader().getHeaderSize());
+                elf.fileHeader().getHeaderSize());
         out.printf(
                 "  Size of program headers:           %d (bytes)\n",
-                elf.getFileHeader().getProgramHeaderTableEntrySize());
-        out.printf(
-                "  Number of program headers:         %d\n", elf.getFileHeader().getNumProgramHeaderTableEntries());
+                elf.fileHeader().getProgramHeaderTableEntrySize());
+        out.printf("  Number of program headers:         %d\n", elf.fileHeader().getNumProgramHeaderTableEntries());
         out.printf(
                 "  Size of section headers:           %d (bytes)\n",
-                elf.getFileHeader().getSectionHeaderTableEntrySize());
-        out.printf(
-                "  Number of section headers:         %d\n", elf.getFileHeader().getNumSectionHeaderTableEntries());
-        out.printf(
-                "  Section header string table index: %d\n", elf.getFileHeader().getSectionHeaderStringTableIndex());
+                elf.fileHeader().getSectionHeaderTableEntrySize());
+        out.printf("  Number of section headers:         %d\n", elf.fileHeader().getNumSectionHeaderTableEntries());
+        out.printf("  Section header string table index: %d\n", elf.fileHeader().getSectionHeaderStringTableIndex());
         out.flush();
     }
 

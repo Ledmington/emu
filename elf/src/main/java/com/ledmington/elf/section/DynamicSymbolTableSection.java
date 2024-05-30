@@ -107,7 +107,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
     @Override
     public String toString() {
         return "DynamicSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit + ";symbolTable="
-                + symbolTable + ")";
+                + Arrays.toString(symbolTable) + ")";
     }
 
     @Override

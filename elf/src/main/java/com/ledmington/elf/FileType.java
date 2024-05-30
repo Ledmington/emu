@@ -42,12 +42,12 @@ public enum FileType {
 
     static {
         for (final FileType x : FileType.values()) {
-            if (codeToFileType.containsKey(x.getCode())) {
+            if (codeToFileType.containsKey(x.code)) {
                 throw new IllegalStateException(String.format(
                         "ELF file type enum value with code %d (0x%02x) and name '%s' already exists",
-                        x.getCode(), x.getCode(), x.getName()));
+                        x.code, x.code, x.fileTypeName));
             }
-            codeToFileType.put(x.getCode(), x);
+            codeToFileType.put(x.code, x);
         }
     }
 
@@ -100,5 +100,10 @@ public enum FileType {
      */
     public String getName() {
         return fileTypeName;
+    }
+
+    @Override
+    public String toString() {
+        return "FileType(code=" + code + ";name=" + fileTypeName + ')';
     }
 }

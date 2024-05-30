@@ -74,15 +74,15 @@ public final class Emulator {
     }
 
     public void run() {
-        if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
-                && elf.getFileHeader().getFileType() != FileType.ET_DYN) {
+        if (elf.fileHeader().getFileType() != FileType.ET_EXEC
+                && elf.fileHeader().getFileType() != FileType.ET_DYN) {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-                    elf.getFileHeader().getFileType()));
+                    elf.fileHeader().getFileType()));
         }
 
-        this.instructionFetcher.setPosition(elf.getFileHeader().getEntryPointVirtualAddress());
-        logger.debug("Entry point virtual address : 0x%x", elf.getFileHeader().getEntryPointVirtualAddress());
+        this.instructionFetcher.setPosition(elf.fileHeader().getEntryPointVirtualAddress());
+        logger.debug("Entry point virtual address : 0x%x", elf.fileHeader().getEntryPointVirtualAddress());
 
         loadELF();
 
@@ -92,7 +92,7 @@ public final class Emulator {
 
         // setup stack
         final long allocatedMemory = 100_000_000L; // 100 MB
-        final long highestAddress = Arrays.stream(elf.getSectionTable())
+        final long highestAddress = Arrays.stream(elf.sectionTable())
                 .map(sec ->
                         sec.getHeader().getVirtualAddress() + sec.getHeader().getSectionSize())
                 .max(Long::compare)
@@ -195,7 +195,7 @@ public final class Emulator {
 
     private void loadELF() {
         logger.debug("Loading ELF segments into memory");
-        for (final PHTEntry phte : elf.getProgramHeaderTable()) {
+        for (final PHTEntry phte : elf.programHeaderTable()) {
             if (phte.getType() != PHTEntryType.PT_LOAD) {
                 // This segment is not loadable
                 continue;
@@ -215,7 +215,7 @@ public final class Emulator {
         }
 
         logger.debug("Loading ELF sections into memory");
-        for (final Section sec : elf.getSectionTable()) {
+        for (final Section sec : elf.sectionTable()) {
             if (sec.getHeader().getSectionSize() != 0) {
                 mem.loadSection(sec);
             }

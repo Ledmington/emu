@@ -36,12 +36,11 @@ public enum ISA {
 
     static {
         for (final ISA x : ISA.values()) {
-            if (codeToISA.containsKey(x.getCode())) {
+            if (codeToISA.containsKey(x.code)) {
                 throw new IllegalStateException(String.format(
-                        "ISA enum value with code %d (0x%02x) and name '%s' already exists",
-                        x.getCode(), x.getCode(), x.getName()));
+                        "ISA enum value with code %d (0x%02x) and name '%s' already exists", x.code, x.code, x.name));
             }
-            codeToISA.put(x.getCode(), x);
+            codeToISA.put(x.code, x);
         }
     }
 
@@ -92,5 +91,10 @@ public enum ISA {
      */
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "ISA(code=" + code + ";name=" + name + ')';
     }
 }

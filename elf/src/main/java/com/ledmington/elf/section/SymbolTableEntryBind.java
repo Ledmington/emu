@@ -40,11 +40,11 @@ public final class SymbolTableEntryBind {
 
     public static SymbolTableEntryBind fromCode(final byte code) {
         if (!codeToBind.containsKey(code)) {
-            if (code >= STB_LOOS.getCode() && code <= STB_HIOS.getCode()) {
+            if (code >= STB_LOOS.code && code <= STB_HIOS.code) {
                 logger.warning("Unknown Symbol table entry bind found: 0x%02x", code);
                 return new SymbolTableEntryBind(code, "OS-specific", false);
             }
-            if (code >= STB_LOPROC.getCode() && code <= STB_HIPROC.getCode()) {
+            if (code >= STB_LOPROC.code && code <= STB_HIPROC.code) {
                 logger.warning("Unknown Symbol table entry bind found: 0x%02x", code);
                 return new SymbolTableEntryBind(code, "Processor-specific", false);
             }

@@ -97,7 +97,7 @@ public final class DynamicSection implements LoadableSection {
     @Override
     public String toString() {
         return "DynamicSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit + ";dynamicTable="
-                + dynamicTable + ")";
+                + Arrays.toString(dynamicTable) + ")";
     }
 
     @Override
