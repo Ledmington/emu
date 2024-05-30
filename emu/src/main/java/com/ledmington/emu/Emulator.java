@@ -39,7 +39,6 @@ import com.ledmington.emu.mem.MemoryController;
 import com.ledmington.emu.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** A useful reference <a href="https://linuxgazette.net/84/hawk.html">here</a>. */
 public final class Emulator {
@@ -49,28 +48,14 @@ public final class Emulator {
     private final ELF elf;
     private final MemoryController mem;
     private final X86RegisterFile regFile = new X86RegisterFile();
-    private final ReadOnlyByteBuffer instructionFetcher = new ReadOnlyByteBuffer(false, 1) {
-
-        @Override
-        public void setPosition(final long newPosition) {
-            regFile.set(Register64.RIP, newPosition);
-        }
-
-        @Override
-        public long getPosition() {
-            return regFile.get(Register64.RIP);
-        }
-
-        @Override
-        protected byte read() {
-            return mem.readCode(regFile.get(Register64.RIP));
-        }
-    };
-    private final InstructionDecoder dec = new InstructionDecoderV1(this.instructionFetcher);
+    private final InstructionFetcher instructionFetcher;
+    private final InstructionDecoder dec;
 
     public Emulator(final ELF elf) {
         this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));
         this.elf = Objects.requireNonNull(elf);
+        this.instructionFetcher = new InstructionFetcher(mem, regFile);
+        this.dec = new InstructionDecoderV1(this.instructionFetcher);
     }
 
     public void run() {

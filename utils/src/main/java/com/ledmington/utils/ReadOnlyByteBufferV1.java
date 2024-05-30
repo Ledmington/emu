@@ -50,13 +50,15 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     /**
      * Creates a ReadOnlyByteBufferV1 with the given array, the given endianness and the given alignment.
      *
-     * @param b The byte array ot be used.
+     * @param bytes The byte array ot be used.
      * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
      * @param alignment The byte alignment to be used while reading.
      */
-    public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian, final long alignment) {
+    public ReadOnlyByteBufferV1(final byte[] bytes, final boolean isLittleEndian, final long alignment) {
         super(isLittleEndian, alignment);
-        this.b = Objects.requireNonNull(b);
+        Objects.requireNonNull(bytes);
+        this.b = new byte[bytes.length];
+        System.arraycopy(bytes, 0, this.b, 0, bytes.length);
         this.position = 0L;
     }
 
@@ -73,6 +75,11 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     @Override
     protected byte read() {
         return b[BitUtils.asInt(position)];
+    }
+
+    @Override
+    public ReadOnlyByteBuffer copy() {
+        return new ReadOnlyByteBufferV1(this.b, this.isLE, this.alignment);
     }
 
     @Override

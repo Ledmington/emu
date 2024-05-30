@@ -19,6 +19,7 @@ package com.ledmington.elf.section;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,8 +45,8 @@ final class TestNoteSectionParsing {
             wb.write(expected[i].name().length());
             wb.write(expected[i].description().length());
             wb.write(expected[i].type());
-            wb.write(expected[i].name().getBytes());
-            wb.write(expected[i].description().getBytes());
+            wb.write(expected[i].name().getBytes(StandardCharsets.UTF_8));
+            wb.write(expected[i].description().getBytes(StandardCharsets.UTF_8));
             if (i < expected.length - 1) {
                 wb.setPosition(runningLength + expected[i].getAlignedSize());
             }
@@ -53,7 +54,7 @@ final class TestNoteSectionParsing {
         }
         final byte[] encoded = wb.array();
         final NoteSectionEntry[] parsed =
-                NoteSection.loadNoteSectionEntries(is32Bit, new ReadOnlyByteBufferV1(encoded), (long) encoded.length);
+                NoteSection.loadNoteSectionEntries(is32Bit, new ReadOnlyByteBufferV1(encoded), encoded.length);
         assertArrayEquals(
                 expected,
                 parsed,

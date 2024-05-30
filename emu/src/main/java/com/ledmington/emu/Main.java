@@ -36,7 +36,7 @@ public final class Main {
     private static ELF parseELF(final String filename) {
         final File file = new File(filename);
         if (!file.exists()) {
-            throw new IllegalArgumentException(String.format("File '%s' does not exist\n", filename));
+            throw new IllegalArgumentException(String.format("File '%s' does not exist%n", filename));
         }
 
         byte[] bytes;

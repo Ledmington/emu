@@ -62,7 +62,7 @@ public final class RexPrefix {
         return rBit;
     }
 
-    public boolean ModRMRegExtension() {
+    public boolean getModRMRegExtension() {
         return rBit;
     }
 
@@ -82,7 +82,7 @@ public final class RexPrefix {
         return bBit;
     }
 
-    public boolean ModRMRMExtension() {
+    public boolean getModRMRMExtension() {
         return bBit;
     }
 

@@ -21,7 +21,7 @@ package com.ledmington.utils;
  * An abstract class for a ByteBuffer which allows only read operations. Most methods are already implemented which call
  * on the {@link #read()}, {@link #getPosition()} and {@link #setPosition(long)} methods.
  */
-public abstract class ReadOnlyByteBuffer {
+public abstract class ReadOnlyByteBuffer implements Copyable<ReadOnlyByteBuffer> {
 
     /** Default endianness: true for little-endian, false for big-endian. */
     protected boolean isLE;

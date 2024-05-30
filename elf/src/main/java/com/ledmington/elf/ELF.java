@@ -39,13 +39,13 @@ public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section.
      */
     public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section... sectionTable) {
         this.fileHeader = Objects.requireNonNull(fileHeader);
-        this.programHeaderTable = Objects.requireNonNull(programHeaderTable);
-        for (final PHTEntry phte : programHeaderTable) {
-            Objects.requireNonNull(phte);
+        this.programHeaderTable = new PHTEntry[Objects.requireNonNull(programHeaderTable).length];
+        for (int i = 0; i < programHeaderTable.length; i++) {
+            this.programHeaderTable[i] = Objects.requireNonNull(programHeaderTable[i]);
         }
-        this.sectionTable = Objects.requireNonNull(sectionTable);
-        for (final Section s : sectionTable) {
-            Objects.requireNonNull(s);
+        this.sectionTable = new Section[Objects.requireNonNull(sectionTable).length];
+        for (int i = 0; i < sectionTable.length; i++) {
+            this.sectionTable[i] = Objects.requireNonNull(sectionTable[i]);
         }
     }
 
@@ -100,21 +100,8 @@ public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section.
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder(1_000);
-        sb.append(" --- File Header --- \n").append(fileHeader).append("\n --- Program Header Table --- \n\n");
-        for (int i = 0; i < programHeaderTable.length; i++) {
-            sb.append(String.format("PHT entry n.%,d\n", i))
-                    .append(programHeaderTable[i].toString())
-                    .append('\n');
-        }
-        sb.append(" --- End of Program Header Table --- \n\n --- Section Table --- \n\n");
-        for (int i = 0; i < sectionTable.length; i++) {
-            sb.append(String.format("Section n.%,d\n", i))
-                    .append(sectionTable[i].toString())
-                    .append('\n');
-        }
-        sb.append(" --- End of Section Table --- \n");
-        return sb.toString();
+        return "ELF(fileHeader=" + fileHeader + ";programHeaderTable=" + Arrays.toString(programHeaderTable)
+                + ";sectionTable=" + Arrays.toString(sectionTable) + ")";
     }
 
     @Override

@@ -17,6 +17,7 @@
 */
 package com.ledmington.elf.section;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -63,7 +64,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
 
     @Override
     public byte[] getContent() {
-        return interpreterFilePath.getBytes();
+        return interpreterFilePath.getBytes(StandardCharsets.UTF_8);
     }
 
     @Override

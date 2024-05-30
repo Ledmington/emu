@@ -19,6 +19,8 @@ package com.ledmington.elf;
 
 import java.util.Objects;
 
+import com.ledmington.utils.HashUtils;
+
 public final class PHTEntry {
 
     private final PHTEntryType type;
@@ -101,22 +103,55 @@ public final class PHTEntry {
 
     @Override
     public String toString() {
-        return "Segment type           : " + type
-                + "\nFlags                  : "
-                + (readable ? 'R' : ' ') + (writeable ? 'W' : ' ') + (executable ? 'X' : ' ')
-                + "\nOffset                 : "
-                + String.format("0x%016x\n", segmentOffset)
-                + "Virtual address        : "
-                + String.format("0x%016x\n", segmentVirtualAddress)
-                + "Physical address       : "
-                + String.format("0x%016x\n", segmentPhysicalAddress)
-                + "Segment size on file   : "
-                + String.format("%,d bytes\n", segmentFileSize)
-                + "Segment size in memory : "
-                + String.format("%,d bytes\n", segmentMemorySize)
-                + "Alignment              : "
-                + alignment
-                + ((alignment == 0 || alignment == 1) ? " (no alignment)" : "")
-                + '\n';
+        return "PHTEntry(type=" + type + ";readable="
+                + readable + ";writeable="
+                + writeable + ";executable="
+                + executable + ";segmentOffset="
+                + segmentOffset + ";segmentVirtualAddress="
+                + segmentVirtualAddress + ";segmentPhysicalAddress="
+                + segmentPhysicalAddress + ";segmentFileSize="
+                + segmentFileSize + ";segmentMemorySize="
+                + segmentMemorySize + ";alignment="
+                + alignment + ')';
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + type.hashCode();
+        h = 31 * h + HashUtils.hash(readable);
+        h = 31 * h + HashUtils.hash(writeable);
+        h = 31 * h + HashUtils.hash(executable);
+        h = 31 * h + HashUtils.hash(segmentOffset);
+        h = 31 * h + HashUtils.hash(segmentVirtualAddress);
+        h = 31 * h + HashUtils.hash(segmentPhysicalAddress);
+        h = 31 * h + HashUtils.hash(segmentFileSize);
+        h = 31 * h + HashUtils.hash(segmentMemorySize);
+        h = 31 * h + HashUtils.hash(alignment);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final PHTEntry phte = (PHTEntry) other;
+        return this.type.equals(phte.type)
+                && this.readable == phte.readable
+                && this.writeable == phte.writeable
+                && this.executable == phte.executable
+                && this.segmentOffset == phte.segmentOffset
+                && this.segmentVirtualAddress == phte.segmentVirtualAddress
+                && this.segmentPhysicalAddress == phte.segmentPhysicalAddress
+                && this.segmentFileSize == phte.segmentFileSize
+                && this.segmentMemorySize == phte.segmentMemorySize
+                && this.alignment == phte.alignment;
     }
 }

@@ -17,6 +17,7 @@
 */
 package com.ledmington.elf.section;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,13 +44,13 @@ public interface NoteSection extends LoadableSection {
             for (int i = 0; i < namesz; i++) {
                 nameBytes[i] = b.read1();
             }
-            final String name = new String(nameBytes);
+            final String name = new String(nameBytes, StandardCharsets.UTF_8);
 
             final byte[] descriptionBytes = new byte[descsz];
             for (int i = 0; i < descsz; i++) {
                 descriptionBytes[i] = b.read1();
             }
-            final String description = new String(descriptionBytes);
+            final String description = new String(descriptionBytes, StandardCharsets.UTF_8);
 
             // alignmnent
             final long bytes = is32Bit ? 4L : 8L;
@@ -78,8 +79,8 @@ public interface NoteSection extends LoadableSection {
             bb.write(nse.name().length());
             bb.write(nse.description().length());
             bb.write(nse.type());
-            bb.write(nse.name().getBytes());
-            bb.write(nse.description().getBytes());
+            bb.write(nse.name().getBytes(StandardCharsets.UTF_8));
+            bb.write(nse.description().getBytes(StandardCharsets.UTF_8));
             runningTotal += nse.getAlignedSize();
             bb.setPosition(runningTotal);
         }
