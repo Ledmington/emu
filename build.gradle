@@ -1,7 +1,8 @@
 plugins {
     id 'java'
-    id 'pmd'
     id 'jacoco'
+    id 'pmd'
+    id 'com.github.spotbugs' version "6.0.15"
     id 'com.adarshr.test-logger' version '4.0.0'
     id 'com.diffplug.spotless' version '6.25.0'
     id 'com.github.ben-manes.versions' version '0.51.0'
@@ -26,8 +27,9 @@ ext.junitVersion = "5.10.2"
 
 allprojects {
     apply plugin: 'java'
-    apply plugin: 'pmd'
     apply plugin: 'jacoco'
+    apply plugin: 'pmd'
+    apply plugin: 'com.github.spotbugs'
     apply plugin: 'com.adarshr.test-logger'
     apply plugin: 'com.github.ben-manes.versions'
 
@@ -42,6 +44,8 @@ allprojects {
     }
 
     dependencies {
+        spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0'
+
         testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
         testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
         testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
@@ -71,15 +75,15 @@ allprojects {
     jacocoTestReport {
         dependsOn test // tests are required to run before generating the report
         reports {
-            xml.required = true
-            csv.required = true
+            // xml.required = true
+            // csv.required = true
             html.required = true
             html.outputLocation = layout.buildDirectory.dir('jacoco')
         }
     }
 
     jacoco {
-        toolVersion = "0.8.11"
+        toolVersion = "0.8.12"
         reportsDirectory = layout.buildDirectory.dir('jacoco')
     }
 
@@ -117,6 +121,10 @@ allprojects {
         threads = 1
         incrementalAnalysis = true
         ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "ruleset.xml"))
+    }
+
+    spotbugs {
+        toolVersion = '4.8.5'
     }
 
     // cleanup tasks
