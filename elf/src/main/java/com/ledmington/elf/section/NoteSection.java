@@ -18,10 +18,12 @@
 package com.ledmington.elf.section;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 public interface NoteSection extends LoadableSection {
 
@@ -31,37 +33,55 @@ public interface NoteSection extends LoadableSection {
         final long start = b.getPosition();
         final List<NoteSectionEntry> entries = new ArrayList<>();
 
-        /*
-         * For some reason, even though on the ELF64 reference (available here
-         * https://uclibc.org/docs/elf-64-gen.pdf) says that the fields of a
-         * SHT_NOTE section must be 8-byte words and aligned on 8-byte boundaries, here
-         * the only code that works is the one which uses 4-byte words regardless of the
-         * actual ELF_CLASS.
-         *
-         * See
-         * https://stackoverflow.com/questions/78531879
-         */
         b.setAlignment(1L);
         while (b.getPosition() - start < length) {
-            final long namesz = BitUtils.asLong(b.read4());
-            final long descsz = BitUtils.asLong(b.read4());
-            final long type = BitUtils.asLong(b.read4());
+            final int namesz = b.read4();
+            final int descsz = b.read4();
+            final int type = b.read4();
 
-            final byte[] nameBytes = new byte[BitUtils.asInt(namesz)];
+            final byte[] nameBytes = new byte[namesz];
             for (int i = 0; i < namesz; i++) {
                 nameBytes[i] = b.read1();
             }
             final String name = new String(nameBytes);
 
-            final byte[] descriptionBytes = new byte[BitUtils.asInt(descsz)];
+            final byte[] descriptionBytes = new byte[descsz];
             for (int i = 0; i < descsz; i++) {
                 descriptionBytes[i] = b.read1();
             }
             final String description = new String(descriptionBytes);
 
-            entries.add(new NoteSectionEntry(name, description, type));
+            // alignmnent
+            final long bytes = is32Bit ? 4L : 8L;
+            final long byteShift = is32Bit ? 2L : 3L;
+            final long newPosition = (b.getPosition() % bytes != 0L)
+                    ? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
+                    : b.getPosition();
+            b.setPosition(newPosition);
+
+            entries.add(new NoteSectionEntry(name, description, type, is32Bit));
         }
 
         return entries.toArray(new NoteSectionEntry[0]);
+    }
+
+    NoteSectionEntry[] getEntries();
+
+    @Override
+    default byte[] getContent() {
+        final NoteSectionEntry[] entries = getEntries();
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(
+                Arrays.stream(entries).mapToInt(e -> e.getAlignedSize()).sum());
+        int runningTotal = 0;
+        for (final NoteSectionEntry nse : entries) {
+            bb.write(nse.name().length());
+            bb.write(nse.description().length());
+            bb.write(nse.type());
+            bb.write(nse.name().getBytes());
+            bb.write(nse.description().getBytes());
+            runningTotal += nse.getAlignedSize();
+            bb.setPosition(runningTotal);
+        }
+        return bb.array();
     }
 }

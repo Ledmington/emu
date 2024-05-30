@@ -22,17 +22,17 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class GnuPropertySection implements NoteSection {
+public final class GnuBuildIDSection implements NoteSection {
 
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
-    public GnuPropertySection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+    public GnuBuildIDSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.header = Objects.requireNonNull(sectionHeader);
 
         if (header.getEntrySize() != 0) {
             throw new IllegalArgumentException(String.format(
-                    "The .note.gnu.property section doesn't have fixed-size entries but its header says they should be %,d bytes each",
+                    "The .note.gnu.build-id section doesn't have fixed-size entries but its header says they should be %,d bytes each",
                     header.getEntrySize()));
         }
 
@@ -43,19 +43,19 @@ public final class GnuPropertySection implements NoteSection {
         final int expectedEntries = 1;
         if (entries.length != expectedEntries) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid .note.gnu.property section: expected %,d note entry but found %,d: %s",
+                    "Invalid .note.gnu.build-id section: expected %,d note entry but found %,d: %s",
                     expectedEntries, entries.length, Arrays.toString(entries)));
         }
 
         if (!"GNU\0".equals(entries[0].name())) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", entries[0].name()));
+                    "Invalid owner for .note.gnu.build-id section: expected 'GNU' but was '%s'", entries[0].name()));
         }
     }
 
     @Override
     public String getName() {
-        return ".note.gnu.property";
+        return ".note.gnu.build-id";
     }
 
     @Override
@@ -70,7 +70,7 @@ public final class GnuPropertySection implements NoteSection {
 
     @Override
     public String toString() {
-        return "GnuPropertySection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
+        return "GnuBuildIDSection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
     }
 
     @Override
@@ -92,7 +92,7 @@ public final class GnuPropertySection implements NoteSection {
         if (!this.getClass().equals(other.getClass())) {
             return false;
         }
-        final GnuPropertySection gps = (GnuPropertySection) other;
-        return this.header.equals(gps.header) && Arrays.equals(this.entries, gps.entries);
+        final GnuBuildIDSection gbis = (GnuBuildIDSection) other;
+        return this.header.equals(gbis.header) && Arrays.equals(this.entries, gbis.entries);
     }
 }

@@ -24,6 +24,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 public final class DynamicSection implements LoadableSection {
 
@@ -70,7 +71,7 @@ public final class DynamicSection implements LoadableSection {
 
     @Override
     public byte[] getContent() {
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(dynamicTable.length * (is32Bit ? 8 : 16));
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(dynamicTable.length * (is32Bit ? 8 : 16));
         for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
             if (is32Bit) {
                 bb.write(BitUtils.asInt(dynamicTableEntry.getTag().getCode()));

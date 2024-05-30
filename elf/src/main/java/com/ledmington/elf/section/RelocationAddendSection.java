@@ -24,6 +24,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 public final class RelocationAddendSection implements LoadableSection {
 
@@ -48,6 +49,10 @@ public final class RelocationAddendSection implements LoadableSection {
         }
     }
 
+    public RelocationAddendEntry[] getRelocationAddendTable() {
+        return Arrays.copyOf(relocationAddendTable, relocationAddendTable.length);
+    }
+
     @Override
     public String getName() {
         return name;
@@ -60,7 +65,7 @@ public final class RelocationAddendSection implements LoadableSection {
 
     @Override
     public byte[] getContent() {
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(relocationAddendTable.length * (is32Bit ? 12 : 24));
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24));
         for (final RelocationAddendEntry relocationAddendEntry : relocationAddendTable) {
             if (is32Bit) {
                 bb.write(BitUtils.asInt(relocationAddendEntry.offset()));

@@ -31,10 +31,15 @@ import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.InterpreterPathSection;
+import com.ledmington.elf.section.NoteSection;
+import com.ledmington.elf.section.NoteSectionEntry;
+import com.ledmington.elf.section.RelocationAddendEntry;
+import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.SectionHeaderType;
+import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.SymbolTable;
 import com.ledmington.elf.section.SymbolTableEntry;
 import com.ledmington.elf.section.SymbolTableSection;
@@ -53,10 +58,13 @@ public final class Main {
         String filename = null;
         boolean displayFileHeader = false;
         boolean displaySectionHeaders = false;
+        boolean displaySectionDetails = false;
         boolean displayProgramHeaders = false;
         boolean displaySectionToSegmentMapping = false;
         boolean displayDynamicSymbolTable = false;
         boolean displaySymbolTable = false;
+        boolean displayNoteSections = false;
+        boolean displayRelocationSections = false;
         for (final String arg : args) {
             switch (arg) {
                 case "-H", "--help":
@@ -85,7 +93,7 @@ public final class Main {
                     notImplemented();
                     break;
                 case "-t", "--section-details":
-                    notImplemented();
+                    displaySectionDetails = true;
                     break;
                 case "-e", "--headers":
                     displayFileHeader = true;
@@ -98,16 +106,16 @@ public final class Main {
                     displaySymbolTable = true;
                     break;
                 case "--dyn-syms":
-                    notImplemented();
+                    displayDynamicSymbolTable = true;
                     break;
                 case "--lto-syms":
                     notImplemented();
                     break;
                 case "-n", "--notes":
-                    notImplemented();
+                    displayNoteSections = true;
                     break;
                 case "-r", "--relocs":
-                    notImplemented();
+                    displayRelocationSections = true;
                     break;
                 case "-u", "--unwind":
                     notImplemented();
@@ -182,6 +190,13 @@ public final class Main {
             printSectionHeaders(elf);
         }
 
+        if (displaySectionDetails) {
+            if (displaySectionHeaders) {
+                out.println();
+            }
+            printSectionDetails(elf);
+        }
+
         if (displayProgramHeaders) {
             if (displaySectionHeaders) {
                 out.println();
@@ -197,11 +212,24 @@ public final class Main {
         }
 
         if (displayDynamicSymbolTable) {
-            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"));
+            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"), (StringTableSection)
+                    elf.getFirstSectionByName(".strtab"));
         }
 
         if (displaySymbolTable) {
-            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"));
+            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"), (StringTableSection)
+                    elf.getFirstSectionByName(".strtab"));
+        }
+
+        if (displayNoteSections) {
+            out.println();
+            printNoteSections(elf);
+        }
+
+        if (displayRelocationSections) {
+            out.println();
+            printRelocationSection((RelocationAddendSection) elf.getFirstSectionByName(".rela.dyn"));
+            printRelocationSection((RelocationAddendSection) elf.getFirstSectionByName(".rela.plt"));
         }
 
         out.flush();
@@ -213,7 +241,68 @@ public final class Main {
         System.exit(-1);
     }
 
-    private static void printSymbolTable(final SymbolTable s) {
+    private static void printRelocationSection(final RelocationAddendSection ras) {
+        final SectionHeader rash = ras.getHeader();
+        final RelocationAddendEntry[] relocationAddendTable = ras.getRelocationAddendTable();
+        out.printf(
+                "Relocation section '%s' at offset 0x%x contains %,d entr%s:\n",
+                ras.getName(),
+                rash.getFileOffset(),
+                relocationAddendTable.length,
+                relocationAddendTable.length == 1 ? "y" : "ies");
+        out.println("  Offset          Info           Type           Sym. Value    Sym. Name + Addend");
+        for (final RelocationAddendEntry rae : relocationAddendTable) {
+            out.printf("%016x  %016x %s\n", rae.offset(), rae.info(), "TODO");
+        }
+        out.println();
+    }
+
+    private static void printNoteSections(final ELF elf) {
+        for (final Section s : elf.getSectionTable()) {
+            if (!s.getName().startsWith(".note")) {
+                continue;
+            }
+
+            final NoteSection ns = (NoteSection) s;
+            out.printf("Displaying notes found in: %s\n", s.getName());
+            out.println("  Owner                Data size     Description");
+
+            for (final NoteSectionEntry nse : ns.getEntries()) {
+                out.printf("  %-20s 0x%08x     %016x TODO\n", nse.name(), nse.getSize(), nse.type());
+            }
+            out.println();
+        }
+    }
+
+    private static void printSectionDetails(final ELF elf) {
+        out.println("Section Headers:\n" + //
+                "  [Nr] Name\n"
+                + //
+                "       Type              Address          Offset            Link\n"
+                + //
+                "       Size              EntSize          Info              Align\n"
+                + //
+                "       Flags");
+
+        final Section[] sections = elf.getSectionTable();
+        for (int i = 0; i < sections.length; i++) {
+            final Section s = sections[i];
+            final SectionHeader sh = s.getHeader();
+            out.printf("  [%2d] %s\n", i, s.getName());
+            out.printf(
+                    "       %-16s %016x %016x %d\n",
+                    sh.getType().getName(), sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex());
+            out.printf(
+                    "       %016x %016x %-16d %d\n",
+                    sh.getSectionSize(), sh.getEntrySize(), sh.getInfo(), sh.getAlignment());
+            out.printf(
+                    "       [%016x]: %s\n",
+                    Arrays.stream(sh.getFlags()).mapToLong(f -> f.getCode()).reduce(0L, (a, b) -> a | b),
+                    Arrays.stream(sh.getFlags()).map(f -> f.getName()).collect(Collectors.joining(", ")));
+        }
+    }
+
+    private static void printSymbolTable(final SymbolTable s, final StringTableSection strtab) {
         final SymbolTableEntry[] st = s.getSymbolTable();
         out.printf("Symbol table '%s' contains %d entries:\n", s.getName(), st.length);
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
@@ -230,32 +319,26 @@ public final class Main {
                     ste.getSectionTableIndex() == 0
                             ? "UND"
                             : (ste.getSectionTableIndex() < 0 ? "ABS" : ste.getSectionTableIndex()),
-                    "TODO");
+                    strtab.getString(ste.getNameOffset()));
         }
         out.println();
     }
 
     private static void printSectionHeaders(final ELF elf) {
-        out.println("Section Headers:\n" + //
-                "  [Nr] Name              Type             Address           Offset\n"
-                + //
-                "       Size              EntSize          Flags  Link  Info  Align");
+        out.println(
+                """
+                        Section Headers:
+                          [Nr] Name              Type             Address           Offset
+                               Size              EntSize          Flags  Link  Info  Align""");
 
         final Section[] sections = elf.getSectionTable();
-        final int maxNameLength = 17;
-        final int maxTypeLength = 16;
-        final String formatString = String.format(
-                "  [%%2d] %%-%ds %%-%ds %%016x  %%08x\n       %%016x  %%016x %%3s    %%4d  %%4d     %%d\n",
-                maxNameLength, maxTypeLength);
         for (int i = 0; i < sections.length; i++) {
             final Section s = sections[i];
             final SectionHeader sh = s.getHeader();
             out.printf(
-                    formatString,
+                    "  [%2d] %-17s %-16s %016x  %08x\n       %016x  %016x %3s    %4d  %4d     %d\n",
                     i,
-                    s.getName().length() > maxNameLength
-                            ? s.getName().substring(0, maxNameLength - 5) + "[...]"
-                            : s.getName(),
+                    s.getName().length() > 17 ? s.getName().substring(0, 17 - 5) + "[...]" : s.getName(),
                     sh.getType().getName(),
                     sh.getVirtualAddress(),
                     sh.getFileOffset(),
@@ -275,18 +358,19 @@ public final class Main {
 
         out.println(
                 """
-				Key to Flags:
-				  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
-				  L (link order), O (extra OS processing required), G (group), T (TLS),
-				  C (compressed), x (unknown), o (OS specific), E (exclude),
-				  D (mbind), l (large), p (processor specific)""");
+                        Key to Flags:
+                          W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+                          L (link order), O (extra OS processing required), G (group), T (TLS),
+                          C (compressed), x (unknown), o (OS specific), E (exclude),
+                          D (mbind), l (large), p (processor specific)""");
     }
 
     private static void printProgramHeaders(final ELF elf) {
-        out.println("Program Headers:\n" + //
-                "  Type           Offset             VirtAddr           PhysAddr\n"
-                + //
-                "                 FileSiz            MemSiz              Flags  Align");
+        out.println(
+                """
+                        Program Headers:
+                          Type           Offset             VirtAddr           PhysAddr
+                                         FileSiz            MemSiz              Flags  Align""");
 
         final PHTEntry[] pht = elf.getProgramHeaderTable();
         for (final PHTEntry phte : pht) {

@@ -2072,7 +2072,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         return new Immediate(b.read8LE());
     }
 
-    // TODO: remove when not needed
+    // TODO: remove when not used anymore
     private void notImplemented() {
         throw new Error("Not implemented");
     }

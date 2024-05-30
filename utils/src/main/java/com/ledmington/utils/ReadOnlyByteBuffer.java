@@ -33,8 +33,7 @@ public abstract class ReadOnlyByteBuffer {
      * Creates a ReadOnlyByteBuffer with the given endianness and the given alignment.
      *
      * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
-     * @param alignment
-     *      The alignment to be used while reading.
+     * @param alignment The alignment to be used while reading.
      */
     protected ReadOnlyByteBuffer(final boolean isLittleEndian, final long alignment) {
         this.isLE = isLittleEndian;
@@ -71,8 +70,7 @@ public abstract class ReadOnlyByteBuffer {
     /**
      * Sets the given alignment to be used while reading.
      *
-     * @param newAlignment
-     *      The new alignment.
+     * @param newAlignment The new alignment.
      */
     public void setAlignment(final long newAlignment) {
         checkAlignment(newAlignment);

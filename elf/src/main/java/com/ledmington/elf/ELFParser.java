@@ -23,12 +23,14 @@ import com.ledmington.elf.section.ConstructorsSection;
 import com.ledmington.elf.section.DestructorsSection;
 import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
+import com.ledmington.elf.section.GnuBuildIDSection;
 import com.ledmington.elf.section.GnuHashSection;
 import com.ledmington.elf.section.GnuPropertySection;
 import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.NoBitsSection;
+import com.ledmington.elf.section.NoteABITagSection;
 import com.ledmington.elf.section.NullSection;
 import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.RelocationSection;
@@ -320,9 +322,12 @@ public final class ELFParser {
             } else if (".dynsym".equals(name) || typeName.equals(SectionHeaderType.SHT_DYNSYM.getName())) {
                 sectionTable[k] = new DynamicSymbolTableSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
-                sectionTable[k] = ".note.gnu.property".equals(name)
-                        ? new GnuPropertySection(sectionHeader, b, fileHeader.is32Bit())
-                        : new BasicNoteSection(name, sectionHeader, b, fileHeader.is32Bit());
+                sectionTable[k] = switch (name) {
+                    case ".note.gnu.property" -> new GnuPropertySection(sectionHeader, b, fileHeader.is32Bit());
+                    case ".note.gnu.build-id" -> new GnuBuildIDSection(sectionHeader, b, fileHeader.is32Bit());
+                    case ".note.ABI-tag" -> new NoteABITagSection(sectionHeader, b, fileHeader.is32Bit());
+                    default -> new BasicNoteSection(name, sectionHeader, b, fileHeader.is32Bit());
+                };
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {

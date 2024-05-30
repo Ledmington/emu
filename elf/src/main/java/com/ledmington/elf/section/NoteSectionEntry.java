@@ -17,4 +17,14 @@
 */
 package com.ledmington.elf.section;
 
-public final record NoteSectionEntry(String name, String description, long type) {}
+public record NoteSectionEntry(String name, String description, int type, boolean is32Bit) {
+    public int getSize() {
+        return 4 + 4 + 4 + name.length() + description.length();
+    }
+
+    public int getAlignedSize() {
+        final int bytes = is32Bit ? 4 : 8;
+        final int size = getSize();
+        return size % bytes == 0 ? size : (((size / bytes) + 1) * bytes);
+    }
+}

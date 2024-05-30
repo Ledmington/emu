@@ -24,6 +24,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 public final class DynamicSymbolTableSection implements LoadableSection, SymbolTable {
 
@@ -72,7 +73,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 
     @Override
     public byte[] getContent() {
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(symbolTable.length * (is32Bit ? 16 : 24));
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24));
         for (final SymbolTableEntry ste : symbolTable) {
             if (is32Bit) {
                 bb.write(ste.getNameOffset());

@@ -41,7 +41,14 @@ public final class BasicNoteSection implements NoteSection {
         }
 
         b.setPosition(sectionHeader.getFileOffset());
+
+        final long expectedAlignment = is32Bit ? 4L : 8L;
+        if (sectionHeader.getAlignment() != expectedAlignment) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid alignment: expected %,d but was %,d", expectedAlignment, sectionHeader.getAlignment()));
+        }
         b.setAlignment(sectionHeader.getAlignment());
+
         this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
     }
 
@@ -58,6 +65,11 @@ public final class BasicNoteSection implements NoteSection {
     @Override
     public byte[] getContent() {
         throw new Error("Not implemented");
+    }
+
+    @Override
+    public NoteSectionEntry[] getEntries() {
+        return Arrays.copyOf(entries, entries.length);
     }
 
     @Override

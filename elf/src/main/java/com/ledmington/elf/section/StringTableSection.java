@@ -41,6 +41,18 @@ public final class StringTableSection implements LoadableSection {
         }
     }
 
+    public String getString(final int stringStartIndex) {
+        final char nullChar = '\0';
+        final StringBuilder sb = new StringBuilder();
+        for (int i = stringStartIndex; i < table.length; i++) {
+            if (table[i] == nullChar) {
+                break;
+            }
+            sb.append(table[i]);
+        }
+        return sb.toString();
+    }
+
     @Override
     public String getName() {
         return name;

@@ -18,6 +18,7 @@
 package com.ledmington.elf.section;
 
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 public final class SymbolTableEntry {
@@ -73,15 +74,39 @@ public final class SymbolTableEntry {
 
     @Override
     public String toString() {
-        return "Name offset         : " + String.format("0x%08x\n", nameOffset)
-                + "Section table index : "
-                + String.format("%,d (0x%04x)\n", sectionTableIndex, sectionTableIndex)
-                + "Value               : "
-                + String.format("%,d (0x%016x)\n", value, value)
-                + "Size                : "
-                + String.format("%,d bytes (0x%016x)\n", size, size)
-                + "Info                : "
-                + String.format("0x%02x (%s)\n", info.toByte(), info)
-                + "Other               : " + visibility + "\n";
+        return "SymbolTableEntry(nameoffset=" + nameOffset + ";sectiontableIndex=" + sectionTableIndex + ";value="
+                + value + ";size=" + size + ";info=" + info + ";visibility=" + visibility + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + nameOffset;
+        h = 31 * h + HashUtils.hash(sectionTableIndex);
+        h = 31 * h + HashUtils.hash(value);
+        h = 31 * h + HashUtils.hash(size);
+        h = 31 * h + info.hashCode();
+        h = 31 * h + visibility.hashCode();
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SymbolTableEntry ste = (SymbolTableEntry) other;
+        return this.nameOffset == ste.nameOffset
+                && this.sectionTableIndex == ste.sectionTableIndex
+                && this.value == ste.value
+                && this.size == ste.size
+                && this.info.equals(ste.info)
+                && this.visibility.equals(ste.visibility);
     }
 }

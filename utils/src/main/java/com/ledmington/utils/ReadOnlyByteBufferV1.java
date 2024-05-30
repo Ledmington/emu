@@ -27,7 +27,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     private long position;
 
     /**
-     * Creates a little-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
+     * Creates a big-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
      * ReadOnlyByteBufferV1(b, false, 1)}.
      *
      * @param b The byte array ot be used.
@@ -52,8 +52,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
      *
      * @param b The byte array ot be used.
      * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
-     * @param alignment
-     *      The byte alignment to be used while reading.
+     * @param alignment The byte alignment to be used while reading.
      */
     public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian, final long alignment) {
         super(isLittleEndian, alignment);
@@ -78,7 +77,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     @Override
     public String toString() {
-        return "ByteBuffer(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE + ")";
+        return "ReadOnlyByteBufferV1(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE + ")";
     }
 
     @Override

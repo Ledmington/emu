@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
  * Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
@@ -67,7 +68,7 @@ public final class GnuVersionSection implements LoadableSection {
 
     @Override
     public byte[] getContent() {
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBuffer(versions.length * 2);
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2);
         for (final short version : versions) {
             bb.write(version);
         }

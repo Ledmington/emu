@@ -24,6 +24,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 public final class GnuHashSection implements LoadableSection {
 
@@ -72,7 +73,7 @@ public final class GnuHashSection implements LoadableSection {
     @Override
     public byte[] getContent() {
         final WriteOnlyByteBuffer bb =
-                new WriteOnlyByteBuffer(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
+                new WriteOnlyByteBufferV1(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
         bb.write(buckets.length);
         bb.write(symOffset);
         bb.write(bloom.length);
