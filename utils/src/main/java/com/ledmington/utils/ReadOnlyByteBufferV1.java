@@ -21,10 +21,12 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /** A buffer which allows reading with endianness. This implementation uses a byte array. */
-public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
+public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 
     private final byte[] b;
     private long position;
+    private boolean isLE;
+    private long alignment;
 
     /**
      * Creates a big-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
@@ -55,11 +57,41 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
      * @param alignment The byte alignment to be used while reading.
      */
     public ReadOnlyByteBufferV1(final byte[] bytes, final boolean isLittleEndian, final long alignment) {
-        super(isLittleEndian, alignment);
+        this.isLE = isLittleEndian;
+        checkAlignment(alignment);
+        this.alignment = alignment;
         Objects.requireNonNull(bytes);
         this.b = new byte[bytes.length];
         System.arraycopy(bytes, 0, this.b, 0, bytes.length);
         this.position = 0L;
+    }
+
+    private void checkAlignment(final long alignment) {
+        if (alignment <= 0 || Long.bitCount(alignment) != 1) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid alignment: expected a power of two >0 but was %,d", alignment));
+        }
+    }
+
+    @Override
+    public boolean isLittleEndian() {
+        return isLE;
+    }
+
+    @Override
+    public void setEndianness(final boolean isLittleEndian) {
+        this.isLE = isLittleEndian;
+    }
+
+    @Override
+    public void setAlignment(final long newAlignment) {
+        checkAlignment(newAlignment);
+        this.alignment = newAlignment;
+    }
+
+    @Override
+    public long getAlignment() {
+        return alignment;
     }
 
     @Override
@@ -73,7 +105,7 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
     }
 
     @Override
-    protected byte read() {
+    public byte read() {
         return b[BitUtils.asInt(position)];
     }
 
@@ -84,17 +116,17 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
 
     @Override
     public String toString() {
-        return "ReadOnlyByteBufferV1(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE + ")";
+        return "ReadOnlyByteBufferV1(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE
+                + ";alignment=" + alignment + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        for (final byte x : this.b) {
-            h = 31 * h + BitUtils.asInt(x);
-        }
+        h = 31 * h + Arrays.hashCode(b);
         h = 31 * h + HashUtils.hash(position);
         h = 31 * h + HashUtils.hash(isLE);
+        h = 31 * h + HashUtils.hash(alignment);
         return h;
     }
 
@@ -110,14 +142,9 @@ public final class ReadOnlyByteBufferV1 extends ReadOnlyByteBuffer {
             return false;
         }
         final ReadOnlyByteBufferV1 bb = (ReadOnlyByteBufferV1) other;
-        if (this.b.length != bb.b.length) {
-            return false;
-        }
-        for (int i = 0; i < this.b.length; i++) {
-            if (this.b[i] != bb.b[i]) {
-                return false;
-            }
-        }
-        return this.position == bb.position && this.isLE == bb.isLE;
+        return Arrays.equals(this.b, bb.b)
+                && this.position == bb.position
+                && this.isLE == bb.isLE
+                && this.alignment == bb.alignment;
     }
 }

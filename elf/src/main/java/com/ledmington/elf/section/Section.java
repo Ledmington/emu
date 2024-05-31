@@ -17,8 +17,20 @@
 */
 package com.ledmington.elf.section;
 
+/** A Section of an ELF file. */
 public interface Section {
+
+    /**
+     * Returns the name of this section.
+     *
+     * @return A non-null String.
+     */
     String getName();
 
+    /**
+     * Returns the header of this section.
+     *
+     * @return A non-null SectionHeader.
+     */
     SectionHeader getHeader();
 }

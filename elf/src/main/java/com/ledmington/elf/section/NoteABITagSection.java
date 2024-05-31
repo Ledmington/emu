@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** The .note.ABI-tag ELF Note section. */
 public final class NoteABITagSection implements NoteSection {
 
     private final SectionHeader header;

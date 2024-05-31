@@ -17,6 +17,7 @@
 */
 package com.ledmington.elf.section;
 
+/** An entry for the Dynamic section (.dyn). */
 public final class DynamicTableEntry {
 
     private final DynamicTableEntryTag tag;

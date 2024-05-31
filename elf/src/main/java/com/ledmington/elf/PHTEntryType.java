@@ -28,13 +28,45 @@ public final class PHTEntryType {
     private static final MiniLogger logger = MiniLogger.getLogger("pht-entry-type");
     private static final Map<Integer, PHTEntryType> codeToType = new HashMap<>();
 
+    /**
+     * The array element is unused; other members' values are undefined. This type lets the program header table have
+     * ignored entries.
+     */
     public static final PHTEntryType PT_NULL = new PHTEntryType(0x00000000, "NULL", "Unused");
+
+    /**
+     * The array element specifies a loadable segment, described by p_filesz and p_memsz. The bytes from the file are
+     * mapped to the beginning of the memory segment. If the segment's memory size (p_memsz) is larger than the file
+     * size (p_filesz), the "extra'' bytes are defined to hold the value 0 and to follow the segment's initialized area.
+     * The file size may not be larger than the memory size. Loadable segment entries in the program header table appear
+     * in ascending order, sorted on the p_vaddr member.The array element specifies a loadable segment, described by
+     * p_filesz and p_memsz. The bytes from the file are mapped to the beginning of the memory segment. If the segment's
+     * memory size (p_memsz) is larger than the file size (p_filesz), the "extra' bytes are defined to hold the value 0
+     * and to follow the segment's initialized area. The file size may not be larger than the memory size. Loadable
+     * segment entries in the program header table appear in ascending order, sorted on the p_vaddr member.
+     */
     public static final PHTEntryType PT_LOAD = new PHTEntryType(0x00000001, "LOAD", "Loadable");
+
+    /** The array element specifies dynamic linking information. */
     public static final PHTEntryType PT_DYNAMIC = new PHTEntryType(0x00000002, "DYNAMIC", "Dynamic linking info");
+
+    /** The array element specifies the location and size of a null-terminated path name to invoke as an interpreter. */
     public static final PHTEntryType PT_INTERP = new PHTEntryType(0x00000003, "INTERP", "Interpreter info");
+
+    /** The array element specifies the location and size of auxiliary information. */
     public static final PHTEntryType PT_NOTE = new PHTEntryType(0x00000004, "NOTE", "Auxiliary info");
+
+    /** This segment type is reserved but has unspecified semantics. */
     public static final PHTEntryType PT_SHLIB = new PHTEntryType(0x00000005, "SHLIB", "Reserved");
+
+    /**
+     * The array element, if present, specifies the location and size of the program header table itself, both in the
+     * file and in the memory image of the program. This segment type may not occur more than once in a file. Moreover,
+     * it may occur only if the program header table is part of the memory image of the program. If it is present, it
+     * must precede any loadable segment entry.
+     */
     public static final PHTEntryType PT_PHDR = new PHTEntryType(0x00000006, "PHDR", "Program header table");
+
     public static final PHTEntryType PT_TLS = new PHTEntryType(0x00000007, "TLS", "Thread-Local Storage template");
 
     public static final PHTEntryType PT_LOOS =

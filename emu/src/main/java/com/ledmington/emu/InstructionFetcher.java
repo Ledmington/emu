@@ -23,15 +23,35 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.emu.mem.MemoryController;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-public final class InstructionFetcher extends ReadOnlyByteBuffer {
+/** A class which represents the part of the emulated CPU which reads instructions from memory during execution. */
+public final class InstructionFetcher implements ReadOnlyByteBuffer {
 
     private final X86RegisterFile regFile;
     private final MemoryController mem;
 
     public InstructionFetcher(final MemoryController mem, final X86RegisterFile regFile) {
-        super(false, 1L);
         this.mem = Objects.requireNonNull(mem);
         this.regFile = Objects.requireNonNull(regFile);
+    }
+
+    @Override
+    public boolean isLittleEndian() {
+        return false;
+    }
+
+    @Override
+    public void setEndianness(final boolean isLittleEndian) {
+        throw new UnsupportedOperationException("InstructionFetcher does not allow to change the endianness");
+    }
+
+    @Override
+    public long getAlignment() {
+        return 1L;
+    }
+
+    @Override
+    public void setAlignment(final long newAlignment) {
+        throw new UnsupportedOperationException("InstructionFetcher does not allow to change the byte alignment");
     }
 
     @Override
@@ -45,7 +65,7 @@ public final class InstructionFetcher extends ReadOnlyByteBuffer {
     }
 
     @Override
-    protected byte read() {
+    public byte read() {
         return mem.readCode(regFile.get(Register64.RIP));
     }
 

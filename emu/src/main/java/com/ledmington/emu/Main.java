@@ -72,7 +72,7 @@ public final class Main {
             switch (arg) {
                 case "-h", "--help" -> {
                     out.println(String.join(
-                            "\n",
+                            "%n",
                             "",
                             " emu - CPU emulator",
                             "",

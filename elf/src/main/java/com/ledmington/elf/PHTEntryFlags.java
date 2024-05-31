@@ -21,8 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum PHTEntryFlags {
+
+    /** This segment is executable. */
     PF_X(0x00000001, "Executable", 'X'),
+
+    /** This segment is writeable. */
     PF_W(0x00000002, "Writable", 'W'),
+
+    /** This segment is readable. */
     PF_R(0x00000004, "Readable", 'R');
 
     private static final Map<Integer, PHTEntryFlags> codeToFlags = new HashMap<>();

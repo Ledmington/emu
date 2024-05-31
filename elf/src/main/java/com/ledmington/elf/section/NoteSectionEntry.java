@@ -17,11 +17,24 @@
 */
 package com.ledmington.elf.section;
 
+/** An entry of an ELF section of type SHT_NOTE (.note*). */
 public record NoteSectionEntry(String name, String description, int type, boolean is32Bit) {
+
+    /**
+     * Returns the number of bytes occupied by the actual data.
+     *
+     * @return The number of bytes occupied by the actual data.
+     */
     public int getSize() {
         return 4 + 4 + 4 + name.length() + description.length();
     }
 
+    /**
+     * Returns the number of bytes occupied by this entry, aligned to a 4-byte or 8-byte boundary (depending on the
+     * is32Bit value).
+     *
+     * @return The number of bytes occupied by this structure, accounting for alignment.
+     */
     public int getAlignedSize() {
         final int bytes = is32Bit ? 4 : 8;
         final int size = getSize();

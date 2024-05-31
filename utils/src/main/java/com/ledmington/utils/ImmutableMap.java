@@ -18,6 +18,7 @@
 package com.ledmington.utils;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,7 +55,7 @@ public final class ImmutableMap<K, V> implements Map<K, V> {
      * @param m The Map to be wrapped and used as Immutable.
      */
     public ImmutableMap(final Map<K, V> m) {
-        this.m = m;
+        this.m = new HashMap<>(m);
     }
 
     @Override

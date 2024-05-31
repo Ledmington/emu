@@ -18,6 +18,7 @@
 package com.ledmington.utils;
 
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public final class MiniLogger {
     private static final Map<String, MiniLogger> ALL_LOGGERS = new HashMap<>();
     private static final long BEGINNING = System.nanoTime();
     private static PrintWriter stdout = System.console() == null
-            ? new PrintWriter(System.out)
+            ? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
             : System.console().writer();
     private static LoggingLevel minimumLevel = LoggingLevel.DEBUG;
     private static final char NEWLINE = '\n';
@@ -80,7 +81,7 @@ public final class MiniLogger {
      * @param pw A non-null PrintWriter. Defaults to System.console().writer() if available, otherwise System.out.
      */
     public static void setWriter(final PrintWriter pw) {
-        stdout = Objects.requireNonNull(pw);
+        stdout = new PrintWriter(Objects.requireNonNull(pw));
     }
 
     private final String loggerName;

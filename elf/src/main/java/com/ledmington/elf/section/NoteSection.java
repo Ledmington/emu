@@ -26,8 +26,17 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
+/** An ELF section with type SHT_NOTE (.note*). */
 public interface NoteSection extends LoadableSection {
 
+    /**
+     * Reads an array of NoteSectionEntry objects by parsing the given ReadOnlyByteBuffer.
+     *
+     * @param is32Bit Used to determine the alignment of the buffer: if true, 4-byte alignment, otherwise 8-byte.
+     * @param b The byte buffer to read the entries from.
+     * @param length Maximum number of bytes to read.
+     * @return A non-null array of NoteSectionEntry.
+     */
     @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     static NoteSectionEntry[] loadNoteSectionEntries(
             final boolean is32Bit, final ReadOnlyByteBuffer b, final long length) {

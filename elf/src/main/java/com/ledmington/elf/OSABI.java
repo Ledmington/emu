@@ -22,24 +22,62 @@ import java.util.Map;
 
 /** The OS Application Binary Interface used for creating the ELF file. */
 public enum OSABI {
+
+    /** UNIX System V. */
     SYSTEM_V((byte) 0x00, "UNIX - System V"),
+
+    /** HP - UX. */
     HP_UX((byte) 0x01, "HP-UX"),
+
+    /** NetBSD. */
     NetBSD((byte) 0x02, "NetBSD"),
+
+    /** Linux. */
     Linux((byte) 0x03, "Linux"),
+
+    /** GNU Hurd. */
     GNU_Hurd((byte) 0x04, "GNU Hurd"),
+
+    /** Solaris. */
     Solaris((byte) 0x06, "Solaris"),
+
+    /** AIX (Monterey). */
     AIX_Monterey((byte) 0x07, "AIX (Monterey)"),
+
+    /** IRIX. */
     IRIX((byte) 0x08, "IRIX"),
+
+    /** FreeBSD. */
     FreeBSD((byte) 0x09, "FreeBSD"),
+
+    /** Tru64. */
     Tru64((byte) 0x0a, "Tru64"),
+
+    /** Novell Modesto. */
     Novell_Modesto((byte) 0x0b, "Novell Modesto"),
+
+    /** OpenBSD. */
     OpenBSD((byte) 0x0c, "OpenBSD"),
+
+    /** OpenVMS. */
     OpenVMS((byte) 0x0d, "OpenVMS"),
+
+    /** NonStop Kernel. */
     NonStop_Kernel((byte) 0x0e, "NonStop Kernel"),
+
+    /** AROS. */
     AROS((byte) 0x0f, "AROS"),
+
+    /** Fenix OS. */
     Fenix_OS((byte) 0x10, "Fenix OS"),
+
+    /** Nuxi CloudABI. */
     Nuxi_CloudABI((byte) 0x11, "Nuxi CloudABI"),
+
+    /** Stratus Technologies OpenVOS. */
     Stratus_Technologies_OpenVOS((byte) 0x12, "Stratus Technologies OpenVOS"),
+
+    /** Standalone (embedded) application. */
     STANDALONE((byte) 0xff, "Standalone (embedded) application");
 
     private static final Map<Byte, OSABI> codeToABI = new HashMap<>();

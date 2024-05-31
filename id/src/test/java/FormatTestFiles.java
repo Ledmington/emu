@@ -31,8 +31,9 @@ import java.util.Set;
 @SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidInstantiatingObjectsInLoops"})
 public final class FormatTestFiles {
 
-    private static final PrintWriter out =
-            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
+    private static final PrintWriter out = System.console() != null
+            ? System.console().writer()
+            : new PrintWriter(System.out, true, StandardCharsets.UTF_8);
 
     private record TestCase(String mnemonic, String hex) {}
 
@@ -103,7 +104,7 @@ public final class FormatTestFiles {
             throw new RuntimeException(e);
         }
 
-        out.printf("Read %,d lines\n", lines.stream().mapToInt(Set::size).sum());
+        out.printf("Read %,d lines%n", lines.stream().mapToInt(Set::size).sum());
 
         final List<String> allLines = new ArrayList<>();
 
@@ -142,7 +143,7 @@ public final class FormatTestFiles {
 
     private static void writeAllLines(final List<String> lines, final String filePath) {
         try {
-            Files.writeString(Path.of(filePath), String.join("\n", lines), StandardOpenOption.WRITE);
+            Files.writeString(Path.of(filePath), String.join("%n", lines), StandardOpenOption.WRITE);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
