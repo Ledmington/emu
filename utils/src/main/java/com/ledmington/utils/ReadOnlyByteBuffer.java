@@ -44,6 +44,11 @@ public interface ReadOnlyByteBuffer extends Copyable<ReadOnlyByteBuffer> {
      */
     void setAlignment(final long newAlignment);
 
+    /**
+     * Returns the current alignment.
+     *
+     * @return The number of bytes to align to.
+     */
     long getAlignment();
 
     /**

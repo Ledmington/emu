@@ -41,7 +41,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
     }
 
     /**
-     * Creates a little-endian WriteOnlyByteBuffer with the given length. It is equivalent to calling {@code new
+     * Creates a big-endian WriteOnlyByteBuffer with the given length. It is equivalent to calling {@code new
      * WriteOnlyByteBuffer(length, false)}.
      *
      * @param length The length of the underlying array.
@@ -50,6 +50,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
         this(length, false);
     }
 
+    /** Creates a big-endian WriteOnlyByteBuffer with a default length. */
     public WriteOnlyByteBufferV1() {
         this(DEFAULT_SIZE, false);
     }
@@ -64,6 +65,9 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
         } catch (final OutOfMemoryError oome) {
             v2 = new byte[newSize];
         } finally {
+            if (v2 == null) {
+                throw new NullPointerException();
+            }
             System.arraycopy(v, 0, v2, 0, v.length);
             v = v2;
         }

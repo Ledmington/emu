@@ -17,6 +17,17 @@
 */
 package com.ledmington.utils;
 
+/**
+ * An interface for an object which can be shallow-copied.
+ *
+ * @param <X> The type of the object which can be shallow-copied.
+ */
 public interface Copyable<X> {
+
+    /**
+     * Creates a shallow copy and returns it.
+     *
+     * @return A shallow copy of this object.
+     */
     X copy();
 }
