@@ -23,15 +23,14 @@ import java.util.Objects;
  * This class represents a pair of an x86 segment register and a general-purpose x86 register, used for representing
  * string operands inside x86 instructions.
  */
-public final class SegmentRegister extends Register {
+public final class SegmentRegister implements Register {
 
     private final Register16 seg;
     private final Register reg;
 
     public SegmentRegister(final Register16 segment, final Register register) {
-        super(Objects.requireNonNull(register).toIntelSyntax());
         this.seg = Objects.requireNonNull(segment);
-        this.reg = register;
+        this.reg = Objects.requireNonNull(register);
     }
 
     public Register16 segment() {
@@ -46,6 +45,11 @@ public final class SegmentRegister extends Register {
     public int bits() {
         // TODO: check this
         return reg.bits();
+    }
+
+    @Override
+    public String toIntelSyntax() {
+        return reg.toIntelSyntax();
     }
 
     @Override

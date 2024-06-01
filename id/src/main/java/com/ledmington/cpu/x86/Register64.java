@@ -17,62 +17,66 @@
 */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 /** An x86 64-bit general-purpose register. */
-public final class Register64 extends Register {
+public enum Register64 implements Register {
 
     /** The register RAX. */
-    public static final Register64 RAX = new Register64("rax");
+    RAX("rax"),
 
     /** The register RBX. */
-    public static final Register64 RBX = new Register64("rbx");
+    RBX("rbx"),
 
     /** The register RCX. */
-    public static final Register64 RCX = new Register64("rcx");
+    RCX("rcx"),
 
     /** The register RDX. */
-    public static final Register64 RDX = new Register64("rdx");
+    RDX("rdx"),
 
     /** The register RSI. */
-    public static final Register64 RSI = new Register64("rsi");
+    RSI("rsi"),
 
     /** The register RDI. */
-    public static final Register64 RDI = new Register64("rdi");
+    RDI("rdi"),
 
     /** The register RSP. */
-    public static final Register64 RSP = new Register64("rsp");
+    RSP("rsp"),
 
     /** The register RBP. */
-    public static final Register64 RBP = new Register64("rbp");
+    RBP("rbp"),
 
     /** The register R8. */
-    public static final Register64 R8 = new Register64("r8");
+    R8("r8"),
 
     /** The register R9. */
-    public static final Register64 R9 = new Register64("r9");
+    R9("r9"),
 
     /** The register R10. */
-    public static final Register64 R10 = new Register64("r10");
+    R10("r10"),
 
     /** The register R11. */
-    public static final Register64 R11 = new Register64("r11");
+    R11("r11"),
 
     /** The register R12. */
-    public static final Register64 R12 = new Register64("r12");
+    R12("r12"),
 
     /** The register R13. */
-    public static final Register64 R13 = new Register64("r13");
+    R13("r13"),
 
     /** The register R14. */
-    public static final Register64 R14 = new Register64("r14");
+    R14("r14"),
 
     /** The register R15. */
-    public static final Register64 R15 = new Register64("r15");
+    R15("r15"),
 
     /** The instruction pointer register RIP. */
-    public static final Register64 RIP = new Register64("rip");
+    RIP("rip");
 
-    private Register64(final String mnemonic) {
-        super(mnemonic);
+    private final String mnemonic;
+
+    Register64(final String mnemonic) {
+        this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
     public static Register64 fromByte(final byte b) {
@@ -100,5 +104,15 @@ public final class Register64 extends Register {
     @Override
     public int bits() {
         return 64;
+    }
+
+    @Override
+    public String toIntelSyntax() {
+        return mnemonic;
+    }
+
+    @Override
+    public String toString() {
+        return "Register64(mnemonic=" + mnemonic + ")";
     }
 }

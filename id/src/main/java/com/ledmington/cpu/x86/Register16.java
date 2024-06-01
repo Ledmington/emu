@@ -17,77 +17,81 @@
 */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 /** An x86 16-bit general-purpose register. */
-public final class Register16 extends Register {
+public enum Register16 implements Register {
 
     /** The register AX. */
-    public static final Register16 AX = new Register16("ax");
+    AX("ax"),
 
     /** The register BX. */
-    public static final Register16 BX = new Register16("bx");
+    BX("bx"),
 
     /** The register CX. */
-    public static final Register16 CX = new Register16("cx");
+    CX("cx"),
 
     /** The register DX. */
-    public static final Register16 DX = new Register16("dx");
+    DX("dx"),
 
     /** The register SI. */
-    public static final Register16 SI = new Register16("si");
+    SI("si"),
 
     /** The register DI. */
-    public static final Register16 DI = new Register16("di");
+    DI("di"),
 
     /** The register SP. */
-    public static final Register16 SP = new Register16("sp");
+    SP("sp"),
 
     /** The register BP. */
-    public static final Register16 BP = new Register16("bp");
+    BP("bp"),
 
     /** The register R8W. */
-    public static final Register16 R8W = new Register16("r8w");
+    R8W("r8w"),
 
     /** The register R9W. */
-    public static final Register16 R9W = new Register16("r9w");
+    R9W("r9w"),
 
     /** The register R10W. */
-    public static final Register16 R10W = new Register16("r10w");
+    R10W("r10w"),
 
     /** The register R11W. */
-    public static final Register16 R11W = new Register16("r11w");
+    R11W("r11w"),
 
     /** The register R12W. */
-    public static final Register16 R12W = new Register16("r12w");
+    R12W("r12w"),
 
     /** The register R13W. */
-    public static final Register16 R13W = new Register16("r13w");
+    R13W("r13w"),
 
     /** The register R14W. */
-    public static final Register16 R14W = new Register16("r14w");
+    R14W("r14w"),
 
     /** The register R15W. */
-    public static final Register16 R15W = new Register16("r15w");
+    R15W("r15w"),
 
     /** The segment register CS. */
-    public static final Register16 CS = new Register16("cs");
+    CS("cs"),
 
     /** The segment register DS. */
-    public static final Register16 DS = new Register16("ds");
+    DS("ds"),
 
     /** The segment register SS. */
-    public static final Register16 SS = new Register16("ss");
+    SS("ss"),
 
     /** The segment register ES. */
-    public static final Register16 ES = new Register16("es");
+    ES("es"),
 
     /** The segment register FS. */
-    public static final Register16 FS = new Register16("fs");
+    FS("fs"),
 
     /** The segment register GS. */
-    public static final Register16 GS = new Register16("gs");
+    GS("gs");
 
-    private Register16(final String mnemonic) {
-        super(mnemonic);
+    private final String mnemonic;
+
+    Register16(final String mnemonic) {
+        this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
     public static Register16 fromByte(final byte b) {
@@ -115,5 +119,15 @@ public final class Register16 extends Register {
     @Override
     public int bits() {
         return 16;
+    }
+
+    @Override
+    public String toIntelSyntax() {
+        return mnemonic;
+    }
+
+    @Override
+    public String toString() {
+        return "Register16(mnemonic=" + mnemonic + ")";
     }
 }

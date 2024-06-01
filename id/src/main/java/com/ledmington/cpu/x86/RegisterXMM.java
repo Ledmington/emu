@@ -17,59 +17,63 @@
 */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 /** An x86 128-bit general-purpose register. */
-public final class RegisterXMM extends Register {
+public enum RegisterXMM implements Register {
 
     /** The register XMM0. */
-    public static final RegisterXMM XMM0 = new RegisterXMM("xmm0");
+    XMM0("xmm0"),
 
     /** The register XMM1. */
-    public static final RegisterXMM XMM1 = new RegisterXMM("xmm1");
+    XMM1("xmm1"),
 
     /** The register XMM2. */
-    public static final RegisterXMM XMM2 = new RegisterXMM("xmm2");
+    XMM2("xmm2"),
 
     /** The register XMM3. */
-    public static final RegisterXMM XMM3 = new RegisterXMM("xmm3");
+    XMM3("xmm3"),
 
     /** The register XMM4. */
-    public static final RegisterXMM XMM4 = new RegisterXMM("xmm4");
+    XMM4("xmm4"),
 
     /** The register XMM5. */
-    public static final RegisterXMM XMM5 = new RegisterXMM("xmm5");
+    XMM5("xmm5"),
 
     /** The register XMM6. */
-    public static final RegisterXMM XMM6 = new RegisterXMM("xmm6");
+    XMM6("xmm6"),
 
     /** The register XMM7. */
-    public static final RegisterXMM XMM7 = new RegisterXMM("xmm7");
+    XMM7("xmm7"),
 
     /** The register XMM8. */
-    public static final RegisterXMM XMM8 = new RegisterXMM("xmm8");
+    XMM8("xmm8"),
 
     /** The register XMM9. */
-    public static final RegisterXMM XMM9 = new RegisterXMM("xmm9");
+    XMM9("xmm9"),
 
     /** The register XMM10. */
-    public static final RegisterXMM XMM10 = new RegisterXMM("xmm10");
+    XMM10("xmm10"),
 
     /** The register XMM11. */
-    public static final RegisterXMM XMM11 = new RegisterXMM("xmm11");
+    XMM11("xmm11"),
 
     /** The register XMM12. */
-    public static final RegisterXMM XMM12 = new RegisterXMM("xmm12");
+    XMM12("xmm12"),
 
     /** The register XMM13. */
-    public static final RegisterXMM XMM13 = new RegisterXMM("xmm13");
+    XMM13("xmm13"),
 
     /** The register XMM14. */
-    public static final RegisterXMM XMM14 = new RegisterXMM("xmm14");
+    XMM14("xmm14"),
 
     /** The register XMM15. */
-    public static final RegisterXMM XMM15 = new RegisterXMM("xmm15");
+    XMM15("xmm15");
 
-    private RegisterXMM(final String mnemonic) {
-        super(mnemonic);
+    private final String mnemonic;
+
+    RegisterXMM(final String mnemonic) {
+        this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
     public static RegisterXMM fromByte(final byte b) {
@@ -97,5 +101,15 @@ public final class RegisterXMM extends Register {
     @Override
     public int bits() {
         return 128;
+    }
+
+    @Override
+    public String toIntelSyntax() {
+        return mnemonic;
+    }
+
+    @Override
+    public String toString() {
+        return "RegisterXMM(mnemonic=" + mnemonic + ")";
     }
 }

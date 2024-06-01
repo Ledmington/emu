@@ -17,35 +17,39 @@
 */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 /** SSE registers. */
-public final class RegisterMMX extends Register {
+public enum RegisterMMX implements Register {
 
     /** The register MM0. */
-    public static final RegisterMMX MM0 = new RegisterMMX("mm0");
+    MM0("mm0"),
 
     /** The register MM1. */
-    public static final RegisterMMX MM1 = new RegisterMMX("mm1");
+    MM1("mm1"),
 
     /** The register MM2. */
-    public static final RegisterMMX MM2 = new RegisterMMX("mm2");
+    MM2("mm2"),
 
     /** The register MM3. */
-    public static final RegisterMMX MM3 = new RegisterMMX("mm3");
+    MM3("mm3"),
 
     /** The register MM4. */
-    public static final RegisterMMX MM4 = new RegisterMMX("mm4");
+    MM4("mm4"),
 
     /** The register MM5. */
-    public static final RegisterMMX MM5 = new RegisterMMX("mm5");
+    MM5("mm5"),
 
     /** The register MM6. */
-    public static final RegisterMMX MM6 = new RegisterMMX("mm6");
+    MM6("mm6"),
 
     /** The register MM7. */
-    public static final RegisterMMX MM7 = new RegisterMMX("mm7");
+    MM7("mm7");
 
-    private RegisterMMX(final String mnemonic) {
-        super(mnemonic);
+    private final String mnemonic;
+
+    RegisterMMX(final String mnemonic) {
+        this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
     public static RegisterMMX fromByte(final byte b) {
@@ -65,5 +69,15 @@ public final class RegisterMMX extends Register {
     @Override
     public int bits() {
         return 64;
+    }
+
+    @Override
+    public String toIntelSyntax() {
+        return mnemonic;
+    }
+
+    @Override
+    public String toString() {
+        return "RegisterMMX(mnemonic=" + mnemonic + ")";
     }
 }

@@ -17,71 +17,75 @@
 */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 /** An x86 8-bit general-purpose register. */
-public final class Register8 extends Register {
+public enum Register8 implements Register {
 
     /** The register AL. */
-    public static final Register8 AL = new Register8("al");
+    AL("al"),
 
     /** The register BL. */
-    public static final Register8 BL = new Register8("bl");
+    BL("bl"),
 
     /** The register CL. */
-    public static final Register8 CL = new Register8("cl");
+    CL("cl"),
 
     /** The register DL. */
-    public static final Register8 DL = new Register8("dl");
+    DL("dl"),
 
     /** The register AH. */
-    public static final Register8 AH = new Register8("ah");
+    AH("ah"),
 
     /** The register BH. */
-    public static final Register8 BH = new Register8("bh");
+    BH("bh"),
 
     /** The register CH. */
-    public static final Register8 CH = new Register8("ch");
+    CH("ch"),
 
     /** The register DH. */
-    public static final Register8 DH = new Register8("dh");
+    DH("dh"),
 
     /** The register DIL. */
-    public static final Register8 DIL = new Register8("dil");
+    DIL("dil"),
 
     /** The register SIL. */
-    public static final Register8 SIL = new Register8("sil");
+    SIL("sil"),
 
     /** The register BPL. */
-    public static final Register8 BPL = new Register8("bpl");
+    BPL("bpl"),
 
     /** The register SPL. */
-    public static final Register8 SPL = new Register8("spl");
+    SPL("spl"),
 
     /** The register R8B. */
-    public static final Register8 R8B = new Register8("r8b");
+    R8B("r8b"),
 
     /** The register R9B. */
-    public static final Register8 R9B = new Register8("r9b");
+    R9B("r9b"),
 
     /** The register R10B. */
-    public static final Register8 R10B = new Register8("r10b");
+    R10B("r10b"),
 
     /** The register R11B. */
-    public static final Register8 R11B = new Register8("r11b");
+    R11B("r11b"),
 
     /** The register R12B. */
-    public static final Register8 R12B = new Register8("r12b");
+    R12B("r12b"),
 
     /** The register R13B. */
-    public static final Register8 R13B = new Register8("r13b");
+    R13B("r13b"),
 
     /** The register R14B. */
-    public static final Register8 R14B = new Register8("r14b");
+    R14B("r14b"),
 
     /** The register R15B. */
-    public static final Register8 R15B = new Register8("r15b");
+    R15B("r15b");
 
-    private Register8(final String mnemonic) {
-        super(mnemonic);
+    private final String mnemonic;
+
+    Register8(final String mnemonic) {
+        this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
     /**
@@ -117,5 +121,15 @@ public final class Register8 extends Register {
     @Override
     public int bits() {
         return 8;
+    }
+
+    @Override
+    public String toIntelSyntax() {
+        return mnemonic;
+    }
+
+    @Override
+    public String toString() {
+        return "Register8(mnemonic=" + mnemonic + ')';
     }
 }
