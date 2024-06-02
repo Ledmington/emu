@@ -79,6 +79,12 @@ public enum Register32 implements Register {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
+    /**
+     * Returns the 32-bit register corresponding to the given byte.
+     *
+     * @param b The byte representing a 32-bit register.
+     * @return A 32-bit register.
+     */
     public static Register32 fromByte(final byte b) {
         return switch (b) {
             case 0x00 -> EAX;

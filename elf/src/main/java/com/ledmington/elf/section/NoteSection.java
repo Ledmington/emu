@@ -75,6 +75,11 @@ public interface NoteSection extends LoadableSection {
         return entries.toArray(new NoteSectionEntry[0]);
     }
 
+    /**
+     * Returns the entry table.
+     *
+     * @return The table of NoteSectionEntry (non-null).
+     */
     NoteSectionEntry[] getEntries();
 
     @Override

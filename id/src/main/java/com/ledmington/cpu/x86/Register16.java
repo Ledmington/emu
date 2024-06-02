@@ -94,6 +94,12 @@ public enum Register16 implements Register {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
+    /**
+     * Returns the 16-bit register corresponding to the given byte.
+     *
+     * @param b The byte representing a 16-bit register.
+     * @return A 16-bit register.
+     */
     public static Register16 fromByte(final byte b) {
         return switch (b) {
             case 0x00 -> AX;

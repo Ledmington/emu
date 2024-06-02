@@ -76,6 +76,12 @@ public enum RegisterXMM implements Register {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
+    /**
+     * Returns the 128-bit XMM register corresponding to the given byte.
+     *
+     * @param b The byte representing a 128-bit XMM register.
+     * @return A 128-bit XMM register.
+     */
     public static RegisterXMM fromByte(final byte b) {
         return switch (b) {
             case 0x00 -> XMM0;

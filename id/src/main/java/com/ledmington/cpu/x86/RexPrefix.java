@@ -30,10 +30,21 @@ public final class RexPrefix {
     private final boolean xBit;
     private final boolean bBit;
 
+    /**
+     * Checks whether the given byte is a valid REX prefix byte.
+     *
+     * @param b The byte to be checked
+     * @return True if it is a valid REX prefix, false otherwise.
+     */
     public static boolean isREXPrefix(final byte b) {
         return BitUtils.and(b, REX_PREFIX_MASK) == REX_PREFIX;
     }
 
+    /**
+     * Creates a REX prefix object by parsing the given byte.
+     *
+     * @param b The byte to be parsed.
+     */
     public RexPrefix(final byte b) {
         if (!isREXPrefix(b)) {
             throw new IllegalArgumentException(String.format("Input byte 0x%02x is not a valid REX prefix", b));

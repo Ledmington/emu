@@ -17,7 +17,9 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import com.ledmington.utils.BitUtils;
@@ -26,6 +28,7 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
+/** An ELF .dynamic section. */
 public final class DynamicSection implements LoadableSection {
 
     private final String name;
@@ -33,6 +36,14 @@ public final class DynamicSection implements LoadableSection {
     private final boolean is32Bit;
     private final DynamicTableEntry[] dynamicTable;
 
+    /**
+     * Creates a DynamicSection with the given name and header by parsing bytes read from the ReadOnlyByteBuffer.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The buffer to read bytes from.
+     * @param is32Bit Used for alignment.
+     */
     public DynamicSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);
@@ -42,21 +53,19 @@ public final class DynamicSection implements LoadableSection {
         final int entrySize = is32Bit ? 8 : 16;
         final int nEntries = (int) sectionHeader.getSectionSize() / entrySize;
 
-        final DynamicTableEntry[] tmp = new DynamicTableEntry[nEntries];
+        final List<DynamicTableEntry> tmp = new ArrayList<>(nEntries);
         int i = 0;
         while (i < nEntries) {
             long tag = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             long content = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            tmp[i] = new DynamicTableEntry(tag, content);
-            if (tmp[i].getTag().equals(DynamicTableEntryTag.DT_NULL)) {
+            tmp.add(new DynamicTableEntry(tag, content));
+            if (tmp.getLast().getTag().equals(DynamicTableEntryTag.DT_NULL)) {
                 break;
             }
             i++;
         }
 
-        // resize dynamic table
-        dynamicTable = new DynamicTableEntry[i];
-        System.arraycopy(tmp, 0, dynamicTable, 0, i);
+        dynamicTable = tmp.toArray(new DynamicTableEntry[0]);
     }
 
     @Override

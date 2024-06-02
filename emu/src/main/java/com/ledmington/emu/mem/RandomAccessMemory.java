@@ -21,11 +21,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/** A class to mimic the behavior of a real-world RAM. */
 public final class RandomAccessMemory implements Memory {
 
     private final MemoryInitializer init;
     private final Map<Long, Byte> m = new HashMap<>();
 
+    /**
+     * Creates a RAM with the given memory initializer.
+     *
+     * @param init The memory initializer to be used when accessing uninitialized memory locations.
+     */
     public RandomAccessMemory(final MemoryInitializer init) {
         this.init = Objects.requireNonNull(init);
     }
@@ -38,5 +44,10 @@ public final class RandomAccessMemory implements Memory {
     @Override
     public void write(final long address, final byte value) {
         m.put(address, value);
+    }
+
+    @Override
+    public String toString() {
+        return "RandomAccessMemory(initializer=" + init + "m=" + m + ')';
     }
 }

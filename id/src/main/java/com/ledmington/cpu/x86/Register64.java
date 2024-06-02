@@ -79,6 +79,12 @@ public enum Register64 implements Register {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
+    /**
+     * Returns the 64-bit register corresponding to the given byte.
+     *
+     * @param b The byte representing a 64-bit register.
+     * @return A 64-bit register.
+     */
     public static Register64 fromByte(final byte b) {
         return switch (b) {
             case 0x00 -> RAX;

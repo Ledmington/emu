@@ -17,7 +17,14 @@
 */
 package com.ledmington.elf.section;
 
-/** An entry of an ELF section of type SHT_NOTE (.note*). */
+/**
+ * An entry of an ELF section of type SHT_NOTE (.note*).
+ *
+ * @param name The name of the entry.
+ * @param description The description of the entry.
+ * @param type The 4-byte type of this entry (meaning of this field varies between note section).
+ * @param is32Bit Used for alignment.
+ */
 public record NoteSectionEntry(String name, String description, int type, boolean is32Bit) {
 
     /**

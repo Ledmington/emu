@@ -19,14 +19,23 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
+/** An ELF .fini_array section. */
 public final class DestructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
 
+    /**
+     * Creates a DestructorsSection with the given name and the given header.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     */
     public DestructorsSection(final String name, final SectionHeader sectionHeader) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
+
+        // TODO
     }
 
     @Override

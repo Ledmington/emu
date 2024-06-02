@@ -52,6 +52,12 @@ public enum RegisterMMX implements Register {
         this.mnemonic = Objects.requireNonNull(mnemonic);
     }
 
+    /**
+     * Returns the 64-bit MMX register corresponding to the given byte.
+     *
+     * @param b The byte representing a 64-bit MMX register.
+     * @return A 64-bit MMX register.
+     */
     public static RegisterMMX fromByte(final byte b) {
         return switch (b) {
             case 0x00 -> MM0;

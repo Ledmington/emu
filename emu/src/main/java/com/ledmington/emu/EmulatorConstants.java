@@ -22,17 +22,28 @@ import java.util.function.Supplier;
 
 import com.ledmington.emu.mem.MemoryInitializer;
 
+/** A class to hold constants for the emulator execution. */
 public final class EmulatorConstants {
 
     /** The default memory initializer */
-    private static Supplier<MemoryInitializer> memoryInitializer = () -> MemoryInitializer.random();
+    private static Supplier<MemoryInitializer> memoryInitializer = MemoryInitializer::random;
 
     private EmulatorConstants() {}
 
+    /**
+     * Allows to change the memory initializer of the emulator.
+     *
+     * @param memInit The new memory initializer.
+     */
     public static void setMemoryInitializer(final Supplier<MemoryInitializer> memInit) {
         memoryInitializer = Objects.requireNonNull(memInit);
     }
 
+    /**
+     * Returns the current memory initializer.
+     *
+     * @return The current memory initializer.
+     */
     public static MemoryInitializer getMemoryInitializer() {
         return memoryInitializer.get();
     }

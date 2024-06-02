@@ -29,6 +29,14 @@ public final class BasicNoteSection implements NoteSection {
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
+    /**
+     * Creates a BasicNoteSection with the given name and header by parsing the bytes read from the ReadOnlyByteBuffer.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The buffer to read bytes from.
+     * @param is32Bit Used for alignment of the entries.
+     */
     public BasicNoteSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);

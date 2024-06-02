@@ -27,15 +27,22 @@ import com.ledmington.utils.BitUtils;
 public interface MemoryInitializer extends Supplier<Byte> {
 
     /**
-     * Initializes the memory with random values, mimicking the "garbage" values you usually get normally when reading
-     * uninitialized memory.
+     * Initializes the memory with random values, mimicking the "garbage" values you usually get with a real computer
+     * when reading uninitialized memory. This is useful for debugging since successive reads from the same
+     * uninitialized address will return different values.
+     *
+     * @return A memory initializer which returns always a random value.
      */
     static MemoryInitializer random() {
         final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(System.nanoTime());
         return () -> BitUtils.asByte(rng.nextInt());
     }
 
-    /** Initializes the memory to all zeroes. */
+    /**
+     * Initializes the memory to all zeroes.
+     *
+     * @return A memory initializer which return always the zero byte.
+     */
     static MemoryInitializer zero() {
         return () -> (byte) 0x00;
     }

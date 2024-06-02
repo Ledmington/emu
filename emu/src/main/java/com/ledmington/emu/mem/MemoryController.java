@@ -102,7 +102,12 @@ public final class MemoryController implements Memory {
         return x;
     }
 
-    /** This behaves exactly like a normal read but check execute permissions instead of read permissions. */
+    /**
+     * This behaves exactly like a normal read but it checks execute permissions instead of read permissions.
+     *
+     * @param address The 64-bit address to read the instructions from.
+     * @return The instruction byte at the given address.
+     */
     public byte readCode(final long address) {
         if (!canExecute.get(address)) {
             throw new IllegalArgumentException(
@@ -131,7 +136,11 @@ public final class MemoryController implements Memory {
         write(address + 7L, BitUtils.asByte(value));
     }
 
-    /** Loads the given section into memory without checking write permissions. */
+    /**
+     * Loads the given section into memory without checking write permissions.
+     *
+     * @param sec The section to be loaded into memory.
+     */
     public void loadSection(final Section sec) {
         Objects.requireNonNull(sec);
 
@@ -159,5 +168,13 @@ public final class MemoryController implements Memory {
                     "Don't know what to do with section '%s' of type %s",
                     sec.getName(), sec.getHeader().getType().getName()));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "MemoryController(mem=" + mem + ";canRead="
+                + canRead + ";canWrite="
+                + canWrite + ";canExecute="
+                + canExecute + ')';
     }
 }

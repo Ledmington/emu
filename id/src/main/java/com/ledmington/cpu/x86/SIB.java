@@ -29,35 +29,73 @@ public final class SIB {
     private final byte indexByte;
     private final byte baseByte;
 
+    /**
+     * Extracts the Scale portion of the given byte interpreted as a SIB byte.
+     *
+     * @param sib The SIB byte.
+     * @return The Scale of the given byte.
+     */
     public static byte extractScale(final byte sib) {
         final byte SIB_SCALE_MASK = (byte) 0b11000000;
         return BitUtils.shr(BitUtils.and(sib, SIB_SCALE_MASK), 6);
     }
 
+    /**
+     * Extracts the Index portion of the given byte interpreted as a SIB byte.
+     *
+     * @param sib The SIB byte.
+     * @return The Index of the given byte.
+     */
     public static byte extractIndex(final byte sib) {
         final byte SIB_INDEX_MASK = (byte) 0b00111000;
         return BitUtils.shr(BitUtils.and(sib, SIB_INDEX_MASK), 3);
     }
 
+    /**
+     * Extracts the Base portion of the given byte interpreted as a SIB byte.
+     *
+     * @param sib The SIB byte.
+     * @return The Base of the given byte.
+     */
     public static byte extractBase(final byte sib) {
         final byte SIB_BASE_MASK = (byte) 0b00000111;
         return BitUtils.and(sib, SIB_BASE_MASK);
     }
 
-    public SIB(final byte s) {
-        this.scaleByte = extractScale(s);
-        this.indexByte = extractIndex(s);
-        this.baseByte = extractBase(s);
+    /**
+     * Creates a SIB object by parsing the given SIB byte.
+     *
+     * @param sib The SIB byte to be parsed.
+     */
+    public SIB(final byte sib) {
+        this.scaleByte = extractScale(sib);
+        this.indexByte = extractIndex(sib);
+        this.baseByte = extractBase(sib);
     }
 
+    /**
+     * Returns the scale of this SIB.
+     *
+     * @return The scale of this SIB.
+     */
     public byte scale() {
         return scaleByte;
     }
 
+    /**
+     * Returns the index of this SIB.
+     *
+     * @return The index of this SIB.
+     */
     public byte index() {
         return indexByte;
     }
 
+    /**
+     * Returns the base of this SIB.
+     *
+     * @return The base of this SIB.
+     */
     public byte base() {
         return baseByte;
     }

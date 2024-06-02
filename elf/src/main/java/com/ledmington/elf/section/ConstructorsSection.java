@@ -19,14 +19,23 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
+/** An ELF .init_array section. */
 public final class ConstructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
 
+    /**
+     * Creates a ConstructorsSection with the given name and header.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     */
     public ConstructorsSection(final String name, final SectionHeader sectionHeader) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
+
+        // TODO
     }
 
     @Override

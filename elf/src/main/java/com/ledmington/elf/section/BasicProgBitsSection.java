@@ -22,12 +22,20 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** A "non-special" PROGBITS ELF section. */
 public final class BasicProgBitsSection implements ProgBitsSection {
 
     private final String name;
     private final SectionHeader header;
     private final byte[] content;
 
+    /**
+     * Creates a BasicProgBitsSection with the given name and header by parsing bytes read from the ReadOnlyByteBuffer.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The buffer to read bytes from.
+     */
     public BasicProgBitsSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);

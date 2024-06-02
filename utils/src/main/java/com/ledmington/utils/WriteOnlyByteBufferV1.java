@@ -59,18 +59,15 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
         if (v.length >= newSize) {
             return;
         }
-        byte[] v2 = null;
+        byte[] v2;
         try {
             v2 = new byte[Integer.highestOneBit(newSize) << 1];
         } catch (final OutOfMemoryError oome) {
             v2 = new byte[newSize];
-        } finally {
-            if (v2 == null) {
-                throw new NullPointerException();
-            }
-            System.arraycopy(v, 0, v2, 0, v.length);
-            v = v2;
         }
+
+        System.arraycopy(v, 0, v2, 0, v.length);
+        v = v2;
     }
 
     @Override

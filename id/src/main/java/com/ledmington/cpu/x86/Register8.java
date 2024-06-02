@@ -89,12 +89,10 @@ public enum Register8 implements Register {
     }
 
     /**
-     * From page 85, paragraph 3.7.2.1:
+     * Returns the 8-bit register corresponding to the given byte.
      *
-     * <pre>
-     * 8-bit general-purpose registers: AL, BL, CL, DL, SIL, DIL, SPL, BPL, and R8B-R15B are available using REX prefixes;
-     * AL, BL, CL, DL, AH, BH, CH, DH are available without using REX prefixes.
-     * </pre>
+     * @param b The byte representing a 8-bit register.
+     * @return A 8-bit register.
      */
     public static Register8 fromByte(final byte b, final boolean hasRexPrefix) {
         return switch (b) {

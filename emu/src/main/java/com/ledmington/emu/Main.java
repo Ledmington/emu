@@ -55,10 +55,10 @@ public final class Main {
         final ELF elf = parseELF(filename);
         logger.info("ELF file parsed successfully");
 
-        final Emulator emu = new Emulator(elf);
+        final Emulator emu = new X86Emulator();
 
         logger.info(" ### Execution start ### ");
-        emu.run();
+        emu.run(elf);
         logger.info(" ### Execution end ### ");
     }
 

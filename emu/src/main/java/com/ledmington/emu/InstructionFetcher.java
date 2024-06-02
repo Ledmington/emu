@@ -29,6 +29,12 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
     private final X86RegisterFile regFile;
     private final MemoryController mem;
 
+    /**
+     * Creates an InstructionFetcher with the given MemoryController and register file.
+     *
+     * @param mem The memory controller to retrieve instructions from.
+     * @param regFile The register file to get and set the instruction pointer.
+     */
     public InstructionFetcher(final MemoryController mem, final X86RegisterFile regFile) {
         this.mem = Objects.requireNonNull(mem);
         this.regFile = Objects.requireNonNull(regFile);
@@ -72,5 +78,10 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
     @Override
     public ReadOnlyByteBuffer copy() {
         return new InstructionFetcher(this.mem, this.regFile);
+    }
+
+    @Override
+    public String toString() {
+        return "InstructionFetcher(regFile=" + regFile + ";mem=" + mem + ')';
     }
 }

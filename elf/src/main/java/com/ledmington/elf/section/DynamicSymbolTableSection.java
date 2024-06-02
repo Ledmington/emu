@@ -26,6 +26,7 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
+/** An ELF .dynsym section. */
 public final class DynamicSymbolTableSection implements LoadableSection, SymbolTable {
 
     private final String name;
@@ -33,6 +34,15 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
     private final boolean is32Bit;
     private final SymbolTableEntry[] symbolTable;
 
+    /**
+     * Creates a DynamicSymbolTableSection with the given name and header by parsing bytes read from the
+     * ReadOnlyByteBuffer.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The buffer to read bytes from.
+     * @param is32Bit Used for alignment.
+     */
     public DynamicSymbolTableSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);

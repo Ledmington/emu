@@ -27,6 +27,10 @@ import com.ledmington.elf.section.Section;
  *
  * <p>References: <a href="https://uclibc.org/docs/elf.pdf">32 bit</a> and <a
  * href="https://uclibc.org/docs/elf-64-gen.pdf">64 bit</a>.
+ *
+ * @param fileHeader The file header containing general information about the file.
+ * @param programHeaderTable The program header table containing information about memory segments.
+ * @param sectionTable The section table containing information about file sections.
  */
 public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section... sectionTable) {
 
