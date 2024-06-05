@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.MiniLogger;
 
+/** The type of an ELF Program Header Table entry. */
 public final class PHTEntryType {
 
     private static final MiniLogger logger = MiniLogger.getLogger("pht-entry-type");
@@ -37,11 +38,11 @@ public final class PHTEntryType {
     /**
      * The array element specifies a loadable segment, described by p_filesz and p_memsz. The bytes from the file are
      * mapped to the beginning of the memory segment. If the segment's memory size (p_memsz) is larger than the file
-     * size (p_filesz), the "extra'' bytes are defined to hold the value 0 and to follow the segment's initialized area.
+     * size (p_filesz), the "extra" bytes are defined to hold the value 0 and to follow the segment's initialized area.
      * The file size may not be larger than the memory size. Loadable segment entries in the program header table appear
      * in ascending order, sorted on the p_vaddr member.The array element specifies a loadable segment, described by
      * p_filesz and p_memsz. The bytes from the file are mapped to the beginning of the memory segment. If the segment's
-     * memory size (p_memsz) is larger than the file size (p_filesz), the "extra' bytes are defined to hold the value 0
+     * memory size (p_memsz) is larger than the file size (p_filesz), the "extra" bytes are defined to hold the value 0
      * and to follow the segment's initialized area. The file size may not be larger than the memory size. Loadable
      * segment entries in the program header table appear in ascending order, sorted on the p_vaddr member.
      */
@@ -67,27 +68,54 @@ public final class PHTEntryType {
      */
     public static final PHTEntryType PT_PHDR = new PHTEntryType(0x00000006, "PHDR", "Program header table");
 
+    /** Specifies a thread-local storage template. */
     public static final PHTEntryType PT_TLS = new PHTEntryType(0x00000007, "TLS", "Thread-Local Storage template");
 
+    /** Values in the inclusive range from this one to PT_HIOS are reserved for OS-specific semantics. */
     public static final PHTEntryType PT_LOOS =
             new PHTEntryType(0x60000000, "OS-specific", "Unknown (OS specific)", false);
+
+    /**
+     * The array element specifies the location and size of the exception handling information as defined by the
+     * .eh_frame_hdr section.
+     */
     public static final PHTEntryType PT_GNU_EH_FRAME =
             new PHTEntryType(0x6474e550, "GNU_EH_FRAME", "Exception handling");
+
+    /**
+     * The p_flags member specifies the permissions on the segment containing the stack and is used to indicate wether
+     * the stack should be executable. The absense of this header indicates that the stack will be executable.
+     */
     public static final PHTEntryType PT_GNU_STACK = new PHTEntryType(0x6474e551, "GNU_STACK", "Stack executablity");
+
+    /**
+     * This array element specifies the location and size of a segment which may be made read-only after relocations
+     * have been processed.
+     */
     public static final PHTEntryType PT_GNU_RELRO =
             new PHTEntryType(0x6474e552, "GNU_RELRO", "Read-only after relocation");
+
+    /** The section .note.gnu.property has this type. */
     public static final PHTEntryType PT_GNU_PROPERTY =
             new PHTEntryType(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections");
+
+    /** Values in the inclusive range from PT_LOOS to this one are reserved for OS-specific semantics. */
     public static final PHTEntryType PT_HIOS =
             new PHTEntryType(0x6fffffff, "OS-specific", "Unknown (OS specific)", false);
 
+    /** Values in the inclusive range from this one to PT_HIPROC are reserved for processor-specific semantics. */
     public static final PHTEntryType PT_LOPROC =
             new PHTEntryType(0x70000000, "CPU-specific", "Unknown (Processor specific)", false);
+
+    /** Values in the inclusive range from PT_LOPROC to this one are reserved for processor-specific semantics. */
     public static final PHTEntryType PT_HIPROC =
             new PHTEntryType(0x7fffffff, "CPU-specific", "Unknown (Processor specific)", false);
 
+    /** Values in the inclusive range from this one to PT_HIUSER are reserved for application programs. */
     public static final PHTEntryType PT_LOUSER =
             new PHTEntryType(0x80000000, "Application-specific", "Unknown (Application specific)", false);
+
+    /** Values in the inclusive range from PT_LOUSER to this one are reserved for application programs. */
     public static final PHTEntryType PT_HIUSER =
             new PHTEntryType(0xffffffff, "Application-specific", "Unknown (Application specific)", false);
 

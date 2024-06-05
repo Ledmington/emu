@@ -25,15 +25,15 @@ public final class SymbolTableEntryInfo {
 
     public static SymbolTableEntryInfo fromByte(final byte info) {
         return new SymbolTableEntryInfo(
-                SymbolTableEntryBind.fromCode((byte) ((info >>> 4) & mask)),
+                SymbolTableEntryBinding.fromCode((byte) ((info >>> 4) & mask)),
                 SymbolTableEntryType.fromCode((byte) (info & mask)));
     }
 
-    private final SymbolTableEntryBind bind;
+    private final SymbolTableEntryBinding bind;
 
     private final SymbolTableEntryType type;
 
-    private SymbolTableEntryInfo(final SymbolTableEntryBind bind, final SymbolTableEntryType type) {
+    private SymbolTableEntryInfo(final SymbolTableEntryBinding bind, final SymbolTableEntryType type) {
         this.bind = Objects.requireNonNull(bind);
         this.type = Objects.requireNonNull(type);
     }
@@ -42,7 +42,7 @@ public final class SymbolTableEntryInfo {
         return (byte) ((bind.getCode() << 4) | (type.getCode()));
     }
 
-    public SymbolTableEntryBind getBind() {
+    public SymbolTableEntryBinding getBind() {
         return bind;
     }
 

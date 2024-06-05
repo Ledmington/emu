@@ -17,7 +17,7 @@
 */
 package com.ledmington.cpu.x86;
 
-import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 
 /**
  * An offset relative to the current (at run-time) value of the Instruction Pointer register. Equivalent to an
@@ -27,12 +27,24 @@ public final class RelativeOffset implements Operand {
 
     private final long value;
 
-    public static RelativeOffset of8(final byte x) {
-        return new RelativeOffset(x);
+    /**
+     * Creates a RelativeOffset by sign-extending the given byte.
+     *
+     * @param x The byte reresenting the offset.
+     * @return A sign-extended RelativeOffset.
+     */
+    public static RelativeOffset of(final byte x) {
+        return new RelativeOffset((long) x);
     }
 
-    public static RelativeOffset of32(final int x) {
-        return new RelativeOffset(x);
+    /**
+     * Creates a RelativeOffset by sign-extending the given int.
+     *
+     * @param x The int reresenting the offset.
+     * @return A sign-extended RelativeOffset.
+     */
+    public static RelativeOffset of(final int x) {
+        return new RelativeOffset((long) x);
     }
 
     private RelativeOffset(final long value) {
@@ -44,7 +56,12 @@ public final class RelativeOffset implements Operand {
         return String.format("0x%x", value);
     }
 
-    public long amount() {
+    /**
+     * Returns the value of this RelativeOffset.
+     *
+     * @return The value.
+     */
+    public long getValue() {
         return value;
     }
 
@@ -56,7 +73,7 @@ public final class RelativeOffset implements Operand {
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + (BitUtils.asInt(value >>> 32) ^ BitUtils.asInt(value));
+        h = 31 * h + HashUtils.hash(value);
         return h;
     }
 

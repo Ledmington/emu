@@ -64,3 +64,4 @@ tasks.register('fatJar', Jar) {
 }
 
 tasks.build.dependsOn(fatJar)
+tasks.javadoc.enabled = false

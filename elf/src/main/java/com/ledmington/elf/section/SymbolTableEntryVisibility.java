@@ -23,16 +23,50 @@ import java.util.Objects;
 
 import com.ledmington.utils.HashUtils;
 
+/**
+ * A symbol's visibility, determined from its st_other field, may be specified in a relocatable object. This visibility
+ * defines how that symbol may be accessed once the symbol has become part of an executable or shared object.
+ */
 public final class SymbolTableEntryVisibility {
 
     private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
 
+    /**
+     * The visibility of symbols with the STV_DEFAULT attribute is as specified by the symbol's binding type. That is,
+     * global and weak symbols are visible outside of their defining component, the executable file or shared object.
+     * Local symbols are hidden. Global and weak symbols can also be preempted, that is, they may by interposed by
+     * definitions of the same name in another component.
+     */
     public static final SymbolTableEntryVisibility STV_DEFAULT = new SymbolTableEntryVisibility((byte) 0, "DEFAULT");
+
+    /** This visibility attribute is currently reserved. */
     public static final SymbolTableEntryVisibility STV_INTERNAL = new SymbolTableEntryVisibility((byte) 1, "INTERNAL");
+
+    /**
+     * A symbol defined in the current component is hidden if its name is not visible to other components. Such a symbol
+     * is necessarily protected. This attribute is used to control the external interface of a component. An object
+     * named by such a symbol may still be referenced from another component if its address is passed outside.
+     *
+     * <p>A hidden symbol contained in a relocatable object is either removed or converted to STB_LOCAL binding by the
+     * link-editor when the relocatable object is included in an executable file or shared object.
+     */
     public static final SymbolTableEntryVisibility STV_HIDDEN = new SymbolTableEntryVisibility((byte) 2, "HIDDEN");
+
+    /**
+     * A symbol defined in the current component is protected if it is visible in other components but cannot be
+     * preempted. Any reference to such a symbol from within the defining component must be resolved to the definition
+     * in that component, even if there is a definition in another component that would interpose by the default rules.
+     * A symbol with STB_LOCAL binding will not have STV_PROTECTED visibility.
+     */
     public static final SymbolTableEntryVisibility STV_PROTECTED =
             new SymbolTableEntryVisibility((byte) 3, "PROTECTED");
 
+    /**
+     * Returns the STV object corresponding to the given code.
+     *
+     * @param code The code representing the STV object.
+     * @return The STV object.
+     */
     public static SymbolTableEntryVisibility fromByte(final byte code) {
         if (!codeToVisibility.containsKey(code)) {
             throw new IllegalArgumentException(
@@ -55,10 +89,20 @@ public final class SymbolTableEntryVisibility {
         codeToVisibility.put(code, this);
     }
 
+    /**
+     * Returns the 8-bit code of this STV object.
+     *
+     * @return The byte representing the code.
+     */
     public byte getCode() {
         return code;
     }
 
+    /**
+     * Returns the name of this STV object without the "STV_" prefix.
+     *
+     * @return The name of this STV object.
+     */
     public String getName() {
         return name;
     }

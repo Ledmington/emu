@@ -18,6 +18,7 @@
 package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 
 /** This class represents an x86 REX prefix byte, used for extending the operands of an x86 instructions. */
 public final class RexPrefix {
@@ -61,42 +62,92 @@ public final class RexPrefix {
         this.bBit = BitUtils.and(b, REX_b_mask) != 0;
     }
 
+    /**
+     * Returns the 'W' bit of this REX prefix.
+     *
+     * @return True if the 'R' bit is set, false otherwise.
+     */
     public boolean w() {
         return wBit;
     }
 
+    /**
+     * Returns the 'W' bit of this REX prefix.
+     *
+     * @return True if the 'R' bit is set, false otherwise.
+     */
     public boolean isOperand64Bit() {
         return wBit;
     }
 
+    /**
+     * Returns the 'R' bit of this REX prefix.
+     *
+     * @return True if the 'R' bit is set, false otherwise.
+     */
     public boolean r() {
         return rBit;
     }
 
-    public boolean getModRMRegExtension() {
+    /**
+     * Returns the 'R' bit of this REX prefix.
+     *
+     * @return True if the 'R' bit is set, false otherwise.
+     */
+    public boolean ModRMRegExtension() {
         return rBit;
     }
 
+    /**
+     * Returns the 'X' bit of this REX prefix.
+     *
+     * @return True if the 'X' bit is set, false otherwise.
+     */
     public boolean x() {
         return xBit;
     }
 
+    /**
+     * Returns the 'X' bit of this REX prefix.
+     *
+     * @return True if the 'X' bit is set, false otherwise.
+     */
     public boolean SIBIndexExtension() {
         return xBit;
     }
 
+    /**
+     * Returns the 'B' bit of this REX prefix.
+     *
+     * @return True if the 'B' bit is set, false otherwise.
+     */
     public boolean b() {
         return bBit;
     }
 
+    /**
+     * Returns the 'B' bit of this REX prefix.
+     *
+     * @return True if the 'B' bit is set, false otherwise.
+     */
     public boolean SIBBaseExtension() {
         return bBit;
     }
 
-    public boolean getModRMRMExtension() {
+    /**
+     * Returns the 'B' bit of this REX prefix.
+     *
+     * @return True if the 'B' bit is set, false otherwise.
+     */
+    public boolean ModRMRMExtension() {
         return bBit;
     }
 
+    /**
+     * Returns the 'B' bit of this REX prefix.
+     *
+     * @return True if the 'B' bit is set, false otherwise.
+     */
     public boolean opcodeRegExtension() {
         return bBit;
     }
@@ -109,10 +160,10 @@ public final class RexPrefix {
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 + h + (wBit ? 1 : 0);
-        h = 31 + h + (rBit ? 1 : 0);
-        h = 31 + h + (xBit ? 1 : 0);
-        h = 31 + h + (bBit ? 1 : 0);
+        h = 31 + h + HashUtils.hash(wBit);
+        h = 31 + h + HashUtils.hash(rBit);
+        h = 31 + h + HashUtils.hash(xBit);
+        h = 31 + h + HashUtils.hash(bBit);
         return h;
     }
 

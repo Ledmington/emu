@@ -31,7 +31,9 @@ import com.ledmington.utils.MiniLogger;
 public final class Main {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
-    private static final PrintWriter out = System.console().writer();
+    private static final PrintWriter out = System.console() == null
+            ? new PrintWriter(System.out)
+            : System.console().writer();
 
     private static ELF parseELF(final String filename) {
         final File file = new File(filename);
@@ -99,13 +101,18 @@ public final class Main {
                 case "--mem-init-zero" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
                 default -> {
                     if (filename != null) {
-                        out.println("Cannot set filename twice");
+                        out.println("Cannot set filename twice.");
                         System.exit(-1);
                     } else {
                         filename = arg;
                     }
                 }
             }
+        }
+
+        if (filename == null) {
+            out.println("Expected the name of the file to run.");
+            System.exit(-1);
         }
 
         try {

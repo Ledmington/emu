@@ -207,7 +207,10 @@ public final class DynamicTableEntryTag {
     /** The total size, in bytes, of the DT_PREINIT_ARRAY array. */
     public static final DynamicTableEntryTag DT_PREINIT_ARRAYSZ = new DynamicTableEntryTag(33L, "PREINIT_ARRAYSZ");
 
+    /** Holds the address of .gnu.hash. */
     public static final DynamicTableEntryTag DT_GNU_HASH = new DynamicTableEntryTag(0x000000006ffffef5L, "GNU_HASH");
+
+    /** Address of the table provided by the .gnu.version section. */
     public static final DynamicTableEntryTag DT_VERSYM = new DynamicTableEntryTag(0x000000006ffffff0L, "VERSYM");
 
     /**
@@ -242,12 +245,19 @@ public final class DynamicTableEntryTag {
     public static final DynamicTableEntryTag DT_VERNEEDNUM =
             new DynamicTableEntryTag(0x000000006fffffffL, "VERNEEDEDNUM");
 
+    /** Values in the inclusive range from this one to DT_HIOS are reserved for OS-specific semantics. */
     public static final DynamicTableEntryTag DT_LOOS =
             new DynamicTableEntryTag(0x0000000060000000, "OS-specific", false);
+
+    /** Values in the inclusive range from DT_LOOS to this one are reserved for OS-specific semantics. */
     public static final DynamicTableEntryTag DT_HIOS =
             new DynamicTableEntryTag(0x000000006fffffff, "OS-specific", false);
+
+    /** Values in the inclusive range from this one to DT_HIPROC are reserved for processor-specific semantics. */
     public static final DynamicTableEntryTag DT_LOPROC =
             new DynamicTableEntryTag(0x0000000070000000, "Processor-specific", false);
+
+    /** Values in the inclusive range from DT_LOPROC to this one are reserved for processor-specific semantics. */
     public static final DynamicTableEntryTag DT_HIPROC =
             new DynamicTableEntryTag(0x000000007fffffff, "Processor-specific", false);
 

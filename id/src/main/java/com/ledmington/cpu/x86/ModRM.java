@@ -18,7 +18,9 @@
 package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 
+/** This class represents an x86 ModR/M byte, used to represent "direct" operands in x86 instructions. */
 public final class ModRM {
 
     private final byte modByte;
@@ -40,20 +42,40 @@ public final class ModRM {
         return BitUtils.and(m, MODRM_RM_MASK);
     }
 
+    /**
+     * Creates a ModRM object by parsing the given byte.
+     *
+     * @param m The byte to be converted.
+     */
     public ModRM(final byte m) {
         this.modByte = extractMod(m);
         this.regByte = extractReg(m);
         this.rmByte = extractRM(m);
     }
 
+    /**
+     * Returns the MOD portion of this ModR/M object.
+     *
+     * @return The MOD portion as a byte.
+     */
     public byte mod() {
         return modByte;
     }
 
+    /**
+     * Returns the REG portion of this ModR/M object.
+     *
+     * @return The REG portion as a byte.
+     */
     public byte reg() {
         return regByte;
     }
 
+    /**
+     * Returns the R/M portion of this ModR/M object.
+     *
+     * @return The R/M portion as a byte.
+     */
     public byte rm() {
         return rmByte;
     }
@@ -68,9 +90,9 @@ public final class ModRM {
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + BitUtils.asInt(modByte);
-        h = 31 * h + BitUtils.asInt(regByte);
-        h = 31 * h + BitUtils.asInt(rmByte);
+        h = 31 * h + HashUtils.hash(modByte);
+        h = 31 * h + HashUtils.hash(regByte);
+        h = 31 * h + HashUtils.hash(rmByte);
         return h;
     }
 

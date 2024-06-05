@@ -17,11 +17,22 @@
 */
 package com.ledmington.cpu.x86;
 
+/** The size of a pointer (indirect operand) in an x86 instruction. */
 public enum PointerSize {
+
+    /** Pointer to byte (8 bits). */
     BYTE_PTR(8),
+
+    /** Pointer to word (16 bits). */
     WORD_PTR(16),
+
+    /** Pointer to double word (32 bits). */
     DWORD_PTR(32),
+
+    /** Pointer to quadword (64 bits). */
     QWORD_PTR(64),
+
+    /** Pointer to word for XMM registers (2x64 bits). */
     XMMWORD_PTR(128);
 
     private final int size;

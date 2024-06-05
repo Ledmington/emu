@@ -24,27 +24,68 @@ import java.util.Objects;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.MiniLogger;
 
+/**
+ * The type of an ELF symbol table entry. A symbol's type provides a general classification for the associated entity.
+ */
 public final class SymbolTableEntryType {
 
     private static final MiniLogger logger = MiniLogger.getLogger("symtab-type");
     private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
 
+    /** The symbol's type is not specified. */
     public static final SymbolTableEntryType STT_NOTYPE = new SymbolTableEntryType((byte) 0x00, "NOTYPE");
+
+    /** The symbol is associated with a data object, such as a variable, an array, and so on. */
     public static final SymbolTableEntryType STT_OBJECT = new SymbolTableEntryType((byte) 0x01, "OBJECT");
+
+    /** The symbol is associated with a function or other executable code. */
     public static final SymbolTableEntryType STT_FUNC = new SymbolTableEntryType((byte) 0x02, "FUNC");
+
+    /**
+     * The symbol is associated with a section. Symbol table entries of this type exist primarily for relocation and
+     * normally have STB_LOCAL binding.
+     */
     public static final SymbolTableEntryType STT_SECTION = new SymbolTableEntryType((byte) 0x03, "SECTION");
+
+    /**
+     * A file symbol has STB_LOCAL binding, its section index is SHN_ABS, and it precedes the other STB_LOCAL symbols
+     * for the file, if it is present.
+     */
     public static final SymbolTableEntryType STT_FILE = new SymbolTableEntryType((byte) 0x04, "FILE");
+
+    /** This symbol labels an uninitialized common block. This symbol is treated exactly the same as STT_OBJECT. */
     public static final SymbolTableEntryType STT_COMMON = new SymbolTableEntryType((byte) 0x05, "COMMON");
+
+    /**
+     * The symbol specifies a thread-local storage entity. When defined, this symbol gives the assigned offset for the
+     * symbol, not the actual address.
+     *
+     * <p>Thread-local storage relocations can only reference symbols with type STT_TLS. A reference to a symbol of type
+     * STT_TLS from an allocatable section, can only be achieved by using special thread-local storage relocations. A
+     * reference to a symbol of type STT_TLS from a non-allocatable section does not have this restriction.
+     */
     public static final SymbolTableEntryType STT_TLS = new SymbolTableEntryType((byte) 0x06, "TLS");
+
+    /** Values in the inclusive range from this one to STT_HIOS are reserved for OS-specific semantics. */
     public static final SymbolTableEntryType STT_LOOS = new SymbolTableEntryType((byte) 0x0a, "OS-specific", false);
+
+    /** Values in the inclusive range from STT_LOOS to this one are reserved for OS-specific semantics. */
     public static final SymbolTableEntryType STT_HIOS = new SymbolTableEntryType((byte) 0x0c, "OS-specific", false);
+
+    /** Values in the inclusive range from this one to STT_HIPROC are reserved for processor-specific semantics. */
     public static final SymbolTableEntryType STT_LOPROC =
             new SymbolTableEntryType((byte) 0x0d, "Processor-specific", false);
-    public static final SymbolTableEntryType STT_SPARC_REGISTER =
-            new SymbolTableEntryType((byte) 0x0d, "SPARC_REGISTER");
+
+    /** Values in the inclusive range from STT_LOPROC to this one are reserved for processor-specific semantics. */
     public static final SymbolTableEntryType STT_HIPROC =
             new SymbolTableEntryType((byte) 0x0f, "Processor-specific", false);
 
+    /**
+     * Returns the STT object corresponding to the given code.
+     *
+     * @param code The code representing the STT object.
+     * @return The STT object.
+     */
     public static SymbolTableEntryType fromCode(final byte code) {
         if (!codeToType.containsKey(code)) {
             if (code >= STT_LOOS.code && code <= STT_HIOS.code) {
@@ -81,10 +122,20 @@ public final class SymbolTableEntryType {
         this(code, name, true);
     }
 
+    /**
+     * Returns the 8-bit code of this STT object.
+     *
+     * @return The 8-bit code.
+     */
     public byte getCode() {
         return code;
     }
 
+    /**
+     * Returns the name of this STT object without the "STT_" prefix.
+     *
+     * @return The name of this STT object.
+     */
     public String getName() {
         return name;
     }

@@ -139,7 +139,7 @@ public final class X86Emulator implements Emulator {
                     }
                 }
                 case JMP -> this.instructionFetcher.setPosition(
-                        this.instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).amount());
+                        this.instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
                 case MOV -> {
                     final Register64 dest = (Register64) inst.firstOperand();
                     final Register64 src = (Register64) inst.secondOperand();
