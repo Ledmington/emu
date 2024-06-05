@@ -55,4 +55,9 @@ public enum PointerSize {
             default -> throw new IllegalStateException("Unexpected value: " + size);
         };
     }
+
+    @Override
+    public String toString (){
+        return "PointerSize(bits="+size+")";
+    }
 }

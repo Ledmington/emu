@@ -4,7 +4,7 @@ plugins {
 
 // utility function
 static def path(final String ...s) {
-    return String.join(File.separator, s);
+    return String.join(File.separator, s)
 }
 
 String fatJarBaseName = "${appNameLowerCase}-readelf"

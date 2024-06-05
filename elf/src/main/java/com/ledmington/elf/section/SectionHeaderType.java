@@ -227,4 +227,9 @@ public final class SectionHeaderType {
     public String getDescription() {
         return description;
     }
+
+    @Override
+    public String toString(){
+        return "SectionHeaderType(code="+code+";name="+name+";description="+description+")";
+    }
 }
