@@ -181,8 +181,6 @@ public final class PHTEntryType {
 
     @Override
     public String toString() {
-        return "PHTEntryType(code=" + code +
-                ";name=" + name + ";description=" + description  +
-                ')';
+        return "PHTEntryType(code=" + code + ";name=" + name + ";description=" + description + ')';
     }
 }

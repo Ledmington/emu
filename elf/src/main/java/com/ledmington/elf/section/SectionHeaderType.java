@@ -229,7 +229,7 @@ public final class SectionHeaderType {
     }
 
     @Override
-    public String toString(){
-        return "SectionHeaderType(code="+code+";name="+name+";description="+description+")";
+    public String toString() {
+        return "SectionHeaderType(code=" + code + ";name=" + name + ";description=" + description + ")";
     }
 }

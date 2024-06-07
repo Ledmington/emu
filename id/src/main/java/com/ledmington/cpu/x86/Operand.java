@@ -20,6 +20,10 @@ package com.ledmington.cpu.x86;
 /** An operand of an x86 instruction. */
 public interface Operand {
 
-    /** Reference obtainable through 'objdump -Mintel-mnemonic ...' */
+    /**
+     * Reference obtainable through 'objdump -Mintel-mnemonic ...'
+     *
+     * @return A String representation of this operand with Intel syntax.
+     */
     String toIntelSyntax();
 }

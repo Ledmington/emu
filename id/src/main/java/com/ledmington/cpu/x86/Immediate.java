@@ -75,6 +75,11 @@ public final class Immediate implements Operand {
         this(x, Type.LONG);
     }
 
+    /**
+     * Return the size (in terms of bits) of this Immediate object.
+     *
+     * @return The number of bits based on the type of this Immediate.
+     */
     public int bits() {
         return switch (type) {
             case BYTE -> 8;
@@ -84,6 +89,11 @@ public final class Immediate implements Operand {
         };
     }
 
+    /**
+     * Returns the value of this Immediate as a 64-bit value.
+     *
+     * @return The 64-bit value of this Immediate.
+     */
     public long asLong() {
         if (type != Type.LONG) {
             throw new IllegalArgumentException("This immediate is not 64 bits");
@@ -103,7 +113,7 @@ public final class Immediate implements Operand {
 
     @Override
     public String toString() {
-        return "Immediate(" + this.toIntelSyntax() + ")";
+        return "Immediate(value=" + value + ";type=" + type + ")";
     }
 
     @Override

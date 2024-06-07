@@ -26,7 +26,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
 import com.ledmington.utils.MiniLogger;
 
-/** This is the part of the memory which checks permissions */
+/** This is the part of the memory which implements read-write-execute permissions. */
 public final class MemoryController implements Memory {
 
     private static final MiniLogger logger = MiniLogger.getLogger("mem");
@@ -36,6 +36,11 @@ public final class MemoryController implements Memory {
     private final IntervalArray canWrite = new IntervalArray();
     private final IntervalArray canExecute = new IntervalArray();
 
+    /**
+     * Creates a MemoryControler by wrapping the given Memory object.
+     *
+     * @param mem The Memory object to be wrapped.
+     */
     public MemoryController(final Memory mem) {
         this.mem = Objects.requireNonNull(mem);
     }
@@ -89,6 +94,12 @@ public final class MemoryController implements Memory {
         return this.mem.read(address);
     }
 
+    /**
+     * Reads 8 contiguous byte starting from the given address.
+     *
+     * @param address The address to start reading from.
+     * @return A 64-bit value read.
+     */
     public long read8(final long address) {
         long x = 0x0000000000000000L;
         x |= BitUtils.asLong(read(address));
@@ -125,6 +136,12 @@ public final class MemoryController implements Memory {
         mem.write(address, value);
     }
 
+    /**
+     * Writes 8 contiguous bytes at the given address.
+     *
+     * @param address The lmemory location where to write.
+     * @param value The 64-bit value to write.
+     */
     public void write(final long address, final long value) {
         write(address, BitUtils.asByte(value >> 56));
         write(address + 1L, BitUtils.asByte(value >> 48));

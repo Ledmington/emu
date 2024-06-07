@@ -57,7 +57,7 @@ public enum PointerSize {
     }
 
     @Override
-    public String toString (){
-        return "PointerSize(bits="+size+")";
+    public String toString() {
+        return "PointerSize(bits=" + size + ")";
     }
 }

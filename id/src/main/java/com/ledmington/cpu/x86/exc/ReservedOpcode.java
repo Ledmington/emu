@@ -19,12 +19,23 @@ package com.ledmington.cpu.x86.exc;
 
 import java.io.Serial;
 
+/**
+ * This excetion is thrown when a reserved opcode is recognized. It doesn't mean that the instruction is invalid or that
+ * the opcode is unknown.
+ */
 public final class ReservedOpcode extends RuntimeException {
 
     @Serial
     private static final long serialVersionUID = 5003238481425708141L;
 
-    public ReservedOpcode(final byte b1, final byte b2) {
-        super(String.format("Reserved opcode 0x%02x%02x", b1, b2));
+    /**
+     * Creates a ReversedOpcode runtime exception with a proper message. Since, usually, all reserved opcodes are made
+     * of two bytes, this constructors also needs two bytes.
+     *
+     * @param firstByte The first byte of the opcode.
+     * @param secondByte The second byte of the opcode.
+     */
+    public ReservedOpcode(final byte firstByte, final byte secondByte) {
+        super(String.format("Reserved opcode 0x%02x%02x", firstByte, secondByte));
     }
 }

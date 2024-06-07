@@ -92,6 +92,8 @@ public enum Register8 implements Register {
      * Returns the 8-bit register corresponding to the given byte.
      *
      * @param b The byte representing a 8-bit register.
+     * @param hasRexPrefix Allows to select different sets of registers. If true, values in the inclusive range
+     *     0x04-0x07 map to SPL, BPL, SIL and DIL respectively; otherwise, they map to AH, CH, DH, BH.
      * @return A 8-bit register.
      */
     public static Register8 fromByte(final byte b, final boolean hasRexPrefix) {
