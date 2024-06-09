@@ -47,6 +47,11 @@ public final class IndirectOperand implements Operand {
     private final DisplacementType displacementType;
     private final PointerSize ptrSize;
 
+    /**
+     * Returns a fresh instance of IndirectOperandBuilder.
+     *
+     * @return A new IndirectOperandBuilder.
+     */
     public static IndirectOperandBuilder builder() {
         return new IndirectOperandBuilder();
     }
@@ -66,26 +71,57 @@ public final class IndirectOperand implements Operand {
         this.ptrSize = ptrSize;
     }
 
+    /**
+     * Returns the base register of this indirect operand.
+     *
+     * @return The base register.
+     */
     public Register base() {
         return reg1;
     }
 
+    /**
+     * Returns the index register of this indirect operand.
+     *
+     * @return The index register.
+     */
     public Register index() {
         return reg2;
     }
 
+    /**
+     * Returns the constant to multiply the index register.
+     *
+     * @return The constant of this indirect operand.
+     */
     public long scale() {
         return constant;
     }
 
+    /**
+     * Returns the displacement of this indirect operand. In case it doesn't appear in the asm, it is 0.
+     *
+     * @return The displacement of this indirect operand.
+     */
     public long getDisplacement() {
         return displacement;
     }
 
+    /**
+     * Checks whether this indirect operand has been built with an explicit pointer size or it has been inferred from
+     * its arguments.
+     *
+     * @return True if the pointer size was made explicit, false otherwise.
+     */
     public boolean hasExplicitPtrSize() {
         return this.ptrSize != null;
     }
 
+    /**
+     * Returns the explicit pointer size of this indirect operand, in case it has been specified.
+     *
+     * @return The pointer size, if it was specified, 0 otherwise.
+     */
     public int explicitPtrSize() {
         return hasExplicitPtrSize() ? ptrSize.getSize() : 0;
     }

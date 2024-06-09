@@ -22,11 +22,19 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** The .note.gnu.property ELF section. */
 public final class GnuPropertySection implements NoteSection {
 
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
+    /**
+     * Creates the .note.gnu.property ELF section with the given data.
+     *
+     * @param sectionHeader The ehader of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for alignment.
+     */
     public GnuPropertySection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.header = Objects.requireNonNull(sectionHeader);
 

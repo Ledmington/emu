@@ -17,9 +17,14 @@
 */
 package com.ledmington.elf;
 
+import java.util.Objects;
+
 import com.ledmington.utils.HashUtils;
 
-/** This class is just a data holder. No check is performed in the constructor on the given data. */
+/**
+ * The header of an ELF file. This class is just a data holder. No check is performed in the constructor on the given
+ * data.
+ */
 public final class FileHeader {
 
     private final boolean bits;
@@ -40,6 +45,27 @@ public final class FileHeader {
     private final short nSectionHeaderTableEntries;
     private final short shstrtab_index;
 
+    /**
+     * Creates a FileHeader object with the given data.
+     *
+     * @param is32Bit Used to differentiate between ELF32 and ELF64 versions.
+     * @param isLittleEndian The endianness for the binary representation of this file header.
+     * @param version The version of the ELF file.
+     * @param osabi The operating system ABI.
+     * @param ABIVersion The (minimum?) version of the ABI supported.
+     * @param fileType The type of this file.
+     * @param isa The ISA of the code contained in ths file.
+     * @param entryPointVirtualAddress The virtual memory address where to start execution.
+     * @param programHeaderTableOffset The offset in the file where the PH table is stored.
+     * @param sectionHeaderTableOffset The offset in the file where the SH table is stored.
+     * @param flags Miscellaneous flags.
+     * @param headerSize The size in bytes of this header on file.
+     * @param programHeaderTableEntrySize The size in bytes of each PHT entry.
+     * @param nProgramHeaderTableEntries The number of PHT entries.
+     * @param sectionHeaderTableEntrySize The size in bytes of each SHT entry.
+     * @param nSectionHeaderTableEntries The number of SHT entries.
+     * @param shstrtab_index The index of the String Table in the SHT.
+     */
     public FileHeader(
             boolean is32Bit,
             boolean isLittleEndian,
@@ -61,10 +87,10 @@ public final class FileHeader {
         this.bits = is32Bit;
         this.endianness = isLittleEndian;
         this.version = version;
-        this.osabi = osabi;
+        this.osabi = Objects.requireNonNull(osabi);
         this.ABIVersion = ABIVersion;
-        this.fileType = fileType;
-        this.isa = isa;
+        this.fileType = Objects.requireNonNull(fileType);
+        this.isa = Objects.requireNonNull(isa);
         this.entryPointVirtualAddress = entryPointVirtualAddress;
         this.programHeaderTableOffset = programHeaderTableOffset;
         this.sectionHeaderTableOffset = sectionHeaderTableOffset;
@@ -77,30 +103,65 @@ public final class FileHeader {
         this.shstrtab_index = shstrtab_index;
     }
 
+    /**
+     * Returns the mode this file header was encoded with.
+     *
+     * @return True for 32-bit, false for 64-bit.
+     */
     public boolean is32Bit() {
         return bits;
     }
 
+    /**
+     * Returns the endianness this file header was encoded with.
+     *
+     * @return True for little-endian, false for big-endian.
+     */
     public boolean isLittleEndian() {
         return endianness;
     }
 
+    /**
+     * Returns the operating system ABI used to generate this ELF file header.
+     *
+     * @return The operating system ABI.
+     */
     public OSABI getOSABI() {
         return osabi;
     }
 
+    /**
+     * Returns the (minimum?) supported version of the ABI.
+     *
+     * @return The version of the ABI.
+     */
     public byte getABIVersion() {
         return ABIVersion;
     }
 
+    /**
+     * Returns the ISA used to generate this ELF file.
+     *
+     * @return The ISA of this file.
+     */
     public ISA getISA() {
         return isa;
     }
 
+    /**
+     * Returns the version of the ELF format used.
+     *
+     * @return The ELF version.
+     */
     public int getVersion() {
         return 1;
     }
 
+    /**
+     * Returns the miscellaneous flags of the file header.
+     *
+     * @return The file header flags.
+     */
     public int getFlags() {
         return flags;
     }
@@ -177,10 +238,20 @@ public final class FileHeader {
         return entryPointVirtualAddress;
     }
 
+    /**
+     * Returns the size in bytes of this file header in the file.
+     *
+     * @return The size of this file header.
+     */
     public int getHeaderSize() {
         return headerSize;
     }
 
+    /**
+     * Returns the index of the String Table in the SHT.
+     *
+     * @return The index of the String Table in the SHT.
+     */
     public int getSectionHeaderStringTableIndex() {
         return shstrtab_index;
     }

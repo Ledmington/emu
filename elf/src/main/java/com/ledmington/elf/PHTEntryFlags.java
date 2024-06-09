@@ -20,54 +20,47 @@ package com.ledmington.elf;
 import java.util.HashMap;
 import java.util.Map;
 
+/** The miscellaneous flags of a Program Header Table entry. */
 public enum PHTEntryFlags {
 
     /** This segment is executable. */
-    PF_X(0x00000001, "Executable", 'X'),
+    PF_X(0x00000001),
 
     /** This segment is writeable. */
-    PF_W(0x00000002, "Writable", 'W'),
+    PF_W(0x00000002),
 
     /** This segment is readable. */
-    PF_R(0x00000004, "Readable", 'R');
+    PF_R(0x00000004);
 
     private static final Map<Integer, PHTEntryFlags> codeToFlags = new HashMap<>();
 
     static {
         for (final PHTEntryFlags x : PHTEntryFlags.values()) {
             if (codeToFlags.containsKey(x.code)) {
-                throw new IllegalStateException(String.format(
-                        "PHT flags enum value with code %d (0x%02x) and description '%s' already exists",
-                        x.code, x.code, x.description));
+                throw new IllegalStateException(
+                        String.format("PHT flags enum value with code %d (0x%02x) already exists", x.code, x.code));
             }
             codeToFlags.put(x.code, x);
         }
     }
 
     private final int code;
-    private final String description;
-    private final char id;
 
-    PHTEntryFlags(final int code, final String description, final char id) {
+    PHTEntryFlags(final int code) {
         this.code = code;
-        this.description = description;
-        this.id = id;
     }
 
+    /**
+     * Returns the 64 bit code of this flag.
+     *
+     * @return The code of this flag.
+     */
     public int getCode() {
         return code;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public char getId() {
-        return id;
-    }
-
     @Override
     public String toString() {
-        return "PHTEntryFlags(code=" + code + ";description=" + description + ";id=" + id + ')';
+        return "PHTEntryFlags(code=" + code + ')';
     }
 }

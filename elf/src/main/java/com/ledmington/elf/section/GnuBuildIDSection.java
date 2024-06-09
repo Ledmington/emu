@@ -22,11 +22,19 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** The .note.gnu.build-id ELF section. */
 public final class GnuBuildIDSection implements NoteSection {
 
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
+    /**
+     * Creates a .note.gnu.build-id section with the given data.
+     *
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Usd for alignment.
+     */
     public GnuBuildIDSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.header = Objects.requireNonNull(sectionHeader);
 

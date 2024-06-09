@@ -25,13 +25,20 @@ import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
- * Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
+ * The .gnu.version ELF section.
+ *
+ * <p>Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
  * Paragraph 2.7.2.
  */
 public final class GnuVersionSection implements LoadableSection {
 
     private static final String standardName = ".gnu.version";
 
+    /**
+     * Returns the standard name of this section.
+     *
+     * @return The string ".gnu.version".
+     */
     public static String getStandardName() {
         return standardName;
     }

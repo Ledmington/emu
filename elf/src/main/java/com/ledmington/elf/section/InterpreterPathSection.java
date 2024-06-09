@@ -22,11 +22,18 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** The .interp ELF section. */
 public final class InterpreterPathSection implements ProgBitsSection {
 
     private final SectionHeader header;
     private final String interpreterFilePath;
 
+    /**
+     * Creates a new .interp ELF section with the given data.
+     *
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     */
     public InterpreterPathSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 
@@ -48,6 +55,11 @@ public final class InterpreterPathSection implements ProgBitsSection {
         this.interpreterFilePath = sb.toString();
     }
 
+    /**
+     * Returns the required interpreter's file path.
+     *
+     * @return The interpreter's file path as a String.
+     */
     public String getInterpreterFilePath() {
         return interpreterFilePath;
     }

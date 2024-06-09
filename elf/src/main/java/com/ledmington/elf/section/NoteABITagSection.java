@@ -28,6 +28,13 @@ public final class NoteABITagSection implements NoteSection {
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
+    /**
+     * Creates a .note.ABI-tag section with the given data.
+     *
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for alignment.
+     */
     public NoteABITagSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.header = Objects.requireNonNull(sectionHeader);
 

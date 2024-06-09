@@ -193,7 +193,8 @@ public final class DynamicTableEntryTag {
     /**
      * Flag values specific to this object.
      *
-     * <p>See https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter7-tbl-5.
+     * <p>See <a
+     * href="https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter7-tbl-5">here</a>.
      */
     public static final DynamicTableEntryTag DT_FLAGS = new DynamicTableEntryTag(30L, "FLAGS");
 
@@ -222,7 +223,8 @@ public final class DynamicTableEntryTag {
     /**
      * Flag values specific to this object.
      *
-     * <p>See https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter6-tbl-53.
+     * <p>See <a
+     * href="https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter6-tbl-53">here</a>.
      */
     public static final DynamicTableEntryTag DT_FLAGS_1 = new DynamicTableEntryTag(0x000000006ffffffbL, "FLAGS_1");
 
@@ -261,6 +263,12 @@ public final class DynamicTableEntryTag {
     public static final DynamicTableEntryTag DT_HIPROC =
             new DynamicTableEntryTag(0x000000007fffffff, "Processor-specific", false);
 
+    /**
+     * Returns the Dynamic table tag corresponding to the given code.
+     *
+     * @param code The 64-bit code of a Dynamic table tag.
+     * @return A Dynamic table tag object.
+     */
     public static DynamicTableEntryTag fromCode(final long code) {
         if (!codeToTag.containsKey(code)) {
             if (code >= DT_LOOS.code && code <= DT_HIOS.code) {
@@ -297,10 +305,20 @@ public final class DynamicTableEntryTag {
         this(code, name, true);
     }
 
+    /**
+     * Return the code of this Dynamic table tag object.
+     *
+     * @return The 64-bit code.
+     */
     public long getCode() {
         return code;
     }
 
+    /**
+     * Returns the name of this Dynamic table tag object.
+     *
+     * @return The name.
+     */
     public String getName() {
         return name;
     }

@@ -19,6 +19,7 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
+/** This class allows an easier construction of an IndirectOperand object. */
 public final class IndirectOperandBuilder {
 
     private Register baseRegister;
@@ -29,8 +30,18 @@ public final class IndirectOperandBuilder {
     private PointerSize ptrSize;
     private boolean alreadyBuilt;
 
+    /**
+     * Creates an IndirectOperandBuilder with the default values. It is important to note that the default set of values
+     * does not lead to a valid IndirectOperand instance.
+     */
     public IndirectOperandBuilder() {}
 
+    /**
+     * Sets the base register for the IndirectOperand.
+     *
+     * @param r The new base register.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder reg1(final Register r) {
         if (this.baseRegister != null) {
             throw new IllegalArgumentException("Cannot define reg1 twice");
@@ -48,6 +59,12 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
+    /**
+     * Sets the constant for the IndirectOperand.
+     *
+     * @param c The new constant.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder constant(final int c) {
         if (this.c != null) {
             throw new IllegalArgumentException("Cannot define constant twice");
@@ -59,6 +76,12 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
+    /**
+     * Sets the index register for the IndirectOperand.
+     *
+     * @param r The new index register.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder reg2(final Register r) {
         if (this.indexRegister != null) {
             throw new IllegalArgumentException("Cannot define reg2 twice");
@@ -76,18 +99,42 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
+    /**
+     * Sets an 8-bit displacement for the IndirectOperand.
+     *
+     * @param disp The new displacement.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder disp(final byte disp) {
         return disp(disp, DisplacementType.BYTE);
     }
 
+    /**
+     * Sets an 16-bit displacement for the IndirectOperand.
+     *
+     * @param disp The new displacement.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder disp(final short disp) {
         return disp(disp, DisplacementType.SHORT);
     }
 
+    /**
+     * Sets an 32-bit displacement for the IndirectOperand.
+     *
+     * @param disp The new displacement.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder disp(final int disp) {
         return disp(disp, DisplacementType.INT);
     }
 
+    /**
+     * Sets an 64-bit displacement for the IndirectOperand.
+     *
+     * @param disp The new displacement.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder disp(final long disp) {
         return disp(disp, DisplacementType.LONG);
     }
@@ -101,6 +148,13 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
+    /**
+     * Sets an explicit pointer size for the IndirectOperand. This method is currently required in the current
+     * implementation since it does not allow, otherwise, to create indirect operands such as "WORD PTR ...".
+     *
+     * @param ptrSize The explicit pointer size.
+     * @return This instance of IndirectOperandBuilder.
+     */
     public IndirectOperandBuilder pointer(final PointerSize ptrSize) {
         if (this.ptrSize != null) {
             throw new IllegalArgumentException("Cannot define PTR size twice");
@@ -110,6 +164,11 @@ public final class IndirectOperandBuilder {
         return this;
     }
 
+    /**
+     * Builds the IndirectOperand object with the parameters that have been set.
+     *
+     * @return A new instance of IndirectOperand.
+     */
     public IndirectOperand build() {
         if (alreadyBuilt) {
             throw new IllegalArgumentException("Cannot build the same IndirectOperandBuilder twice");

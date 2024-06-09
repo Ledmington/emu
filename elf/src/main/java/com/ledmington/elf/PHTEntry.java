@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.HashUtils;
 
+/** An entry of an ELF Program Header Table. */
 public final class PHTEntry {
 
     private final PHTEntryType type;
@@ -34,6 +35,18 @@ public final class PHTEntry {
     private final long segmentMemorySize;
     private final long alignment;
 
+    /**
+     * Creates a Program Header Table entry with the given data.
+     *
+     * @param type The type of this entry.
+     * @param flags Miscellaneous flags.
+     * @param segmentOffset The segment's offset in file.
+     * @param segmentVirtualAddress The virtual address where to load this segment in memory.
+     * @param segmentPhysicalAddress The physical address where to load this segment in memory.
+     * @param segmentFileSize The size in bytes of this segment on the file.
+     * @param segmentMemorySize The size in bytes of this segment in memory.
+     * @param alignment Byte alignment.
+     */
     public PHTEntry(
             PHTEntryType type,
             int flags,
@@ -61,42 +74,92 @@ public final class PHTEntry {
         this.alignment = alignment;
     }
 
+    /**
+     * Returns the type of this entry.
+     *
+     * @return The type of this entry.
+     */
     public PHTEntryType getType() {
         return type;
     }
 
+    /**
+     * Checks whether this entry contains the PF_R flag.
+     *
+     * @return True if this entry contains the PF_R flag, false otherwise.
+     */
     public boolean isReadable() {
         return readable;
     }
 
+    /**
+     * Checks whether this entry contains the PF_W flag.
+     *
+     * @return True if this entry contains the PF_W flag, false otherwise.
+     */
     public boolean isWriteable() {
         return writeable;
     }
 
+    /**
+     * Checks whether this entry contains the PF_X flag.
+     *
+     * @return True if this entry contains the PF_X flag, false otherwise.
+     */
     public boolean isExecutable() {
         return executable;
     }
 
+    /**
+     * Returns the offset of this segment in the file.
+     *
+     * @return The offset of this segment in the file.
+     */
     public long getSegmentOffset() {
         return segmentOffset;
     }
 
+    /**
+     * Returns the virtual address where to load this fragment in memory.
+     *
+     * @return The virtual address where to load this fragment in memory
+     */
     public long getSegmentVirtualAddress() {
         return segmentVirtualAddress;
     }
 
+    /**
+     * Returns the physical address where to load this fragment in memory.
+     *
+     * @return The physical address where to load this fragment in memory
+     */
     public long getSegmentPhysicalAddress() {
         return segmentPhysicalAddress;
     }
 
+    /**
+     * Returns the size in bytes of this segment in memory.
+     *
+     * @return The size in bytes in memory.
+     */
     public long getSegmentMemorySize() {
         return segmentMemorySize;
     }
 
+    /**
+     * Returns the size in bytes of this segment in the file.
+     *
+     * @return The size in bytes in the file.
+     */
     public long getSegmentFileSize() {
         return segmentFileSize;
     }
 
+    /**
+     * Returns the alignment of the bytes.
+     *
+     * @return The byte-alignment.
+     */
     public long getAlignment() {
         return alignment;
     }

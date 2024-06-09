@@ -26,6 +26,7 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
+/** A gnu-style hash table ELF section. */
 public final class GnuHashSection implements LoadableSection {
 
     private final String name;
@@ -36,6 +37,14 @@ public final class GnuHashSection implements LoadableSection {
     private final long[] bloom;
     private final int[] buckets;
 
+    /**
+     * Creates the GNU hash section with the given data.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for alignment.
+     */
     public GnuHashSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);

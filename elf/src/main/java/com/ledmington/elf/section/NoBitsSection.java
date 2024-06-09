@@ -19,11 +19,18 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
+/** An ELF section which allocates memory without initialization. */
 public final class NoBitsSection implements Section {
 
     private final String name;
     private final SectionHeader header;
 
+    /**
+     * Creates a NoBitsSection with the given data.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     */
     public NoBitsSection(final String name, final SectionHeader sectionHeader) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);

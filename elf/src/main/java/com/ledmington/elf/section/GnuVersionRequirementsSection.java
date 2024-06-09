@@ -20,19 +20,31 @@ package com.ledmington.elf.section;
 import java.util.Objects;
 
 /**
- * Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
+ * The .gnu.version_r ELF section.
+ *
+ * <p>Reference <a href= "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
  * Paragraph 2.7.4.
  */
 public final class GnuVersionRequirementsSection implements LoadableSection {
 
     private static final String standardName = ".gnu.version_r";
 
+    /**
+     * Returns the standard name of this special section.
+     *
+     * @return The string ".gnu.version_r".
+     */
     public static String getStandardName() {
         return standardName;
     }
 
     private final SectionHeader header;
 
+    /**
+     * Creates the GNU version requirements section with the given header.
+     *
+     * @param sectionHeader The header for this section.
+     */
     public GnuVersionRequirementsSection(final SectionHeader sectionHeader) {
         this.header = Objects.requireNonNull(sectionHeader);
     }

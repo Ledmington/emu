@@ -29,7 +29,7 @@ public final class Instruction {
     private final Operand op2;
     private final Operand op3;
 
-    public Instruction(
+    private Instruction(
             final InstructionPrefix prefix,
             final Opcode opcode,
             final Operand firstOperand,
@@ -51,6 +51,14 @@ public final class Instruction {
         this.op3 = thirdOperand;
     }
 
+    /**
+     * Creates an instruction with a prefix and two operands (like REP MOVS BYTE PTR ES:[EDI],BYTE PTR DS:[ESI]).
+     *
+     * @param prefix The prefix of the Instruction.
+     * @param opcode The opcode of the Instruction.
+     * @param firstOperand The first operand of the Instruction.
+     * @param secondOperand The second operand of the Instruction.
+     */
     public Instruction(
             final InstructionPrefix prefix,
             final Opcode opcode,
@@ -59,27 +67,64 @@ public final class Instruction {
         this(prefix, opcode, firstOperand, secondOperand, null);
     }
 
+    /**
+     * Creates an Instruction with 3 operands (like PSHUFD XMM0, XMM1, 0x12).
+     *
+     * @param opcode The opcode of the Instruction.
+     * @param firstOperand The first operand of the Instruction.
+     * @param secondOperand The second operand of the Instruction.
+     * @param thirdOperand The third of the Instruction.
+     */
     public Instruction(
             final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
         this(null, opcode, firstOperand, secondOperand, thirdOperand);
     }
 
+    /**
+     * Creates an Instruction with two operands (like XOR EAX, EAX).
+     *
+     * @param opcode The opcode of the Instruction.
+     * @param firstOperand The first operand of the Instruction.
+     * @param secondOperand The second operand of the Instruction.
+     */
     public Instruction(final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
         this(null, opcode, firstOperand, secondOperand, null);
     }
 
+    /**
+     * Creates an Instruction with one operand (like PUSH R9).
+     *
+     * @param opcode The opcode of the instruction.
+     * @param firstOperand The only operand of this instruction.
+     */
     public Instruction(final Opcode opcode, final Operand firstOperand) {
         this(null, opcode, firstOperand, null, null);
     }
 
+    /**
+     * Creates an instruction with just the opcode (like NOP or ENDBR64).
+     *
+     * @param opcode The opcode of the instruction.
+     */
     public Instruction(final Opcode opcode) {
         this(null, opcode, null, null, null);
     }
 
+    /**
+     * Returns the opcode of this Instruction.
+     *
+     * @return The opcode of this Instruction.
+     */
     public Opcode opcode() {
         return code;
     }
 
+    /**
+     * Returns the first operand of this Instruction.
+     *
+     * @return The first operand.
+     * @throws IllegalArgumentException If this instruction has no operands.
+     */
     public Operand firstOperand() {
         if (op1 == null) {
             throw new IllegalArgumentException("No first operand");
@@ -87,6 +132,12 @@ public final class Instruction {
         return op1;
     }
 
+    /**
+     * Returns the second operand of this Instruction.
+     *
+     * @return The second operand.
+     * @throws IllegalArgumentException If this instruction has less than two operands.
+     */
     public Operand secondOperand() {
         if (op2 == null) {
             throw new IllegalArgumentException("No second operand");
@@ -100,6 +151,8 @@ public final class Instruction {
      * <p>For example: {@code lea eax,[rbx]} "uses" 32 bits {@code vaddsd xmm9, xmm10, xmm9} "uses" 64 bits
      *
      * <p>Instructions which do not "use" anything like NOP, RET, LEAVE etc. return 0.
+     *
+     * @return The bits "used" in this instruction.
      */
     public int bits() {
         // here it is assumed that all "first-class" registers involved have the same
@@ -154,6 +207,11 @@ public final class Instruction {
         return op.toIntelSyntax();
     }
 
+    /**
+     * Reference obtainable through 'objdump -Mintel-mnemonic ...'
+     *
+     * @return A String representation of this instruction with Intel syntax.
+     */
     public String toIntelSyntax() {
         final StringBuilder sb = new StringBuilder();
         if (this.prefix != null) {
