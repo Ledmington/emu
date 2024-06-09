@@ -17,13 +17,16 @@
 */
 package com.ledmington.cpu.x86;
 
+/** A prefix for an x86 instruction which changes its behavior. */
 public enum InstructionPrefix {
+
+    /** Executes this instruction atomically. */
     LOCK((byte) 0xf0),
 
-    /** REPNE / REPNZ */
+    /** Equivalent to REPNE. Executes the instruction until the ECX (to be checked) register is not zero. */
     REPNZ((byte) 0xf2),
 
-    /** REP / REPE / REPZ */
+    /** Equivalent to REPE and REPZ. Executes the instruction until the ECX (to be checked) register is zero. */
     REP((byte) 0xf3);
 
     public final byte code;
@@ -32,6 +35,12 @@ public enum InstructionPrefix {
         this.code = code;
     }
 
+    /**
+     * Returns the proper instruction prefix object corresponding to the given byte.
+     *
+     * @param x The byte with the prefix.
+     * @return The InstructionPrefix object.
+     */
     public static InstructionPrefix fromByte(final byte x) {
         return switch (x) {
             case (byte) 0xf0 -> LOCK;
@@ -39,5 +48,10 @@ public enum InstructionPrefix {
             case (byte) 0xf3 -> REP;
             default -> throw new IllegalArgumentException();
         };
+    }
+
+    @Override
+    public String toString() {
+        return "InstructionPrefix(code=" + code + ')';
     }
 }

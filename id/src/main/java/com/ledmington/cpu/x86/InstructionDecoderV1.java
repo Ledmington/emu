@@ -46,10 +46,20 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
     private final ReadOnlyByteBuffer b;
 
+    /**
+     * Creates an InstructionDecoder with the given byte buffer.
+     *
+     * @param b The byte buffer to read bytes from.
+     */
     public InstructionDecoderV1(final ReadOnlyByteBuffer b) {
         this.b = Objects.requireNonNull(b).copy();
     }
 
+    /**
+     * Creates an InstructionDecoder by wrapping the given byte array.
+     *
+     * @param code A non-null and non empty byte array.
+     */
     public InstructionDecoderV1(final byte[] code) {
         this(new ReadOnlyByteBufferV1(code));
     }
