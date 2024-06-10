@@ -74,7 +74,7 @@ public final class GnuVersionSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2);
         for (final short version : versions) {
             bb.write(version);

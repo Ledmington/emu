@@ -25,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class TestRegisters {
+final class TestRegisters {
 
     private static Stream<Arguments> registers() {
         return Stream.of(
@@ -90,6 +90,12 @@ public class TestRegisters {
             final boolean extension,
             final boolean hasOperandSizeOverridePrefix,
             final Register expected) {
-        assertEquals(expected, Registers.fromCode(registerCode, is64Bit, extension, hasOperandSizeOverridePrefix));
+        final Register actual = Registers.fromCode(registerCode, is64Bit, extension, hasOperandSizeOverridePrefix);
+        assertEquals(
+                expected,
+                actual,
+                () -> String.format(
+                        "Decoding 0x%02x, is64Bit=%s, extension=%s, hasOperandSizeOverridePrefix=%s: expected %s but was %s",
+                        registerCode, is64Bit, extension, hasOperandSizeOverridePrefix, expected, actual));
     }
 }

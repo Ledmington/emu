@@ -49,7 +49,7 @@ public final class DestructorsSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         throw new Error("Not implemented");
     }
 

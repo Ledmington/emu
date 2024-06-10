@@ -75,7 +75,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         return interpreterFilePath.getBytes(StandardCharsets.UTF_8);
     }
 

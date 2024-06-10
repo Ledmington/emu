@@ -64,7 +64,7 @@ public final class RelocationAddendSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24));
         for (final RelocationAddendEntry relocationAddendEntry : relocationAddendTable) {
             if (is32Bit) {

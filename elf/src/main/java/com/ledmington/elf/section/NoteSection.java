@@ -83,7 +83,7 @@ public interface NoteSection extends LoadableSection {
     NoteSectionEntry[] getEntries();
 
     @Override
-    default byte[] getContent() {
+    default byte[] getLoadableContent() {
         final NoteSectionEntry[] entries = getEntries();
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(Arrays.stream(entries)
                 .mapToInt(NoteSectionEntry::getAlignedSize)

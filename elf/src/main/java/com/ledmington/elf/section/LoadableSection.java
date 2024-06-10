@@ -25,5 +25,5 @@ public interface LoadableSection extends Section {
      *
      * @return A non-null byte array with the section's content.
      */
-    byte[] getContent();
+    byte[] getLoadableContent();
 }

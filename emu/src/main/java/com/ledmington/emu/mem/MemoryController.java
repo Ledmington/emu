@@ -173,7 +173,7 @@ public final class MemoryController implements Memory {
             }
         } else if (sec instanceof LoadableSection ls) {
             final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-            final byte[] content = ls.getContent();
+            final byte[] content = ls.getLoadableContent();
             logger.debug(
                     "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
                     sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);

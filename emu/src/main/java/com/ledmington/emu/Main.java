@@ -73,8 +73,8 @@ public final class Main {
         for (final String arg : args) {
             switch (arg) {
                 case "-h", "--help" -> {
-                    out.println(String.join(
-                            "%n",
+                    out.print(String.join(
+                            "\n",
                             "",
                             " emu - CPU emulator",
                             "",
@@ -82,16 +82,17 @@ public final class Main {
                             "",
                             " Command line options:",
                             "",
-                            " -h, --help  Shows this help message and exits.",
-                            " -q, --quiet Sets the verbosity level to ERROR.",
-                            " -v          Sets the verbosity level to INFO.",
-                            " -vv         Sets the verbosity level to DEBUG.",
+                            " -h, --help   Shows this help message and exits.",
+                            " -q, --quiet  Only errors are reported.",
+                            " -v           Errors, warnings and info messages are reported.",
+                            " -vv          All messages are reported.",
                             "",
                             " --mem-init-random  Uninitialized memory has random values (default).",
                             " --mem-init-zero    Uninitialized memory contains binary zero.",
                             "",
                             " FILE       The ELF executable file to emulate.",
                             ""));
+                    out.flush();
                     System.exit(0);
                 }
                 case "-q", "--quiet" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -99,9 +100,15 @@ public final class Main {
                 case "-vv" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
                 case "--mem-init-random" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
                 case "--mem-init-zero" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+                case "-V", "--version" -> {
+                    out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
+                    out.flush();
+                    System.exit(0);
+                }
                 default -> {
                     if (filename != null) {
                         out.println("Cannot set filename twice.");
+                        out.flush();
                         System.exit(-1);
                     } else {
                         filename = arg;
@@ -112,6 +119,7 @@ public final class Main {
 
         if (filename == null) {
             out.println("Expected the name of the file to run.");
+            out.flush();
             System.exit(-1);
         }
 
@@ -119,7 +127,9 @@ public final class Main {
             run(filename);
         } catch (final Throwable t) {
             logger.error(t);
+            out.flush();
             System.exit(-1);
         }
+        out.flush();
     }
 }

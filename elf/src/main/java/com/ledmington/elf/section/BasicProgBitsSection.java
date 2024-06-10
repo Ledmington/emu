@@ -59,7 +59,7 @@ public final class BasicProgBitsSection implements ProgBitsSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final byte[] v = new byte[content.length];
         System.arraycopy(content, 0, v, 0, content.length);
         return v;

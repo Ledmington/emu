@@ -135,9 +135,7 @@ public final class ELFParser {
         }
 
         final long entryPointVirtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long PHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long SHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 
         final int flags = b.read4();

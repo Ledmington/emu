@@ -20,10 +20,13 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** Implementation of a "non-special" {@code .note*} ELF section. */
 public final class BasicNoteSection implements NoteSection {
+
+    private static final MiniLogger logger = MiniLogger.getLogger("basic-note-section");
 
     private final String name;
     private final SectionHeader header;
@@ -52,8 +55,8 @@ public final class BasicNoteSection implements NoteSection {
 
         final long expectedAlignment = is32Bit ? 4L : 8L;
         if (sectionHeader.getAlignment() != expectedAlignment) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid alignment: expected %,d but was %,d", expectedAlignment, sectionHeader.getAlignment()));
+            logger.warning(
+                    "Invalid alignment: expected %,d but was %,d", expectedAlignment, sectionHeader.getAlignment());
         }
         b.setAlignment(sectionHeader.getAlignment());
 
@@ -71,7 +74,7 @@ public final class BasicNoteSection implements NoteSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         throw new Error("Not implemented");
     }
 

@@ -82,7 +82,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24));
         for (final SymbolTableEntry ste : symbolTable) {
             if (is32Bit) {

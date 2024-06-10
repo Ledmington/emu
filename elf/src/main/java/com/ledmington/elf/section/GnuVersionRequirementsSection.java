@@ -60,7 +60,7 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         throw new Error("Not implemented");
     }
 

@@ -64,7 +64,7 @@ public final class StringTableSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final byte[] v = new byte[table.length];
         for (int i = 0; i < table.length; i++) {
             v[i] = (byte) table[i];

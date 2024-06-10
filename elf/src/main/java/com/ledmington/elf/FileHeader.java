@@ -243,7 +243,7 @@ public final class FileHeader {
      *
      * @return The size of this file header.
      */
-    public int getHeaderSize() {
+    public short getHeaderSize() {
         return headerSize;
     }
 

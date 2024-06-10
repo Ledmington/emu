@@ -79,15 +79,15 @@ public final class DynamicSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(dynamicTable.length * (is32Bit ? 8 : 16));
         for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
             if (is32Bit) {
                 bb.write(BitUtils.asInt(dynamicTableEntry.getTag().getCode()));
-                bb.write(BitUtils.asInt(dynamicTableEntry.getContent()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.getLoadableContent()));
             } else {
                 bb.write(dynamicTableEntry.getTag().getCode());
-                bb.write(dynamicTableEntry.getContent());
+                bb.write(dynamicTableEntry.getLoadableContent());
             }
         }
         return bb.array();

@@ -80,7 +80,7 @@ public final class GnuHashSection implements LoadableSection {
     }
 
     @Override
-    public byte[] getContent() {
+    public byte[] getLoadableContent() {
         final WriteOnlyByteBuffer bb =
                 new WriteOnlyByteBufferV1(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
         bb.write(buckets.length);
