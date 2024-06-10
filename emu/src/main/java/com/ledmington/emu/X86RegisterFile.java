@@ -38,7 +38,15 @@ public final class X86RegisterFile {
     /** Creates the register file initializing every register to 0. */
     public X86RegisterFile() {}
 
-    /** Returns the value of the given 8-bit register as a byte. */
+
+    /**
+     * Returns the value of the given 8-bit register as a byte.
+     *
+     * @param r
+     *      The register to be read.
+     * @return
+     *      The value in the register.
+     */
     public byte get(final Register8 r) {
         return switch (r) {
             case AL -> BitUtils.asByte(gpr[0]);
@@ -64,6 +72,14 @@ public final class X86RegisterFile {
         };
     }
 
+    /**
+     * Sets the value of the given 8-bit register to given byte. This operation does not modify the other registers.
+     *
+     * @param r
+     *      The Register to be overwritten.
+     * @param v
+     *      The value to be written.
+     */
     public void set(final Register8 r, final byte v) {
         switch (r) {
             case AL -> gpr[0] = (gpr[0] & 0xffffffffffffff00L) | BitUtils.asLong(v);
@@ -89,6 +105,14 @@ public final class X86RegisterFile {
         }
     }
 
+    /**
+     * Returns the value of the given 32-bit register as an int.
+     *
+     * @param r
+     *      The Register to be read.
+     * @return
+     *      The value of the register.
+     */
     public int get(final Register32 r) {
         return switch (r) {
             case EAX -> BitUtils.asInt(gpr[0]);
@@ -111,6 +135,14 @@ public final class X86RegisterFile {
         };
     }
 
+    /**
+     * Sets the value of the given 32-bit register to given int. This operation does not modify the other registers.
+     *
+     * @param r
+     *      The Register to be overwritten.
+     * @param v
+     *      The value to be written.
+     */
     public void set(final Register32 r, final int v) {
         switch (r) {
             case EAX -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | BitUtils.asLong(v);
@@ -133,6 +165,14 @@ public final class X86RegisterFile {
         }
     }
 
+    /**
+     * Returns the value of the given 64-bit register as a long.
+     *
+     * @param r
+     *      The Register to be read.
+     * @return
+     *      The value of the register.
+     */
     public long get(final Register64 r) {
         return switch (r) {
             case RAX -> gpr[0];
@@ -155,6 +195,14 @@ public final class X86RegisterFile {
         };
     }
 
+    /**
+     * Sets the value of the given 64-bit register to given long. This operation does not modify the other registers.
+     *
+     * @param r
+     *      The Register to be overwritten.
+     * @param v
+     *      The value to be written.
+     */
     public void set(final Register64 r, final long v) {
         switch (r) {
             case RAX -> gpr[0] = v;

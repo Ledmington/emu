@@ -36,6 +36,30 @@ public final class SectionHeader {
     private final long alignment;
     private final long entrySize;
 
+    /**
+     * Creates a new section header with the given data. No check is performed except the non-null ones.
+     *
+     * @param nameOffset
+     *      The offset of the name of this section in the string table.
+     * @param type
+     *      The type of this section.
+     * @param flags
+     *      Miscellaneous flags.
+     * @param virtualAddress
+     *      The virtual memory address where to load this section.
+     * @param fileOffset
+     *      The offset in the file where this section starts.
+     * @param sectionSize
+     *      The size in bytes of the section in the file.
+     * @param linkedSectionIndex
+     *      The index in the section table of the linked section.
+     * @param sh_info
+     *      Miscellaneous info.
+     * @param alignment
+     *      Byte-alignment for parsing.
+     * @param entrySize
+     *      The size in bytes of each entry of this section.
+     */
     public SectionHeader(
             int nameOffset,
             SectionHeaderType type,
