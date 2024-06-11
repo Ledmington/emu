@@ -38,6 +38,7 @@ import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -56,16 +57,16 @@ public final class X86Emulator implements Emulator {
     /** Creates an emulator to be used later. */
     public X86Emulator() {}
 
-    private void setup(final ELF elf) {
-        this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));
+    private void setup(final ELF elf, final MemoryInitializer memInit) {
+        this.mem = new MemoryController(new RandomAccessMemory(memInit));
         this.elf = Objects.requireNonNull(elf);
         this.instructionFetcher = new InstructionFetcher(mem, regFile);
         this.dec = new InstructionDecoderV1(this.instructionFetcher);
     }
 
     @Override
-    public void run(final ELF elf) {
-        setup(elf);
+    public void run(final ELF elf, final MemoryInitializer memInit) {
+        setup(elf, memInit);
 
         if (elf.fileHeader().getFileType() != FileType.ET_EXEC
                 && elf.fileHeader().getFileType() != FileType.ET_DYN) {

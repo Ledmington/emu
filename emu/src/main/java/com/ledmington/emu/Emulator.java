@@ -18,6 +18,7 @@
 package com.ledmington.emu;
 
 import com.ledmington.elf.ELF;
+import com.ledmington.mem.MemoryInitializer;
 
 /** A common interface for emulators. */
 public interface Emulator {
@@ -27,5 +28,5 @@ public interface Emulator {
      *
      * @param elf The file to be executed.
      */
-    void run(final ELF elf);
+    void run(final ELF elf, final MemoryInitializer memInit);
 }

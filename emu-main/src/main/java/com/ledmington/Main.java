@@ -60,7 +60,7 @@ public final class Main {
         final Emulator emu = new X86Emulator();
 
         logger.info(" ### Execution start ### ");
-        emu.run(elf);
+        emu.run(elf, EmulatorConstants.getMemoryInitializer());
         logger.info(" ### Execution end ### ");
     }
 
