@@ -17,8 +17,9 @@
 */
 package com.ledmington.elf.section;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import com.ledmington.utils.HashUtils;
 
@@ -27,7 +28,7 @@ public final class SectionHeader {
 
     private final int nameOffset;
     private final SectionHeaderType type;
-    private final SectionHeaderFlags[] flags;
+    private final Set<SectionHeaderFlags> flags;
     private final long virtualAddress;
     private final long fileOffset;
     private final long sectionSize;
@@ -39,26 +40,16 @@ public final class SectionHeader {
     /**
      * Creates a new section header with the given data. No check is performed except the non-null ones.
      *
-     * @param nameOffset
-     *      The offset of the name of this section in the string table.
-     * @param type
-     *      The type of this section.
-     * @param flags
-     *      Miscellaneous flags.
-     * @param virtualAddress
-     *      The virtual memory address where to load this section.
-     * @param fileOffset
-     *      The offset in the file where this section starts.
-     * @param sectionSize
-     *      The size in bytes of the section in the file.
-     * @param linkedSectionIndex
-     *      The index in the section table of the linked section.
-     * @param sh_info
-     *      Miscellaneous info.
-     * @param alignment
-     *      Byte-alignment for parsing.
-     * @param entrySize
-     *      The size in bytes of each entry of this section.
+     * @param nameOffset The offset of the name of this section in the string table.
+     * @param type The type of this section.
+     * @param flags Miscellaneous flags.
+     * @param virtualAddress The virtual memory address where to load this section.
+     * @param fileOffset The offset in the file where this section starts.
+     * @param sectionSize The size in bytes of the section in the file.
+     * @param linkedSectionIndex The index in the section table of the linked section.
+     * @param sh_info Miscellaneous info.
+     * @param alignment Byte-alignment for parsing.
+     * @param entrySize The size in bytes of each entry of this section.
      */
     public SectionHeader(
             int nameOffset,
@@ -84,34 +75,54 @@ public final class SectionHeader {
     }
 
     /**
-     * Returns the name of the section. Its value is an index into the section header string table section, giving the
-     * location of a null-terminated string.
+     * Returns the offset of the name of the section in the string table.
+     *
+     * @return The offset where the name of this section starts in the string table.
      */
     public int getNameOffset() {
         return nameOffset;
     }
 
+    /**
+     * The offset in the file where the section starts.
+     *
+     * @return The 64-bit offset of the section in the file.
+     */
     public long getFileOffset() {
         return fileOffset;
     }
 
     /**
      * Size in bytes of the section. This is the amount of space occupied in the file, except for SHT_NO_BITS sections.
+     *
+     * @return Number of bytes occupied by this section in the file.
      */
     public long getSectionSize() {
         return sectionSize;
     }
 
+    /**
+     * Returns the type of this section.
+     *
+     * @return The type of this section.
+     */
     public SectionHeaderType getType() {
         return type;
     }
 
-    public SectionHeaderFlags[] getFlags() {
-        return Arrays.copyOf(flags, flags.length);
+    /**
+     * Returns the set of flags of this section.
+     *
+     * @return The set of flags of this section.
+     */
+    public Set<SectionHeaderFlags> getFlags() {
+        return new HashSet<>(flags);
     }
 
     /**
      * Returns the size in bytes of each entry. Returns 0 if the section does not hold a table of fixed-size entries.
+     *
+     * @return The size in bytes in the file of each entry of this section.
      */
     public long getEntrySize() {
         return entrySize;
@@ -120,26 +131,43 @@ public final class SectionHeader {
     /**
      * Returns the virtual address of the beginning of the section in memory. If the section is not allocated to the
      * memory image of the program, this field should be zero.
+     *
+     * @return The virtual address where to load this section in memory.
      */
     public long getVirtualAddress() {
         return virtualAddress;
     }
 
+    /**
+     * Alignment in bytes of this section.
+     *
+     * @return Alignment in bytes of this section.
+     */
     public long getAlignment() {
         return alignment;
     }
 
+    /**
+     * Returns the index of the linked section in the section table.
+     *
+     * @return The index of the linked section.
+     */
     public int getLinkedSectionIndex() {
         return linkedSectionIndex;
     }
 
+    /**
+     * Returns the 32-bit info of this section.
+     *
+     * @return The miscellaneous info of this section.
+     */
     public int getInfo() {
         return info;
     }
 
     @Override
     public String toString() {
-        return "SectionHeader(nameOffset=" + nameOffset + ";type=" + type + ";flags=" + Arrays.toString(flags)
+        return "SectionHeader(nameOffset=" + nameOffset + ";type=" + type + ";flags=" + flags
                 + ";virtualAddress="
                 + virtualAddress + ";fileOffset=" + fileOffset + ";size="
                 + sectionSize + ";linkedSectionIndex=" + linkedSectionIndex + ";info=" + info + ";alignment="
@@ -151,7 +179,7 @@ public final class SectionHeader {
         int h = 17;
         h = 31 * h + nameOffset;
         h = 31 * h + type.hashCode();
-        h = 31 * h + Arrays.hashCode(flags);
+        h = 31 * h + flags.hashCode();
         h = 31 * h + HashUtils.hash(virtualAddress);
         h = 31 * h + HashUtils.hash(fileOffset);
         h = 31 * h + HashUtils.hash(sectionSize);
@@ -176,7 +204,7 @@ public final class SectionHeader {
         final SectionHeader sh = (SectionHeader) other;
         return this.nameOffset == sh.nameOffset
                 && this.type.equals(sh.type)
-                && Arrays.equals(this.flags, sh.flags)
+                && this.flags.equals(sh.flags)
                 && this.virtualAddress == sh.virtualAddress
                 && this.fileOffset == sh.fileOffset
                 && this.sectionSize == sh.sectionSize

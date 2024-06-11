@@ -17,10 +17,10 @@
 */
 package com.ledmington.elf.section;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /** Flags for an ELF section's header. */
 public enum SectionHeaderFlags {
@@ -143,22 +143,22 @@ public enum SectionHeaderFlags {
     }
 
     /**
-     * Converts the given 64-bit flags into an array of objects.
+     * Converts the given 64-bit flags into a Set of objects.
      *
      * @param flags The flags to be converted.
-     * @return A non-null array of SectionHeaderFlags objects.
+     * @return A non-null Set of flags.
      */
-    public static SectionHeaderFlags[] fromLong(final long flags) {
+    public static Set<SectionHeaderFlags> fromLong(final long flags) {
         if (!isValid(flags)) {
             throw new IllegalArgumentException(String.format("Invalid SHF flags 0x%016x", flags));
         }
-        final List<SectionHeaderFlags> shf = new ArrayList<>();
+        final Set<SectionHeaderFlags> shf = new HashSet<>();
         for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
             if ((flags & f.code) != 0L) { // NOPMD
                 shf.add(f);
             }
         }
-        return shf.toArray(new SectionHeaderFlags[0]);
+        return shf;
     }
 
     private final long code;

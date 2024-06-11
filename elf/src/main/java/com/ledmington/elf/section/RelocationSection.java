@@ -23,6 +23,7 @@ import java.util.Objects;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** An ELF Relocation table without explicit addends. */
 public final class RelocationSection implements Section {
 
     private final String name;

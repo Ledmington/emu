@@ -122,10 +122,8 @@ public final class PHTEntryType {
     /**
      * Checks whether the given code is a valid program header table entry type.
      *
-     * @param code
-     *      The code to be checked.
-     * @return
-     *      True if it is a valid code, false otherwise.
+     * @param code The code to be checked.
+     * @return True if it is a valid code, false otherwise.
      */
     public static boolean isValid(final int code) {
         return codeToType.containsKey(code) || (code >= PT_LOOS.code);
@@ -134,10 +132,8 @@ public final class PHTEntryType {
     /**
      * Returns the proper program header table entry type object corresponding to the given code.
      *
-     * @param code
-     *      The code to look for.
-     * @return
-     *      The proper type object.
+     * @param code The code to look for.
+     * @return The proper type object.
      */
     public static PHTEntryType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
@@ -186,8 +182,7 @@ public final class PHTEntryType {
     /**
      * Returns the 32-bit code of this type object.
      *
-     * @return
-     *      The code of this typ object.
+     * @return The code of this typ object.
      */
     public int getCode() {
         return code;
@@ -196,8 +191,7 @@ public final class PHTEntryType {
     /**
      * Returns the name of this object without the "PT_" prefix.
      *
-     * @return
-     *      The name of this type object.
+     * @return The name of this type object.
      */
     public String getName() {
         return name;
@@ -206,8 +200,7 @@ public final class PHTEntryType {
     /**
      * Returns a brief description of the meaning of this type object.
      *
-     * @return
-     *       A brief description of this type object.
+     * @return A brief description of this type object.
      */
     public String getDescription() {
         return description;

@@ -26,6 +26,7 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
+/** An ELF Relocation table with explicit addends. */
 public final class RelocationAddendSection implements LoadableSection {
 
     private final String name;
@@ -33,6 +34,14 @@ public final class RelocationAddendSection implements LoadableSection {
     private final boolean is32Bit;
     private final RelocationAddendEntry[] relocationAddendTable;
 
+    /**
+     * Creates a RelocationAddendSection with the given data.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The readOnlyByteBuffer to read data from.
+     * @param is32Bit Used for alignment.
+     */
     public RelocationAddendSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);
@@ -49,6 +58,11 @@ public final class RelocationAddendSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns a non-null array of relocation entries with explicit addends.
+     *
+     * @return The array of relocation entries.
+     */
     public RelocationAddendEntry[] getRelocationAddendTable() {
         return Arrays.copyOf(relocationAddendTable, relocationAddendTable.length);
     }

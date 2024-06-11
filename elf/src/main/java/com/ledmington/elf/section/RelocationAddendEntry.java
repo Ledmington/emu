@@ -17,4 +17,16 @@
 */
 package com.ledmington.elf.section;
 
+/**
+ * An entry of a relocation table with explicit addend.
+ *
+ * @param offset This member gives the location at which to apply the relocation action. For a relocatable file, the
+ *     value is the byte offset from the beginning of the section to the storage unit affected by the relocation. For an
+ *     executable file or a shared object, the value is the virtual address of the storage unit affected by the
+ *     relocation.
+ * @param info This member gives both the symbol table index with respect to which the relocation must be made, and the
+ *     type of relocation to apply.
+ * @param addend This member specifies a constant addend used to compute the value to be stored into the relocatable
+ *     field.
+ */
 public record RelocationAddendEntry(long offset, long info, long addend) {}

@@ -17,7 +17,5 @@
 */
 package com.ledmington.elf.section;
 
-/**
- * Common type for all ELF PROGBITS sections.
- */
+/** Common type for all ELF PROGBITS sections. */
 public interface ProgBitsSection extends LoadableSection {}
