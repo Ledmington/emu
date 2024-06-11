@@ -20,7 +20,7 @@ package com.ledmington.emu;
 import java.util.Objects;
 
 import com.ledmington.cpu.x86.Register64;
-import com.ledmington.emu.mem.MemoryController;
+import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** A class which represents the part of the emulated CPU which reads instructions from memory during execution. */

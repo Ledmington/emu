@@ -59,7 +59,7 @@ final class TestReadWrite {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        final ELF elf = ELFParser.parse(fileBytes);
+        final ELF elf = ELFReader.read(fileBytes);
         final byte[] encoded = ELFWriter.write(elf);
 
         assertEquals(

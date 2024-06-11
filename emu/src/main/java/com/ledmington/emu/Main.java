@@ -24,8 +24,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFParser;
-import com.ledmington.emu.mem.MemoryInitializer;
+import com.ledmington.elf.ELFReader;
+import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -50,7 +50,7 @@ public final class Main {
 
         logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
 
-        return ELFParser.parse(bytes);
+        return ELFReader.read(bytes);
     }
 
     private static void run(final String filename) {

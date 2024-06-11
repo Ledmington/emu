@@ -30,7 +30,6 @@ public final class SymbolTableEntryInfo {
     }
 
     private final SymbolTableEntryBinding bind;
-
     private final SymbolTableEntryType type;
 
     private SymbolTableEntryInfo(final SymbolTableEntryBinding bind, final SymbolTableEntryType type) {

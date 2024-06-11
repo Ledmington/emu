@@ -8,4 +8,4 @@ include 'elf'
 include 'id'
 include 'utils'
 include 'readelf'
-
+include 'mem'

@@ -15,13 +15,10 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.emu.mem;
+package com.ledmington.mem;
 
 import java.util.Objects;
 
-import com.ledmington.elf.section.LoadableSection;
-import com.ledmington.elf.section.NoBitsSection;
-import com.ledmington.elf.section.Section;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
 import com.ledmington.utils.MiniLogger;
@@ -153,37 +150,15 @@ public final class MemoryController implements Memory {
         write(address + 7L, BitUtils.asByte(value));
     }
 
-    /**
-     * Loads the given section into memory without checking write permissions.
-     *
-     * @param sec The section to be loaded into memory.
-     */
-    public void loadSection(final Section sec) {
-        Objects.requireNonNull(sec);
+    public void initialize(final long start, final long bytes, final byte value) {
+        for (long i = 0L; i < bytes; i++) {
+            write(start + i, value);
+        }
+    }
 
-        if (sec instanceof NoBitsSection) {
-            // allocate uninitialized data blocks
-            final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-            final long size = sec.getHeader().getSectionSize();
-            logger.debug(
-                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                    sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
-            for (long i = 0L; i < size; i++) {
-                mem.write(startVirtualAddress + i, (byte) 0x00);
-            }
-        } else if (sec instanceof LoadableSection ls) {
-            final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-            final byte[] content = ls.getLoadableContent();
-            logger.debug(
-                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                    sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
-            for (int i = 0; i < content.length; i++) {
-                mem.write(startVirtualAddress + BitUtils.asLong(i), content[i]);
-            }
-        } else {
-            throw new IllegalArgumentException(String.format(
-                    "Don't know what to do with section '%s' of type %s",
-                    sec.getName(), sec.getHeader().getType().getName()));
+    public void initialize(final long start, final byte[] values) {
+        for (long i = 0L; i < values.length; i++) {
+            write(start + i, values[BitUtils.asInt(i)]);
         }
     }
 

@@ -26,7 +26,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFParser;
+import com.ledmington.elf.ELFReader;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
@@ -174,7 +174,7 @@ public final class Main {
 
         final ELF elf;
         try {
-            elf = ELFParser.parse(Files.readAllBytes(Path.of(filename)));
+            elf = ELFReader.read(Files.readAllBytes(Path.of(filename)));
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -297,8 +297,8 @@ public final class Main {
                     sh.getSectionSize(), sh.getEntrySize(), sh.getInfo(), sh.getAlignment());
             out.printf(
                     "       [%016x]: %s%n",
-                    Arrays.stream(sh.getFlags()).mapToLong(f -> f.getCode()).reduce(0L, (a, b) -> a | b),
-                    Arrays.stream(sh.getFlags()).map(f -> f.getName()).collect(Collectors.joining(", ")));
+                    sh.getFlags().stream().mapToLong(f -> f.getCode()).reduce(0L, (a, b) -> a | b),
+                    sh.getFlags().stream().map(f -> f.getName()).collect(Collectors.joining(", ")));
         }
     }
 
@@ -344,7 +344,7 @@ public final class Main {
                     sh.getFileOffset(),
                     sh.getSectionSize(),
                     sh.getEntrySize(),
-                    Arrays.stream(sh.getFlags())
+                    sh.getFlags().stream()
                             .map(SectionHeaderFlags::getId)
                             .collect(Collector.of(
                                     StringBuilder::new,

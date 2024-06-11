@@ -6,6 +6,7 @@ The project is divided as follows:
 - `readelf` : a utility executable to mimic the behavior of GNU's `readelf`
 - `elf` : ELF file parser
 - `id` : Instruction Decoder (currently only X86)
+- `mem` : implementation of various emulated memories
 - `utils` : various utility components
 
 ## How to build
@@ -28,7 +29,7 @@ gradlew.bat fatJar
 ```
 This command is equivalent to:
 ```bash
-./gradlew spotlessApply pmdMain pmdTest test javadoc fatJar
+./gradlew spotlessApply pmdMain pmdTest spotbugsMain spotbugsTest test javadoc fatJar
 ```
 
 ### Windows
@@ -37,7 +38,7 @@ gradlew.bat build
 ```
 This command is equivalent to:
 ```bash
-gradlew.bat spotlessApply pmdMain pmdTest test javadoc fatJar
+gradlew.bat spotlessApply pmdMain pmdTest spotbugsMain spotbugsTest test javadoc fatJar
 ```
 
 ## License

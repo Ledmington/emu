@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.emu.mem;
+package com.ledmington.mem;
 
 /**
  * A common interface for emulated RAMs, caches and hard drives.

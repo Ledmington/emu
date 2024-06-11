@@ -20,7 +20,7 @@ package com.ledmington.emu;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import com.ledmington.emu.mem.MemoryInitializer;
+import com.ledmington.mem.MemoryInitializer;
 
 /** A class to hold constants for the emulator execution. */
 public final class EmulatorConstants {

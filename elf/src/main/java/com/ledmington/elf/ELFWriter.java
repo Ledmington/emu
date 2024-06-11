@@ -69,6 +69,7 @@ public final class ELFWriter {
 
     private static void writeProgramHeaderTable(final WriteOnlyByteBuffer wb, final ELF elf) {
         final boolean is32Bit = elf.fileHeader().is32Bit();
+        final PHTEntry[] pht = elf.programHeaderTable();
     }
 
     private static void writeSectionHeaderTable(final WriteOnlyByteBuffer wb, final ELF elf) {

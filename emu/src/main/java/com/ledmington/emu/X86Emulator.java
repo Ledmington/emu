@@ -34,9 +34,11 @@ import com.ledmington.elf.ELF;
 import com.ledmington.elf.FileType;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
+import com.ledmington.elf.section.LoadableSection;
+import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
-import com.ledmington.emu.mem.MemoryController;
-import com.ledmington.emu.mem.RandomAccessMemory;
+import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
@@ -208,8 +210,33 @@ public final class X86Emulator implements Emulator {
         logger.debug("Loading ELF sections into memory");
         for (final Section sec : elf.sectionTable()) {
             if (sec.getHeader().getSectionSize() != 0) {
-                mem.loadSection(sec);
+                loadSection(sec);
             }
+        }
+    }
+
+    public void loadSection(final Section sec) {
+        Objects.requireNonNull(sec);
+
+        if (sec instanceof NoBitsSection) {
+            // allocate uninitialized data blocks
+            final long startVirtualAddress = sec.getHeader().getVirtualAddress();
+            final long size = sec.getHeader().getSectionSize();
+            logger.debug(
+                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+                    sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
+            mem.initialize(startVirtualAddress, size, (byte) 0x00);
+        } else if (sec instanceof LoadableSection ls) {
+            final long startVirtualAddress = sec.getHeader().getVirtualAddress();
+            final byte[] content = ls.getLoadableContent();
+            logger.debug(
+                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+                    sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
+            mem.initialize(startVirtualAddress, content);
+        } else {
+            throw new IllegalArgumentException(String.format(
+                    "Don't know what to do with section '%s' of type %s",
+                    sec.getName(), sec.getHeader().getType().getName()));
         }
     }
 
