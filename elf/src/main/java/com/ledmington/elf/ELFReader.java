@@ -44,31 +44,31 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
-/** A parser of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
-public final class ELFParser {
+/** A reader of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
+public final class ELFReader {
 
-    private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
+    private static final MiniLogger logger = MiniLogger.getLogger("elf-reader");
 
     private static ReadOnlyByteBuffer b;
 
-    private ELFParser() {}
+    private ELFReader() {}
 
     /**
-     * Parses the given byte-array and returns an ELF file object.
+     * Reads the given byte-array and returns an ELF file object.
      *
-     * @param bytes The byte-array to be parsed.
+     * @param bytes The byte-array to be read.
      * @return An ELF file object.
      */
-    public static ELF parse(final byte[] bytes) {
+    public static ELF read(final byte[] bytes) {
         b = new ReadOnlyByteBufferV1(bytes);
-        final FileHeader fileHeader = parseFileHeader();
-        final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
-        final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
-        final Section[] sectionTable = parseSectionTable(fileHeader, sectionHeaderTable);
+        final FileHeader fileHeader = readFileHeader();
+        final PHTEntry[] programHeaderTable = readProgramHeaderTable(fileHeader);
+        final SectionHeader[] sectionHeaderTable = readSectionHeaderTable(fileHeader);
+        final Section[] sectionTable = readSectionTable(fileHeader, sectionHeaderTable);
         return new ELF(fileHeader, programHeaderTable, sectionTable);
     }
 
-    private static FileHeader parseFileHeader() {
+    private static FileHeader readFileHeader() {
         final int magicNumber = b.read4BE();
         final int ELF_MAGIC_NUMBER = 0x7f454c46;
         if (magicNumber != ELF_MAGIC_NUMBER) {
@@ -256,7 +256,7 @@ public final class ELFParser {
                 entrySize);
     }
 
-    private static PHTEntry[] parseProgramHeaderTable(final FileHeader fileHeader) {
+    private static PHTEntry[] readProgramHeaderTable(final FileHeader fileHeader) {
         final int nPHTEntries = fileHeader.getNumProgramHeaderTableEntries();
         final PHTEntry[] programHeaderTable = new PHTEntry[nPHTEntries];
         final int PHTOffset = (int) fileHeader.getProgramHeaderTableOffset();
@@ -271,7 +271,7 @@ public final class ELFParser {
         return programHeaderTable;
     }
 
-    private static SectionHeader[] parseSectionHeaderTable(final FileHeader fileHeader) {
+    private static SectionHeader[] readSectionHeaderTable(final FileHeader fileHeader) {
         final int nSHTEntries = fileHeader.getNumSectionHeaderTableEntries();
         final SectionHeader[] sectionHeaderTable = new SectionHeader[nSHTEntries];
         final int SHTOffset = (int) fileHeader.getSectionHeaderTableOffset();
@@ -296,7 +296,7 @@ public final class ELFParser {
         return sb.toString();
     }
 
-    private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
+    private static Section[] readSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
         final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].getFileOffset();
