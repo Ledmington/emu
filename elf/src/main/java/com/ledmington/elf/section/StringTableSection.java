@@ -22,12 +22,20 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** An ELF String table section. */
 public final class StringTableSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
     private final char[] table;
 
+    /**
+     * Creates a string table section object with the given data.
+     *
+     * @param name The name of this section.
+     * @param header The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     */
     public StringTableSection(final String name, final SectionHeader header, final ReadOnlyByteBuffer b) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(header);
@@ -41,6 +49,12 @@ public final class StringTableSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns the null-terminated string starting at the given index.
+     *
+     * @param stringStartIndex The index in the string table where the requested string starts.
+     * @return A non-null String object.
+     */
     public String getString(final int stringStartIndex) {
         final char nullChar = '\0';
         final StringBuilder sb = new StringBuilder();

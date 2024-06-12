@@ -180,4 +180,15 @@ public final class BitUtils {
     public static byte shr(final byte b, final int x) {
         return asByte((b >>> x) & (0x000000ff >>> x));
     }
+
+    /**
+     * Shift (logical) to the left and return as a byte.
+     *
+     * @param b The byte to be shifted.
+     * @param x The number of bits to shift.
+     * @return The shifted byte, as a byte.
+     */
+    public static byte shl(final byte b, final int x) {
+        return asByte(b << x);
+    }
 }

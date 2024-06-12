@@ -168,10 +168,22 @@ public final class SectionHeaderType {
     public static final SectionHeaderType SHT_HIUSER =
             new SectionHeaderType(0xffffffff, "SHT_HIUSER", "Unknown (Application specific)", false);
 
+    /**
+     * Checks whether the given 32-bit code corresponds to a valid type of a section header.
+     *
+     * @param code The 32-bit value to be checked.
+     * @return True if the code is valid, false otherwise.
+     */
     public static boolean isValid(final int code) {
         return codeToType.containsKey(code) || code >= SHT_LOOS.code;
     }
 
+    /**
+     * Returns the SectionHeaderType object corresponding to the given 32-bit code.
+     *
+     * @param code The 32-bit value of the type.
+     * @return A non-null type object.
+     */
     public static SectionHeaderType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
             if (code >= SHT_LOOS.code && code <= SHT_HIOS.code) {
@@ -216,14 +228,29 @@ public final class SectionHeaderType {
         this(code, name, description, true);
     }
 
+    /**
+     * Returns the 32-bit code of this type object.
+     *
+     * @return The code of this type object.
+     */
     public int getCode() {
         return code;
     }
 
+    /**
+     * Returns the name of this type object without the "SHT_" prefix.
+     *
+     * @return The name of this type object.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns a brief description of this type object.
+     *
+     * @return A brief description of this type object.
+     */
     public String getDescription() {
         return description;
     }

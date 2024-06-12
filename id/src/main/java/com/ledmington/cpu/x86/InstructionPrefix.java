@@ -29,7 +29,7 @@ public enum InstructionPrefix {
     /** Equivalent to REPE and REPZ. Executes the instruction until the ECX (to be checked) register is zero. */
     REP((byte) 0xf3);
 
-    public final byte code;
+    private final byte code;
 
     InstructionPrefix(final byte code) {
         this.code = code;
@@ -48,6 +48,10 @@ public enum InstructionPrefix {
             case (byte) 0xf3 -> REP;
             default -> throw new IllegalArgumentException();
         };
+    }
+
+    public byte getCode() {
+        return code;
     }
 
     @Override

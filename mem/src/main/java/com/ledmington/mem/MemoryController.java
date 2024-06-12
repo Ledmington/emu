@@ -150,15 +150,28 @@ public final class MemoryController implements Memory {
         write(address + 7L, BitUtils.asByte(value));
     }
 
+    /**
+     * Writes the given value in the memory withuot checking nor modifying permissions.
+     *
+     * @param start The start of the address range.
+     * @param bytes The length of the address range.
+     * @param value The 8-bit value to be written in each byte.
+     */
     public void initialize(final long start, final long bytes, final byte value) {
         for (long i = 0L; i < bytes; i++) {
-            write(start + i, value);
+            mem.write(start + i, value);
         }
     }
 
+    /**
+     * Writes the given bytes in the memory withuot checking nor modifying permissions.
+     *
+     * @param start The start of the address range.
+     * @param values The non-null array of 8-bit values to be written.
+     */
     public void initialize(final long start, final byte[] values) {
         for (long i = 0L; i < values.length; i++) {
-            write(start + i, values[BitUtils.asInt(i)]);
+            mem.write(start + i, values[BitUtils.asInt(i)]);
         }
     }
 

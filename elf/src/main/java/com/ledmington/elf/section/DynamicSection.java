@@ -68,6 +68,10 @@ public final class DynamicSection implements LoadableSection {
         dynamicTable = tmp.toArray(new DynamicTableEntry[0]);
     }
 
+    public DynamicTableEntry[] getDynamicTable() {
+        return dynamicTable;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -84,10 +88,10 @@ public final class DynamicSection implements LoadableSection {
         for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
             if (is32Bit) {
                 bb.write(BitUtils.asInt(dynamicTableEntry.getTag().getCode()));
-                bb.write(BitUtils.asInt(dynamicTableEntry.getLoadableContent()));
+                bb.write(BitUtils.asInt(dynamicTableEntry.getContent()));
             } else {
                 bb.write(dynamicTableEntry.getTag().getCode());
-                bb.write(dynamicTableEntry.getLoadableContent());
+                bb.write(dynamicTableEntry.getContent());
             }
         }
         return bb.array();

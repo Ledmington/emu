@@ -2088,9 +2088,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
     }
 
     private boolean isLegacyPrefixGroup1(final byte prefix) {
-        return prefix == InstructionPrefix.LOCK.code
-                || prefix == InstructionPrefix.REPNZ.code
-                || prefix == InstructionPrefix.REP.code;
+        return prefix == InstructionPrefix.LOCK.getCode()
+                || prefix == InstructionPrefix.REPNZ.getCode()
+                || prefix == InstructionPrefix.REP.getCode();
     }
 
     private boolean isLegacyPrefixGroup2(final byte prefix) {

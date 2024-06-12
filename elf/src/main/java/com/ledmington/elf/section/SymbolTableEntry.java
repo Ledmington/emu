@@ -21,6 +21,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** An entry of an ELF symbol table. */
 public final class SymbolTableEntry {
 
     private final int nameOffset; // relative to the start of the symbol string table
@@ -30,6 +31,12 @@ public final class SymbolTableEntry {
     private final SymbolTableEntryInfo info;
     private final SymbolTableEntryVisibility visibility;
 
+    /**
+     * Creates a symbol table entry with the given data.
+     *
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for correct parsing.
+     */
     public SymbolTableEntry(final ReadOnlyByteBuffer b, final boolean is32Bit) {
         if (is32Bit) {
             this.nameOffset = b.read4();
@@ -48,26 +55,56 @@ public final class SymbolTableEntry {
         }
     }
 
+    /**
+     * Returns the index in the ELF file's string table where the name of this symbol starts.
+     *
+     * @return An index for the string table.
+     */
     public int getNameOffset() {
         return nameOffset;
     }
 
+    /**
+     * Returns the index of the section related to this symbol.
+     *
+     * @return The index of the related section.
+     */
     public short getSectionTableIndex() {
         return sectionTableIndex;
     }
 
+    /**
+     * Returns the 64-bit value of this symbol: it has different meanings depending on the type of symbol.
+     *
+     * @return The 64-bit value of this symbol.
+     */
     public long getValue() {
         return value;
     }
 
+    /**
+     * The size in bytes of the associated data object.
+     *
+     * @return The size in bytes of the associated data object.
+     */
     public long getSize() {
         return size;
     }
 
+    /**
+     * The info of a symbol specifies the type and binding attributes.
+     *
+     * @return The info object of this symbol.
+     */
     public SymbolTableEntryInfo getInfo() {
         return info;
     }
 
+    /**
+     * Returns the visibility object of this symbol.
+     *
+     * @return The visibility object of this symbol.
+     */
     public SymbolTableEntryVisibility getVisibility() {
         return visibility;
     }

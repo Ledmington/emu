@@ -19,14 +19,23 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
+
+/** The info field of a symbol table entry. */
 public final class SymbolTableEntryInfo {
 
     private static final byte mask = (byte) 0x0f;
 
+    /**
+     * Creates a new STE info object from the given 8-bit code.
+     *
+     * @param info The code to be converted.
+     * @return A non-null STE object.
+     */
     public static SymbolTableEntryInfo fromByte(final byte info) {
         return new SymbolTableEntryInfo(
-                SymbolTableEntryBinding.fromCode((byte) ((info >>> 4) & mask)),
-                SymbolTableEntryType.fromCode((byte) (info & mask)));
+                SymbolTableEntryBinding.fromCode(BitUtils.and(BitUtils.shr(info, 4), mask)),
+                SymbolTableEntryType.fromCode(BitUtils.and(info, mask)));
     }
 
     private final SymbolTableEntryBinding bind;
@@ -37,21 +46,36 @@ public final class SymbolTableEntryInfo {
         this.type = Objects.requireNonNull(type);
     }
 
+    /**
+     * Converts this STE info object back to the original 8-bit value.
+     *
+     * @return The 8-bit value representing this STE info object.
+     */
     public byte toByte() {
-        return (byte) ((bind.getCode() << 4) | (type.getCode()));
+        return BitUtils.or(BitUtils.shl(bind.getCode(), 4), type.getCode());
     }
 
-    public SymbolTableEntryBinding getBind() {
+    /**
+     * Returns the STE binding object of this info.
+     *
+     * @return The STE binding.
+     */
+    public SymbolTableEntryBinding getBinding() {
         return bind;
     }
 
+    /**
+     * Returns the STE type object of this info.
+     *
+     * @return The STE type.
+     */
     public SymbolTableEntryType getType() {
         return type;
     }
 
     @Override
     public String toString() {
-        return bind + " " + type;
+        return "SymbolTableEntryInfo(binding=" + bind + ";type=" + type + ")";
     }
 
     @Override

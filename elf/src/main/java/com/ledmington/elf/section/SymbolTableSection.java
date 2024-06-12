@@ -22,12 +22,21 @@ import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** An ELF symbol table section. */
 public final class SymbolTableSection implements SymbolTable {
 
     private final String name;
     private final SectionHeader header;
     private final SymbolTableEntry[] symbolTable;
 
+    /**
+     * Creates a symbol table section with the given data.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for byte alignment.
+     */
     public SymbolTableSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);

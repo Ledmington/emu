@@ -49,7 +49,7 @@ public final class DynamicTableEntry {
      *
      * @return The 64-bit content.
      */
-    public long getLoadableContent() {
+    public long getContent() {
         return content;
     }
 

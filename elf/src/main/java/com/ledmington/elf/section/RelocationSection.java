@@ -30,6 +30,14 @@ public final class RelocationSection implements Section {
     private final SectionHeader header;
     private final RelocationEntry[] relocationTable;
 
+    /**
+     * Creates an ELF relocation section with the given data.
+     *
+     * @param name The name of the section.
+     * @param sectionHeader The header of the section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for byte alignment.
+     */
     public RelocationSection(
             final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);

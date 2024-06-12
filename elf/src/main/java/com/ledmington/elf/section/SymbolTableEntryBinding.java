@@ -60,6 +60,12 @@ public final class SymbolTableEntryBinding {
     public static final SymbolTableEntryBinding STB_HIPROC =
             new SymbolTableEntryBinding((byte) 0x0f, "Processor-specific", false);
 
+    /**
+     * Returns the proper STE binding object corresponding to the given code.
+     *
+     * @param code The code of the binding object.
+     * @return A non-null STE binding object.
+     */
     public static SymbolTableEntryBinding fromCode(final byte code) {
         if (!codeToBind.containsKey(code)) {
             if (code >= STB_LOOS.code && code <= STB_HIOS.code) {
@@ -96,16 +102,26 @@ public final class SymbolTableEntryBinding {
         this(code, name, true);
     }
 
+    /**
+     * Returns the code of this object.
+     *
+     * @return The code of this object.
+     */
     public byte getCode() {
         return code;
     }
 
+    /**
+     * Returns the name of this object without the "STB_" prefix.
+     *
+     * @return The name of this object.
+     */
     public String getName() {
         return name;
     }
 
     @Override
     public String toString() {
-        return name;
+        return "SymbolTableEntryBinding(name=" + name + ";code=" + code + ")";
     }
 }
