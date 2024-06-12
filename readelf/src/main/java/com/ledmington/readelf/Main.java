@@ -29,7 +29,10 @@ import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
+import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
+import com.ledmington.elf.section.DynamicTableEntry;
+import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.NoteSection;
 import com.ledmington.elf.section.NoteSectionEntry;
@@ -64,6 +67,7 @@ public final class Main {
         boolean displayDynamicSymbolTable = false;
         boolean displaySymbolTable = false;
         boolean displayNoteSections = false;
+        boolean displayDynamicSection = false;
         boolean displayRelocationSections = false;
         for (final String arg : args) {
             switch (arg) {
@@ -81,7 +85,16 @@ public final class Main {
                     displayFileHeader = true;
                     break;
                 case "-a", "--all":
-                    notImplemented();
+                    displayFileHeader = true;
+                    displaySectionHeaders = true;
+                    displaySectionDetails = true;
+                    displayProgramHeaders = true;
+                    displaySectionToSegmentMapping = true;
+                    displayDynamicSymbolTable = true;
+                    displaySymbolTable = true;
+                    displayNoteSections = true;
+                    displayDynamicSection = true;
+                    displayRelocationSections = true;
                     break;
                 case "-l", "--program-headers", "--segments":
                     displayProgramHeaders = true;
@@ -121,7 +134,7 @@ public final class Main {
                     notImplemented();
                     break;
                 case "-d", "--dynamic":
-                    notImplemented();
+                    displayDynamicSection = true;
                     break;
                 case "-V", "--version-info":
                     notImplemented();
@@ -232,6 +245,11 @@ public final class Main {
             printRelocationSection((RelocationAddendSection) elf.getFirstSectionByName(".rela.plt"));
         }
 
+        if (displayDynamicSection) {
+            out.println();
+            printDynamicSection((DynamicSection) elf.getFirstSectionByName(".dynamic"));
+        }
+
         out.flush();
         System.exit(0);
     }
@@ -240,6 +258,30 @@ public final class Main {
         out.println("This flag is not implemented yet");
         out.flush();
         System.exit(-1);
+    }
+
+    private static void printDynamicSection(final DynamicSection ds) {
+        final SectionHeader dsh = ds.getHeader();
+        final DynamicTableEntry[] dyntab = ds.getDynamicTable();
+        out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), dyntab.length);
+        out.println("  Tag        Type                         Name/Value");
+
+        for (final DynamicTableEntry dte : dyntab) {
+            out.printf(
+                    " 0x%016x %-20s ",
+                    dte.getTag().getCode(), "(" + dte.getTag().getName() + ")");
+            final long content = dte.getContent();
+            switch (dte.getTag()) {
+                case DynamicTableEntryTag.DT_INIT_ARRAYSZ,
+                        DynamicTableEntryTag.DT_FINI_ARRAYSZ,
+                        DynamicTableEntryTag.DT_STRSZ,
+                        DynamicTableEntryTag.DT_SYMENT,
+                        DynamicTableEntryTag.DT_PLRELSZ,
+                        DynamicTableEntryTag.DT_RELASZ,
+                        DynamicTableEntryTag.DT_RELAENT -> out.printf("%d (bytes)%n", content);
+                default -> out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
+            }
+        }
     }
 
     private static void printRelocationSection(final RelocationAddendSection ras) {
@@ -314,7 +356,7 @@ public final class Main {
                     ste.getValue(),
                     ste.getSize(),
                     ste.getInfo().getType().getName(),
-                    ste.getInfo().getBind().getName(),
+                    ste.getInfo().getBinding().getName(),
                     ste.getVisibility().getName(),
                     ste.getSectionTableIndex() == 0
                             ? "UND"
@@ -395,7 +437,7 @@ public final class Main {
     }
 
     private static void printSectionToSegmentMapping(final ELF elf) {
-        out.println(" Section to Segment mapping:%n" + //
+        out.println(" Section to Segment mapping:\n" + //
                 "  Segment Sections...");
 
         final PHTEntry[] pht = elf.programHeaderTable();
