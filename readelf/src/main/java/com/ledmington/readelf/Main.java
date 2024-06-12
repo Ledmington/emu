@@ -46,14 +46,15 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.SymbolTable;
 import com.ledmington.elf.section.SymbolTableEntry;
 import com.ledmington.elf.section.SymbolTableSection;
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class Main {
 
-    private static final PrintWriter out =
-            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
+    private static final PrintWriter out = System.console() != null ? System.console().writer()
+            : new PrintWriter(System.out);
 
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -69,6 +70,7 @@ public final class Main {
         boolean displayNoteSections = false;
         boolean displayDynamicSection = false;
         boolean displayRelocationSections = false;
+        boolean displayVersionSections = false;
         for (final String arg : args) {
             switch (arg) {
                 case "-H", "--help":
@@ -95,6 +97,7 @@ public final class Main {
                     displayNoteSections = true;
                     displayDynamicSection = true;
                     displayRelocationSections = true;
+                    displayVersionSections = true;
                     break;
                 case "-l", "--program-headers", "--segments":
                     displayProgramHeaders = true;
@@ -137,7 +140,7 @@ public final class Main {
                     displayDynamicSection = true;
                     break;
                 case "-V", "--version-info":
-                    notImplemented();
+                    displayVersionSections = true;
                     break;
                 case "-A", "--arch-specific":
                     notImplemented();
@@ -164,7 +167,7 @@ public final class Main {
                     notImplemented();
                     break;
 
-                    // TODO: add the other CLI flags
+                // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -225,13 +228,13 @@ public final class Main {
         }
 
         if (displayDynamicSymbolTable) {
-            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"), (StringTableSection)
-                    elf.getFirstSectionByName(".strtab"));
+            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"),
+                    (StringTableSection) elf.getFirstSectionByName(".strtab"));
         }
 
         if (displaySymbolTable) {
-            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"), (StringTableSection)
-                    elf.getFirstSectionByName(".strtab"));
+            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"),
+                    (StringTableSection) elf.getFirstSectionByName(".strtab"));
         }
 
         if (displayNoteSections) {
@@ -247,7 +250,14 @@ public final class Main {
 
         if (displayDynamicSection) {
             out.println();
-            printDynamicSection((DynamicSection) elf.getFirstSectionByName(".dynamic"));
+            printDynamicSection((DynamicSection) elf.getFirstSectionByName(".dynamic"),
+                    (StringTableSection) elf.getFirstSectionByName(".strtab"));
+        }
+
+        if (displayVersionSections) {
+            out.println();
+            printVersionSection(elf.getFirstSectionByName(".gnu.version"));
+            printVersionSection(elf.getFirstSectionByName(".gnu.version_r"));
         }
 
         out.flush();
@@ -260,7 +270,15 @@ public final class Main {
         System.exit(-1);
     }
 
-    private static void printDynamicSection(final DynamicSection ds) {
+    private static void printVersionSection(final Section s) {
+        final SectionHeader sh = s.getHeader();
+        out.printf(
+                "Version symbols section '%s' contains %d entries:%n",
+                s.getName(), sh.getSectionSize() / sh.getEntrySize());
+        // TODO
+    }
+
+    private static void printDynamicSection(final DynamicSection ds, final StringTableSection strtab) {
         final SectionHeader dsh = ds.getHeader();
         final DynamicTableEntry[] dyntab = ds.getDynamicTable();
         out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), dyntab.length);
@@ -271,15 +289,43 @@ public final class Main {
                     " 0x%016x %-20s ",
                     dte.getTag().getCode(), "(" + dte.getTag().getName() + ")");
             final long content = dte.getContent();
-            switch (dte.getTag()) {
-                case DynamicTableEntryTag.DT_INIT_ARRAYSZ,
-                        DynamicTableEntryTag.DT_FINI_ARRAYSZ,
-                        DynamicTableEntryTag.DT_STRSZ,
-                        DynamicTableEntryTag.DT_SYMENT,
-                        DynamicTableEntryTag.DT_PLRELSZ,
-                        DynamicTableEntryTag.DT_RELASZ,
-                        DynamicTableEntryTag.DT_RELAENT -> out.printf("%d (bytes)%n", content);
-                default -> out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
+            if (dte.getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_FINI_ARRAYSZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_STRSZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_SYMENT
+                    || dte.getTag() == DynamicTableEntryTag.DT_PLTRELSZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELASZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELAENT) {
+                out.printf("%d (bytes)%n", content);
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_INIT
+                    || dte.getTag() == DynamicTableEntryTag.DT_FINI
+                    || dte.getTag() == DynamicTableEntryTag.DT_INIT_ARRAY
+                    || dte.getTag() == DynamicTableEntryTag.DT_FINI_ARRAY
+                    || dte.getTag() == DynamicTableEntryTag.DT_GNU_HASH
+                    || dte.getTag() == DynamicTableEntryTag.DT_STRTAB
+                    || dte.getTag() == DynamicTableEntryTag.DT_SYMTAB
+                    || dte.getTag() == DynamicTableEntryTag.DT_DEBUG
+                    || dte.getTag() == DynamicTableEntryTag.DT_PLTGOT
+                    || dte.getTag() == DynamicTableEntryTag.DT_JMPREL
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELA
+                    || dte.getTag() == DynamicTableEntryTag.DT_VERNEED
+                    || dte.getTag() == DynamicTableEntryTag.DT_VERSYM
+                    || dte.getTag() == DynamicTableEntryTag.DT_NULL) {
+                out.printf("0x%x%n", content);
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_PLTREL) {
+                out.println("RELA");
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_FLAGS) {
+                out.println("BIND_NOW");
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_FLAGS_1) {
+                out.println("Flags: NOW PIE");
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_VERNEEDNUM
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELACOUNT) {
+                out.printf("%d%n", content);
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_NEEDED) {
+                // FIXME
+                out.printf("Shared object: [%s]%n", strtab.getString(BitUtils.asInt(content)));
+            } else {
+                out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
             }
         }
     }
@@ -452,8 +498,7 @@ public final class Main {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
                                 final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd =
-                                        sectionStart + s.getHeader().getSectionSize();
+                                final long sectionEnd = sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;
