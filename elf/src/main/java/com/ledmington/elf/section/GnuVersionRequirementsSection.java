@@ -19,6 +19,8 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
+import com.ledmington.utils.ReadOnlyByteBuffer;
+
 /**
  * The .gnu.version_r ELF section.
  *
@@ -39,14 +41,25 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
     }
 
     private final SectionHeader header;
+    private final GnuVersionRequirementEntry[] entries;
 
     /**
      * Creates the GNU version requirements section with the given header.
      *
      * @param sectionHeader The header for this section.
      */
-    public GnuVersionRequirementsSection(final SectionHeader sectionHeader) {
+    public GnuVersionRequirementsSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
+
+        this.entries = new GnuVersionRequirementEntry[0]; // (int) (sectionHeader.getSectionSize() /
+        // sectionHeader.getEntrySize())];
+        for (int i = 0; i < this.entries.length; i++) {
+            this.entries[i] = new GnuVersionRequirementEntry(b.read2(), b.read2(), b.read4(), b.read4(), b.read4());
+        }
+    }
+
+    public GnuVersionRequirementEntry[] getEntries() {
+        return entries;
     }
 
     @Override

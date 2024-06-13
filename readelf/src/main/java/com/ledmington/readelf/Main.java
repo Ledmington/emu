@@ -33,6 +33,9 @@ import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
+import com.ledmington.elf.section.GnuVersionRequirementEntry;
+import com.ledmington.elf.section.GnuVersionRequirementsSection;
+import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.NoteSection;
 import com.ledmington.elf.section.NoteSectionEntry;
@@ -53,8 +56,8 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class Main {
 
-    private static final PrintWriter out = System.console() != null ? System.console().writer()
-            : new PrintWriter(System.out);
+    private static final PrintWriter out =
+            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
 
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -167,7 +170,7 @@ public final class Main {
                     notImplemented();
                     break;
 
-                // TODO: add the other CLI flags
+                    // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -228,13 +231,13 @@ public final class Main {
         }
 
         if (displayDynamicSymbolTable) {
-            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"),
-                    (StringTableSection) elf.getFirstSectionByName(".strtab"));
+            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"), (StringTableSection)
+                    elf.getFirstSectionByName(".strtab"));
         }
 
         if (displaySymbolTable) {
-            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"),
-                    (StringTableSection) elf.getFirstSectionByName(".strtab"));
+            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"), (StringTableSection)
+                    elf.getFirstSectionByName(".strtab"));
         }
 
         if (displayNoteSections) {
@@ -250,14 +253,14 @@ public final class Main {
 
         if (displayDynamicSection) {
             out.println();
-            printDynamicSection((DynamicSection) elf.getFirstSectionByName(".dynamic"),
-                    (StringTableSection) elf.getFirstSectionByName(".strtab"));
+            printDynamicSection((DynamicSection) elf.getFirstSectionByName(".dynamic"), (StringTableSection)
+                    elf.getFirstSectionByName(".strtab"));
         }
 
         if (displayVersionSections) {
             out.println();
-            printVersionSection(elf.getFirstSectionByName(".gnu.version"));
-            printVersionSection(elf.getFirstSectionByName(".gnu.version_r"));
+            printVersionSection((GnuVersionSection) elf.getFirstSectionByName(".gnu.version"));
+            printVersionSection((GnuVersionRequirementsSection) elf.getFirstSectionByName(".gnu.version_r"));
         }
 
         out.flush();
@@ -272,10 +275,18 @@ public final class Main {
 
     private static void printVersionSection(final Section s) {
         final SectionHeader sh = s.getHeader();
-        out.printf(
-                "Version symbols section '%s' contains %d entries:%n",
-                s.getName(), sh.getSectionSize() / sh.getEntrySize());
-        // TODO
+        if (s instanceof GnuVersionRequirementsSection gvrs) {
+            final GnuVersionRequirementEntry[] entries = gvrs.getEntries();
+            out.printf("Version needs section '%s' contains %d entries:%n", s.getName(), entries.length);
+            for (int i = 0; i < entries.length; i++) {
+                out.printf("%s%n", entries[i]);
+            }
+        } else {
+            out.printf(
+                    "Version symbols section '%s' contains %d entries:%n",
+                    s.getName(), sh.getSectionSize() / sh.getEntrySize());
+            // TODO
+        }
     }
 
     private static void printDynamicSection(final DynamicSection ds, final StringTableSection strtab) {
@@ -498,7 +509,8 @@ public final class Main {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
                                 final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd = sectionStart + s.getHeader().getSectionSize();
+                                final long sectionEnd =
+                                        sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;

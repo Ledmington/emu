@@ -343,7 +343,7 @@ public final class ELFReader {
             } else if (GnuVersionSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionSection(sectionHeader, b);
             } else if (GnuVersionRequirementsSection.getStandardName().equals(name)) {
-                sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader);
+                sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader, b);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, sectionHeader);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
