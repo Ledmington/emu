@@ -18,9 +18,16 @@
 package com.ledmington.elf.section;
 
 /**
- * An entry of the .gnu.version_r section.
+ * An entry of the .gnu.version_r section. Usually this structure is called Elfxx_Verneed in the ELF documentation.
  *
  * <p>Useful reference <a href=
  * "https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html">here</a>.
+ *
+ * @param version Version of structure. This value is currently set to 1, and will be reset if the versioning
+ *     implementation is incompatibly altered.
+ * @param count Number of associated verneed array entries.
+ * @param fileOffset Offset to the file name string in the section header, in bytes.
+ * @param auxOffset Offset to a corresponding entry in the vernaux array, in bytes.
+ * @param nextOffset Offset to the next verneed entry, in bytes.
  */
 public record GnuVersionRequirementEntry(short version, short count, int fileOffset, int auxOffset, int nextOffset) {}

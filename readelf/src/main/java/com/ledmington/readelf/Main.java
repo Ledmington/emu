@@ -56,8 +56,8 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class Main {
 
-    private static final PrintWriter out =
-            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
+    private static final PrintWriter out = System.console() != null ? System.console().writer()
+            : new PrintWriter(System.out);
 
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -170,7 +170,7 @@ public final class Main {
                     notImplemented();
                     break;
 
-                    // TODO: add the other CLI flags
+                // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -231,13 +231,11 @@ public final class Main {
         }
 
         if (displayDynamicSymbolTable) {
-            printSymbolTable((DynamicSymbolTableSection) elf.getFirstSectionByName(".dynsym"), (StringTableSection)
-                    elf.getFirstSectionByName(".strtab"));
+            printSymbolTable((DynamicSymbolTableSection) elf.getSectionByName(".dynsym"), elf.sectionTable());
         }
 
         if (displaySymbolTable) {
-            printSymbolTable((SymbolTableSection) elf.getFirstSectionByName(".symtab"), (StringTableSection)
-                    elf.getFirstSectionByName(".strtab"));
+            printSymbolTable((SymbolTableSection) elf.getSectionByName(".symtab"), elf.sectionTable());
         }
 
         if (displayNoteSections) {
@@ -247,20 +245,22 @@ public final class Main {
 
         if (displayRelocationSections) {
             out.println();
-            printRelocationSection((RelocationAddendSection) elf.getFirstSectionByName(".rela.dyn"));
-            printRelocationSection((RelocationAddendSection) elf.getFirstSectionByName(".rela.plt"));
+            printRelocationSection((RelocationAddendSection) elf.getSectionByName(".rela.dyn"));
+            printRelocationSection((RelocationAddendSection) elf.getSectionByName(".rela.plt"));
         }
 
         if (displayDynamicSection) {
             out.println();
-            printDynamicSection((DynamicSection) elf.getFirstSectionByName(".dynamic"), (StringTableSection)
-                    elf.getFirstSectionByName(".strtab"));
+            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"),
+                    (StringTableSection) elf.getSectionByName(".strtab"));
         }
 
         if (displayVersionSections) {
             out.println();
-            printVersionSection((GnuVersionSection) elf.getFirstSectionByName(".gnu.version"));
-            printVersionSection((GnuVersionRequirementsSection) elf.getFirstSectionByName(".gnu.version_r"));
+            printVersionSection((GnuVersionSection) elf.getSectionByName(".gnu.version"), elf.sectionTable());
+            out.println();
+            printVersionSection(
+                    (GnuVersionRequirementsSection) elf.getSectionByName(".gnu.version_r"), elf.sectionTable());
         }
 
         out.flush();
@@ -273,19 +273,57 @@ public final class Main {
         System.exit(-1);
     }
 
-    private static void printVersionSection(final Section s) {
+    private static void printVersionSection(final Section s, final Section[] sectionTable) {
         final SectionHeader sh = s.getHeader();
         if (s instanceof GnuVersionRequirementsSection gvrs) {
             final GnuVersionRequirementEntry[] entries = gvrs.getEntries();
-            out.printf("Version needs section '%s' contains %d entries:%n", s.getName(), entries.length);
+            out.printf(
+                    "Version needs section '%s' contains %d entr%s:%n",
+                    s.getName(), entries.length, entries.length == 1 ? "y" : "ies");
+            out.printf(
+                    " Addr: 0x%016x Offset: 0x%08x Link: %d (%s)%n",
+                    sh.getVirtualAddress(),
+                    sh.getFileOffset(),
+                    sh.getLinkedSectionIndex(),
+                    sectionTable[sh.getLinkedSectionIndex()].getName());
+            final StringTableSection strtab = (StringTableSection) sectionTable[sh.getLinkedSectionIndex()];
             for (int i = 0; i < entries.length; i++) {
+                out.printf(
+                        "  %06x: Version: %d  File: %s  Cnt: %d%n",
+                        i, entries[i].version(), strtab.getString(entries[i].fileOffset()), entries[i].count());
                 out.printf("%s%n", entries[i]);
             }
-        } else {
+        } else if (s instanceof GnuVersionSection gvs) {
+            final short[] versions = gvs.getVersions();
+            final Section linkedSection = sectionTable[sh.getLinkedSectionIndex()];
             out.printf(
-                    "Version symbols section '%s' contains %d entries:%n",
-                    s.getName(), sh.getSectionSize() / sh.getEntrySize());
-            // TODO
+                    "Version symbols section '%s' contains %d entr%s:%n",
+                    s.getName(), versions.length, versions.length == 1 ? "y" : "ies");
+            out.printf(
+                    " Addr: 0x%016x Offset: 0x%08x Link: %d (%s)%n",
+                    sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
+            final SymbolTableEntry[] symbolTable = ((SymbolTable) linkedSection).getSymbolTable();
+            final StringTableSection stringTable = (StringTableSection) sectionTable[linkedSection.getHeader()
+                    .getLinkedSectionIndex()];
+            for (int i = 0; i < versions.length; i++) {
+                if (i % 4 == 0) {
+                    out.printf("  %03x: ", i);
+                }
+                out.printf(
+                        "%2d (%s)\t",
+                        versions[i],
+                        versions[i] == 0
+                                ? "*local*"
+                                : (versions[i] == 1
+                                        ? "*global*"
+                                        : stringTable.getString(symbolTable[i].getNameOffset())));
+                if (i % 4 == 3) {
+                    out.println();
+                }
+            }
+            out.println();
+        } else {
+            out.printf("Unknown version section '%s'%n", s.getName());
         }
     }
 
@@ -401,10 +439,11 @@ public final class Main {
         }
     }
 
-    private static void printSymbolTable(final SymbolTable s, final StringTableSection strtab) {
+    private static void printSymbolTable(final SymbolTable s, final Section[] sectionTable) {
         final SymbolTableEntry[] st = s.getSymbolTable();
         out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), st.length);
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
+        final StringTableSection strtab = (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
         for (int i = 0; i < st.length; i++) {
             final SymbolTableEntry ste = st[i];
             out.printf(
@@ -488,7 +527,7 @@ public final class Main {
             if (phte.getType() == PHTEntryType.PT_INTERP) {
                 out.printf(
                         "      [Requesting program interpreter: %s]%n",
-                        ((InterpreterPathSection) elf.getFirstSectionByName(".interp")).getInterpreterFilePath());
+                        ((InterpreterPathSection) elf.getSectionByName(".interp")).getInterpreterFilePath());
             }
         }
     }
@@ -509,8 +548,7 @@ public final class Main {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
                                 final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd =
-                                        sectionStart + s.getHeader().getSectionSize();
+                                final long sectionEnd = sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;

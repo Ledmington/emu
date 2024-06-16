@@ -48,11 +48,23 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
      *
      * @param sectionHeader The header for this section.
      */
-    public GnuVersionRequirementsSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+    public GnuVersionRequirementsSection(
+            final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
         this.header = Objects.requireNonNull(sectionHeader);
 
-        this.entries = new GnuVersionRequirementEntry[0]; // (int) (sectionHeader.getSectionSize() /
-        // sectionHeader.getEntrySize())];
+        int versionRequirementsEntryNum = 0;
+        {
+            final DynamicTableEntry[] dynamicTable =
+                    Objects.requireNonNull(dynamicSection).getDynamicTable();
+            for (final DynamicTableEntry dte : dynamicTable) {
+                if (dte.getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
+                    versionRequirementsEntryNum = (int) dte.getContent();
+                    break;
+                }
+            }
+        }
+
+        this.entries = new GnuVersionRequirementEntry[versionRequirementsEntryNum];
         for (int i = 0; i < this.entries.length; i++) {
             this.entries[i] = new GnuVersionRequirementEntry(b.read2(), b.read2(), b.read4(), b.read4(), b.read4());
         }

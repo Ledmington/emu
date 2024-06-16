@@ -17,6 +17,8 @@
 */
 package com.ledmington.elf;
 
+import java.util.Objects;
+
 import com.ledmington.elf.section.BasicNoteSection;
 import com.ledmington.elf.section.BasicProgBitsSection;
 import com.ledmington.elf.section.ConstructorsSection;
@@ -300,7 +302,32 @@ public final class ELFReader {
         final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].getFileOffset();
+        DynamicSection dynamicSection = null;
+
+        // Since some section may require the .dynamic section for correct parsing, we
+        // need to parse that first
         for (int k = 0; k < sectionHeaderTable.length; k++) {
+            final SectionHeader sectionHeader = sectionHeaderTable[k];
+            b.setPosition(shstr_offset + sectionHeader.getNameOffset());
+
+            final String name = readZeroTerminatedString();
+
+            final String typeName = sectionHeader.getType().getName();
+            logger.debug("Parsing %s (%s)", name, typeName);
+
+            if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
+                sectionTable[k] = new DynamicSection(name, sectionHeader, b, fileHeader.is32Bit());
+                dynamicSection = (DynamicSection) sectionTable[k];
+                break;
+            }
+        }
+
+        for (int k = 0; k < sectionHeaderTable.length; k++) {
+            if (sectionTable[k] != null) {
+                // we already parsed this section
+                continue;
+            }
+
             final SectionHeader sectionHeader = sectionHeaderTable[k];
             b.setPosition(shstr_offset + sectionHeader.getNameOffset());
 
@@ -334,8 +361,6 @@ public final class ELFReader {
                         : new BasicProgBitsSection(name, sectionHeader, b);
             } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.getName())) {
                 sectionTable[k] = new NoBitsSection(name, sectionHeader);
-            } else if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
-                sectionTable[k] = new DynamicSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_RELA.getName())) {
                 sectionTable[k] = new RelocationAddendSection(name, sectionHeader, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.getName())) {
@@ -343,7 +368,7 @@ public final class ELFReader {
             } else if (GnuVersionSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionSection(sectionHeader, b);
             } else if (GnuVersionRequirementsSection.getStandardName().equals(name)) {
-                sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader, b);
+                sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, sectionHeader);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
@@ -352,6 +377,10 @@ public final class ELFReader {
                 throw new IllegalArgumentException(String.format(
                         "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));
             }
+        }
+
+        for (int i = 0; i < sectionHeaderTable.length; i++) {
+            Objects.requireNonNull(sectionTable[i]);
         }
 
         return sectionTable;

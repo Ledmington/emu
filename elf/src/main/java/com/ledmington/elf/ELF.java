@@ -91,9 +91,9 @@ public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section.
      * Looks for a section with the given name inside the Section Table and returns it.
      *
      * @param name The name of the section to look for.
-     * @return The first Section encountered such that {@code s.getName().equals(name)} returns true.
+     * @return The Section encountered such that {@code s.getName().equals(name)} returns true.
      */
-    public Section getFirstSectionByName(final String name) {
+    public Section getSectionByName(final String name) {
         for (final Section s : sectionTable) {
             if (s.getName().equals(name)) {
                 return s;
