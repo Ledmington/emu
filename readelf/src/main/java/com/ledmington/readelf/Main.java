@@ -19,6 +19,7 @@ package com.ledmington.readelf;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -56,8 +57,8 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class Main {
 
-    private static final PrintWriter out = System.console() != null ? System.console().writer()
-            : new PrintWriter(System.out);
+    private static final PrintWriter out =
+            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
 
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -170,7 +171,7 @@ public final class Main {
                     notImplemented();
                     break;
 
-                // TODO: add the other CLI flags
+                    // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -231,6 +232,9 @@ public final class Main {
         }
 
         if (displayDynamicSymbolTable) {
+            if (displaySectionToSegmentMapping) {
+                out.println();
+            }
             printSymbolTable((DynamicSymbolTableSection) elf.getSectionByName(".dynsym"), elf.sectionTable());
         }
 
@@ -239,8 +243,17 @@ public final class Main {
         }
 
         if (displayNoteSections) {
-            out.println();
-            printNoteSections(elf);
+            if (displaySymbolTable) {
+                out.println();
+            }
+            for (final Section s : elf.sectionTable()) {
+                if (!s.getName().startsWith(".note")) {
+                    continue;
+                }
+
+                printNoteSection((NoteSection) s);
+                out.println();
+            }
         }
 
         if (displayRelocationSections) {
@@ -251,8 +264,8 @@ public final class Main {
 
         if (displayDynamicSection) {
             out.println();
-            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"),
-                    (StringTableSection) elf.getSectionByName(".strtab"));
+            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (StringTableSection)
+                    elf.getSectionByName(".strtab"));
         }
 
         if (displayVersionSections) {
@@ -303,8 +316,8 @@ public final class Main {
                     " Addr: 0x%016x Offset: 0x%08x Link: %d (%s)%n",
                     sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
             final SymbolTableEntry[] symbolTable = ((SymbolTable) linkedSection).getSymbolTable();
-            final StringTableSection stringTable = (StringTableSection) sectionTable[linkedSection.getHeader()
-                    .getLinkedSectionIndex()];
+            final StringTableSection stringTable =
+                    (StringTableSection) sectionTable[linkedSection.getHeader().getLinkedSectionIndex()];
             for (int i = 0; i < versions.length; i++) {
                 if (i % 4 == 0) {
                     out.printf("  %03x: ", i);
@@ -395,20 +408,31 @@ public final class Main {
         out.println();
     }
 
-    private static void printNoteSections(final ELF elf) {
-        for (final Section s : elf.sectionTable()) {
-            if (!s.getName().startsWith(".note")) {
-                continue;
+    private static void printNoteSection(final NoteSection ns) {
+        out.printf("Displaying notes found in: %s%n", ns.getName());
+        out.println("  Owner                Data size     Description");
+        for (final NoteSectionEntry nse : ns.getEntries()) {
+            out.printf(
+                    "  %-20s 0x%08x     %s%n",
+                    nse.name(), nse.getSize(), nse.type().getDescription());
+            switch (nse.type()) {
+                case NT_GNU_ABI_TAG -> {}
+                case NT_GNU_BUILD_ID -> out.printf(
+                        "    Build ID: %s%n",
+                        nse.description()
+                                .chars()
+                                .mapToObj(x -> String.format("%02x", BitUtils.asByte(x)))
+                                .collect(Collectors.joining()));
+                case NT_GNU_PROPERTY_TYPE_0 -> {
+                    final byte[] bytes = nse.description().getBytes(StandardCharsets.UTF_8);
+                    final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(bytes);
+                    for (int i = 0; i < bytes.length - 3; i += 4) {
+                        out.printf("0x%08x%n", b.read4());
+                    }
+                }
+                default -> throw new IllegalArgumentException(
+                        String.format("Unknown note section entry type '%s'", nse.type()));
             }
-
-            final NoteSection ns = (NoteSection) s;
-            out.printf("Displaying notes found in: %s%n", s.getName());
-            out.println("  Owner                Data size     Description");
-
-            for (final NoteSectionEntry nse : ns.getEntries()) {
-                out.printf("  %-20s 0x%08x     %016x TODO%n", nse.name(), nse.getSize(), nse.type());
-            }
-            out.println();
         }
     }
 
@@ -443,7 +467,8 @@ public final class Main {
         final SymbolTableEntry[] st = s.getSymbolTable();
         out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), st.length);
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
-        final StringTableSection strtab = (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
+        final StringTableSection strtab =
+                (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
         for (int i = 0; i < st.length; i++) {
             final SymbolTableEntry ste = st[i];
             out.printf(
@@ -548,7 +573,8 @@ public final class Main {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
                                 final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd = sectionStart + s.getHeader().getSectionSize();
+                                final long sectionEnd =
+                                        sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;

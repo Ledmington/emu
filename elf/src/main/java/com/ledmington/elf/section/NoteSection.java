@@ -69,7 +69,7 @@ public interface NoteSection extends LoadableSection {
                     : b.getPosition();
             b.setPosition(newPosition);
 
-            entries.add(new NoteSectionEntry(name, description, type, is32Bit));
+            entries.add(new NoteSectionEntry(name, description, NoteSectionEntryType.fromCode(type), is32Bit));
         }
 
         return entries.toArray(new NoteSectionEntry[0]);
@@ -92,7 +92,7 @@ public interface NoteSection extends LoadableSection {
         for (final NoteSectionEntry nse : entries) {
             bb.write(nse.name().length());
             bb.write(nse.description().length());
-            bb.write(nse.type());
+            bb.write(nse.type().getCode());
             bb.write(nse.name().getBytes(StandardCharsets.UTF_8));
             bb.write(nse.description().getBytes(StandardCharsets.UTF_8));
             runningTotal += nse.getAlignedSize();

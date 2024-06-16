@@ -34,9 +34,11 @@ final class TestNoteSectionParsing {
     @ValueSource(booleans = {false, true})
     void correctParsing(final boolean is32Bit) {
         final NoteSectionEntry[] expected = new NoteSectionEntry[] {
-            new NoteSectionEntry("test-name", "12345", 0x12345678, is32Bit),
-            new NoteSectionEntry("long-test-name", "Another test description", 99, is32Bit),
-            new NoteSectionEntry("really-long-test-name", "This is a test description", -99, is32Bit)
+            new NoteSectionEntry("test-name", "12345", NoteSectionEntryType.NT_GNU_PROPERTY_TYPE_0, is32Bit),
+            new NoteSectionEntry(
+                    "long-test-name", "Another test description", NoteSectionEntryType.NT_GNU_BUILD_ID, is32Bit),
+            new NoteSectionEntry(
+                    "really-long-test-name", "This is a test description", NoteSectionEntryType.NT_GNU_ABI_TAG, is32Bit)
         };
 
         final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1();
@@ -44,7 +46,7 @@ final class TestNoteSectionParsing {
         for (int i = 0; i < expected.length; i++) {
             wb.write(expected[i].name().length());
             wb.write(expected[i].description().length());
-            wb.write(expected[i].type());
+            wb.write(expected[i].type().getCode());
             wb.write(expected[i].name().getBytes(StandardCharsets.UTF_8));
             wb.write(expected[i].description().getBytes(StandardCharsets.UTF_8));
             if (i < expected.length - 1) {

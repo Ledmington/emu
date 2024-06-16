@@ -25,7 +25,7 @@ package com.ledmington.elf.section;
  * @param type The 4-byte type of this entry (meaning of this field varies between note section).
  * @param is32Bit Used for alignment.
  */
-public record NoteSectionEntry(String name, String description, int type, boolean is32Bit) {
+public record NoteSectionEntry(String name, String description, NoteSectionEntryType type, boolean is32Bit) {
 
     /**
      * Returns the number of bytes occupied by the actual data.

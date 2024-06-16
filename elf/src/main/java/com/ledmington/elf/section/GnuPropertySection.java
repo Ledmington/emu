@@ -31,7 +31,7 @@ public final class GnuPropertySection implements NoteSection {
     /**
      * Creates the .note.gnu.property ELF section with the given data.
      *
-     * @param sectionHeader The ehader of this section.
+     * @param sectionHeader The header of this section.
      * @param b The ReadOnlyByteBuffer to read data from.
      * @param is32Bit Used for alignment.
      */
