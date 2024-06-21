@@ -43,6 +43,10 @@ public interface NoteSection extends LoadableSection {
         final long start = b.getPosition();
         final List<NoteSectionEntry> entries = new ArrayList<>();
 
+        // for alignment
+        final long bytes = is32Bit ? 4L : 8L;
+        final long byteShift = is32Bit ? 2L : 3L;
+
         b.setAlignment(1L);
         while (b.getPosition() - start < length) {
             final int namesz = b.read4();
@@ -53,7 +57,8 @@ public interface NoteSection extends LoadableSection {
             for (int i = 0; i < namesz; i++) {
                 nameBytes[i] = b.read1();
             }
-            final String name = new String(nameBytes, StandardCharsets.UTF_8);
+            final String name = new String(
+                    nameBytes, 0, nameBytes[namesz - 1] == '\0' ? namesz - 1 : namesz, StandardCharsets.UTF_8);
 
             final byte[] descriptionBytes = new byte[descsz];
             for (int i = 0; i < descsz; i++) {
@@ -61,9 +66,7 @@ public interface NoteSection extends LoadableSection {
             }
             final String description = new String(descriptionBytes, StandardCharsets.UTF_8);
 
-            // alignmnent
-            final long bytes = is32Bit ? 4L : 8L;
-            final long byteShift = is32Bit ? 2L : 3L;
+            // alignment
             final long newPosition = (b.getPosition() % bytes != 0L)
                     ? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
                     : b.getPosition();

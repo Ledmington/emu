@@ -19,44 +19,138 @@ package com.ledmington.elf.section;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import java.nio.charset.StandardCharsets;
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.utils.ReadOnlyByteBufferV1;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 final class TestNoteSectionParsing {
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void correctParsing(final boolean is32Bit) {
-        final NoteSectionEntry[] expected = new NoteSectionEntry[] {
-            new NoteSectionEntry("test-name", "12345", NoteSectionEntryType.NT_GNU_PROPERTY_TYPE_0, is32Bit),
-            new NoteSectionEntry(
-                    "long-test-name", "Another test description", NoteSectionEntryType.NT_GNU_BUILD_ID, is32Bit),
-            new NoteSectionEntry(
-                    "really-long-test-name", "This is a test description", NoteSectionEntryType.NT_GNU_ABI_TAG, is32Bit)
-        };
 
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1();
-        int runningLength = 0;
-        for (int i = 0; i < expected.length; i++) {
-            wb.write(expected[i].name().length());
-            wb.write(expected[i].description().length());
-            wb.write(expected[i].type().getCode());
-            wb.write(expected[i].name().getBytes(StandardCharsets.UTF_8));
-            wb.write(expected[i].description().getBytes(StandardCharsets.UTF_8));
-            if (i < expected.length - 1) {
-                wb.setPosition(runningLength + expected[i].getAlignedSize());
-            }
-            runningLength += expected[i].getAlignedSize();
-        }
-        final byte[] encoded = wb.array();
+    private static byte[] convertHexStringToByteArray(final String hexString) {
+        return new BigInteger(hexString, 16).toByteArray();
+    }
+
+    private static Stream<Arguments> exampleNoteSections() {
+        return Stream.of(
+                Arguments.of(
+                        convertHexStringToByteArray(
+                                // real dump of the .note.gnu.property section of a gcc 11.4.0 executable, obtained with
+                                // 'readelf -x .note.gnu.property /usr/bin/gcc'
+                                "040000002000000005000000474e5500020000c0040000000300000000000000028000c0040000000100000000000000"),
+                        false,
+                        new NoteSectionEntry[] {
+                            new NoteSectionEntry(
+                                    "GNU",
+                                    new String(new byte[] {
+                                        (byte) 0x02,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0xc0,
+                                        (byte) 0x04,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x03,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x02,
+                                        (byte) 0x80,
+                                        (byte) 0x00,
+                                        (byte) 0xc0,
+                                        (byte) 0x04,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x01,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                    }),
+                                    NoteSectionEntryType.NT_GNU_PROPERTY_TYPE_0,
+                                    false)
+                        }),
+                Arguments.of(
+                        convertHexStringToByteArray(
+                                // real dump of the .note.gnu.build-id section of a gcc 11.4.0 executable, obtained with
+                                // 'readelf -x .note.gnu.build-id /usr/bin/gcc'
+                                "040000001400000003000000474e5500bee27145fd189a47a04c578e204051498e609ed2"),
+                        false,
+                        new NoteSectionEntry[] {
+                            new NoteSectionEntry(
+                                    "GNU",
+                                    new String(new byte[] {
+                                        (byte) 0x00,
+                                        (byte) 0xbe,
+                                        (byte) 0xe2,
+                                        (byte) 0x71,
+                                        (byte) 0x45,
+                                        (byte) 0xfd,
+                                        (byte) 0x18,
+                                        (byte) 0x9a,
+                                        (byte) 0x47,
+                                        (byte) 0xa0,
+                                        (byte) 0x4c,
+                                        (byte) 0x57,
+                                        (byte) 0x8e,
+                                        (byte) 0x20,
+                                        (byte) 0x40,
+                                        (byte) 0x51,
+                                        (byte) 0x49,
+                                        (byte) 0x8e,
+                                        (byte) 0x60,
+                                        (byte) 0x9e,
+                                        (byte) 0xd2,
+                                    }),
+                                    NoteSectionEntryType.NT_GNU_BUILD_ID,
+                                    false)
+                        }),
+                Arguments.of(
+                        convertHexStringToByteArray(
+                                // real dump of the .note.ABI-tag section of a gcc 11.4.0 executable, obtained with
+                                // 'readelf -x .note.ABI-tag /usr/bin/gcc'
+                                "040000001000000001000000474e550000000000030000000200000000000000"),
+                        false,
+                        new NoteSectionEntry[] {
+                            new NoteSectionEntry(
+                                    "GNU",
+                                    new String(new byte[] {
+                                        (byte) 0x03,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x02,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                    }),
+                                    NoteSectionEntryType.NT_GNU_ABI_TAG,
+                                    false)
+                        }));
+    }
+
+    @ParameterizedTest
+    @MethodSource("exampleNoteSections")
+    void correctParsing(final byte[] content, final boolean is32Bit, final NoteSectionEntry[] expected) {
         final NoteSectionEntry[] parsed =
-                NoteSection.loadNoteSectionEntries(is32Bit, new ReadOnlyByteBufferV1(encoded), encoded.length);
+                NoteSection.loadNoteSectionEntries(is32Bit, new ReadOnlyByteBufferV1(content, true), content.length);
         assertArrayEquals(
                 expected,
                 parsed,

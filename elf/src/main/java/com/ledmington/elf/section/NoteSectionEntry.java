@@ -17,11 +17,15 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.stream.Collectors;
+
+import com.ledmington.utils.BitUtils;
+
 /**
  * An entry of an ELF section of type SHT_NOTE (.note*).
  *
  * @param name The name of the entry.
- * @param description The description of the entry.
+ * @param description The description/content of the entry.
  * @param type The 4-byte type of this entry (meaning of this field varies between note section).
  * @param is32Bit Used for alignment.
  */
@@ -46,5 +50,15 @@ public record NoteSectionEntry(String name, String description, NoteSectionEntry
         final int bytes = is32Bit ? 4 : 8;
         final int size = getSize();
         return size % bytes == 0 ? size : (((size / bytes) + 1) * bytes);
+    }
+
+    @Override
+    public String toString() {
+        return "NoteSectionEntry[name='" + name + "';description="
+                + description
+                        .chars()
+                        .mapToObj(x -> String.format("%02x", BitUtils.asByte(x)))
+                        .collect(Collectors.joining())
+                + "]";
     }
 }
