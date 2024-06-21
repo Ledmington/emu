@@ -34,6 +34,7 @@ import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
+import com.ledmington.elf.section.GnuHashSection;
 import com.ledmington.elf.section.GnuVersionRequirementEntry;
 import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
@@ -75,6 +76,7 @@ public final class Main {
         boolean displayDynamicSection = false;
         boolean displayRelocationSections = false;
         boolean displayVersionSections = false;
+        boolean displayGnuHashSection = false;
         for (final String arg : args) {
             switch (arg) {
                 case "-H", "--help":
@@ -102,6 +104,7 @@ public final class Main {
                     displayDynamicSection = true;
                     displayRelocationSections = true;
                     displayVersionSections = true;
+                    displayGnuHashSection = true;
                     break;
                 case "-l", "--program-headers", "--segments":
                     displayProgramHeaders = true;
@@ -210,10 +213,11 @@ public final class Main {
             printSectionHeaders(elf);
         }
 
-        if (displaySectionDetails) {
-            if (displaySectionHeaders) {
+        if (displaySectionDetails && !displaySectionHeaders) {
+            if (displayFileHeader) {
                 out.println();
             }
+
             printSectionDetails(elf);
         }
 
@@ -231,19 +235,54 @@ public final class Main {
             printSectionToSegmentMapping(elf);
         }
 
-        if (displayDynamicSymbolTable) {
+        if (displayDynamicSection) {
             if (displaySectionToSegmentMapping) {
+                out.println();
+            }
+            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (StringTableSection)
+                    elf.getSectionByName(".strtab"));
+        }
+
+        if (displayRelocationSections) {
+            if (displayDynamicSection) {
+                out.println();
+            }
+            printRelocationSection((RelocationAddendSection) elf.getSectionByName(".rela.dyn"));
+            printRelocationSection((RelocationAddendSection) elf.getSectionByName(".rela.plt"));
+        }
+
+        if (displayDynamicSymbolTable) {
+            if (displayRelocationSections) {
                 out.println();
             }
             printSymbolTable((DynamicSymbolTableSection) elf.getSectionByName(".dynsym"), elf.sectionTable());
         }
 
         if (displaySymbolTable) {
+            if (displayDynamicSymbolTable) {
+                out.println();
+            }
             printSymbolTable((SymbolTableSection) elf.getSectionByName(".symtab"), elf.sectionTable());
         }
 
-        if (displayNoteSections) {
+        if (displayGnuHashSection) {
             if (displaySymbolTable) {
+                out.println();
+            }
+            printGnuHashSection((GnuHashSection) elf.getSectionByName(".gnu.hash"));
+        }
+
+        if (displayVersionSections) {
+            if (displayGnuHashSection) {
+                out.println();
+            }
+            printVersionSection(elf.getSectionByName(".gnu.version"), elf.sectionTable());
+            out.println();
+            printVersionSection(elf.getSectionByName(".gnu.version_r"), elf.sectionTable());
+        }
+
+        if (displayNoteSections) {
+            if (displayGnuHashSection) {
                 out.println();
             }
             for (final Section s : elf.sectionTable()) {
@@ -256,28 +295,17 @@ public final class Main {
             }
         }
 
-        if (displayRelocationSections) {
-            out.println();
-            printRelocationSection((RelocationAddendSection) elf.getSectionByName(".rela.dyn"));
-            printRelocationSection((RelocationAddendSection) elf.getSectionByName(".rela.plt"));
-        }
-
-        if (displayDynamicSection) {
-            out.println();
-            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (StringTableSection)
-                    elf.getSectionByName(".strtab"));
-        }
-
-        if (displayVersionSections) {
-            out.println();
-            printVersionSection((GnuVersionSection) elf.getSectionByName(".gnu.version"), elf.sectionTable());
-            out.println();
-            printVersionSection(
-                    (GnuVersionRequirementsSection) elf.getSectionByName(".gnu.version_r"), elf.sectionTable());
-        }
-
         out.flush();
         System.exit(0);
+    }
+
+    private static void printGnuHashSection(final GnuHashSection s) {
+        out.printf(
+                "Histogram for '%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBuckets().length);
+        out.println(" Length  Number     % of total  Coverage");
+        for (int b = 0; b < s.getBuckets().length; b++) {
+            out.printf("  bucket %d: %d TODO%n", b, s.getBuckets()[b]);
+        }
     }
 
     private static void notImplemented() {
@@ -458,8 +486,10 @@ public final class Main {
                     sh.getSectionSize(), sh.getEntrySize(), sh.getInfo(), sh.getAlignment());
             out.printf(
                     "       [%016x]: %s%n",
-                    sh.getFlags().stream().mapToLong(f -> f.getCode()).reduce(0L, (a, b) -> a | b),
-                    sh.getFlags().stream().map(f -> f.getName()).collect(Collectors.joining(", ")));
+                    sh.getFlags().stream()
+                            .mapToLong(SectionHeaderFlags::getCode)
+                            .reduce(0L, (a, b) -> a | b),
+                    sh.getFlags().stream().map(SectionHeaderFlags::getName).collect(Collectors.joining(", ")));
         }
     }
 

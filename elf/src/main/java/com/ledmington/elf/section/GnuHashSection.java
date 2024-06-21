@@ -69,6 +69,14 @@ public final class GnuHashSection implements LoadableSection {
         }
     }
 
+    public long[] getBloomFilter() {
+        return bloom;
+    }
+
+    public int[] getBuckets() {
+        return buckets;
+    }
+
     @Override
     public String getName() {
         return name;
