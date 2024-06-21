@@ -234,7 +234,7 @@ public final class Instruction {
 
     @Override
     public String toString() {
-        return "Instruction(prefix=" + prefix.toString() + ";opcode=" + code.toString()
+        return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
                 + (op1 == null
                         ? ""
                         : ";operands=[" + op1 + (op2 == null ? "" : "," + op2 + (op3 == null ? "" : "," + op3)) + "]")
