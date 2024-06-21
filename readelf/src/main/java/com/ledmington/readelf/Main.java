@@ -19,12 +19,12 @@ package com.ledmington.readelf;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
@@ -39,8 +39,6 @@ import com.ledmington.elf.section.GnuVersionRequirementEntry;
 import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
-import com.ledmington.elf.section.NoteSection;
-import com.ledmington.elf.section.NoteSectionEntry;
 import com.ledmington.elf.section.RelocationAddendEntry;
 import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.Section;
@@ -51,6 +49,11 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.SymbolTable;
 import com.ledmington.elf.section.SymbolTableEntry;
 import com.ledmington.elf.section.SymbolTableSection;
+import com.ledmington.elf.section.note.GnuProperty;
+import com.ledmington.elf.section.note.GnuPropertySection;
+import com.ledmington.elf.section.note.GnuPropertyType;
+import com.ledmington.elf.section.note.NoteSection;
+import com.ledmington.elf.section.note.NoteSectionEntry;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -440,22 +443,28 @@ public final class Main {
         out.printf("Displaying notes found in: %s%n", ns.getName());
         out.println("  Owner                Data size     Description");
         for (final NoteSectionEntry nse : ns.getEntries()) {
+            final byte[] desc = nse.description();
             out.printf(
                     "  %-20s 0x%08x     %s%n",
-                    nse.name(), nse.getSize(), nse.type().getDescription());
+                    nse.name(), desc.length, nse.type().getDescription());
+
             switch (nse.type()) {
-                case NT_GNU_ABI_TAG -> {}
+                case NT_GNU_ABI_TAG -> out.println("TODO");
                 case NT_GNU_BUILD_ID -> out.printf(
                         "    Build ID: %s%n",
-                        nse.description()
-                                .chars()
-                                .mapToObj(x -> String.format("%02x", BitUtils.asByte(x)))
+                        IntStream.range(0, desc.length)
+                                .mapToObj(i -> String.format("%02x", desc[i]))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> {
-                    final byte[] bytes = nse.description().getBytes(StandardCharsets.UTF_8);
-                    final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(bytes);
-                    for (int i = 0; i < bytes.length - 3; i += 4) {
-                        out.printf("0x%08x%n", b.read4());
+                    final GnuPropertySection gps = (GnuPropertySection) ns;
+                    for (final GnuProperty gp : gps.getProperties()) {
+                        if (gp.type() == GnuPropertyType.GNU_PROPERTY_X86_FEATURE_1_AND) {
+                            // see https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L21133
+                            out.printf(
+                                    "      Properties: x86 feature: 0x%08x %s%n",
+                                    gp.value(),
+                                    (((gp.value() & 1) != 0) ? "IBT" : "") + (((gp.value() & 2) != 0) ? "SHSTK" : ""));
+                        }
                     }
                 }
                 default -> throw new IllegalArgumentException(

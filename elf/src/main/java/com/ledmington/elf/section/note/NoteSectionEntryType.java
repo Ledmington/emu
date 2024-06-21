@@ -15,7 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.elf.section;
+package com.ledmington.elf.section.note;
 
 import java.util.Objects;
 

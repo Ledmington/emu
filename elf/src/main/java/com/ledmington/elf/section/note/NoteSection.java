@@ -15,13 +15,14 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.elf.section;
+package com.ledmington.elf.section.note;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
@@ -64,7 +65,6 @@ public interface NoteSection extends LoadableSection {
             for (int i = 0; i < descsz; i++) {
                 descriptionBytes[i] = b.read1();
             }
-            final String description = new String(descriptionBytes, StandardCharsets.UTF_8);
 
             // alignment
             final long newPosition = (b.getPosition() % bytes != 0L)
@@ -72,7 +72,7 @@ public interface NoteSection extends LoadableSection {
                     : b.getPosition();
             b.setPosition(newPosition);
 
-            entries.add(new NoteSectionEntry(name, description, NoteSectionEntryType.fromCode(type), is32Bit));
+            entries.add(new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(type), is32Bit));
         }
 
         return entries.toArray(new NoteSectionEntry[0]);
@@ -94,10 +94,10 @@ public interface NoteSection extends LoadableSection {
         int runningTotal = 0;
         for (final NoteSectionEntry nse : entries) {
             bb.write(nse.name().length());
-            bb.write(nse.description().length());
+            bb.write(nse.description().length);
             bb.write(nse.type().getCode());
             bb.write(nse.name().getBytes(StandardCharsets.UTF_8));
-            bb.write(nse.description().getBytes(StandardCharsets.UTF_8));
+            bb.write(nse.description());
             runningTotal += nse.getAlignedSize();
             bb.setPosition(runningTotal);
         }

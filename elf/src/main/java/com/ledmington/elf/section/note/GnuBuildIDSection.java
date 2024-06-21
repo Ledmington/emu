@@ -15,11 +15,12 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.elf.section;
+package com.ledmington.elf.section.note;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** The .note.gnu.build-id ELF section. */
@@ -55,7 +56,7 @@ public final class GnuBuildIDSection implements NoteSection {
                     expectedEntries, entries.length, Arrays.toString(entries)));
         }
 
-        if (!"GNU\0".equals(entries[0].name())) {
+        if (!"GNU".equals(entries[0].name())) {
             throw new IllegalArgumentException(String.format(
                     "Invalid owner for .note.gnu.build-id section: expected 'GNU' but was '%s'", entries[0].name()));
         }

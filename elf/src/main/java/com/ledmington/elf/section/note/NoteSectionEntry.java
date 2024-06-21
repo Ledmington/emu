@@ -15,11 +15,11 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.elf.section;
+package com.ledmington.elf.section.note;
 
-import java.util.stream.Collectors;
+import java.util.Arrays;
 
-import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 
 /**
  * An entry of an ELF section of type SHT_NOTE (.note*).
@@ -29,7 +29,7 @@ import com.ledmington.utils.BitUtils;
  * @param type The 4-byte type of this entry (meaning of this field varies between note section).
  * @param is32Bit Used for alignment.
  */
-public record NoteSectionEntry(String name, String description, NoteSectionEntryType type, boolean is32Bit) {
+public record NoteSectionEntry(String name, byte[] description, NoteSectionEntryType type, boolean is32Bit) {
 
     /**
      * Returns the number of bytes occupied by the actual data.
@@ -37,7 +37,7 @@ public record NoteSectionEntry(String name, String description, NoteSectionEntry
      * @return The number of bytes occupied by the actual data.
      */
     public int getSize() {
-        return 4 + 4 + 4 + name.length() + description.length();
+        return 4 + 4 + 4 + name.length() + description.length;
     }
 
     /**
@@ -54,11 +54,40 @@ public record NoteSectionEntry(String name, String description, NoteSectionEntry
 
     @Override
     public String toString() {
-        return "NoteSectionEntry[name='" + name + "';description="
-                + description
-                        .chars()
-                        .mapToObj(x -> String.format("%02x", BitUtils.asByte(x)))
-                        .collect(Collectors.joining())
-                + "]";
+        final StringBuilder sb = new StringBuilder();
+        sb.append("NoteSectionEntry[name='").append(name).append("';description=0x");
+        for (final byte b : description) {
+            sb.append(String.format("%02x", b));
+        }
+        sb.append(']');
+        return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + Arrays.hashCode(description);
+        h = 31 * h + type.hashCode();
+        h = 31 * h + HashUtils.hash(is32Bit);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final NoteSectionEntry nse = (NoteSectionEntry) other;
+        return this.name.equals(nse.name)
+                && Arrays.equals(this.description, nse.description)
+                && this.type.equals(nse.type)
+                && this.is32Bit == nse.is32Bit;
     }
 }

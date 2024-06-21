@@ -27,6 +27,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.ledmington.elf.section.note.NoteSection;
+import com.ledmington.elf.section.note.NoteSectionEntry;
+import com.ledmington.elf.section.note.NoteSectionEntryType;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 final class TestNoteSectionParsing {
@@ -46,7 +49,7 @@ final class TestNoteSectionParsing {
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "GNU",
-                                    new String(new byte[] {
+                                    new byte[] {
                                         (byte) 0x02,
                                         (byte) 0x00,
                                         (byte) 0x00,
@@ -79,7 +82,7 @@ final class TestNoteSectionParsing {
                                         (byte) 0x00,
                                         (byte) 0x00,
                                         (byte) 0x00,
-                                    }),
+                                    },
                                     NoteSectionEntryType.NT_GNU_PROPERTY_TYPE_0,
                                     false)
                         }),
@@ -92,8 +95,7 @@ final class TestNoteSectionParsing {
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "GNU",
-                                    new String(new byte[] {
-                                        (byte) 0x00,
+                                    new byte[] {
                                         (byte) 0xbe,
                                         (byte) 0xe2,
                                         (byte) 0x71,
@@ -114,7 +116,7 @@ final class TestNoteSectionParsing {
                                         (byte) 0x60,
                                         (byte) 0x9e,
                                         (byte) 0xd2,
-                                    }),
+                                    },
                                     NoteSectionEntryType.NT_GNU_BUILD_ID,
                                     false)
                         }),
@@ -127,7 +129,11 @@ final class TestNoteSectionParsing {
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "GNU",
-                                    new String(new byte[] {
+                                    new byte[] {
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
                                         (byte) 0x03,
                                         (byte) 0x00,
                                         (byte) 0x00,
@@ -140,7 +146,7 @@ final class TestNoteSectionParsing {
                                         (byte) 0x00,
                                         (byte) 0x00,
                                         (byte) 0x00,
-                                    }),
+                                    },
                                     NoteSectionEntryType.NT_GNU_ABI_TAG,
                                     false)
                         }));

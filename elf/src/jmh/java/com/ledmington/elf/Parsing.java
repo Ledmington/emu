@@ -52,7 +52,8 @@ public class Parsing {
     @Setup
     public void setup() {
         try {
-            fileBytes = Objects.requireNonNull(Parsing.class.getClassLoader().getResourceAsStream("hello.elf"))
+            fileBytes = Objects.requireNonNull(
+                            Thread.currentThread().getContextClassLoader().getResourceAsStream("hello.elf"))
                     .readAllBytes();
         } catch (IOException e) {
             throw new RuntimeException(e);

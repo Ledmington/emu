@@ -15,67 +15,75 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package com.ledmington.elf.section;
+package com.ledmington.elf.section.note;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
-import com.ledmington.utils.MiniLogger;
+import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBufferV1;
 
-/** Implementation of a "non-special" {@code .note*} ELF section. */
-public final class BasicNoteSection implements NoteSection {
+/** The .note.gnu.property ELF section. */
+public final class GnuPropertySection implements NoteSection {
 
-    private static final MiniLogger logger = MiniLogger.getLogger("basic-note-section");
-
-    private final String name;
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
+    private final GnuProperty[] properties;
 
     /**
-     * Creates a BasicNoteSection with the given name and header by parsing the bytes read from the ReadOnlyByteBuffer.
+     * Creates the .note.gnu.property ELF section with the given data.
      *
-     * @param name The name of this section.
      * @param sectionHeader The header of this section.
-     * @param b The buffer to read bytes from.
-     * @param is32Bit Used for alignment of the entries.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param is32Bit Used for alignment.
      */
-    public BasicNoteSection(
-            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        this.name = Objects.requireNonNull(name);
+    public GnuPropertySection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
         this.header = Objects.requireNonNull(sectionHeader);
 
         if (header.getEntrySize() != 0) {
             throw new IllegalArgumentException(String.format(
-                    "The %s section doesn't have fixed-size entries but its header says they should be %,d bytes each",
-                    name, header.getEntrySize()));
+                    "The .note.gnu.property section doesn't have fixed-size entries but its header says they should be %,d bytes each",
+                    header.getEntrySize()));
         }
 
         b.setPosition(sectionHeader.getFileOffset());
-
-        final long expectedAlignment = is32Bit ? 4L : 8L;
-        if (sectionHeader.getAlignment() != expectedAlignment) {
-            logger.warning(
-                    "Invalid alignment: expected %,d but was %,d", expectedAlignment, sectionHeader.getAlignment());
-        }
         b.setAlignment(sectionHeader.getAlignment());
-        System.out.printf("Reading section '%s'\n", name);
         this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
+
+        final int expectedEntries = 1;
+        if (entries.length != expectedEntries) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid .note.gnu.property section: expected %,d note entry but found %,d: %s",
+                    expectedEntries, entries.length, Arrays.toString(entries)));
+        }
+
+        if (!"GNU".equals(entries[0].name())) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", entries[0].name()));
+        }
+
+        // parse GNU properties
+        final List<GnuProperty> props = new ArrayList<>();
+        final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(entries[0].description(), b.isLittleEndian());
+        props.add(GnuProperty.read(robb));
+        this.properties = props.toArray(new GnuProperty[0]);
+    }
+
+    public GnuProperty[] getProperties() {
+        return properties;
     }
 
     @Override
     public String getName() {
-        return name;
+        return ".note.gnu.property";
     }
 
     @Override
     public SectionHeader getHeader() {
         return header;
-    }
-
-    @Override
-    public byte[] getLoadableContent() {
-        throw new Error("Not implemented");
     }
 
     @Override
@@ -85,13 +93,12 @@ public final class BasicNoteSection implements NoteSection {
 
     @Override
     public String toString() {
-        return "BasicNoteSection(name=" + name + ";header=" + header + ";entries=" + Arrays.toString(entries) + ")";
+        return "GnuPropertySection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
-        h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
         h = 31 * h + Arrays.hashCode(entries);
         return h;
@@ -108,7 +115,7 @@ public final class BasicNoteSection implements NoteSection {
         if (!this.getClass().equals(other.getClass())) {
             return false;
         }
-        final BasicNoteSection bns = (BasicNoteSection) other;
-        return name.equals(bns.name) && header.equals(bns.header) && Arrays.equals(this.entries, bns.entries);
+        final GnuPropertySection gps = (GnuPropertySection) other;
+        return this.header.equals(gps.header) && Arrays.equals(this.entries, gps.entries);
     }
 }
