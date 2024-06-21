@@ -2,5 +2,6 @@
 *.bat text eol=crlf
 
 *.pdf binary
+*.elf binary
 
 *.test text eol=lf
