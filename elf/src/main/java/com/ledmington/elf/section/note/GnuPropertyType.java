@@ -18,16 +18,33 @@
 package com.ledmington.elf.section.note;
 
 public enum GnuPropertyType {
-    /* Stack size.  */
+    /** Stack size. */
     GNU_PROPERTY_STACK_SIZE,
-    /* No copy relocation on protected data symbol.  */
+
+    /** No copy relocation on protected data symbol. */
     GNU_PROPERTY_NO_COPY_ON_PROTECTED,
+
+    /**
+     * The x86 instruction sets indicated by the corresponding bits are used in program. Their support in the hardware
+     * is optional.
+     */
+    GNU_PROPERTY_X86_ISA_1_USED,
+
+    /**
+     * The x86 instruction sets indicated by the corresponding bits are used in program and they must be supported by
+     * the hardware.
+     */
+    GNU_PROPERTY_X86_ISA_1_NEEDED,
+
+    /** X86 processor-specific features used in program. */
     GNU_PROPERTY_X86_FEATURE_1_AND;
 
     public static GnuPropertyType fromCode(final int code) {
         return switch (code) {
             case 1 -> GNU_PROPERTY_STACK_SIZE;
             case 2 -> GNU_PROPERTY_NO_COPY_ON_PROTECTED;
+            case 0xc0010002 -> GNU_PROPERTY_X86_ISA_1_USED;
+            case 0xc0008002 -> GNU_PROPERTY_X86_ISA_1_NEEDED;
             case 0xc0000002 -> GNU_PROPERTY_X86_FEATURE_1_AND;
             default -> throw new IllegalArgumentException(
                     String.format("Unknown GNU property type code %d (0x%08x)", code, code));

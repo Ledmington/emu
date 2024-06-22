@@ -17,21 +17,17 @@
 */
 package com.ledmington.elf.section.note;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /** The .note.gnu.property ELF section. */
 public final class GnuPropertySection implements NoteSection {
 
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
-    private final GnuProperty[] properties;
 
     /**
      * Creates the .note.gnu.property ELF section with the given data.
@@ -64,16 +60,6 @@ public final class GnuPropertySection implements NoteSection {
             throw new IllegalArgumentException(String.format(
                     "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", entries[0].name()));
         }
-
-        // parse GNU properties
-        final List<GnuProperty> props = new ArrayList<>();
-        final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(entries[0].description(), b.isLittleEndian());
-        props.add(GnuProperty.read(robb));
-        this.properties = props.toArray(new GnuProperty[0]);
-    }
-
-    public GnuProperty[] getProperties() {
-        return properties;
     }
 
     @Override

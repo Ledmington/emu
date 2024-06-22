@@ -49,8 +49,6 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.SymbolTable;
 import com.ledmington.elf.section.SymbolTableEntry;
 import com.ledmington.elf.section.SymbolTableSection;
-import com.ledmington.elf.section.note.GnuProperty;
-import com.ledmington.elf.section.note.GnuPropertySection;
 import com.ledmington.elf.section.note.GnuPropertyType;
 import com.ledmington.elf.section.note.NoteSection;
 import com.ledmington.elf.section.note.NoteSectionEntry;
@@ -449,21 +447,110 @@ public final class Main {
                     nse.name(), desc.length, nse.type().getDescription());
 
             switch (nse.type()) {
-                case NT_GNU_ABI_TAG -> out.println("TODO");
+                case NT_GNU_ABI_TAG -> {
+                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(desc, true);
+                    final int osCode = robb.read4();
+                    out.printf(
+                            "    OS: %s, ABI: %d.%d.%d%n",
+                            switch (osCode) {
+                                case 0 -> "Linux";
+                                case 1 -> "GNU";
+                                case 2 -> "Solaris2";
+                                case 3 -> "FreeBSD";
+                                default -> throw new IllegalArgumentException(
+                                        String.format("Unknown ABI tag %d (0x%08x)", osCode, osCode));
+                            },
+                            robb.read4(),
+                            robb.read4(),
+                            robb.read4());
+                }
                 case NT_GNU_BUILD_ID -> out.printf(
                         "    Build ID: %s%n",
                         IntStream.range(0, desc.length)
                                 .mapToObj(i -> String.format("%02x", desc[i]))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> {
-                    final GnuPropertySection gps = (GnuPropertySection) ns;
-                    for (final GnuProperty gp : gps.getProperties()) {
-                        if (gp.type() == GnuPropertyType.GNU_PROPERTY_X86_FEATURE_1_AND) {
-                            // see https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L21133
-                            out.printf(
-                                    "      Properties: x86 feature: 0x%08x %s%n",
-                                    gp.value(),
-                                    (((gp.value() & 1) != 0) ? "IBT" : "") + (((gp.value() & 2) != 0) ? "SHSTK" : ""));
+                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(desc, true);
+                    while (robb.getPosition() < desc.length) {
+                        final int code = robb.read4();
+                        final GnuPropertyType type = GnuPropertyType.fromCode(code);
+                        switch (type) {
+                            case GNU_PROPERTY_NO_COPY_ON_PROTECTED -> throw new UnsupportedOperationException(
+                                    "Unimplemented case: " + type);
+                            case GNU_PROPERTY_STACK_SIZE -> throw new UnsupportedOperationException(
+                                    "Unimplemented case: " + type);
+                            case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
+                                out.print("        x86 ISA needed: ");
+                                int x = robb.read4();
+                                while (robb.getPosition() < desc.length && x != 0) {
+                                    if ((x & 1) != 0) {
+                                        out.print("x86-64-baseline");
+                                        x &= 0xfffffffe;
+                                        if (x != 0) {
+                                            out.print(", ");
+                                        }
+                                    }
+                                    if ((x & 2) != 0) {
+                                        out.print("x86-64-v2");
+                                        x &= 0xfffffffc;
+                                        if (x != 0) {
+                                            out.print(", ");
+                                        }
+                                    }
+                                    if ((x & 4) != 0) {
+                                        out.print("x86-64-v3");
+                                        x &= 0xfffffff8;
+                                        if (x != 0) {
+                                            out.print(", ");
+                                        }
+                                    }
+                                    if ((x & 8) != 0) {
+                                        out.print("x86-64-v4");
+                                        x &= 0xfffffff0;
+                                        if (x != 0) {
+                                            out.print(", <unknown>");
+                                        }
+                                    }
+
+                                    if (robb.getPosition() < desc.length) {
+                                        x = robb.read4();
+                                        if (x != 0) {
+                                            out.print(", ");
+                                        }
+                                    }
+                                }
+                                out.println();
+                            }
+                            case GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
+                                    "Unimplemented case: " + type);
+                            case GNU_PROPERTY_X86_FEATURE_1_AND -> {
+                                out.print("      Properties: x86 feature: ");
+                                int x = robb.read4();
+                                while (robb.getPosition() < desc.length && x != 0) {
+                                    if ((x & 1) != 0) {
+                                        out.print("IBT");
+                                        x &= 0xfffffffe;
+                                        if (x != 0) {
+                                            out.print(", ");
+                                        }
+                                    }
+                                    if ((x & 2) != 0) {
+                                        out.print("SHSTK");
+                                        x &= 0xfffffffc;
+                                        if (x != 0) {
+                                            out.print(", <unknown>");
+                                        }
+                                    }
+
+                                    if (robb.getPosition() < desc.length) {
+                                        x = robb.read4();
+                                        if (x != 0) {
+                                            out.print(", ");
+                                        }
+                                    }
+                                }
+                                out.println();
+                            }
                         }
                     }
                 }
@@ -529,9 +616,9 @@ public final class Main {
     private static void printSectionHeaders(final ELF elf) {
         out.println(
                 """
-                        Section Headers:
-                          [Nr] Name              Type             Address           Offset
-                               Size              EntSize          Flags  Link  Info  Align""");
+						Section Headers:
+						  [Nr] Name              Type             Address           Offset
+						       Size              EntSize          Flags  Link  Info  Align""");
 
         final Section[] sections = elf.sectionTable();
         for (int i = 0; i < sections.length; i++) {
@@ -560,19 +647,19 @@ public final class Main {
 
         out.println(
                 """
-                        Key to Flags:
-                          W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
-                          L (link order), O (extra OS processing required), G (group), T (TLS),
-                          C (compressed), x (unknown), o (OS specific), E (exclude),
-                          D (mbind), l (large), p (processor specific)""");
+						Key to Flags:
+						  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+						  L (link order), O (extra OS processing required), G (group), T (TLS),
+						  C (compressed), x (unknown), o (OS specific), E (exclude),
+						  D (mbind), l (large), p (processor specific)""");
     }
 
     private static void printProgramHeaders(final ELF elf) {
         out.println(
                 """
-                        Program Headers:
-                          Type           Offset             VirtAddr           PhysAddr
-                                         FileSiz            MemSiz              Flags  Align""");
+						Program Headers:
+						  Type           Offset             VirtAddr           PhysAddr
+						                 FileSiz            MemSiz              Flags  Align""");
 
         final PHTEntry[] pht = elf.programHeaderTable();
         for (final PHTEntry phte : pht) {
@@ -696,39 +783,39 @@ public final class Main {
     private static void printHelp() {
         out.println(
                 """
-                        Usage: readelf <option(s)> elf-file(s)
-                         Display information about the contents of ELF format files
-                         Options are:
-                          -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
-                          -h --file-header       Display the ELF file header
-                          -l --program-headers   Display the program headers
-                        	 --segments          An alias for --program-headers
-                          -S --section-headers   Display the sections' header
-                        	 --sections          An alias for --section-headers
-                          -g --section-groups    Display the section groups
-                          -t --section-details   Display the section details
-                          -e --headers           Equivalent to: -h -l -S
-                          -s --syms              Display the symbol table
-                        	 --symbols           An alias for --syms
-                        	 --dyn-syms          Display the dynamic symbol table
-                        	 --lto-syms          Display LTO symbol tables
-                          -n --notes             Display the core notes (if present)
-                          -r --relocs            Display the relocations (if present)
-                          -u --unwind            Display the unwind info (if present)
-                          -d --dynamic           Display the dynamic section (if present)
-                          -V --version-info      Display the version sections (if present)
-                          -A --arch-specific     Display architecture specific information (if any)
-                          -c --archive-index     Display the symbol/file index in an archive
-                          -D --use-dynamic       Use the dynamic section info when displaying symbols
-                          -L --lint|--enable-checks
-                        						 Display warning messages for possible problems
-                          -x --hex-dump=<number|name>
-                        						 Dump the contents of section <number|name> as bytes
-                          -p --string-dump=<number|name>
-                        						 Dump the contents of section <number|name> as strings
-                          -R --relocated-dump=<number|name>
-                        						 Dump the relocated contents of section <number|name>
-                          -H --help              Display this information
-                          -v --version           Display the version number of readelf""");
+						Usage: readelf <option(s)> elf-file(s)
+						 Display information about the contents of ELF format files
+						 Options are:
+						  -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
+						  -h --file-header       Display the ELF file header
+						  -l --program-headers   Display the program headers
+							 --segments          An alias for --program-headers
+						  -S --section-headers   Display the sections' header
+							 --sections          An alias for --section-headers
+						  -g --section-groups    Display the section groups
+						  -t --section-details   Display the section details
+						  -e --headers           Equivalent to: -h -l -S
+						  -s --syms              Display the symbol table
+							 --symbols           An alias for --syms
+							 --dyn-syms          Display the dynamic symbol table
+							 --lto-syms          Display LTO symbol tables
+						  -n --notes             Display the core notes (if present)
+						  -r --relocs            Display the relocations (if present)
+						  -u --unwind            Display the unwind info (if present)
+						  -d --dynamic           Display the dynamic section (if present)
+						  -V --version-info      Display the version sections (if present)
+						  -A --arch-specific     Display architecture specific information (if any)
+						  -c --archive-index     Display the symbol/file index in an archive
+						  -D --use-dynamic       Use the dynamic section info when displaying symbols
+						  -L --lint|--enable-checks
+												 Display warning messages for possible problems
+						  -x --hex-dump=<number|name>
+												 Dump the contents of section <number|name> as bytes
+						  -p --string-dump=<number|name>
+												 Dump the contents of section <number|name> as strings
+						  -R --relocated-dump=<number|name>
+												 Dump the relocated contents of section <number|name>
+						  -H --help              Display this information
+						  -v --version           Display the version number of readelf""");
     }
 }
