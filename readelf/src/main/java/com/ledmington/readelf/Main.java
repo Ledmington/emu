@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -80,7 +81,10 @@ public final class Main {
         boolean displayVersionSections = false;
         boolean displayGnuHashSection = false;
         boolean displaySectionGroups = false;
-        for (final String arg : args) {
+        Optional<Integer> sectionIndexToBeHexDumped = Optional.empty();
+        Optional<String> sectionNameToBeHexDumped = Optional.empty();
+        for (int i = 0; i < args.length; i++) {
+            final String arg = args[i];
             switch (arg) {
                 case "-H", "--help":
                     printHelp();
@@ -167,7 +171,18 @@ public final class Main {
                     break;
                 case "-x":
                     // --hex-dump=<number|name>
-                    notImplemented();
+                    if (i + 1 >= args.length) {
+                        out.println("readelf: option requires an argument -- 'x'");
+                        printHelp();
+                        out.flush();
+                        System.exit(0);
+                    }
+                    if (args[i + 1].chars().allMatch(Character::isDigit)) {
+                        sectionIndexToBeHexDumped = Optional.of(Integer.parseInt(args[i + 1]));
+                    } else {
+                        sectionNameToBeHexDumped = Optional.of(args[i + 1]);
+                    }
+                    i++;
                     break;
                 case "-p":
                     // --string-dump=<number|name>
@@ -182,10 +197,19 @@ public final class Main {
 
                 default:
                     if (arg.startsWith("-")) {
-                        out.printf("readelf: Error: Invalid option '%s'%n", arg);
-                        printHelp();
-                        out.flush();
-                        System.exit(0);
+                        if (arg.startsWith("--hex-dump=")) {
+                            final String s = arg.split("=")[1];
+                            if (s.chars().allMatch(Character::isDigit)) {
+                                sectionIndexToBeHexDumped = Optional.of(Integer.parseInt(s));
+                            } else {
+                                sectionNameToBeHexDumped = Optional.of(s);
+                            }
+                        } else {
+                            out.printf("readelf: Error: Invalid option '%s'%n", arg);
+                            printHelp();
+                            out.flush();
+                            System.exit(0);
+                        }
                     } else {
                         filename = arg;
                     }
@@ -204,6 +228,14 @@ public final class Main {
             elf = ELFReader.read(Files.readAllBytes(Path.of(filename)));
         } catch (final IOException e) {
             throw new RuntimeException(e);
+        }
+
+        if (sectionIndexToBeHexDumped.isPresent()) {
+            printHexDumpOfSection(filename, elf, sectionIndexToBeHexDumped.orElseThrow());
+        }
+
+        if (sectionNameToBeHexDumped.isPresent()) {
+            printHexDumpOfSection(filename, elf, sectionNameToBeHexDumped.orElseThrow());
         }
 
         if (displayFileHeader) {
@@ -308,6 +340,60 @@ public final class Main {
 
         out.flush();
         System.exit(0);
+    }
+
+    private static void printHexDumpOfSection(final String filename, final ELF elf, final String sectionName) {
+        final ReadOnlyByteBuffer b;
+        try {
+            b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+        printHexDump(b, elf.getSectionByName(sectionName));
+    }
+
+    private static void printHexDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
+        final ReadOnlyByteBuffer b;
+        try {
+            b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+        printHexDump(b, elf.sectionTable()[sectionIndex]);
+    }
+
+    private static void printHexDump(final ReadOnlyByteBuffer b, final Section s) {
+        out.printf("%nHex dump of section '%s':%n", s.getName());
+        final long start = s.getHeader().getFileOffset();
+        b.setPosition(start);
+        final long length = s.getHeader().getSectionSize();
+        while (b.getPosition() - start < length) {
+            final long a = b.getPosition();
+            out.printf("  0x%08x", BitUtils.asInt(a));
+            for (int i = 0; i < 4; i++) {
+                out.print(" ");
+                for (int k = 0; k < 4; k++) {
+                    if (b.getPosition() - start < length) {
+                        out.printf("%02x", b.read1());
+                    } else {
+                        out.print("  ");
+                    }
+                }
+            }
+            out.print(" ");
+            b.setPosition(a);
+            for (int i = 0; i < 16; i++) {
+                if (b.getPosition() - start < length) {
+                    final byte x = b.read1();
+                    out.printf("%c", (x >= 32 && x < 127) ? (char) x : '.');
+                } else {
+                    out.print(" ");
+                }
+            }
+
+            out.println();
+        }
+        out.println();
     }
 
     private static void printSectionGroups(final ELF elf) {
