@@ -49,7 +49,7 @@ public final class DynamicTableEntryTag {
      * This element holds the total size, in bytes, of the relocation entries associated with the procedure linkage
      * table. If an entry of type DT_JMPREL is present, a DT_PLTRELSZ must accompany it.
      */
-    public static final DynamicTableEntryTag DT_PLTRELSZ = new DynamicTableEntryTag(2L, "PTRELSZ");
+    public static final DynamicTableEntryTag DT_PLTRELSZ = new DynamicTableEntryTag(2L, "PLTRELSZ");
 
     /** This element holds an address associated with the procedure linkage table and/or the global offset table. */
     public static final DynamicTableEntryTag DT_PLTGOT = new DynamicTableEntryTag(3L, "PLTGOT");
@@ -193,8 +193,8 @@ public final class DynamicTableEntryTag {
     /**
      * Flag values specific to this object.
      *
-     * <p>See <a
-     * href="https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter7-tbl-5">here</a>.
+     * <p>See <a href=
+     * "https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter7-tbl-5">here</a>.
      */
     public static final DynamicTableEntryTag DT_FLAGS = new DynamicTableEntryTag(30L, "FLAGS");
 
@@ -218,13 +218,13 @@ public final class DynamicTableEntryTag {
      * Indicates the RELATIVE relocation count, which is produced from the concatenation of all Elf32_Rela, or
      * Elf64_Rela relocations.
      */
-    public static final DynamicTableEntryTag DT_RELACOUNT = new DynamicTableEntryTag(0x000000006ffffff9L, "VERSYM");
+    public static final DynamicTableEntryTag DT_RELACOUNT = new DynamicTableEntryTag(0x000000006ffffff9L, "RELACOUNT");
 
     /**
      * Flag values specific to this object.
      *
-     * <p>See <a
-     * href="https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter6-tbl-53">here</a>.
+     * <p>See <a href=
+     * "https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/6n33n7fe2/index.html#chapter6-tbl-53">here</a>.
      */
     public static final DynamicTableEntryTag DT_FLAGS_1 = new DynamicTableEntryTag(0x000000006ffffffbL, "FLAGS_1");
 
@@ -245,7 +245,7 @@ public final class DynamicTableEntryTag {
 
     /** The number of entries in the DT_VERNEEDNUM table. */
     public static final DynamicTableEntryTag DT_VERNEEDNUM =
-            new DynamicTableEntryTag(0x000000006fffffffL, "VERNEEDEDNUM");
+            new DynamicTableEntryTag(0x000000006fffffffL, "VERNEEDNUM");
 
     /** Values in the inclusive range from this one to DT_HIOS are reserved for OS-specific semantics. */
     public static final DynamicTableEntryTag DT_LOOS =

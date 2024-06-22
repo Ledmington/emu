@@ -18,9 +18,9 @@
 package com.ledmington.elf.section;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 /** Flags for an ELF section's header. */
 public enum SectionHeaderFlags {
@@ -152,7 +152,7 @@ public enum SectionHeaderFlags {
         if (!isValid(flags)) {
             throw new IllegalArgumentException(String.format("Invalid SHF flags 0x%016x", flags));
         }
-        final Set<SectionHeaderFlags> shf = new HashSet<>();
+        final Set<SectionHeaderFlags> shf = new TreeSet<>();
         for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
             if ((flags & f.code) != 0L) { // NOPMD
                 shf.add(f);

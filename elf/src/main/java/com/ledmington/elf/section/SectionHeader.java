@@ -17,9 +17,9 @@
 */
 package com.ledmington.elf.section;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.ledmington.utils.HashUtils;
 
@@ -116,7 +116,7 @@ public final class SectionHeader {
      * @return The set of flags of this section.
      */
     public Set<SectionHeaderFlags> getFlags() {
-        return new HashSet<>(flags);
+        return new TreeSet<>(flags);
     }
 
     /**

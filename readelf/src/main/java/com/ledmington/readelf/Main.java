@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
+import com.ledmington.elf.FileHeader;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.section.DynamicSection;
@@ -78,6 +79,7 @@ public final class Main {
         boolean displayRelocationSections = false;
         boolean displayVersionSections = false;
         boolean displayGnuHashSection = false;
+        boolean displaySectionGroups = false;
         for (final String arg : args) {
             switch (arg) {
                 case "-H", "--help":
@@ -106,6 +108,7 @@ public final class Main {
                     displayRelocationSections = true;
                     displayVersionSections = true;
                     displayGnuHashSection = true;
+                    displaySectionGroups = true;
                     break;
                 case "-l", "--program-headers", "--segments":
                     displayProgramHeaders = true;
@@ -114,7 +117,7 @@ public final class Main {
                     displaySectionHeaders = true;
                     break;
                 case "-g", "--section-groups":
-                    notImplemented();
+                    displaySectionGroups = true;
                     break;
                 case "-t", "--section-details":
                     displaySectionDetails = true;
@@ -222,8 +225,15 @@ public final class Main {
             printSectionDetails(elf);
         }
 
+        if (displaySectionGroups) {
+            if (displayFileHeader) {
+                out.println();
+            }
+            printSectionGroups(elf);
+        }
+
         if (displayProgramHeaders) {
-            if (displaySectionHeaders) {
+            if (displaySectionGroups) {
                 out.println();
             }
             printProgramHeaders(elf);
@@ -300,6 +310,10 @@ public final class Main {
         System.exit(0);
     }
 
+    private static void printSectionGroups(final ELF elf) {
+        out.println("There are no section groups in this file.");
+    }
+
     private static void printGnuHashSection(final GnuHashSection s) {
         out.printf(
                 "Histogram for '%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBuckets().length);
@@ -323,7 +337,7 @@ public final class Main {
                     "Version needs section '%s' contains %d entr%s:%n",
                     s.getName(), entries.length, entries.length == 1 ? "y" : "ies");
             out.printf(
-                    " Addr: 0x%016x Offset: 0x%08x Link: %d (%s)%n",
+                    " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
                     sh.getVirtualAddress(),
                     sh.getFileOffset(),
                     sh.getLinkedSectionIndex(),
@@ -342,7 +356,7 @@ public final class Main {
                     "Version symbols section '%s' contains %d entr%s:%n",
                     s.getName(), versions.length, versions.length == 1 ? "y" : "ies");
             out.printf(
-                    " Addr: 0x%016x Offset: 0x%08x Link: %d (%s)%n",
+                    " Addr: 0x%016x Offset: 0x%08x  Link: %d (%s)%n",
                     sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
             final SymbolTableEntry[] symbolTable = ((SymbolTable) linkedSection).getSymbolTable();
             final StringTableSection stringTable =
@@ -414,7 +428,7 @@ public final class Main {
                 out.printf("%d%n", content);
             } else if (dte.getTag() == DynamicTableEntryTag.DT_NEEDED) {
                 // FIXME
-                out.printf("Shared object: [%s]%n", strtab.getString(BitUtils.asInt(content)));
+                out.printf("Shared library: [%s]%n", strtab.getString(BitUtils.asInt(content)));
             } else {
                 out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
             }
@@ -439,12 +453,11 @@ public final class Main {
 
     private static void printNoteSection(final NoteSection ns) {
         out.printf("Displaying notes found in: %s%n", ns.getName());
-        out.println("  Owner                Data size     Description");
+        out.println("  Owner                Data size \tDescription");
         for (final NoteSectionEntry nse : ns.getEntries()) {
             final byte[] desc = nse.description();
             out.printf(
-                    "  %-20s 0x%08x     %s%n",
-                    nse.name(), desc.length, nse.type().getDescription());
+                    "  %-20s 0x%08x\t%s%n", nse.name(), desc.length, nse.type().getDescription());
 
             switch (nse.type()) {
                 case NT_GNU_ABI_TAG -> {
@@ -610,15 +623,14 @@ public final class Main {
                             : (ste.getSectionTableIndex() < 0 ? "ABS" : ste.getSectionTableIndex()),
                     strtab.getString(ste.getNameOffset()));
         }
-        out.println();
     }
 
     private static void printSectionHeaders(final ELF elf) {
         out.println(
                 """
-						Section Headers:
-						  [Nr] Name              Type             Address           Offset
-						       Size              EntSize          Flags  Link  Info  Align""");
+                        Section Headers:
+                          [Nr] Name              Type             Address           Offset
+                               Size              EntSize          Flags  Link  Info  Align""");
 
         final Section[] sections = elf.sectionTable();
         for (int i = 0; i < sections.length; i++) {
@@ -647,19 +659,19 @@ public final class Main {
 
         out.println(
                 """
-						Key to Flags:
-						  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
-						  L (link order), O (extra OS processing required), G (group), T (TLS),
-						  C (compressed), x (unknown), o (OS specific), E (exclude),
-						  D (mbind), l (large), p (processor specific)""");
+                        Key to Flags:
+                          W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+                          L (link order), O (extra OS processing required), G (group), T (TLS),
+                          C (compressed), x (unknown), o (OS specific), E (exclude),
+                          D (mbind), l (large), p (processor specific)""");
     }
 
     private static void printProgramHeaders(final ELF elf) {
         out.println(
                 """
-						Program Headers:
-						  Type           Offset             VirtAddr           PhysAddr
-						                 FileSiz            MemSiz              Flags  Align""");
+                        Program Headers:
+                          Type           Offset             VirtAddr           PhysAddr
+                                         FileSiz            MemSiz              Flags  Align""");
 
         final PHTEntry[] pht = elf.programHeaderTable();
         for (final PHTEntry phte : pht) {
@@ -738,84 +750,68 @@ public final class Main {
                     bb.read1(),
                     bb.read1());
         }
-        out.printf("  Class:                             %s%n", elf.fileHeader().is32Bit() ? "ELF32" : "ELF64");
+
+        final FileHeader fh = elf.fileHeader();
+
+        out.printf("  Class:                             %s%n", fh.is32Bit() ? "ELF32" : "ELF64");
         out.printf(
                 "  Data:                              %s%n",
-                elf.fileHeader().isLittleEndian() ? "2's complement, little-endian" : "2's complement, big-endian");
+                fh.isLittleEndian() ? "2's complement, little endian" : "2's complement, big endian");
         out.println("  Version:                           1 (current)");
-        out.printf(
-                "  OS/ABI:                            %s%n",
-                elf.fileHeader().getOSABI().getName());
-        out.printf("  ABI Version:                       %s%n", elf.fileHeader().getABIVersion());
-        out.printf(
-                "  Type:                              %s%n",
-                elf.fileHeader().getFileType().getName());
-        out.printf(
-                "  Machine:                           %s%n",
-                elf.fileHeader().getISA().getName());
-        out.printf(
-                "  Version:                           0x%x%n", elf.fileHeader().getVersion());
-        out.printf(
-                "  Entry point address:               0x%x%n", elf.fileHeader().getEntryPointVirtualAddress());
-        out.printf(
-                "  Start of program headers:          %d (bytes into file)%n",
-                elf.fileHeader().getProgramHeaderTableOffset());
-        out.printf(
-                "  Start of section headers:          %d (bytes into file)%n",
-                elf.fileHeader().getSectionHeaderTableOffset());
-        out.printf(
-                "  Flags:                             0x%x%n", elf.fileHeader().getFlags());
-        out.printf(
-                "  Size of this header:               %d (bytes)%n",
-                elf.fileHeader().getHeaderSize());
-        out.printf(
-                "  Size of program headers:           %d (bytes)%n",
-                elf.fileHeader().getProgramHeaderTableEntrySize());
-        out.printf("  Number of program headers:         %d%n", elf.fileHeader().getNumProgramHeaderTableEntries());
-        out.printf(
-                "  Size of section headers:           %d (bytes)%n",
-                elf.fileHeader().getSectionHeaderTableEntrySize());
-        out.printf("  Number of section headers:         %d%n", elf.fileHeader().getNumSectionHeaderTableEntries());
-        out.printf("  Section header string table index: %d%n", elf.fileHeader().getSectionHeaderStringTableIndex());
+        out.printf("  OS/ABI:                            %s%n", fh.getOSABI().getName());
+        out.printf("  ABI Version:                       %s%n", fh.getABIVersion());
+        out.printf("  Type:                              %s%n", fh.getFileType().getName());
+        out.printf("  Machine:                           %s%n", fh.getISA().getName());
+        out.printf("  Version:                           0x%x%n", fh.getVersion());
+        out.printf("  Entry point address:               0x%x%n", fh.getEntryPointVirtualAddress());
+        out.printf("  Start of program headers:          %d (bytes into file)%n", fh.getProgramHeaderTableOffset());
+        out.printf("  Start of section headers:          %d (bytes into file)%n", fh.getSectionHeaderTableOffset());
+        out.printf("  Flags:                             0x%x%n", fh.getFlags());
+        out.printf("  Size of this header:               %d (bytes)%n", fh.getHeaderSize());
+        out.printf("  Size of program headers:           %d (bytes)%n", fh.getProgramHeaderTableEntrySize());
+        out.printf("  Number of program headers:         %d%n", fh.getNumProgramHeaderTableEntries());
+        out.printf("  Size of section headers:           %d (bytes)%n", fh.getSectionHeaderTableEntrySize());
+        out.printf("  Number of section headers:         %d%n", fh.getNumSectionHeaderTableEntries());
+        out.printf("  Section header string table index: %d%n", fh.getSectionHeaderStringTableIndex());
         out.flush();
     }
 
     private static void printHelp() {
         out.println(
                 """
-						Usage: readelf <option(s)> elf-file(s)
-						 Display information about the contents of ELF format files
-						 Options are:
-						  -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
-						  -h --file-header       Display the ELF file header
-						  -l --program-headers   Display the program headers
-							 --segments          An alias for --program-headers
-						  -S --section-headers   Display the sections' header
-							 --sections          An alias for --section-headers
-						  -g --section-groups    Display the section groups
-						  -t --section-details   Display the section details
-						  -e --headers           Equivalent to: -h -l -S
-						  -s --syms              Display the symbol table
-							 --symbols           An alias for --syms
-							 --dyn-syms          Display the dynamic symbol table
-							 --lto-syms          Display LTO symbol tables
-						  -n --notes             Display the core notes (if present)
-						  -r --relocs            Display the relocations (if present)
-						  -u --unwind            Display the unwind info (if present)
-						  -d --dynamic           Display the dynamic section (if present)
-						  -V --version-info      Display the version sections (if present)
-						  -A --arch-specific     Display architecture specific information (if any)
-						  -c --archive-index     Display the symbol/file index in an archive
-						  -D --use-dynamic       Use the dynamic section info when displaying symbols
-						  -L --lint|--enable-checks
-												 Display warning messages for possible problems
-						  -x --hex-dump=<number|name>
-												 Dump the contents of section <number|name> as bytes
-						  -p --string-dump=<number|name>
-												 Dump the contents of section <number|name> as strings
-						  -R --relocated-dump=<number|name>
-												 Dump the relocated contents of section <number|name>
-						  -H --help              Display this information
-						  -v --version           Display the version number of readelf""");
+                        Usage: readelf <option(s)> elf-file(s)
+                         Display information about the contents of ELF format files
+                         Options are:
+                          -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
+                          -h --file-header       Display the ELF file header
+                          -l --program-headers   Display the program headers
+                        	 --segments          An alias for --program-headers
+                          -S --section-headers   Display the sections' header
+                        	 --sections          An alias for --section-headers
+                          -g --section-groups    Display the section groups
+                          -t --section-details   Display the section details
+                          -e --headers           Equivalent to: -h -l -S
+                          -s --syms              Display the symbol table
+                        	 --symbols           An alias for --syms
+                        	 --dyn-syms          Display the dynamic symbol table
+                        	 --lto-syms          Display LTO symbol tables
+                          -n --notes             Display the core notes (if present)
+                          -r --relocs            Display the relocations (if present)
+                          -u --unwind            Display the unwind info (if present)
+                          -d --dynamic           Display the dynamic section (if present)
+                          -V --version-info      Display the version sections (if present)
+                          -A --arch-specific     Display architecture specific information (if any)
+                          -c --archive-index     Display the symbol/file index in an archive
+                          -D --use-dynamic       Use the dynamic section info when displaying symbols
+                          -L --lint|--enable-checks
+                        						 Display warning messages for possible problems
+                          -x --hex-dump=<number|name>
+                        						 Dump the contents of section <number|name> as bytes
+                          -p --string-dump=<number|name>
+                        						 Dump the contents of section <number|name> as strings
+                          -R --relocated-dump=<number|name>
+                        						 Dump the relocated contents of section <number|name>
+                          -H --help              Display this information
+                          -v --version           Display the version number of readelf""");
     }
 }
