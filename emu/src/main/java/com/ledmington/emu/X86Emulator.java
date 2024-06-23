@@ -98,6 +98,10 @@ public final class X86Emulator implements Emulator {
         // we make RSP point at the last 8 bytes of allocated memory
         regFile.set(Register64.RSP, highestAddress + allocatedMemory - 8L);
 
+        // run pre-constructors? (.preinit_array)
+
+        // run constructors? (.init_array)
+
         while (true) {
             // dec.goTo(this.instructionFetcher.position());
             final Instruction inst = dec.decodeOne();
@@ -179,6 +183,8 @@ public final class X86Emulator implements Emulator {
                         String.format("Unknwon instruction %s", inst.toIntelSyntax()));
             }
         }
+
+        // run desctructors? (.fini_array)
     }
 
     private long computeIndirectOperand(final IndirectOperand io) {
