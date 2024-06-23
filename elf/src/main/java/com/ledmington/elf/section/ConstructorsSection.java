@@ -45,23 +45,29 @@ public final class ConstructorsSection implements LoadableSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        int constructorsSize = 0; // bytes
+        int constructorsSizeInBytes = 0; // bytes
         {
             final DynamicTableEntry[] dynamicTable =
                     Objects.requireNonNull(dynamicSection).getDynamicTable();
             for (final DynamicTableEntry dte : dynamicTable) {
                 if (dte.getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
-                    constructorsSize = (int) dte.getContent();
+                    constructorsSizeInBytes = (int) dte.getContent();
                     break;
                 }
             }
         }
 
+        if (constructorsSizeInBytes % 8 != 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Expected size of .init.array section to be a multiple of 8 bytes but was %d (0x%x)",
+                    constructorsSizeInBytes, constructorsSizeInBytes));
+        }
+
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
 
-        this.constructors = new long[constructorsSize];
-        for (int i = 0; i < constructorsSize; i++) {
+        this.constructors = new long[constructorsSizeInBytes / 8];
+        for (int i = 0; i < constructors.length; i++) {
             this.constructors[i] = b.read8();
         }
     }

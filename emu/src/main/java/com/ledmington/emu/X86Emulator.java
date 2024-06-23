@@ -43,7 +43,10 @@ import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
-/** A useful reference <a href="https://linuxgazette.net/84/hawk.html">here</a>. */
+/**
+ * Useful references <a href="https://linuxgazette.net/84/hawk.html">here</a> and <a
+ * href="https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779" >here</a>.
+ */
 public final class X86Emulator implements Emulator {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
