@@ -17,9 +17,12 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
  * The .gnu.version_r ELF section.
@@ -86,18 +89,27 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        throw new Error("Not implemented");
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1((2 + 2 + 4 + 4 + 4) * entries.length);
+        for (final GnuVersionRequirementEntry gvre : entries) {
+            wb.write(gvre.version());
+            wb.write(gvre.count());
+            wb.write(gvre.fileOffset());
+            wb.write(gvre.auxOffset());
+            wb.write(gvre.nextOffset());
+        }
+        return wb.array();
     }
 
     @Override
     public String toString() {
-        return "GnuVersionRequirementsSection(header=" + header + ")";
+        return "GnuVersionRequirementsSection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
     }
 
     @Override
     public int hashCode() {
         int h = 17;
         h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(entries);
         return h;
     }
 
@@ -113,6 +125,6 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
             return false;
         }
         final GnuVersionRequirementsSection gvrs = (GnuVersionRequirementsSection) other;
-        return this.header.equals(gvrs.header);
+        return this.header.equals(gvrs.header) && Arrays.equals(this.entries, gvrs.entries);
     }
 }
