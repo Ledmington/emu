@@ -18,18 +18,25 @@
 package com.ledmington.elf.section;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
-/** An entry of an ELF symbol table. */
-public final class SymbolTableEntry {
-
-    private final int nameOffset; // relative to the start of the symbol string table
-    private final short sectionTableIndex;
-    private final long value;
-    private final long size;
-    private final SymbolTableEntryInfo info;
-    private final SymbolTableEntryVisibility visibility;
+/**
+ * An entry of an ELF symbol table.
+ *
+ * @param nameOffset The index in the ELF file's string table where the name of this symbol starts.
+ * @param sectionTableIndex The index of the section related to this symbol.
+ * @param value The 64-bit value of this symbol: it has different meanings depending on the type of symbol.
+ * @param size The size in bytes of the associated data object.
+ * @param info The info of a symbol specifies the type and binding attributes.
+ * @param visibility The visibility object of this symbol.
+ */
+public record SymbolTableEntry(
+        int nameOffset,
+        short sectionTableIndex,
+        long value,
+        long size,
+        SymbolTableEntryInfo info,
+        SymbolTableEntryVisibility visibility) {
 
     /**
      * Creates a symbol table entry with the given data.
@@ -37,113 +44,29 @@ public final class SymbolTableEntry {
      * @param b The ReadOnlyByteBuffer to read data from.
      * @param is32Bit Used for correct parsing.
      */
-    public SymbolTableEntry(final ReadOnlyByteBuffer b, final boolean is32Bit) {
+    public static SymbolTableEntry read(final ReadOnlyByteBuffer b, final boolean is32Bit) {
+        int name;
+        long val;
+        long sz;
+        SymbolTableEntryVisibility vis;
+        SymbolTableEntryInfo inf;
+        short sti;
         if (is32Bit) {
-            this.nameOffset = b.read4();
-            this.value = BitUtils.asLong(b.read4());
-            this.size = BitUtils.asLong(b.read4());
-            this.info = SymbolTableEntryInfo.fromByte(b.read1());
-            this.visibility = SymbolTableEntryVisibility.fromByte(b.read1());
-            this.sectionTableIndex = b.read2();
+            name = b.read4();
+            val = BitUtils.asLong(b.read4());
+            sz = BitUtils.asLong(b.read4());
+            inf = SymbolTableEntryInfo.fromByte(b.read1());
+            vis = SymbolTableEntryVisibility.fromByte(b.read1());
+            sti = b.read2();
         } else {
-            this.nameOffset = b.read4();
-            this.info = SymbolTableEntryInfo.fromByte(b.read1());
-            this.visibility = SymbolTableEntryVisibility.fromByte(b.read1());
-            this.sectionTableIndex = b.read2();
-            this.value = b.read8();
-            this.size = b.read8();
+            name = b.read4();
+            inf = SymbolTableEntryInfo.fromByte(b.read1());
+            vis = SymbolTableEntryVisibility.fromByte(b.read1());
+            sti = b.read2();
+            val = b.read8();
+            sz = b.read8();
         }
-    }
 
-    /**
-     * Returns the index in the ELF file's string table where the name of this symbol starts.
-     *
-     * @return An index for the string table.
-     */
-    public int getNameOffset() {
-        return nameOffset;
-    }
-
-    /**
-     * Returns the index of the section related to this symbol.
-     *
-     * @return The index of the related section.
-     */
-    public short getSectionTableIndex() {
-        return sectionTableIndex;
-    }
-
-    /**
-     * Returns the 64-bit value of this symbol: it has different meanings depending on the type of symbol.
-     *
-     * @return The 64-bit value of this symbol.
-     */
-    public long getValue() {
-        return value;
-    }
-
-    /**
-     * The size in bytes of the associated data object.
-     *
-     * @return The size in bytes of the associated data object.
-     */
-    public long getSize() {
-        return size;
-    }
-
-    /**
-     * The info of a symbol specifies the type and binding attributes.
-     *
-     * @return The info object of this symbol.
-     */
-    public SymbolTableEntryInfo getInfo() {
-        return info;
-    }
-
-    /**
-     * Returns the visibility object of this symbol.
-     *
-     * @return The visibility object of this symbol.
-     */
-    public SymbolTableEntryVisibility getVisibility() {
-        return visibility;
-    }
-
-    @Override
-    public String toString() {
-        return "SymbolTableEntry(nameoffset=" + nameOffset + ";sectiontableIndex=" + sectionTableIndex + ";value="
-                + value + ";size=" + size + ";info=" + info + ";visibility=" + visibility + ")";
-    }
-
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + nameOffset;
-        h = 31 * h + HashUtils.hash(sectionTableIndex);
-        h = 31 * h + HashUtils.hash(value);
-        h = 31 * h + HashUtils.hash(size);
-        h = 31 * h + info.hashCode();
-        h = 31 * h + visibility.hashCode();
-        return h;
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final SymbolTableEntry ste = (SymbolTableEntry) other;
-        return this.nameOffset == ste.nameOffset
-                && this.sectionTableIndex == ste.sectionTableIndex
-                && this.value == ste.value
-                && this.size == ste.size
-                && this.info.equals(ste.info)
-                && this.visibility.equals(ste.visibility);
+        return new SymbolTableEntry(name, sti, val, sz, inf, vis);
     }
 }

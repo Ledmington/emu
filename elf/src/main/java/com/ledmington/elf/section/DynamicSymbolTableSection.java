@@ -62,7 +62,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
         final long nEntries = size / symtabEntrySize;
         this.symbolTable = new SymbolTableEntry[(int) nEntries];
         for (int i = 0; i < nEntries; i++) {
-            symbolTable[i] = new SymbolTableEntry(b, is32Bit);
+            symbolTable[i] = SymbolTableEntry.read(b, is32Bit);
         }
     }
 
@@ -86,19 +86,19 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24));
         for (final SymbolTableEntry ste : symbolTable) {
             if (is32Bit) {
-                bb.write(ste.getNameOffset());
-                bb.write(BitUtils.asInt(ste.getValue()));
-                bb.write(BitUtils.asInt(ste.getSize()));
-                bb.write(ste.getInfo().toByte());
-                bb.write(ste.getVisibility().getCode());
-                bb.write(ste.getSectionTableIndex());
+                bb.write(ste.nameOffset());
+                bb.write(BitUtils.asInt(ste.value()));
+                bb.write(BitUtils.asInt(ste.size()));
+                bb.write(ste.info().toByte());
+                bb.write(ste.visibility().getCode());
+                bb.write(ste.sectionTableIndex());
             } else {
-                bb.write(ste.getNameOffset());
-                bb.write(ste.getInfo().toByte());
-                bb.write(ste.getVisibility().getCode());
-                bb.write(ste.getSectionTableIndex());
-                bb.write(ste.getValue());
-                bb.write(ste.getSize());
+                bb.write(ste.nameOffset());
+                bb.write(ste.info().toByte());
+                bb.write(ste.visibility().getCode());
+                bb.write(ste.sectionTableIndex());
+                bb.write(ste.value());
+                bb.write(ste.size());
             }
         }
         return bb.array();

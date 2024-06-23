@@ -550,9 +550,7 @@ public final class Main {
                         versions[i],
                         versions[i] == 0
                                 ? "*local*"
-                                : (versions[i] == 1
-                                        ? "*global*"
-                                        : stringTable.getString(symbolTable[i].getNameOffset())));
+                                : (versions[i] == 1 ? "*global*" : stringTable.getString(symbolTable[i].nameOffset())));
                 if (i % 4 == 3) {
                     out.println();
                 }
@@ -793,15 +791,15 @@ public final class Main {
             out.printf(
                     "    %2d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
                     i,
-                    ste.getValue(),
-                    ste.getSize(),
-                    ste.getInfo().getType().getName(),
-                    ste.getInfo().getBinding().getName(),
-                    ste.getVisibility().getName(),
-                    ste.getSectionTableIndex() == 0
+                    ste.value(),
+                    ste.size(),
+                    ste.info().getType().getName(),
+                    ste.info().getBinding().getName(),
+                    ste.visibility().getName(),
+                    ste.sectionTableIndex() == 0
                             ? "UND"
-                            : (ste.getSectionTableIndex() < 0 ? "ABS" : ste.getSectionTableIndex()),
-                    strtab.getString(ste.getNameOffset()));
+                            : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
+                    strtab.getString(ste.nameOffset()));
         }
     }
 

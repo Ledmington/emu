@@ -49,7 +49,7 @@ public final class SymbolTableSection implements SymbolTable {
         final long nEntries = size / symtabEntrySize;
         this.symbolTable = new SymbolTableEntry[(int) nEntries];
         for (int i = 0; i < nEntries; i++) {
-            symbolTable[i] = new SymbolTableEntry(b, is32Bit);
+            symbolTable[i] = SymbolTableEntry.read(b, is32Bit);
         }
     }
 
