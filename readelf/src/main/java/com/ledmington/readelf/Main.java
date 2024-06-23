@@ -206,6 +206,16 @@ public final class Main {
                     notImplemented();
                     break;
 
+                case "-I", "--histogram":
+                    notImplemented();
+                    break;
+                case "-W", "--wide":
+                    notImplemented();
+                    break;
+                case "-T", "--silent-truncation":
+                    notImplemented();
+                    break;
+
                     // TODO: add the other CLI flags
 
                 default:
@@ -955,16 +965,16 @@ public final class Main {
                           -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
                           -h --file-header       Display the ELF file header
                           -l --program-headers   Display the program headers
-                        	 --segments          An alias for --program-headers
+                             --segments          An alias for --program-headers
                           -S --section-headers   Display the sections' header
-                        	 --sections          An alias for --section-headers
+                             --sections          An alias for --section-headers
                           -g --section-groups    Display the section groups
                           -t --section-details   Display the section details
                           -e --headers           Equivalent to: -h -l -S
                           -s --syms              Display the symbol table
-                        	 --symbols           An alias for --syms
-                        	 --dyn-syms          Display the dynamic symbol table
-                        	 --lto-syms          Display LTO symbol tables
+                             --symbols           An alias for --syms
+                             --dyn-syms          Display the dynamic symbol table
+                             --lto-syms          Display LTO symbol tables
                           -n --notes             Display the core notes (if present)
                           -r --relocs            Display the relocations (if present)
                           -u --unwind            Display the unwind info (if present)
@@ -974,13 +984,16 @@ public final class Main {
                           -c --archive-index     Display the symbol/file index in an archive
                           -D --use-dynamic       Use the dynamic section info when displaying symbols
                           -L --lint|--enable-checks
-                        						 Display warning messages for possible problems
+                                                 Display warning messages for possible problems
                           -x --hex-dump=<number|name>
-                        						 Dump the contents of section <number|name> as bytes
+                                                 Dump the contents of section <number|name> as bytes
                           -p --string-dump=<number|name>
-                        						 Dump the contents of section <number|name> as strings
+                                                 Dump the contents of section <number|name> as strings
                           -R --relocated-dump=<number|name>
-                        						 Dump the relocated contents of section <number|name>
+                                                 Dump the relocated contents of section <number|name>
+                          -I --histogram         Display histogram of bucket list lengths
+                          -W --wide              Allow output width to exceed 80 characters
+                          -T --silent-truncation If a symbol name is truncated, do not add [...] suffix
                           -H --help              Display this information
                           -v --version           Display the version number of readelf""");
     }
