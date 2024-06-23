@@ -227,6 +227,21 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
         size += 4 * arr.length;
     }
 
+    @Override
+    public void write(final long[] arr) {
+        ensureSize(size + 8 * arr.length);
+        if (isLittleEndian) {
+            for (final long x : arr) {
+                writeLE(x);
+            }
+        } else {
+            for (final long x : arr) {
+                writeBE(x);
+            }
+        }
+        size += 8 * arr.length;
+    }
+
     /**
      * Returns a copy of the underlying array.
      *

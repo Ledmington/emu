@@ -309,13 +309,12 @@ public final class ELFReader {
         for (int k = 0; k < sectionHeaderTable.length; k++) {
             final SectionHeader sectionHeader = sectionHeaderTable[k];
             b.setPosition(shstr_offset + sectionHeader.getNameOffset());
-
             final String name = readZeroTerminatedString();
 
             final String typeName = sectionHeader.getType().getName();
-            logger.debug("Parsing %s (%s)", name, typeName);
 
             if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
+                logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new DynamicSection(name, sectionHeader, b, fileHeader.is32Bit());
                 dynamicSection = (DynamicSection) sectionTable[k];
                 break;
@@ -329,8 +328,8 @@ public final class ELFReader {
             }
 
             final SectionHeader sectionHeader = sectionHeaderTable[k];
-            b.setPosition(shstr_offset + sectionHeader.getNameOffset());
 
+            b.setPosition(shstr_offset + sectionHeader.getNameOffset());
             final String name = readZeroTerminatedString();
 
             final String typeName = sectionHeader.getType().getName();
@@ -370,7 +369,7 @@ public final class ELFReader {
             } else if (GnuVersionRequirementsSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionRequirementsSection(sectionHeader, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
-                sectionTable[k] = new ConstructorsSection(name, sectionHeader);
+                sectionTable[k] = new ConstructorsSection(name, sectionHeader, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
                 sectionTable[k] = new DestructorsSection(name, sectionHeader);
             } else {

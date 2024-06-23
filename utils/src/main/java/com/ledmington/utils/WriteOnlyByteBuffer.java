@@ -83,4 +83,6 @@ public interface WriteOnlyByteBuffer {
      * @param newPosition The new position in the buffer.
      */
     void setPosition(final int newPosition);
+
+    void write(long[] longs);
 }

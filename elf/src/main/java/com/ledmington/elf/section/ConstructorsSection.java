@@ -17,13 +17,19 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
 import java.util.Objects;
+
+import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** An ELF .init_array section. */
 public final class ConstructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
+    private final long[] constructors; // function pointers
 
     /**
      * Creates a ConstructorsSection with the given name and header.
@@ -31,11 +37,33 @@ public final class ConstructorsSection implements LoadableSection {
      * @param name The name of this section.
      * @param sectionHeader The header of this section.
      */
-    public ConstructorsSection(final String name, final SectionHeader sectionHeader) {
+    public ConstructorsSection(
+            final String name,
+            final SectionHeader sectionHeader,
+            final ReadOnlyByteBuffer b,
+            final DynamicSection dynamicSection) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        // TODO
+        int constructorsSize = 0; // bytes
+        {
+            final DynamicTableEntry[] dynamicTable =
+                    Objects.requireNonNull(dynamicSection).getDynamicTable();
+            for (final DynamicTableEntry dte : dynamicTable) {
+                if (dte.getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
+                    constructorsSize = (int) dte.getContent();
+                    break;
+                }
+            }
+        }
+
+        b.setPosition(sectionHeader.getFileOffset());
+        b.setAlignment(sectionHeader.getAlignment());
+
+        this.constructors = new long[constructorsSize];
+        for (int i = 0; i < constructorsSize; i++) {
+            this.constructors[i] = b.read8();
+        }
     }
 
     @Override
@@ -50,7 +78,9 @@ public final class ConstructorsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        throw new Error("Not implemented");
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length + 8);
+        wb.write(constructors);
+        return wb.array();
     }
 
     @Override
@@ -58,12 +88,14 @@ public final class ConstructorsSection implements LoadableSection {
         int h = 17;
         h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(constructors);
         return h;
     }
 
     @Override
     public String toString() {
-        return "ConstructorsSection(name=" + name + ";header=" + header + ")";
+        return "ConstructorsSection(name=" + name + ";header=" + header + ";constructors="
+                + Arrays.toString(constructors) + ")";
     }
 
     @Override
@@ -78,6 +110,8 @@ public final class ConstructorsSection implements LoadableSection {
             return false;
         }
         final ConstructorsSection cs = (ConstructorsSection) other;
-        return this.name.equals(cs.name) && this.header.equals(cs.header);
+        return this.name.equals(cs.name)
+                && this.header.equals(cs.header)
+                && Arrays.equals(this.constructors, cs.constructors);
     }
 }
