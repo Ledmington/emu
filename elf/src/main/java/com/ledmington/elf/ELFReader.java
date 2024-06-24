@@ -288,21 +288,14 @@ public final class ELFReader {
         return sectionHeaderTable;
     }
 
-    private static String readZeroTerminatedString() {
-        final StringBuilder sb = new StringBuilder();
-        char c = (char) b.read1();
-        while (c != '\0') {
-            sb.append(c);
-            c = (char) b.read1();
-        }
-        return sb.toString();
-    }
-
     private static Section[] readSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
         final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
         final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].getFileOffset();
         DynamicSection dynamicSection = null;
+        sectionTable[sectionTable.length - 1] =
+                new StringTableSection(".shstrtab", sectionHeaderTable[sectionHeaderTable.length - 1], b);
+        final StringTableSection shstrtab = (StringTableSection) sectionTable[sectionTable.length - 1];
 
         // Since some section may require the .dynamic section for correct parsing, we
         // need to parse that first
@@ -311,8 +304,7 @@ public final class ELFReader {
             final String typeName = sectionHeader.getType().getName();
 
             if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
-                b.setPosition(shstr_offset + sectionHeader.getNameOffset());
-                final String name = readZeroTerminatedString();
+                final String name = shstrtab.getString(sectionHeader.getNameOffset());
                 logger.debug("Parsing %s (%s)", name, typeName);
                 sectionTable[k] = new DynamicSection(name, sectionHeader, b, fileHeader.is32Bit());
                 dynamicSection = (DynamicSection) sectionTable[k];
@@ -329,8 +321,7 @@ public final class ELFReader {
             final SectionHeader sh = sectionHeaderTable[k];
 
             b.setPosition(shstr_offset + sh.getNameOffset());
-            logger.debug("0x%X + 0x%x = 0x%x", shstr_offset, sh.getNameOffset(), b.getPosition());
-            final String name = readZeroTerminatedString();
+            final String name = shstrtab.getString(sh.getNameOffset());
             final String typeName = sh.getType().getName();
             logger.debug("Parsing %s (%s)", name, typeName);
 
