@@ -43,11 +43,18 @@ public final class SymbolTableSection implements SymbolTable {
         this.header = Objects.requireNonNull(sectionHeader);
 
         final long size = sectionHeader.getSectionSize();
-        b.setPosition(sectionHeader.getFileOffset());
-        final int symtabEntrySize = is32Bit ? 16 : 24;
+        final long symtabEntrySize = sectionHeader.getEntrySize();
+
+        if (size % symtabEntrySize != 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Expected section size to be multiple of entry size (%d bytes) but was %d bytes",
+                    symtabEntrySize, size));
+        }
 
         final long nEntries = size / symtabEntrySize;
         this.symbolTable = new SymbolTableEntry[(int) nEntries];
+        b.setPosition(sectionHeader.getFileOffset());
+        b.setAlignment(1L);
         for (int i = 0; i < nEntries; i++) {
             symbolTable[i] = SymbolTableEntry.read(b, is32Bit);
         }
