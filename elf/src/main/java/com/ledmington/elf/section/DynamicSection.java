@@ -68,8 +68,12 @@ public final class DynamicSection implements LoadableSection {
         dynamicTable = tmp.toArray(new DynamicTableEntry[0]);
     }
 
-    public DynamicTableEntry[] getDynamicTable() {
-        return dynamicTable;
+    public int getTableLength() {
+        return dynamicTable.length;
+    }
+
+    public DynamicTableEntry getEntry(final int idx) {
+        return dynamicTable[idx];
     }
 
     @Override

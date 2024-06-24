@@ -54,7 +54,7 @@ public record NoteSectionEntry(String name, byte[] description, NoteSectionEntry
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(40);
         sb.append("NoteSectionEntry[name='").append(name).append("';description=0x");
         for (final byte b : description) {
             sb.append(String.format("%02x", b));

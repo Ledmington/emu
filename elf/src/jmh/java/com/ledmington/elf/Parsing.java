@@ -47,7 +47,7 @@ public class Parsing {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
     }
 
-    private static byte[] fileBytes;
+    private byte[] fileBytes;
 
     @Setup
     public void setup() {

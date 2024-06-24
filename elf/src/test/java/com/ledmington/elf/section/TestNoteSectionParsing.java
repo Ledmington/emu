@@ -42,7 +42,8 @@ final class TestNoteSectionParsing {
         return Stream.of(
                 Arguments.of(
                         convertHexStringToByteArray(
-                                // real dump of the .note.gnu.property section of a gcc 11.4.0 executable, obtained with
+                                // real dump of the .note.gnu.property section of a gcc
+                                // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.gnu.property /usr/bin/gcc'
                                 "040000002000000005000000474e5500020000c0040000000300000000000000028000c0040000000100000000000000"),
                         false,
@@ -88,7 +89,8 @@ final class TestNoteSectionParsing {
                         }),
                 Arguments.of(
                         convertHexStringToByteArray(
-                                // real dump of the .note.gnu.build-id section of a gcc 11.4.0 executable, obtained with
+                                // real dump of the .note.gnu.build-id section of a gcc
+                                // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.gnu.build-id /usr/bin/gcc'
                                 "040000001400000003000000474e5500bee27145fd189a47a04c578e204051498e609ed2"),
                         false,
@@ -122,7 +124,8 @@ final class TestNoteSectionParsing {
                         }),
                 Arguments.of(
                         convertHexStringToByteArray(
-                                // real dump of the .note.ABI-tag section of a gcc 11.4.0 executable, obtained with
+                                // real dump of the .note.ABI-tag section of a gcc
+                                // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.ABI-tag /usr/bin/gcc'
                                 "040000001000000001000000474e550000000000030000000200000000000000"),
                         false,
@@ -154,7 +157,7 @@ final class TestNoteSectionParsing {
 
     @ParameterizedTest
     @MethodSource("exampleNoteSections")
-    void correctParsing(final byte[] content, final boolean is32Bit, final NoteSectionEntry[] expected) {
+    void correctParsing(final byte[] content, final boolean is32Bit, final NoteSectionEntry... expected) {
         final NoteSectionEntry[] parsed =
                 NoteSection.loadNoteSectionEntries(is32Bit, new ReadOnlyByteBufferV1(content, true), content.length);
         assertArrayEquals(

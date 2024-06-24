@@ -63,8 +63,12 @@ public final class GnuVersionSection implements LoadableSection {
         }
     }
 
-    public short[] getVersions() {
-        return versions;
+    public int getVersionsLength() {
+        return versions.length;
+    }
+
+    public short getVersion(final int idx) {
+        return versions[idx];
     }
 
     @Override

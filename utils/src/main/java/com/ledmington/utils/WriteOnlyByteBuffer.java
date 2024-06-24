@@ -64,6 +64,14 @@ public interface WriteOnlyByteBuffer {
     void write(final int... ints);
 
     /**
+     * Writes the array of longs, each with the current endianness, at the current position. It is equivalent to call
+     * write() on each element in order.
+     *
+     * @param longs The long array to be written.
+     */
+    void write(final long... longs);
+
+    /**
      * Returns the array that has been written.
      *
      * @return The backing array.
@@ -83,6 +91,4 @@ public interface WriteOnlyByteBuffer {
      * @param newPosition The new position in the buffer.
      */
     void setPosition(final int newPosition);
-
-    void write(long[] longs);
 }

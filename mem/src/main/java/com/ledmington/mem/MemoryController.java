@@ -21,12 +21,9 @@ import java.util.Objects;
 
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
-import com.ledmington.utils.MiniLogger;
 
 /** This is the part of the memory which implements read-write-execute permissions. */
 public final class MemoryController implements Memory {
-
-    private static final MiniLogger logger = MiniLogger.getLogger("mem");
 
     private final Memory mem;
     private final IntervalArray canRead = new IntervalArray();

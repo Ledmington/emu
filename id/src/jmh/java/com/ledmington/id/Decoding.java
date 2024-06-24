@@ -49,7 +49,7 @@ public class Decoding {
     }
 
     // Bytes of the instruction 'cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef'
-    private static final byte[] instructionBytes = new byte[] {
+    private final byte[] instructionBytes = new byte[] {
         (byte) 0x66,
         (byte) 0x41,
         (byte) 0x81,
@@ -62,7 +62,7 @@ public class Decoding {
         (byte) 0xef,
         (byte) 0xbe
     };
-    private static InstructionDecoder id;
+    private InstructionDecoder id;
 
     @Setup(Level.Invocation)
     public void setup() {

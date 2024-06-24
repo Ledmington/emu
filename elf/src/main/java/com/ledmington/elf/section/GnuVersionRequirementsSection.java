@@ -57,11 +57,10 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 
         int versionRequirementsEntryNum = 0;
         {
-            final DynamicTableEntry[] dynamicTable =
-                    Objects.requireNonNull(dynamicSection).getDynamicTable();
-            for (final DynamicTableEntry dte : dynamicTable) {
-                if (dte.getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
-                    versionRequirementsEntryNum = (int) dte.getContent();
+            for (int i = 0; i < dynamicSection.getTableLength(); i++) {
+                if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
+                    versionRequirementsEntryNum =
+                            (int) dynamicSection.getEntry(i).getContent();
                     break;
                 }
             }
@@ -73,8 +72,12 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
         }
     }
 
-    public GnuVersionRequirementEntry[] getEntries() {
-        return entries;
+    public int getRequirementsLength() {
+        return entries.length;
+    }
+
+    public GnuVersionRequirementEntry getEntry(final int idx) {
+        return entries[idx];
     }
 
     @Override

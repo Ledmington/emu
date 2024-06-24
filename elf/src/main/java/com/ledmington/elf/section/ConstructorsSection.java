@@ -47,11 +47,9 @@ public final class ConstructorsSection implements LoadableSection {
 
         int constructorsSizeInBytes = 0; // bytes
         {
-            final DynamicTableEntry[] dynamicTable =
-                    Objects.requireNonNull(dynamicSection).getDynamicTable();
-            for (final DynamicTableEntry dte : dynamicTable) {
-                if (dte.getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
-                    constructorsSizeInBytes = (int) dte.getContent();
+            for (int i = 0; i < dynamicSection.getTableLength(); i++) {
+                if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
+                    constructorsSizeInBytes = (int) dynamicSection.getEntry(i).getContent();
                     break;
                 }
             }

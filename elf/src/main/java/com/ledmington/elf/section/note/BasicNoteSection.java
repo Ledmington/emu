@@ -60,7 +60,6 @@ public final class BasicNoteSection implements NoteSection {
                     "Invalid alignment: expected %,d but was %,d", expectedAlignment, sectionHeader.getAlignment());
         }
         b.setAlignment(sectionHeader.getAlignment());
-        System.out.printf("Reading section '%s'\n", name);
         this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
     }
 
