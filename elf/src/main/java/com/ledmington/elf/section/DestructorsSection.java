@@ -17,13 +17,19 @@
 */
 package com.ledmington.elf.section;
 
+import java.util.Arrays;
 import java.util.Objects;
+
+import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** An ELF .fini_array section. */
 public final class DestructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
+    private final long[] destructors;
 
     /**
      * Creates a DestructorsSection with the given name and the given header.
@@ -31,11 +37,39 @@ public final class DestructorsSection implements LoadableSection {
      * @param name The name of this section.
      * @param sectionHeader The header of this section.
      */
-    public DestructorsSection(final String name, final SectionHeader sectionHeader) {
+    public DestructorsSection(
+            final String name,
+            final SectionHeader sectionHeader,
+            final ReadOnlyByteBuffer b,
+            final DynamicSection dynamicSection) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
-        // TODO
+        int destructorsSizeInBytes = 0; // bytes
+        {
+            final DynamicTableEntry[] dynamicTable =
+                    Objects.requireNonNull(dynamicSection).getDynamicTable();
+            for (final DynamicTableEntry dte : dynamicTable) {
+                if (dte.getTag() == DynamicTableEntryTag.DT_FINI_ARRAYSZ) {
+                    destructorsSizeInBytes = (int) dte.getContent();
+                    break;
+                }
+            }
+        }
+
+        if (destructorsSizeInBytes % 8 != 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Expected size of .fini_array section to be a multiple of 8 bytes but was %d (0x%x)",
+                    destructorsSizeInBytes, destructorsSizeInBytes));
+        }
+
+        b.setPosition(sectionHeader.getFileOffset());
+        b.setAlignment(sectionHeader.getAlignment());
+
+        this.destructors = new long[destructorsSizeInBytes / 8];
+        for (int i = 0; i < destructors.length; i++) {
+            this.destructors[i] = b.read8();
+        }
     }
 
     @Override
@@ -50,7 +84,9 @@ public final class DestructorsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        throw new Error("Not implemented");
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length + 8);
+        wb.write(destructors);
+        return wb.array();
     }
 
     @Override
@@ -58,12 +94,14 @@ public final class DestructorsSection implements LoadableSection {
         int h = 17;
         h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(destructors);
         return h;
     }
 
     @Override
     public String toString() {
-        return "DestructorsSection(name=" + name + ";header=" + header + ")";
+        return "DestructorsSection(name=" + name + ";header=" + header + ";destructors=" + Arrays.toString(destructors)
+                + ")";
     }
 
     @Override
@@ -78,6 +116,8 @@ public final class DestructorsSection implements LoadableSection {
             return false;
         }
         final DestructorsSection ds = (DestructorsSection) other;
-        return this.name.equals(ds.name) && this.header.equals(ds.header);
+        return this.name.equals(ds.name)
+                && this.header.equals(ds.header)
+                && Arrays.equals(this.destructors, ds.destructors);
     }
 }

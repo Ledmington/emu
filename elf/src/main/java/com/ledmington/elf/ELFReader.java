@@ -361,7 +361,7 @@ public final class ELFReader {
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, sh, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
-                sectionTable[k] = new DestructorsSection(name, sh);
+                sectionTable[k] = new DestructorsSection(name, sh, b, dynamicSection);
             } else {
                 throw new IllegalArgumentException(String.format(
                         "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));

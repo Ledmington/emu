@@ -59,7 +59,7 @@ public final class ConstructorsSection implements LoadableSection {
 
         if (constructorsSizeInBytes % 8 != 0) {
             throw new IllegalArgumentException(String.format(
-                    "Expected size of .init.array section to be a multiple of 8 bytes but was %d (0x%x)",
+                    "Expected size of .init_array section to be a multiple of 8 bytes but was %d (0x%x)",
                     constructorsSizeInBytes, constructorsSizeInBytes));
         }
 
