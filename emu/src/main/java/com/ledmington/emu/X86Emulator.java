@@ -39,7 +39,6 @@ import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
-import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
@@ -61,7 +60,7 @@ public final class X86Emulator implements Emulator {
     public X86Emulator() {}
 
     private void setup(final ELF elf, final MemoryInitializer memInit) {
-        this.mem = new MemoryController(new RandomAccessMemory(memInit));
+        this.mem = new MemoryController(memInit);
         this.elf = Objects.requireNonNull(elf);
         this.instructionFetcher = new InstructionFetcher(mem, regFile);
         this.dec = new InstructionDecoderV1(this.instructionFetcher);

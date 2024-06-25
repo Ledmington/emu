@@ -35,8 +35,8 @@ public final class MemoryController implements Memory {
      *
      * @param mem The Memory object to be wrapped.
      */
-    public MemoryController(final Memory mem) {
-        this.mem = Objects.requireNonNull(mem);
+    public MemoryController(final MemoryInitializer memInit) {
+        this.mem = new RandomAccessMemory(Objects.requireNonNull(memInit));
     }
 
     /**

@@ -19,8 +19,6 @@ package com.ledmington.elf.section.note;
 
 import java.util.List;
 
-import com.ledmington.utils.HashUtils;
-
 /**
  * An entry of an ELF section of type SHT_NOTE (.note*).
  *
@@ -61,15 +59,5 @@ public record NoteSectionEntry(String name, List<Byte> description, NoteSectionE
         }
         sb.append(']');
         return sb.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + description.hashCode();
-        h = 31 * h + type.hashCode();
-        h = 31 * h + HashUtils.hash(is32Bit);
-        return h;
     }
 }

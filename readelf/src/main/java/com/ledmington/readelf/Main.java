@@ -22,10 +22,10 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
@@ -37,7 +37,6 @@ import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.GnuHashSection;
-import com.ledmington.elf.section.GnuVersionRequirementEntry;
 import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
@@ -495,11 +494,10 @@ public final class Main {
     }
 
     private static void printGnuHashSection(final GnuHashSection s) {
-        out.printf(
-                "Histogram for '%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBuckets().length);
+        out.printf("Histogram for '%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBucketsLength());
         out.println(" Length  Number     % of total  Coverage");
-        for (int b = 0; b < s.getBuckets().length; b++) {
-            out.printf("  bucket %d: %d TODO%n", b, s.getBuckets()[b]);
+        for (int b = 0; b < s.getBucketsLength(); b++) {
+            out.printf("  bucket %d: %d TODO%n", b, s.getBucket(b));
         }
     }
 
@@ -512,10 +510,9 @@ public final class Main {
     private static void printVersionSection(final Section s, final Section[] sectionTable) {
         final SectionHeader sh = s.getHeader();
         if (s instanceof GnuVersionRequirementsSection gvrs) {
-            final GnuVersionRequirementEntry[] entries = gvrs.getEntries();
             out.printf(
                     "Version needs section '%s' contains %d entr%s:%n",
-                    s.getName(), entries.length, entries.length == 1 ? "y" : "ies");
+                    s.getName(), gvrs.getRequirementsLength(), gvrs.getRequirementsLength() == 1 ? "y" : "ies");
             out.printf(
                     " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
                     sh.getVirtualAddress(),
@@ -523,34 +520,38 @@ public final class Main {
                     sh.getLinkedSectionIndex(),
                     sectionTable[sh.getLinkedSectionIndex()].getName());
             final StringTableSection strtab = (StringTableSection) sectionTable[sh.getLinkedSectionIndex()];
-            for (int i = 0; i < entries.length; i++) {
+            for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
                 out.printf(
                         "  %06x: Version: %d  File: %s  Cnt: %d%n",
-                        i, entries[i].version(), strtab.getString(entries[i].fileOffset()), entries[i].count());
-                out.printf("%s%n", entries[i]);
+                        i,
+                        gvrs.getEntry(i).version(),
+                        strtab.getString(gvrs.getEntry(i).fileOffset()),
+                        gvrs.getEntry(i).count());
+                out.printf("%s%n", gvrs.getEntry(i));
             }
         } else if (s instanceof GnuVersionSection gvs) {
-            final short[] versions = gvs.getVersions();
             final Section linkedSection = sectionTable[sh.getLinkedSectionIndex()];
             out.printf(
                     "Version symbols section '%s' contains %d entr%s:%n",
-                    s.getName(), versions.length, versions.length == 1 ? "y" : "ies");
+                    s.getName(), gvs.getVersionsLength(), gvs.getVersionsLength() == 1 ? "y" : "ies");
             out.printf(
                     " Addr: 0x%016x Offset: 0x%08x  Link: %d (%s)%n",
                     sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
             final SymbolTableEntry[] symbolTable = ((SymbolTable) linkedSection).getSymbolTable();
             final StringTableSection stringTable =
                     (StringTableSection) sectionTable[linkedSection.getHeader().getLinkedSectionIndex()];
-            for (int i = 0; i < versions.length; i++) {
+            for (int i = 0; i < gvs.getVersionsLength(); i++) {
                 if (i % 4 == 0) {
                     out.printf("  %03x: ", i);
                 }
                 out.printf(
                         "%2d (%s)\t",
-                        versions[i],
-                        versions[i] == 0
+                        gvs.getVersion(i),
+                        gvs.getVersion(i) == 0
                                 ? "*local*"
-                                : (versions[i] == 1 ? "*global*" : stringTable.getString(symbolTable[i].nameOffset())));
+                                : (gvs.getVersion(i) == 1
+                                        ? "*global*"
+                                        : stringTable.getString(symbolTable[i].nameOffset())));
                 if (i % 4 == 3) {
                     out.println();
                 }
@@ -563,11 +564,11 @@ public final class Main {
 
     private static void printDynamicSection(final DynamicSection ds, final StringTableSection strtab) {
         final SectionHeader dsh = ds.getHeader();
-        final DynamicTableEntry[] dyntab = ds.getDynamicTable();
-        out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), dyntab.length);
+        out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), ds.getTableLength());
         out.println("  Tag        Type                         Name/Value");
 
-        for (final DynamicTableEntry dte : dyntab) {
+        for (int i = 0; i < ds.getTableLength(); i++) {
+            final DynamicTableEntry dte = ds.getEntry(i);
             out.printf(
                     " 0x%016x %-20s ",
                     dte.getTag().getCode(), "(" + dte.getTag().getName() + ")");
@@ -633,13 +634,17 @@ public final class Main {
         out.printf("Displaying notes found in: %s%n", ns.getName());
         out.println("  Owner                Data size \tDescription");
         for (final NoteSectionEntry nse : ns.getEntries()) {
-            final byte[] desc = nse.description();
+            final List<Byte> desc = nse.description();
             out.printf(
-                    "  %-20s 0x%08x\t%s%n", nse.name(), desc.length, nse.type().getDescription());
+                    "  %-20s 0x%08x\t%s%n", nse.name(), desc.size(), nse.type().getDescription());
 
             switch (nse.type()) {
                 case NT_GNU_ABI_TAG -> {
-                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(desc, true);
+                    final byte[] v = new byte[desc.size()];
+                    for (int i = 0; i < v.length; i++) {
+                        v[i] = desc.get(i);
+                    }
+                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
                     final int osCode = robb.read4();
                     out.printf(
                             "    OS: %s, ABI: %d.%d.%d%n",
@@ -657,12 +662,14 @@ public final class Main {
                 }
                 case NT_GNU_BUILD_ID -> out.printf(
                         "    Build ID: %s%n",
-                        IntStream.range(0, desc.length)
-                                .mapToObj(i -> String.format("%02x", desc[i]))
-                                .collect(Collectors.joining()));
+                        desc.stream().map(x -> String.format("%02x", x)).collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> {
-                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(desc, true);
-                    while (robb.getPosition() < desc.length) {
+                    final byte[] v = new byte[desc.size()];
+                    for (int i = 0; i < v.length; i++) {
+                        v[i] = desc.get(i);
+                    }
+                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
+                    while (robb.getPosition() < desc.size()) {
                         final int code = robb.read4();
                         final GnuPropertyType type = GnuPropertyType.fromCode(code);
                         switch (type) {
@@ -673,7 +680,7 @@ public final class Main {
                             case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
                                 out.print("        x86 ISA needed: ");
                                 int x = robb.read4();
-                                while (robb.getPosition() < desc.length && x != 0) {
+                                while (robb.getPosition() < desc.size() && x != 0) {
                                     if ((x & 1) != 0) {
                                         out.print("x86-64-baseline");
                                         x &= 0xfffffffe;
@@ -703,7 +710,7 @@ public final class Main {
                                         }
                                     }
 
-                                    if (robb.getPosition() < desc.length) {
+                                    if (robb.getPosition() < desc.size()) {
                                         x = robb.read4();
                                         if (x != 0) {
                                             out.print(", ");
@@ -717,7 +724,7 @@ public final class Main {
                             case GNU_PROPERTY_X86_FEATURE_1_AND -> {
                                 out.print("      Properties: x86 feature: ");
                                 int x = robb.read4();
-                                while (robb.getPosition() < desc.length && x != 0) {
+                                while (robb.getPosition() < desc.size() && x != 0) {
                                     if ((x & 1) != 0) {
                                         out.print("IBT");
                                         x &= 0xfffffffe;
@@ -733,7 +740,7 @@ public final class Main {
                                         }
                                     }
 
-                                    if (robb.getPosition() < desc.length) {
+                                    if (robb.getPosition() < desc.size()) {
                                         x = robb.read4();
                                         if (x != 0) {
                                             out.print(", ");
