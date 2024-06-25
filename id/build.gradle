@@ -11,8 +11,8 @@ dependencies {
 pitest {
 	targetClasses.set(['com.ledmington.cpu.x86.*'])
 	targetTests.set(['com.ledmington.cpu.x86.*'])
-	pitestVersion = '1.15.0'
-	junit5PluginVersion = '1.2.0'
+	pitestVersion = '1.16.1'
+	junit5PluginVersion = '1.2.1'
 	threads = 4
 	outputFormats.set(['XML', 'HTML'])
 	useClasspathFile = true     // useful with bigger projects on Windows
