@@ -17,7 +17,7 @@
 */
 package com.ledmington.elf.section.note;
 
-import java.util.Arrays;
+import java.util.List;
 
 import com.ledmington.utils.HashUtils;
 
@@ -29,7 +29,7 @@ import com.ledmington.utils.HashUtils;
  * @param type The 4-byte type of this entry (meaning of this field varies between note section).
  * @param is32Bit Used for alignment.
  */
-public record NoteSectionEntry(String name, byte[] description, NoteSectionEntryType type, boolean is32Bit) {
+public record NoteSectionEntry(String name, List<Byte> description, NoteSectionEntryType type, boolean is32Bit) {
 
     /**
      * Returns the number of bytes occupied by the actual data.
@@ -37,7 +37,7 @@ public record NoteSectionEntry(String name, byte[] description, NoteSectionEntry
      * @return The number of bytes occupied by the actual data.
      */
     public int getSize() {
-        return 4 + 4 + 4 + name.length() + description.length;
+        return 4 + 4 + 4 + name.length() + description.size();
     }
 
     /**
@@ -67,27 +67,9 @@ public record NoteSectionEntry(String name, byte[] description, NoteSectionEntry
     public int hashCode() {
         int h = 17;
         h = 31 * h + name.hashCode();
-        h = 31 * h + Arrays.hashCode(description);
+        h = 31 * h + description.hashCode();
         h = 31 * h + type.hashCode();
         h = 31 * h + HashUtils.hash(is32Bit);
         return h;
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final NoteSectionEntry nse = (NoteSectionEntry) other;
-        return this.name.equals(nse.name)
-                && Arrays.equals(this.description, nse.description)
-                && this.type.equals(nse.type)
-                && this.is32Bit == nse.is32Bit;
     }
 }
