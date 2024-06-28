@@ -126,19 +126,9 @@ allprojects {
     }
 
     // cleanup tasks
-    clean.dependsOn('cleanDLLs', 'cleanDyLibs', 'cleanLogs', 'cleanSOs', 'cleanBin')
-    tasks.register('cleanDLLs', Delete) {
-        delete fileTree(dir: project.projectDir, include: '*.dll')
-    }
-    tasks.register('cleanDyLibs', Delete) {
-        delete fileTree(dir: project.projectDir, include: '*.dylib')
-    }
-    tasks.register('cleanLogs', Delete) {
-        delete fileTree(dir: project.projectDir, include: 'hs_err_pid*.log')
-    }
-    tasks.register('cleanSOs', Delete) {
-        delete fileTree(dir: project.projectDir, include: '*.so')
-    }
+    clean.dependsOn('cleanBin')
+
+    // remove default VSCode build directory
     tasks.register('cleanBin', Delete) {
         delete "${project.projectDir}/bin"
     }
