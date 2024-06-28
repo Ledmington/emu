@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -73,13 +72,7 @@ public interface NoteSection extends LoadableSection {
                     : b.getPosition();
             b.setPosition(newPosition);
 
-            entries.add(new NoteSectionEntry(
-                    name,
-                    IntStream.range(0, descriptionBytes.length)
-                            .mapToObj(i -> descriptionBytes[i])
-                            .toList(),
-                    NoteSectionEntryType.fromCode(type),
-                    is32Bit));
+            entries.add(new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(type), is32Bit));
         }
 
         return entries.toArray(new NoteSectionEntry[0]);
@@ -100,12 +93,12 @@ public interface NoteSection extends LoadableSection {
                 .sum());
         int runningTotal = 0;
         for (final NoteSectionEntry nse : entries) {
-            bb.write(nse.name().length());
-            bb.write(nse.description().size());
-            bb.write(nse.type().getCode());
-            bb.write(nse.name().getBytes(StandardCharsets.UTF_8));
-            for (final byte b : nse.description()) {
-                bb.write(b);
+            bb.write(nse.getName().length());
+            bb.write(nse.getDescriptionLength());
+            bb.write(nse.getType().getCode());
+            bb.write(nse.getName().getBytes(StandardCharsets.UTF_8));
+            for (int i = 0; i < nse.getDescriptionLength(); i++) {
+                bb.write(nse.getDescriptionByte(i));
             }
             runningTotal += nse.getAlignedSize();
             bb.setPosition(runningTotal);

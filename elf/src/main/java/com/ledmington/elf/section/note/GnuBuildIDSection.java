@@ -56,9 +56,9 @@ public final class GnuBuildIDSection implements NoteSection {
                     expectedEntries, entries.length, Arrays.toString(entries)));
         }
 
-        if (!"GNU".equals(entries[0].name())) {
+        if (!"GNU".equals(entries[0].getName())) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid owner for .note.gnu.build-id section: expected 'GNU' but was '%s'", entries[0].name()));
+                    "Invalid owner for .note.gnu.build-id section: expected 'GNU' but was '%s'", entries[0].getName()));
         }
     }
 

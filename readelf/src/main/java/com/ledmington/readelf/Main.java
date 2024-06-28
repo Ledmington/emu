@@ -22,10 +22,10 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
@@ -634,15 +634,15 @@ public final class Main {
         out.printf("Displaying notes found in: %s%n", ns.getName());
         out.println("  Owner                Data size \tDescription");
         for (final NoteSectionEntry nse : ns.getEntries()) {
-            final List<Byte> desc = nse.description();
             out.printf(
-                    "  %-20s 0x%08x\t%s%n", nse.name(), desc.size(), nse.type().getDescription());
+                    "  %-20s 0x%08x\t%s%n",
+                    nse.getName(), nse.getDescriptionLength(), nse.getType().getDescription());
 
-            switch (nse.type()) {
+            switch (nse.getType()) {
                 case NT_GNU_ABI_TAG -> {
-                    final byte[] v = new byte[desc.size()];
+                    final byte[] v = new byte[nse.getDescriptionLength()];
                     for (int i = 0; i < v.length; i++) {
-                        v[i] = desc.get(i);
+                        v[i] = nse.getDescriptionByte(i);
                     }
                     final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
                     final int osCode = robb.read4();
@@ -662,14 +662,16 @@ public final class Main {
                 }
                 case NT_GNU_BUILD_ID -> out.printf(
                         "    Build ID: %s%n",
-                        desc.stream().map(x -> String.format("%02x", x)).collect(Collectors.joining()));
+                        IntStream.range(0, nse.getDescriptionLength())
+                                .mapToObj(i -> String.format("%02x", nse.getDescriptionByte(i)))
+                                .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> {
-                    final byte[] v = new byte[desc.size()];
+                    final byte[] v = new byte[nse.getDescriptionLength()];
                     for (int i = 0; i < v.length; i++) {
-                        v[i] = desc.get(i);
+                        v[i] = nse.getDescriptionByte(i);
                     }
                     final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
-                    while (robb.getPosition() < desc.size()) {
+                    while (robb.getPosition() < nse.getDescriptionLength()) {
                         final int code = robb.read4();
                         final GnuPropertyType type = GnuPropertyType.fromCode(code);
                         switch (type) {
@@ -680,7 +682,7 @@ public final class Main {
                             case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
                                 out.print("        x86 ISA needed: ");
                                 int x = robb.read4();
-                                while (robb.getPosition() < desc.size() && x != 0) {
+                                while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
                                     if ((x & 1) != 0) {
                                         out.print("x86-64-baseline");
                                         x &= 0xfffffffe;
@@ -710,7 +712,7 @@ public final class Main {
                                         }
                                     }
 
-                                    if (robb.getPosition() < desc.size()) {
+                                    if (robb.getPosition() < nse.getDescriptionLength()) {
                                         x = robb.read4();
                                         if (x != 0) {
                                             out.print(", ");
@@ -724,7 +726,7 @@ public final class Main {
                             case GNU_PROPERTY_X86_FEATURE_1_AND -> {
                                 out.print("      Properties: x86 feature: ");
                                 int x = robb.read4();
-                                while (robb.getPosition() < desc.size() && x != 0) {
+                                while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
                                     if ((x & 1) != 0) {
                                         out.print("IBT");
                                         x &= 0xfffffffe;
@@ -740,7 +742,7 @@ public final class Main {
                                         }
                                     }
 
-                                    if (robb.getPosition() < desc.size()) {
+                                    if (robb.getPosition() < nse.getDescriptionLength()) {
                                         x = robb.read4();
                                         if (x != 0) {
                                             out.print(", ");
@@ -753,7 +755,7 @@ public final class Main {
                     }
                 }
                 default -> throw new IllegalArgumentException(
-                        String.format("Unknown note section entry type '%s'", nse.type()));
+                        String.format("Unknown note section entry type '%s'", nse.getType()));
             }
         }
     }

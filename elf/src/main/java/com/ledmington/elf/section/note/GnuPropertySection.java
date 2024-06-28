@@ -56,9 +56,9 @@ public final class GnuPropertySection implements NoteSection {
                     expectedEntries, entries.length, Arrays.toString(entries)));
         }
 
-        if (!"GNU".equals(entries[0].name())) {
+        if (!"GNU".equals(entries[0].getName())) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", entries[0].name()));
+                    "Invalid owner for .note.gnu.property section: expected 'GNU' but was '%s'", entries[0].getName()));
         }
     }
 

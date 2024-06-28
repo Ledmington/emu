@@ -17,17 +17,49 @@
 */
 package com.ledmington.elf.section.note;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Objects;
 
-/**
- * An entry of an ELF section of type SHT_NOTE (.note*).
- *
- * @param name The name of the entry.
- * @param description The description/content of the entry.
- * @param type The 4-byte type of this entry (meaning of this field varies between note section).
- * @param is32Bit Used for alignment.
- */
-public record NoteSectionEntry(String name, List<Byte> description, NoteSectionEntryType type, boolean is32Bit) {
+import com.ledmington.utils.HashUtils;
+
+/** An entry of an ELF section of type SHT_NOTE (.note*). */
+public final class NoteSectionEntry {
+
+    private final String name;
+    private final byte[] description;
+    private final NoteSectionEntryType type;
+    private final boolean is32Bit;
+
+    /**
+     * @param name The name of the entry.
+     * @param description The description/content of the entry.
+     * @param type The 4-byte type of this entry (meaning of this field varies between note section).
+     * @param is32Bit Used for alignment.
+     */
+    public NoteSectionEntry(
+            final String name, final byte[] description, final NoteSectionEntryType type, final boolean is32Bit) {
+        this.name = Objects.requireNonNull(name);
+        this.description = new byte[Objects.requireNonNull(description).length];
+        System.arraycopy(description, 0, this.description, 0, description.length);
+        this.type = Objects.requireNonNull(type);
+        this.is32Bit = is32Bit;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getDescriptionLength() {
+        return description.length;
+    }
+
+    public byte getDescriptionByte(final int idx) {
+        return description[idx];
+    }
+
+    public NoteSectionEntryType getType() {
+        return type;
+    }
 
     /**
      * Returns the number of bytes occupied by the actual data.
@@ -35,7 +67,7 @@ public record NoteSectionEntry(String name, List<Byte> description, NoteSectionE
      * @return The number of bytes occupied by the actual data.
      */
     public int getSize() {
-        return 4 + 4 + 4 + name.length() + description.size();
+        return 4 + 4 + 4 + name.length() + description.length;
     }
 
     /**
@@ -59,5 +91,33 @@ public record NoteSectionEntry(String name, List<Byte> description, NoteSectionE
         }
         sb.append(']');
         return sb.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + name.hashCode();
+        h = 31 * h + Arrays.hashCode(description);
+        h = 31 * h + type.hashCode();
+        h = 31 * h + HashUtils.hash(is32Bit);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final NoteSectionEntry nse = (NoteSectionEntry) other;
+        return this.name.equals(nse.name)
+                && Arrays.equals(this.description, nse.description)
+                && this.type.equals(nse.type)
+                && this.is32Bit == nse.is32Bit;
     }
 }
