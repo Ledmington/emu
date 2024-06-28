@@ -123,6 +123,10 @@ allprojects {
 
     spotbugs {
         toolVersion = '4.8.6'
+
+        ignoreFailures = false
+        showStackTraces = true
+        showProgress = false // too verbose for parallel output
     }
 
     // cleanup tasks
