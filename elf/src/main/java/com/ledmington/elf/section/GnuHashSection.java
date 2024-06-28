@@ -69,18 +69,40 @@ public final class GnuHashSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns the number of elements in the bloom filter.
+     *
+     * @return The number of elements in the bloom filter.
+     */
     public int getBloomFilterLength() {
         return bloom.length;
     }
 
+    /**
+     * Returns the i-th element of the bloom filter.
+     *
+     * @param idx The index of the element to retrieve.
+     * @return The i-th element in the bloom filter.
+     */
     public long getBloomFilter(final int idx) {
         return bloom[idx];
     }
 
+    /**
+     * Returns the number of buckets.
+     *
+     * @return The number of buckets.
+     */
     public int getBucketsLength() {
         return buckets.length;
     }
 
+    /**
+     * Returns the i-th bucket.
+     *
+     * @param idx The index of the bucket ot retrieve.
+     * @return The i-th bucket
+     */
     public int getBucket(final int idx) {
         return buckets[idx];
     }

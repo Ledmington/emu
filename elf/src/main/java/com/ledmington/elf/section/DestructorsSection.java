@@ -36,6 +36,8 @@ public final class DestructorsSection implements LoadableSection {
      *
      * @param name The name of this section.
      * @param sectionHeader The header of this section.
+     * @param b The {@link ReadOnlyByteBuffer} to read data from.
+     * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_FINI_ARRAYSZ from.
      */
     public DestructorsSection(
             final String name,

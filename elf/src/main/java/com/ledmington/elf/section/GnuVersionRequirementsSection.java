@@ -50,6 +50,8 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
      * Creates the GNU version requirements section with the given header.
      *
      * @param sectionHeader The header for this section.
+     * @param b The {@link ReadOnlyByteBuffer} to read data from.
+     * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_VERNEEDNUM from.
      */
     public GnuVersionRequirementsSection(
             final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
@@ -72,10 +74,21 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns the number of version requirements in this section.
+     *
+     * @return The number of version requirements.
+     */
     public int getRequirementsLength() {
         return entries.length;
     }
 
+    /**
+     * Returns the i-th version requirement.
+     *
+     * @param idx The index of the version requirement to retrieve.
+     * @return The i-th version requirement.
+     */
     public GnuVersionRequirementEntry getEntry(final int idx) {
         return entries[idx];
     }

@@ -17,6 +17,7 @@
 */
 package com.ledmington.elf.section.note;
 
+/** The type of a property found inside the .note.gnu.property ELF section. */
 public enum GnuPropertyType {
     /** Stack size. */
     GNU_PROPERTY_STACK_SIZE,
@@ -39,6 +40,12 @@ public enum GnuPropertyType {
     /** X86 processor-specific features used in program. */
     GNU_PROPERTY_X86_FEATURE_1_AND;
 
+    /**
+     * Returns the property type corresponding to the given 32-bit code.
+     *
+     * @param code The 32-bit code of the GNU property.
+     * @return The proper GNU property.
+     */
     public static GnuPropertyType fromCode(final int code) {
         return switch (code) {
             case 1 -> GNU_PROPERTY_STACK_SIZE;

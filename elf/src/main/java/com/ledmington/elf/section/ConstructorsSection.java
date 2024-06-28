@@ -36,6 +36,8 @@ public final class ConstructorsSection implements LoadableSection {
      *
      * @param name The name of this section.
      * @param sectionHeader The header of this section.
+     * @param b The {@link ReadOnlyByteBuffer} to read data from.
+     * @param dynamicSection The dynamic section of the current executable to retrieve the DT_INIT_ARRAYSZ entry.
      */
     public ConstructorsSection(
             final String name,

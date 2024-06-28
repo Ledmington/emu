@@ -68,10 +68,21 @@ public final class DynamicSection implements LoadableSection {
         dynamicTable = tmp.toArray(new DynamicTableEntry[0]);
     }
 
+    /**
+     * Returns the number of entries in the dynamic section.
+     *
+     * @return The number of entries in the dynamic section.
+     */
     public int getTableLength() {
         return dynamicTable.length;
     }
 
+    /**
+     * Returns the i-th entry in the dynamic section.
+     *
+     * @param idx The index of the entry to retrieve.
+     * @return The i-th entry of the dynamic section.
+     */
     public DynamicTableEntry getEntry(final int idx) {
         return dynamicTable[idx];
     }

@@ -39,10 +39,11 @@ public record SymbolTableEntry(
         SymbolTableEntryVisibility visibility) {
 
     /**
-     * Creates a symbol table entry with the given data.
+     * Reads a symbol table entry from the given buffer.
      *
-     * @param b The ReadOnlyByteBuffer to read data from.
+     * @param b The {@link ReadOnlyByteBuffer} to read data from.
      * @param is32Bit Used for correct parsing.
+     * @return A symbol table entry.
      */
     public static SymbolTableEntry read(final ReadOnlyByteBuffer b, final boolean is32Bit) {
         int name;

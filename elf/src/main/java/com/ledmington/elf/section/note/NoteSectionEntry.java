@@ -31,6 +31,8 @@ public final class NoteSectionEntry {
     private final boolean is32Bit;
 
     /**
+     * Creates an entry of a .note section with the given data.
+     *
      * @param name The name of the entry.
      * @param description The description/content of the entry.
      * @param type The 4-byte type of this entry (meaning of this field varies between note section).
@@ -45,18 +47,39 @@ public final class NoteSectionEntry {
         this.is32Bit = is32Bit;
     }
 
+    /**
+     * Returns the name of this entry.
+     *
+     * @return The name of this entry.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns the length (in bytes) of the description.
+     *
+     * @return The length (in bytes) of the description.
+     */
     public int getDescriptionLength() {
         return description.length;
     }
 
+    /**
+     * Returns the i-th byte of the description array.
+     *
+     * @param idx The index of the byte to retrieve.
+     * @return The i-th byte of the description array.
+     */
     public byte getDescriptionByte(final int idx) {
         return description[idx];
     }
 
+    /**
+     * Returns the type of this entry.
+     *
+     * @return The type of this entry.
+     */
     public NoteSectionEntryType getType() {
         return type;
     }

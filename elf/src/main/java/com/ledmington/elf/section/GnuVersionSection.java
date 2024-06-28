@@ -63,10 +63,21 @@ public final class GnuVersionSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns the number of versions contained in this section.
+     *
+     * @return The number of versions contained in this section.
+     */
     public int getVersionsLength() {
         return versions.length;
     }
 
+    /**
+     * Returns the i-th version in this section.
+     *
+     * @param idx The index of the version to find.
+     * @return The i-th version in this section.
+     */
     public short getVersion(final int idx) {
         return versions[idx];
     }
