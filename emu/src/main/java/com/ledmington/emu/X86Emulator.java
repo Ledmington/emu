@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
@@ -37,6 +38,7 @@ import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
+import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.BitUtils;
@@ -218,7 +220,7 @@ public final class X86Emulator implements Emulator {
 
         logger.debug("Loading ELF sections into memory");
         for (final Section sec : elf.sectionTable()) {
-            if (sec.getHeader().getSectionSize() != 0) {
+            if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
                 loadSection(sec);
             }
         }
@@ -249,8 +251,12 @@ public final class X86Emulator implements Emulator {
             mem.initialize(startVirtualAddress, content);
         } else {
             throw new IllegalArgumentException(String.format(
-                    "Don't know what to do with section '%s' of type %s",
-                    sec.getName(), sec.getHeader().getType().getName()));
+                    "Don't know what to do with section '%s' of type %s and flags '%s'",
+                    sec.getName(),
+                    sec.getHeader().getType().getName(),
+                    sec.getHeader().getFlags().stream()
+                            .map(SectionHeaderFlags::getName)
+                            .collect(Collectors.joining(", "))));
         }
     }
 

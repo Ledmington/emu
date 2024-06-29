@@ -52,7 +52,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
      * @param b The byte buffer to read bytes from.
      */
     public InstructionDecoderV1(final ReadOnlyByteBuffer b) {
-        this.b = Objects.requireNonNull(b).copy();
+        this.b = Objects.requireNonNull(b);
     }
 
     /**
