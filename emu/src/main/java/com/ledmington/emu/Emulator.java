@@ -29,5 +29,5 @@ public interface Emulator {
      * @param elf The file to be executed.
      * @param memInit The {@link MemoryInitializer} to be used when reading uninitialized memory.
      */
-    void run(final ELF elf, final MemoryInitializer memInit);
+    void run(final ELF elf, final MemoryInitializer memInit, final String... commandLineArguments);
 }

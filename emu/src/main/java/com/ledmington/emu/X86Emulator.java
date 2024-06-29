@@ -18,6 +18,7 @@
 package com.ledmington.emu;
 
 import java.util.Arrays;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -69,7 +70,7 @@ public final class X86Emulator implements Emulator {
     }
 
     @Override
-    public void run(final ELF elf, final MemoryInitializer memInit) {
+    public void run(final ELF elf, final MemoryInitializer memInit, final String... commandLineArguments) {
         setup(elf, memInit);
 
         if (elf.fileHeader().getFileType() != FileType.ET_EXEC
@@ -85,8 +86,16 @@ public final class X86Emulator implements Emulator {
         loadELF();
 
         // TODO: load argc and argv (command-line arguments)
+        logger.debug("Command-line arguments:");
+        for (final String arg : commandLineArguments) {
+            logger.debug("'%s'", arg);
+        }
 
         // TODO: load environment variables
+        logger.debug("Environment variables:");
+        for (final Entry<String, String> env : System.getenv().entrySet()) {
+            logger.debug("'%s' = '%s'", env.getKey(), env.getValue());
+        }
 
         // setup stack
         final long allocatedMemory = 100_000_000L; // 100 MB

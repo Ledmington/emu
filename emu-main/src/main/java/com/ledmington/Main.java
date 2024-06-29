@@ -54,14 +54,14 @@ public final class Main {
         return ELFReader.read(bytes);
     }
 
-    private static void run(final String filename) {
+    private static void run(final String filename, final String[] commandLineArguments) {
         final ELF elf = parseELF(filename);
         logger.info("ELF file parsed successfully");
 
         final Emulator emu = new X86Emulator();
 
         logger.info(" ### Execution start ### ");
-        emu.run(elf, com.ledmington.emu.EmulatorConstants.getMemoryInitializer());
+        emu.run(elf, EmulatorConstants.getMemoryInitializer(), commandLineArguments);
         logger.info(" ### Execution end ### ");
     }
 
@@ -71,7 +71,11 @@ public final class Main {
 
         String filename = null;
 
-        for (final String arg : args) {
+        String[] innerArgs = null;
+
+        loop:
+        for (int i = 0; i < args.length; i++) {
+            final String arg = args[i];
             switch (arg) {
                 case "-h", "--help" -> {
                     out.print(String.join(
@@ -109,13 +113,13 @@ public final class Main {
                     System.exit(0);
                 }
                 default -> {
-                    if (filename != null) {
-                        out.println("Cannot set filename twice.");
-                        out.flush();
-                        System.exit(-1);
-                    } else {
-                        filename = arg;
-                    }
+                    filename = arg;
+
+                    // all the next command-line arguments are considered to be related to the
+                    // executable to be emulated
+                    innerArgs = new String[args.length - i - 1];
+                    System.arraycopy(args, i + 1, innerArgs, 0, innerArgs.length);
+                    break loop;
                 }
             }
         }
@@ -127,7 +131,7 @@ public final class Main {
         }
 
         try {
-            run(filename);
+            run(filename, innerArgs);
         } catch (final Throwable t) {
             logger.error(t);
             out.flush();
