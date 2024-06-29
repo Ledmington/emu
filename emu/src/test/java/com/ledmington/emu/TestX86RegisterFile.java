@@ -29,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
@@ -60,6 +61,30 @@ final class TestX86RegisterFile {
         Register8.SPL,
         Register8.SIL,
         Register8.DIL
+    };
+    private static final Register16[] all16BitRegisters = new Register16[] {
+        Register16.AX,
+        Register16.BX,
+        Register16.CX,
+        Register16.DX,
+        Register16.SP,
+        Register16.BP,
+        Register16.SI,
+        Register16.DI,
+        Register16.R8W,
+        Register16.R9W,
+        Register16.R10W,
+        Register16.R11W,
+        Register16.R12W,
+        Register16.R13W,
+        Register16.R14W,
+        Register16.R15W,
+        Register16.CS,
+        Register16.DS,
+        Register16.ES,
+        Register16.FS,
+        Register16.GS,
+        Register16.SS
     };
     private static final Register32[] all32BitRegisters = new Register32[] {
         Register32.EAX,
@@ -143,6 +168,47 @@ final class TestX86RegisterFile {
                     (byte) 0x00,
                     regFile.get(other),
                     () -> String.format("Expected register %s to be zero but was 0x%02x", other, regFile.get(other)));
+        }
+    }
+
+    static Stream<Arguments> all16BitsRegisters() {
+        return Arrays.stream(all16BitRegisters).map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource("all16BitsRegisters")
+    void initiallyAllZero(final Register16 r) {
+        assertEquals(
+                (short) 0x0000,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be initially zero but was 0x%04x", r, regFile.get(r)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("all16BitsRegisters")
+    void setToValue(final Register16 r) {
+        final short x = BitUtils.asShort(rng.nextInt(1, 65536));
+        regFile.set(r, x);
+        assertEquals(
+                x,
+                regFile.get(r),
+                () -> String.format("Expected register %s to be 0x%04x but was 0x%04x", r, x, regFile.get(r)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("all16BitsRegisters")
+    void setToValueShouldNotChangeOtherRegisters(final Register16 r) {
+        final short x = BitUtils.asShort(rng.nextInt(1, 65536));
+        regFile.set(r, x);
+
+        for (final Register16 other : all16BitRegisters) {
+            if (r.equals(other)) {
+                continue;
+            }
+            assertEquals(
+                    (short) 0x0000,
+                    regFile.get(other),
+                    () -> String.format("Expected register %s to be zero but was 0x%04x", other, regFile.get(other)));
         }
     }
 

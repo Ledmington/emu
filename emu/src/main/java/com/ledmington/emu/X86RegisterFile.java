@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
@@ -31,6 +32,9 @@ public final class X86RegisterFile {
 
     // General-purpose registers
     private final long[] gpr = new long[16];
+
+    // Segment registers
+    private final short[] seg = new short[6];
 
     // instruction pointer
     private long rip;
@@ -97,6 +101,60 @@ public final class X86RegisterFile {
             case R13B -> gpr[13] = (gpr[13] & 0xffffffffffffff00L) | BitUtils.asLong(v);
             case R14B -> gpr[14] = (gpr[14] & 0xffffffffffffff00L) | BitUtils.asLong(v);
             case R15B -> gpr[15] = (gpr[15] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+        }
+    }
+
+    public short get(final Register16 r) {
+        return switch (r) {
+            case AX -> BitUtils.asShort(gpr[0]);
+            case BX -> BitUtils.asShort(gpr[1]);
+            case CX -> BitUtils.asShort(gpr[2]);
+            case DX -> BitUtils.asShort(gpr[3]);
+            case SP -> BitUtils.asShort(gpr[4]);
+            case BP -> BitUtils.asShort(gpr[5]);
+            case SI -> BitUtils.asShort(gpr[6]);
+            case DI -> BitUtils.asShort(gpr[7]);
+            case R8W -> BitUtils.asShort(gpr[8]);
+            case R9W -> BitUtils.asShort(gpr[9]);
+            case R10W -> BitUtils.asShort(gpr[10]);
+            case R11W -> BitUtils.asShort(gpr[11]);
+            case R12W -> BitUtils.asShort(gpr[12]);
+            case R13W -> BitUtils.asShort(gpr[13]);
+            case R14W -> BitUtils.asShort(gpr[14]);
+            case R15W -> BitUtils.asShort(gpr[15]);
+            case CS -> seg[0];
+            case DS -> seg[1];
+            case ES -> seg[2];
+            case FS -> seg[3];
+            case GS -> seg[4];
+            case SS -> seg[5];
+        };
+    }
+
+    public void set(final Register16 r, final short v) {
+        switch (r) {
+            case AX -> gpr[0] = (gpr[0] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case BX -> gpr[1] = (gpr[1] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case CX -> gpr[2] = (gpr[2] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case DX -> gpr[3] = (gpr[3] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case SP -> gpr[4] = (gpr[4] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case BP -> gpr[5] = (gpr[5] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case SI -> gpr[6] = (gpr[6] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case DI -> gpr[7] = (gpr[7] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R8W -> gpr[8] = (gpr[8] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R9W -> gpr[9] = (gpr[9] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R10W -> gpr[10] = (gpr[10] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R11W -> gpr[11] = (gpr[11] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R12W -> gpr[12] = (gpr[12] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R13W -> gpr[13] = (gpr[13] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R14W -> gpr[14] = (gpr[14] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case R15W -> gpr[15] = (gpr[15] & 0xffffffffff0000L) | BitUtils.asLong(v);
+            case CS -> seg[0] = v;
+            case DS -> seg[1] = v;
+            case ES -> seg[2] = v;
+            case FS -> seg[3] = v;
+            case GS -> seg[4] = v;
+            case SS -> seg[5] = v;
         }
     }
 
