@@ -19,6 +19,7 @@ package com.ledmington.readelf;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -60,9 +61,11 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 public final class Main {
 
-    private static final PrintWriter out =
-            System.console() != null ? System.console().writer() : new PrintWriter(System.out);
+    private static final PrintWriter out = System.console() != null
+            ? System.console().writer()
+            : new PrintWriter(System.out, false, StandardCharsets.UTF_8);
 
+    @SuppressWarnings("PMD.AvoidReassigningLoopVariables")
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
@@ -84,6 +87,7 @@ public final class Main {
         Optional<String> sectionNameToBeHexDumped = Optional.empty();
         Optional<Integer> sectionIndexToBeStringDumped = Optional.empty();
         Optional<String> sectionNameToBeStringDumped = Optional.empty();
+
         for (int i = 0; i < args.length; i++) {
             final String arg = args[i];
             switch (arg) {
@@ -178,12 +182,12 @@ public final class Main {
                         out.flush();
                         System.exit(0);
                     }
-                    if (args[i + 1].chars().allMatch(Character::isDigit)) {
-                        sectionIndexToBeHexDumped = Optional.of(Integer.parseInt(args[i + 1]));
-                    } else {
-                        sectionNameToBeHexDumped = Optional.of(args[i + 1]);
-                    }
                     i++;
+                    if (args[i].chars().allMatch(Character::isDigit)) {
+                        sectionIndexToBeHexDumped = Optional.of(Integer.parseInt(args[i]));
+                    } else {
+                        sectionNameToBeHexDumped = Optional.of(args[i]);
+                    }
                     break;
                 case "-p":
                     // --string-dump=<number|name>
@@ -193,12 +197,12 @@ public final class Main {
                         out.flush();
                         System.exit(0);
                     }
-                    if (args[i + 1].chars().allMatch(Character::isDigit)) {
-                        sectionIndexToBeStringDumped = Optional.of(Integer.parseInt(args[i + 1]));
-                    } else {
-                        sectionNameToBeStringDumped = Optional.of(args[i + 1]);
-                    }
                     i++;
+                    if (args[i].chars().allMatch(Character::isDigit)) {
+                        sectionIndexToBeStringDumped = Optional.of(Integer.parseInt(args[i]));
+                    } else {
+                        sectionNameToBeStringDumped = Optional.of(args[i]);
+                    }
                     break;
                 case "-R":
                     // --relocated-dump=<number|name>
@@ -226,14 +230,7 @@ public final class Main {
                             } else {
                                 sectionNameToBeHexDumped = Optional.of(s);
                             }
-                        } else {
-                            out.printf("readelf: Error: Invalid option '%s'%n", arg);
-                            printHelp();
-                            out.flush();
-                            System.exit(0);
-                        }
-                    } else if (arg.startsWith("-")) {
-                        if (arg.startsWith("--string-dump=")) {
+                        } else if (arg.startsWith("--string-dump=")) {
                             final String s = arg.split("=")[1];
                             if (s.chars().allMatch(Character::isDigit)) {
                                 sectionIndexToBeStringDumped = Optional.of(Integer.parseInt(s));
@@ -305,7 +302,7 @@ public final class Main {
             if (displayFileHeader) {
                 out.println();
             }
-            printSectionGroups(elf);
+            printSectionGroups();
         }
 
         if (displayProgramHeaders) {
@@ -489,7 +486,7 @@ public final class Main {
         out.println();
     }
 
-    private static void printSectionGroups(final ELF elf) {
+    private static void printSectionGroups() {
         out.println("There are no section groups in this file.");
     }
 
@@ -507,7 +504,8 @@ public final class Main {
         System.exit(-1);
     }
 
-    private static void printVersionSection(final Section s, final Section[] sectionTable) {
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+    private static void printVersionSection(final Section s, final Section... sectionTable) {
         final SectionHeader sh = s.getHeader();
         if (s instanceof GnuVersionRequirementsSection gvrs) {
             out.printf(
@@ -633,131 +631,134 @@ public final class Main {
     private static void printNoteSection(final NoteSection ns) {
         out.printf("Displaying notes found in: %s%n", ns.getName());
         out.println("  Owner                Data size \tDescription");
+
         for (final NoteSectionEntry nse : ns.getEntries()) {
             out.printf(
                     "  %-20s 0x%08x\t%s%n",
                     nse.getName(), nse.getDescriptionLength(), nse.getType().getDescription());
 
             switch (nse.getType()) {
-                case NT_GNU_ABI_TAG -> {
-                    final byte[] v = new byte[nse.getDescriptionLength()];
-                    for (int i = 0; i < v.length; i++) {
-                        v[i] = nse.getDescriptionByte(i);
-                    }
-                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
-                    final int osCode = robb.read4();
-                    out.printf(
-                            "    OS: %s, ABI: %d.%d.%d%n",
-                            switch (osCode) {
-                                case 0 -> "Linux";
-                                case 1 -> "GNU";
-                                case 2 -> "Solaris2";
-                                case 3 -> "FreeBSD";
-                                default -> throw new IllegalArgumentException(
-                                        String.format("Unknown ABI tag %d (0x%08x)", osCode, osCode));
-                            },
-                            robb.read4(),
-                            robb.read4(),
-                            robb.read4());
-                }
+                case NT_GNU_ABI_TAG -> printGNUABITag(nse);
                 case NT_GNU_BUILD_ID -> out.printf(
                         "    Build ID: %s%n",
                         IntStream.range(0, nse.getDescriptionLength())
                                 .mapToObj(i -> String.format("%02x", nse.getDescriptionByte(i)))
                                 .collect(Collectors.joining()));
-                case NT_GNU_PROPERTY_TYPE_0 -> {
-                    final byte[] v = new byte[nse.getDescriptionLength()];
-                    for (int i = 0; i < v.length; i++) {
-                        v[i] = nse.getDescriptionByte(i);
-                    }
-                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
-                    while (robb.getPosition() < nse.getDescriptionLength()) {
-                        final int code = robb.read4();
-                        final GnuPropertyType type = GnuPropertyType.fromCode(code);
-                        switch (type) {
-                            case GNU_PROPERTY_NO_COPY_ON_PROTECTED -> throw new UnsupportedOperationException(
-                                    "Unimplemented case: " + type);
-                            case GNU_PROPERTY_STACK_SIZE -> throw new UnsupportedOperationException(
-                                    "Unimplemented case: " + type);
-                            case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
-                                out.print("        x86 ISA needed: ");
-                                int x = robb.read4();
-                                while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
-                                    if ((x & 1) != 0) {
-                                        out.print("x86-64-baseline");
-                                        x &= 0xfffffffe;
-                                        if (x != 0) {
-                                            out.print(", ");
-                                        }
-                                    }
-                                    if ((x & 2) != 0) {
-                                        out.print("x86-64-v2");
-                                        x &= 0xfffffffc;
-                                        if (x != 0) {
-                                            out.print(", ");
-                                        }
-                                    }
-                                    if ((x & 4) != 0) {
-                                        out.print("x86-64-v3");
-                                        x &= 0xfffffff8;
-                                        if (x != 0) {
-                                            out.print(", ");
-                                        }
-                                    }
-                                    if ((x & 8) != 0) {
-                                        out.print("x86-64-v4");
-                                        x &= 0xfffffff0;
-                                        if (x != 0) {
-                                            out.print(", <unknown>");
-                                        }
-                                    }
-
-                                    if (robb.getPosition() < nse.getDescriptionLength()) {
-                                        x = robb.read4();
-                                        if (x != 0) {
-                                            out.print(", ");
-                                        }
-                                    }
-                                }
-                                out.println();
-                            }
-                            case GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
-                                    "Unimplemented case: " + type);
-                            case GNU_PROPERTY_X86_FEATURE_1_AND -> {
-                                out.print("      Properties: x86 feature: ");
-                                int x = robb.read4();
-                                while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
-                                    if ((x & 1) != 0) {
-                                        out.print("IBT");
-                                        x &= 0xfffffffe;
-                                        if (x != 0) {
-                                            out.print(", ");
-                                        }
-                                    }
-                                    if ((x & 2) != 0) {
-                                        out.print("SHSTK");
-                                        x &= 0xfffffffc;
-                                        if (x != 0) {
-                                            out.print(", <unknown>");
-                                        }
-                                    }
-
-                                    if (robb.getPosition() < nse.getDescriptionLength()) {
-                                        x = robb.read4();
-                                        if (x != 0) {
-                                            out.print(", ");
-                                        }
-                                    }
-                                }
-                                out.println();
-                            }
-                        }
-                    }
-                }
+                case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown note section entry type '%s'", nse.getType()));
             }
         }
+    }
+
+    private static void printGNUProperties(final NoteSectionEntry nse) {
+        final byte[] v = new byte[nse.getDescriptionLength()];
+        for (int i = 0; i < v.length; i++) {
+            v[i] = nse.getDescriptionByte(i);
+        }
+        final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
+        while (robb.getPosition() < nse.getDescriptionLength()) {
+            final int code = robb.read4();
+            final GnuPropertyType type = GnuPropertyType.fromCode(code);
+            switch (type) {
+                case GNU_PROPERTY_NO_COPY_ON_PROTECTED,
+                        GNU_PROPERTY_STACK_SIZE,
+                        GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
+                        "Unimplemented case: " + type);
+                case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
+                    out.print("        x86 ISA needed: ");
+                    int x = robb.read4();
+                    while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
+                        if ((x & 1) != 0) {
+                            out.print("x86-64-baseline");
+                            x &= 0xfffffffe;
+                            if (x != 0) {
+                                out.print(", ");
+                            }
+                        }
+                        if ((x & 2) != 0) {
+                            out.print("x86-64-v2");
+                            x &= 0xfffffffc;
+                            if (x != 0) {
+                                out.print(", ");
+                            }
+                        }
+                        if ((x & 4) != 0) {
+                            out.print("x86-64-v3");
+                            x &= 0xfffffff8;
+                            if (x != 0) {
+                                out.print(", ");
+                            }
+                        }
+                        if ((x & 8) != 0) {
+                            out.print("x86-64-v4");
+                            x &= 0xfffffff0;
+                            if (x != 0) {
+                                out.print(", <unknown>");
+                            }
+                        }
+
+                        if (robb.getPosition() < nse.getDescriptionLength()) {
+                            x = robb.read4();
+                            if (x != 0) {
+                                out.print(", ");
+                            }
+                        }
+                    }
+                    out.println();
+                }
+                case GNU_PROPERTY_X86_FEATURE_1_AND -> {
+                    out.print("      Properties: x86 feature: ");
+                    int x = robb.read4();
+                    while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
+                        if ((x & 1) != 0) {
+                            out.print("IBT");
+                            x &= 0xfffffffe;
+                            if (x != 0) {
+                                out.print(", ");
+                            }
+                        }
+                        if ((x & 2) != 0) {
+                            out.print("SHSTK");
+                            x &= 0xfffffffc;
+                            if (x != 0) {
+                                out.print(", <unknown>");
+                            }
+                        }
+
+                        if (robb.getPosition() < nse.getDescriptionLength()) {
+                            x = robb.read4();
+                            if (x != 0) {
+                                out.print(", ");
+                            }
+                        }
+                    }
+                    out.println();
+                }
+            }
+        }
+    }
+
+    private static void printGNUABITag(final NoteSectionEntry nse) {
+        final byte[] v = new byte[nse.getDescriptionLength()];
+        for (int i = 0; i < v.length; i++) {
+            v[i] = nse.getDescriptionByte(i);
+        }
+        final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
+        final int osCode = robb.read4();
+        out.printf(
+                "    OS: %s, ABI: %d.%d.%d%n",
+                switch (osCode) {
+                    case 0 -> "Linux";
+                    case 1 -> "GNU";
+                    case 2 -> "Solaris2";
+                    case 3 -> "FreeBSD";
+                    default -> throw new IllegalArgumentException(
+                            String.format("Unknown ABI tag %d (0x%08x)", osCode, osCode));
+                },
+                robb.read4(),
+                robb.read4(),
+                robb.read4());
     }
 
     private static void printSectionDetails(final ELF elf) {
@@ -789,7 +790,7 @@ public final class Main {
         }
     }
 
-    private static void printSymbolTable(final SymbolTable s, final Section[] sectionTable) {
+    private static void printSymbolTable(final SymbolTable s, final Section... sectionTable) {
         final SymbolTableEntry[] st = s.getSymbolTable();
         out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), st.length);
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");

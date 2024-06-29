@@ -31,9 +31,9 @@ public final class MemoryController implements Memory {
     private final IntervalArray canExecute = new IntervalArray();
 
     /**
-     * Creates a MemoryControler by wrapping the given Memory object.
+     * Creates a MemoryController with the given initializer.
      *
-     * @param mem The Memory object to be wrapped.
+     * @param memInit The {@link MemoryInitializer} object to be used.
      */
     public MemoryController(final MemoryInitializer memInit) {
         this.mem = new RandomAccessMemory(Objects.requireNonNull(memInit));

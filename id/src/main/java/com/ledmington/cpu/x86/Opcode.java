@@ -412,6 +412,11 @@ public enum Opcode {
         this.mnemonicString = Objects.requireNonNull(mnemonicString);
     }
 
+    /**
+     * Returns the mnemonic for this opcode.
+     *
+     * @return The mnemonic for this opcode.
+     */
     public String mnemonic() {
         return mnemonicString;
     }

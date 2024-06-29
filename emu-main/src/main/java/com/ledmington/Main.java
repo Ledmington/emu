@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -32,7 +33,7 @@ public final class Main {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
     private static final PrintWriter out = System.console() == null
-            ? new PrintWriter(System.out)
+            ? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
             : System.console().writer();
 
     private static ELF parseELF(final String filename) {
@@ -60,7 +61,7 @@ public final class Main {
         final Emulator emu = new X86Emulator();
 
         logger.info(" ### Execution start ### ");
-        emu.run(elf, EmulatorConstants.getMemoryInitializer());
+        emu.run(elf, com.ledmington.emu.EmulatorConstants.getMemoryInitializer());
         logger.info(" ### Execution end ### ");
     }
 
@@ -98,8 +99,10 @@ public final class Main {
                 case "-q", "--quiet" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
                 case "-v" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
                 case "-vv" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-                case "--mem-init-random" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
-                case "--mem-init-zero" -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+                case "--mem-init-random" -> com.ledmington.emu.EmulatorConstants.setMemoryInitializer(
+                        MemoryInitializer::random);
+                case "--mem-init-zero" -> com.ledmington.emu.EmulatorConstants.setMemoryInitializer(
+                        MemoryInitializer::zero);
                 case "-V", "--version" -> {
                     out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
                     out.flush();

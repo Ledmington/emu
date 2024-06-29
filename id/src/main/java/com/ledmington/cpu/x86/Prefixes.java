@@ -19,6 +19,17 @@ package com.ledmington.cpu.x86;
 
 import java.util.Optional;
 
+/**
+ * This class represents all possible prefixes which an x86 instruction can have.
+ *
+ * @param p1 Prefix of the first group (LOCK, REP, REPNE).
+ * @param p2 Prefix of the second group.
+ * @param hasOperandSizeOverridePrefix Prefix of the third group (operand size override).
+ * @param hasAddressSizeOverridePrefix Prefix of the fourth group (address size override).
+ * @param hasRexPrefix Field which tells if the REX prefix has been used. It may seem redundant with the "rex" field but
+ *     it is needed for certain 8-bit instructions.
+ * @param rex The REX prefix of the instruction. In case "hasRexPrefix" is false, this field is just 0x40.
+ */
 public record Prefixes(
         Optional<InstructionPrefix> p1,
         Optional<Byte> p2,

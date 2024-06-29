@@ -28,15 +28,31 @@ public final class SegmentRegister implements Register {
     private final Register16 seg;
     private final Register reg;
 
+    /**
+     * Creates a segment register with the given couple of registers.
+     *
+     * @param segment The 16-bit register.
+     * @param register The general-purpose register.
+     */
     public SegmentRegister(final Register16 segment, final Register register) {
         this.seg = Objects.requireNonNull(segment);
         this.reg = Objects.requireNonNull(register);
     }
 
+    /**
+     * Returns the segment.
+     *
+     * @return The segment.
+     */
     public Register16 segment() {
         return seg;
     }
 
+    /**
+     * Returns the general-purpose register.
+     *
+     * @return The general-purpose register.
+     */
     public Register register() {
         return reg;
     }

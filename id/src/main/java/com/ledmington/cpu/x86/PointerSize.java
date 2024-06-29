@@ -41,10 +41,21 @@ public enum PointerSize {
         this.size = size;
     }
 
+    /**
+     * Returns the number of bits represented by this pointer size.
+     *
+     * @return The number of bits represented by this pointer size.
+     */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Returns the proper PointerSize object from corresponding to the given size in bits.
+     *
+     * @param size The size in bits of the pointer.
+     * @return The proper PointerSize object.
+     */
     public static PointerSize fromSize(final int size) {
         return switch (size) {
             case 8 -> BYTE_PTR;

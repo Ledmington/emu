@@ -224,6 +224,11 @@ public final class X86Emulator implements Emulator {
         }
     }
 
+    /**
+     * Loads the given ELF section into memory without modifying or checking the memory permissions.
+     *
+     * @param sec The ELF section to be loaded
+     */
     public void loadSection(final Section sec) {
         Objects.requireNonNull(sec);
 

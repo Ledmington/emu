@@ -94,7 +94,7 @@ public final class RexPrefix {
      *
      * @return True if the 'R' bit is set, false otherwise.
      */
-    public boolean ModRMRegExtension() {
+    public boolean getModRMRegExtension() {
         return rBit;
     }
 
@@ -139,7 +139,7 @@ public final class RexPrefix {
      *
      * @return True if the 'B' bit is set, false otherwise.
      */
-    public boolean ModRMRMExtension() {
+    public boolean getModRMRMExtension() {
         return bBit;
     }
 

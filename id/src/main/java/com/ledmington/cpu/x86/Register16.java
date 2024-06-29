@@ -70,16 +70,16 @@ public enum Register16 implements Register {
     /** The register R15W. */
     R15W("r15w"),
 
-    /** The segment register CS. */
+    /** The segment register CS (Code Segment). */
     CS("cs"),
 
-    /** The segment register DS. */
+    /** The segment register DS (Data Segment). */
     DS("ds"),
 
-    /** The segment register SS. */
+    /** The segment register SS (Stack Segment). */
     SS("ss"),
 
-    /** The segment register ES. */
+    /** The segment register ES (Extra Segment). */
     ES("es"),
 
     /** The segment register FS. */

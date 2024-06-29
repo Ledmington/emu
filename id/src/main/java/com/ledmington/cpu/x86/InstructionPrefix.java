@@ -50,6 +50,11 @@ public enum InstructionPrefix {
         };
     }
 
+    /**
+     * Returns the 1-byte code with this prefix.
+     *
+     * @return The 1-byte code with this prefix.
+     */
     public byte getCode() {
         return code;
     }
