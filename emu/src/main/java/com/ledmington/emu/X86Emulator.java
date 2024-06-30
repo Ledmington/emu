@@ -108,6 +108,7 @@ public final class X86Emulator implements Emulator {
                 "Setting stack size to %,d bytes (%.3f MB) starting at 0x%x",
                 allocatedMemory, (double) allocatedMemory / 1_000_000.0, highestAddress + allocatedMemory);
         mem.setPermissions(highestAddress, highestAddress + allocatedMemory, true, true, false);
+
         // we make RSP point at the last 8 bytes of allocated memory
         regFile.set(Register64.RSP, highestAddress + allocatedMemory - 8L);
 
