@@ -54,7 +54,7 @@ public final class Main {
         return ELFReader.read(bytes);
     }
 
-    private static void run(final String filename, final String[] commandLineArguments) {
+    private static void run(final String filename, final String... commandLineArguments) {
         final ELF elf = parseELF(filename);
         logger.info("ELF file parsed successfully");
 
@@ -73,54 +73,53 @@ public final class Main {
 
         String[] innerArgs = null;
 
-        loop:
         for (int i = 0; i < args.length; i++) {
             final String arg = args[i];
-            switch (arg) {
-                case "-h", "--help" -> {
-                    out.print(String.join(
-                            "\n",
-                            "",
-                            " emu - CPU emulator",
-                            "",
-                            " Usage: emu [OPTIONS] FILE",
-                            "",
-                            " Command line options:",
-                            "",
-                            " -h, --help   Shows this help message and exits.",
-                            " -q, --quiet  Only errors are reported.",
-                            " -v           Errors, warnings and info messages are reported.",
-                            " -vv          All messages are reported.",
-                            "",
-                            " --mem-init-random  Uninitialized memory has random values (default).",
-                            " --mem-init-zero    Uninitialized memory contains binary zero.",
-                            "",
-                            " FILE       The ELF executable file to emulate.",
-                            ""));
-                    out.flush();
-                    System.exit(0);
-                }
-                case "-q", "--quiet" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-                case "-v" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
-                case "-vv" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-                case "--mem-init-random" -> com.ledmington.emu.EmulatorConstants.setMemoryInitializer(
-                        MemoryInitializer::random);
-                case "--mem-init-zero" -> com.ledmington.emu.EmulatorConstants.setMemoryInitializer(
-                        MemoryInitializer::zero);
-                case "-V", "--version" -> {
-                    out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
-                    out.flush();
-                    System.exit(0);
-                }
-                default -> {
-                    filename = arg;
 
-                    // all the next command-line arguments are considered to be related to the
-                    // executable to be emulated
-                    innerArgs = new String[args.length - i - 1];
-                    System.arraycopy(args, i + 1, innerArgs, 0, innerArgs.length);
-                    break loop;
-                }
+            if ("-h".equals(arg) || "--help".equals(arg)) {
+                out.print(String.join(
+                        "\n",
+                        "",
+                        " emu - CPU emulator",
+                        "",
+                        " Usage: emu [OPTIONS] FILE",
+                        "",
+                        " Command line options:",
+                        "",
+                        " -h, --help   Shows this help message and exits.",
+                        " -q, --quiet  Only errors are reported.",
+                        " -v           Errors, warnings and info messages are reported.",
+                        " -vv          All messages are reported.",
+                        "",
+                        " --mem-init-random  Uninitialized memory has random values (default).",
+                        " --mem-init-zero    Uninitialized memory contains binary zero.",
+                        "",
+                        " FILE       The ELF executable file to emulate.",
+                        ""));
+                out.flush();
+                System.exit(0);
+            } else if ("-q".equals(arg) || "--quiet".equals(arg)) {
+                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+            } else if ("-v".equals(arg)) {
+                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+            } else if ("-vv".equals(arg)) {
+                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+            } else if ("--mem-init-random".equals(arg)) {
+                EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
+            } else if ("--mem-init-zero".equals(arg)) {
+                EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+            } else if ("-V".equals(arg) || "--version".equals(arg)) {
+                out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
+                out.flush();
+                System.exit(0);
+            } else {
+                filename = arg;
+
+                // all the next command-line arguments are considered to be related to the
+                // executable to be emulated
+                innerArgs = new String[args.length - i - 1];
+                System.arraycopy(args, i + 1, innerArgs, 0, innerArgs.length);
+                break;
             }
         }
 

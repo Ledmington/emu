@@ -220,7 +220,7 @@ public final class Main {
                     notImplemented();
                     break;
 
-                // TODO: add the other CLI flags
+                    // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -324,8 +324,8 @@ public final class Main {
             if (displaySectionToSegmentMapping) {
                 out.println();
             }
-            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"),
-                    (StringTableSection) elf.getSectionByName(".strtab"));
+            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (StringTableSection)
+                    elf.getSectionByName(".strtab"));
         }
 
         if (displayRelocationSections) {
@@ -541,8 +541,8 @@ public final class Main {
                     " Addr: 0x%016x Offset: 0x%08x  Link: %d (%s)%n",
                     sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
             final SymbolTableEntry[] symbolTable = ((SymbolTable) linkedSection).getSymbolTable();
-            final StringTableSection stringTable = (StringTableSection) sectionTable[linkedSection.getHeader()
-                    .getLinkedSectionIndex()];
+            final StringTableSection stringTable =
+                    (StringTableSection) sectionTable[linkedSection.getHeader().getLinkedSectionIndex()];
             for (int i = 0; i < gvs.getVersionsLength(); i++) {
                 if (i % 4 == 0) {
                     out.printf("  %03x: ", i);
@@ -684,9 +684,8 @@ public final class Main {
             switch (type) {
                 case GNU_PROPERTY_NO_COPY_ON_PROTECTED,
                         GNU_PROPERTY_STACK_SIZE,
-                        GNU_PROPERTY_X86_ISA_1_USED ->
-                    throw new UnsupportedOperationException(
-                            "Unimplemented case: " + type);
+                        GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
+                        "Unimplemented case: " + type);
                 case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
                     out.print("        x86 ISA needed: ");
                     int x = robb.read4();
@@ -816,7 +815,8 @@ public final class Main {
         final SymbolTableEntry[] st = s.getSymbolTable();
         out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), st.length);
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
-        final StringTableSection strtab = (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
+        final StringTableSection strtab =
+                (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
         for (int i = 0; i < st.length; i++) {
             final SymbolTableEntry ste = st[i];
             out.printf(
@@ -920,7 +920,8 @@ public final class Main {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
                                 final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd = sectionStart + s.getHeader().getSectionSize();
+                                final long sectionEnd =
+                                        sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;

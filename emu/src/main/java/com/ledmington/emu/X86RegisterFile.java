@@ -104,6 +104,12 @@ public final class X86RegisterFile {
         }
     }
 
+    /**
+     * Returns the value of the given 16-bit register as a short.
+     *
+     * @param r The register to be read.
+     * @return The value in the register.
+     */
     public short get(final Register16 r) {
         return switch (r) {
             case AX -> BitUtils.asShort(gpr[0]);
@@ -131,6 +137,12 @@ public final class X86RegisterFile {
         };
     }
 
+    /**
+     * Sets the value of the given 16-bit register to given short. This operation does not modify the other registers.
+     *
+     * @param r The Register to be overwritten.
+     * @param v The value to be written.
+     */
     public void set(final Register16 r, final short v) {
         switch (r) {
             case AX -> gpr[0] = (gpr[0] & 0xffffffffff0000L) | BitUtils.asLong(v);
