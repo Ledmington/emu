@@ -12,13 +12,13 @@ The project is divided as follows:
 
 ## How to build
 ### Linux
-This command formats the code, compiles and creates a single executable jar with all the dependencies inside.
+This command formats the code, compiles and creates a single executable jar with all the dependencies inside for each of the executables provided.
 ```bash
 ./gradlew fatJar
 ```
 
-### Window
-This command formats the code, compiles and creates a single executable jar with all the dependencies inside.
+### Windows
+This command formats the code, compiles and creates a single executable jar with all the dependencies inside for each of the executables provided.
 ```batch
 gradlew.bat fatJar
 ```
