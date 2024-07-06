@@ -689,7 +689,8 @@ public final class Main {
         out.printf("Displaying notes found in: %s%n", ns.getName());
         out.println("  Owner                Data size \tDescription");
 
-        for (final NoteSectionEntry nse : ns.getEntries()) {
+        for (int i = 0; i < ns.getNumEntries(); i++) {
+            final NoteSectionEntry nse = ns.getEntry(i);
             out.printf(
                     "  %-20s 0x%08x\t%s%n",
                     nse.getName(), nse.getDescriptionLength(), nse.getType().getDescription());
@@ -699,7 +700,7 @@ public final class Main {
                 case NT_GNU_BUILD_ID -> out.printf(
                         "    Build ID: %s%n",
                         IntStream.range(0, nse.getDescriptionLength())
-                                .mapToObj(i -> String.format("%02x", nse.getDescriptionByte(i)))
+                                .mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
                 default -> throw new IllegalArgumentException(
