@@ -29,4 +29,4 @@ package com.ledmington.elf.section;
  * @param addend This member specifies a constant addend used to compute the value to be stored into the relocatable
  *     field.
  */
-public record RelocationAddendEntry(long offset, long info, long addend) {}
+public record RelocationAddendEntry(long offset, int symbolTableIndex, RelocationAddendEntryType type, long addend) {}

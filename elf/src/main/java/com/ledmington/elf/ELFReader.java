@@ -351,7 +351,7 @@ public final class ELFReader {
             } else if (typeName.equals(SectionHeaderType.SHT_NOBITS.getName())) {
                 sectionTable[k] = new NoBitsSection(name, sh);
             } else if (typeName.equals(SectionHeaderType.SHT_RELA.getName())) {
-                sectionTable[k] = new RelocationAddendSection(name, sh, b, fileHeader.is32Bit());
+                sectionTable[k] = new RelocationAddendSection(name, sh, b, fileHeader.is32Bit(), fileHeader.getISA());
             } else if (typeName.equals(SectionHeaderType.SHT_REL.getName())) {
                 sectionTable[k] = new RelocationSection(name, sh, b, fileHeader.is32Bit());
             } else if (GnuVersionSection.getStandardName().equals(name)) {

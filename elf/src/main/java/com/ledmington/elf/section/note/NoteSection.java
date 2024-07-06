@@ -19,8 +19,8 @@ package com.ledmington.elf.section.note;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -78,27 +78,25 @@ public interface NoteSection extends LoadableSection {
         return entries.toArray(new NoteSectionEntry[0]);
     }
 
-    /**
-     * Returns the entry table.
-     *
-     * @return The table of NoteSectionEntry (non-null).
-     */
-    NoteSectionEntry[] getEntries();
+    int getNumEntries();
+
+    NoteSectionEntry getEntry(final int idx);
 
     @Override
     default byte[] getLoadableContent() {
-        final NoteSectionEntry[] entries = getEntries();
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(Arrays.stream(entries)
-                .mapToInt(NoteSectionEntry::getAlignedSize)
+        final int numEntries = getNumEntries();
+        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(IntStream.range(0, numEntries)
+                .map(i -> getEntry(i).getAlignedSize())
                 .sum());
         int runningTotal = 0;
-        for (final NoteSectionEntry nse : entries) {
+        for (int i = 0; i < numEntries; i++) {
+            final NoteSectionEntry nse = getEntry(i);
             bb.write(nse.getName().length());
             bb.write(nse.getDescriptionLength());
             bb.write(nse.getType().getCode());
             bb.write(nse.getName().getBytes(StandardCharsets.UTF_8));
-            for (int i = 0; i < nse.getDescriptionLength(); i++) {
-                bb.write(nse.getDescriptionByte(i));
+            for (int j = 0; j < nse.getDescriptionLength(); j++) {
+                bb.write(nse.getDescriptionByte(j));
             }
             runningTotal += nse.getAlignedSize();
             bb.setPosition(runningTotal);

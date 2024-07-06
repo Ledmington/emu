@@ -79,8 +79,13 @@ public final class BasicNoteSection implements NoteSection {
     }
 
     @Override
-    public NoteSectionEntry[] getEntries() {
-        return Arrays.copyOf(entries, entries.length);
+    public int getNumEntries() {
+        return entries.length;
+    }
+
+    @Override
+    public NoteSectionEntry getEntry(final int idx) {
+        return entries[idx];
     }
 
     @Override

@@ -19,11 +19,7 @@ package com.ledmington.elf.section;
 
 /** An interface for ELF section which behave like a symbol table. */
 public interface SymbolTable extends Section {
+    int getSymbolTableLength();
 
-    /**
-     * Returns the symbol table as an array of symbol table entries.
-     *
-     * @return The symbol table.
-     */
-    SymbolTableEntry[] getSymbolTable();
+    SymbolTableEntry getSymbolTableEntry(final int idx);
 }

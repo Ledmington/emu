@@ -43,6 +43,7 @@ import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.RelocationAddendEntry;
+import com.ledmington.elf.section.RelocationAddendEntryType;
 import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
@@ -324,8 +325,7 @@ public final class Main {
             if (displaySectionToSegmentMapping) {
                 out.println();
             }
-            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (StringTableSection)
-                    elf.getSectionByName(".strtab"));
+            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), elf.sectionTable());
         }
 
         if (displayRelocationSections) {
@@ -514,6 +514,8 @@ public final class Main {
     @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     private static void printVersionSection(final Section s, final Section... sectionTable) {
         final SectionHeader sh = s.getHeader();
+        final Section linkedSection = sectionTable[sh.getLinkedSectionIndex()];
+
         if (s instanceof GnuVersionRequirementsSection gvrs) {
             out.printf(
                     "Version needs section '%s' contains %d entr%s:%n",
@@ -524,7 +526,8 @@ public final class Main {
                     sh.getFileOffset(),
                     sh.getLinkedSectionIndex(),
                     sectionTable[sh.getLinkedSectionIndex()].getName());
-            final StringTableSection strtab = (StringTableSection) sectionTable[sh.getLinkedSectionIndex()];
+
+            final StringTableSection strtab = (StringTableSection) linkedSection;
             for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
                 final GnuVersionRequirementEntry gvre = gvrs.getEntry(i);
                 out.printf(
@@ -533,28 +536,30 @@ public final class Main {
                 out.printf("%s%n", gvre);
             }
         } else if (s instanceof GnuVersionSection gvs) {
-            final Section linkedSection = sectionTable[sh.getLinkedSectionIndex()];
             out.printf(
                     "Version symbols section '%s' contains %d entr%s:%n",
                     s.getName(), gvs.getVersionsLength(), gvs.getVersionsLength() == 1 ? "y" : "ies");
             out.printf(
-                    " Addr: 0x%016x Offset: 0x%08x  Link: %d (%s)%n",
+                    " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
                     sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
-            final SymbolTableEntry[] symbolTable = ((SymbolTable) linkedSection).getSymbolTable();
+
+            final SymbolTable symbolTable = (SymbolTable) linkedSection;
             final StringTableSection stringTable =
                     (StringTableSection) sectionTable[linkedSection.getHeader().getLinkedSectionIndex()];
             for (int i = 0; i < gvs.getVersionsLength(); i++) {
                 if (i % 4 == 0) {
-                    out.printf("  %03x: ", i);
+                    out.printf("  %03x:   ", i);
                 }
                 out.printf(
-                        "%2d (%s)\t",
+                        "%2d (%s)  ",
                         gvs.getVersion(i),
                         gvs.getVersion(i) == 0
                                 ? "*local*"
                                 : (gvs.getVersion(i) == 1
                                         ? "*global*"
-                                        : stringTable.getString(symbolTable[i].nameOffset())));
+                                        : stringTable.getString(symbolTable
+                                                .getSymbolTableEntry(i)
+                                                .nameOffset())));
                 if (i % 4 == 3) {
                     out.println();
                 }
@@ -565,10 +570,27 @@ public final class Main {
         }
     }
 
-    private static void printDynamicSection(final DynamicSection ds, final StringTableSection strtab) {
+    private static void printDynamicSection(final DynamicSection ds, final Section[] sectionTable) {
         final SectionHeader dsh = ds.getHeader();
         out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), ds.getTableLength());
         out.println("  Tag        Type                         Name/Value");
+
+        long dt_strtab_offset = -1L;
+        for (int i = 0; i < ds.getTableLength(); i++) {
+            final DynamicTableEntry dte = ds.getEntry(i);
+            if (dte.getTag() == DynamicTableEntryTag.DT_STRTAB) {
+                dt_strtab_offset = dte.getContent();
+                break;
+            }
+        }
+
+        StringTableSection strtab = null;
+        for (final Section s : sectionTable) {
+            if (s.getHeader().getFileOffset() == dt_strtab_offset) {
+                strtab = (StringTableSection) s;
+                break;
+            }
+        }
 
         for (int i = 0; i < ds.getTableLength(); i++) {
             final DynamicTableEntry dte = ds.getEntry(i);
@@ -609,7 +631,6 @@ public final class Main {
                     || dte.getTag() == DynamicTableEntryTag.DT_RELACOUNT) {
                 out.printf("%d%n", content);
             } else if (dte.getTag() == DynamicTableEntryTag.DT_NEEDED) {
-                // FIXME
                 out.printf("Shared library: [%s]%n", strtab.getString(BitUtils.asInt(content)));
             } else {
                 out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
@@ -620,30 +641,45 @@ public final class Main {
     private static void printRelocationSection(
             final RelocationAddendSection ras, final Section[] sectionTable, final boolean is32Bit) {
         final SectionHeader rash = ras.getHeader();
-        final RelocationAddendEntry[] relocationAddendTable = ras.getRelocationAddendTable();
         final SymbolTable symtab = (SymbolTable) sectionTable[ras.getHeader().getLinkedSectionIndex()];
+        final StringTableSection symstrtab =
+                (StringTableSection) sectionTable[symtab.getHeader().getLinkedSectionIndex()];
+
         out.printf(
                 "Relocation section '%s' at offset 0x%x contains %,d entr%s:%n",
                 ras.getName(),
                 rash.getFileOffset(),
-                relocationAddendTable.length,
-                relocationAddendTable.length == 1 ? "y" : "ies");
+                ras.getRelocationAddendTableLength(),
+                ras.getRelocationAddendTableLength() == 1 ? "y" : "ies");
         out.println("  Offset          Info           Type           Sym. Value    Sym. Name + Addend");
-        for (final RelocationAddendEntry rae : relocationAddendTable) {
+
+        for (int i = 0; i < ras.getRelocationAddendTableLength(); i++) {
+            final RelocationAddendEntry rae = ras.getRelocationAddendEntry(i);
             if (is32Bit) {
-                final byte symbolTableIndex = BitUtils.asByte(rae.info() >>> 8);
-                final byte type = BitUtils.asByte(rae.info());
+                final byte symbolTableIndex = BitUtils.asByte(rae.symbolTableIndex());
+                final RelocationAddendEntryType type = rae.type();
                 // TODO
             } else {
-                final int symbolTableIndex = BitUtils.asInt(rae.info() >>> 32);
-                final int type = BitUtils.asInt(rae.info());
+                final int symbolTableIndex = rae.symbolTableIndex();
+                final RelocationAddendEntryType type = rae.type();
+                final SymbolTableEntry symbol = symtab.getSymbolTableEntry(symbolTableIndex);
                 out.printf(
-                        "%012x  %012x %d %016x %d%n",
+                        "%012x  %012x %s ",
                         rae.offset(),
-                        rae.info(),
-                        type,
-                        symtab.getSymbolTable()[symbolTableIndex].value(),
-                        symtab.getSymbolTable()[symbolTableIndex].nameOffset() + rae.addend());
+                        (BitUtils.asLong(symbolTableIndex) << 32) | BitUtils.asLong(type.getCode()),
+                        type.name().substring(0, Math.min(type.name().length(), 17)));
+
+                if (type == RelocationAddendEntryType.R_X86_64_RELATIVE) {
+                    // B + A
+                    out.printf("                   %x%n", rae.addend());
+                } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
+                        || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT) {
+                    // S
+                    out.printf(
+                            "%016x %s + %d%n", symbol.value(), symstrtab.getString(symbol.nameOffset()), rae.addend());
+                } else {
+                    out.println("unknown");
+                }
             }
         }
         out.println();
@@ -812,13 +848,12 @@ public final class Main {
     }
 
     private static void printSymbolTable(final SymbolTable s, final Section... sectionTable) {
-        final SymbolTableEntry[] st = s.getSymbolTable();
-        out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), st.length);
+        out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), s.getSymbolTableLength());
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
         final StringTableSection strtab =
                 (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
-        for (int i = 0; i < st.length; i++) {
-            final SymbolTableEntry ste = st[i];
+        for (int i = 0; i < s.getSymbolTableLength(); i++) {
+            final SymbolTableEntry ste = s.getSymbolTableEntry(i);
             out.printf(
                     "    %2d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
                     i,
@@ -913,7 +948,7 @@ public final class Main {
         for (int i = 0; i < pht.length; i++) {
             final PHTEntry phte = pht[i];
             out.printf(
-                    "   %02d    %s%n",
+                    "   %02d     %s %n",
                     i,
                     Arrays.stream(sections)
                             .filter(s -> {

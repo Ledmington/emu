@@ -20,6 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.elf.ISA;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -43,28 +44,37 @@ public final class RelocationAddendSection implements LoadableSection {
      * @param is32Bit Used for alignment.
      */
     public RelocationAddendSection(
-            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+            final String name,
+            final SectionHeader sectionHeader,
+            final ReadOnlyByteBuffer b,
+            final boolean is32Bit,
+            final ISA isa) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
         this.is32Bit = is32Bit;
+
         b.setPosition(sectionHeader.getFileOffset());
         final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
         this.relocationAddendTable = new RelocationAddendEntry[nEntries];
+
         for (int i = 0; i < nEntries; i++) {
             final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
             final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+            final int symbolTableIndex =
+                    is32Bit ? BitUtils.asInt((info & 0x000000000000ff00L) >>> 8) : BitUtils.asInt(info >>> 32);
+            final RelocationAddendEntryType type = RelocationAddendEntryType.fromCode(
+                    isa, is32Bit ? BitUtils.asInt(BitUtils.asByte(info)) : BitUtils.asInt(info));
             final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            this.relocationAddendTable[i] = new RelocationAddendEntry(offset, info, addend);
+            this.relocationAddendTable[i] = new RelocationAddendEntry(offset, symbolTableIndex, type, addend);
         }
     }
 
-    /**
-     * Returns a non-null array of relocation entries with explicit addends.
-     *
-     * @return The array of relocation entries.
-     */
-    public RelocationAddendEntry[] getRelocationAddendTable() {
-        return Arrays.copyOf(relocationAddendTable, relocationAddendTable.length);
+    public int getRelocationAddendTableLength() {
+        return relocationAddendTable.length;
+    }
+
+    public RelocationAddendEntry getRelocationAddendEntry(final int idx) {
+        return relocationAddendTable[idx];
     }
 
     @Override
@@ -80,15 +90,17 @@ public final class RelocationAddendSection implements LoadableSection {
     @Override
     public byte[] getLoadableContent() {
         final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24));
-        for (final RelocationAddendEntry relocationAddendEntry : relocationAddendTable) {
+        for (final RelocationAddendEntry entry : relocationAddendTable) {
             if (is32Bit) {
-                bb.write(BitUtils.asInt(relocationAddendEntry.offset()));
-                bb.write(BitUtils.asInt(relocationAddendEntry.info()));
-                bb.write(BitUtils.asInt(relocationAddendEntry.addend()));
+                bb.write(BitUtils.asInt(entry.offset()));
+                bb.write(BitUtils.asInt((BitUtils.asByte(entry.symbolTableIndex()) << 8)
+                        | (BitUtils.asByte(entry.type().getCode()))));
+                bb.write(BitUtils.asInt(entry.addend()));
             } else {
-                bb.write(relocationAddendEntry.offset());
-                bb.write(relocationAddendEntry.info());
-                bb.write(relocationAddendEntry.addend());
+                bb.write(entry.offset());
+                bb.write((BitUtils.asLong(entry.symbolTableIndex()) << 32)
+                        | (BitUtils.asLong(entry.type().getCode())));
+                bb.write(entry.addend());
             }
         }
         return bb.array();
