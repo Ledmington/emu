@@ -591,6 +591,9 @@ public final class Main {
                 break;
             }
         }
+        if (strtab == null) {
+            throw new IllegalArgumentException("String table not found");
+        }
 
         for (int i = 0; i < ds.getTableLength(); i++) {
             final DynamicTableEntry dte = ds.getEntry(i);

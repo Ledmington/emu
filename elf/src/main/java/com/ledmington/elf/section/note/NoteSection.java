@@ -78,8 +78,19 @@ public interface NoteSection extends LoadableSection {
         return entries.toArray(new NoteSectionEntry[0]);
     }
 
+    /**
+     * Returns the number of entries in the note section table.
+     *
+     * @return The number of entries.
+     */
     int getNumEntries();
 
+    /**
+     * Returns the entry at the given index in the note section table.
+     *
+     * @param idx The index of the entry.
+     * @return The entry at teh given index.
+     */
     NoteSectionEntry getEntry(final int idx);
 
     @Override

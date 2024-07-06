@@ -93,8 +93,8 @@ public final class RelocationAddendSection implements LoadableSection {
         for (final RelocationAddendEntry entry : relocationAddendTable) {
             if (is32Bit) {
                 bb.write(BitUtils.asInt(entry.offset()));
-                bb.write(BitUtils.asInt((BitUtils.asByte(entry.symbolTableIndex()) << 8)
-                        | (BitUtils.asByte(entry.type().getCode()))));
+                bb.write(((entry.symbolTableIndex() & 0x000000ff) << 8)
+                        | (entry.type().getCode() & 0x000000ff));
                 bb.write(BitUtils.asInt(entry.addend()));
             } else {
                 bb.write(entry.offset());
