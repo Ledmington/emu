@@ -17,10 +17,10 @@
  */
 package com.ledmington.emu;
 
-import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
@@ -70,18 +70,22 @@ public final class X86Emulator implements Emulator {
     }
 
     @Override
-    public void run(final ELF elf, final MemoryInitializer memInit, final String... commandLineArguments) {
+    public void run(
+            final ELF elf,
+            final MemoryInitializer memInit,
+            final long stackSize,
+            final String... commandLineArguments) {
         setup(elf, memInit);
 
-        if (elf.fileHeader().getFileType() != FileType.ET_EXEC
-                && elf.fileHeader().getFileType() != FileType.ET_DYN) {
+        if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
+                && elf.getFileHeader().getFileType() != FileType.ET_DYN) {
             throw new IllegalArgumentException(String.format(
                     "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-                    elf.fileHeader().getFileType()));
+                    elf.getFileHeader().getFileType()));
         }
 
-        this.instructionFetcher.setPosition(elf.fileHeader().getEntryPointVirtualAddress());
-        logger.debug("Entry point virtual address : 0x%x", elf.fileHeader().getEntryPointVirtualAddress());
+        this.instructionFetcher.setPosition(elf.getFileHeader().getEntryPointVirtualAddress());
+        logger.debug("Entry point virtual address : 0x%x", elf.getFileHeader().getEntryPointVirtualAddress());
 
         loadELF();
 
@@ -98,19 +102,19 @@ public final class X86Emulator implements Emulator {
         }
 
         // setup stack
-        final long allocatedMemory = 100_000_000L; // 100 MB
-        final long highestAddress = Arrays.stream(elf.sectionTable())
+        final long highestAddress = IntStream.range(0, elf.getSectionTableLength())
+                .mapToObj(i -> elf.getSection(i))
                 .map(sec ->
                         sec.getHeader().getVirtualAddress() + sec.getHeader().getSectionSize())
                 .max(Long::compare)
                 .orElseThrow();
         logger.debug(
                 "Setting stack size to %,d bytes (%.3f MB) starting at 0x%x",
-                allocatedMemory, (double) allocatedMemory / 1_000_000.0, highestAddress + allocatedMemory);
-        mem.setPermissions(highestAddress, highestAddress + allocatedMemory, true, true, false);
+                stackSize, (double) stackSize / 1_000_000.0, highestAddress + stackSize);
+        mem.setPermissions(highestAddress, highestAddress + stackSize, true, true, false);
 
         // we make RSP point at the last 8 bytes of allocated memory
-        regFile.set(Register64.RSP, highestAddress + allocatedMemory - 8L);
+        regFile.set(Register64.RSP, highestAddress + stackSize - 8L);
 
         // run pre-constructors? (.preinit_array)
 
@@ -209,7 +213,8 @@ public final class X86Emulator implements Emulator {
 
     private void loadELF() {
         logger.debug("Loading ELF segments into memory");
-        for (final PHTEntry phte : elf.programHeaderTable()) {
+        for (int i = 0; i < elf.getProgramHeaderTableLength(); i++) {
+            final PHTEntry phte = elf.getProgramHeader(i);
             if (phte.getType() != PHTEntryType.PT_LOAD) {
                 // This segment is not loadable
                 continue;
@@ -229,7 +234,8 @@ public final class X86Emulator implements Emulator {
         }
 
         logger.debug("Loading ELF sections into memory");
-        for (final Section sec : elf.sectionTable()) {
+        for (int i = 0; i < elf.getSectionTableLength(); i++) {
+            final Section sec = elf.getSection(i);
             if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
                 loadSection(sec);
             }

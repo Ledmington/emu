@@ -28,7 +28,9 @@ public interface Emulator {
      *
      * @param elf The file to be executed.
      * @param memInit The {@link MemoryInitializer} to be used when reading uninitialized memory.
-     * @aram commandLineArguments The command-line arguments to be passed to the executable.
+     * @param stackSize The number of bytes to allocate for the stack.
+     * @param commandLineArguments The command-line arguments to be passed to the executable.
      */
-    void run(final ELF elf, final MemoryInitializer memInit, final String... commandLineArguments);
+    void run(
+            final ELF elf, final MemoryInitializer memInit, final long stackSize, final String... commandLineArguments);
 }
