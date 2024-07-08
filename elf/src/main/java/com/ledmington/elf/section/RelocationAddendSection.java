@@ -42,6 +42,7 @@ public final class RelocationAddendSection implements LoadableSection {
      * @param sectionHeader The header of this section.
      * @param b The readOnlyByteBuffer to read data from.
      * @param is32Bit Used for alignment.
+     * @param isa The ISA to be used to parse entries.
      */
     public RelocationAddendSection(
             final String name,
@@ -69,10 +70,21 @@ public final class RelocationAddendSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns the number of entries in the relocation section.
+     *
+     * @return The number of entries in the relocation section.
+     */
     public int getRelocationAddendTableLength() {
         return relocationAddendTable.length;
     }
 
+    /**
+     * Returns the i-th entry in the relocation section.
+     *
+     * @param idx The index of the entry to return.
+     * @return The i-th entry in the relocation section.
+     */
     public RelocationAddendEntry getRelocationAddendEntry(final int idx) {
         return relocationAddendTable[idx];
     }

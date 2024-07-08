@@ -27,12 +27,12 @@ import com.ledmington.elf.section.Section;
  *
  * <p>References: <a href="https://uclibc.org/docs/elf.pdf">32 bit</a> and <a
  * href="https://uclibc.org/docs/elf-64-gen.pdf">64 bit</a>.
- *
- * @param fileHeader The file header containing general information about the file.
- * @param programHeaderTable The program header table containing information about memory segments.
- * @param sectionTable The section table containing information about file sections.
  */
-public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section... sectionTable) {
+public final class ELF implements ProgramHeaderTable, SectionTable {
+
+    private final FileHeader fileHeader;
+    private final PHTEntry[] programHeaderTable;
+    private final Section[] sectionTable;
 
     /**
      * Creates an ELF object.
@@ -58,33 +58,28 @@ public record ELF(FileHeader fileHeader, PHTEntry[] programHeaderTable, Section.
      *
      * @return The File Header.
      */
-    @Override
-    public FileHeader fileHeader() {
+    public FileHeader getFileHeader() {
         return fileHeader;
     }
 
-    /**
-     * Returns the Program Header Table of this ELF file object.
-     *
-     * @return The Program Header Table.
-     */
     @Override
-    public PHTEntry[] programHeaderTable() {
-        final PHTEntry[] v = new PHTEntry[programHeaderTable.length];
-        System.arraycopy(programHeaderTable, 0, v, 0, programHeaderTable.length);
-        return v;
+    public int getProgramHeaderTableLength() {
+        return programHeaderTable.length;
     }
 
-    /**
-     * Returns the Section Table of this ELF file object.
-     *
-     * @return The Section Table.
-     */
     @Override
-    public Section[] sectionTable() {
-        final Section[] v = new Section[sectionTable.length];
-        System.arraycopy(sectionTable, 0, v, 0, sectionTable.length);
-        return v;
+    public PHTEntry getProgramHeader(int idx) {
+        return programHeaderTable[idx];
+    }
+
+    @Override
+    public int getSectionTableLength() {
+        return sectionTable.length;
+    }
+
+    @Override
+    public Section getSection(final int idx) {
+        return sectionTable[idx];
     }
 
     /**

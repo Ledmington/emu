@@ -117,8 +117,16 @@ public enum RelocationAddendEntryType {
     R_X86_64_GOTPCRELX(41),
     /** Load from 32 bit signed pc relative offset to GOT entry with REX prefix, relaxable. */
     R_X86_64_REX_GOTPCRELX(42),
+    /** Unknown/undefined. */
     R_X86_64_NUM(43);
 
+    /**
+     * Returns the type of relocation entry corresponding to the given ISA and code combination.
+     *
+     * @param isa The ISA the code is referring to.
+     * @param code The actual 32-bit code of the type.
+     * @return The proper type of the entry.
+     */
     public static RelocationAddendEntryType fromCode(final ISA isa, final int code) {
         if (isa == ISA.AMD_X86_64) {
             for (final RelocationAddendEntryType type : values()) {
@@ -138,6 +146,11 @@ public enum RelocationAddendEntryType {
         this.code = code;
     }
 
+    /**
+     * Returns the 32-bit code of this entry type.
+     *
+     * @return The 32-bit code of this entry type.
+     */
     public int getCode() {
         return code;
     }

@@ -15,23 +15,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.elf.section;
+package com.ledmington.elf;
 
-/** An interface for ELF sections which behave like a symbol table. */
-public interface SymbolTable extends Section {
+import com.ledmington.elf.section.Section;
 
-    /**
-     * Returns the number of entries in the symbol table.
-     *
-     * @return The number of entries in the symbol table.
-     */
-    int getSymbolTableLength();
+/** An interface for ELF files/objects which behave like a section table. */
+public interface SectionTable {
 
     /**
-     * Returns the i-th entry in the symbol table.
+     * Returns the number of sections.
      *
-     * @param idx The index of the entry to return.
-     * @return The i-th entry in the symbol table.
+     * @return The number of sections.
      */
-    SymbolTableEntry getSymbolTableEntry(final int idx);
+    int getSectionTableLength();
+
+    /**
+     * Returns the i-th section.
+     *
+     * @param idx The index of the section to return.
+     * @return The i-th section.
+     */
+    Section getSection(final int idx);
 }

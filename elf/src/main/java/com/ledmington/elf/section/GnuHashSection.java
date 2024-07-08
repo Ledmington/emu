@@ -26,13 +26,16 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
-/** A gnu-style hash table ELF section. */
+/**
+ * A GNU-style hash table ELF section. A useful reference can be found <a href=
+ * "https://sourceware.org/legacy-ml/binutils/2006-10/msg00377.html">here</a>.
+ */
 public final class GnuHashSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
     private final boolean is32Bit;
-    private final int symOffset;
+    private final int symIndex;
     private final int bloomShift;
     private final long[] bloom;
     private final int[] buckets;
@@ -54,7 +57,7 @@ public final class GnuHashSection implements LoadableSection {
         b.setPosition(sectionHeader.getFileOffset());
 
         final int nBuckets = b.read4();
-        this.symOffset = b.read4();
+        this.symIndex = b.read4();
         final int bloomSize = b.read4();
         this.bloomShift = b.read4();
         this.bloom = new long[bloomSize];
@@ -67,6 +70,15 @@ public final class GnuHashSection implements LoadableSection {
         for (int i = 0; i < nBuckets; i++) {
             buckets[i] = b.read4();
         }
+    }
+
+    /**
+     * Returns the number of symbols which cannot be looked up using {@code .gnu.hash}.
+     *
+     * @return The number of symbols which cannot be looked up using this section.
+     */
+    public int getSymbolTableIndex() {
+        return symIndex;
     }
 
     /**
@@ -122,7 +134,7 @@ public final class GnuHashSection implements LoadableSection {
         final WriteOnlyByteBuffer bb =
                 new WriteOnlyByteBufferV1(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
         bb.write(buckets.length);
-        bb.write(symOffset);
+        bb.write(symIndex);
         bb.write(bloom.length);
         bb.write(bloomShift);
         for (final long l : bloom) {
@@ -141,7 +153,7 @@ public final class GnuHashSection implements LoadableSection {
         return "GnuHashSection(name=" + name + ";header="
                 + header + ";is32Bit="
                 + is32Bit + ";symOffset="
-                + symOffset + ";bloomShift="
+                + symIndex + ";bloomShift="
                 + bloomShift + ";bloom="
                 + Arrays.toString(bloom) + ";buckets="
                 + Arrays.toString(buckets) + ')';
@@ -153,7 +165,7 @@ public final class GnuHashSection implements LoadableSection {
         h = 31 * h + name.hashCode();
         h = 31 * h + header.hashCode();
         h = 31 * h + HashUtils.hash(is32Bit);
-        h = 31 * h + symOffset;
+        h = 31 * h + symIndex;
         h = 31 * h + bloomShift;
         h = 31 * h + Arrays.hashCode(bloom);
         h = 31 * h + Arrays.hashCode(buckets);
@@ -175,7 +187,7 @@ public final class GnuHashSection implements LoadableSection {
         return this.name.equals(ghs.name)
                 && this.header.equals(ghs.header)
                 && this.is32Bit == ghs.is32Bit
-                && this.symOffset == ghs.symOffset
+                && this.symIndex == ghs.symIndex
                 && this.bloomShift == ghs.bloomShift
                 && Arrays.equals(this.bloom, ghs.bloom)
                 && Arrays.equals(this.buckets, ghs.buckets);

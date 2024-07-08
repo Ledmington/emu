@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -33,6 +32,8 @@ import com.ledmington.elf.ELFReader;
 import com.ledmington.elf.FileHeader;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
+import com.ledmington.elf.ProgramHeaderTable;
+import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.DynamicTableEntry;
@@ -325,7 +326,7 @@ public final class Main {
             if (displaySectionToSegmentMapping) {
                 out.println();
             }
-            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), elf.sectionTable());
+            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (SectionTable) elf);
         }
 
         if (displayRelocationSections) {
@@ -334,49 +335,50 @@ public final class Main {
             }
             printRelocationSection(
                     (RelocationAddendSection) elf.getSectionByName(".rela.dyn"),
-                    elf.sectionTable(),
-                    elf.fileHeader().is32Bit());
+                    (SectionTable) elf,
+                    elf.getFileHeader().is32Bit());
             printRelocationSection(
                     (RelocationAddendSection) elf.getSectionByName(".rela.plt"),
-                    elf.sectionTable(),
-                    elf.fileHeader().is32Bit());
+                    (SectionTable) elf,
+                    elf.getFileHeader().is32Bit());
         }
 
         if (displayDynamicSymbolTable) {
             if (displayRelocationSections) {
                 out.println();
             }
-            printSymbolTable((DynamicSymbolTableSection) elf.getSectionByName(".dynsym"), elf.sectionTable());
+            printSymbolTable((DynamicSymbolTableSection) elf.getSectionByName(".dynsym"), (SectionTable) elf);
         }
 
         if (displaySymbolTable) {
             if (displayDynamicSymbolTable) {
                 out.println();
             }
-            printSymbolTable((SymbolTableSection) elf.getSectionByName(".symtab"), elf.sectionTable());
+            printSymbolTable((SymbolTableSection) elf.getSectionByName(".symtab"), (SectionTable) elf);
         }
 
         if (displayGnuHashSection) {
             if (displaySymbolTable) {
                 out.println();
             }
-            printGnuHashSection((GnuHashSection) elf.getSectionByName(".gnu.hash"));
+            printGnuHashSection((GnuHashSection) elf.getSectionByName(".gnu.hash"), (SectionTable) elf);
         }
 
         if (displayVersionSections) {
             if (displayGnuHashSection) {
                 out.println();
             }
-            printVersionSection(elf.getSectionByName(".gnu.version"), elf.sectionTable());
+            printVersionSection(elf.getSectionByName(".gnu.version"), (SectionTable) elf);
             out.println();
-            printVersionSection(elf.getSectionByName(".gnu.version_r"), elf.sectionTable());
+            printVersionSection(elf.getSectionByName(".gnu.version_r"), (SectionTable) elf);
         }
 
         if (displayNoteSections) {
             if (displayGnuHashSection) {
                 out.println();
             }
-            for (final Section s : elf.sectionTable()) {
+            for (int i = 0; i < elf.getSectionTableLength(); i++) {
+                final Section s = elf.getSection(i);
                 if (!s.getName().startsWith(".note")) {
                     continue;
                 }
@@ -407,7 +409,7 @@ public final class Main {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        printStringDump(b, elf.sectionTable()[sectionIndex]);
+        printStringDump(b, elf.getSection(sectionIndex));
     }
 
     private static boolean isAsciiPrintable(final byte x) {
@@ -456,7 +458,7 @@ public final class Main {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        printHexDump(b, elf.sectionTable()[sectionIndex]);
+        printHexDump(b, elf.getSection(sectionIndex));
     }
 
     private static void printHexDump(final ReadOnlyByteBuffer b, final Section s) {
@@ -497,11 +499,23 @@ public final class Main {
         out.println("There are no section groups in this file.");
     }
 
-    private static void printGnuHashSection(final GnuHashSection s) {
+    private static void printGnuHashSection(final GnuHashSection s, final SectionTable sectionTable) {
         out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBucketsLength());
         out.println(" Length  Number     % of total  Coverage");
+
+        final SymbolTable symtab =
+                (SymbolTable) sectionTable.getSection(s.getHeader().getLinkedSectionIndex());
+
+        out.printf("String: '%s'%n", symtab.getSymbolTableEntry(s.getSymbolTableIndex()));
+
+        out.println("buckets:");
         for (int b = 0; b < s.getBucketsLength(); b++) {
-            out.printf("  bucket %d: %d TODO%n", b, s.getBucket(b));
+            out.printf("  bucket %d: %d%n", b, s.getBucket(b));
+        }
+
+        out.println("bloom:");
+        for (int b = 0; b < s.getBloomFilterLength(); b++) {
+            out.printf("  bloom %d: %d (0x%016x)%n", b, s.getBloomFilter(b), s.getBloomFilter(b));
         }
     }
 
@@ -512,9 +526,9 @@ public final class Main {
     }
 
     @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-    private static void printVersionSection(final Section s, final Section... sectionTable) {
+    private static void printVersionSection(final Section s, final SectionTable sectionTable) {
         final SectionHeader sh = s.getHeader();
-        final Section linkedSection = sectionTable[sh.getLinkedSectionIndex()];
+        final Section linkedSection = sectionTable.getSection(sh.getLinkedSectionIndex());
 
         if (s instanceof GnuVersionRequirementsSection gvrs) {
             out.printf(
@@ -525,7 +539,7 @@ public final class Main {
                     sh.getVirtualAddress(),
                     sh.getFileOffset(),
                     sh.getLinkedSectionIndex(),
-                    sectionTable[sh.getLinkedSectionIndex()].getName());
+                    sectionTable.getSection(sh.getLinkedSectionIndex()).getName());
 
             final StringTableSection strtab = (StringTableSection) linkedSection;
             for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
@@ -544,8 +558,8 @@ public final class Main {
                     sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
 
             final SymbolTable symbolTable = (SymbolTable) linkedSection;
-            final StringTableSection stringTable =
-                    (StringTableSection) sectionTable[linkedSection.getHeader().getLinkedSectionIndex()];
+            final StringTableSection stringTable = (StringTableSection)
+                    sectionTable.getSection(linkedSection.getHeader().getLinkedSectionIndex());
             for (int i = 0; i < gvs.getVersionsLength(); i++) {
                 if (i % 4 == 0) {
                     out.printf("  %03x:   ", i);
@@ -570,7 +584,7 @@ public final class Main {
         }
     }
 
-    private static void printDynamicSection(final DynamicSection ds, final Section[] sectionTable) {
+    private static void printDynamicSection(final DynamicSection ds, final SectionTable sectionTable) {
         final SectionHeader dsh = ds.getHeader();
         out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), ds.getTableLength());
         out.println("  Tag        Type                         Name/Value");
@@ -585,7 +599,8 @@ public final class Main {
         }
 
         StringTableSection strtab = null;
-        for (final Section s : sectionTable) {
+        for (int i = 0; i < sectionTable.getSectionTableLength(); i++) {
+            final Section s = sectionTable.getSection(i);
             if (s.getHeader().getFileOffset() == dt_strtab_offset) {
                 strtab = (StringTableSection) s;
                 break;
@@ -642,11 +657,12 @@ public final class Main {
     }
 
     private static void printRelocationSection(
-            final RelocationAddendSection ras, final Section[] sectionTable, final boolean is32Bit) {
+            final RelocationAddendSection ras, final SectionTable sectionTable, final boolean is32Bit) {
         final SectionHeader rash = ras.getHeader();
-        final SymbolTable symtab = (SymbolTable) sectionTable[ras.getHeader().getLinkedSectionIndex()];
+        final SymbolTable symtab =
+                (SymbolTable) sectionTable.getSection(ras.getHeader().getLinkedSectionIndex());
         final StringTableSection symstrtab =
-                (StringTableSection) sectionTable[symtab.getHeader().getLinkedSectionIndex()];
+                (StringTableSection) sectionTable.getSection(symtab.getHeader().getLinkedSectionIndex());
 
         out.printf(
                 "Relocation section '%s' at offset 0x%x contains %,d entr%s:%n",
@@ -831,9 +847,9 @@ public final class Main {
                 "       Size              EntSize          Info              Align",
                 "       Flags"));
 
-        final Section[] sections = elf.sectionTable();
-        for (int i = 0; i < sections.length; i++) {
-            final Section s = sections[i];
+        final SectionTable sections = (SectionTable) elf;
+        for (int i = 0; i < sections.getSectionTableLength(); i++) {
+            final Section s = sections.getSection(i);
             final SectionHeader sh = s.getHeader();
             out.printf("  [%2d] %s%n", i, s.getName());
             out.printf(
@@ -851,11 +867,12 @@ public final class Main {
         }
     }
 
-    private static void printSymbolTable(final SymbolTable s, final Section... sectionTable) {
+    private static void printSymbolTable(final SymbolTable s, final SectionTable sectionTable) {
         out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), s.getSymbolTableLength());
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
         final StringTableSection strtab =
-                (StringTableSection) sectionTable[s.getHeader().getLinkedSectionIndex()];
+                (StringTableSection) sectionTable.getSection(s.getHeader().getLinkedSectionIndex());
+
         for (int i = 0; i < s.getSymbolTableLength(); i++) {
             final SymbolTableEntry ste = s.getSymbolTableEntry(i);
             out.printf(
@@ -880,9 +897,9 @@ public final class Main {
                           [Nr] Name              Type             Address           Offset
                                Size              EntSize          Flags  Link  Info  Align""");
 
-        final Section[] sections = elf.sectionTable();
-        for (int i = 0; i < sections.length; i++) {
-            final Section s = sections[i];
+        final SectionTable sections = (SectionTable) elf;
+        for (int i = 0; i < sections.getSectionTableLength(); i++) {
+            final Section s = sections.getSection(i);
             final SectionHeader sh = s.getHeader();
             out.printf(
                     "  [%2d] %-17s %-16s %016x  %08x%n       %016x  %016x %3s    %4d  %4d     %d%n",
@@ -921,8 +938,9 @@ public final class Main {
                           Type           Offset             VirtAddr           PhysAddr
                                          FileSiz            MemSiz              Flags  Align""");
 
-        final PHTEntry[] pht = elf.programHeaderTable();
-        for (final PHTEntry phte : pht) {
+        final ProgramHeaderTable pht = (ProgramHeaderTable) elf;
+        for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
+            final PHTEntry phte = pht.getProgramHeader(i);
             out.printf(
                     "  %-14s 0x%016x 0x%016x 0x%016x%n                 0x%016x 0x%016x  %3s    0x%x%n",
                     phte.getType().getName(),
@@ -947,14 +965,15 @@ public final class Main {
         out.println(" Section to Segment mapping:\n" + //
                 "  Segment Sections...");
 
-        final PHTEntry[] pht = elf.programHeaderTable();
-        final Section[] sections = elf.sectionTable();
-        for (int i = 0; i < pht.length; i++) {
-            final PHTEntry phte = pht[i];
+        final ProgramHeaderTable pht = (ProgramHeaderTable) elf;
+        final SectionTable sections = (SectionTable) elf;
+        for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
+            final PHTEntry phte = pht.getProgramHeader(i);
             out.printf(
                     "   %02d     %s %n",
                     i,
-                    Arrays.stream(sections)
+                    IntStream.range(0, sections.getSectionTableLength())
+                            .mapToObj(k -> sections.getSection(k))
                             .filter(s -> {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
@@ -999,7 +1018,7 @@ public final class Main {
                     bb.read1());
         }
 
-        final FileHeader fh = elf.fileHeader();
+        final FileHeader fh = elf.getFileHeader();
 
         out.printf("  Class:                             %s%n", fh.is32Bit() ? "ELF32" : "ELF64");
         out.printf(
