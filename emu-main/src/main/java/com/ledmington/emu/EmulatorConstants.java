@@ -52,7 +52,8 @@ public final class EmulatorConstants {
     }
 
     public static void setStackSize(final long newStackSize) {
-        if (newStackSize < 1) {
+        final long minStackSize = 1L;
+        if (newStackSize < minStackSize) {
             throw new IllegalArgumentException("Stack size must be at least 1");
         }
         stackSize = newStackSize;
