@@ -30,6 +30,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes : Paragraph 2.1.1.
@@ -51,6 +52,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
      *
      * @param b The byte buffer to read bytes from.
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public InstructionDecoderV1(final ReadOnlyByteBuffer b) {
         this.b = Objects.requireNonNull(b);
     }
@@ -61,7 +63,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
      * @param code A non-null and non empty byte array.
      */
     public InstructionDecoderV1(final byte[] code) {
-        this(new ReadOnlyByteBufferV1(code));
+        this.b = new ReadOnlyByteBufferV1(Objects.requireNonNull(code));
     }
 
     @Override
@@ -71,7 +73,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
         final List<Instruction> instructions = new ArrayList<>();
         while (b.getPosition() < nBytesToDecode) {
             final long pos = b.getPosition();
-            final Instruction inst = decodeOne();
+            final Instruction inst = decode();
             { // Debugging info
                 final long codeLen = b.getPosition() - pos;
                 b.setPosition(pos);
@@ -90,7 +92,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
     }
 
     @Override
-    public Instruction decodeOne() {
+    public Instruction decode() {
         final Prefixes pref = parsePrefixes();
 
         final byte opcodeFirstByte = b.read1();

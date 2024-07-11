@@ -122,7 +122,7 @@ public final class X86Emulator implements Emulator {
 
         while (true) {
             // dec.goTo(this.instructionFetcher.position());
-            final Instruction inst = dec.decodeOne();
+            final Instruction inst = dec.decode();
             // this.instructionFetcher.setPosition(dec.position());
 
             logger.debug(inst.toIntelSyntax());

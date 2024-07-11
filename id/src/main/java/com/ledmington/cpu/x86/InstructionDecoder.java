@@ -35,5 +35,5 @@ public interface InstructionDecoder {
      *
      * @return The decoded instruction.
      */
-    Instruction decodeOne();
+    Instruction decode();
 }

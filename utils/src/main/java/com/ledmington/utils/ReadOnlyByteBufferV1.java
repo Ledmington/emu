@@ -110,11 +110,6 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
     }
 
     @Override
-    public ReadOnlyByteBuffer copy() {
-        return new ReadOnlyByteBufferV1(this.b, this.isLE, this.alignment);
-    }
-
-    @Override
     public String toString() {
         return "ReadOnlyByteBufferV1(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE
                 + ";alignment=" + alignment + ")";

@@ -71,6 +71,6 @@ public class Decoding {
 
     @Benchmark
     public void parse(final Blackhole bh) {
-        bh.consume(id.decodeOne());
+        bh.consume(id.decode());
     }
 }

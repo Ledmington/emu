@@ -21,7 +21,7 @@ package com.ledmington.utils;
  * An interface for a ByteBuffer which allows only read operations. Most methods are already implemented which call on
  * the {@link #read()}, {@link #getPosition()} and {@link #setPosition(long)} methods.
  */
-public interface ReadOnlyByteBuffer extends Copyable<ReadOnlyByteBuffer> {
+public interface ReadOnlyByteBuffer {
 
     /**
      * Returns the current endianness.

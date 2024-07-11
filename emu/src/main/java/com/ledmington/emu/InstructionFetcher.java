@@ -82,11 +82,6 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
     }
 
     @Override
-    public ReadOnlyByteBuffer copy() {
-        throw new UnsupportedOperationException("InstructionFetcher does not allow to be copied.");
-    }
-
-    @Override
     public String toString() {
         return "InstructionFetcher(rip=" + instructionPointerReader.get() + ')';
     }
