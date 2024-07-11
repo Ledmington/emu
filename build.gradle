@@ -66,15 +66,12 @@ allprojects {
 
     test {
         useJUnitPlatform()
-        // failFast true
         finalizedBy jacocoTestReport
     }
 
     jacocoTestReport {
         dependsOn test // tests are required to run before generating the report
         reports {
-            // xml.required = true
-            // csv.required = true
             html.required = true
             html.outputLocation = layout.buildDirectory.dir('jacoco')
         }
@@ -87,8 +84,6 @@ allprojects {
 
     testlogger {
         theme 'standard'
-        // theme 'mocha'
-        // theme 'mocha-parallel'
 
         showExceptions true
         showStackTraces true
@@ -99,7 +94,7 @@ allprojects {
 
         showSummary true
         showSimpleNames false
-        showPassed true
+        showPassed false // enable for verbose tests
         showSkipped true
         showFailed true
         showOnlySlow false
