@@ -15,12 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.elf.section;
+package com.ledmington.elf.section.rel;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.ISA;
+import com.ledmington.elf.section.LoadableSection;
+import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
