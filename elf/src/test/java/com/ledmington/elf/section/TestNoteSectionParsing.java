@@ -45,7 +45,8 @@ final class TestNoteSectionParsing {
                                 // real dump of the .note.gnu.property section of a gcc
                                 // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.gnu.property /usr/bin/gcc'
-                                "040000002000000005000000474e5500020000c0040000000300000000000000028000c0040000000100000000000000"),
+                                "040000002000000005000000474e5500" + "020000c0040000000300000000000000"
+                                        + "028000c0040000000100000000000000"),
                         false,
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
@@ -92,7 +93,7 @@ final class TestNoteSectionParsing {
                                 // real dump of the .note.gnu.build-id section of a gcc
                                 // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.gnu.build-id /usr/bin/gcc'
-                                "040000001400000003000000474e5500bee27145fd189a47a04c578e204051498e609ed2"),
+                                "040000001400000003000000474e5500" + "bee27145fd189a47a04c578e20405149" + "8e609ed2"),
                         false,
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
@@ -127,7 +128,7 @@ final class TestNoteSectionParsing {
                                 // real dump of the .note.ABI-tag section of a gcc
                                 // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.ABI-tag /usr/bin/gcc'
-                                "040000001000000001000000474e550000000000030000000200000000000000"),
+                                "040000001000000001000000474e5500" + "00000000030000000200000000000000"),
                         false,
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
@@ -151,6 +152,53 @@ final class TestNoteSectionParsing {
                                         (byte) 0x00
                                     },
                                     NoteSectionEntryType.NT_GNU_ABI_TAG,
+                                    false)
+                        }),
+                Arguments.of(
+                        convertHexStringToByteArray(
+                                // real dump of the .note.stapsdt section of a gcc
+                                // 11.4.0 executable, obtained with
+                                // 'readelf -x .note.stapsdt /usr/bin/gcc'
+                                "080000003a0000000300000073746170" //
+                                        + "00000010736474001146440000000000" //
+                                        + "50de4c00000000200000000000000000" //
+                                        + "000000006c6962730000003074646378" //
+                                        + "78006361746368003840257200000040" //
+                                        + "382038402d3830282572627829000000" //
+                                        + "00000050080000003600000003000000" //
+                                        + "737461700000006073647400b2544400" //
+                                        + "0000000050de4c000000007000000000" //
+                                        + "00000000000000006c69627300000080" //
+                                        + "7464637878007468726f770038402572" //
+                                        + "00000090646920384025727369000000" //
+                                        + "08000000000000a03800000003000000" //
+                                        + "7374617073647400000000b04b554400" //
+                                        + "0000000050de4c0000000000000000c0" //
+                                        + "00000000000000006c69627374646378" //
+                                        + "000000d0780072657468726f77003840" //
+                                        + "25726478000000e02038402572617800"),
+                        false,
+                        new NoteSectionEntry[] {
+                            new NoteSectionEntry(
+                                    "stapsdt",
+                                    new byte[] {
+                                        (byte) 0x00
+                                    },
+                                    NoteSectionEntryType.NT_STAPSDT,
+                                    false),
+                            new NoteSectionEntry(
+                                    "stapsdt",
+                                    new byte[] {
+                                        (byte) 0x00
+                                    },
+                                    NoteSectionEntryType.NT_STAPSDT,
+                                    false),
+                            new NoteSectionEntry(
+                                    "stapsdt",
+                                    new byte[] {
+                                        (byte) 0x00
+                                    },
+                                    NoteSectionEntryType.NT_STAPSDT,
                                     false)
                         }));
     }

@@ -35,7 +35,9 @@ public enum NoteSectionEntryType {
     NT_GNU_GOLD_VERSION(4, "NT_GNU_GOLD_VERSION"),
 
     /** Program property. */
-    NT_GNU_PROPERTY_TYPE_0(5, "NT_GNU_PROPERTY_TYPE_0");
+    NT_GNU_PROPERTY_TYPE_0(5, "NT_GNU_PROPERTY_TYPE_0"),
+
+    NT_STAPSDT(0x70617473, "NT_STAPSDT (SystemTap probe descriptors)");
 
     private final int code;
     private final String description;
@@ -58,6 +60,7 @@ public enum NoteSectionEntryType {
             case 3 -> NT_GNU_BUILD_ID;
             case 4 -> NT_GNU_GOLD_VERSION;
             case 5 -> NT_GNU_PROPERTY_TYPE_0;
+            case 0x70617473 -> NT_STAPSDT;
             default -> throw new IllegalArgumentException(
                     String.format("Unknown note section entry type %d (0x%08x)", type, type));
         };

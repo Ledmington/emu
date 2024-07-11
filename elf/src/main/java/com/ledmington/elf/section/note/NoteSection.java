@@ -50,9 +50,17 @@ public interface NoteSection extends LoadableSection {
 
         b.setAlignment(1L);
         while (b.getPosition() - start < length) {
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
             final int namesz = b.read4();
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
             final int descsz = b.read4();
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
             final int type = b.read4();
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
+
+            System.out.printf("namesz: %,d (0x%08x)\n", namesz, namesz);
+            System.out.printf("descsz: %,d (0x%08x)\n", descsz, descsz);
+            System.out.printf("type: %,d (0x%08x)\n", type, type);
 
             final byte[] nameBytes = new byte[namesz];
             for (int i = 0; i < namesz; i++) {
@@ -60,17 +68,20 @@ public interface NoteSection extends LoadableSection {
             }
             final String name = new String(
                     nameBytes, 0, nameBytes[namesz - 1] == '\0' ? namesz - 1 : namesz, StandardCharsets.UTF_8);
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
 
             final byte[] descriptionBytes = new byte[descsz];
             for (int i = 0; i < descsz; i++) {
                 descriptionBytes[i] = b.read1();
             }
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
 
-            // alignment
+            // Manually align the position
             final long newPosition = (b.getPosition() % bytes != 0L)
                     ? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
                     : b.getPosition();
             b.setPosition(newPosition);
+            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
 
             final NoteSectionEntry nse =
                     new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(type), is32Bit);
