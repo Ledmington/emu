@@ -65,3 +65,49 @@ tasks.register('fatJar', Jar) {
 
 tasks.build.dependsOn(fatJar)
 tasks.javadoc.enabled = false
+
+if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
+
+    // Utility task to check that the output of readelf is the same as GNU's readelf
+    task checkReadelf {
+        dependsOn fatJar
+
+        doLast {
+            final List<String> executables = List.of(
+                "gcc",
+                "g++",
+                "clang",
+                "clang++",
+                "zip",
+                "unzip"
+            );
+
+            for(final String elf : executables) {
+                final String filepath = "/usr/bin/" + elf
+                if (!(new File(filepath).exists())) {
+                    continue
+                }
+
+                println("Checking $filepath with system readelf")
+                exec {
+                    commandLine "readelf", "-a", "${filepath}"
+                    standardOutput = new FileOutputStream("${elf}_all_ref.out")
+                }
+                exec {
+                    commandLine "readelf", "-a", "-W", "${filepath}"
+                    standardOutput = new FileOutputStream("${elf}_all_wide_ref.out")
+                }
+
+                println("Checking $filepath with custom readelf")
+                exec {
+                    commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "${filepath}"
+                    standardOutput = new FileOutputStream("${elf}_all.out")
+                }
+                exec {
+                    commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "-W", "${filepath}"
+                    standardOutput = new FileOutputStream("${elf}_all_wide.out")
+                }
+            }
+        }
+    }
+}
