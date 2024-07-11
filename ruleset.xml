@@ -4,11 +4,23 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>Emu ruleset</description>
+
     <rule ref="category/java/errorprone.xml">
+        <!-- Avoid reporting System.exit() -->
         <exclude name="DoNotTerminateVM" />
     </rule>
+
     <rule ref="category/java/bestpractices.xml">
+        <!-- Avoid reporting custom logger calls -->
         <exclude name="GuardLogStatement" />
     </rule>
+
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables">
+        <!-- Avoid reporting increments/decrements of loop control variable outside of 'for' -->
+        <properties>
+            <property name="forReassign" value="skip" />
+        </properties>
+    </rule>
+    
     <rule ref="category/java/performance.xml"></rule>
 </ruleset>
