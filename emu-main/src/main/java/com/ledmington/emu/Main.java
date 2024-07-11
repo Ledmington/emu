@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
@@ -70,13 +71,24 @@ public final class Main {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
         String filename = null;
-
         String[] innerArgs = null;
+
+        final String shortHelpFlag = "-h";
+        final String longHelpFlag = "--help";
+        final String shortQuietFlag = "-q";
+        final String longQuietFlag = "--quiet";
+        final String verboseFlag = "-v";
+        final String veryVerboseFlag = "-vv";
+        final String memoryInitializerRandomFlag = "--mem-init-random";
+        final String memoryInitializerZeroFlag = "--mem-init-zero";
+        final String stackSizeFlag = "--stack-size";
+        final String shortVersionFlag = "-V";
+        final String longVersionFlag = "--version";
 
         for (int i = 0; i < args.length; i++) {
             final String arg = args[i];
 
-            if ("-h".equals(arg) || "--help".equals(arg)) {
+            if (shortHelpFlag.equals(arg) || longHelpFlag.equals(arg)) {
                 out.print(String.join(
                         "\n",
                         "",
@@ -99,20 +111,20 @@ public final class Main {
                         ""));
                 out.flush();
                 System.exit(0);
-            } else if ("-q".equals(arg) || "--quiet".equals(arg)) {
+            } else if (shortQuietFlag.equals(arg) || longQuietFlag.equals(arg)) {
                 MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-            } else if ("-v".equals(arg)) {
+            } else if (verboseFlag.equals(arg)) {
                 MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
-            } else if ("-vv".equals(arg)) {
+            } else if (veryVerboseFlag.equals(arg)) {
                 MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-            } else if ("--mem-init-random".equals(arg)) {
+            } else if (memoryInitializerRandomFlag.equals(arg)) {
                 EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
-            } else if ("--mem-init-zero".equals(arg)) {
+            } else if (memoryInitializerZeroFlag.equals(arg)) {
                 EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
-            } else if ("--stack-size".equals(arg)) {
+            } else if (stackSizeFlag.equals(arg)) {
                 i++;
                 if (i >= args.length) {
-                    throw new IllegalArgumentException("Expected an argument after '--stack-size'");
+                    throw new IllegalArgumentException(String.format("Expected an argument after '%s'", stackSizeFlag));
                 }
 
                 String s = args[i];
@@ -153,7 +165,7 @@ public final class Main {
                 };
 
                 EmulatorConstants.setStackSize(bytes);
-            } else if ("-V".equals(arg) || "--version".equals(arg)) {
+            } else if (shortVersionFlag.equals(arg) || longVersionFlag.equals(arg)) {
                 out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
                 out.flush();
                 System.exit(0);
@@ -162,8 +174,7 @@ public final class Main {
 
                 // all the next command-line arguments are considered to be related to the
                 // executable to be emulated
-                innerArgs = new String[args.length - i - 1];
-                System.arraycopy(args, i + 1, innerArgs, 0, innerArgs.length);
+                innerArgs = Arrays.copyOfRange(args, i + 1, args.length);
                 break;
             }
         }

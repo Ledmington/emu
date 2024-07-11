@@ -20,6 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** A "non-special" PROGBITS ELF section. */
@@ -41,11 +42,14 @@ public final class BasicProgBitsSection implements ProgBitsSection {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
-        final int size = (int) sectionHeader.getSectionSize();
+        final long oldAlignment = b.getAlignment();
+        b.setAlignment(1L);
+        final int size = BitUtils.asInt(sectionHeader.getSectionSize());
         this.content = new byte[size];
         for (int i = 0; i < size; i++) {
             this.content[i] = b.read1();
         }
+        b.setAlignment(oldAlignment);
     }
 
     @Override

@@ -35,7 +35,6 @@ import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.ProgramHeaderTable;
 import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.DynamicSection;
-import com.ledmington.elf.section.DynamicSymbolTableSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.GnuHashSection;
@@ -43,20 +42,21 @@ import com.ledmington.elf.section.GnuVersionRequirementEntry;
 import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
-import com.ledmington.elf.section.RelocationAddendEntry;
-import com.ledmington.elf.section.RelocationAddendEntryType;
-import com.ledmington.elf.section.RelocationAddendSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.StringTableSection;
-import com.ledmington.elf.section.SymbolTable;
-import com.ledmington.elf.section.SymbolTableEntry;
-import com.ledmington.elf.section.SymbolTableSection;
 import com.ledmington.elf.section.note.GnuPropertyType;
 import com.ledmington.elf.section.note.NoteSection;
 import com.ledmington.elf.section.note.NoteSectionEntry;
+import com.ledmington.elf.section.rel.RelocationAddendEntry;
+import com.ledmington.elf.section.rel.RelocationAddendEntryType;
+import com.ledmington.elf.section.rel.RelocationAddendSection;
+import com.ledmington.elf.section.sym.DynamicSymbolTableSection;
+import com.ledmington.elf.section.sym.SymbolTable;
+import com.ledmington.elf.section.sym.SymbolTableEntry;
+import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -67,6 +67,8 @@ public final class Main {
     private static final PrintWriter out = System.console() != null
             ? System.console().writer()
             : new PrintWriter(System.out, false, StandardCharsets.UTF_8);
+
+    private static boolean wide = false;
 
     @SuppressWarnings("PMD.AvoidReassigningLoopVariables")
     public static void main(final String[] args) {
@@ -216,7 +218,7 @@ public final class Main {
                     notImplemented();
                     break;
                 case "-W", "--wide":
-                    notImplemented();
+                    wide = true;
                     break;
                 case "-T", "--silent-truncation":
                     notImplemented();
@@ -670,14 +672,37 @@ public final class Main {
                 rash.getFileOffset(),
                 ras.getRelocationAddendTableLength(),
                 ras.getRelocationAddendTableLength() == 1 ? "y" : "ies");
-        out.println("  Offset          Info           Type           Sym. Value    Sym. Name + Addend");
+
+        if (wide) {
+            out.println(
+                    "    Offset             Info             Type               Symbol's Value  Symbol's Name + Addend");
+        } else {
+            out.println("  Offset          Info           Type           Sym. Value    Sym. Name + Addend");
+        }
 
         for (int i = 0; i < ras.getRelocationAddendTableLength(); i++) {
             final RelocationAddendEntry rae = ras.getRelocationAddendEntry(i);
             if (is32Bit) {
                 final byte symbolTableIndex = BitUtils.asByte(rae.symbolTableIndex());
                 final RelocationAddendEntryType type = rae.type();
-                // TODO
+                final SymbolTableEntry symbol = symtab.getSymbolTableEntry(BitUtils.asInt(symbolTableIndex));
+                out.printf(
+                        "%012x  %012x %s ",
+                        rae.offset(),
+                        (BitUtils.asInt(symbolTableIndex) << 8) | type.getCode(),
+                        type.name().substring(0, Math.min(type.name().length(), 17)));
+
+                if (type == RelocationAddendEntryType.R_X86_64_RELATIVE) {
+                    // B + A
+                    out.printf("                   %x%n", rae.addend());
+                } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
+                        || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT) {
+                    // S
+                    out.printf(
+                            "%016x %s + %d%n", symbol.value(), symstrtab.getString(symbol.nameOffset()), rae.addend());
+                } else {
+                    out.println("unknown");
+                }
             } else {
                 final int symbolTableIndex = rae.symbolTableIndex();
                 final RelocationAddendEntryType type = rae.type();
@@ -891,35 +916,68 @@ public final class Main {
     }
 
     private static void printSectionHeaders(final ELF elf) {
-        out.println(
-                """
-                        Section Headers:
-                          [Nr] Name              Type             Address           Offset
-                               Size              EntSize          Flags  Link  Info  Align""");
+        if (wide) {
+            out.println(
+                    """
+                            Section Headers:
+                              [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al""");
+        } else {
+            out.println(
+                    """
+                            Section Headers:
+                              [Nr] Name              Type             Address           Offset
+                                   Size              EntSize          Flags  Link  Info  Align""");
+        }
 
         final SectionTable sections = (SectionTable) elf;
         for (int i = 0; i < sections.getSectionTableLength(); i++) {
             final Section s = sections.getSection(i);
             final SectionHeader sh = s.getHeader();
-            out.printf(
-                    "  [%2d] %-17s %-16s %016x  %08x%n       %016x  %016x %3s    %4d  %4d     %d%n",
-                    i,
-                    s.getName().length() > 17 ? s.getName().substring(0, 17 - 5) + "[...]" : s.getName(),
-                    sh.getType().getName(),
-                    sh.getVirtualAddress(),
-                    sh.getFileOffset(),
-                    sh.getSectionSize(),
-                    sh.getEntrySize(),
-                    sh.getFlags().stream()
-                            .map(SectionHeaderFlags::getId)
-                            .collect(Collector.of(
-                                    StringBuilder::new,
-                                    StringBuilder::append,
-                                    StringBuilder::append,
-                                    StringBuilder::toString)),
-                    sh.getLinkedSectionIndex(),
-                    sh.getInfo(),
-                    sh.getAlignment());
+            final String name = wide
+                    ? s.getName()
+                    : (s.getName().length() > 17 ? s.getName().substring(0, 17 - 5) + "[...]" : s.getName());
+            final String typeName = sh.getType().getName();
+            final long virtualAddress = sh.getVirtualAddress();
+            final long fileOffset = sh.getFileOffset();
+            final long sectionSize = sh.getSectionSize();
+            final long entrySize = sh.getEntrySize();
+            final String flags = sh.getFlags().stream()
+                    .map(SectionHeaderFlags::getId)
+                    .collect(Collector.of(
+                            StringBuilder::new, StringBuilder::append, StringBuilder::append, StringBuilder::toString));
+            final int link = sh.getLinkedSectionIndex();
+            final int info = sh.getInfo();
+            final long alignment = sh.getAlignment();
+
+            if (wide) {
+                out.printf(
+                        "  [%2d] %-17s %-15s %016x %06x %06x %02x %3s %2d %3d %2d%n",
+                        i,
+                        name,
+                        typeName,
+                        virtualAddress,
+                        fileOffset,
+                        sectionSize,
+                        entrySize,
+                        flags,
+                        link,
+                        info,
+                        alignment);
+            } else {
+                out.printf(
+                        "  [%2d] %-17s %-16s %016x  %08x%n       %016x  %016x %3s    %4d  %4d     %d%n",
+                        i,
+                        name,
+                        typeName,
+                        virtualAddress,
+                        fileOffset,
+                        sectionSize,
+                        entrySize,
+                        flags,
+                        link,
+                        info,
+                        alignment);
+            }
         }
 
         out.println(
@@ -932,27 +990,57 @@ public final class Main {
     }
 
     private static void printProgramHeaders(final ELF elf) {
-        out.println(
-                """
+        if (wide) {
+            out.println(
+                    """
+                        Program Headers:
+                          Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align""");
+        } else {
+            out.println(
+                    """
                         Program Headers:
                           Type           Offset             VirtAddr           PhysAddr
                                          FileSiz            MemSiz              Flags  Align""");
+        }
 
         final ProgramHeaderTable pht = (ProgramHeaderTable) elf;
         for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
             final PHTEntry phte = pht.getProgramHeader(i);
-            out.printf(
-                    "  %-14s 0x%016x 0x%016x 0x%016x%n                 0x%016x 0x%016x  %3s    0x%x%n",
-                    phte.getType().getName(),
-                    phte.getSegmentOffset(),
-                    phte.getSegmentVirtualAddress(),
-                    phte.getSegmentPhysicalAddress(),
-                    phte.getSegmentFileSize(),
-                    phte.getSegmentMemorySize(),
-                    (phte.isReadable() ? "R" : " ")
-                            + (phte.isWriteable() ? "W" : " ")
-                            + (phte.isExecutable() ? "E" : " "),
-                    phte.getAlignment());
+            final String type = phte.getType().getName();
+            final long offset = phte.getSegmentOffset();
+            final long virtualAddress = phte.getSegmentVirtualAddress();
+            final long physicalAddress = phte.getSegmentPhysicalAddress();
+            final long fileSize = phte.getSegmentFileSize();
+            final long memorySize = phte.getSegmentMemorySize();
+
+            if (wide) {
+                out.printf(
+                        "  %-14s 0x%06x 0x%016x 0x%016x 0x%06x 0x%06x %c%c%c 0x%x%n",
+                        type,
+                        offset,
+                        virtualAddress,
+                        physicalAddress,
+                        fileSize,
+                        memorySize,
+                        phte.isReadable() ? 'R' : ' ',
+                        phte.isWriteable() ? 'W' : ' ',
+                        phte.isExecutable() ? 'E' : ' ',
+                        phte.getAlignment());
+            } else {
+                out.printf(
+                        "  %-14s 0x%016x 0x%016x 0x%016x%n                 0x%016x 0x%016x  %c%c%c    0x%x%n",
+                        type,
+                        offset,
+                        virtualAddress,
+                        physicalAddress,
+                        fileSize,
+                        memorySize,
+                        phte.isReadable() ? 'R' : ' ',
+                        phte.isWriteable() ? 'W' : ' ',
+                        phte.isExecutable() ? 'E' : ' ',
+                        phte.getAlignment());
+            }
+
             if (phte.getType() == PHTEntryType.PT_INTERP) {
                 out.printf(
                         "      [Requesting program interpreter: %s]%n",

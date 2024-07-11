@@ -72,7 +72,10 @@ public interface NoteSection extends LoadableSection {
                     : b.getPosition();
             b.setPosition(newPosition);
 
-            entries.add(new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(type), is32Bit));
+            final NoteSectionEntry nse =
+                    new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(type), is32Bit);
+            entries.add(nse);
+            System.out.printf("Entry n.%,d: '%s'\n", entries.size() - 1, nse);
         }
 
         return entries.toArray(new NoteSectionEntry[0]);
