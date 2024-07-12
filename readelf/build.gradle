@@ -88,24 +88,33 @@ if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
                     continue
                 }
 
-                println("Checking $filepath with system readelf")
+                final String ref = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all_ref.out")
+                final String refWide = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all_ref_wide.out")
+                final String actual = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all.out")
+                final String actualWide = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all_wide.out")
+
+                println("Checking '${filepath}'")
                 exec {
                     commandLine "readelf", "-a", "${filepath}"
-                    standardOutput = new FileOutputStream("${elf}_all_ref.out")
+                    standardOutput = new FileOutputStream(ref)
+                }
+                exec {
+                    commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "${filepath}"
+                    standardOutput = new FileOutputStream(actual)
+                }
+                exec {
+                    commandLine "diff", "${actual}", "${ref}"
                 }
                 exec {
                     commandLine "readelf", "-a", "-W", "${filepath}"
-                    standardOutput = new FileOutputStream("${elf}_all_wide_ref.out")
-                }
-
-                println("Checking $filepath with custom readelf")
-                exec {
-                    commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "${filepath}"
-                    standardOutput = new FileOutputStream("${elf}_all.out")
+                    standardOutput = new FileOutputStream(refWide)
                 }
                 exec {
                     commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "-W", "${filepath}"
-                    standardOutput = new FileOutputStream("${elf}_all_wide.out")
+                    standardOutput = new FileOutputStream(actualWide)
+                }
+                exec {
+                    commandLine "diff", "${actualWide}", "${refWide}"
                 }
             }
         }
