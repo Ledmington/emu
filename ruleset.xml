@@ -22,5 +22,8 @@
         </properties>
     </rule>
     
-    <rule ref="category/java/performance.xml"></rule>
+    <rule ref="category/java/performance.xml">
+        <!-- Avoid reporting redundant field initialization -->
+        <exclude name="RedundantFieldInitializer" />
+    </rule>
 </ruleset>
