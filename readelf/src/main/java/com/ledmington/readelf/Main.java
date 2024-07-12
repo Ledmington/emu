@@ -328,51 +328,79 @@ public final class Main {
             if (displaySectionToSegmentMapping) {
                 out.println();
             }
-            printDynamicSection((DynamicSection) elf.getSectionByName(".dynamic"), (SectionTable) elf);
+            final Optional<Section> dyn = elf.getSectionByName(".dynamic");
+            if (dyn.isPresent()) {
+                printDynamicSection((DynamicSection) dyn.orElseThrow(), (SectionTable) elf);
+            }
         }
 
         if (displayRelocationSections) {
             if (displayDynamicSection) {
                 out.println();
             }
-            printRelocationSection(
-                    (RelocationAddendSection) elf.getSectionByName(".rela.dyn"),
-                    (SectionTable) elf,
-                    elf.getFileHeader().is32Bit());
-            printRelocationSection(
-                    (RelocationAddendSection) elf.getSectionByName(".rela.plt"),
-                    (SectionTable) elf,
-                    elf.getFileHeader().is32Bit());
+
+            final Optional<Section> reladyn = elf.getSectionByName(".rela.dyn");
+            if (reladyn.isPresent()) {
+                printRelocationSection(
+                        (RelocationAddendSection) reladyn.orElseThrow(),
+                        (SectionTable) elf,
+                        elf.getFileHeader().is32Bit());
+            }
+
+            final Optional<Section> relaplt = elf.getSectionByName(".rela.plt");
+            if (relaplt.isPresent()) {
+                printRelocationSection(
+                        (RelocationAddendSection) relaplt.orElseThrow(),
+                        (SectionTable) elf,
+                        elf.getFileHeader().is32Bit());
+            }
         }
 
         if (displayDynamicSymbolTable) {
             if (displayRelocationSections) {
                 out.println();
             }
-            printSymbolTable((DynamicSymbolTableSection) elf.getSectionByName(".dynsym"), (SectionTable) elf);
+            final Optional<Section> dynsym = elf.getSectionByName(".dynsym");
+            if (dynsym.isPresent()) {
+                printSymbolTable((DynamicSymbolTableSection) dynsym.orElseThrow(), (SectionTable) elf);
+            }
         }
 
         if (displaySymbolTable) {
             if (displayDynamicSymbolTable) {
                 out.println();
             }
-            printSymbolTable((SymbolTableSection) elf.getSectionByName(".symtab"), (SectionTable) elf);
+            final Optional<Section> symtab = elf.getSectionByName(".symtab");
+            if (symtab.isPresent()) {
+                printSymbolTable((SymbolTableSection) symtab.orElseThrow(), (SectionTable) elf);
+            }
         }
 
         if (displayGnuHashSection) {
             if (displaySymbolTable) {
                 out.println();
             }
-            printGnuHashSection((GnuHashSection) elf.getSectionByName(".gnu.hash"), (SectionTable) elf);
+            final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
+            if (gnuhash.isPresent()) {
+                printGnuHashSection((GnuHashSection) gnuhash.orElseThrow(), (SectionTable) elf);
+            }
         }
 
         if (displayVersionSections) {
             if (displayGnuHashSection) {
                 out.println();
             }
-            printVersionSection(elf.getSectionByName(".gnu.version"), (SectionTable) elf);
-            out.println();
-            printVersionSection(elf.getSectionByName(".gnu.version_r"), (SectionTable) elf);
+
+            final Optional<Section> gnuversion = elf.getSectionByName(".gnu.version");
+            if (gnuversion.isPresent()) {
+                printVersionSection(gnuversion.orElseThrow(), (SectionTable) elf);
+                out.println();
+            }
+
+            final Optional<Section> gnuversionr = elf.getSectionByName(".gnu.version_r");
+            if (gnuversionr.isPresent()) {
+                printVersionSection(gnuversionr.orElseThrow(), (SectionTable) elf);
+            }
         }
 
         if (displayNoteSections) {
@@ -401,7 +429,16 @@ public final class Main {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        printStringDump(b, elf.getSectionByName(sectionName));
+
+        final Optional<Section> s = elf.getSectionByName(sectionName);
+
+        if (s.isEmpty()) {
+            out.printf("readelf: Warning: Section '%s' was not dumped because it does not exist%n%n", sectionName);
+            System.exit(-1);
+            return;
+        }
+
+        printStringDump(b, s.orElseThrow());
     }
 
     private static void printStringDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
@@ -411,6 +448,7 @@ public final class Main {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+
         printStringDump(b, elf.getSection(sectionIndex));
     }
 
@@ -450,7 +488,16 @@ public final class Main {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-        printHexDump(b, elf.getSectionByName(sectionName));
+
+        final Optional<Section> s = elf.getSectionByName(sectionName);
+
+        if (s.isEmpty()) {
+            out.printf("readelf: Warning: Section '%s' was not dumped because it does not exist%n%n", sectionName);
+            System.exit(-1);
+            return;
+        }
+
+        printHexDump(b, s.orElseThrow());
     }
 
     private static void printHexDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
@@ -603,7 +650,7 @@ public final class Main {
         StringTableSection strtab = null;
         for (int i = 0; i < sectionTable.getSectionTableLength(); i++) {
             final Section s = sectionTable.getSection(i);
-            if (s.getHeader().getFileOffset() == dt_strtab_offset) {
+            if (s.getHeader().getVirtualAddress() == dt_strtab_offset) {
                 strtab = (StringTableSection) s;
                 break;
             }
@@ -687,7 +734,7 @@ public final class Main {
                 final RelocationAddendEntryType type = rae.type();
                 final SymbolTableEntry symbol = symtab.getSymbolTableEntry(BitUtils.asInt(symbolTableIndex));
                 out.printf(
-                        "%012x  %012x %s ",
+                        "%012x  %012x %-17s ",
                         rae.offset(),
                         (BitUtils.asInt(symbolTableIndex) << 8) | type.getCode(),
                         type.name().substring(0, Math.min(type.name().length(), 17)));
@@ -696,7 +743,8 @@ public final class Main {
                     // B + A
                     out.printf("                   %x%n", rae.addend());
                 } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
-                        || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT) {
+                        || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT
+                        || type == RelocationAddendEntryType.R_X86_64_COPY) {
                     // S
                     out.printf(
                             "%016x %s + %d%n", symbol.value(), symstrtab.getString(symbol.nameOffset()), rae.addend());
@@ -708,7 +756,7 @@ public final class Main {
                 final RelocationAddendEntryType type = rae.type();
                 final SymbolTableEntry symbol = symtab.getSymbolTableEntry(symbolTableIndex);
                 out.printf(
-                        "%012x  %012x %s ",
+                        "%012x  %012x %-17s ",
                         rae.offset(),
                         (BitUtils.asLong(symbolTableIndex) << 32) | BitUtils.asLong(type.getCode()),
                         type.name().substring(0, Math.min(type.name().length(), 17)));
@@ -717,7 +765,8 @@ public final class Main {
                     // B + A
                     out.printf("                   %x%n", rae.addend());
                 } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
-                        || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT) {
+                        || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT
+                        || type == RelocationAddendEntryType.R_X86_64_COPY) {
                     // S
                     out.printf(
                             "%016x %s + %d%n", symbol.value(), symstrtab.getString(symbol.nameOffset()), rae.addend());
@@ -747,6 +796,7 @@ public final class Main {
                                 .mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
+                case NT_STAPSDT -> out.println("TODO");
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown note section entry type '%s'", nse.getType()));
             }
@@ -901,7 +951,7 @@ public final class Main {
         for (int i = 0; i < s.getSymbolTableLength(); i++) {
             final SymbolTableEntry ste = s.getSymbolTableEntry(i);
             out.printf(
-                    "    %2d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
+                    "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
                     i,
                     ste.value(),
                     ste.size(),
@@ -1044,7 +1094,9 @@ public final class Main {
             if (phte.getType() == PHTEntryType.PT_INTERP) {
                 out.printf(
                         "      [Requesting program interpreter: %s]%n",
-                        ((InterpreterPathSection) elf.getSectionByName(".interp")).getInterpreterFilePath());
+                        ((InterpreterPathSection)
+                                        elf.getSectionByName(".interp").orElseThrow())
+                                .getInterpreterFilePath());
             }
         }
     }
@@ -1087,7 +1139,7 @@ public final class Main {
                 throw new RuntimeException(e);
             }
             out.printf(
-                    "  Magic:   %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x%n",
+                    "  Magic:   %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %n",
                     bb.read1(),
                     bb.read1(),
                     bb.read1(),

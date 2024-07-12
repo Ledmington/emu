@@ -17,22 +17,30 @@
  */
 package com.ledmington.elf.section.note;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+/** A .note.stapsdt ELF section. */
 public final class SystemtapUSDTSection implements NoteSection {
 
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
-    public SystemtapUSDTSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+    /**
+     * Creates a .note.stapsdt section with the given data.
+     *
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     */
+    public SystemtapUSDTSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
-        this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
+        this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
 
         for (int i = 0; i < entries.length; i++) {
             if (!"stapsdt".equals(entries[i].getName())) {
@@ -61,5 +69,33 @@ public final class SystemtapUSDTSection implements NoteSection {
     @Override
     public NoteSectionEntry getEntry(final int idx) {
         return entries[idx];
+    }
+
+    @Override
+    public String toString() {
+        return "SystemtapUSDT(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + header.hashCode();
+        h = 31 * h + Arrays.hashCode(entries);
+        return h;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!this.getClass().equals(other.getClass())) {
+            return false;
+        }
+        final SystemtapUSDTSection ss = (SystemtapUSDTSection) other;
+        return this.header.equals(ss.header) && Arrays.equals(this.entries, ss.entries);
     }
 }

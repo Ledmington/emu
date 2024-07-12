@@ -34,9 +34,8 @@ public final class GnuPropertySection implements NoteSection {
      *
      * @param sectionHeader The header of this section.
      * @param b The ReadOnlyByteBuffer to read data from.
-     * @param is32Bit Used for alignment.
      */
-    public GnuPropertySection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+    public GnuPropertySection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 
         if (header.getEntrySize() != 0) {
@@ -47,7 +46,7 @@ public final class GnuPropertySection implements NoteSection {
 
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
-        this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
+        this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
 
         final int expectedEntries = 1;
         if (entries.length != expectedEntries) {

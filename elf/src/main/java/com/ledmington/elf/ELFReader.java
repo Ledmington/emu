@@ -338,11 +338,11 @@ public final class ELFReader {
                 sectionTable[k] = new DynamicSymbolTableSection(name, sh, b, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_NOTE.getName())) {
                 sectionTable[k] = switch (name) {
-                    case ".note.gnu.property" -> new GnuPropertySection(sh, b, fileHeader.is32Bit());
-                    case ".note.gnu.build-id" -> new GnuBuildIDSection(sh, b, fileHeader.is32Bit());
-                    case ".note.ABI-tag" -> new NoteABITagSection(sh, b, fileHeader.is32Bit());
-                    case ".note.stapsdt" -> new SystemtapUSDTSection(sh, b, fileHeader.is32Bit());
-                    default -> new BasicNoteSection(name, sh, b, fileHeader.is32Bit());
+                    case ".note.gnu.property" -> new GnuPropertySection(sh, b);
+                    case ".note.gnu.build-id" -> new GnuBuildIDSection(sh, b);
+                    case ".note.ABI-tag" -> new NoteABITagSection(sh, b);
+                    case ".note.stapsdt" -> new SystemtapUSDTSection(sh, b);
+                    default -> new BasicNoteSection(name, sh, b);
                 };
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, sh, b, fileHeader.is32Bit());

@@ -37,7 +37,8 @@ public enum NoteSectionEntryType {
     /** Program property. */
     NT_GNU_PROPERTY_TYPE_0(5, "NT_GNU_PROPERTY_TYPE_0"),
 
-    NT_STAPSDT(0x70617473, "NT_STAPSDT (SystemTap probe descriptors)");
+    /** SystemTap USDT probe descriptors. */
+    NT_STAPSDT(3, "NT_STAPSDT (SystemTap probe descriptors)");
 
     private final int code;
     private final String description;
@@ -50,20 +51,54 @@ public enum NoteSectionEntryType {
     /**
      * Returns the type corresponding to the given 32-bit code.
      *
+     * @param owner The owner of the entry.
      * @param type The 32-bit code which must correspond to a known type.
      * @return The type corresponding to the code.
      */
-    public static NoteSectionEntryType fromCode(final int type) {
-        return switch (type) {
-            case 1 -> NT_GNU_ABI_TAG;
-            case 2 -> NT_GNU_HWCAP;
-            case 3 -> NT_GNU_BUILD_ID;
-            case 4 -> NT_GNU_GOLD_VERSION;
-            case 5 -> NT_GNU_PROPERTY_TYPE_0;
-            case 0x70617473 -> NT_STAPSDT;
+    public static NoteSectionEntryType fromCode(final String owner, final int type) {
+        return switch (owner) {
+            case "GNU" -> {
+                yield switch (type) {
+                    case 1 -> NT_GNU_ABI_TAG;
+                    case 2 -> NT_GNU_HWCAP;
+                    case 3 -> NT_GNU_BUILD_ID;
+                    case 4 -> NT_GNU_GOLD_VERSION;
+                    case 5 -> NT_GNU_PROPERTY_TYPE_0;
+                    default -> throw new IllegalArgumentException(String.format(
+                            "Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
+                };
+            }
+            case "stapsdt" -> {
+                yield switch (type) {
+                    case 3 -> NT_STAPSDT;
+                    default -> throw new IllegalArgumentException(String.format(
+                            "Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
+                };
+            }
             default -> throw new IllegalArgumentException(
-                    String.format("Unknown note section entry type %d (0x%08x)", type, type));
+                    String.format("Unknown note section entry owner '%s'", owner));
         };
+        // if ("GNU".equals(owner)) {
+        //     return switch (type) {
+        //         case 1 -> NT_GNU_ABI_TAG;
+        //         case 2 -> NT_GNU_HWCAP;
+        //         case 3 -> NT_GNU_BUILD_ID;
+        //         case 4 -> NT_GNU_GOLD_VERSION;
+        //         case 5 -> NT_GNU_PROPERTY_TYPE_0;
+        //         default -> throw new IllegalArgumentException(
+        //                 String.format("Unknown note section entry type %d (0x%08x) for owner '%s'", type, type,
+        // owner));
+        //     };
+        // } else if ("stapsdt".equals(owner)) {
+        //     return switch (type) {
+        //         case 3 -> NT_STAPSDT;
+        //         default -> throw new IllegalArgumentException(
+        //                 String.format("Unknown note section entry type %d (0x%08x) for owner '%s'", type, type,
+        // owner));
+        //     };
+        // } else {
+        //     throw new IllegalArgumentException(String.format("Unknown note section entry owner '%s'", owner));
+        // }
     }
 
     /**

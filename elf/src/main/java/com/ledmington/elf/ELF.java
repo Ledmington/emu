@@ -19,6 +19,7 @@ package com.ledmington.elf;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.ledmington.elf.section.Section;
 
@@ -88,13 +89,13 @@ public final class ELF implements ProgramHeaderTable, SectionTable {
      * @param name The name of the section to look for.
      * @return The Section encountered such that {@code s.getName().equals(name)} returns true.
      */
-    public Section getSectionByName(final String name) {
+    public Optional<Section> getSectionByName(final String name) {
         for (final Section s : sectionTable) {
             if (s.getName().equals(name)) {
-                return s;
+                return Optional.of(s);
             }
         }
-        throw new IllegalArgumentException(String.format("No section found with name '%s'", name));
+        return Optional.empty();
     }
 
     @Override

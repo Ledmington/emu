@@ -20,15 +20,12 @@ package com.ledmington.elf.section.note;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.ledmington.utils.HashUtils;
-
 /** An entry of an ELF section of type SHT_NOTE (.note*). */
 public final class NoteSectionEntry {
 
     private final String name;
     private final byte[] description;
     private final NoteSectionEntryType type;
-    private final boolean is32Bit;
 
     /**
      * Creates an entry of a .note section with the given data.
@@ -36,15 +33,12 @@ public final class NoteSectionEntry {
      * @param name The name of the entry.
      * @param description The description/content of the entry.
      * @param type The 4-byte type of this entry (meaning of this field varies between note section).
-     * @param is32Bit Used for alignment.
      */
-    public NoteSectionEntry(
-            final String name, final byte[] description, final NoteSectionEntryType type, final boolean is32Bit) {
+    public NoteSectionEntry(final String name, final byte[] description, final NoteSectionEntryType type) {
         this.name = Objects.requireNonNull(name);
         this.description = new byte[Objects.requireNonNull(description).length];
         System.arraycopy(description, 0, this.description, 0, description.length);
         this.type = Objects.requireNonNull(type);
-        this.is32Bit = is32Bit;
     }
 
     /**
@@ -94,13 +88,12 @@ public final class NoteSectionEntry {
     }
 
     /**
-     * Returns the number of bytes occupied by this entry, aligned to a 4-byte or 8-byte boundary (depending on the
-     * is32Bit value).
+     * Returns the number of bytes occupied by this entry, aligned to a 4-byte boundary.
      *
      * @return The number of bytes occupied by this structure, accounting for alignment.
      */
     public int getAlignedSize() {
-        final int bytes = is32Bit ? 4 : 8;
+        final int bytes = 4;
         final int size = getSize();
         return size % bytes == 0 ? size : (((size / bytes) + 1) * bytes);
     }
@@ -122,7 +115,6 @@ public final class NoteSectionEntry {
         h = 31 * h + name.hashCode();
         h = 31 * h + Arrays.hashCode(description);
         h = 31 * h + type.hashCode();
-        h = 31 * h + HashUtils.hash(is32Bit);
         return h;
     }
 
@@ -140,7 +132,6 @@ public final class NoteSectionEntry {
         final NoteSectionEntry nse = (NoteSectionEntry) other;
         return this.name.equals(nse.name)
                 && Arrays.equals(this.description, nse.description)
-                && this.type.equals(nse.type)
-                && this.is32Bit == nse.is32Bit;
+                && this.type.equals(nse.type);
     }
 }

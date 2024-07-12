@@ -47,7 +47,6 @@ final class TestNoteSectionParsing {
                                 // 'readelf -x .note.gnu.property /usr/bin/gcc'
                                 "040000002000000005000000474e5500" + "020000c0040000000300000000000000"
                                         + "028000c0040000000100000000000000"),
-                        false,
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "GNU",
@@ -85,8 +84,7 @@ final class TestNoteSectionParsing {
                                         (byte) 0x00,
                                         (byte) 0x00
                                     },
-                                    NoteSectionEntryType.NT_GNU_PROPERTY_TYPE_0,
-                                    false)
+                                    NoteSectionEntryType.NT_GNU_PROPERTY_TYPE_0)
                         }),
                 Arguments.of(
                         convertHexStringToByteArray(
@@ -94,7 +92,6 @@ final class TestNoteSectionParsing {
                                 // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.gnu.build-id /usr/bin/gcc'
                                 "040000001400000003000000474e5500" + "bee27145fd189a47a04c578e20405149" + "8e609ed2"),
-                        false,
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "GNU",
@@ -120,8 +117,7 @@ final class TestNoteSectionParsing {
                                         (byte) 0x9e,
                                         (byte) 0xd2
                                     },
-                                    NoteSectionEntryType.NT_GNU_BUILD_ID,
-                                    false)
+                                    NoteSectionEntryType.NT_GNU_BUILD_ID)
                         }),
                 Arguments.of(
                         convertHexStringToByteArray(
@@ -129,7 +125,6 @@ final class TestNoteSectionParsing {
                                 // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.ABI-tag /usr/bin/gcc'
                                 "040000001000000001000000474e5500" + "00000000030000000200000000000000"),
-                        false,
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "GNU",
@@ -151,63 +146,220 @@ final class TestNoteSectionParsing {
                                         (byte) 0x00,
                                         (byte) 0x00
                                     },
-                                    NoteSectionEntryType.NT_GNU_ABI_TAG,
-                                    false)
+                                    NoteSectionEntryType.NT_GNU_ABI_TAG)
                         }),
                 Arguments.of(
                         convertHexStringToByteArray(
                                 // real dump of the .note.stapsdt section of a gcc
                                 // 11.4.0 executable, obtained with
                                 // 'readelf -x .note.stapsdt /usr/bin/gcc'
-                                "080000003a0000000300000073746170" //
-                                        + "00000010736474001146440000000000" //
-                                        + "50de4c00000000200000000000000000" //
-                                        + "000000006c6962730000003074646378" //
-                                        + "78006361746368003840257200000040" //
-                                        + "382038402d3830282572627829000000" //
-                                        + "00000050080000003600000003000000" //
-                                        + "737461700000006073647400b2544400" //
-                                        + "0000000050de4c000000007000000000" //
-                                        + "00000000000000006c69627300000080" //
-                                        + "7464637878007468726f770038402572" //
-                                        + "00000090646920384025727369000000" //
-                                        + "08000000000000a03800000003000000" //
-                                        + "7374617073647400000000b04b554400" //
-                                        + "0000000050de4c0000000000000000c0" //
-                                        + "00000000000000006c69627374646378" //
-                                        + "000000d0780072657468726f77003840" //
-                                        + "25726478000000e02038402572617800"),
-                        false,
+                                "080000003a0000000300000073746170"
+                                        + "73647400114644000000000050de4c00"
+                                        + "0000000000000000000000006c696273"
+                                        + "74646378780063617463680038402572"
+                                        + "382038402d3830282572627829000000"
+                                        + "08000000360000000300000073746170"
+                                        + "73647400b25444000000000050de4c00"
+                                        + "0000000000000000000000006c696273"
+                                        + "7464637878007468726f770038402572"
+                                        + "64692038402572736900000008000000"
+                                        + "38000000030000007374617073647400"
+                                        + "4b5544000000000050de4c0000000000"
+                                        + "00000000000000006c69627374646378"
+                                        + "780072657468726f7700384025726478"
+                                        + "2038402572617800"),
                         new NoteSectionEntry[] {
                             new NoteSectionEntry(
                                     "stapsdt",
                                     new byte[] {
+                                        (byte) 0x11,
+                                        (byte) 0x46,
+                                        (byte) 0x44,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x50,
+                                        (byte) 0xde,
+                                        (byte) 0x4c,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x6c,
+                                        (byte) 0x69,
+                                        (byte) 0x62,
+                                        (byte) 0x73,
+                                        (byte) 0x74,
+                                        (byte) 0x64,
+                                        (byte) 0x63,
+                                        (byte) 0x78,
+                                        (byte) 0x78,
+                                        (byte) 0x00,
+                                        (byte) 0x63,
+                                        (byte) 0x61,
+                                        (byte) 0x74,
+                                        (byte) 0x63,
+                                        (byte) 0x68,
+                                        (byte) 0x00,
+                                        (byte) 0x38,
+                                        (byte) 0x40,
+                                        (byte) 0x25,
+                                        (byte) 0x72,
+                                        (byte) 0x38,
+                                        (byte) 0x20,
+                                        (byte) 0x38,
+                                        (byte) 0x40,
+                                        (byte) 0x2d,
+                                        (byte) 0x38,
+                                        (byte) 0x30,
+                                        (byte) 0x28,
+                                        (byte) 0x25,
+                                        (byte) 0x72,
+                                        (byte) 0x62,
+                                        (byte) 0x78,
+                                        (byte) 0x29,
                                         (byte) 0x00
                                     },
-                                    NoteSectionEntryType.NT_STAPSDT,
-                                    false),
+                                    NoteSectionEntryType.NT_STAPSDT),
                             new NoteSectionEntry(
                                     "stapsdt",
                                     new byte[] {
+                                        (byte) 0xb2,
+                                        (byte) 0x54,
+                                        (byte) 0x44,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x50,
+                                        (byte) 0xde,
+                                        (byte) 0x4c,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x6c,
+                                        (byte) 0x69,
+                                        (byte) 0x62,
+                                        (byte) 0x73,
+                                        (byte) 0x74,
+                                        (byte) 0x64,
+                                        (byte) 0x63,
+                                        (byte) 0x78,
+                                        (byte) 0x78,
+                                        (byte) 0x00,
+                                        (byte) 0x74,
+                                        (byte) 0x68,
+                                        (byte) 0x72,
+                                        (byte) 0x6f,
+                                        (byte) 0x77,
+                                        (byte) 0x00,
+                                        (byte) 0x38,
+                                        (byte) 0x40,
+                                        (byte) 0x25,
+                                        (byte) 0x72,
+                                        (byte) 0x64,
+                                        (byte) 0x69,
+                                        (byte) 0x20,
+                                        (byte) 0x38,
+                                        (byte) 0x40,
+                                        (byte) 0x25,
+                                        (byte) 0x72,
+                                        (byte) 0x73,
+                                        (byte) 0x69,
                                         (byte) 0x00
                                     },
-                                    NoteSectionEntryType.NT_STAPSDT,
-                                    false),
+                                    NoteSectionEntryType.NT_STAPSDT),
                             new NoteSectionEntry(
                                     "stapsdt",
                                     new byte[] {
+                                        (byte) 0x4b,
+                                        (byte) 0x55,
+                                        (byte) 0x44,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x50,
+                                        (byte) 0xde,
+                                        (byte) 0x4c,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x00,
+                                        (byte) 0x6c,
+                                        (byte) 0x69,
+                                        (byte) 0x62,
+                                        (byte) 0x73,
+                                        (byte) 0x74,
+                                        (byte) 0x64,
+                                        (byte) 0x63,
+                                        (byte) 0x78,
+                                        (byte) 0x78,
+                                        (byte) 0x00,
+                                        (byte) 0x72,
+                                        (byte) 0x65,
+                                        (byte) 0x74,
+                                        (byte) 0x68,
+                                        (byte) 0x72,
+                                        (byte) 0x6f,
+                                        (byte) 0x77,
+                                        (byte) 0x00,
+                                        (byte) 0x38,
+                                        (byte) 0x40,
+                                        (byte) 0x25,
+                                        (byte) 0x72,
+                                        (byte) 0x64,
+                                        (byte) 0x78,
+                                        (byte) 0x20,
+                                        (byte) 0x38,
+                                        (byte) 0x40,
+                                        (byte) 0x25,
+                                        (byte) 0x72,
+                                        (byte) 0x61,
+                                        (byte) 0x78,
                                         (byte) 0x00
                                     },
-                                    NoteSectionEntryType.NT_STAPSDT,
-                                    false)
+                                    NoteSectionEntryType.NT_STAPSDT)
                         }));
     }
 
     @ParameterizedTest
     @MethodSource("exampleNoteSections")
-    void correctParsing(final byte[] content, final boolean is32Bit, final NoteSectionEntry... expected) {
+    void correctParsing(final byte[] content, final NoteSectionEntry... expected) {
         final NoteSectionEntry[] parsed =
-                NoteSection.loadNoteSectionEntries(is32Bit, new ReadOnlyByteBufferV1(content, true), content.length);
+                NoteSection.loadNoteSectionEntries(new ReadOnlyByteBufferV1(content, true), content.length);
         assertArrayEquals(
                 expected,
                 parsed,

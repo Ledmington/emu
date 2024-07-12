@@ -39,10 +39,8 @@ public final class BasicNoteSection implements NoteSection {
      * @param name The name of this section.
      * @param sectionHeader The header of this section.
      * @param b The buffer to read bytes from.
-     * @param is32Bit Used for alignment of the entries.
      */
-    public BasicNoteSection(
-            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+    public BasicNoteSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
@@ -54,13 +52,13 @@ public final class BasicNoteSection implements NoteSection {
 
         b.setPosition(sectionHeader.getFileOffset());
 
-        final long expectedAlignment = is32Bit ? 4L : 8L;
+        final long expectedAlignment = 4L;
         if (sectionHeader.getAlignment() != expectedAlignment) {
             logger.warning(
                     "Invalid alignment: expected %,d but was %,d", expectedAlignment, sectionHeader.getAlignment());
         }
         b.setAlignment(sectionHeader.getAlignment());
-        this.entries = NoteSection.loadNoteSectionEntries(is32Bit, b, sectionHeader.getSectionSize());
+        this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
     }
 
     @Override

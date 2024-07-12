@@ -33,34 +33,24 @@ public interface NoteSection extends LoadableSection {
     /**
      * Reads an array of NoteSectionEntry objects by parsing the given ReadOnlyByteBuffer.
      *
-     * @param is32Bit Used to determine the alignment of the buffer: if true, 4-byte alignment, otherwise 8-byte.
      * @param b The byte buffer to read the entries from.
      * @param length Maximum number of bytes to read.
      * @return A non-null array of NoteSectionEntry.
      */
     @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-    static NoteSectionEntry[] loadNoteSectionEntries(
-            final boolean is32Bit, final ReadOnlyByteBuffer b, final long length) {
+    static NoteSectionEntry[] loadNoteSectionEntries(final ReadOnlyByteBuffer b, final long length) {
         final long start = b.getPosition();
         final List<NoteSectionEntry> entries = new ArrayList<>();
 
         // for alignment
-        final long bytes = is32Bit ? 4L : 8L;
-        final long byteShift = is32Bit ? 2L : 3L;
+        final long bytes = 4L;
+        final long byteShift = 2L;
 
         b.setAlignment(1L);
         while (b.getPosition() - start < length) {
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
             final int namesz = b.read4();
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
             final int descsz = b.read4();
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
             final int type = b.read4();
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
-
-            System.out.printf("namesz: %,d (0x%08x)\n", namesz, namesz);
-            System.out.printf("descsz: %,d (0x%08x)\n", descsz, descsz);
-            System.out.printf("type: %,d (0x%08x)\n", type, type);
 
             final byte[] nameBytes = new byte[namesz];
             for (int i = 0; i < namesz; i++) {
@@ -68,25 +58,21 @@ public interface NoteSection extends LoadableSection {
             }
             final String name = new String(
                     nameBytes, 0, nameBytes[namesz - 1] == '\0' ? namesz - 1 : namesz, StandardCharsets.UTF_8);
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
 
             final byte[] descriptionBytes = new byte[descsz];
             for (int i = 0; i < descsz; i++) {
                 descriptionBytes[i] = b.read1();
             }
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
 
             // Manually align the position
             final long newPosition = (b.getPosition() % bytes != 0L)
                     ? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
                     : b.getPosition();
             b.setPosition(newPosition);
-            System.out.printf("%,d (0x%08x)\n", b.getPosition(), b.getPosition());
 
             final NoteSectionEntry nse =
-                    new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(type), is32Bit);
+                    new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(name, type));
             entries.add(nse);
-            System.out.printf("Entry n.%,d: '%s'\n", entries.size() - 1, nse);
         }
 
         return entries.toArray(new NoteSectionEntry[0]);
