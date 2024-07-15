@@ -798,82 +798,86 @@ public final class Main {
                                 .mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
-                case NT_STAPSDT -> {
-                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBuffer() {
+                case NT_STAPSDT -> printSystemtapProperties(nse);
 
-                        private long k = 0;
-
-                        @Override
-                        public boolean isLittleEndian() {
-                            return true;
-                        }
-
-                        @Override
-                        public void setEndianness(final boolean isLittleEndian) {
-                            throw new UnsupportedOperationException("Unimplemented method 'setEndianness'");
-                        }
-
-                        @Override
-                        public void setAlignment(final long newAlignment) {
-                            throw new UnsupportedOperationException("Unimplemented method 'setAlignment'");
-                        }
-
-                        @Override
-                        public long getAlignment() {
-                            return 1L;
-                        }
-
-                        @Override
-                        public void setPosition(final long newPosition) {
-                            k = newPosition;
-                        }
-
-                        @Override
-                        public long getPosition() {
-                            return k;
-                        }
-
-                        @Override
-                        public byte read() {
-                            return nse.getDescriptionByte(BitUtils.asInt(k));
-                        }
-                    };
-                    final int location = robb.read4();
-                    // ignore a 32-bit word
-                    robb.read4();
-                    final int base = robb.read4();
-                    // ignore a 32-bit word
-                    robb.read4();
-                    final int semaphore = robb.read4();
-                    // ignore a 32-bit word
-                    robb.read4();
-                    final StringBuilder provider = new StringBuilder();
-                    byte x = robb.read1();
-                    while (x != 0x00) {
-                        provider.append((char) x);
-                        x = robb.read1();
-                    }
-                    final StringBuilder name = new StringBuilder();
-                    x = robb.read1();
-                    while (x != 0x00) {
-                        name.append((char) x);
-                        x = robb.read1();
-                    }
-                    final StringBuilder arguments = new StringBuilder();
-                    x = robb.read1();
-                    while (x != 0x00) {
-                        arguments.append((char) x);
-                        x = robb.read1();
-                    }
-                    out.printf("    Provider: %s%n", provider.toString());
-                    out.printf("    Name: %s%n", name.toString());
-                    out.printf("    Location: 0x%016x, Base: 0x%016x, Semaphore: 0x%016x%n", location, base, semaphore);
-                    out.printf("    Arguments: %s%n", arguments.toString());
-                }
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown note section entry type '%s'", nse.getType()));
             }
         }
+    }
+
+    private static void printSystemtapProperties(final NoteSectionEntry nse) {
+        final ReadOnlyByteBuffer robb = new ReadOnlyByteBuffer() {
+
+            private long k = 0;
+
+            @Override
+            public boolean isLittleEndian() {
+                return true;
+            }
+
+            @Override
+            public void setEndianness(final boolean isLittleEndian) {
+                throw new UnsupportedOperationException("Unimplemented method 'setEndianness'");
+            }
+
+            @Override
+            public void setAlignment(final long newAlignment) {
+                throw new UnsupportedOperationException("Unimplemented method 'setAlignment'");
+            }
+
+            @Override
+            public long getAlignment() {
+                return 1L;
+            }
+
+            @Override
+            public void setPosition(final long newPosition) {
+                k = newPosition;
+            }
+
+            @Override
+            public long getPosition() {
+                return k;
+            }
+
+            @Override
+            public byte read() {
+                return nse.getDescriptionByte(BitUtils.asInt(k));
+            }
+        };
+        final int location = robb.read4();
+        // ignore a 32-bit word
+        robb.read4();
+        final int base = robb.read4();
+        // ignore a 32-bit word
+        robb.read4();
+        final int semaphore = robb.read4();
+        // ignore a 32-bit word
+        robb.read4();
+        final StringBuilder provider = new StringBuilder();
+        byte x = robb.read1();
+        while (x != 0x00) {
+            provider.append((char) x);
+            x = robb.read1();
+        }
+        final StringBuilder name = new StringBuilder();
+        x = robb.read1();
+        while (x != 0x00) {
+            name.append((char) x);
+            x = robb.read1();
+        }
+        final StringBuilder arguments = new StringBuilder();
+        x = robb.read1();
+        while (x != 0x00) {
+            arguments.append((char) x);
+            x = robb.read1();
+        }
+        out.printf("    Provider: %s%n", provider.toString());
+        out.printf("    Name: %s%n", name.toString());
+        out.printf("    Location: 0x%016x, Base: 0x%016x, Semaphore: 0x%016x%n", location, base, semaphore);
+
+        out.printf("    Arguments: %s%n", arguments.toString());
     }
 
     private static void printGNUProperties(final NoteSectionEntry nse) {
