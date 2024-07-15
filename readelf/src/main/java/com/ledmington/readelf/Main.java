@@ -353,6 +353,7 @@ public final class Main {
                         (RelocationAddendSection) relaplt.orElseThrow(),
                         elf,
                         elf.getFileHeader().is32Bit());
+                out.println("No processor specific unwind information to decode");
             }
         }
 
@@ -615,18 +616,15 @@ public final class Main {
                     sectionTable.getSection(linkedSection.getHeader().getLinkedSectionIndex());
             for (int i = 0; i < gvs.getVersionsLength(); i++) {
                 if (i % 4 == 0) {
-                    out.printf("  %03x:   ", i);
+                    out.printf("  %03x:  ", i);
                 }
-                out.printf(
-                        "%2d (%s)  ",
-                        gvs.getVersion(i),
-                        gvs.getVersion(i) == 0
-                                ? "*local*"
-                                : (gvs.getVersion(i) == 1
-                                        ? "*global*"
-                                        : stringTable.getString(symbolTable
-                                                .getSymbolTableEntry(i)
-                                                .nameOffset())));
+                final String name = (gvs.getVersion(i) == 0
+                        ? "*local*"
+                        : (gvs.getVersion(i) == 1
+                                ? "*global*"
+                                : stringTable.getString(
+                                        symbolTable.getSymbolTableEntry(i).nameOffset())));
+                out.printf("%2d %13s  ", gvs.getVersion(i), "(" + name + ")");
                 if (i % 4 == 3) {
                     out.println();
                 }
@@ -1109,7 +1107,7 @@ public final class Main {
                           W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
                           L (link order), O (extra OS processing required), G (group), T (TLS),
                           C (compressed), x (unknown), o (OS specific), E (exclude),
-                          D (mbind), l (large), p (processor specific)""");
+                          R (retain), D (mbind), l (large), p (processor specific)""");
     }
 
     private static void printProgramHeaders(final ProgramHeaderTable pht, final ELF elf) {
