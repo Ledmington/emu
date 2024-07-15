@@ -99,7 +99,7 @@ if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
                     standardOutput = new FileOutputStream(ref)
                 }
                 exec {
-                    commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "${filepath}"
+                    commandLine "java", "-jar", "${fatJarPath}", "-a", "${filepath}"
                     standardOutput = new FileOutputStream(actual)
                 }
                 exec {
@@ -110,7 +110,7 @@ if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
                     standardOutput = new FileOutputStream(refWide)
                 }
                 exec {
-                    commandLine "java", "-jar", "${fatJarPath}", "readelf", "-a", "-W", "${filepath}"
+                    commandLine "java", "-jar", "${fatJarPath}", "-a", "-W", "${filepath}"
                     standardOutput = new FileOutputStream(actualWide)
                 }
                 exec {
@@ -119,4 +119,6 @@ if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
             }
         }
     }
+} else {
+    println("Task 'checkReadelf' not created")
 }

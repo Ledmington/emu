@@ -314,14 +314,14 @@ public final class Main {
             if (displaySectionGroups) {
                 out.println();
             }
-            printProgramHeaders(elf);
+            printProgramHeaders(elf, elf);
         }
 
         if (displaySectionToSegmentMapping) {
             if (displayProgramHeaders) {
                 out.println();
             }
-            printSectionToSegmentMapping(elf);
+            printSectionToSegmentMapping(elf, elf);
         }
 
         if (displayDynamicSection) {
@@ -330,7 +330,7 @@ public final class Main {
             }
             final Optional<Section> dyn = elf.getSectionByName(".dynamic");
             if (dyn.isPresent()) {
-                printDynamicSection((DynamicSection) dyn.orElseThrow(), (SectionTable) elf);
+                printDynamicSection((DynamicSection) dyn.orElseThrow(), elf);
             }
         }
 
@@ -343,7 +343,7 @@ public final class Main {
             if (reladyn.isPresent()) {
                 printRelocationSection(
                         (RelocationAddendSection) reladyn.orElseThrow(),
-                        (SectionTable) elf,
+                        elf,
                         elf.getFileHeader().is32Bit());
             }
 
@@ -351,7 +351,7 @@ public final class Main {
             if (relaplt.isPresent()) {
                 printRelocationSection(
                         (RelocationAddendSection) relaplt.orElseThrow(),
-                        (SectionTable) elf,
+                        elf,
                         elf.getFileHeader().is32Bit());
             }
         }
@@ -362,7 +362,7 @@ public final class Main {
             }
             final Optional<Section> dynsym = elf.getSectionByName(".dynsym");
             if (dynsym.isPresent()) {
-                printSymbolTable((DynamicSymbolTableSection) dynsym.orElseThrow(), (SectionTable) elf);
+                printSymbolTable((DynamicSymbolTableSection) dynsym.orElseThrow(), elf);
             }
         }
 
@@ -372,7 +372,7 @@ public final class Main {
             }
             final Optional<Section> symtab = elf.getSectionByName(".symtab");
             if (symtab.isPresent()) {
-                printSymbolTable((SymbolTableSection) symtab.orElseThrow(), (SectionTable) elf);
+                printSymbolTable((SymbolTableSection) symtab.orElseThrow(), elf);
             }
         }
 
@@ -382,7 +382,7 @@ public final class Main {
             }
             final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
             if (gnuhash.isPresent()) {
-                printGnuHashSection((GnuHashSection) gnuhash.orElseThrow(), (SectionTable) elf);
+                printGnuHashSection((GnuHashSection) gnuhash.orElseThrow(), elf);
             }
         }
 
@@ -393,13 +393,13 @@ public final class Main {
 
             final Optional<Section> gnuversion = elf.getSectionByName(".gnu.version");
             if (gnuversion.isPresent()) {
-                printVersionSection(gnuversion.orElseThrow(), (SectionTable) elf);
+                printVersionSection(gnuversion.orElseThrow(), elf);
                 out.println();
             }
 
             final Optional<Section> gnuversionr = elf.getSectionByName(".gnu.version_r");
             if (gnuversionr.isPresent()) {
-                printVersionSection(gnuversionr.orElseThrow(), (SectionTable) elf);
+                printVersionSection(gnuversionr.orElseThrow(), elf);
             }
         }
 
@@ -407,14 +407,18 @@ public final class Main {
             if (displayGnuHashSection) {
                 out.println();
             }
+            boolean first = true;
             for (int i = 0; i < elf.getSectionTableLength(); i++) {
                 final Section s = elf.getSection(i);
                 if (!s.getName().startsWith(".note")) {
                     continue;
                 }
 
+                if (!first) {
+                    out.println();
+                }
                 printNoteSection((NoteSection) s);
-                out.println();
+                first = false;
             }
         }
 
@@ -796,7 +800,78 @@ public final class Main {
                                 .mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
-                case NT_STAPSDT -> out.println("TODO");
+                case NT_STAPSDT -> {
+                    final ReadOnlyByteBuffer robb = new ReadOnlyByteBuffer() {
+
+                        private long k = 0;
+
+                        @Override
+                        public boolean isLittleEndian() {
+                            return true;
+                        }
+
+                        @Override
+                        public void setEndianness(final boolean isLittleEndian) {
+                            throw new UnsupportedOperationException("Unimplemented method 'setEndianness'");
+                        }
+
+                        @Override
+                        public void setAlignment(final long newAlignment) {
+                            throw new UnsupportedOperationException("Unimplemented method 'setAlignment'");
+                        }
+
+                        @Override
+                        public long getAlignment() {
+                            return 1L;
+                        }
+
+                        @Override
+                        public void setPosition(final long newPosition) {
+                            k = newPosition;
+                        }
+
+                        @Override
+                        public long getPosition() {
+                            return k;
+                        }
+
+                        @Override
+                        public byte read() {
+                            return nse.getDescriptionByte(BitUtils.asInt(k));
+                        }
+                    };
+                    final int location = robb.read4();
+                    // ignore a 32-bit word
+                    robb.read4();
+                    final int base = robb.read4();
+                    // ignore a 32-bit word
+                    robb.read4();
+                    final int semaphore = robb.read4();
+                    // ignore a 32-bit word
+                    robb.read4();
+                    final StringBuilder provider = new StringBuilder();
+                    byte x = robb.read1();
+                    while (x != 0x00) {
+                        provider.append((char) x);
+                        x = robb.read1();
+                    }
+                    final StringBuilder name = new StringBuilder();
+                    x = robb.read1();
+                    while (x != 0x00) {
+                        name.append((char) x);
+                        x = robb.read1();
+                    }
+                    final StringBuilder arguments = new StringBuilder();
+                    x = robb.read1();
+                    while (x != 0x00) {
+                        arguments.append((char) x);
+                        x = robb.read1();
+                    }
+                    out.printf("    Provider: %s%n", provider.toString());
+                    out.printf("    Name: %s%n", name.toString());
+                    out.printf("    Location: 0x%016x, Base: 0x%016x, Semaphore: 0x%016x%n", location, base, semaphore);
+                    out.printf("    Arguments: %s%n", arguments.toString());
+                }
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown note section entry type '%s'", nse.getType()));
             }
@@ -913,7 +988,7 @@ public final class Main {
                 robb.read4());
     }
 
-    private static void printSectionDetails(final ELF elf) {
+    private static void printSectionDetails(final SectionTable sections) {
         out.print(String.join(
                 "\n",
                 "Section Headers:",
@@ -922,7 +997,6 @@ public final class Main {
                 "       Size              EntSize          Info              Align",
                 "       Flags"));
 
-        final SectionTable sections = (SectionTable) elf;
         for (int i = 0; i < sections.getSectionTableLength(); i++) {
             final Section s = sections.getSection(i);
             final SectionHeader sh = s.getHeader();
@@ -965,7 +1039,7 @@ public final class Main {
         }
     }
 
-    private static void printSectionHeaders(final ELF elf) {
+    private static void printSectionHeaders(final SectionTable sections) {
         if (wide) {
             out.println(
                     """
@@ -979,7 +1053,6 @@ public final class Main {
                                    Size              EntSize          Flags  Link  Info  Align""");
         }
 
-        final SectionTable sections = (SectionTable) elf;
         for (int i = 0; i < sections.getSectionTableLength(); i++) {
             final Section s = sections.getSection(i);
             final SectionHeader sh = s.getHeader();
@@ -1039,7 +1112,7 @@ public final class Main {
                           D (mbind), l (large), p (processor specific)""");
     }
 
-    private static void printProgramHeaders(final ELF elf) {
+    private static void printProgramHeaders(final ProgramHeaderTable pht, final ELF elf) {
         if (wide) {
             out.println(
                     """
@@ -1053,7 +1126,6 @@ public final class Main {
                                          FileSiz            MemSiz              Flags  Align""");
         }
 
-        final ProgramHeaderTable pht = (ProgramHeaderTable) elf;
         for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
             final PHTEntry phte = pht.getProgramHeader(i);
             final String type = phte.getType().getName();
@@ -1101,19 +1173,17 @@ public final class Main {
         }
     }
 
-    private static void printSectionToSegmentMapping(final ELF elf) {
+    private static void printSectionToSegmentMapping(final ProgramHeaderTable pht, final SectionTable sections) {
         out.println(" Section to Segment mapping:\n" + //
                 "  Segment Sections...");
 
-        final ProgramHeaderTable pht = (ProgramHeaderTable) elf;
-        final SectionTable sections = (SectionTable) elf;
         for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
             final PHTEntry phte = pht.getProgramHeader(i);
             out.printf(
                     "   %02d     %s %n",
                     i,
                     IntStream.range(0, sections.getSectionTableLength())
-                            .mapToObj(k -> sections.getSection(k))
+                            .mapToObj(sections::getSection)
                             .filter(s -> {
                                 final long segmentStart = phte.getSegmentOffset();
                                 final long segmentEnd = segmentStart + phte.getSegmentFileSize();
