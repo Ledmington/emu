@@ -46,8 +46,9 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
 /**
- * Useful references <a href="https://linuxgazette.net/84/hawk.html">here</a> and <a
- * href="https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779" >here</a>.
+ * Useful references <a href="https://linuxgazette.net/84/hawk.html">here</a>, <a
+ * href="https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779" >here</a> and <a
+ * href="https://gitlab.com/x86-psABIs/x86-64-ABI">here</a>.
  */
 public final class X86Emulator implements Emulator {
 
@@ -119,6 +120,8 @@ public final class X86Emulator implements Emulator {
         // run pre-constructors? (.preinit_array)
 
         // run constructors? (.init_array)
+
+        // run legacy constructors? (.init)
 
         while (true) {
             // dec.goTo(this.instructionFetcher.position());
@@ -203,6 +206,8 @@ public final class X86Emulator implements Emulator {
         }
 
         // run desctructors? (.fini_array)
+
+        // run legacy destructors? (.fini)
     }
 
     private long computeIndirectOperand(final IndirectOperand io) {

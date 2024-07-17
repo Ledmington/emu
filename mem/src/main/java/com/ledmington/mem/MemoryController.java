@@ -133,7 +133,7 @@ public final class MemoryController implements Memory {
     /**
      * Writes 8 contiguous bytes at the given address.
      *
-     * @param address The lmemory location where to write.
+     * @param address The memory location where to write.
      * @param value The 64-bit value to write.
      */
     public void write(final long address, final long value) {
