@@ -21,44 +21,47 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.ledmington.utils.MiniLogger;
-
 /** A symbol's binding determines the linkage visibility and behavior. */
-public final class SymbolTableEntryBinding {
-
-    private static final MiniLogger logger = MiniLogger.getLogger("symtab-bind");
-    private static final Map<Byte, SymbolTableEntryBinding> codeToBind = new HashMap<>();
+public enum SymbolTableEntryBinding {
 
     /**
      * Local symbols are not visible outside the object file containing their definition. Local symbols of the same name
      * may exist in multiple files without interfering with each other.
      */
-    public static final SymbolTableEntryBinding STB_LOCAL = new SymbolTableEntryBinding((byte) 0x00, "LOCAL");
+    STB_LOCAL((byte) 0x00, "LOCAL"),
 
     /**
      * Global symbols are visible to all object files being combined. One file's definition of a global symbol will
      * satisfy another file's undefined reference to the same global symbol.
      */
-    public static final SymbolTableEntryBinding STB_GLOBAL = new SymbolTableEntryBinding((byte) 0x01, "GLOBAL");
+    STB_GLOBAL((byte) 0x01, "GLOBAL"),
 
     /** Weak symbols resemble global symbols, but their definitions have lower precedence. */
-    public static final SymbolTableEntryBinding STB_WEAK = new SymbolTableEntryBinding((byte) 0x02, "WEAK");
+    STB_WEAK((byte) 0x02, "WEAK"),
 
     /** Values in the inclusive range from this one to STB_HIOS are reserved for OS-specific semantics. */
-    public static final SymbolTableEntryBinding STB_LOOS =
-            new SymbolTableEntryBinding((byte) 0x0a, "OS-specific", false);
+    STB_LOOS((byte) 0x0a, "OS-specific"),
 
     /** Values in the inclusive range from STB_LOOS to this one are reserved for OS-specific semantics. */
-    public static final SymbolTableEntryBinding STB_HIOS =
-            new SymbolTableEntryBinding((byte) 0x0c, "OS-specific", false);
+    STB_HIOS((byte) 0x0c, "OS-specific"),
 
     /** Values in the inclusive range from this one to STB_HIPROC are reserved for processor-specific semantics. */
-    public static final SymbolTableEntryBinding STB_LOPROC =
-            new SymbolTableEntryBinding((byte) 0x0d, "Processor-specific", false);
+    STB_LOPROC((byte) 0x0d, "Processor-specific"),
 
     /** Values in the inclusive range from STB_LOPROC to this one are reserved for processor-specific semantics. */
-    public static final SymbolTableEntryBinding STB_HIPROC =
-            new SymbolTableEntryBinding((byte) 0x0f, "Processor-specific", false);
+    STB_HIPROC((byte) 0x0f, "Processor-specific");
+
+    private static final Map<Byte, SymbolTableEntryBinding> codeToBind = new HashMap<>();
+
+    static {
+        for (final SymbolTableEntryBinding bind : SymbolTableEntryBinding.values()) {
+            if ((bind.code <= STB_LOOS.code && bind.code >= STB_HIOS.code)
+                    || (bind.code <= STB_LOPROC.code && bind.code >= STB_HIPROC.code)) {
+                continue;
+            }
+            codeToBind.put(bind.code, bind);
+        }
+    }
 
     /**
      * Returns the proper STE binding object corresponding to the given code.
@@ -69,12 +72,12 @@ public final class SymbolTableEntryBinding {
     public static SymbolTableEntryBinding fromCode(final byte code) {
         if (!codeToBind.containsKey(code)) {
             if (code >= STB_LOOS.code && code <= STB_HIOS.code) {
-                logger.warning("Unknown Symbol table entry bind found: 0x%02x", code);
-                return new SymbolTableEntryBinding(code, "OS-specific", false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown OS-specific Symbol table entry bind identifier: 0x%02x", code));
             }
             if (code >= STB_LOPROC.code && code <= STB_HIPROC.code) {
-                logger.warning("Unknown Symbol table entry bind found: 0x%02x", code);
-                return new SymbolTableEntryBinding(code, "Processor-specific", false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown CPU-specific Symbol table entry bind identifier: 0x%02x", code));
             }
             throw new IllegalArgumentException(
                     String.format("Unknown Symbol table entry bind identifier: 0x%02x", code));
@@ -85,21 +88,9 @@ public final class SymbolTableEntryBinding {
     private final byte code;
     private final String name;
 
-    private SymbolTableEntryBinding(final byte code, final String name, final boolean addToMap) {
+    private SymbolTableEntryBinding(final byte code, final String name) {
         this.code = code;
         this.name = Objects.requireNonNull(name);
-
-        if (addToMap) {
-            if (codeToBind.containsKey(code)) {
-                throw new IllegalStateException(String.format(
-                        "Symbol table entry bind value with code %d (0x%02x) already exists", code, code));
-            }
-            codeToBind.put(code, this);
-        }
-    }
-
-    private SymbolTableEntryBinding(final byte code, final String name) {
-        this(code, name, true);
     }
 
     /**
