@@ -21,15 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.ledmington.utils.HashUtils;
-
 /**
  * A symbol's visibility, determined from its st_other field, may be specified in a relocatable object. This visibility
  * defines how that symbol may be accessed once the symbol has become part of an executable or shared object.
  */
-public final class SymbolTableEntryVisibility {
-
-    private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
+public enum SymbolTableEntryVisibility {
 
     /**
      * The visibility of symbols with the STV_DEFAULT attribute is as specified by the symbol's binding type. That is,
@@ -37,10 +33,10 @@ public final class SymbolTableEntryVisibility {
      * Local symbols are hidden. Global and weak symbols can also be preempted, that is, they may by interposed by
      * definitions of the same name in another component.
      */
-    public static final SymbolTableEntryVisibility STV_DEFAULT = new SymbolTableEntryVisibility((byte) 0, "DEFAULT");
+    STV_DEFAULT((byte) 0, "DEFAULT"),
 
     /** This visibility attribute is currently reserved. */
-    public static final SymbolTableEntryVisibility STV_INTERNAL = new SymbolTableEntryVisibility((byte) 1, "INTERNAL");
+    STV_INTERNAL((byte) 1, "INTERNAL"),
 
     /**
      * A symbol defined in the current component is hidden if its name is not visible to other components. Such a symbol
@@ -50,7 +46,7 @@ public final class SymbolTableEntryVisibility {
      * <p>A hidden symbol contained in a relocatable object is either removed or converted to STB_LOCAL binding by the
      * link-editor when the relocatable object is included in an executable file or shared object.
      */
-    public static final SymbolTableEntryVisibility STV_HIDDEN = new SymbolTableEntryVisibility((byte) 2, "HIDDEN");
+    STV_HIDDEN((byte) 2, "HIDDEN"),
 
     /**
      * A symbol defined in the current component is protected if it is visible in other components but cannot be
@@ -58,8 +54,15 @@ public final class SymbolTableEntryVisibility {
      * in that component, even if there is a definition in another component that would interpose by the default rules.
      * A symbol with STB_LOCAL binding will not have STV_PROTECTED visibility.
      */
-    public static final SymbolTableEntryVisibility STV_PROTECTED =
-            new SymbolTableEntryVisibility((byte) 3, "PROTECTED");
+    STV_PROTECTED((byte) 3, "PROTECTED");
+
+    private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
+
+    static {
+        for (final SymbolTableEntryVisibility visibility : SymbolTableEntryVisibility.values()) {
+            codeToVisibility.put(visibility.code, visibility);
+        }
+    }
 
     /**
      * Returns the STV object corresponding to the given code.
@@ -81,12 +84,6 @@ public final class SymbolTableEntryVisibility {
     private SymbolTableEntryVisibility(final byte code, final String name) {
         this.code = code;
         this.name = Objects.requireNonNull(name);
-
-        if (codeToVisibility.containsKey(code)) {
-            throw new IllegalStateException(String.format(
-                    "Symbol table entry visibility value with code %d (0x%02x) already exists", code, code));
-        }
-        codeToVisibility.put(code, this);
     }
 
     /**
@@ -110,28 +107,5 @@ public final class SymbolTableEntryVisibility {
     @Override
     public String toString() {
         return "SymbolTableEntryVisibility(code=" + code + ";name=" + name + ')';
-    }
-
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + HashUtils.hash(code);
-        h = 31 * h + name.hashCode();
-        return h;
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final SymbolTableEntryVisibility stev = (SymbolTableEntryVisibility) other;
-        return this.code == stev.code && this.name.equals(stev.name);
     }
 }
