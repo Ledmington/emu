@@ -1188,11 +1188,14 @@ public final class Main {
                             .mapToObj(sections::getSection)
                             .filter(s -> {
                                 final long segmentStart = phte.getSegmentOffset();
-                                final long segmentEnd = segmentStart + phte.getSegmentFileSize();
+                                final long segmentEnd = segmentStart + phte.getSegmentMemorySize();
                                 final long sectionStart = s.getHeader().getFileOffset();
                                 final long sectionEnd =
                                         sectionStart + s.getHeader().getSectionSize();
                                 return s.getHeader().getType() != SectionHeaderType.SHT_NULL
+                                        && s.getHeader().getVirtualAddress() != 0L
+                                        && s.getHeader().getSectionSize() != 0L
+                                        && s.getHeader().getFlags().contains(SectionHeaderFlags.SHF_ALLOC)
                                         && sectionStart >= segmentStart
                                         && sectionEnd <= segmentEnd;
                             })
@@ -1239,7 +1242,10 @@ public final class Main {
         out.println("  Version:                           1 (current)");
         out.printf("  OS/ABI:                            %s%n", fh.getOSABI().getName());
         out.printf("  ABI Version:                       %s%n", fh.getABIVersion());
-        out.printf("  Type:                              %s%n", fh.getFileType().getName());
+        out.printf(
+                "  Type:                              %s (%s)%n",
+                fh.getFileType().name().replaceFirst("^ET_", ""),
+                fh.getFileType().getName());
         out.printf("  Machine:                           %s%n", fh.getISA().getName());
         out.printf("  Version:                           0x%x%n", fh.getVersion());
         out.printf("  Entry point address:               0x%x%n", fh.getEntryPointVirtualAddress());

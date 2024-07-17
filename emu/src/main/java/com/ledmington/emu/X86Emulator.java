@@ -123,6 +123,8 @@ public final class X86Emulator implements Emulator {
 
         // run legacy constructors? (.init)
 
+        // run legacy constructors? (.ctors)
+
         while (true) {
             // dec.goTo(this.instructionFetcher.position());
             final Instruction inst = dec.decode();
@@ -208,6 +210,8 @@ public final class X86Emulator implements Emulator {
         // run desctructors? (.fini_array)
 
         // run legacy destructors? (.fini)
+
+        // run legacy destructors? (.dtors)
     }
 
     private long computeIndirectOperand(final IndirectOperand io) {
