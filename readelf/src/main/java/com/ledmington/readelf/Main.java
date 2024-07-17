@@ -62,6 +62,11 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
+/**
+ * Copy of GNU's readelf utility. Original source code available <a
+ * href="https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c">here</a> or <a
+ * href="https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=binutils/readelf.c;h=5d1cf9c3388a9c7eebd99001963b338e60baf370;hb=refs/heads/master">here</a>.
+ */
 public final class Main {
 
     private static final PrintWriter out = System.console() != null

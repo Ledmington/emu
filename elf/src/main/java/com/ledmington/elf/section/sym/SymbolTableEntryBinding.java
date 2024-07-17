@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
+
 /** A symbol's binding determines the linkage visibility and behavior. */
 public enum SymbolTableEntryBinding {
 
@@ -37,30 +39,22 @@ public enum SymbolTableEntryBinding {
     STB_GLOBAL((byte) 0x01, "GLOBAL"),
 
     /** Weak symbols resemble global symbols, but their definitions have lower precedence. */
-    STB_WEAK((byte) 0x02, "WEAK"),
-
-    /** Values in the inclusive range from this one to STB_HIOS are reserved for OS-specific semantics. */
-    STB_LOOS((byte) 0x0a, "OS-specific"),
-
-    /** Values in the inclusive range from STB_LOOS to this one are reserved for OS-specific semantics. */
-    STB_HIOS((byte) 0x0c, "OS-specific"),
-
-    /** Values in the inclusive range from this one to STB_HIPROC are reserved for processor-specific semantics. */
-    STB_LOPROC((byte) 0x0d, "Processor-specific"),
-
-    /** Values in the inclusive range from STB_LOPROC to this one are reserved for processor-specific semantics. */
-    STB_HIPROC((byte) 0x0f, "Processor-specific");
+    STB_WEAK((byte) 0x02, "WEAK");
 
     private static final Map<Byte, SymbolTableEntryBinding> codeToBind = new HashMap<>();
 
     static {
         for (final SymbolTableEntryBinding bind : SymbolTableEntryBinding.values()) {
-            if ((bind.code <= STB_LOOS.code && bind.code >= STB_HIOS.code)
-                    || (bind.code <= STB_LOPROC.code && bind.code >= STB_HIPROC.code)) {
-                continue;
-            }
             codeToBind.put(bind.code, bind);
         }
+    }
+
+    private static boolean isOSSpecific(final byte code) {
+        return BitUtils.and(code, (byte) 0x0a) == (byte) 0x0a;
+    }
+
+    private static boolean isCPUSpecific(final byte code) {
+        return BitUtils.and(code, (byte) 0x0c) == (byte) 0x0c;
     }
 
     /**
@@ -71,11 +65,11 @@ public enum SymbolTableEntryBinding {
      */
     public static SymbolTableEntryBinding fromCode(final byte code) {
         if (!codeToBind.containsKey(code)) {
-            if (code >= STB_LOOS.code && code <= STB_HIOS.code) {
+            if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown OS-specific Symbol table entry bind identifier: 0x%02x", code));
             }
-            if (code >= STB_LOPROC.code && code <= STB_HIPROC.code) {
+            if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown CPU-specific Symbol table entry bind identifier: 0x%02x", code));
             }

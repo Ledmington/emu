@@ -239,30 +239,22 @@ public enum DynamicTableEntryTag {
     DT_VERNEED(0x000000006ffffffeL, "VERNEED"),
 
     /** The number of entries in the DT_VERNEEDNUM table. */
-    DT_VERNEEDNUM(0x000000006fffffffL, "VERNEEDNUM"),
-
-    /** Values in the inclusive range from this one to DT_HIOS are reserved for OS-specific semantics. */
-    DT_LOOS(0x0000000060000000, "OS-specific"),
-
-    /** Values in the inclusive range from DT_LOOS to this one are reserved for OS-specific semantics. */
-    DT_HIOS(0x000000006fffffff, "OS-specific"),
-
-    /** Values in the inclusive range from this one to DT_HIPROC are reserved for processor-specific semantics. */
-    DT_LOPROC(0x0000000070000000, "Processor-specific"),
-
-    /** Values in the inclusive range from DT_LOPROC to this one are reserved for processor-specific semantics. */
-    DT_HIPROC(0x000000007fffffff, "Processor-specific");
+    DT_VERNEEDNUM(0x000000006fffffffL, "VERNEEDNUM");
 
     private static final Map<Long, DynamicTableEntryTag> codeToTag = new HashMap<>();
 
     static {
         for (final DynamicTableEntryTag dtet : values()) {
-            if ((dtet.code >= DT_LOOS.code && dtet.code <= DT_HIOS.code)
-                    || (dtet.code >= DT_LOPROC.code && dtet.code <= DT_HIPROC.code)) {
-                continue;
-            }
             codeToTag.put(dtet.getCode(), dtet);
         }
+    }
+
+    private static boolean isOSSpecific(final long code) {
+        return (code & 0x00000000f0000000L) == 0x0000000060000000L;
+    }
+
+    private static boolean isCPUSpecific(final long code) {
+        return (code & 0x00000000f0000000L) == 0x0000000070000000L;
     }
 
     /**
@@ -273,11 +265,11 @@ public enum DynamicTableEntryTag {
      */
     public static DynamicTableEntryTag fromCode(final long code) {
         if (!codeToTag.containsKey(code)) {
-            if (code >= DT_LOOS.code && code <= DT_HIOS.code) {
+            if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
-                        String.format("OS-specific Unknown Dynamic table entry tag identifier: 0x%016x", code));
+                        String.format("Unknown OS-specific Dynamic table entry tag identifier: 0x%016x", code));
             }
-            if (code >= DT_LOPROC.code && code <= DT_HIPROC.code) {
+            if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown CPU-specific Dynamic table entry tag identifier: 0x%016x", code));
             }

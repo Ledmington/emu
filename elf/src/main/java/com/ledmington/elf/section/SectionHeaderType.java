@@ -114,9 +114,6 @@ public enum SectionHeaderType {
     /** Number of defined types. */
     SHT_NUM(0x00000013, "NUM", "Number of defined types"),
 
-    /** Values in the inclusive range from this one to SHT_HIOS are reserved for OS-specific semantics. */
-    SHT_LOOS(0x60000000, "SHT_LOOS", "Unknown (OS specific)"),
-
     /** GNU-style hash table (bloom filter?). */
     SHT_GNU_HASH(0x6ffffff6, "GNU_HASH", "GNU Hash table"),
 
@@ -127,34 +124,26 @@ public enum SectionHeaderType {
     SHT_GNU_verneed(0x6ffffffe, "VERNEED", "GNU version symbol needed elements"),
 
     /** Version symbol table. */
-    SHT_GNU_versym(0x6fffffff, "VERSYM", "GNU version symbol table"),
-
-    /** Values in the inclusive range from SHT_LOOS to this one are reserved for OS-specific semantics. */
-    SHT_HIOS(0x6fffffff, "SHT_HIOS", "Unknown (OS specific)"),
-
-    /** Values in the inclusive range from this one to SHT_HIPROC are reserved for processor-specific semantics. */
-    SHT_LOPROC(0x70000000, "SHT_LOPROC", "Unknown (Processor specific)"),
-
-    /** Values in the inclusive range from SHT_LOPROC to this one are reserved for processor-specific semantics. */
-    SHT_HIPROC(0x7fffffff, "SHT_HIPROC", "Unknown (Processor specific)"),
-
-    /** Values in the inclusive range from this one to SHT_HIUSER are reserved for application programs. */
-    SHT_LOUSER(0x80000000, "SHT_LOUSER", "Unknown (Application specific)"),
-
-    /** Values in the inclusive range from SHT_LOUSER to this one are reserved for application programs. */
-    SHT_HIUSER(0xffffffff, "SHT_HIUSER", "Unknown (Application specific)");
+    SHT_GNU_versym(0x6fffffff, "VERSYM", "GNU version symbol table");
 
     private static final Map<Integer, SectionHeaderType> codeToType = new HashMap<>();
 
     static {
         for (final SectionHeaderType type : values()) {
-            if ((type.code >= SHT_LOOS.code && type.code <= SHT_HIOS.code)
-                    || (type.code >= SHT_LOPROC.code && type.code <= SHT_HIPROC.code)
-                    || (type.code >= SHT_LOUSER.code && type.code <= SHT_HIUSER.code)) {
-                continue;
-            }
             codeToType.put(type.getCode(), type);
         }
+    }
+
+    private static boolean isOSSpecific(final int code) {
+        return (code & 0xf0000000) == 0x60000000;
+    }
+
+    private static boolean isCPUSpecific(final int code) {
+        return (code & 0xf0000000) == 0x70000000;
+    }
+
+    private static boolean isApplicationSpecific(final int code) {
+        return (code & 0x80000000) == 0x80000000;
     }
 
     /**
@@ -164,7 +153,7 @@ public enum SectionHeaderType {
      * @return True if the code is valid, false otherwise.
      */
     public static boolean isValid(final int code) {
-        return codeToType.containsKey(code) || code >= SHT_LOOS.code;
+        return codeToType.containsKey(code);
     }
 
     /**
@@ -175,15 +164,15 @@ public enum SectionHeaderType {
      */
     public static SectionHeaderType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
-            if (code >= SHT_LOOS.code && code <= SHT_HIOS.code) {
+            if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown OS-specific SHT entry identifier: 0x%08x", code));
             }
-            if (code >= SHT_LOPROC.code && code <= SHT_HIPROC.code) {
+            if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown CPU-specific SHT entry identifier: 0x%08x", code));
             }
-            if (code >= SHT_LOUSER.code && code <= SHT_HIUSER.code) {
+            if (isApplicationSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown application-specific SHT entry identifier: 0x%08x", code));
             }

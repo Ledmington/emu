@@ -66,9 +66,6 @@ public enum PHTEntryType {
     /** Specifies a thread-local storage template. */
     PT_TLS(0x00000007, "TLS", "Thread-Local Storage template"),
 
-    /** Values in the inclusive range from this one to PT_HIOS are reserved for OS-specific semantics. */
-    PT_LOOS(0x60000000, "OS-specific", "Unknown (OS specific)"),
-
     /**
      * The array element specifies the location and size of the exception handling information as defined by the
      * .eh_frame_hdr section.
@@ -88,34 +85,26 @@ public enum PHTEntryType {
     PT_GNU_RELRO(0x6474e552, "GNU_RELRO", "Read-only after relocation"),
 
     /** The section .note.gnu.property has this type. */
-    PT_GNU_PROPERTY(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections"),
-
-    /** Values in the inclusive range from PT_LOOS to this one are reserved for OS-specific semantics. */
-    PT_HIOS(0x6fffffff, "OS-specific", "Unknown (OS specific)"),
-
-    /** Values in the inclusive range from this one to PT_HIPROC are reserved for processor-specific semantics. */
-    PT_LOPROC(0x70000000, "CPU-specific", "Unknown (Processor specific)"),
-
-    /** Values in the inclusive range from PT_LOPROC to this one are reserved for processor-specific semantics. */
-    PT_HIPROC(0x7fffffff, "CPU-specific", "Unknown (Processor specific)"),
-
-    /** Values in the inclusive range from this one to PT_HIUSER are reserved for application programs. */
-    PT_LOUSER(0x80000000, "Application-specific", "Unknown (Application specific)"),
-
-    /** Values in the inclusive range from PT_LOUSER to this one are reserved for application programs. */
-    PT_HIUSER(0xffffffff, "Application-specific", "Unknown (Application specific)");
+    PT_GNU_PROPERTY(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections");
 
     private static final Map<Integer, PHTEntryType> codeToType = new HashMap<>();
 
     static {
         for (final PHTEntryType type : values()) {
-            if ((type.getCode() >= PT_LOOS.code && type.getCode() <= PT_HIOS.code)
-                    || (type.getCode() >= PT_LOPROC.code && type.getCode() <= PT_HIPROC.code)
-                    || (type.getCode() >= PT_LOUSER.code && type.getCode() <= PT_HIUSER.code)) {
-                continue;
-            }
             codeToType.put(type.getCode(), type);
         }
+    }
+
+    private static boolean isOSSpecific(final int code) {
+        return (code & 0xf0000000) == 0x60000000;
+    }
+
+    private static boolean isCPUSpecific(final int code) {
+        return (code & 0xf0000000) == 0x70000000;
+    }
+
+    private static boolean isApplicationSpecific(final int code) {
+        return (code & 0x80000000) == 0x80000000;
     }
 
     /**
@@ -125,7 +114,7 @@ public enum PHTEntryType {
      * @return True if it is a valid code, false otherwise.
      */
     public static boolean isValid(final int code) {
-        return codeToType.containsKey(code) || (code >= PT_LOOS.code);
+        return codeToType.containsKey(code);
     }
 
     /**
@@ -136,15 +125,15 @@ public enum PHTEntryType {
      */
     public static PHTEntryType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
-            if (code >= PT_LOOS.code && code <= PT_HIOS.code) {
+            if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown OS-specific PHT entry type identifier: 0x%02x", code));
             }
-            if (code >= PT_LOPROC.code && code <= PT_HIPROC.code) {
+            if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown CPU-specific PHT entry type identifier: 0x%02x", code));
             }
-            if (code >= PT_LOUSER.code && code <= PT_HIUSER.code) {
+            if (isApplicationSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown application-specific PHT entry type identifier: 0x%02x", code));
             }

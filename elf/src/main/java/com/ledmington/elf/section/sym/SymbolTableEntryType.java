@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
+
 /**
  * The type of an ELF symbol table entry. A symbol's type provides a general classification for the associated entity.
  */
@@ -58,28 +60,22 @@ public enum SymbolTableEntryType {
      * STT_TLS from an allocatable section, can only be achieved by using special thread-local storage relocations. A
      * reference to a symbol of type STT_TLS from a non-allocatable section does not have this restriction.
      */
-    STT_TLS((byte) 0x06, "TLS"),
-
-    /** Values in the inclusive range from this one to STT_HIOS are reserved for OS-specific semantics. */
-    STT_LOOS((byte) 0x0a, "OS-specific"),
-
-    /** Values in the inclusive range from STT_LOOS to this one are reserved for OS-specific semantics. */
-    STT_HIOS((byte) 0x0c, "OS-specific"),
-
-    /** Values in the inclusive range from this one to STT_HIPROC are reserved for processor-specific semantics. */
-    STT_LOPROC((byte) 0x0d, "Processor-specific"),
-
-    /** Values in the inclusive range from STT_LOPROC to this one are reserved for processor-specific semantics. */
-    STT_HIPROC((byte) 0x0f, "Processor-specific");
+    STT_TLS((byte) 0x06, "TLS");
 
     private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
 
     static {
         for (final SymbolTableEntryType type : values()) {
-            if ((type.code >= STT_LOOS.code && type.code <= STT_HIOS.code)
-                    || (type.code >= STT_LOPROC.code && type.code <= STT_HIPROC.code))
-                codeToType.put(type.getCode(), type);
+            codeToType.put(type.getCode(), type);
         }
+    }
+
+    private static boolean isOSSpecific(final byte code) {
+        return BitUtils.and(code, (byte) 0x0a) == (byte) 0x0a;
+    }
+
+    private static boolean isCPUSpecific(final byte code) {
+        return BitUtils.and(code, (byte) 0x0d) == (byte) 0x0d;
     }
 
     /**
@@ -90,11 +86,11 @@ public enum SymbolTableEntryType {
      */
     public static SymbolTableEntryType fromCode(final byte code) {
         if (!codeToType.containsKey(code)) {
-            if (code >= STT_LOOS.code && code <= STT_HIOS.code) {
+            if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown OS-specific Symbol table entry type identifier: 0x%02x", code));
             }
-            if (code >= STT_LOPROC.code && code <= STT_HIPROC.code) {
+            if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
                         String.format("Unknown CPU-specific Symbol table entry type identifier: 0x%02x", code));
             }
