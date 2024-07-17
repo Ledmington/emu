@@ -21,40 +21,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.ledmington.utils.HashUtils;
-import com.ledmington.utils.MiniLogger;
-
 /**
  * The type of an ELF symbol table entry. A symbol's type provides a general classification for the associated entity.
  */
-public final class SymbolTableEntryType {
-
-    private static final MiniLogger logger = MiniLogger.getLogger("symtab-type");
-    private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
+public enum SymbolTableEntryType {
 
     /** The symbol's type is not specified. */
-    public static final SymbolTableEntryType STT_NOTYPE = new SymbolTableEntryType((byte) 0x00, "NOTYPE");
+    STT_NOTYPE((byte) 0x00, "NOTYPE"),
 
     /** The symbol is associated with a data object, such as a variable, an array, and so on. */
-    public static final SymbolTableEntryType STT_OBJECT = new SymbolTableEntryType((byte) 0x01, "OBJECT");
+    STT_OBJECT((byte) 0x01, "OBJECT"),
 
     /** The symbol is associated with a function or other executable code. */
-    public static final SymbolTableEntryType STT_FUNC = new SymbolTableEntryType((byte) 0x02, "FUNC");
+    STT_FUNC((byte) 0x02, "FUNC"),
 
     /**
      * The symbol is associated with a section. Symbol table entries of this type exist primarily for relocation and
      * normally have STB_LOCAL binding.
      */
-    public static final SymbolTableEntryType STT_SECTION = new SymbolTableEntryType((byte) 0x03, "SECTION");
+    STT_SECTION((byte) 0x03, "SECTION"),
 
     /**
      * A file symbol has STB_LOCAL binding, its section index is SHN_ABS, and it precedes the other STB_LOCAL symbols
      * for the file, if it is present.
      */
-    public static final SymbolTableEntryType STT_FILE = new SymbolTableEntryType((byte) 0x04, "FILE");
+    STT_FILE((byte) 0x04, "FILE"),
 
     /** This symbol labels an uninitialized common block. This symbol is treated exactly the same as STT_OBJECT. */
-    public static final SymbolTableEntryType STT_COMMON = new SymbolTableEntryType((byte) 0x05, "COMMON");
+    STT_COMMON((byte) 0x05, "COMMON"),
 
     /**
      * The symbol specifies a thread-local storage entity. When defined, this symbol gives the assigned offset for the
@@ -64,21 +58,29 @@ public final class SymbolTableEntryType {
      * STT_TLS from an allocatable section, can only be achieved by using special thread-local storage relocations. A
      * reference to a symbol of type STT_TLS from a non-allocatable section does not have this restriction.
      */
-    public static final SymbolTableEntryType STT_TLS = new SymbolTableEntryType((byte) 0x06, "TLS");
+    STT_TLS((byte) 0x06, "TLS"),
 
     /** Values in the inclusive range from this one to STT_HIOS are reserved for OS-specific semantics. */
-    public static final SymbolTableEntryType STT_LOOS = new SymbolTableEntryType((byte) 0x0a, "OS-specific", false);
+    STT_LOOS((byte) 0x0a, "OS-specific"),
 
     /** Values in the inclusive range from STT_LOOS to this one are reserved for OS-specific semantics. */
-    public static final SymbolTableEntryType STT_HIOS = new SymbolTableEntryType((byte) 0x0c, "OS-specific", false);
+    STT_HIOS((byte) 0x0c, "OS-specific"),
 
     /** Values in the inclusive range from this one to STT_HIPROC are reserved for processor-specific semantics. */
-    public static final SymbolTableEntryType STT_LOPROC =
-            new SymbolTableEntryType((byte) 0x0d, "Processor-specific", false);
+    STT_LOPROC((byte) 0x0d, "Processor-specific"),
 
     /** Values in the inclusive range from STT_LOPROC to this one are reserved for processor-specific semantics. */
-    public static final SymbolTableEntryType STT_HIPROC =
-            new SymbolTableEntryType((byte) 0x0f, "Processor-specific", false);
+    STT_HIPROC((byte) 0x0f, "Processor-specific");
+
+    private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
+
+    static {
+        for (final SymbolTableEntryType type : values()) {
+            if ((type.code >= STT_LOOS.code && type.code <= STT_HIOS.code)
+                    || (type.code >= STT_LOPROC.code && type.code <= STT_HIPROC.code))
+                codeToType.put(type.getCode(), type);
+        }
+    }
 
     /**
      * Returns the STT object corresponding to the given code.
@@ -89,12 +91,12 @@ public final class SymbolTableEntryType {
     public static SymbolTableEntryType fromCode(final byte code) {
         if (!codeToType.containsKey(code)) {
             if (code >= STT_LOOS.code && code <= STT_HIOS.code) {
-                logger.warning("Unknown Symbol table entry type found: 0x%02x", code);
-                return new SymbolTableEntryType(code, "OS-specific", false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown OS-specific Symbol table entry type identifier: 0x%02x", code));
             }
             if (code >= STT_LOPROC.code && code <= STT_HIPROC.code) {
-                logger.warning("Unknown Symbol table entry type found: 0x%02x", code);
-                return new SymbolTableEntryType(code, "Processor-specific", false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown CPU-specific Symbol table entry type identifier: 0x%02x", code));
             }
             throw new IllegalArgumentException(
                     String.format("Unknown Symbol table entry type identifier: 0x%02x", code));
@@ -105,21 +107,9 @@ public final class SymbolTableEntryType {
     private final byte code;
     private final String name;
 
-    private SymbolTableEntryType(final byte code, final String name, final boolean addToMap) {
+    private SymbolTableEntryType(final byte code, final String name) {
         this.code = code;
         this.name = Objects.requireNonNull(name);
-
-        if (addToMap) {
-            if (codeToType.containsKey(code)) {
-                throw new IllegalStateException(String.format(
-                        "Symbol table entry type value with code %d (0x%02x) already exists", code, code));
-            }
-            codeToType.put(code, this);
-        }
-    }
-
-    private SymbolTableEntryType(final byte code, final String name) {
-        this(code, name, true);
     }
 
     /**
@@ -143,28 +133,5 @@ public final class SymbolTableEntryType {
     @Override
     public String toString() {
         return "SymbolTableEntryType(code=" + code + ";name=" + name + ')';
-    }
-
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + HashUtils.hash(code);
-        h = 31 * h + name.hashCode();
-        return h;
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final SymbolTableEntryType stet = (SymbolTableEntryType) other;
-        return this.code == stet.code && this.name.equals(stet.name);
     }
 }
