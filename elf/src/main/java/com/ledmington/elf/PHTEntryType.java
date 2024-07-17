@@ -21,19 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.ledmington.utils.MiniLogger;
-
 /** The type of an ELF Program Header Table entry. */
-public final class PHTEntryType {
-
-    private static final MiniLogger logger = MiniLogger.getLogger("pht-entry-type");
-    private static final Map<Integer, PHTEntryType> codeToType = new HashMap<>();
+public enum PHTEntryType {
 
     /**
      * The array element is unused; other members' values are undefined. This type lets the program header table have
      * ignored entries.
      */
-    public static final PHTEntryType PT_NULL = new PHTEntryType(0x00000000, "NULL", "Unused");
+    PT_NULL(0x00000000, "NULL", "Unused"),
 
     /**
      * The array element specifies a loadable segment, described by p_filesz and p_memsz. The bytes from the file are
@@ -46,19 +41,19 @@ public final class PHTEntryType {
      * and to follow the segment's initialized area. The file size may not be larger than the memory size. Loadable
      * segment entries in the program header table appear in ascending order, sorted on the p_vaddr member.
      */
-    public static final PHTEntryType PT_LOAD = new PHTEntryType(0x00000001, "LOAD", "Loadable");
+    PT_LOAD(0x00000001, "LOAD", "Loadable"),
 
     /** The array element specifies dynamic linking information. */
-    public static final PHTEntryType PT_DYNAMIC = new PHTEntryType(0x00000002, "DYNAMIC", "Dynamic linking info");
+    PT_DYNAMIC(0x00000002, "DYNAMIC", "Dynamic linking info"),
 
     /** The array element specifies the location and size of a null-terminated path name to invoke as an interpreter. */
-    public static final PHTEntryType PT_INTERP = new PHTEntryType(0x00000003, "INTERP", "Interpreter info");
+    PT_INTERP(0x00000003, "INTERP", "Interpreter info"),
 
     /** The array element specifies the location and size of auxiliary information. */
-    public static final PHTEntryType PT_NOTE = new PHTEntryType(0x00000004, "NOTE", "Auxiliary info");
+    PT_NOTE(0x00000004, "NOTE", "Auxiliary info"),
 
     /** This segment type is reserved but has unspecified semantics. */
-    public static final PHTEntryType PT_SHLIB = new PHTEntryType(0x00000005, "SHLIB", "Reserved");
+    PT_SHLIB(0x00000005, "SHLIB", "Reserved"),
 
     /**
      * The array element, if present, specifies the location and size of the program header table itself, both in the
@@ -66,58 +61,62 @@ public final class PHTEntryType {
      * it may occur only if the program header table is part of the memory image of the program. If it is present, it
      * must precede any loadable segment entry.
      */
-    public static final PHTEntryType PT_PHDR = new PHTEntryType(0x00000006, "PHDR", "Program header table");
+    PT_PHDR(0x00000006, "PHDR", "Program header table"),
 
     /** Specifies a thread-local storage template. */
-    public static final PHTEntryType PT_TLS = new PHTEntryType(0x00000007, "TLS", "Thread-Local Storage template");
+    PT_TLS(0x00000007, "TLS", "Thread-Local Storage template"),
 
     /** Values in the inclusive range from this one to PT_HIOS are reserved for OS-specific semantics. */
-    public static final PHTEntryType PT_LOOS =
-            new PHTEntryType(0x60000000, "OS-specific", "Unknown (OS specific)", false);
+    PT_LOOS(0x60000000, "OS-specific", "Unknown (OS specific)"),
 
     /**
      * The array element specifies the location and size of the exception handling information as defined by the
      * .eh_frame_hdr section.
      */
-    public static final PHTEntryType PT_GNU_EH_FRAME =
-            new PHTEntryType(0x6474e550, "GNU_EH_FRAME", "Exception handling");
+    PT_GNU_EH_FRAME(0x6474e550, "GNU_EH_FRAME", "Exception handling"),
 
     /**
      * The p_flags member specifies the permissions on the segment containing the stack and is used to indicate wether
      * the stack should be executable. The absense of this header indicates that the stack will be executable.
      */
-    public static final PHTEntryType PT_GNU_STACK = new PHTEntryType(0x6474e551, "GNU_STACK", "Stack executablity");
+    PT_GNU_STACK(0x6474e551, "GNU_STACK", "Stack executablity"),
 
     /**
      * This array element specifies the location and size of a segment which may be made read-only after relocations
      * have been processed.
      */
-    public static final PHTEntryType PT_GNU_RELRO =
-            new PHTEntryType(0x6474e552, "GNU_RELRO", "Read-only after relocation");
+    PT_GNU_RELRO(0x6474e552, "GNU_RELRO", "Read-only after relocation"),
 
     /** The section .note.gnu.property has this type. */
-    public static final PHTEntryType PT_GNU_PROPERTY =
-            new PHTEntryType(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections");
+    PT_GNU_PROPERTY(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections"),
 
     /** Values in the inclusive range from PT_LOOS to this one are reserved for OS-specific semantics. */
-    public static final PHTEntryType PT_HIOS =
-            new PHTEntryType(0x6fffffff, "OS-specific", "Unknown (OS specific)", false);
+    PT_HIOS(0x6fffffff, "OS-specific", "Unknown (OS specific)"),
 
     /** Values in the inclusive range from this one to PT_HIPROC are reserved for processor-specific semantics. */
-    public static final PHTEntryType PT_LOPROC =
-            new PHTEntryType(0x70000000, "CPU-specific", "Unknown (Processor specific)", false);
+    PT_LOPROC(0x70000000, "CPU-specific", "Unknown (Processor specific)"),
 
     /** Values in the inclusive range from PT_LOPROC to this one are reserved for processor-specific semantics. */
-    public static final PHTEntryType PT_HIPROC =
-            new PHTEntryType(0x7fffffff, "CPU-specific", "Unknown (Processor specific)", false);
+    PT_HIPROC(0x7fffffff, "CPU-specific", "Unknown (Processor specific)"),
 
     /** Values in the inclusive range from this one to PT_HIUSER are reserved for application programs. */
-    public static final PHTEntryType PT_LOUSER =
-            new PHTEntryType(0x80000000, "Application-specific", "Unknown (Application specific)", false);
+    PT_LOUSER(0x80000000, "Application-specific", "Unknown (Application specific)"),
 
     /** Values in the inclusive range from PT_LOUSER to this one are reserved for application programs. */
-    public static final PHTEntryType PT_HIUSER =
-            new PHTEntryType(0xffffffff, "Application-specific", "Unknown (Application specific)", false);
+    PT_HIUSER(0xffffffff, "Application-specific", "Unknown (Application specific)");
+
+    private static final Map<Integer, PHTEntryType> codeToType = new HashMap<>();
+
+    static {
+        for (final PHTEntryType type : values()) {
+            if ((type.getCode() >= PT_LOOS.code && type.getCode() <= PT_HIOS.code)
+                    || (type.getCode() >= PT_LOPROC.code && type.getCode() <= PT_HIPROC.code)
+                    || (type.getCode() >= PT_LOUSER.code && type.getCode() <= PT_HIUSER.code)) {
+                continue;
+            }
+            codeToType.put(type.getCode(), type);
+        }
+    }
 
     /**
      * Checks whether the given code is a valid program header table entry type.
@@ -138,18 +137,16 @@ public final class PHTEntryType {
     public static PHTEntryType fromCode(final int code) {
         if (!codeToType.containsKey(code)) {
             if (code >= PT_LOOS.code && code <= PT_HIOS.code) {
-                logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(code, "OS-specific", String.format("0x%08x (OS specific)", code), false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown OS-specific PHT entry type identifier: 0x%02x", code));
             }
             if (code >= PT_LOPROC.code && code <= PT_HIPROC.code) {
-                logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(
-                        code, "CPU-specific", String.format("0x%08x (Processor specific)", code), false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown CPU-specific PHT entry type identifier: 0x%02x", code));
             }
             if (code >= PT_LOUSER.code && code <= PT_HIUSER.code) {
-                logger.warning("Unknown PHT entry type found: 0x%08x", code);
-                return new PHTEntryType(
-                        code, "Application-specific", String.format("0x%08x (Application specific)", code), false);
+                throw new IllegalArgumentException(
+                        String.format("Unknown application-specific PHT entry type identifier: 0x%02x", code));
             }
             throw new IllegalArgumentException(String.format("Unknown ELF PHT entry type identifier: 0x%02x", code));
         }
@@ -160,23 +157,10 @@ public final class PHTEntryType {
     private final String name;
     private final String description;
 
-    private PHTEntryType(final int code, final String name, final String description, final boolean addToMap) {
+    private PHTEntryType(final int code, final String name, final String description) {
         this.code = code;
         this.name = Objects.requireNonNull(name);
         this.description = Objects.requireNonNull(description);
-
-        if (addToMap) {
-            if (codeToType.containsKey(code)) {
-                throw new IllegalStateException(String.format(
-                        "ELF PHT entry type enum value with code %d (0x%02x) and name '%s' already exists",
-                        code, code, description));
-            }
-            codeToType.put(code, this);
-        }
-    }
-
-    private PHTEntryType(final int code, final String name, final String description) {
-        this(code, name, description, true);
     }
 
     /**
