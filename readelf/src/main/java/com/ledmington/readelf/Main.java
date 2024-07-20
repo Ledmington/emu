@@ -889,11 +889,11 @@ public final class Main {
             arguments.append((char) x);
             x = robb.read1();
         }
-        out.printf("    Provider: %s%n", provider.toString());
-        out.printf("    Name: %s%n", name.toString());
+        out.printf("    Provider: %s%n", provider);
+        out.printf("    Name: %s%n", name);
         out.printf("    Location: 0x%016x, Base: 0x%016x, Semaphore: 0x%016x%n", location, base, semaphore);
 
-        out.printf("    Arguments: %s%n", arguments.toString());
+        out.printf("    Arguments: %s%n", arguments);
     }
 
     private static void printGNUProperties(final NoteSectionEntry nse) {
