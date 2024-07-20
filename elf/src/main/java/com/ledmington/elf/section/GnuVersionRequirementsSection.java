@@ -20,6 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
@@ -62,16 +63,25 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
             for (int i = 0; i < dynamicSection.getTableLength(); i++) {
                 if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
                     versionRequirementsEntryNum =
-                            (int) dynamicSection.getEntry(i).getContent();
+                            BitUtils.asInt(dynamicSection.getEntry(i).getContent());
                     break;
                 }
             }
         }
 
+        final long oldAlignment = b.getAlignment();
+        b.setAlignment(1L);
+        b.setPosition(sectionHeader.getFileOffset());
+
         this.entries = new GnuVersionRequirementEntry[versionRequirementsEntryNum];
         for (int i = 0; i < this.entries.length; i++) {
-            this.entries[i] = new GnuVersionRequirementEntry(b.read2(), b.read2(), b.read4(), b.read4(), b.read4());
+            final long entryStart = b.getPosition();
+            this.entries[i] = new GnuVersionRequirementEntry(b);
+
+            b.setPosition(entryStart + BitUtils.asLong(entries[i].getNextOffset()));
         }
+
+        b.setAlignment(oldAlignment);
     }
 
     /**
@@ -105,13 +115,26 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1((2 + 2 + 4 + 4 + 4) * entries.length);
+        int bytesNeeded = (2 + 2 + 4 + 4 + 4) * entries.length;
         for (final GnuVersionRequirementEntry gvre : entries) {
-            wb.write(gvre.version());
-            wb.write(gvre.count());
-            wb.write(gvre.fileOffset());
-            wb.write(gvre.auxOffset());
-            wb.write(gvre.nextOffset());
+            bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
+        }
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded);
+        for (final GnuVersionRequirementEntry gvre : entries) {
+            wb.write(gvre.getVersion());
+            wb.write(gvre.getCount());
+            wb.write(gvre.getFileOffset());
+            wb.write(gvre.getAuxOffset());
+            wb.write(gvre.getNextOffset());
+
+            for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
+                final GnuVersionRequirementAuxiliaryEntry aux = gvre.getAuxiliary(i);
+                wb.write(aux.hash());
+                wb.write(aux.flags());
+                wb.write(aux.other());
+                wb.write(aux.nameOffset());
+                wb.write(aux.nextOffset());
+            }
         }
         return wb.array();
     }

@@ -38,6 +38,7 @@ import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.GnuHashSection;
+import com.ledmington.elf.section.GnuVersionRequirementAuxiliaryEntry;
 import com.ledmington.elf.section.GnuVersionRequirementEntry;
 import com.ledmington.elf.section.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.GnuVersionSection;
@@ -63,9 +64,9 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
- * Copy of GNU's readelf utility. Original source code available <a
- * href="https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c">here</a> or <a
- * href="https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=binutils/readelf.c;h=5d1cf9c3388a9c7eebd99001963b338e60baf370;hb=refs/heads/master">here</a>.
+ * Copy of GNU's readelf utility. Original source code available <a href=
+ * "https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c">here</a> or <a href=
+ * "https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=binutils/readelf.c;h=5d1cf9c3388a9c7eebd99001963b338e60baf370;hb=refs/heads/master">here</a>.
  */
 public final class Main {
 
@@ -350,6 +351,7 @@ public final class Main {
                         (RelocationAddendSection) reladyn.orElseThrow(),
                         elf,
                         elf.getFileHeader().is32Bit());
+                out.println();
             }
 
             final Optional<Section> relaplt = elf.getSectionByName(".rela.plt");
@@ -595,18 +597,28 @@ public final class Main {
                     s.getName(), gvrs.getRequirementsLength(), gvrs.getRequirementsLength() == 1 ? "y" : "ies");
             out.printf(
                     " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
-                    sh.getVirtualAddress(),
-                    sh.getFileOffset(),
-                    sh.getLinkedSectionIndex(),
-                    sectionTable.getSection(sh.getLinkedSectionIndex()).getName());
+                    sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
 
             final StringTableSection strtab = (StringTableSection) linkedSection;
+            int k = 0;
             for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
                 final GnuVersionRequirementEntry gvre = gvrs.getEntry(i);
                 out.printf(
-                        "  %06x: Version: %d  File: %s  Cnt: %d%n",
-                        i, gvre.version(), strtab.getString(gvre.fileOffset()), gvre.count());
-                out.printf("%s%n", gvre);
+                        "  0%c%04x: Version: %d  File: %s  Cnt: %d%n",
+                        i == 0 ? '0' : 'x',
+                        i == 0 ? 0 : k,
+                        gvre.getVersion(),
+                        strtab.getString(gvre.getFileOffset()),
+                        gvre.getCount());
+                k += 16;
+
+                for (int j = 0; j < gvre.getAuxiliaryLength(); j++) {
+                    final GnuVersionRequirementAuxiliaryEntry aux = gvre.getAuxiliary(j);
+                    out.printf(
+                            "  0x%04x:   Name: %s  Flags: none  Version: %d%n",
+                            k, strtab.getString(aux.nameOffset()), aux.other());
+                    k += 16;
+                }
             }
         } else if (s instanceof GnuVersionSection gvs) {
             out.printf(
@@ -782,7 +794,6 @@ public final class Main {
                 }
             }
         }
-        out.println();
     }
 
     private static void printNoteSection(final NoteSection ns) {
@@ -1123,14 +1134,14 @@ public final class Main {
         if (wide) {
             out.println(
                     """
-                        Program Headers:
-                          Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align""");
+                            Program Headers:
+                              Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align""");
         } else {
             out.println(
                     """
-                        Program Headers:
-                          Type           Offset             VirtAddr           PhysAddr
-                                         FileSiz            MemSiz              Flags  Align""");
+                            Program Headers:
+                              Type           Offset             VirtAddr           PhysAddr
+                                             FileSiz            MemSiz              Flags  Align""");
         }
 
         for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
