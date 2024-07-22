@@ -103,6 +103,40 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
         return entries[idx];
     }
 
+    /**
+     * Returns the name offset of the auxiliary entry with the given version.
+     *
+     * @param version The version to look for.
+     * @return The name offset of the entry.
+     */
+    public int getVersionNameOffset(final short version) {
+        for (final GnuVersionRequirementEntry gvre : entries) {
+            for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
+                if (gvre.getAuxiliary(i).other() == version) {
+                    return gvre.getAuxiliary(i).nameOffset();
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the 'other' field of the auxiliary entry with the given version.
+     *
+     * @param version The version to look for.
+     * @return The 'other' field of the entry.
+     */
+    public short getVersion(final short version) {
+        for (final GnuVersionRequirementEntry gvre : entries) {
+            for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
+                if (gvre.getAuxiliary(i).other() == version) {
+                    return gvre.getAuxiliary(i).other();
+                }
+            }
+        }
+        return -1;
+    }
+
     @Override
     public String getName() {
         return standardName;

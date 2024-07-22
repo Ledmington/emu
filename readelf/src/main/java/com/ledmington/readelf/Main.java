@@ -80,6 +80,8 @@ public final class Main {
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(out::flush));
+
         String filename = null;
         boolean displayFileHeader = false;
         boolean displaySectionHeaders = false;
@@ -349,6 +351,11 @@ public final class Main {
             if (reladyn.isPresent()) {
                 printRelocationSection(
                         (RelocationAddendSection) reladyn.orElseThrow(),
+                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
+                                .orElseThrow(),
+                        (GnuVersionRequirementsSection)
+                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
+                                        .orElseThrow(),
                         elf,
                         elf.getFileHeader().is32Bit());
                 out.println();
@@ -358,6 +365,11 @@ public final class Main {
             if (relaplt.isPresent()) {
                 printRelocationSection(
                         (RelocationAddendSection) relaplt.orElseThrow(),
+                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
+                                .orElseThrow(),
+                        (GnuVersionRequirementsSection)
+                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
+                                        .orElseThrow(),
                         elf,
                         elf.getFileHeader().is32Bit());
                 out.println("No processor specific unwind information to decode");
@@ -370,7 +382,14 @@ public final class Main {
             }
             final Optional<Section> dynsym = elf.getSectionByName(".dynsym");
             if (dynsym.isPresent()) {
-                printSymbolTable((DynamicSymbolTableSection) dynsym.orElseThrow(), elf);
+                printSymbolTable(
+                        (DynamicSymbolTableSection) dynsym.orElseThrow(),
+                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
+                                .orElseThrow(),
+                        (GnuVersionRequirementsSection)
+                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
+                                        .orElseThrow(),
+                        elf);
             }
         }
 
@@ -380,7 +399,14 @@ public final class Main {
             }
             final Optional<Section> symtab = elf.getSectionByName(".symtab");
             if (symtab.isPresent()) {
-                printSymbolTable((SymbolTableSection) symtab.orElseThrow(), elf);
+                printSymbolTable(
+                        (SymbolTableSection) symtab.orElseThrow(),
+                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
+                                .orElseThrow(),
+                        (GnuVersionRequirementsSection)
+                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
+                                        .orElseThrow(),
+                        elf);
             }
         }
 
@@ -399,15 +425,18 @@ public final class Main {
                 out.println();
             }
 
-            final Optional<Section> gnuversion = elf.getSectionByName(".gnu.version");
+            final Optional<Section> gnuversion = elf.getSectionByName(GnuVersionSection.getStandardName());
+            final Optional<Section> gnuversionr = elf.getSectionByName(GnuVersionRequirementsSection.getStandardName());
             if (gnuversion.isPresent()) {
-                printVersionSection(gnuversion.orElseThrow(), elf);
+                printVersionSection(
+                        (GnuVersionSection) gnuversion.orElseThrow(),
+                        (GnuVersionRequirementsSection) gnuversionr.orElseThrow(),
+                        elf);
                 out.println();
             }
 
-            final Optional<Section> gnuversionr = elf.getSectionByName(".gnu.version_r");
             if (gnuversionr.isPresent()) {
-                printVersionSection(gnuversionr.orElseThrow(), elf);
+                printVersionSection((GnuVersionRequirementsSection) gnuversionr.orElseThrow(), elf);
             }
         }
 
@@ -586,69 +615,69 @@ public final class Main {
         System.exit(-1);
     }
 
-    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-    private static void printVersionSection(final Section s, final SectionTable sectionTable) {
-        final SectionHeader sh = s.getHeader();
+    private static void printVersionSection(final GnuVersionRequirementsSection gvrs, final SectionTable sectionTable) {
+        final SectionHeader sh = gvrs.getHeader();
         final Section linkedSection = sectionTable.getSection(sh.getLinkedSectionIndex());
 
-        if (s instanceof GnuVersionRequirementsSection gvrs) {
-            out.printf(
-                    "Version needs section '%s' contains %d entr%s:%n",
-                    s.getName(), gvrs.getRequirementsLength(), gvrs.getRequirementsLength() == 1 ? "y" : "ies");
-            out.printf(
-                    " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
-                    sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
+        out.printf(
+                "Version needs section '%s' contains %d entr%s:%n",
+                gvrs.getName(), gvrs.getRequirementsLength(), gvrs.getRequirementsLength() == 1 ? "y" : "ies");
+        out.printf(
+                " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
+                sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
 
-            final StringTableSection strtab = (StringTableSection) linkedSection;
-            int k = 0;
-            for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
-                final GnuVersionRequirementEntry gvre = gvrs.getEntry(i);
+        final StringTableSection strtab = (StringTableSection) linkedSection;
+        int k = 0;
+        for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
+            final GnuVersionRequirementEntry gvre = gvrs.getEntry(i);
+            out.printf(
+                    "  0%c%04x: Version: %d  File: %s  Cnt: %d%n",
+                    i == 0 ? '0' : 'x',
+                    i == 0 ? 0 : k,
+                    gvre.getVersion(),
+                    strtab.getString(gvre.getFileOffset()),
+                    gvre.getCount());
+            k += 16;
+
+            for (int j = 0; j < gvre.getAuxiliaryLength(); j++) {
+                final GnuVersionRequirementAuxiliaryEntry aux = gvre.getAuxiliary(j);
                 out.printf(
-                        "  0%c%04x: Version: %d  File: %s  Cnt: %d%n",
-                        i == 0 ? '0' : 'x',
-                        i == 0 ? 0 : k,
-                        gvre.getVersion(),
-                        strtab.getString(gvre.getFileOffset()),
-                        gvre.getCount());
+                        "  0x%04x:   Name: %s  Flags: none  Version: %d%n",
+                        k, strtab.getString(aux.nameOffset()), aux.other());
                 k += 16;
-
-                for (int j = 0; j < gvre.getAuxiliaryLength(); j++) {
-                    final GnuVersionRequirementAuxiliaryEntry aux = gvre.getAuxiliary(j);
-                    out.printf(
-                            "  0x%04x:   Name: %s  Flags: none  Version: %d%n",
-                            k, strtab.getString(aux.nameOffset()), aux.other());
-                    k += 16;
-                }
             }
-        } else if (s instanceof GnuVersionSection gvs) {
-            out.printf(
-                    "Version symbols section '%s' contains %d entr%s:%n",
-                    s.getName(), gvs.getVersionsLength(), gvs.getVersionsLength() == 1 ? "y" : "ies");
-            out.printf(
-                    " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
-                    sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
+        }
+    }
 
-            final SymbolTable symbolTable = (SymbolTable) linkedSection;
-            final StringTableSection stringTable = (StringTableSection)
-                    sectionTable.getSection(linkedSection.getHeader().getLinkedSectionIndex());
-            for (int i = 0; i < gvs.getVersionsLength(); i++) {
-                if (i % 4 == 0) {
-                    out.printf("  %03x:  ", i);
-                }
-                final String name = (gvs.getVersion(i) == 0
-                        ? "*local*"
-                        : (gvs.getVersion(i) == 1
-                                ? "*global*"
-                                : stringTable.getString(
-                                        symbolTable.getSymbolTableEntry(i).nameOffset())));
-                out.printf("%2d %13s  ", gvs.getVersion(i), "(" + name + ")");
-                if (i % 4 == 3) {
-                    out.println();
-                }
+    private static void printVersionSection(
+            final GnuVersionSection gvs, final GnuVersionRequirementsSection gvrs, final SectionTable sectionTable) {
+        final SectionHeader sh = gvs.getHeader();
+        final Section linkedSection = sectionTable.getSection(sh.getLinkedSectionIndex());
+
+        out.printf(
+                "Version symbols section '%s' contains %d entr%s:%n",
+                gvs.getName(), gvs.getVersionsLength(), gvs.getVersionsLength() == 1 ? "y" : "ies");
+        out.printf(
+                " Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
+                sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
+
+        final StringTableSection stringTable = (StringTableSection)
+                sectionTable.getSection(linkedSection.getHeader().getLinkedSectionIndex());
+
+        for (int i = 0; i < gvs.getVersionsLength(); i++) {
+            if (i % 4 == 0) {
+                out.printf("  %03x:  ", i);
             }
-            out.println();
-        } else {
-            out.printf("Unknown version section '%s'%n", s.getName());
+            final short v = gvs.getVersion(i);
+            final String name =
+                    (v == 0 ? "*local*" : (v == 1 ? "*global*" : stringTable.getString(gvrs.getVersionNameOffset(v))));
+
+            out.printf("%2x %-13s", v, "(" + name + ")");
+            if (i % 4 == 3 || i >= gvs.getVersionsLength() - 1) {
+                out.println();
+            } else {
+                out.print("  ");
+            }
         }
     }
 
@@ -725,12 +754,20 @@ public final class Main {
     }
 
     private static void printRelocationSection(
-            final RelocationAddendSection ras, final SectionTable sectionTable, final boolean is32Bit) {
+            final RelocationAddendSection ras,
+            final GnuVersionSection gvs,
+            final GnuVersionRequirementsSection gvrs,
+            final SectionTable sectionTable,
+            final boolean is32Bit) {
         final SectionHeader rash = ras.getHeader();
-        final SymbolTable symtab =
-                (SymbolTable) sectionTable.getSection(ras.getHeader().getLinkedSectionIndex());
-        final StringTableSection symstrtab =
-                (StringTableSection) sectionTable.getSection(symtab.getHeader().getLinkedSectionIndex());
+        final boolean hasSymbolTable = ras.getHeader().getLinkedSectionIndex() != 0;
+        final SymbolTable symtab = hasSymbolTable
+                ? (SymbolTable) sectionTable.getSection(ras.getHeader().getLinkedSectionIndex())
+                : null;
+        final StringTableSection symstrtab = hasSymbolTable
+                ? (StringTableSection)
+                        sectionTable.getSection(symtab.getHeader().getLinkedSectionIndex())
+                : null;
 
         out.printf(
                 "Relocation section '%s' at offset 0x%x contains %,d entr%s:%n",
@@ -748,10 +785,14 @@ public final class Main {
 
         for (int i = 0; i < ras.getRelocationAddendTableLength(); i++) {
             final RelocationAddendEntry rae = ras.getRelocationAddendEntry(i);
+            final short v = gvs.getVersion(BitUtils.asShort(rae.symbolTableIndex()));
+            final int versionNameOffset = gvrs.getVersionNameOffset(v);
+
             if (is32Bit) {
                 final byte symbolTableIndex = BitUtils.asByte(rae.symbolTableIndex());
                 final RelocationAddendEntryType type = rae.type();
-                final SymbolTableEntry symbol = symtab.getSymbolTableEntry(BitUtils.asInt(symbolTableIndex));
+                final SymbolTableEntry symbol =
+                        hasSymbolTable ? symtab.getSymbolTableEntry(BitUtils.asInt(symbolTableIndex)) : null;
                 out.printf(
                         "%012x  %012x %-17s ",
                         rae.offset(),
@@ -763,17 +804,26 @@ public final class Main {
                     out.printf("                   %x%n", rae.addend());
                 } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
                         || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT
-                        || type == RelocationAddendEntryType.R_X86_64_COPY) {
+                        || type == RelocationAddendEntryType.R_X86_64_COPY
+                        || type == RelocationAddendEntryType.R_X86_64_IRELATIVE) {
                     // S
-                    out.printf(
-                            "%016x %s + %d%n", symbol.value(), symstrtab.getString(symbol.nameOffset()), rae.addend());
+                    if (hasSymbolTable) {
+                        out.printf(
+                                "%016x %s%s + %x%n",
+                                symbol.value(),
+                                addSuffixIfLonger(symstrtab.getString(symbol.nameOffset()), 22),
+                                versionNameOffset == -1 ? "" : "@" + symstrtab.getString(versionNameOffset),
+                                rae.addend());
+                    } else {
+                        out.printf("                 %x%n", rae.addend());
+                    }
                 } else {
                     out.println("unknown");
                 }
             } else {
                 final int symbolTableIndex = rae.symbolTableIndex();
                 final RelocationAddendEntryType type = rae.type();
-                final SymbolTableEntry symbol = symtab.getSymbolTableEntry(symbolTableIndex);
+                final SymbolTableEntry symbol = hasSymbolTable ? symtab.getSymbolTableEntry(symbolTableIndex) : null;
                 out.printf(
                         "%012x  %012x %-17s ",
                         rae.offset(),
@@ -785,10 +835,19 @@ public final class Main {
                     out.printf("                   %x%n", rae.addend());
                 } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
                         || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT
-                        || type == RelocationAddendEntryType.R_X86_64_COPY) {
+                        || type == RelocationAddendEntryType.R_X86_64_COPY
+                        || type == RelocationAddendEntryType.R_X86_64_IRELATIVE) {
                     // S
-                    out.printf(
-                            "%016x %s + %d%n", symbol.value(), symstrtab.getString(symbol.nameOffset()), rae.addend());
+                    if (hasSymbolTable) {
+                        out.printf(
+                                "%016x %s%s + %x%n",
+                                symbol.value(),
+                                addSuffixIfLonger(symstrtab.getString(symbol.nameOffset()), 22),
+                                versionNameOffset == -1 ? "" : "@" + symstrtab.getString(versionNameOffset),
+                                rae.addend());
+                    } else {
+                        out.printf("                 %x%n", rae.addend());
+                    }
                 } else {
                     out.println("unknown");
                 }
@@ -1034,7 +1093,11 @@ public final class Main {
         }
     }
 
-    private static void printSymbolTable(final SymbolTable s, final SectionTable sectionTable) {
+    private static void printSymbolTable(
+            final SymbolTable s,
+            final GnuVersionSection gvs,
+            final GnuVersionRequirementsSection gvrs,
+            final SectionTable sectionTable) {
         out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), s.getSymbolTableLength());
         out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
         final StringTableSection strtab =
@@ -1042,18 +1105,40 @@ public final class Main {
 
         for (int i = 0; i < s.getSymbolTableLength(); i++) {
             final SymbolTableEntry ste = s.getSymbolTableEntry(i);
-            out.printf(
-                    "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
-                    i,
-                    ste.value(),
-                    ste.size(),
-                    ste.info().getType().getName(),
-                    ste.info().getBinding().getName(),
-                    ste.visibility().getName(),
-                    ste.sectionTableIndex() == 0
-                            ? "UND"
-                            : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
-                    strtab.getString(ste.nameOffset()));
+            final short v = gvs.getVersion(i);
+            final int versionNameOffset = gvrs.getVersionNameOffset(v);
+
+            if (versionNameOffset == -1) {
+                out.printf(
+                        "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
+                        i,
+                        ste.value(),
+                        ste.size(),
+                        ste.info().getType().getName(),
+                        ste.info().getBinding().getName(),
+                        ste.visibility().getName(),
+                        ste.sectionTableIndex() == 0
+                                ? "UND"
+                                : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
+                        addSuffixIfLonger(strtab.getString(ste.nameOffset()), 21));
+            } else {
+                final String name = strtab.getString(ste.nameOffset());
+                final String version = strtab.getString(versionNameOffset);
+                out.printf(
+                        "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s@%s (%d)%n",
+                        i,
+                        ste.value(),
+                        ste.size(),
+                        ste.info().getType().getName(),
+                        ste.info().getBinding().getName(),
+                        ste.visibility().getName(),
+                        ste.sectionTableIndex() == 0
+                                ? "UND"
+                                : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
+                        addSuffixIfLonger(name, 21 - (1 + version.length() + 4)),
+                        version,
+                        gvrs.getVersion(v));
+            }
         }
     }
 
@@ -1317,5 +1402,13 @@ public final class Main {
                           -T --silent-truncation If a symbol name is truncated, do not add [...] suffix
                           -H --help              Display this information
                           -v --version           Display the version number of readelf""");
+    }
+
+    private static String addSuffixIfLonger(final String s, final int maxLength) {
+        final String suffix = "[...]";
+        if (s.length() > maxLength) {
+            return s.substring(0, maxLength - suffix.length()) + suffix;
+        }
+        return s;
     }
 }

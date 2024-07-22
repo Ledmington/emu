@@ -20,6 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
@@ -56,7 +57,7 @@ public final class GnuVersionSection implements LoadableSection {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
-        final int nEntries = (int) (sectionHeader.getSectionSize() / 2);
+        final int nEntries = BitUtils.asInt(sectionHeader.getSectionSize() / 2L);
         this.versions = new short[nEntries];
         for (int i = 0; i < nEntries; i++) {
             versions[i] = b.read2();

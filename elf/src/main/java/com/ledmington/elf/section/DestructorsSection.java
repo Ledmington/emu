@@ -47,6 +47,11 @@ public final class DestructorsSection implements LoadableSection {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
 
+        if (dynamicSection == null) {
+            this.destructors = new long[0];
+            return;
+        }
+
         int destructorsSizeInBytes = 0; // bytes
         {
             for (int i = 0; i < dynamicSection.getTableLength(); i++) {
