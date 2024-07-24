@@ -38,17 +38,13 @@ public final class InterpreterPathSection implements ProgBitsSection {
         this.header = Objects.requireNonNull(sectionHeader);
 
         b.setPosition(sectionHeader.getFileOffset());
-        final long expectedAlignment = 1L;
-        if (sectionHeader.getAlignment() != expectedAlignment) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid alignment for .interp section: expected %,d but was %,d",
-                    expectedAlignment, sectionHeader.getAlignment()));
-        }
-        b.setAlignment(expectedAlignment);
+        final long start = b.getPosition();
+        final long size = sectionHeader.getSectionSize();
+        b.setAlignment(1L);
 
         final StringBuilder sb = new StringBuilder();
         char c = (char) b.read1();
-        while (c != '\0') {
+        while (b.getPosition() < start + size && c != '\0') {
             sb.append(c);
             c = (char) b.read1();
         }

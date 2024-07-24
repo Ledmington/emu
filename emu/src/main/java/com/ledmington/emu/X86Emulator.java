@@ -207,7 +207,7 @@ public final class X86Emulator implements Emulator {
             }
         }
 
-        // run desctructors? (.fini_array)
+        // run destructors? (.fini_array)
 
         // run legacy destructors? (.fini)
 
@@ -246,51 +246,41 @@ public final class X86Emulator implements Emulator {
         for (int i = 0; i < elf.getSectionTableLength(); i++) {
             final Section sec = elf.getSection(i);
             if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
-                loadSection(sec);
+                initializeSection(sec);
             }
         }
     }
 
-    /**
-     * Loads the given ELF section into memory without modifying or checking the memory permissions.
-     *
-     * @param sec The ELF section to be loaded
-     */
-    public void loadSection(final Section sec) {
+    private void initializeSection(final Section sec) {
         Objects.requireNonNull(sec);
 
-        if (sec instanceof NoBitsSection) {
-            // allocate uninitialized data blocks
-            final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-            final long size = sec.getHeader().getSectionSize();
-            logger.debug(
-                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                    sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
-            mem.initialize(startVirtualAddress, size, (byte) 0x00);
-        } else if (sec instanceof LoadableSection ls) {
-            final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-            final byte[] content = ls.getLoadableContent();
-            logger.debug(
-                    "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                    sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
-            mem.initialize(startVirtualAddress, content);
-        } else {
-            throw new IllegalArgumentException(String.format(
-                    "Don't know what to do with section '%s' of type %s and flags '%s'",
-                    sec.getName(),
-                    sec.getHeader().getType().getName(),
-                    sec.getHeader().getFlags().stream()
-                            .map(SectionHeaderFlags::getName)
-                            .collect(Collectors.joining(", "))));
+        switch (sec) {
+            case NoBitsSection ignored -> {
+                // allocate uninitialized data blocks
+                final long startVirtualAddress = sec.getHeader().getVirtualAddress();
+                final long size = sec.getHeader().getSectionSize();
+                logger.debug(
+                        "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+                        sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
+                mem.initialize(startVirtualAddress, size, (byte) 0x00);
+            }
+            case LoadableSection ls -> {
+                final long startVirtualAddress = sec.getHeader().getVirtualAddress();
+                final byte[] content = ls.getLoadableContent();
+                logger.debug(
+                        "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+                        sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
+                mem.initialize(startVirtualAddress, content);
+            }
+            default -> {
+                throw new IllegalArgumentException(String.format(
+                        "Don't know what to do with section '%s' of type %s and flags '%s'",
+                        sec.getName(),
+                        sec.getHeader().getType().getName(),
+                        sec.getHeader().getFlags().stream()
+                                .map(SectionHeaderFlags::getName)
+                                .collect(Collectors.joining(", "))));
+            }
         }
-    }
-
-    @Override
-    public String toString() {
-        return "Emulator(elf=" + elf + ";mem="
-                + mem + ";regFile="
-                + regFile + ";instructionFetcher="
-                + instructionFetcher + ";instructionDecoder="
-                + dec + ')';
     }
 }

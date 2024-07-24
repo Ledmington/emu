@@ -60,7 +60,10 @@ public enum SymbolTableEntryType {
      * STT_TLS from an allocatable section, can only be achieved by using special thread-local storage relocations. A
      * reference to a symbol of type STT_TLS from a non-allocatable section does not have this restriction.
      */
-    STT_TLS((byte) 0x06, "TLS");
+    STT_TLS((byte) 0x06, "TLS"),
+
+    /** Symbol is indirect code object. */
+    STT_GNU_IFUNC((byte) 0x0a, "IFUNC");
 
     private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
 
@@ -88,14 +91,14 @@ public enum SymbolTableEntryType {
         if (!codeToType.containsKey(code)) {
             if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
-                        String.format("Unknown OS-specific Symbol table entry type identifier: 0x%02x", code));
+                        String.format("Unknown OS-specific symbol table entry type identifier: 0x%02x", code));
             }
             if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
-                        String.format("Unknown CPU-specific Symbol table entry type identifier: 0x%02x", code));
+                        String.format("Unknown CPU-specific symbol table entry type identifier: 0x%02x", code));
             }
             throw new IllegalArgumentException(
-                    String.format("Unknown Symbol table entry type identifier: 0x%02x", code));
+                    String.format("Unknown symbol table entry type identifier: 0x%02x", code));
         }
         return codeToType.get(code);
     }

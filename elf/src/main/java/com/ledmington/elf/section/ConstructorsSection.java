@@ -20,6 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
@@ -29,7 +30,7 @@ public final class ConstructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
-    private final long[] constructors; // function pointers
+    private final int[] constructors; // function pointers
 
     /**
      * Creates a ConstructorsSection with the given name and header.
@@ -48,7 +49,7 @@ public final class ConstructorsSection implements LoadableSection {
         this.header = Objects.requireNonNull(sectionHeader);
 
         if (dynamicSection == null) {
-            this.constructors = new long[0];
+            this.constructors = new int[0];
             return;
         }
 
@@ -56,24 +57,25 @@ public final class ConstructorsSection implements LoadableSection {
         {
             for (int i = 0; i < dynamicSection.getTableLength(); i++) {
                 if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
-                    constructorsSizeInBytes = (int) dynamicSection.getEntry(i).getContent();
+                    constructorsSizeInBytes =
+                            BitUtils.asInt(dynamicSection.getEntry(i).getContent());
                     break;
                 }
             }
         }
 
-        if (constructorsSizeInBytes % 8 != 0) {
+        if (constructorsSizeInBytes % 4 != 0) {
             throw new IllegalArgumentException(String.format(
-                    "Expected size of .init_array section to be a multiple of 8 bytes but was %d (0x%x)",
+                    "Expected size of .init_array section to be a multiple of 4 bytes but was %d (0x%x)",
                     constructorsSizeInBytes, constructorsSizeInBytes));
         }
 
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
 
-        this.constructors = new long[constructorsSizeInBytes / 8];
+        this.constructors = new int[constructorsSizeInBytes / 4];
         for (int i = 0; i < constructors.length; i++) {
-            this.constructors[i] = b.read8();
+            this.constructors[i] = b.read4();
         }
     }
 
@@ -89,7 +91,7 @@ public final class ConstructorsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length + 8);
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * 4);
         wb.write(constructors);
         return wb.array();
     }

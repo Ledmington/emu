@@ -29,8 +29,23 @@ public enum ISA {
     /** AT{@literal &}T WE 32100. */
     AT_T_WE_32100((short) 0x0001, "AT&T WE 32100"),
 
+    /** Intel 80386. */
+    Intel_80386((short) 0x0003, "Intel 80386"),
+
+    /** PowerPC. */
+    PPC((short) 0x0014, "PowerPC"),
+
+    /** ARM. */
+    ARM((short) 0x0028, "ARM"),
+
     /** AMD x86_64. */
-    AMD_X86_64((short) 0x003e, "Advanced Micro Devices X86-64");
+    AMD_X86_64((short) 0x003e, "Advanced Micro Devices X86-64"),
+
+    /** Intel L10M. */
+    Intel_L10M((short) 0x00b4, "Intel L10M"),
+
+    /** Intel K10M. */
+    Intel_K10M((short) 0x00b5, "Intel K10M");
 
     private static final Map<Short, ISA> codeToISA = new HashMap<>();
 

@@ -7,7 +7,8 @@ static def path(final String ...s) {
     return String.join(File.separator, s)
 }
 
-String fatJarBaseName = "${appNameLowerCase}-readelf"
+String readelfVersion = "1.0.0"
+String fatJarBaseName = "${appNameLowerCase}-readelf-${readelfVersion}"
 String fatJarName = "${fatJarBaseName}.jar"
 String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "libs", "${fatJarName}")
 String mainClassName = "${basePackage}.readelf.Main"
@@ -74,16 +75,16 @@ if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
 
         doLast {
             final List<String> executables = List.of(
-                "gcc",
-                "g++",
-                "clang",
-                "clang++",
-                "zip",
-                "unzip"
+                "/usr/bin/gcc",
+                "/usr/bin/g++",
+                "/usr/bin/clang",
+                "/usr/bin/clang++",
+                "/usr/bin/zip",
+                "/usr/bin/unzip"
             );
 
-            for(final String elf : executables) {
-                final String filepath = "/usr/bin/" + elf
+            for(final String filepath : executables) {
+                final String elf = filepath.substring(filepath.lastIndexOf("/") + 1)
                 if (!(new File(filepath).exists())) {
                     continue
                 }

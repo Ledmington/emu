@@ -32,7 +32,7 @@ public enum OSABI {
     /** NetBSD. */
     NetBSD((byte) 0x02, "NetBSD"),
 
-    /** Linux. */
+    /** Linux / GNU. */
     Linux((byte) 0x03, "UNIX - GNU"),
 
     /** GNU Hurd. */

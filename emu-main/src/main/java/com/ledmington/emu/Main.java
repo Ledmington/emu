@@ -24,6 +24,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
@@ -184,6 +186,12 @@ public final class Main {
             out.flush();
             System.exit(-1);
         }
+
+        logger.info(
+                "Executing %s",
+                Stream.concat(Stream.of(filename), Arrays.stream(innerArgs))
+                        .map(s -> "'" + s + "'")
+                        .collect(Collectors.joining(" ")));
 
         try {
             run(filename, innerArgs);

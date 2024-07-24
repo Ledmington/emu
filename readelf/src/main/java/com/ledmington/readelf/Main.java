@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -30,6 +31,8 @@ import java.util.stream.IntStream;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.elf.FileHeader;
+import com.ledmington.elf.ISA;
+import com.ledmington.elf.OSABI;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.ProgramHeaderTable;
@@ -37,17 +40,17 @@ import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
-import com.ledmington.elf.section.GnuHashSection;
-import com.ledmington.elf.section.GnuVersionRequirementAuxiliaryEntry;
-import com.ledmington.elf.section.GnuVersionRequirementEntry;
-import com.ledmington.elf.section.GnuVersionRequirementsSection;
-import com.ledmington.elf.section.GnuVersionSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.gnu.GnuHashSection;
+import com.ledmington.elf.section.gnu.GnuVersionRequirementAuxiliaryEntry;
+import com.ledmington.elf.section.gnu.GnuVersionRequirementEntry;
+import com.ledmington.elf.section.gnu.GnuVersionRequirementsSection;
+import com.ledmington.elf.section.gnu.GnuVersionSection;
 import com.ledmington.elf.section.note.GnuPropertyType;
 import com.ledmington.elf.section.note.NoteSection;
 import com.ledmington.elf.section.note.NoteSectionEntry;
@@ -75,6 +78,7 @@ public final class Main {
             : new PrintWriter(System.out, false, StandardCharsets.UTF_8);
 
     private static boolean wide = false;
+    private static boolean silentTruncation = false;
 
     @SuppressWarnings("PMD.AvoidReassigningLoopVariables")
     public static void main(final String[] args) {
@@ -157,35 +161,17 @@ public final class Main {
                 case "--dyn-syms":
                     displayDynamicSymbolTable = true;
                     break;
-                case "--lto-syms":
-                    notImplemented();
-                    break;
                 case "-n", "--notes":
                     displayNoteSections = true;
                     break;
                 case "-r", "--relocs":
                     displayRelocationSections = true;
                     break;
-                case "-u", "--unwind":
-                    notImplemented();
-                    break;
                 case "-d", "--dynamic":
                     displayDynamicSection = true;
                     break;
                 case "-V", "--version-info":
                     displayVersionSections = true;
-                    break;
-                case "-A", "--arch-specific":
-                    notImplemented();
-                    break;
-                case "-c", "--archive-index":
-                    notImplemented();
-                    break;
-                case "-D", "--use-dynamic":
-                    notImplemented();
-                    break;
-                case "-L", "--lint", "--enable-checks":
-                    notImplemented();
                     break;
                 case "-x":
                     // --hex-dump=<number|name>
@@ -217,22 +203,12 @@ public final class Main {
                         sectionNameToBeStringDumped = Optional.of(args[i]);
                     }
                     break;
-                case "-R":
-                    // --relocated-dump=<number|name>
-                    notImplemented();
-                    break;
-
-                case "-I", "--histogram":
-                    notImplemented();
-                    break;
                 case "-W", "--wide":
                     wide = true;
                     break;
                 case "-T", "--silent-truncation":
-                    notImplemented();
+                    silentTruncation = true;
                     break;
-
-                    // TODO: add the other CLI flags
 
                 default:
                     if (arg.startsWith("-")) {
@@ -300,7 +276,7 @@ public final class Main {
             if (displayFileHeader) {
                 out.println();
             }
-            printSectionHeaders(elf);
+            printSectionHeaders(elf, elf.getFileHeader());
         }
 
         if (displaySectionDetails && !displaySectionHeaders) {
@@ -411,12 +387,9 @@ public final class Main {
         }
 
         if (displayGnuHashSection) {
-            if (displaySymbolTable) {
-                out.println();
-            }
             final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
             if (gnuhash.isPresent()) {
-                printGnuHashSection((GnuHashSection) gnuhash.orElseThrow(), elf);
+                printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
             }
         }
 
@@ -425,23 +398,21 @@ public final class Main {
                 out.println();
             }
 
-            final Optional<Section> gnuversion = elf.getSectionByName(GnuVersionSection.getStandardName());
-            final Optional<Section> gnuversionr = elf.getSectionByName(GnuVersionRequirementsSection.getStandardName());
-            if (gnuversion.isPresent()) {
+            final Optional<Section> gv = elf.getSectionByName(GnuVersionSection.getStandardName());
+            final Optional<Section> gvr = elf.getSectionByName(GnuVersionRequirementsSection.getStandardName());
+            if (gv.isPresent()) {
                 printVersionSection(
-                        (GnuVersionSection) gnuversion.orElseThrow(),
-                        (GnuVersionRequirementsSection) gnuversionr.orElseThrow(),
-                        elf);
+                        (GnuVersionSection) gv.orElseThrow(), (GnuVersionRequirementsSection) gvr.orElseThrow(), elf);
                 out.println();
             }
 
-            if (gnuversionr.isPresent()) {
-                printVersionSection((GnuVersionRequirementsSection) gnuversionr.orElseThrow(), elf);
+            if (gvr.isPresent()) {
+                printVersionSection((GnuVersionRequirementsSection) gvr.orElseThrow(), elf);
             }
         }
 
         if (displayNoteSections) {
-            if (displayGnuHashSection) {
+            if (displayVersionSections) {
                 out.println();
             }
             boolean first = true;
@@ -589,30 +560,48 @@ public final class Main {
         out.println("There are no section groups in this file.");
     }
 
-    private static void printGnuHashSection(final GnuHashSection s, final SectionTable sectionTable) {
+    private static void printGnuHashSection(final GnuHashSection s) {
         out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBucketsLength());
         out.println(" Length  Number     % of total  Coverage");
 
-        final SymbolTable symtab =
-                (SymbolTable) sectionTable.getSection(s.getHeader().getLinkedSectionIndex());
+        long maxLength = 0L;
+        long nsyms = 0L;
+        final long[] lengths = new long[s.getBucketsLength()];
+        for (long hn = 0L; hn < s.getBucketsLength(); hn++) {
+            if (s.getBucket(BitUtils.asInt(hn)) != 0) {
+                long length = 1L;
+                for (long off = s.getBucket(BitUtils.asInt(hn)) - s.getSymbolTableIndex();
+                        off < s.getChainsLength() && ((s.getChain(BitUtils.asInt(off)) & 1) == 0);
+                        off++) {
+                    length++;
+                }
 
-        out.printf("String: '%s'%n", symtab.getSymbolTableEntry(s.getSymbolTableIndex()));
-
-        out.println("buckets:");
-        for (int b = 0; b < s.getBucketsLength(); b++) {
-            out.printf("  bucket %d: %d%n", b, s.getBucket(b));
+                lengths[BitUtils.asInt(hn)] = length;
+                if (length > maxLength) {
+                    maxLength = length;
+                }
+                nsyms += length;
+            }
         }
 
-        out.println("bloom:");
-        for (int b = 0; b < s.getBloomFilterLength(); b++) {
-            out.printf("  bloom %d: %d (0x%016x)%n", b, s.getBloomFilter(b), s.getBloomFilter(b));
+        final long[] counts = new long[BitUtils.asInt(maxLength + 1L)];
+        for (long hn = 0L; hn < s.getBucketsLength(); hn++) {
+            counts[BitUtils.asInt(lengths[BitUtils.asInt(hn)])]++;
         }
-    }
 
-    private static void notImplemented() {
-        out.println("This flag is not implemented yet");
-        out.flush();
-        System.exit(-1);
+        if (s.getBucketsLength() > 0) {
+            long nzero_counts = 0L;
+            out.printf("      0  %-10d (%5.1f%%)%n", counts[0], (counts[0] * 100.0) / s.getBucketsLength());
+            for (long j = 1L; j <= maxLength; j++) {
+                nzero_counts += counts[BitUtils.asInt(j)] * j;
+                out.printf(
+                        "%7d  %-10d (%5.1f%%)    %5.1f%%%n",
+                        j,
+                        counts[BitUtils.asInt(j)],
+                        (counts[BitUtils.asInt(j)] * 100.0) / s.getBucketsLength(),
+                        (nzero_counts * 100.0) / nsyms);
+            }
+        }
     }
 
     private static void printVersionSection(final GnuVersionRequirementsSection gvrs, final SectionTable sectionTable) {
@@ -718,20 +707,25 @@ public final class Main {
                     || dte.getTag() == DynamicTableEntryTag.DT_STRSZ
                     || dte.getTag() == DynamicTableEntryTag.DT_SYMENT
                     || dte.getTag() == DynamicTableEntryTag.DT_PLTRELSZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELSZ
                     || dte.getTag() == DynamicTableEntryTag.DT_RELASZ
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELENT
                     || dte.getTag() == DynamicTableEntryTag.DT_RELAENT) {
                 out.printf("%d (bytes)%n", content);
             } else if (dte.getTag() == DynamicTableEntryTag.DT_INIT
                     || dte.getTag() == DynamicTableEntryTag.DT_FINI
                     || dte.getTag() == DynamicTableEntryTag.DT_INIT_ARRAY
                     || dte.getTag() == DynamicTableEntryTag.DT_FINI_ARRAY
+                    || dte.getTag() == DynamicTableEntryTag.DT_HASH
                     || dte.getTag() == DynamicTableEntryTag.DT_GNU_HASH
                     || dte.getTag() == DynamicTableEntryTag.DT_STRTAB
                     || dte.getTag() == DynamicTableEntryTag.DT_SYMTAB
                     || dte.getTag() == DynamicTableEntryTag.DT_DEBUG
                     || dte.getTag() == DynamicTableEntryTag.DT_PLTGOT
                     || dte.getTag() == DynamicTableEntryTag.DT_JMPREL
+                    || dte.getTag() == DynamicTableEntryTag.DT_REL
                     || dte.getTag() == DynamicTableEntryTag.DT_RELA
+                    || dte.getTag() == DynamicTableEntryTag.DT_VERDEF
                     || dte.getTag() == DynamicTableEntryTag.DT_VERNEED
                     || dte.getTag() == DynamicTableEntryTag.DT_VERSYM
                     || dte.getTag() == DynamicTableEntryTag.DT_NULL) {
@@ -742,11 +736,15 @@ public final class Main {
                 out.println("BIND_NOW");
             } else if (dte.getTag() == DynamicTableEntryTag.DT_FLAGS_1) {
                 out.println("Flags: NOW PIE");
-            } else if (dte.getTag() == DynamicTableEntryTag.DT_VERNEEDNUM
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_VERDEFNUM
+                    || dte.getTag() == DynamicTableEntryTag.DT_VERNEEDNUM
+                    || dte.getTag() == DynamicTableEntryTag.DT_RELCOUNT
                     || dte.getTag() == DynamicTableEntryTag.DT_RELACOUNT) {
                 out.printf("%d%n", content);
             } else if (dte.getTag() == DynamicTableEntryTag.DT_NEEDED) {
                 out.printf("Shared library: [%s]%n", strtab.getString(BitUtils.asInt(content)));
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_SONAME) {
+                out.printf("Library soname: [%s]%n", strtab.getString(BitUtils.asInt(content)));
             } else {
                 out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
             }
@@ -783,6 +781,9 @@ public final class Main {
             out.println("  Offset          Info           Type           Sym. Value    Sym. Name + Addend");
         }
 
+        final String fmt = wide ? "%016x  %016x %-22s " : "%012x  %012x %-17s ";
+        final int typeMaxLength = wide ? 22 : 17;
+
         for (int i = 0; i < ras.getRelocationAddendTableLength(); i++) {
             final RelocationAddendEntry rae = ras.getRelocationAddendEntry(i);
             final short v = gvs.getVersion(BitUtils.asShort(rae.symbolTableIndex()));
@@ -794,10 +795,10 @@ public final class Main {
                 final SymbolTableEntry symbol =
                         hasSymbolTable ? symtab.getSymbolTableEntry(BitUtils.asInt(symbolTableIndex)) : null;
                 out.printf(
-                        "%012x  %012x %-17s ",
+                        fmt,
                         rae.offset(),
                         (BitUtils.asInt(symbolTableIndex) << 8) | type.getCode(),
-                        type.name().substring(0, Math.min(type.name().length(), 17)));
+                        type.name().substring(0, Math.min(type.name().length(), typeMaxLength)));
 
                 if (type == RelocationAddendEntryType.R_X86_64_RELATIVE) {
                     // B + A
@@ -825,10 +826,10 @@ public final class Main {
                 final RelocationAddendEntryType type = rae.type();
                 final SymbolTableEntry symbol = hasSymbolTable ? symtab.getSymbolTableEntry(symbolTableIndex) : null;
                 out.printf(
-                        "%012x  %012x %-17s ",
+                        fmt,
                         rae.offset(),
                         (BitUtils.asLong(symbolTableIndex) << 32) | BitUtils.asLong(type.getCode()),
-                        type.name().substring(0, Math.min(type.name().length(), 17)));
+                        type.name().substring(0, Math.min(type.name().length(), typeMaxLength)));
 
                 if (type == RelocationAddendEntryType.R_X86_64_RELATIVE) {
                     // B + A
@@ -839,10 +840,11 @@ public final class Main {
                         || type == RelocationAddendEntryType.R_X86_64_IRELATIVE) {
                     // S
                     if (hasSymbolTable) {
+                        final String symbolName = symstrtab.getString(symbol.nameOffset());
                         out.printf(
                                 "%016x %s%s + %x%n",
                                 symbol.value(),
-                                addSuffixIfLonger(symstrtab.getString(symbol.nameOffset()), 22),
+                                wide ? symbolName : addSuffixIfLonger(symbolName, 22),
                                 versionNameOffset == -1 ? "" : "@" + symstrtab.getString(versionNameOffset),
                                 rae.addend());
                     } else {
@@ -862,8 +864,10 @@ public final class Main {
         for (int i = 0; i < ns.getNumEntries(); i++) {
             final NoteSectionEntry nse = ns.getEntry(i);
             out.printf(
-                    "  %-20s 0x%08x\t%s%n",
-                    nse.getName(), nse.getDescriptionLength(), nse.getType().getDescription());
+                    "  %-20s 0x%08x\t%s" + (wide ? "\t" : "%n"),
+                    nse.getName(),
+                    nse.getDescriptionLength(),
+                    nse.getType().getDescription());
 
             switch (nse.getType()) {
                 case NT_GNU_ABI_TAG -> printGNUABITag(nse);
@@ -956,55 +960,42 @@ public final class Main {
     }
 
     private static void printGNUProperties(final NoteSectionEntry nse) {
+        final int expectedDataSize = 4;
         final byte[] v = new byte[nse.getDescriptionLength()];
         for (int i = 0; i < v.length; i++) {
             v[i] = nse.getDescriptionByte(i);
         }
-        final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
-        while (robb.getPosition() < nse.getDescriptionLength()) {
+
+        final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true, 1L);
+        while (robb.getPosition() < BitUtils.asLong(nse.getDescriptionLength())) {
             final int code = robb.read4();
             final GnuPropertyType type = GnuPropertyType.fromCode(code);
+            final int datasz = robb.read4();
             switch (type) {
                 case GNU_PROPERTY_NO_COPY_ON_PROTECTED,
                         GNU_PROPERTY_STACK_SIZE,
                         GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
                         "Unimplemented case: " + type);
                 case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
-                    out.print("        x86 ISA needed: ");
-                    int x = robb.read4();
-                    while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
-                        if ((x & 1) != 0) {
-                            out.print("x86-64-baseline");
-                            x &= 0xfffffffe;
-                            if (x != 0) {
-                                out.print(", ");
-                            }
+                    out.print((wide ? "" : "\t") + "x86 ISA needed: ");
+                    if (datasz != expectedDataSize) {
+                        out.printf("<corrupt length: %x> ", datasz);
+                    } else {
+                        int bitmask = robb.read4();
+                        if (bitmask == 0) {
+                            out.print("<None>");
                         }
-                        if ((x & 2) != 0) {
-                            out.print("x86-64-v2");
-                            x &= 0xfffffffc;
-                            if (x != 0) {
-                                out.print(", ");
+                        while (bitmask != 0) {
+                            final int bit = bitmask & (-bitmask);
+                            bitmask &= (~bit);
+                            switch (bit) {
+                                case 1 -> out.print("x86-64-baseline");
+                                case 2 -> out.print("x86-64-v2");
+                                case 4 -> out.print("x86-64-v3");
+                                case 8 -> out.print("x86-64-v4");
+                                default -> out.printf("<unknown: %x>", bit);
                             }
-                        }
-                        if ((x & 4) != 0) {
-                            out.print("x86-64-v3");
-                            x &= 0xfffffff8;
-                            if (x != 0) {
-                                out.print(", ");
-                            }
-                        }
-                        if ((x & 8) != 0) {
-                            out.print("x86-64-v4");
-                            x &= 0xfffffff0;
-                            if (x != 0) {
-                                out.print(", <unknown>");
-                            }
-                        }
-
-                        if (robb.getPosition() < nse.getDescriptionLength()) {
-                            x = robb.read4();
-                            if (x != 0) {
+                            if (bitmask != 0) {
                                 out.print(", ");
                             }
                         }
@@ -1013,33 +1004,34 @@ public final class Main {
                 }
                 case GNU_PROPERTY_X86_FEATURE_1_AND -> {
                     out.print("      Properties: x86 feature: ");
-                    int x = robb.read4();
-                    while (robb.getPosition() < nse.getDescriptionLength() && x != 0) {
-                        if ((x & 1) != 0) {
-                            out.print("IBT");
-                            x &= 0xfffffffe;
-                            if (x != 0) {
-                                out.print(", ");
-                            }
+                    if (datasz != expectedDataSize) {
+                        out.printf("<corrupt length: %x> ", datasz);
+                    } else {
+                        int bitmask = robb.read4();
+                        if (bitmask == 0) {
+                            out.print("<None>");
                         }
-                        if ((x & 2) != 0) {
-                            out.print("SHSTK");
-                            x &= 0xfffffffc;
-                            if (x != 0) {
-                                out.print(", <unknown>");
+                        while (bitmask != 0) {
+                            final int bit = bitmask & (-bitmask);
+                            bitmask &= (~bit);
+                            switch (bit) {
+                                case 1 -> out.print("IBT");
+                                case 2 -> out.print("SHSTK");
+                                case 4 -> out.print("LAM_U48");
+                                case 8 -> out.print("LAM_U57");
+                                default -> out.printf("<unknown: %x>", bit);
                             }
-                        }
-
-                        if (robb.getPosition() < nse.getDescriptionLength()) {
-                            x = robb.read4();
-                            if (x != 0) {
+                            if (bitmask != 0) {
                                 out.print(", ");
                             }
                         }
                     }
-                    out.println();
+                    out.print(wide ? ", " : "\n");
                 }
             }
+
+            // skipping 4 bytes for alignment
+            robb.read4();
         }
     }
 
@@ -1105,6 +1097,7 @@ public final class Main {
 
         for (int i = 0; i < s.getSymbolTableLength(); i++) {
             final SymbolTableEntry ste = s.getSymbolTableEntry(i);
+            final String symbolName = strtab.getString(ste.nameOffset());
             final short v = gvs.getVersion(i);
             final int versionNameOffset = gvrs.getVersionNameOffset(v);
 
@@ -1120,10 +1113,10 @@ public final class Main {
                         ste.sectionTableIndex() == 0
                                 ? "UND"
                                 : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
-                        addSuffixIfLonger(strtab.getString(ste.nameOffset()), 21));
+                        wide ? symbolName : addSuffixIfLonger(symbolName, 21));
             } else {
-                final String name = strtab.getString(ste.nameOffset());
                 final String version = strtab.getString(versionNameOffset);
+                final short versionNumber = gvrs.getVersion(v);
                 out.printf(
                         "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s@%s (%d)%n",
                         i,
@@ -1135,14 +1128,17 @@ public final class Main {
                         ste.sectionTableIndex() == 0
                                 ? "UND"
                                 : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
-                        addSuffixIfLonger(name, 21 - (1 + version.length() + 4)),
+                        wide
+                                ? symbolName
+                                : addSuffixIfLonger(
+                                        symbolName, 21 - (1 + version.length() + (versionNumber >= 10 ? 5 : 4))),
                         version,
-                        gvrs.getVersion(v));
+                        versionNumber);
             }
         }
     }
 
-    private static void printSectionHeaders(final SectionTable sections) {
+    private static void printSectionHeaders(final SectionTable sections, final FileHeader fh) {
         if (wide) {
             out.println(
                     """
@@ -1159,9 +1155,7 @@ public final class Main {
         for (int i = 0; i < sections.getSectionTableLength(); i++) {
             final Section s = sections.getSection(i);
             final SectionHeader sh = s.getHeader();
-            final String name = wide
-                    ? s.getName()
-                    : (s.getName().length() > 17 ? s.getName().substring(0, 17 - 5) + "[...]" : s.getName());
+            final String name = wide ? s.getName() : addSuffixIfLonger(s.getName(), 17);
             final String typeName = sh.getType().getName();
             final long virtualAddress = sh.getVirtualAddress();
             final long fileOffset = sh.getFileOffset();
@@ -1211,8 +1205,21 @@ public final class Main {
                         Key to Flags:
                           W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
                           L (link order), O (extra OS processing required), G (group), T (TLS),
-                          C (compressed), x (unknown), o (OS specific), E (exclude),
-                          R (retain), D (mbind), l (large), p (processor specific)""");
+                          C (compressed), x (unknown), o (OS specific), E (exclude),""");
+
+        if (fh.getOSABI() == OSABI.Linux || fh.getOSABI() == OSABI.FreeBSD) {
+            out.print("  R (retain), D (mbind), ");
+        } else if (fh.getOSABI() == OSABI.SYSTEM_V) {
+            out.print("  D (mbind), ");
+        }
+        if (fh.getISA() == ISA.AMD_X86_64 || fh.getISA() == ISA.Intel_L10M || fh.getISA() == ISA.Intel_K10M) {
+            out.print("l (large), ");
+        } else if (fh.getISA() == ISA.ARM) {
+            out.print("y (purecode), ");
+        } else if (fh.getISA() == ISA.PPC) {
+            out.print("v (VLE), ");
+        }
+        out.println("p (processor specific)");
     }
 
     private static void printProgramHeaders(final ProgramHeaderTable pht, final ELF elf) {
@@ -1282,26 +1289,32 @@ public final class Main {
 
         for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
             final PHTEntry phte = pht.getProgramHeader(i);
-            out.printf(
-                    "   %02d     %s %n",
-                    i,
-                    IntStream.range(0, sections.getSectionTableLength())
-                            .mapToObj(sections::getSection)
-                            .filter(s -> {
-                                final long segmentStart = phte.getSegmentOffset();
-                                final long segmentEnd = segmentStart + phte.getSegmentMemorySize();
-                                final long sectionStart = s.getHeader().getFileOffset();
-                                final long sectionEnd =
-                                        sectionStart + s.getHeader().getSectionSize();
-                                return s.getHeader().getType() != SectionHeaderType.SHT_NULL
-                                        && s.getHeader().getVirtualAddress() != 0L
-                                        && s.getHeader().getSectionSize() != 0L
-                                        && s.getHeader().getFlags().contains(SectionHeaderFlags.SHF_ALLOC)
-                                        && sectionStart >= segmentStart
-                                        && sectionEnd <= segmentEnd;
-                            })
-                            .map(Section::getName)
-                            .collect(Collectors.joining(" ")));
+            final long segmentStart = phte.getSegmentVirtualAddress();
+            final long segmentEnd = segmentStart + phte.getSegmentMemorySize();
+            final boolean isTLS = phte.getType() == PHTEntryType.PT_TLS;
+
+            out.printf("   %02d     ", i);
+
+            for (int j = 0; j < sections.getSectionTableLength(); j++) {
+                final Section s = sections.getSection(j);
+                final SectionHeader sh = s.getHeader();
+                final long sectionSize = sh.getSectionSize();
+                final long sectionStart = sh.getVirtualAddress();
+                final long sectionEnd = sectionStart + sectionSize;
+                final Set<SectionHeaderFlags> flags = sh.getFlags();
+
+                if (sh.getType() != SectionHeaderType.SHT_NULL
+                        && sectionStart != 0L
+                        && sectionSize != 0L
+                        && flags.contains(SectionHeaderFlags.SHF_ALLOC)
+                        // Sections with flag TLS can be loaded only in the TLS segment
+                        && !(isTLS ^ flags.contains(SectionHeaderFlags.SHF_TLS))
+                        && sectionStart >= segmentStart
+                        && sectionEnd <= segmentEnd) {
+                    out.printf("%s ", s.getName());
+                }
+            }
+            out.println();
         }
     }
 
@@ -1380,24 +1393,14 @@ public final class Main {
                           -s --syms              Display the symbol table
                              --symbols           An alias for --syms
                              --dyn-syms          Display the dynamic symbol table
-                             --lto-syms          Display LTO symbol tables
                           -n --notes             Display the core notes (if present)
                           -r --relocs            Display the relocations (if present)
-                          -u --unwind            Display the unwind info (if present)
                           -d --dynamic           Display the dynamic section (if present)
                           -V --version-info      Display the version sections (if present)
-                          -A --arch-specific     Display architecture specific information (if any)
-                          -c --archive-index     Display the symbol/file index in an archive
-                          -D --use-dynamic       Use the dynamic section info when displaying symbols
-                          -L --lint|--enable-checks
-                                                 Display warning messages for possible problems
                           -x --hex-dump=<number|name>
                                                  Dump the contents of section <number|name> as bytes
                           -p --string-dump=<number|name>
                                                  Dump the contents of section <number|name> as strings
-                          -R --relocated-dump=<number|name>
-                                                 Dump the relocated contents of section <number|name>
-                          -I --histogram         Display histogram of bucket list lengths
                           -W --wide              Allow output width to exceed 80 characters
                           -T --silent-truncation If a symbol name is truncated, do not add [...] suffix
                           -H --help              Display this information
@@ -1405,9 +1408,9 @@ public final class Main {
     }
 
     private static String addSuffixIfLonger(final String s, final int maxLength) {
-        final String suffix = "[...]";
+        final String suffix = silentTruncation ? "" : "[...]";
         if (s.length() > maxLength) {
-            return s.substring(0, maxLength - suffix.length()) + suffix;
+            return s.substring(0, Math.max(0, maxLength - suffix.length())) + suffix;
         }
         return s;
     }

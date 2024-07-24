@@ -216,6 +216,11 @@ public enum DynamicTableEntryTag {
     DT_RELACOUNT(0x000000006ffffff9L, "RELACOUNT"),
 
     /**
+     * Indicates the RELATIVE relocation count, which is produced from the concatenation of all Elf32_Rel relocations.
+     */
+    DT_RELCOUNT(0x000000006ffffffaL, "RELCOUNT"),
+
+    /**
      * Flag values specific to this object.
      *
      * <p>See <a href=
@@ -267,14 +272,14 @@ public enum DynamicTableEntryTag {
         if (!codeToTag.containsKey(code)) {
             if (isOSSpecific(code)) {
                 throw new IllegalArgumentException(
-                        String.format("Unknown OS-specific Dynamic table entry tag identifier: 0x%016x", code));
+                        String.format("Unknown OS-specific dynamic table entry tag identifier: 0x%016x", code));
             }
             if (isCPUSpecific(code)) {
                 throw new IllegalArgumentException(
-                        String.format("Unknown CPU-specific Dynamic table entry tag identifier: 0x%016x", code));
+                        String.format("Unknown CPU-specific dynamic table entry tag identifier: 0x%016x", code));
             }
             throw new IllegalArgumentException(
-                    String.format("Unknown Dynamic table entry tag identifier: 0x%016x", code));
+                    String.format("Unknown dynamic table entry tag identifier: 0x%016x", code));
         }
         return codeToTag.get(code);
     }

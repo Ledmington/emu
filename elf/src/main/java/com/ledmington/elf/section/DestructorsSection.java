@@ -29,7 +29,7 @@ public final class DestructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
-    private final long[] destructors;
+    private final int[] destructors;
 
     /**
      * Creates a DestructorsSection with the given name and the given header.
@@ -48,7 +48,7 @@ public final class DestructorsSection implements LoadableSection {
         this.header = Objects.requireNonNull(sectionHeader);
 
         if (dynamicSection == null) {
-            this.destructors = new long[0];
+            this.destructors = new int[0];
             return;
         }
 
@@ -62,18 +62,18 @@ public final class DestructorsSection implements LoadableSection {
             }
         }
 
-        if (destructorsSizeInBytes % 8 != 0) {
+        if (destructorsSizeInBytes % 4 != 0) {
             throw new IllegalArgumentException(String.format(
-                    "Expected size of .fini_array section to be a multiple of 8 bytes but was %d (0x%x)",
+                    "Expected size of .fini_array section to be a multiple of 4 bytes but was %d (0x%x)",
                     destructorsSizeInBytes, destructorsSizeInBytes));
         }
 
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
 
-        this.destructors = new long[destructorsSizeInBytes / 8];
+        this.destructors = new int[destructorsSizeInBytes / 4];
         for (int i = 0; i < destructors.length; i++) {
-            this.destructors[i] = b.read8();
+            this.destructors[i] = b.read4();
         }
     }
 
@@ -89,7 +89,7 @@ public final class DestructorsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length + 8);
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length * 4);
         wb.write(destructors);
         return wb.array();
     }

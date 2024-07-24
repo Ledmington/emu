@@ -23,9 +23,7 @@ import com.ledmington.elf.section.BasicProgBitsSection;
 import com.ledmington.elf.section.ConstructorsSection;
 import com.ledmington.elf.section.DestructorsSection;
 import com.ledmington.elf.section.DynamicSection;
-import com.ledmington.elf.section.GnuHashSection;
-import com.ledmington.elf.section.GnuVersionRequirementsSection;
-import com.ledmington.elf.section.GnuVersionSection;
+import com.ledmington.elf.section.HashTableSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.NullSection;
@@ -33,6 +31,10 @@ import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.gnu.GnuHashSection;
+import com.ledmington.elf.section.gnu.GnuVersionDefinitionSection;
+import com.ledmington.elf.section.gnu.GnuVersionRequirementsSection;
+import com.ledmington.elf.section.gnu.GnuVersionSection;
 import com.ledmington.elf.section.note.BasicNoteSection;
 import com.ledmington.elf.section.note.GnuBuildIDSection;
 import com.ledmington.elf.section.note.GnuPropertySection;
@@ -346,6 +348,8 @@ public final class ELFReader {
                 };
             } else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
                 sectionTable[k] = new GnuHashSection(name, sh, b, fileHeader.is32Bit());
+            } else if (typeName.equals(SectionHeaderType.SHT_HASH.getName())) {
+                sectionTable[k] = new HashTableSection(name, sh, b);
             } else if (typeName.equals(SectionHeaderType.SHT_PROGBITS.getName())) {
                 sectionTable[k] = ".interp".equals(name)
                         ? new InterpreterPathSection(sh, b)
@@ -360,6 +364,8 @@ public final class ELFReader {
                 sectionTable[k] = new GnuVersionSection(sh, b);
             } else if (GnuVersionRequirementsSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionRequirementsSection(sh, b, dynamicSection);
+            } else if (GnuVersionDefinitionSection.getStandardName().equals(name)) {
+                sectionTable[k] = new GnuVersionDefinitionSection(sh, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
                 sectionTable[k] = new ConstructorsSection(name, sh, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
