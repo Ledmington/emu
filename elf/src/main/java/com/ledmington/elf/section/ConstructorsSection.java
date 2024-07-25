@@ -30,7 +30,8 @@ public final class ConstructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
-    private final int[] constructors; // function pointers
+    private final long[] constructors; // function pointers
+    private final boolean is32Bit;
 
     /**
      * Creates a ConstructorsSection with the given name and header.
@@ -39,17 +40,20 @@ public final class ConstructorsSection implements LoadableSection {
      * @param sectionHeader The header of this section.
      * @param b The {@link ReadOnlyByteBuffer} to read data from.
      * @param dynamicSection The dynamic section of the current executable to retrieve the DT_INIT_ARRAYSZ entry.
+     * @param is32Bit Used for alignment.
      */
     public ConstructorsSection(
             final String name,
             final SectionHeader sectionHeader,
             final ReadOnlyByteBuffer b,
-            final DynamicSection dynamicSection) {
+            final DynamicSection dynamicSection,
+            final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
+        this.is32Bit = is32Bit;
 
         if (dynamicSection == null) {
-            this.constructors = new int[0];
+            this.constructors = new long[0];
             return;
         }
 
@@ -64,18 +68,19 @@ public final class ConstructorsSection implements LoadableSection {
             }
         }
 
-        if (constructorsSizeInBytes % 4 != 0) {
+        final int wordSize = is32Bit ? 4 : 8;
+        if (constructorsSizeInBytes % wordSize != 0) {
             throw new IllegalArgumentException(String.format(
-                    "Expected size of .init_array section to be a multiple of 4 bytes but was %d (0x%x)",
-                    constructorsSizeInBytes, constructorsSizeInBytes));
+                    "Expected size of .init_array section to be a multiple of %d bytes but was %d (0x%x)",
+                    wordSize, constructorsSizeInBytes, constructorsSizeInBytes));
         }
 
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
 
-        this.constructors = new int[constructorsSizeInBytes / 4];
+        this.constructors = new long[constructorsSizeInBytes / wordSize];
         for (int i = 0; i < constructors.length; i++) {
-            this.constructors[i] = b.read4();
+            this.constructors[i] = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         }
     }
 
@@ -91,8 +96,15 @@ public final class ConstructorsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * 4);
-        wb.write(constructors);
+        final int wordSize = is32Bit ? 4 : 8;
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * wordSize);
+        for (final long c : constructors) {
+            if (is32Bit) {
+                wb.write(BitUtils.asInt(c));
+            } else {
+                wb.write(c);
+            }
+        }
         return wb.array();
     }
 

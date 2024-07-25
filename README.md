@@ -2,7 +2,7 @@
 ![Build](https://github.com/Ledmington/emu/actions/workflows/build.yaml/badge.svg)
 
 The project is divided as follows:
-- `emu-main` : the actual executable emulator
+- `emu-cli` : the actual executable emulator (CLI version)
 - `emu` : the core components of the emulator
 - `readelf` : a utility executable to mimic the behavior of GNU's `readelf`
 - `elf` : ELF file parser

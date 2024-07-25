@@ -17,11 +17,6 @@
  */
 package com.ledmington.emu;
 
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
@@ -32,117 +27,56 @@ import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.cpu.x86.RelativeOffset;
-import com.ledmington.elf.ELF;
-import com.ledmington.elf.FileType;
-import com.ledmington.elf.PHTEntry;
-import com.ledmington.elf.PHTEntryType;
-import com.ledmington.elf.section.LoadableSection;
-import com.ledmington.elf.section.NoBitsSection;
-import com.ledmington.elf.section.Section;
-import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
-/**
- * Useful references <a href="https://linuxgazette.net/84/hawk.html">here</a>, <a
- * href="https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779" >here</a> and <a
- * href="https://gitlab.com/x86-psABIs/x86-64-ABI">here</a>.
- */
-public final class X86Emulator implements Emulator {
+/** Emulator of an x86 CPU. */
+public final class X86Emulator {
 
-    private static final MiniLogger logger = MiniLogger.getLogger("emu");
+    private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 
-    private ELF elf;
-    private MemoryController mem;
-    private final X86RegisterFile regFile = new X86RegisterFile();
-    private InstructionFetcher instructionFetcher;
-    private InstructionDecoder dec;
+    private X86Emulator() {}
 
-    /** Creates an emulator to be used later. */
-    public X86Emulator() {}
+    /**
+     * Automatically fetches instruction from the emulated memory and executes them.
+     *
+     * @param mem The emulated memory to read instructions and data from.
+     * @param entryPointVirtualAddress The virtual address where to start execution.
+     * @param highestAddress The highest address of the allocated memory.
+     * @param stackSize The size in bytes of the stack.
+     */
+    public static void run(
+            final MemoryController mem,
+            final long entryPointVirtualAddress,
+            final long highestAddress,
+            final long stackSize) {
+        final X86RegisterFile rf = new X86RegisterFile();
+        final InstructionFetcher instructionFetcher = new InstructionFetcher(mem, rf);
+        final InstructionDecoder dec = new InstructionDecoderV1(instructionFetcher);
 
-    private void setup(final ELF elf, final MemoryInitializer memInit) {
-        this.mem = new MemoryController(memInit);
-        this.elf = Objects.requireNonNull(elf);
-        this.instructionFetcher = new InstructionFetcher(mem, regFile);
-        this.dec = new InstructionDecoderV1(this.instructionFetcher);
-    }
-
-    @Override
-    public void run(
-            final ELF elf,
-            final MemoryInitializer memInit,
-            final long stackSize,
-            final String... commandLineArguments) {
-        setup(elf, memInit);
-
-        if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
-                && elf.getFileHeader().getFileType() != FileType.ET_DYN) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-                    elf.getFileHeader().getFileType()));
-        }
-
-        this.instructionFetcher.setPosition(elf.getFileHeader().getEntryPointVirtualAddress());
-        logger.debug("Entry point virtual address : 0x%x", elf.getFileHeader().getEntryPointVirtualAddress());
-
-        loadELF();
-
-        // TODO: load argc and argv (command-line arguments)
-        logger.debug("Command-line arguments:");
-        for (final String arg : commandLineArguments) {
-            logger.debug("'%s'", arg);
-        }
-
-        // TODO: load environment variables
-        logger.debug("Environment variables:");
-        for (final Entry<String, String> env : System.getenv().entrySet()) {
-            logger.debug("'%s' = '%s'", env.getKey(), env.getValue());
-        }
-
-        // setup stack
-        final long highestAddress = IntStream.range(0, elf.getSectionTableLength())
-                .mapToObj(i -> elf.getSection(i))
-                .map(sec ->
-                        sec.getHeader().getVirtualAddress() + sec.getHeader().getSectionSize())
-                .max(Long::compare)
-                .orElseThrow();
-        logger.debug(
-                "Setting stack size to %,d bytes (%.3f MB) starting at 0x%x",
-                stackSize, (double) stackSize / 1_000_000.0, highestAddress + stackSize);
-        mem.setPermissions(highestAddress, highestAddress + stackSize, true, true, false);
+        instructionFetcher.setPosition(entryPointVirtualAddress);
+        logger.debug("Entry point virtual address : 0x%x", entryPointVirtualAddress);
 
         // we make RSP point at the last 8 bytes of allocated memory
-        regFile.set(Register64.RSP, highestAddress + stackSize - 8L);
-
-        // run pre-constructors? (.preinit_array)
-
-        // run constructors? (.init_array)
-
-        // run legacy constructors? (.init)
-
-        // run legacy constructors? (.ctors)
+        rf.set(Register64.RSP, highestAddress + stackSize - 8L);
 
         while (true) {
-            // dec.goTo(this.instructionFetcher.position());
             final Instruction inst = dec.decode();
-            // this.instructionFetcher.setPosition(dec.position());
 
             logger.debug(inst.toIntelSyntax());
             switch (inst.opcode()) {
                 case XOR -> {
                     switch (((Register) inst.firstOperand()).bits()) {
                         case 8 -> {
-                            final byte r1 = regFile.get((Register8) inst.firstOperand());
-                            final byte r2 = regFile.get((Register8) inst.secondOperand());
-                            regFile.set((Register8) inst.firstOperand(), BitUtils.xor(r1, r2));
+                            final byte r1 = rf.get((Register8) inst.firstOperand());
+                            final byte r2 = rf.get((Register8) inst.secondOperand());
+                            rf.set((Register8) inst.firstOperand(), BitUtils.xor(r1, r2));
                         }
                         case 32 -> {
-                            final int r1 = regFile.get((Register32) inst.firstOperand());
-                            final int r2 = regFile.get((Register32) inst.secondOperand());
-                            regFile.set((Register32) inst.firstOperand(), r1 ^ r2);
+                            final int r1 = rf.get((Register32) inst.firstOperand());
+                            final int r2 = rf.get((Register32) inst.secondOperand());
+                            rf.set((Register32) inst.firstOperand(), r1 ^ r2);
                         }
                         default -> throw new IllegalArgumentException(String.format(
                                 "Don't know what to do when XOR has %,d bits",
@@ -158,7 +92,7 @@ public final class X86Emulator implements Emulator {
                         case Register r -> {
                             if (r instanceof Register64 r64) {
                                 final long imm64 = ((Immediate) inst.secondOperand()).asLong();
-                                regFile.set(r64, regFile.get(r64) & imm64);
+                                rf.set(r64, rf.get(r64) & imm64);
                             } else {
                                 throw new IllegalArgumentException(
                                         String.format("Don't know what to do when AND has %,d bits", r.bits()));
@@ -168,119 +102,52 @@ public final class X86Emulator implements Emulator {
                                 String.format("Unknown type of first operand '%s'", inst.firstOperand()));
                     }
                 }
-                case JMP -> this.instructionFetcher.setPosition(
-                        this.instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
+                case JMP -> instructionFetcher.setPosition(
+                        instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
                 case MOV -> {
                     final Register64 dest = (Register64) inst.firstOperand();
                     final Register64 src = (Register64) inst.secondOperand();
-                    regFile.set(dest, regFile.get(src));
+                    rf.set(dest, rf.get(src));
                 }
                 case PUSH -> {
                     final Register64 src = (Register64) inst.firstOperand();
-                    final long rsp = regFile.get(Register64.RSP);
-                    mem.write(rsp, regFile.get(src));
+                    final long rsp = rf.get(Register64.RSP);
+                    mem.write(rsp, rf.get(src));
                     // the stack "grows downward"
-                    regFile.set(Register64.RSP, rsp - 8L);
+                    rf.set(Register64.RSP, rsp - 8L);
                 }
                 case POP -> {
                     final Register64 dest = (Register64) inst.firstOperand();
-                    final long rsp = regFile.get(Register64.RSP);
-                    regFile.set(dest, mem.read8(rsp));
+                    final long rsp = rf.get(Register64.RSP);
+                    rf.set(dest, mem.read8(rsp));
                     // the stack "grows downward"
-                    regFile.set(Register64.RSP, rsp + 8L);
+                    rf.set(Register64.RSP, rsp + 8L);
                 }
                 case LEA -> {
                     final Register64 dest = (Register64) inst.firstOperand();
                     final IndirectOperand src = (IndirectOperand) inst.secondOperand();
-                    final long result = computeIndirectOperand(src);
-                    regFile.set(dest, result);
+                    final long result = computeIndirectOperand(rf, src);
+                    rf.set(dest, result);
                 }
                 case CALL -> {
                     // TODO: check this
                     final IndirectOperand src = (IndirectOperand) inst.firstOperand();
-                    final long result = computeIndirectOperand(src);
-                    regFile.set(Register64.RIP, result);
+                    final long result = computeIndirectOperand(rf, src);
+                    rf.set(Register64.RIP, result);
                 }
                 case ENDBR64 -> logger.warning("ENDBR64 not implemented");
+                case HLT -> {
+                    return;
+                }
                 default -> throw new IllegalStateException(
                         String.format("Unknwon instruction %s", inst.toIntelSyntax()));
             }
         }
-
-        // run destructors? (.fini_array)
-
-        // run legacy destructors? (.fini)
-
-        // run legacy destructors? (.dtors)
     }
 
-    private long computeIndirectOperand(final IndirectOperand io) {
-        return ((io.base() == null) ? 0L : regFile.get((Register64) io.base()))
-                + ((io.index() == null) ? 0L : regFile.get((Register64) io.index())) * io.scale()
+    private static long computeIndirectOperand(final X86RegisterFile rf, final IndirectOperand io) {
+        return ((io.base() == null) ? 0L : rf.get((Register64) io.base()))
+                + ((io.index() == null) ? 0L : rf.get((Register64) io.index())) * io.scale()
                 + io.getDisplacement();
-    }
-
-    private void loadELF() {
-        logger.debug("Loading ELF segments into memory");
-        for (int i = 0; i < elf.getProgramHeaderTableLength(); i++) {
-            final PHTEntry phte = elf.getProgramHeader(i);
-            if (phte.getType() != PHTEntryType.PT_LOAD) {
-                // This segment is not loadable
-                continue;
-            }
-
-            final long start = phte.getSegmentVirtualAddress();
-            final long end = phte.getSegmentVirtualAddress() + phte.getSegmentMemorySize() - 1;
-            logger.debug(
-                    "Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
-                    start,
-                    end,
-                    end - start,
-                    (phte.isReadable() ? "R" : "")
-                            + (phte.isWriteable() ? "W" : "")
-                            + (phte.isExecutable() ? "X" : ""));
-            mem.setPermissions(start, end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
-        }
-
-        logger.debug("Loading ELF sections into memory");
-        for (int i = 0; i < elf.getSectionTableLength(); i++) {
-            final Section sec = elf.getSection(i);
-            if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
-                initializeSection(sec);
-            }
-        }
-    }
-
-    private void initializeSection(final Section sec) {
-        Objects.requireNonNull(sec);
-
-        switch (sec) {
-            case NoBitsSection ignored -> {
-                // allocate uninitialized data blocks
-                final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-                final long size = sec.getHeader().getSectionSize();
-                logger.debug(
-                        "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                        sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
-                mem.initialize(startVirtualAddress, size, (byte) 0x00);
-            }
-            case LoadableSection ls -> {
-                final long startVirtualAddress = sec.getHeader().getVirtualAddress();
-                final byte[] content = ls.getLoadableContent();
-                logger.debug(
-                        "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
-                        sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
-                mem.initialize(startVirtualAddress, content);
-            }
-            default -> {
-                throw new IllegalArgumentException(String.format(
-                        "Don't know what to do with section '%s' of type %s and flags '%s'",
-                        sec.getName(),
-                        sec.getHeader().getType().getName(),
-                        sec.getHeader().getFlags().stream()
-                                .map(SectionHeaderFlags::getName)
-                                .collect(Collectors.joining(", "))));
-            }
-        }
     }
 }

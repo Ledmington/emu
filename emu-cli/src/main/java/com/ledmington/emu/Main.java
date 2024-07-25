@@ -29,6 +29,8 @@ import java.util.stream.Stream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
+import com.ledmington.elf.FileType;
+import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.MiniLogger;
 
@@ -61,11 +63,24 @@ public final class Main {
         final ELF elf = parseELF(filename);
         logger.info("ELF file parsed successfully");
 
-        final Emulator emu = new X86Emulator();
+        if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
+                && elf.getFileHeader().getFileType() != FileType.ET_DYN) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
+                    elf.getFileHeader().getFileType()));
+        }
+
+        final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
+        final long highestAddress = ELFLoader.load(elf, mem, commandLineArguments, EmulatorConstants.getStackSize());
 
         logger.info(" ### Execution start ### ");
-        emu.run(elf, EmulatorConstants.getMemoryInitializer(), EmulatorConstants.getStackSize(), commandLineArguments);
+        X86Emulator.run(
+                mem,
+                elf.getFileHeader().getEntryPointVirtualAddress(),
+                highestAddress,
+                EmulatorConstants.getStackSize());
         logger.info(" ### Execution end ### ");
+        ELFLoader.unload(elf);
     }
 
     @SuppressWarnings("PMD.AvoidCatchingThrowable")

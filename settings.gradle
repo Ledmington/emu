@@ -4,7 +4,7 @@ plugins {
 
 rootProject.name = 'emu'
 include 'emu'
-include 'emu-main'
+include 'emu-cli'
 include 'elf'
 include 'id'
 include 'utils'

@@ -20,6 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
@@ -29,7 +30,8 @@ public final class DestructorsSection implements LoadableSection {
 
     private final String name;
     private final SectionHeader header;
-    private final int[] destructors;
+    private final long[] destructors; // function pointers
+    private final boolean is32Bit;
 
     /**
      * Creates a DestructorsSection with the given name and the given header.
@@ -38,17 +40,20 @@ public final class DestructorsSection implements LoadableSection {
      * @param sectionHeader The header of this section.
      * @param b The {@link ReadOnlyByteBuffer} to read data from.
      * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_FINI_ARRAYSZ from.
+     * @param is32Bit Used for alignment.
      */
     public DestructorsSection(
             final String name,
             final SectionHeader sectionHeader,
             final ReadOnlyByteBuffer b,
-            final DynamicSection dynamicSection) {
+            final DynamicSection dynamicSection,
+            final boolean is32Bit) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);
+        this.is32Bit = is32Bit;
 
         if (dynamicSection == null) {
-            this.destructors = new int[0];
+            this.destructors = new long[0];
             return;
         }
 
@@ -56,24 +61,26 @@ public final class DestructorsSection implements LoadableSection {
         {
             for (int i = 0; i < dynamicSection.getTableLength(); i++) {
                 if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_FINI_ARRAYSZ) {
-                    destructorsSizeInBytes = (int) dynamicSection.getEntry(i).getContent();
+                    destructorsSizeInBytes =
+                            BitUtils.asInt(dynamicSection.getEntry(i).getContent());
                     break;
                 }
             }
         }
 
-        if (destructorsSizeInBytes % 4 != 0) {
+        final int wordSize = is32Bit ? 4 : 8;
+        if (destructorsSizeInBytes % wordSize != 0) {
             throw new IllegalArgumentException(String.format(
-                    "Expected size of .fini_array section to be a multiple of 4 bytes but was %d (0x%x)",
-                    destructorsSizeInBytes, destructorsSizeInBytes));
+                    "Expected size of .fini_array section to be a multiple of %d bytes but was %d (0x%x)",
+                    wordSize, destructorsSizeInBytes, destructorsSizeInBytes));
         }
 
         b.setPosition(sectionHeader.getFileOffset());
         b.setAlignment(sectionHeader.getAlignment());
 
-        this.destructors = new int[destructorsSizeInBytes / 4];
+        this.destructors = new long[destructorsSizeInBytes / wordSize];
         for (int i = 0; i < destructors.length; i++) {
-            this.destructors[i] = b.read4();
+            this.destructors[i] = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         }
     }
 
@@ -89,8 +96,15 @@ public final class DestructorsSection implements LoadableSection {
 
     @Override
     public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length * 4);
-        wb.write(destructors);
+        final int wordSize = is32Bit ? 4 : 8;
+        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length * wordSize);
+        for (final long d : destructors) {
+            if (is32Bit) {
+                wb.write(BitUtils.asInt(d));
+            } else {
+                wb.write(d);
+            }
+        }
         return wb.array();
     }
 

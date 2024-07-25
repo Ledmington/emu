@@ -367,9 +367,9 @@ public final class ELFReader {
             } else if (GnuVersionDefinitionSection.getStandardName().equals(name)) {
                 sectionTable[k] = new GnuVersionDefinitionSection(sh, b, dynamicSection);
             } else if (typeName.equals(SectionHeaderType.SHT_INIT_ARRAY.getName())) {
-                sectionTable[k] = new ConstructorsSection(name, sh, b, dynamicSection);
+                sectionTable[k] = new ConstructorsSection(name, sh, b, dynamicSection, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
-                sectionTable[k] = new DestructorsSection(name, sh, b, dynamicSection);
+                sectionTable[k] = new DestructorsSection(name, sh, b, dynamicSection, fileHeader.is32Bit());
             } else {
                 throw new IllegalArgumentException(String.format(
                         "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));

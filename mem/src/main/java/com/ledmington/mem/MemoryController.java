@@ -172,6 +172,16 @@ public final class MemoryController implements Memory {
         }
     }
 
+    /**
+     * Writes the given byte in the memory without checking nor modifying permissions.
+     *
+     * @param address The address where to write the value.
+     * @param value The value to be written.
+     */
+    public void initialize(final long address, final byte value) {
+        mem.write(address, value);
+    }
+
     @Override
     public String toString() {
         return "MemoryController(mem=" + mem + ";canRead="

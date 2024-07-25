@@ -191,4 +191,35 @@ public final class BitUtils {
     public static byte shl(final byte b, final int x) {
         return asByte(b << x);
     }
+
+    /**
+     * Returns the given 32-bit integer as an array of 4 big-endian bytes.
+     *
+     * @param x The 32-bit integer to be split.
+     * @return An array of 4 big endian bytes.
+     */
+    public static byte[] asBEBytes(final int x) {
+        return new byte[] {
+            BitUtils.asByte(x), BitUtils.asByte(x >>> 8), BitUtils.asByte(x >>> 16), BitUtils.asByte(x >>> 24)
+        };
+    }
+
+    /**
+     * Returns the given 64-bit long as an array of 8 big-endian bytes.
+     *
+     * @param x The 64-bit long to be split.
+     * @return An array of 8 big endian bytes.
+     */
+    public static byte[] asBEBytes(final long x) {
+        return new byte[] {
+            BitUtils.asByte(x),
+            BitUtils.asByte(x >>> 8),
+            BitUtils.asByte(x >>> 16),
+            BitUtils.asByte(x >>> 24),
+            BitUtils.asByte(x >>> 32),
+            BitUtils.asByte(x >>> 40),
+            BitUtils.asByte(x >>> 48),
+            BitUtils.asByte(x >>> 56)
+        };
+    }
 }
