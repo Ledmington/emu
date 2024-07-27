@@ -28,6 +28,9 @@ public final class EmulatorConstants {
     /** The default memory initializer */
     private static Supplier<MemoryInitializer> memoryInitializer = MemoryInitializer::random;
 
+    /** Base address where to load the executable file. */
+    private static long baseAddress = 0x8000000000000000L;
+
     /** The default stack size. */
     private static long stackSize = 100_000_000L;
 
@@ -61,5 +64,13 @@ public final class EmulatorConstants {
 
     public static long getStackSize() {
         return stackSize;
+    }
+
+    public static void setBaseAddress(final long bAddr) {
+        baseAddress = bAddr;
+    }
+
+    public static long getbaseAddress() {
+        return baseAddress;
     }
 }

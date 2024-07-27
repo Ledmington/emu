@@ -84,6 +84,25 @@ public final class ConstructorsSection implements LoadableSection {
         }
     }
 
+    /**
+     * Returns the number of constructors.
+     *
+     * @return The number of constructors.
+     */
+    public int getConstructorsLength() {
+        return constructors.length;
+    }
+
+    /**
+     * Returns the i-th constructor.
+     *
+     * @param idx The index of the constructor to return.
+     * @return The i-th constructor.
+     */
+    public long getConstructor(final int idx) {
+        return constructors[idx];
+    }
+
     @Override
     public String getName() {
         return name;

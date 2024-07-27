@@ -90,6 +90,42 @@ public final class Immediate implements Operand {
     }
 
     /**
+     * Returns the value of this Immediate as a 8-bit value.
+     *
+     * @return The 8-bit value of this Immediate.
+     */
+    public byte asByte() {
+        if (type != Type.BYTE) {
+            throw new IllegalArgumentException("This immediate is not 8 bits");
+        }
+        return BitUtils.asByte(value);
+    }
+
+    /**
+     * Returns the value of this Immediate as a 16-bit value.
+     *
+     * @return The 16-bit value of this Immediate.
+     */
+    public short asShort() {
+        if (type != Type.SHORT) {
+            throw new IllegalArgumentException("This immediate is not 16 bits");
+        }
+        return BitUtils.asShort(value);
+    }
+
+    /**
+     * Returns the value of this Immediate as a 32-bit value.
+     *
+     * @return The 32-bit value of this Immediate.
+     */
+    public int asInt() {
+        if (type != Type.INT) {
+            throw new IllegalArgumentException("This immediate is not 32 bits");
+        }
+        return BitUtils.asInt(value);
+    }
+
+    /**
      * Returns the value of this Immediate as a 64-bit value.
      *
      * @return The 64-bit value of this Immediate.

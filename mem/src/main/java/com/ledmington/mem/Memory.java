@@ -39,4 +39,13 @@ public interface Memory {
      * @param value The value to write.
      */
     void write(final long address, final byte value);
+
+    /**
+     * Checks whether the given address is initialized or not. A memory address is said to be initialized if it has been
+     * written to at least once.
+     *
+     * @param address The address to be checked.
+     * @return True if it is initialized, false otherwise.
+     */
+    boolean isInitialized(final long address);
 }

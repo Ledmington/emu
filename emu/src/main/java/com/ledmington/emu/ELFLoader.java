@@ -22,11 +22,13 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.ProgramHeaderTable;
 import com.ledmington.elf.SectionTable;
+import com.ledmington.elf.section.ConstructorsSection;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
@@ -57,18 +59,31 @@ public final class ELFLoader {
      * @param stackSize The size in bytes of the stack.
      * @return The highest address of the allocated portion of memory.
      */
-    public static long load(
-            final ELF elf, final MemoryController mem, final String[] commandLineArguments, final long stackSize) {
-        loadSegments(elf, mem);
-        loadSections(elf, mem);
+    public static void load(
+            final ELF elf,
+            final MemoryController mem,
+            final String[] commandLineArguments,
+            final long baseAddress,
+            final long stackSize,
+            final X86RegisterFile rf) {
+        loadSegments(elf, mem, baseAddress);
+        loadSections(elf, mem, baseAddress);
         final long highestAddress = setupStack(elf, stackSize, mem);
+
+        // we make RSP point at the last 8 bytes of allocated memory
+        rf.set(Register64.RSP, highestAddress + stackSize - 8L);
+
         loadCommandLineArgumentsAndEnvironmentVariables(
                 mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
         if (elf.getSectionByName(".preinit_array").isPresent()) {
             runPreInitArray();
         }
         if (elf.getSectionByName(".init_array").isPresent()) {
-            runInitArray();
+            runInitArray(
+                    (ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(),
+                    mem,
+                    rf,
+                    elf.getFileHeader().getEntryPointVirtualAddress());
         }
         if (elf.getSectionByName(".init").isPresent()) {
             runInit();
@@ -76,7 +91,6 @@ public final class ELFLoader {
         if (elf.getSectionByName(".ctors").isPresent()) {
             runCtors();
         }
-        return highestAddress;
     }
 
     /**
@@ -89,7 +103,7 @@ public final class ELFLoader {
         if (elf.getSectionByName(".fini_array").isPresent()) {
             runFiniArray();
         }
-        if (elf.getSectionByName("..fini").isPresent()) {
+        if (elf.getSectionByName(".fini").isPresent()) {
             runFini();
         }
         if (elf.getSectionByName(".dtors").isPresent()) {
@@ -98,38 +112,43 @@ public final class ELFLoader {
     }
 
     private static void runPreInitArray() {
-        // TODO
-        logger.debug("Running .preinit_array");
+        notImplemented();
     }
 
-    private static void runInitArray() {
-        // TODO
-        logger.debug("Running .init_array");
+    private static void runInitArray(
+            final ConstructorsSection initArray,
+            final MemoryController mem,
+            final X86RegisterFile rf,
+            final long entryPointVirtualAddress) {
+        for (int i = 0; i < initArray.getConstructorsLength(); i++) {
+            logger.debug("Running .init_array[%d]", i);
+            final long c = initArray.getConstructor(i);
+            X86Emulator.run(mem, rf, entryPointVirtualAddress + c);
+        }
     }
 
     private static void runInit() {
-        // TODO
-        logger.debug("Running .init");
+        notImplemented();
     }
 
     private static void runCtors() {
-        // TODO
-        logger.debug("Running .ctors");
+        notImplemented();
     }
 
     private static void runFiniArray() {
-        // TODO
-        logger.debug("Running .fini_array");
+        notImplemented();
     }
 
     private static void runFini() {
-        // TODO
-        logger.debug("Running .fini");
+        notImplemented();
     }
 
     private static void runDtors() {
-        // TODO
-        logger.debug("Running .dtors");
+        notImplemented();
+    }
+
+    private static void notImplemented() {
+        throw new Error("Not implemented");
     }
 
     private static long setupStack(final SectionTable st, final long stackSize, final MemoryController mem) {
@@ -240,7 +259,7 @@ public final class ELFLoader {
         return p;
     }
 
-    private static void loadSegments(final ProgramHeaderTable pht, final MemoryController mem) {
+    private static void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {
         logger.debug("Loading ELF segments into memory");
         for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
             final PHTEntry phte = pht.getProgramHeader(i);
@@ -249,8 +268,8 @@ public final class ELFLoader {
                 continue;
             }
 
-            final long start = phte.getSegmentVirtualAddress();
-            final long end = phte.getSegmentVirtualAddress() + phte.getSegmentMemorySize() - 1;
+            final long start = baseAddress + phte.getSegmentVirtualAddress();
+            final long end = start + phte.getSegmentMemorySize();
             logger.debug(
                     "Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
                     start,
@@ -263,23 +282,23 @@ public final class ELFLoader {
         }
     }
 
-    private static void loadSections(final SectionTable st, final MemoryController mem) {
+    private static void loadSections(final SectionTable st, final MemoryController mem, final long baseAddress) {
         logger.debug("Loading ELF sections into memory");
         for (int i = 0; i < st.getSectionTableLength(); i++) {
             final Section sec = st.getSection(i);
             if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
-                initializeSection(sec, mem);
+                initializeSection(sec, mem, baseAddress);
             }
         }
     }
 
-    private static void initializeSection(final Section sec, final MemoryController mem) {
+    private static void initializeSection(final Section sec, final MemoryController mem, final long baseAddress) {
         Objects.requireNonNull(sec);
 
         switch (sec) {
             case NoBitsSection ignored -> {
                 // allocate uninitialized data blocks
-                final long startVirtualAddress = sec.getHeader().getVirtualAddress();
+                final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
                 final long size = sec.getHeader().getSectionSize();
                 logger.debug(
                         "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
@@ -287,7 +306,7 @@ public final class ELFLoader {
                 mem.initialize(startVirtualAddress, size, (byte) 0x00);
             }
             case LoadableSection ls -> {
-                final long startVirtualAddress = sec.getHeader().getVirtualAddress();
+                final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
                 final byte[] content = ls.getLoadableContent();
                 logger.debug(
                         "Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",

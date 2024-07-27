@@ -38,12 +38,17 @@ public final class RandomAccessMemory implements Memory {
 
     @Override
     public byte read(final long address) {
-        return m.containsKey(address) ? m.get(address) : init.get();
+        return isInitialized(address) ? m.get(address) : init.get();
     }
 
     @Override
     public void write(final long address, final byte value) {
         m.put(address, value);
+    }
+
+    @Override
+    public boolean isInitialized(final long address) {
+        return m.containsKey(address);
     }
 
     @Override

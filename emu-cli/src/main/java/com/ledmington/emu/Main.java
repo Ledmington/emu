@@ -71,14 +71,18 @@ public final class Main {
         }
 
         final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
-        final long highestAddress = ELFLoader.load(elf, mem, commandLineArguments, EmulatorConstants.getStackSize());
+        final X86RegisterFile rf = new X86RegisterFile();
+
+        ELFLoader.load(
+                elf,
+                mem,
+                commandLineArguments,
+                EmulatorConstants.getbaseAddress(),
+                EmulatorConstants.getStackSize(),
+                rf);
 
         logger.info(" ### Execution start ### ");
-        X86Emulator.run(
-                mem,
-                elf.getFileHeader().getEntryPointVirtualAddress(),
-                highestAddress,
-                EmulatorConstants.getStackSize());
+        X86Emulator.run(mem, rf, elf.getFileHeader().getEntryPointVirtualAddress());
         logger.info(" ### Execution end ### ");
         ELFLoader.unload(elf);
     }
@@ -99,6 +103,7 @@ public final class Main {
         final String memoryInitializerRandomFlag = "--mem-init-random";
         final String memoryInitializerZeroFlag = "--mem-init-zero";
         final String stackSizeFlag = "--stack-size";
+        final String baseAddressFlag = "--base-address";
         final String shortVersionFlag = "-V";
         final String longVersionFlag = "--version";
 
@@ -124,6 +129,7 @@ public final class Main {
                         " --mem-init-zero    Uninitialized memory contains binary zero.",
                         " --stack-size N     Number of bytes to allocate for the stack. Accepts only integers.",
                         "                    Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
+                        " --base-address X   Memory location where to load the executable file (hexadecimal 64-bits).",
                         " FILE               The ELF executable file to emulate.",
                         ""));
                 out.flush();
@@ -182,6 +188,15 @@ public final class Main {
                 };
 
                 EmulatorConstants.setStackSize(bytes);
+            } else if (baseAddressFlag.equals(arg)) {
+                i++;
+                if (i >= args.length) {
+                    throw new IllegalArgumentException(
+                            String.format("Expected an argument after '%s'", baseAddressFlag));
+                }
+
+                EmulatorConstants.setBaseAddress(
+                        Long.parseLong(args[i].startsWith("0x") ? args[i].substring(2) : args[i], 16));
             } else if (shortVersionFlag.equals(arg) || longVersionFlag.equals(arg)) {
                 out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
                 out.flush();

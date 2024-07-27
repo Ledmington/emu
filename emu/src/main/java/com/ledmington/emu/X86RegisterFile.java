@@ -39,6 +39,8 @@ public final class X86RegisterFile {
     // instruction pointer
     private long rip;
 
+    private long rflags = 0L;
+
     /** Creates the register file initializing every register to 0. */
     public X86RegisterFile() {}
 
@@ -280,6 +282,26 @@ public final class X86RegisterFile {
             case R15 -> gpr[15] = v;
             case RIP -> rip = v;
         }
+    }
+
+    public boolean isSet(final RFlags f) {
+        return (rflags & (1L << f.bit())) != 0L;
+    }
+
+    public void set(final RFlags f, final boolean v) {
+        if (v) {
+            set(f);
+        } else {
+            reset(f);
+        }
+    }
+
+    public void set(final RFlags f) {
+        rflags |= (1L << f.bit());
+    }
+
+    public void reset(final RFlags f) {
+        rflags &= ~(1L << f.bit());
     }
 
     @Override

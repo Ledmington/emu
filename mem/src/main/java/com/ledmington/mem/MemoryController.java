@@ -83,7 +83,9 @@ public final class MemoryController implements Memory {
     @Override
     public byte read(final long address) {
         if (!canRead.get(address)) {
-            throw new IllegalArgumentException(String.format("Attempted read at non-readable address 0x%x", address));
+            throw new IllegalArgumentException(String.format(
+                    "Attempted read at%s non-readable address 0x%x",
+                    isInitialized(address) ? "" : " uninitialized", address));
         }
         return this.mem.read(address);
     }
@@ -115,8 +117,9 @@ public final class MemoryController implements Memory {
      */
     public byte readCode(final long address) {
         if (!canExecute.get(address)) {
-            throw new IllegalArgumentException(
-                    String.format("Attempted execute at non-executable address 0x%x", address));
+            throw new IllegalArgumentException(String.format(
+                    "Attempted execute at%s non-executable address 0x%x",
+                    isInitialized(address) ? "" : " uninitialized", address));
         }
         return this.mem.read(address);
     }
@@ -145,6 +148,11 @@ public final class MemoryController implements Memory {
         write(address + 5L, BitUtils.asByte(value >> 16));
         write(address + 6L, BitUtils.asByte(value >> 8));
         write(address + 7L, BitUtils.asByte(value));
+    }
+
+    @Override
+    public boolean isInitialized(final long address) {
+        return mem.isInitialized(address);
     }
 
     /**

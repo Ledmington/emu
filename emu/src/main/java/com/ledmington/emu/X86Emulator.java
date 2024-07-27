@@ -46,26 +46,73 @@ public final class X86Emulator {
      * @param highestAddress The highest address of the allocated memory.
      * @param stackSize The size in bytes of the stack.
      */
-    public static void run(
-            final MemoryController mem,
-            final long entryPointVirtualAddress,
-            final long highestAddress,
-            final long stackSize) {
-        final X86RegisterFile rf = new X86RegisterFile();
+    public static void run(final MemoryController mem, final X86RegisterFile rf, final long entryPointVirtualAddress) {
         final InstructionFetcher instructionFetcher = new InstructionFetcher(mem, rf);
         final InstructionDecoder dec = new InstructionDecoderV1(instructionFetcher);
 
         instructionFetcher.setPosition(entryPointVirtualAddress);
         logger.debug("Entry point virtual address : 0x%x", entryPointVirtualAddress);
 
-        // we make RSP point at the last 8 bytes of allocated memory
-        rf.set(Register64.RSP, highestAddress + stackSize - 8L);
-
         while (true) {
             final Instruction inst = dec.decode();
 
             logger.debug(inst.toIntelSyntax());
             switch (inst.opcode()) {
+                case SUB -> {
+                    if (inst.firstOperand() instanceof Register64) {
+                        final long r1 = rf.get((Register64) inst.firstOperand());
+                        final long r2 = rf.get((Register64) inst.secondOperand());
+                        rf.set((Register64) inst.firstOperand(), r1 - r2);
+                    } else {
+                        throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when SUB has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
+                    }
+                }
+                case ADD -> {
+                    if (inst.firstOperand() instanceof Register64) {
+                        final long r1 = rf.get((Register64) inst.firstOperand());
+                        final long r2 = rf.get((Register64) inst.secondOperand());
+                        rf.set((Register64) inst.firstOperand(), r1 + r2);
+                    } else {
+                        throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when ADD has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
+                    }
+                }
+                case SHR -> {
+                    if (inst.firstOperand() instanceof Register64) {
+                        final long r1 = rf.get((Register64) inst.firstOperand());
+                        final byte imm = ((Immediate) inst.secondOperand()).asByte();
+                        rf.set((Register64) inst.firstOperand(), r1 >>> imm);
+                    } else {
+                        throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when SHR has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
+                    }
+                }
+                case SAR -> {
+                    if (inst.firstOperand() instanceof Register64) {
+                        final long r1 = rf.get((Register64) inst.firstOperand());
+                        final byte imm = ((Immediate) inst.secondOperand()).asByte();
+                        rf.set((Register64) inst.firstOperand(), r1 >> imm);
+                    } else {
+                        throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when SAR has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
+                    }
+                }
+                case SHL -> {
+                    if (inst.firstOperand() instanceof Register64) {
+                        final long r1 = rf.get((Register64) inst.firstOperand());
+                        final byte imm = rf.get((Register8) inst.secondOperand());
+                        rf.set((Register64) inst.firstOperand(), r1 << imm);
+                    } else {
+                        throw new IllegalArgumentException(String.format(
+                                "Don't know what to do when SHL has %,d bits",
+                                ((Register) inst.firstOperand()).bits()));
+                    }
+                }
                 case XOR -> {
                     switch (((Register) inst.firstOperand()).bits()) {
                         case 8 -> {
@@ -84,30 +131,38 @@ public final class X86Emulator {
                     }
                 }
                 case AND -> {
-                    switch (inst.firstOperand()) {
-                        case IndirectOperand io -> {
-                            // final long result = computeIndirectOperand(io);
-                            throw new Error("Not implemented");
-                        }
-                        case Register r -> {
-                            if (r instanceof Register64 r64) {
-                                final long imm64 = ((Immediate) inst.secondOperand()).asLong();
-                                rf.set(r64, rf.get(r64) & imm64);
-                            } else {
-                                throw new IllegalArgumentException(
-                                        String.format("Don't know what to do when AND has %,d bits", r.bits()));
-                            }
-                        }
-                        default -> throw new IllegalArgumentException(
+                    if (inst.firstOperand() instanceof Register64 r64) {
+                        final long imm64 = ((Immediate) inst.secondOperand()).asLong();
+                        rf.set(r64, rf.get(r64) & imm64);
+                    } else {
+                        throw new IllegalArgumentException(
                                 String.format("Unknown type of first operand '%s'", inst.firstOperand()));
                     }
                 }
-                case JMP -> instructionFetcher.setPosition(
-                        instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
+                case TEST -> {
+                    final long r1 = rf.get((Register64) inst.firstOperand());
+                    final long r2 = rf.get((Register64) inst.secondOperand());
+                    rf.set(RFlags.Zero, (r1 & r2) == 0L);
+                }
+                case JMP -> {
+                    final long offset = (inst.firstOperand() instanceof Register64)
+                            ? rf.get((Register64) inst.firstOperand())
+                            : ((RelativeOffset) inst.firstOperand()).getValue();
+                    instructionFetcher.setPosition(instructionFetcher.getPosition() + offset);
+                }
+                case JE -> {
+                    if (rf.isSet(RFlags.Zero)) {
+                        instructionFetcher.setPosition(
+                                instructionFetcher.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
+                    }
+                }
                 case MOV -> {
                     final Register64 dest = (Register64) inst.firstOperand();
-                    final Register64 src = (Register64) inst.secondOperand();
-                    rf.set(dest, rf.get(src));
+                    final long src = (inst.secondOperand() instanceof Register)
+                            ? rf.get((Register64) inst.secondOperand())
+                            : mem.read8(entryPointVirtualAddress
+                                    + computeIndirectOperand(rf, (IndirectOperand) inst.secondOperand()));
+                    rf.set(dest, src);
                 }
                 case PUSH -> {
                     final Register64 src = (Register64) inst.firstOperand();
