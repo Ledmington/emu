@@ -23,20 +23,8 @@ application {
 }
 
 run {
-    args = [
-            // "/usr/bin/gcc"
-    ]
-    jvmArgs = [
-            // "-ea",
-            // "-esa",
-            // "-XX:+TieredCompilation",
-            // "-XX:+PrintCompilation"
-    ]
-}
-
-// utility function
-static def getDate() {
-    return new Date().format('yyyyMMddHHmmss')
+    args = []
+    jvmArgs = []
 }
 
 tasks.register('fatJar', Jar) {
@@ -52,7 +40,7 @@ tasks.register('fatJar', Jar) {
         archiveBaseName = appNameLowerCase
         attributes(
                 // "Implementation-Title": "Gradle",
-                // "Implementation-Version": version,
+                "Implementation-Version": "${readelfVersion}",
                 "Main-Class": "$mainClassName"
         )
     }

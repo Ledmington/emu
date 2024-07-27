@@ -1,5 +1,6 @@
 plugins {
 	id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 // utility function
@@ -7,8 +8,8 @@ static def path(final String ...s) {
 	return String.join(File.separator, s);
 }
 
-String emuCLIVersion = "0.1.0"
-String fatJarBaseName = "${appNameLowerCase}-cli-${emuCLIVersion}"
+String emuGUIVersion = "0.1.0"
+String fatJarBaseName = "${appNameLowerCase}-gui-${emuGUIVersion}"
 String fatJarName = "${fatJarBaseName}.jar"
 String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "libs", "${fatJarName}")
 String mainClassName = "${basePackage}.emu.Main"
@@ -26,15 +27,15 @@ application {
 }
 
 run {
-	args = [
-			// "/usr/bin/gcc"
-	]
-	jvmArgs = [
-			// "-ea",
-			// "-esa",
-			// "-XX:+TieredCompilation",
-			// "-XX:+PrintCompilation"
-	]
+	args = []
+	jvmArgs = []
+}
+
+javafx {
+	version = '21.0.4'
+	modules = [ 'javafx.controls', 'javafx.graphics' ]
+	platform = 'linux'
+	configurations = [ 'implementation', 'runtimeOnly' ]
 }
 
 tasks.register('fatJar', Jar) {
@@ -50,7 +51,7 @@ tasks.register('fatJar', Jar) {
 		archiveBaseName = appNameLowerCase
 		attributes(
 				// "Implementation-Title": "Gradle",
-				"Implementation-Version": "${emuCLIVersion}",
+				"Implementation-Version": "${emuGUIVersion}",
 				"Main-Class": "$mainClassName"
 		)
 	}
