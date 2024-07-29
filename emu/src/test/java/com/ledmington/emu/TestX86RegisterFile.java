@@ -18,6 +18,7 @@
 package com.ledmington.emu;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Arrays;
 import java.util.random.RandomGenerator;
@@ -292,6 +293,29 @@ final class TestX86RegisterFile {
                     regFile.get(other),
                     () -> String.format(
                             "Expected register %s to be initially zero but was 0x%016x", other, regFile.get(other)));
+        }
+    }
+
+    private static Stream<Arguments> allRFlags() {
+        return Arrays.stream(RFlags.values()).map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource("allRFlags")
+    void initiallyAllFlagsAreNotSet(final RFlags f) {
+        assertFalse(regFile.isSet(f), () -> String.format("Expected flag %s to be not set but wasn't", f));
+    }
+
+    @ParameterizedTest
+    @MethodSource("allRFlags")
+    void setToValueShouldNotChangeOtherFlags(final RFlags f) {
+        regFile.set(f, true);
+
+        for (final RFlags other : RFlags.values()) {
+            if (f.equals(other)) {
+                continue;
+            }
+            assertFalse(regFile.isSet(other), () -> String.format("Expected flag %s to be not set but wasn't", other));
         }
     }
 }

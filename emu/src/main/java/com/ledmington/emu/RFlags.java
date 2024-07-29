@@ -17,6 +17,7 @@
  */
 package com.ledmington.emu;
 
+/** X86 RFlags values. */
 public enum RFlags {
 
     /** ID Flag (ID). System flag. */
@@ -28,11 +29,8 @@ public enum RFlags {
     /** Virtual Interrupt Flag (VIF). System flag. */
     VirtualInterrupt(19),
 
-    /** Alignment Check (AC). Equivalent to AccessControl. System flag. */
+    /** Alignment Check / Access Control (AC). System flag. */
     AlignmentCheck(18),
-
-    /** Access Control (AC). Equivalent to AlignmentCheck. System flag. */
-    AccessControl(18),
 
     /** Virtual-8068 Mode (VM). System flag. */
     Virtual8086Mode(17),
@@ -79,6 +77,11 @@ public enum RFlags {
         this.bitIndex = bit;
     }
 
+    /**
+     * Returns the bit index of the flag.
+     *
+     * @return The bit index of the flag.
+     */
     public int bit() {
         return bitIndex;
     }

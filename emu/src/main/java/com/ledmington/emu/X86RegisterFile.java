@@ -284,10 +284,22 @@ public final class X86RegisterFile {
         }
     }
 
+    /**
+     * Checks whether the given flag is set.
+     *
+     * @param f The flag to be checked.
+     * @return True if it is set, false otherwise.
+     */
     public boolean isSet(final RFlags f) {
         return (rflags & (1L << f.bit())) != 0L;
     }
 
+    /**
+     * Sets the given flag to the given value.
+     *
+     * @param f The flag to be set.
+     * @param v The value to be written.
+     */
     public void set(final RFlags f, final boolean v) {
         if (v) {
             set(f);
@@ -296,11 +308,11 @@ public final class X86RegisterFile {
         }
     }
 
-    public void set(final RFlags f) {
+    private void set(final RFlags f) {
         rflags |= (1L << f.bit());
     }
 
-    public void reset(final RFlags f) {
+    private void reset(final RFlags f) {
         rflags &= ~(1L << f.bit());
     }
 

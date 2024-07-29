@@ -56,8 +56,9 @@ public final class ELFLoader {
      * @param elf The file to be loaded.
      * @param mem The emulated memory where to load the file.
      * @param commandLineArguments The arguments to pass to the program.
+     * @param baseAddress The address where to start loading the file.
      * @param stackSize The size in bytes of the stack.
-     * @return The highest address of the allocated portion of memory.
+     * @param rf Register file of the CPU.
      */
     public static void load(
             final ELF elf,
@@ -80,10 +81,9 @@ public final class ELFLoader {
         }
         if (elf.getSectionByName(".init_array").isPresent()) {
             runInitArray(
-                    (ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(),
-                    mem,
-                    rf,
-                    elf.getFileHeader().getEntryPointVirtualAddress());
+                    (ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(), mem, rf, baseAddress
+                    // elf.getFileHeader().getEntryPointVirtualAddress()
+                    );
         }
         if (elf.getSectionByName(".init").isPresent()) {
             runInit();

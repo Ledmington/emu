@@ -18,7 +18,6 @@
 package com.ledmington.emu;
 
 import javafx.animation.AnimationTimer;
-import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -34,7 +33,7 @@ public final class Emu {
 
     private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
-    public Emu(final HostServices hostServices, final Stage stage) {
+    public Emu(final Stage stage) {
         logger.info("Emu is running on:");
         logger.info(" - %s %s", AppConstants.OSName, AppConstants.OSVersion);
         logger.info(" - Java %s", AppConstants.javaVersion);
@@ -63,10 +62,10 @@ public final class Emu {
             mainPane.setCenter(
                     new Label(
                             """
-                    Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).
+                                    Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).
 
-                    If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.
-                    """));
+                                    If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.
+                                    """));
         }
         bPane.setCenter(mainPane);
 

@@ -42,9 +42,8 @@ public final class X86Emulator {
      * Automatically fetches instruction from the emulated memory and executes them.
      *
      * @param mem The emulated memory to read instructions and data from.
+     * @param rf The register file of the CPU.
      * @param entryPointVirtualAddress The virtual address where to start execution.
-     * @param highestAddress The highest address of the allocated memory.
-     * @param stackSize The size in bytes of the stack.
      */
     public static void run(final MemoryController mem, final X86RegisterFile rf, final long entryPointVirtualAddress) {
         final InstructionFetcher instructionFetcher = new InstructionFetcher(mem, rf);

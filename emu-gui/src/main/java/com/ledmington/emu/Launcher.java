@@ -17,17 +17,8 @@
  */
 package com.ledmington.emu;
 
-import javafx.application.Application;
-import javafx.stage.Stage;
-
-public final class Main extends Application {
-
-    @Override
-    public void start(final Stage stage) {
-        new Emu(stage);
-    }
-
+public final class Launcher {
     public static void main(final String[] args) {
-        Application.launch(args);
+        Main.main(args);
     }
 }
