@@ -1291,7 +1291,7 @@ public final class Main {
             final PHTEntry phte = pht.getProgramHeader(i);
             final long segmentStart = phte.getSegmentVirtualAddress();
             final long segmentEnd = segmentStart + phte.getSegmentMemorySize();
-            final boolean isTLS = phte.getType() == PHTEntryType.PT_TLS;
+            final boolean isSegmentTLS = phte.getType() == PHTEntryType.PT_TLS;
 
             out.printf("   %02d     ", i);
 
@@ -1302,13 +1302,15 @@ public final class Main {
                 final long sectionStart = sh.getVirtualAddress();
                 final long sectionEnd = sectionStart + sectionSize;
                 final Set<SectionHeaderFlags> flags = sh.getFlags();
+                final boolean isSectionAllocatable = flags.contains(SectionHeaderFlags.SHF_ALLOC);
+                final boolean isSectionTLS = flags.contains(SectionHeaderFlags.SHF_TLS);
 
                 if (sh.getType() != SectionHeaderType.SHT_NULL
                         && sectionStart != 0L
                         && sectionSize != 0L
-                        && flags.contains(SectionHeaderFlags.SHF_ALLOC)
+                        && isSectionAllocatable
                         // Sections with flag TLS can be loaded only in the TLS segment
-                        && !(isTLS ^ flags.contains(SectionHeaderFlags.SHF_TLS))
+                        && isSegmentTLS == isSectionTLS
                         && sectionStart >= segmentStart
                         && sectionEnd <= segmentEnd) {
                     out.printf("%s ", s.getName());
