@@ -82,16 +82,19 @@ public final class Emu {
 
                 @Override
                 public void handle(final long now) {
+                    // update the label every second
+                    final long oneSecondInNanoseconds = 1_000_000_000L;
+                    if ((now - lastTime) < oneSecondInNanoseconds) {
+                        return;
+                    }
+
                     final long memoryUsed = Runtime.getRuntime().totalMemory()
                             - Runtime.getRuntime().freeMemory();
                     final long totalMemory = Runtime.getRuntime().totalMemory();
 
-                    // update the label every second
-                    if ((now - lastTime) >= 1_000_000_000L) {
-                        memoryUsageLabel.setText(String.format(
-                                "Java heap: %d / %d MB", memoryUsed / 1_000_000L, totalMemory / 1_000_000L));
-                        lastTime = now;
-                    }
+                    memoryUsageLabel.setText(
+                            String.format("Java heap: %d / %d MB", memoryUsed / 1_000_000L, totalMemory / 1_000_000L));
+                    lastTime = now;
                 }
             };
             timer.start();
