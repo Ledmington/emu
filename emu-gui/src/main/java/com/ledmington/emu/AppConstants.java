@@ -17,6 +17,8 @@
  */
 package com.ledmington.emu;
 
+import javafx.scene.text.Font;
+
 public final class AppConstants {
 
     private AppConstants() {}
@@ -47,4 +49,13 @@ public final class AppConstants {
 
     /** Shorthand field which holds the path where all the temporary files/folders are stored by the OS. */
     public static final String tmpDirectoryPath = System.getProperty("java.io.tmpdir");
+
+    /** Shorthand monospace font family. */
+    public static final String monospaceFontFamily = Font.getFamilies().contains("Consolas")
+            ? "Consolas"
+            : (Font.getFamilies().contains("Courier")
+                    ? "Courier"
+                    : (Font.getFamilies().contains("Monospaced")
+                            ? "Monospaced"
+                            : Font.getDefault().getFamily()));
 }

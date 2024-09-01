@@ -42,7 +42,8 @@ public final class ELFViewer extends Stage {
             fc.setTitle("Select an ELF file to be loaded");
             fc.getExtensionFilters()
                     .addAll(
-                            new FileChooser.ExtensionFilter("ELF files", "*.elf"),
+                            new FileChooser.ExtensionFilter("ELF files", "*.elf", "*.bin", "*.out"),
+                            new FileChooser.ExtensionFilter("Shared objects", "*.o"),
                             new FileChooser.ExtensionFilter("Shared libraries", "*.so"),
                             new FileChooser.ExtensionFilter("Static libraries", "*.a"),
                             new FileChooser.ExtensionFilter("All files", "*.*"));
@@ -53,7 +54,7 @@ public final class ELFViewer extends Stage {
         });
 
         textArea.setEditable(false);
-        textArea.setFont(new Font("Consolas", 12));
+        textArea.setFont(new Font(AppConstants.monospaceFontFamily, 12));
         vbox.getChildren().addAll(load, textArea);
         final Scene scene = new Scene(vbox);
 
@@ -73,16 +74,18 @@ public final class ELFViewer extends Stage {
             throw new RuntimeException(e);
         }
         final StringBuilder sb = new StringBuilder();
+        final int nBytesPerRow = 16;
+        final int nBytesPerBlock = 4;
         for (int i = 0; i < fileBytes.length; i++) {
-            if (i % 16 == 0) {
+            if (i % nBytesPerRow == 0) {
                 // start of the row
                 sb.append(" 0x").append(String.format("%08x", i)).append(" : ");
             }
             sb.append(String.format("%02x", fileBytes[i]));
-            if (i % 2 == 1) {
+            if (i % nBytesPerBlock == nBytesPerBlock - 1) {
                 sb.append(' ');
             }
-            if (i % 16 == 15) {
+            if (i % nBytesPerRow == nBytesPerRow - 1) {
                 sb.append('\n');
             }
         }
