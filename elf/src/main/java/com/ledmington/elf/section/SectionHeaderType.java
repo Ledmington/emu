@@ -124,7 +124,10 @@ public enum SectionHeaderType {
     SHT_GNU_verneed(0x6ffffffe, "VERNEED", "GNU version symbol needed elements"),
 
     /** Version symbol table. */
-    SHT_GNU_versym(0x6fffffff, "VERSYM", "GNU version symbol table");
+    SHT_GNU_versym(0x6fffffff, "VERSYM", "GNU version symbol table"),
+
+    /** x86_64 specific unwind info. */
+    SHT_X86_64_UNWIND(0x70000001, "X86_64_UNWIND", "x86_64 unwind info");
 
     private static final Map<Integer, SectionHeaderType> codeToType = new HashMap<>();
 

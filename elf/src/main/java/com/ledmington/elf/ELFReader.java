@@ -31,6 +31,7 @@ import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderType;
 import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.X86_64_Unwind;
 import com.ledmington.elf.section.gnu.GnuHashSection;
 import com.ledmington.elf.section.gnu.GnuVersionDefinitionSection;
 import com.ledmington.elf.section.gnu.GnuVersionRequirementsSection;
@@ -224,15 +225,8 @@ public final class ELFReader {
 
     private static SectionHeader parseSectionHeaderEntry(final boolean is32Bit) {
         final int nameOffset = b.read4();
-
         final int type = b.read4();
-        if (!SectionHeaderType.isValid(type)) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid section header type: was %,d (0x%08x)", type, type));
-        }
-
         final long flags = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
         final long virtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         final long fileOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
         final long size = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
@@ -370,6 +364,8 @@ public final class ELFReader {
                 sectionTable[k] = new ConstructorsSection(name, sh, b, dynamicSection, fileHeader.is32Bit());
             } else if (typeName.equals(SectionHeaderType.SHT_FINI_ARRAY.getName())) {
                 sectionTable[k] = new DestructorsSection(name, sh, b, dynamicSection, fileHeader.is32Bit());
+            } else if (typeName.equals(SectionHeaderType.SHT_X86_64_UNWIND.getName())) {
+                sectionTable[k] = new X86_64_Unwind(name, sh);
             } else {
                 throw new IllegalArgumentException(String.format(
                         "Don't know how to parse section n.%,d with type '%s' and name '%s'", k, typeName, name));
