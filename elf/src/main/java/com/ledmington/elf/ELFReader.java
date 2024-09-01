@@ -38,6 +38,7 @@ import com.ledmington.elf.section.gnu.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.gnu.GnuVersionSection;
 import com.ledmington.elf.section.note.BasicNoteSection;
 import com.ledmington.elf.section.note.GnuBuildIDSection;
+import com.ledmington.elf.section.note.GnuGoldVersion;
 import com.ledmington.elf.section.note.GnuPropertySection;
 import com.ledmington.elf.section.note.NoteABITagSection;
 import com.ledmington.elf.section.note.SystemtapUSDTSection;
@@ -337,6 +338,7 @@ public final class ELFReader {
                     case ".note.gnu.property" -> new GnuPropertySection(sh, b);
                     case ".note.gnu.build-id" -> new GnuBuildIDSection(sh, b);
                     case ".note.ABI-tag" -> new NoteABITagSection(sh, b);
+                    case ".note.gnu.gold-version" -> new GnuGoldVersion(sh, b);
                     case ".note.stapsdt" -> new SystemtapUSDTSection(sh, b);
                     default -> new BasicNoteSection(name, sh, b);
                 };

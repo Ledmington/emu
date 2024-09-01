@@ -662,7 +662,19 @@ public final class Main {
                     (v == 0 ? "*local*" : (v == 1 ? "*global*" : stringTable.getString(gvrs.getVersionNameOffset(v))));
 
             out.printf("%2x %-13s", v, "(" + name + ")");
-            if (i % 4 == 3 || i >= gvs.getVersionsLength() - 1) {
+
+            final boolean finished = i >= gvs.getVersionsLength() - 1;
+            if (finished) {
+                out.println();
+                break;
+            }
+
+            final boolean inLastColumn = i % 4 == 3;
+            final boolean nameTooLong = name.length() >= 12;
+            if (nameTooLong) {
+                out.print(" ");
+            }
+            if (inLastColumn) {
                 out.println();
             } else {
                 out.print("  ");
@@ -837,7 +849,8 @@ public final class Main {
                 } else if (type == RelocationAddendEntryType.R_X86_64_GLOB_DAT
                         || type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT
                         || type == RelocationAddendEntryType.R_X86_64_COPY
-                        || type == RelocationAddendEntryType.R_X86_64_IRELATIVE) {
+                        || type == RelocationAddendEntryType.R_X86_64_IRELATIVE
+                        || type == RelocationAddendEntryType.R_X86_64_64) {
                     // S
                     if (hasSymbolTable) {
                         final String symbolName = symstrtab.getString(symbol.nameOffset());
@@ -877,12 +890,21 @@ public final class Main {
                                 .mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
                                 .collect(Collectors.joining()));
                 case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
+                case NT_GNU_GOLD_VERSION -> printGNUGoldVersion(nse);
                 case NT_STAPSDT -> printSystemtapProperties(nse);
 
                 default -> throw new IllegalArgumentException(
                         String.format("Unknown note section entry type '%s'", nse.getType()));
             }
         }
+    }
+
+    private static void printGNUGoldVersion(final NoteSectionEntry nse) {
+        final StringBuilder sb = new StringBuilder(nse.getDescriptionLength());
+        for (int i = 0; i < nse.getDescriptionLength(); i++) {
+            sb.append((char) nse.getDescriptionByte(i));
+        }
+        out.printf("    Version: %s%n", sb.toString());
     }
 
     private static void printSystemtapProperties(final NoteSectionEntry nse) {
@@ -966,6 +988,9 @@ public final class Main {
             v[i] = nse.getDescriptionByte(i);
         }
 
+        // (wide ? "" : "\t") +
+        out.print("      Properties: ");
+
         final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true, 1L);
         while (robb.getPosition() < BitUtils.asLong(nse.getDescriptionLength())) {
             final int code = robb.read4();
@@ -977,7 +1002,10 @@ public final class Main {
                         GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
                         "Unimplemented case: " + type);
                 case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
-                    out.print((wide ? "" : "\t") + "x86 ISA needed: ");
+                    if (robb.getPosition() > 8) {
+                        out.print(wide ? "" : "\t");
+                    }
+                    out.print("x86 ISA needed: ");
                     if (datasz != expectedDataSize) {
                         out.printf("<corrupt length: %x> ", datasz);
                     } else {
@@ -1003,7 +1031,10 @@ public final class Main {
                     out.println();
                 }
                 case GNU_PROPERTY_X86_FEATURE_1_AND -> {
-                    out.print("      Properties: x86 feature: ");
+                    if (robb.getPosition() > 8) {
+                        out.print(wide ? "" : "\t");
+                    }
+                    out.print("x86 feature: ");
                     if (datasz != expectedDataSize) {
                         out.printf("<corrupt length: %x> ", datasz);
                     } else {
@@ -1103,7 +1134,7 @@ public final class Main {
 
             if (versionNameOffset == -1) {
                 out.printf(
-                        "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s%n",
+                        "   %3d: %016x %5d %-6s  %-6s %-7s  %3s %s%n",
                         i,
                         ste.value(),
                         ste.size(),
