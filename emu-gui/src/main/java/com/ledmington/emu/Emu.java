@@ -49,11 +49,12 @@ public final class Emu {
             topPane.setPadding(new Insets(5));
             topPane.setPrefWrapLength(300);
             final Button elfViewerButton = new Button("ELF Viewer");
-            elfViewerButton.setOnMouseClicked(e -> {
-                new ELFViewer(stage.getWidth(), stage.getHeight()).show();
-            });
+            elfViewerButton.setOnMouseClicked(e -> new ELFViewer(stage.getWidth(), stage.getHeight()).show());
             topPane.getChildren().add(elfViewerButton);
             topPane.getChildren().add(new Button("Emulator"));
+            final Button settingsButton = new Button("Settings");
+            settingsButton.setOnMouseClicked(e -> new SettingsWindow().show());
+            topPane.getChildren().add(settingsButton);
         }
         bPane.setTop(topPane);
 

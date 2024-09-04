@@ -17,6 +17,8 @@
  */
 package com.ledmington.emu;
 
+import java.util.Objects;
+
 import javafx.scene.text.Font;
 
 public final class AppConstants {
@@ -51,11 +53,17 @@ public final class AppConstants {
     public static final String tmpDirectoryPath = System.getProperty("java.io.tmpdir");
 
     /** Shorthand monospace font family. */
-    public static final String monospaceFontFamily = Font.getFamilies().contains("Consolas")
+    public static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
             ? "Consolas"
-            : (Font.getFamilies().contains("Courier")
-                    ? "Courier"
-                    : (Font.getFamilies().contains("Monospaced")
-                            ? "Monospaced"
-                            : Font.getDefault().getFamily()));
+            : Font.getDefault().getFamily();
+
+    public static void setDefaultMonospaceFont(final String monospaceFontFamily) {
+        Objects.requireNonNull(monospaceFontFamily);
+        if (monospaceFontFamily.isEmpty()
+                || monospaceFontFamily.isBlank()
+                || !Font.getFamilies().contains(monospaceFontFamily)) {
+            throw new IllegalArgumentException(String.format("Illegal font family name '%s'", monospaceFontFamily));
+        }
+        MONOSPACE_FONT_FAMILY = monospaceFontFamily;
+    }
 }

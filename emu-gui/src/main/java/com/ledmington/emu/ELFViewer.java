@@ -54,12 +54,12 @@ public final class ELFViewer extends Stage {
         });
 
         textArea.setEditable(false);
-        textArea.setFont(new Font(AppConstants.monospaceFontFamily, 12));
+        textArea.setFont(new Font(AppConstants.MONOSPACE_FONT_FAMILY, 12));
         vbox.getChildren().addAll(load, textArea);
         final Scene scene = new Scene(vbox);
 
         this.setScene(scene);
-        this.setTitle("ELF Viewer");
+        this.setTitle("Emu - ELF Viewer");
         this.setWidth(width);
         this.setHeight(height);
         this.centerOnScreen();
