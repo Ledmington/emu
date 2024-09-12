@@ -22,6 +22,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -34,6 +35,7 @@ import javafx.stage.Stage;
 public final class SettingsWindow extends Stage {
 
     private final ComboBox<Label> fonts;
+    private final Spinner<Integer> fontSize;
 
     public SettingsWindow() {
         final BorderPane bPane = new BorderPane();
@@ -43,13 +45,22 @@ public final class SettingsWindow extends Stage {
         {
             mainPane.getChildren().add(new Label("Font"));
             fonts = new ComboBox<>();
-            for (final String fontName : Font.getFontNames()) {
-                final Label lbl = new Label(fontName);
-                lbl.setFont(Font.font(fontName, FontWeight.NORMAL, FontPosture.REGULAR, 11));
+            for (final String fontFamily : Font.getFamilies()) {
+                final Label lbl = new Label(fontFamily);
+                lbl.setFont(
+                        Font.font(fontFamily, FontWeight.NORMAL, FontPosture.REGULAR, AppConstants.DEFAULT_FONT_SIZE));
+                lbl.setTextFill(Color.BLACK);
                 fonts.getItems().add(lbl);
+                if (fonts.getValue() == null) {
+                    fonts.setValue(lbl);
+                }
             }
-            fonts.setOnMouseClicked(e -> System.out.printf("Clicked '%s'\n", e));
             mainPane.getChildren().add(fonts);
+        }
+        {
+            mainPane.getChildren().add(new Label("Font Size"));
+            fontSize = new Spinner<>(1, 20, AppConstants.DEFAULT_FONT_SIZE);
+            mainPane.getChildren().add(fontSize);
         }
         bPane.setCenter(mainPane);
 
@@ -59,6 +70,7 @@ public final class SettingsWindow extends Stage {
             ok.setBackground(Background.fill(Color.LIGHTBLUE));
             ok.setOnMouseClicked(e -> {
                 AppConstants.setDefaultMonospaceFont(fonts.getValue().getText());
+                AppConstants.setDefaultFontSize(fontSize.getValue());
                 this.close();
             });
             bottomPane.getChildren().add(ok);

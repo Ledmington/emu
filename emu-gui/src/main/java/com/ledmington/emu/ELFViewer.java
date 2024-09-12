@@ -53,9 +53,12 @@ public final class ELFViewer extends Stage {
             }
         });
 
+        final Button settings = new Button();
+        settings.setText("Settings");
+        settings.setOnAction(e -> new SettingsWindow());
+
         textArea.setEditable(false);
-        textArea.setFont(new Font(AppConstants.MONOSPACE_FONT_FAMILY, 12));
-        vbox.getChildren().addAll(load, textArea);
+        vbox.getChildren().addAll(load, settings, textArea);
         final Scene scene = new Scene(vbox);
 
         this.setScene(scene);
@@ -89,6 +92,7 @@ public final class ELFViewer extends Stage {
                 sb.append('\n');
             }
         }
+        textArea.setFont(new Font(AppConstants.MONOSPACE_FONT_FAMILY, AppConstants.DEFAULT_FONT_SIZE));
         this.textArea.setText(sb.toString());
     }
 }

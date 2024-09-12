@@ -66,4 +66,14 @@ public final class AppConstants {
         }
         MONOSPACE_FONT_FAMILY = monospaceFontFamily;
     }
+
+    /** Shorthand default font size. */
+    public static int DEFAULT_FONT_SIZE = 12;
+
+    public static void setDefaultFontSize(final int newFontSize) {
+        if (newFontSize <= 1) {
+            throw new IllegalArgumentException(String.format("Invalid font size: %,d", newFontSize));
+        }
+        DEFAULT_FONT_SIZE = newFontSize;
+    }
 }
