@@ -61,7 +61,7 @@ jmh {
 tasks.register('downloadELF32Manual', Download) {
 	group 'utilities'
 	description 'Downloads the ELF 32-bit file format specification in the project root directory'
-	src "https://uclibc.org/docs/elf.pdf"
+	src "https://refspecs.linuxfoundation.org/elf/elf.pdf"
 	dest new File(project.getRootDir(), "elf32-manual.pdf")
 	overwrite false
 	acceptAnyCertificate true

@@ -4,7 +4,7 @@ plugins {
 
 // utility function
 static def path(final String ...s) {
-	return String.join(File.separator, s);
+	return String.join(File.separator, s)
 }
 
 String emuCLIVersion = "0.1.0"
@@ -45,7 +45,7 @@ tasks.register('fatJar', Jar) {
 	from {
 		configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
 	}
-	duplicatesStrategy = 'include'
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	manifest {
 		archiveBaseName = appNameLowerCase
 		attributes(

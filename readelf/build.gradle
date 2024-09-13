@@ -35,7 +35,7 @@ tasks.register('fatJar', Jar) {
     from {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
     }
-    duplicatesStrategy = 'include'
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     manifest {
         archiveBaseName = appNameLowerCase
         attributes(
@@ -58,7 +58,7 @@ tasks.javadoc.enabled = false
 if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
 
     // Utility task to check that the output of readelf is the same as GNU's readelf
-    task checkReadelf {
+    tasks.register("checkReadelf") {
         dependsOn fatJar
 
         doLast {
@@ -69,7 +69,7 @@ if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
                 "/usr/bin/clang++",
                 "/usr/bin/zip",
                 "/usr/bin/unzip"
-            );
+            )
 
             for(final String filepath : executables) {
                 final String elf = filepath.substring(filepath.lastIndexOf("/") + 1)
