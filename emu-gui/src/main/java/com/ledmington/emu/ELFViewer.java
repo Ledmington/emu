@@ -21,10 +21,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -34,7 +36,9 @@ public final class ELFViewer extends Stage {
     private final TextArea textArea = new TextArea();
 
     public ELFViewer(final double width, final double height) {
-        final VBox vbox = new VBox();
+        final BorderPane mainPane = new BorderPane();
+
+        final FlowPane topPane = new FlowPane();
         final Button load = new Button();
         load.setText("Load");
         load.setOnAction(e -> {
@@ -58,8 +62,13 @@ public final class ELFViewer extends Stage {
         settings.setOnAction(e -> new SettingsWindow());
 
         textArea.setEditable(false);
-        vbox.getChildren().addAll(load, settings, textArea);
-        final Scene scene = new Scene(vbox);
+        topPane.setHgap(4);
+        topPane.setPadding(new Insets(5));
+        topPane.setPrefWrapLength(300);
+        topPane.getChildren().addAll(load, settings);
+        mainPane.setTop(topPane);
+        mainPane.setCenter(textArea);
+        final Scene scene = new Scene(mainPane);
 
         this.setScene(scene);
         this.setTitle("Emu - ELF Viewer");
