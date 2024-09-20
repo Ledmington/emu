@@ -8,7 +8,7 @@ dependencies {}
 pitest {
 	targetClasses.set(['com.ledmington.utils.*'])
 	targetTests.set(['com.ledmington.utils.*'])
-	pitestVersion = '1.16.1'
+	pitestVersion = '1.17.0'
 	junit5PluginVersion = '1.2.1'
 	threads = 4
 	outputFormats.set(['XML', 'HTML'])
