@@ -101,7 +101,7 @@ public final class ELFViewer extends Stage {
                 sb.append('\n');
             }
         }
-        textArea.setFont(new Font(AppConstants.MONOSPACE_FONT_FAMILY, AppConstants.DEFAULT_FONT_SIZE));
+        textArea.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
         this.textArea.setText(sb.toString());
     }
 }

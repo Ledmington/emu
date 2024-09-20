@@ -53,9 +53,13 @@ public final class AppConstants {
     public static final String tmpDirectoryPath = System.getProperty("java.io.tmpdir");
 
     /** Shorthand monospace font family. */
-    public static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
+    private static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
             ? "Consolas"
             : Font.getDefault().getFamily();
+
+    public static String getDefaultMonospaceFont() {
+        return MONOSPACE_FONT_FAMILY;
+    }
 
     public static void setDefaultMonospaceFont(final String monospaceFontFamily) {
         Objects.requireNonNull(monospaceFontFamily);
@@ -68,10 +72,15 @@ public final class AppConstants {
     }
 
     /** Shorthand default font size. */
-    public static int DEFAULT_FONT_SIZE = 12;
+    private static int DEFAULT_FONT_SIZE = 12;
+
+    public static int getDefaultFontSize() {
+        return DEFAULT_FONT_SIZE;
+    }
 
     public static void setDefaultFontSize(final int newFontSize) {
-        if (newFontSize <= 1) {
+        final int minFontSize = 1;
+        if (newFontSize <= minFontSize) {
             throw new IllegalArgumentException(String.format("Invalid font size: %,d", newFontSize));
         }
         DEFAULT_FONT_SIZE = newFontSize;

@@ -988,7 +988,6 @@ public final class Main {
             v[i] = nse.getDescriptionByte(i);
         }
 
-        // (wide ? "" : "\t") +
         out.print("      Properties: ");
 
         final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true, 1L);
@@ -1002,7 +1001,8 @@ public final class Main {
                         GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
                         "Unimplemented case: " + type);
                 case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
-                    if (robb.getPosition() > 8) {
+                    final long expectedBytes = 8L;
+                    if (robb.getPosition() > expectedBytes) {
                         out.print(wide ? "" : "\t");
                     }
                     out.print("x86 ISA needed: ");
@@ -1031,7 +1031,8 @@ public final class Main {
                     out.println();
                 }
                 case GNU_PROPERTY_X86_FEATURE_1_AND -> {
-                    if (robb.getPosition() > 8) {
+                    final long expectedBytes = 8L;
+                    if (robb.getPosition() > expectedBytes) {
                         out.print(wide ? "" : "\t");
                     }
                     out.print("x86 feature: ");

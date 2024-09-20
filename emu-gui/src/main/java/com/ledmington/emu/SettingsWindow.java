@@ -46,10 +46,7 @@ public final class SettingsWindow extends Stage {
             mainPane.getChildren().add(new Label("Font"));
             fonts = new ComboBox<>();
             for (final String fontFamily : Font.getFamilies()) {
-                final Label lbl = new Label(fontFamily);
-                lbl.setFont(
-                        Font.font(fontFamily, FontWeight.NORMAL, FontPosture.REGULAR, AppConstants.DEFAULT_FONT_SIZE));
-                lbl.setTextFill(Color.BLACK);
+                final Label lbl = getFontLabel(fontFamily);
                 fonts.getItems().add(lbl);
                 if (fonts.getValue() == null) {
                     fonts.setValue(lbl);
@@ -59,7 +56,7 @@ public final class SettingsWindow extends Stage {
         }
         {
             mainPane.getChildren().add(new Label("Font Size"));
-            fontSize = new Spinner<>(1, 20, AppConstants.DEFAULT_FONT_SIZE);
+            fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
             mainPane.getChildren().add(fontSize);
         }
         bPane.setCenter(mainPane);
@@ -85,5 +82,12 @@ public final class SettingsWindow extends Stage {
         this.show();
 
         Platform.runLater(this::requestFocus);
+    }
+
+    private Label getFontLabel(final String fontFamily) {
+        final Label lbl = new Label(fontFamily);
+        lbl.setFont(Font.font(fontFamily, FontWeight.NORMAL, FontPosture.REGULAR, AppConstants.getDefaultFontSize()));
+        lbl.setTextFill(Color.BLACK);
+        return lbl;
     }
 }

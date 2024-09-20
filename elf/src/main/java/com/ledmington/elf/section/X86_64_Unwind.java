@@ -19,11 +19,18 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
+/** A x86_64 specific unwind ELF section (such as '.eh_frame'). */
 public final class X86_64_Unwind implements Section {
 
     private final String name;
     private final SectionHeader header;
 
+    /**
+     * Creates a x86_64 unwind section with the given data.
+     *
+     * @param name The name of this section.
+     * @param sectionHeader The header of this section.
+     */
     public X86_64_Unwind(final String name, final SectionHeader sectionHeader) {
         this.name = Objects.requireNonNull(name);
         this.header = Objects.requireNonNull(sectionHeader);

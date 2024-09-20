@@ -29,6 +29,12 @@ public final class GnuGoldVersion implements NoteSection {
     private final SectionHeader header;
     private final NoteSectionEntry[] entries;
 
+    /**
+     * Creates a .note.gnu.gold-version section with the given data.
+     *
+     * @param sectionHeader The header of this section.
+     * @param b The ReadOnlyByteBuffer to read data from.
+     */
     public GnuGoldVersion(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
         this.header = Objects.requireNonNull(sectionHeader);
 
