@@ -18,6 +18,7 @@
 package com.ledmington.mem;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
@@ -37,6 +38,118 @@ public final class MemoryController implements Memory {
      */
     public MemoryController(final MemoryInitializer memInit) {
         this.mem = new RandomAccessMemory(Objects.requireNonNull(memInit));
+    }
+
+    private void reportIllegalRead(final long address) {
+        reportIllegalAccess(
+                String.format(
+                        "Attempted read at%s non-readable address 0x%x",
+                        isInitialized(address) ? "" : " uninitialized", address),
+                address);
+    }
+
+    private void reportIllegalExecution(final long address) {
+        reportIllegalAccess(
+                String.format(
+                        "Attempted execution at%s non-executable address 0x%x",
+                        isInitialized(address) ? "" : " uninitialized", address),
+                address);
+    }
+
+    private void reportIllegalWrite(final long address) {
+        reportIllegalAccess(
+                String.format(
+                        "Attempted write at%s non-writable address 0x%x",
+                        isInitialized(address) ? "" : " uninitialized", address),
+                address);
+    }
+
+    private void reportIllegalAccess(final String message, final long address) {
+        final String reset = "\u001B[0m";
+        final String bold = "\u001B[1m";
+        final String red = "\u001b[31m";
+        final String green = "\u001b[32m";
+        final String yellow = "\u001b[33m";
+        final String blue = "\u001b[34m";
+        final String magenta = "\u001b[35m";
+        final String cyan = "\u001b[36m";
+        final String white = "\u001b[37m";
+
+        final long linesAround = 5;
+        final long bytesPerLine = 16;
+
+        // The given address must be at the center of the displayed memory portion
+        final long startAddress = address - (bytesPerLine / 2 - 1) - (bytesPerLine * linesAround);
+
+        System.out.println("Legend:");
+        System.out.println(" Uninitialized=xx " + red + "Readable" + reset + " " + green
+                + "Writable" + reset + " " + blue + "Executable"
+                + reset + " " + yellow + "Read-Write" + reset + " " + magenta + "Read-Execute" + reset
+                + " " + cyan + "Write-Execute" + reset + " " + white + "Read-Write-Execute" + reset);
+
+        final Consumer<Long> printer = x -> {
+            final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
+            System.out.print(x == address ? "[" : " ");
+            if (x == address) {
+                System.out.print(bold);
+            }
+            final boolean r = canRead.get(x);
+            final boolean w = canWrite.get(x);
+            final boolean e = canExecute.get(x);
+            if (r && !w && !e) {
+                System.out.print(red);
+            }
+            if (!r && w && !e) {
+                System.out.print(green);
+            }
+            if (!r && !w && e) {
+                System.out.print(blue);
+            }
+            if (r && w && !e) {
+                System.out.print(yellow);
+            }
+            if (r && !w && e) {
+                System.out.print(magenta);
+            }
+            if (!r && w && e) {
+                System.out.print(cyan);
+            }
+            if (r && w && e) {
+                System.out.print(white);
+            }
+            System.out.print(s + reset);
+            System.out.print(x == address ? "]" : " ");
+        };
+
+        // print lines before
+        for (long r = 0L; r < linesAround; r++) {
+            System.out.printf(" 0x%016x: ", startAddress + (r * bytesPerLine));
+            for (long i = 0L; i < bytesPerLine; i++) {
+                final long x = startAddress + (r * bytesPerLine) + i;
+                printer.accept(x);
+            }
+            System.out.println();
+        }
+
+        // print line with the given address
+        System.out.printf(" 0x%016x: ", startAddress + (linesAround * bytesPerLine));
+        for (long i = 0L; i < bytesPerLine; i++) {
+            final long x = startAddress + (linesAround * bytesPerLine) + i;
+            printer.accept(x);
+        }
+        System.out.println();
+
+        // print lines after
+        for (long r = 0L; r < linesAround; r++) {
+            System.out.printf(" 0x%016x: ", startAddress + ((linesAround + 1 + r) * bytesPerLine));
+            for (long i = 0L; i < bytesPerLine; i++) {
+                final long x = startAddress + ((linesAround + 1 + r) * bytesPerLine) + i;
+                printer.accept(x);
+            }
+            System.out.println();
+        }
+
+        throw new MemoryException(message);
     }
 
     /**
@@ -83,9 +196,7 @@ public final class MemoryController implements Memory {
     @Override
     public byte read(final long address) {
         if (!canRead.get(address)) {
-            throw new IllegalArgumentException(String.format(
-                    "Attempted read at%s non-readable address 0x%x",
-                    isInitialized(address) ? "" : " uninitialized", address));
+            reportIllegalRead(address);
         }
         return this.mem.read(address);
     }
@@ -117,9 +228,7 @@ public final class MemoryController implements Memory {
      */
     public byte readCode(final long address) {
         if (!canExecute.get(address)) {
-            throw new IllegalArgumentException(String.format(
-                    "Attempted execute at%s non-executable address 0x%x",
-                    isInitialized(address) ? "" : " uninitialized", address));
+            reportIllegalExecution(address);
         }
         return this.mem.read(address);
     }
@@ -127,8 +236,7 @@ public final class MemoryController implements Memory {
     @Override
     public void write(final long address, final byte value) {
         if (!canWrite.get(address)) {
-            throw new IllegalArgumentException(
-                    String.format("Attempted write of value 0x%02x at non-writeable address 0x%x", value, address));
+            reportIllegalWrite(address);
         }
         mem.write(address, value);
     }

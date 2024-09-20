@@ -46,6 +46,7 @@ public final class IntervalArray {
      * @return True is the value is present, false otherwise.
      */
     public boolean get(final long address) {
+        // TODO: can be optimized in a binary search
         for (final Block b : blocks) {
             if (address >= b.start() && address <= b.end()) {
                 return true;

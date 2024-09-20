@@ -50,7 +50,7 @@ final class TestPermissions {
                 Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
         for (final long address : positions) {
-            assertThrows(IllegalArgumentException.class, () -> mem.read(address));
+            assertThrows(MemoryException.class, () -> mem.read(address));
         }
     }
 
@@ -60,7 +60,7 @@ final class TestPermissions {
                 Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
         for (final long address : positions) {
-            assertThrows(IllegalArgumentException.class, () -> mem.readCode(address));
+            assertThrows(MemoryException.class, () -> mem.readCode(address));
         }
     }
 
@@ -70,7 +70,7 @@ final class TestPermissions {
                 Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
         for (final long address : positions) {
-            assertThrows(IllegalArgumentException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
+            assertThrows(MemoryException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
         }
     }
 
@@ -83,9 +83,8 @@ final class TestPermissions {
         for (long i = start; i <= end; i++) {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.read(finalI));
-            // assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
-            // assertThrows(IllegalArgumentException.class, () -> mem.write(finalI,
-            // BitUtils.asByte(rng.nextInt())));
+            assertThrows(MemoryException.class, () -> mem.readCode(finalI));
+            assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
     }
 
@@ -98,8 +97,8 @@ final class TestPermissions {
         for (long i = start; i <= end; i++) {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-            assertThrows(IllegalArgumentException.class, () -> mem.read(finalI));
-            assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
+            assertThrows(MemoryException.class, () -> mem.read(finalI));
+            assertThrows(MemoryException.class, () -> mem.readCode(finalI));
         }
     }
 
@@ -113,7 +112,7 @@ final class TestPermissions {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.read(finalI));
             assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-            assertThrows(IllegalArgumentException.class, () -> mem.readCode(finalI));
+            assertThrows(MemoryException.class, () -> mem.readCode(finalI));
         }
     }
 
@@ -126,8 +125,8 @@ final class TestPermissions {
         for (long i = start; i <= end; i++) {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.readCode(finalI));
-            assertThrows(IllegalArgumentException.class, () -> mem.read(finalI));
-            assertThrows(IllegalArgumentException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+            assertThrows(MemoryException.class, () -> mem.read(finalI));
+            assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
     }
 
@@ -141,7 +140,7 @@ final class TestPermissions {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.read(finalI));
             assertDoesNotThrow(() -> mem.readCode(finalI));
-            assertThrows(IllegalArgumentException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+            assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
         }
     }
 
@@ -155,7 +154,7 @@ final class TestPermissions {
             final long finalI = i;
             assertDoesNotThrow(() -> mem.readCode(finalI));
             assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-            assertThrows(IllegalArgumentException.class, () -> mem.read(finalI));
+            assertThrows(MemoryException.class, () -> mem.read(finalI));
         }
     }
 
