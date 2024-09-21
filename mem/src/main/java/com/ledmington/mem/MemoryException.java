@@ -19,11 +19,20 @@ package com.ledmington.mem;
 
 import java.io.Serial;
 
+/**
+ * A special exception which gets thrown when accessing the memory in the wrong way. For example, when trying to read
+ * from a non-readable address.
+ */
 public final class MemoryException extends RuntimeException {
 
     @Serial
     private static final long serialVersionUID = -8908344966805555310L;
 
+    /**
+     * Creates a new MemoryException with the given message.
+     *
+     * @param message The message of the exception.
+     */
     public MemoryException(final String message) {
         super(message);
     }

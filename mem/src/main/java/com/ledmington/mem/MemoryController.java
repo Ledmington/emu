@@ -81,75 +81,102 @@ public final class MemoryController implements Memory {
         // The given address must be at the center of the displayed memory portion
         final long startAddress = address - (bytesPerLine / 2 - 1) - (bytesPerLine * linesAround);
 
-        System.out.println("Legend:");
-        System.out.println(" Uninitialized=xx " + red + "Readable" + reset + " " + green
-                + "Writable" + reset + " " + blue + "Executable"
-                + reset + " " + yellow + "Read-Write" + reset + " " + magenta + "Read-Execute" + reset
-                + " " + cyan + "Write-Execute" + reset + " " + white + "Read-Write-Execute" + reset);
+        final StringBuilder sb = new StringBuilder(128);
+
+        sb.append("\nLegend:\n Uninitialized=xx ")
+                .append(red)
+                .append("Readable")
+                .append(reset)
+                .append(' ')
+                .append(green)
+                .append("Writable")
+                .append(reset)
+                .append(' ')
+                .append(blue)
+                .append("Executable")
+                .append(reset)
+                .append(' ')
+                .append(yellow)
+                .append("Read-Write")
+                .append(reset)
+                .append(' ')
+                .append(magenta)
+                .append("Read-Execute")
+                .append(reset)
+                .append(' ')
+                .append(cyan)
+                .append("Write-Execute")
+                .append(reset)
+                .append(' ')
+                .append(white)
+                .append("Read-Write-Execute")
+                .append(reset)
+                .append('\n');
 
         final Consumer<Long> printer = x -> {
             final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
-            System.out.print(x == address ? "[" : " ");
+            sb.append(x == address ? '[' : ' ');
             if (x == address) {
-                System.out.print(bold);
+                sb.append(bold);
             }
             final boolean r = canRead.get(x);
             final boolean w = canWrite.get(x);
             final boolean e = canExecute.get(x);
             if (r && !w && !e) {
-                System.out.print(red);
+                sb.append(red);
             }
             if (!r && w && !e) {
-                System.out.print(green);
+                sb.append(green);
             }
             if (!r && !w && e) {
-                System.out.print(blue);
+                sb.append(blue);
             }
             if (r && w && !e) {
-                System.out.print(yellow);
+                sb.append(yellow);
             }
             if (r && !w && e) {
-                System.out.print(magenta);
+                sb.append(magenta);
             }
             if (!r && w && e) {
-                System.out.print(cyan);
+                sb.append(cyan);
             }
             if (r && w && e) {
-                System.out.print(white);
+                sb.append(white);
             }
-            System.out.print(s + reset);
-            System.out.print(x == address ? "]" : " ");
+            sb.append(s).append(reset).append(x == address ? ']' : ' ');
         };
 
         // print lines before
         for (long r = 0L; r < linesAround; r++) {
-            System.out.printf(" 0x%016x: ", startAddress + (r * bytesPerLine));
+            sb.append(String.format(" 0x%016x: ", startAddress + (r * bytesPerLine)));
             for (long i = 0L; i < bytesPerLine; i++) {
                 final long x = startAddress + (r * bytesPerLine) + i;
                 printer.accept(x);
             }
-            System.out.println();
+            sb.append('\n');
         }
 
         // print line with the given address
-        System.out.printf(" 0x%016x: ", startAddress + (linesAround * bytesPerLine));
+        sb.append(String.format(" 0x%016x: ", startAddress + (linesAround * bytesPerLine)));
         for (long i = 0L; i < bytesPerLine; i++) {
             final long x = startAddress + (linesAround * bytesPerLine) + i;
             printer.accept(x);
         }
-        System.out.println();
+        sb.append('\n');
 
         // print lines after
         for (long r = 0L; r < linesAround; r++) {
-            System.out.printf(" 0x%016x: ", startAddress + ((linesAround + 1 + r) * bytesPerLine));
+            sb.append(String.format(" 0x%016x: ", startAddress + ((linesAround + 1 + r) * bytesPerLine)));
             for (long i = 0L; i < bytesPerLine; i++) {
                 final long x = startAddress + ((linesAround + 1 + r) * bytesPerLine) + i;
                 printer.accept(x);
             }
-            System.out.println();
+            sb.append('\n');
         }
 
-        throw new MemoryException(message);
+        sb.append('\n').append(message);
+
+        throw new MemoryException(sb.toString());
     }
 
     /**
