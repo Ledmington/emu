@@ -25,7 +25,9 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Comparator;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 public final class CheckReadelf {
 
@@ -34,12 +36,11 @@ public final class CheckReadelf {
     private static final String fatJarPath;
 
     static {
-        try {
-            fatJarPath = Files.find(
-                            Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
-                    .filter(p -> p.getFileName().toString().startsWith("emu-readelf")
-                            && p.getFileName().toString().endsWith(".jar"))
-                    .max((a, b) -> Long.compare(a.toFile().length(), b.toFile().length()))
+        try (final Stream<Path> s = Files.find(
+                        Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
+                .filter(p -> p.getFileName().toString().startsWith("emu-readelf")
+                        && p.getFileName().toString().endsWith(".jar"))) {
+            fatJarPath = s.max(Comparator.comparingLong(a -> a.toFile().length()))
                     .orElseThrow()
                     .normalize()
                     .toAbsolutePath()
@@ -52,7 +53,10 @@ public final class CheckReadelf {
     private static boolean isELF(final Path p) {
         try (final InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
             final byte[] buffer = new byte[4];
-            is.read(buffer);
+            final int bytesRead = is.read(buffer);
+            if (bytesRead != 4) {
+                throw new RuntimeException();
+            }
             return buffer[0] == (byte) 0x7f
                     && buffer[1] == (byte) 0x45
                     && buffer[2] == (byte) 0x4c
@@ -150,23 +154,22 @@ public final class CheckReadelf {
 
     public static void main(final String[] args) {
         if (args.length > 0) {
-            System.out.printf("Arguments were passed on the command line but were not needed");
+            System.out.println("Arguments were passed on the command line but were not needed.");
         }
 
         if (isWindows) {
-            System.out.printf("It seems that you are running on a windows machine. This test will be disabled.\n");
+            System.out.println("It seems that you are running on a windows machine. This test will be disabled.");
             System.exit(0);
         }
 
-        try {
-            Files.find(
-                            Path.of("/usr/bin").normalize().toAbsolutePath(),
-                            1,
-                            (p, bfa) -> bfa.isRegularFile() && p.toFile().length() >= 4L && isELF(p))
-                    .forEach(p -> {
-                        test(p, false);
-                        test(p, true);
-                    });
+        try (final Stream<Path> s = Files.find(
+                Path.of("/usr/bin").normalize().toAbsolutePath(),
+                1,
+                (p, bfa) -> bfa.isRegularFile() && p.toFile().length() >= 4L && isELF(p))) {
+            s.forEach(p -> {
+                test(p, false);
+                test(p, true);
+            });
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
