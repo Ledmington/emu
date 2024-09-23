@@ -28,6 +28,9 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestIntervalArray {
 
@@ -50,14 +53,18 @@ final class TestIntervalArray {
         }
     }
 
-    @Test
-    void setAndGet() {
+    private static Stream<Arguments> pairsOfMemoryLocations() {
+        return Stream.of(Arguments.of(0L, 0L), Arguments.of(-1L, 1L), Arguments.of(0x1234L, 0x4567L));
+    }
+
+    @ParameterizedTest
+    @MethodSource("pairsOfMemoryLocations")
+    void setAndGet(final long start, final long end) {
         ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-        final Set<Long> positions =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
-        for (final long x : positions) {
-            ia.set(x);
-            assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", x));
+        ia.set(start, end);
+        for (long x = start; x <= end; x++) {
+            final long finalX = x;
+            assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", finalX));
         }
     }
 
@@ -73,14 +80,14 @@ final class TestIntervalArray {
         }
     }
 
-    @Test
-    void resetAndGet() {
+    @ParameterizedTest
+    @MethodSource("pairsOfMemoryLocations")
+    void resetAndGet(final long start, final long end) {
         ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
-        final Set<Long> addresses =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
-        for (final long x : addresses) {
-            ia.reset(x);
-            assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
+        ia.reset(start, end);
+        for (long x = start; x <= end; x++) {
+            final long finalX = x;
+            assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", finalX));
         }
     }
 

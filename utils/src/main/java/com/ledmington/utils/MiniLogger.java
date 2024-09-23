@@ -108,6 +108,14 @@ public final class MiniLogger {
     private String getFormattedHeader(final LoggingLevel tag) {
         Objects.requireNonNull(tag);
 
+        final String color =
+                switch (tag) {
+                    case DEBUG -> "\u001b[37m"; // white
+                    case INFO -> "\u001b[36m"; // cyan
+                    case WARNING -> "\u001b[33m"; // yellow
+                    case ERROR -> "\u001b[31m"; // red
+                };
+
         return '['
                 + getFormattedTime()
                 + ']'
@@ -117,8 +125,8 @@ public final class MiniLogger {
                 + '['
                 + loggerName
                 + ']'
-                + '['
-                + tag.name()
+                + '[' + color
+                + tag.name() + "\u001b[0m"
                 + ']';
     }
 

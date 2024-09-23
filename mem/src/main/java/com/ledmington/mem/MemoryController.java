@@ -111,7 +111,7 @@ public final class MemoryController implements Memory {
                 .append(white)
                 .append("Read-Write-Execute")
                 .append(reset)
-                .append('\n');
+                .append("\n\n");
 
         final Consumer<Long> printer = x -> {
             final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
