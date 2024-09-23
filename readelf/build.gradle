@@ -55,59 +55,10 @@ tasks.register('fatJar', Jar) {
 tasks.build.dependsOn(fatJar)
 tasks.javadoc.enabled = false
 
-if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
-
-    // Utility task to check that the output of readelf is the same as GNU's readelf
-    tasks.register("checkReadelf") {
-        dependsOn fatJar
-
-        doLast {
-            final List<String> executables = List.of(
-                "/usr/bin/gcc",
-                "/usr/bin/g++",
-                "/usr/bin/clang",
-                "/usr/bin/clang++",
-                "/usr/bin/zip",
-                "/usr/bin/unzip"
-            )
-
-            for(final String filepath : executables) {
-                final String elf = filepath.substring(filepath.lastIndexOf("/") + 1)
-                if (!(new File(filepath).exists())) {
-                    continue
-                }
-
-                final String ref = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all_ref.out")
-                final String refWide = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all_ref_wide.out")
-                final String actual = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all.out")
-                final String actualWide = path("${project.layout.buildDirectory.get().toString()}", "${elf}_all_wide.out")
-
-                println("Checking '${filepath}'")
-                exec {
-                    commandLine "readelf", "-a", "${filepath}"
-                    standardOutput = new FileOutputStream(ref)
-                }
-                exec {
-                    commandLine "java", "-jar", "${fatJarPath}", "-a", "${filepath}"
-                    standardOutput = new FileOutputStream(actual)
-                }
-                exec {
-                    commandLine "diff", "${actual}", "${ref}"
-                }
-                exec {
-                    commandLine "readelf", "-a", "-W", "${filepath}"
-                    standardOutput = new FileOutputStream(refWide)
-                }
-                exec {
-                    commandLine "java", "-jar", "${fatJarPath}", "-a", "-W", "${filepath}"
-                    standardOutput = new FileOutputStream(actualWide)
-                }
-                exec {
-                    commandLine "diff", "${actualWide}", "${refWide}"
-                }
-            }
-        }
-    }
-} else {
-    println("Task 'checkReadelf' not created")
+tasks.register('checkReadelf', JavaExec) {
+    group 'verification'
+    description 'Checks the readelf output against the one provided by the system'
+    dependsOn fatJar
+    classpath sourceSets.test.runtimeClasspath
+    mainClass = 'com.ledmington.readelf.CheckReadelf'
 }
