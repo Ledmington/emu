@@ -315,8 +315,13 @@ public final class Main {
             final Optional<Section> dyn = elf.getSectionByName(".dynamic");
             if (dyn.isPresent()) {
                 printDynamicSection((DynamicSection) dyn.orElseThrow(), elf);
+            } else {
+                out.println("There is no dynamic section in this file.");
             }
         }
+
+        final Optional<Section> gv = elf.getSectionByName(GnuVersionSection.getStandardName());
+        final Optional<Section> gvr = elf.getSectionByName(GnuVersionRequirementsSection.getStandardName());
 
         if (displayRelocationSections) {
             if (displayDynamicSection) {
@@ -327,11 +332,8 @@ public final class Main {
             if (reladyn.isPresent()) {
                 printRelocationSection(
                         (RelocationAddendSection) reladyn.orElseThrow(),
-                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
-                                .orElseThrow(),
-                        (GnuVersionRequirementsSection)
-                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
-                                        .orElseThrow(),
+                        (GnuVersionSection) gv.orElse(null),
+                        (GnuVersionRequirementsSection) gvr.orElse(null),
                         elf,
                         elf.getFileHeader().is32Bit());
                 out.println();
@@ -341,72 +343,66 @@ public final class Main {
             if (relaplt.isPresent()) {
                 printRelocationSection(
                         (RelocationAddendSection) relaplt.orElseThrow(),
-                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
-                                .orElseThrow(),
-                        (GnuVersionRequirementsSection)
-                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
-                                        .orElseThrow(),
+                        (GnuVersionSection) gv.orElse(null),
+                        (GnuVersionRequirementsSection) gvr.orElse(null),
                         elf,
                         elf.getFileHeader().is32Bit());
                 out.println("No processor specific unwind information to decode");
             }
         }
 
+        final Optional<Section> dynsym = elf.getSectionByName(".dynsym");
         if (displayDynamicSymbolTable) {
             if (displayRelocationSections) {
                 out.println();
             }
-            final Optional<Section> dynsym = elf.getSectionByName(".dynsym");
+
             if (dynsym.isPresent()) {
                 printSymbolTable(
                         (DynamicSymbolTableSection) dynsym.orElseThrow(),
-                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
-                                .orElseThrow(),
-                        (GnuVersionRequirementsSection)
-                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
-                                        .orElseThrow(),
+                        (GnuVersionSection) gv.orElseThrow(),
+                        (GnuVersionRequirementsSection) gvr.orElseThrow(),
                         elf);
             }
         }
 
         if (displaySymbolTable) {
-            if (displayDynamicSymbolTable) {
+            if (displayDynamicSymbolTable && dynsym.isPresent()) {
                 out.println();
             }
             final Optional<Section> symtab = elf.getSectionByName(".symtab");
             if (symtab.isPresent()) {
                 printSymbolTable(
                         (SymbolTableSection) symtab.orElseThrow(),
-                        (GnuVersionSection) elf.getSectionByName(GnuVersionSection.getStandardName())
-                                .orElseThrow(),
-                        (GnuVersionRequirementsSection)
-                                elf.getSectionByName(GnuVersionRequirementsSection.getStandardName())
-                                        .orElseThrow(),
+                        (GnuVersionSection) gv.orElseThrow(),
+                        (GnuVersionRequirementsSection) gvr.orElseThrow(),
                         elf);
             }
         }
 
+        final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
         if (displayGnuHashSection) {
-            final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
             if (gnuhash.isPresent()) {
                 printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
             }
         }
 
         if (displayVersionSections) {
-            if (displayGnuHashSection) {
+            if (displayGnuHashSection && gnuhash.isPresent()) {
                 out.println();
             }
 
-            final Optional<Section> gv = elf.getSectionByName(GnuVersionSection.getStandardName());
-            final Optional<Section> gvr = elf.getSectionByName(GnuVersionRequirementsSection.getStandardName());
-            if (gv.isPresent()) {
-                printVersionSection(
-                        (GnuVersionSection) gv.orElseThrow(), (GnuVersionRequirementsSection) gvr.orElseThrow(), elf);
-                out.println();
-            }
+            if (gv.isEmpty() && gvr.isEmpty()) {
+                out.println("No version information found in this file.");
+            } else {
+                if (gv.isPresent()) {
+                    printVersionSection(
+                            (GnuVersionSection) gv.orElseThrow(),
+                            (GnuVersionRequirementsSection) gvr.orElseThrow(),
+                            elf);
+                    out.println();
+                }
 
-            if (gvr.isPresent()) {
                 printVersionSection((GnuVersionRequirementsSection) gvr.orElseThrow(), elf);
             }
         }
@@ -757,6 +753,8 @@ public final class Main {
                 out.printf("Shared library: [%s]%n", strtab.getString(BitUtils.asInt(content)));
             } else if (dte.getTag() == DynamicTableEntryTag.DT_SONAME) {
                 out.printf("Library soname: [%s]%n", strtab.getString(BitUtils.asInt(content)));
+            } else if (dte.getTag() == DynamicTableEntryTag.DT_RUNPATH) {
+                out.printf("Library runpath: [%s]%n", strtab.getString(BitUtils.asInt(content)));
             } else {
                 out.printf("%nUnknown dynamic table tag '%s'%n", dte.getTag());
             }
@@ -780,7 +778,7 @@ public final class Main {
                 : null;
 
         out.printf(
-                "Relocation section '%s' at offset 0x%x contains %,d entr%s:%n",
+                "Relocation section '%s' at offset 0x%x contains %d entr%s:%n",
                 ras.getName(),
                 rash.getFileOffset(),
                 ras.getRelocationAddendTableLength(),
@@ -798,8 +796,9 @@ public final class Main {
 
         for (int i = 0; i < ras.getRelocationAddendTableLength(); i++) {
             final RelocationAddendEntry rae = ras.getRelocationAddendEntry(i);
-            final short v = gvs.getVersion(BitUtils.asShort(rae.symbolTableIndex()));
-            final int versionNameOffset = gvrs.getVersionNameOffset(v);
+            final int versionNameOffset = gvs == null
+                    ? -1
+                    : gvrs.getVersionNameOffset(gvs.getVersion(BitUtils.asShort(rae.symbolTableIndex())));
 
             if (is32Bit) {
                 final byte symbolTableIndex = BitUtils.asByte(rae.symbolTableIndex());
@@ -904,7 +903,7 @@ public final class Main {
         for (int i = 0; i < nse.getDescriptionLength(); i++) {
             sb.append((char) nse.getDescriptionByte(i));
         }
-        out.printf("    Version: %s%n", sb.toString());
+        out.printf("    Version: %s%n", sb);
     }
 
     private static void printSystemtapProperties(final NoteSectionEntry nse) {
