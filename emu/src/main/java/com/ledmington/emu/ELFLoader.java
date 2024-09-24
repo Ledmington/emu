@@ -76,6 +76,7 @@ public final class ELFLoader {
 
         loadCommandLineArgumentsAndEnvironmentVariables(
                 mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
+
         if (elf.getSectionByName(".preinit_array").isPresent()) {
             runPreInitArray();
         }
@@ -166,7 +167,7 @@ public final class ELFLoader {
         return highestAddress;
     }
 
-    private static long loadCommandLineArgumentsAndEnvironmentVariables(
+    private static void loadCommandLineArgumentsAndEnvironmentVariables(
             final MemoryController mem,
             final long stackBase,
             final boolean is32Bit,
@@ -255,8 +256,6 @@ public final class ELFLoader {
             currentEnvPointer += BitUtils.asLong(envBytes.length) + 1L;
             p += wordSize;
         }
-
-        return p;
     }
 
     private static void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {
@@ -313,15 +312,13 @@ public final class ELFLoader {
                         sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
                 mem.initialize(startVirtualAddress, content);
             }
-            default -> {
-                throw new IllegalArgumentException(String.format(
-                        "Don't know what to do with section '%s' of type %s and flags '%s'",
-                        sec.getName(),
-                        sec.getHeader().getType().getName(),
-                        sec.getHeader().getFlags().stream()
-                                .map(SectionHeaderFlags::getName)
-                                .collect(Collectors.joining(", "))));
-            }
+            default -> throw new IllegalArgumentException(String.format(
+                    "Don't know what to do with section '%s' of type %s and flags '%s'",
+                    sec.getName(),
+                    sec.getHeader().getType().getName(),
+                    sec.getHeader().getFlags().stream()
+                            .map(SectionHeaderFlags::getName)
+                            .collect(Collectors.joining(", "))));
         }
     }
 }

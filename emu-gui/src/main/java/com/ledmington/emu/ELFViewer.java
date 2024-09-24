@@ -18,25 +18,23 @@
 package com.ledmington.emu;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public final class ELFViewer extends Stage {
 
-    private final TextArea textArea = new TextArea();
+    private final ELFView view;
 
     public ELFViewer(final double width, final double height) {
         final BorderPane mainPane = new BorderPane();
+
+        this.view = new ELFView(this);
 
         final FlowPane topPane = new FlowPane();
         final Button load = new Button();
@@ -53,7 +51,7 @@ public final class ELFViewer extends Stage {
                             new FileChooser.ExtensionFilter("All files", "*.*"));
             final File selectedFile = fc.showOpenDialog(this);
             if (selectedFile != null) {
-                this.loadFile(selectedFile);
+                this.view.loadFile(selectedFile);
             }
         });
 
@@ -61,13 +59,13 @@ public final class ELFViewer extends Stage {
         settings.setText("Settings");
         settings.setOnAction(e -> new SettingsWindow());
 
-        textArea.setEditable(false);
         topPane.setHgap(4);
         topPane.setPadding(new Insets(5));
         topPane.setPrefWrapLength(300);
         topPane.getChildren().addAll(load, settings);
+
         mainPane.setTop(topPane);
-        mainPane.setCenter(textArea);
+        mainPane.setCenter(this.view);
         final Scene scene = new Scene(mainPane);
 
         this.setScene(scene);
@@ -76,32 +74,5 @@ public final class ELFViewer extends Stage {
         this.setHeight(height);
         this.centerOnScreen();
         this.show();
-    }
-
-    private void loadFile(final File elfFile) {
-        final byte[] fileBytes;
-        try {
-            fileBytes = Files.readAllBytes(elfFile.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        final StringBuilder sb = new StringBuilder();
-        final int nBytesPerRow = 16;
-        final int nBytesPerBlock = 4;
-        for (int i = 0; i < fileBytes.length; i++) {
-            if (i % nBytesPerRow == 0) {
-                // start of the row
-                sb.append(" 0x").append(String.format("%08x", i)).append(" : ");
-            }
-            sb.append(String.format("%02x", fileBytes[i]));
-            if (i % nBytesPerBlock == nBytesPerBlock - 1) {
-                sb.append(' ');
-            }
-            if (i % nBytesPerRow == nBytesPerRow - 1) {
-                sb.append('\n');
-            }
-        }
-        textArea.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
-        this.textArea.setText(sb.toString());
     }
 }

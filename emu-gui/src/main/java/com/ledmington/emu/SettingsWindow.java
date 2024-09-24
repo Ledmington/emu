@@ -18,6 +18,7 @@
 package com.ledmington.emu;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -59,6 +60,7 @@ public final class SettingsWindow extends Stage {
             fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
             mainPane.getChildren().add(fontSize);
         }
+        mainPane.setPadding(new Insets(5));
         bPane.setCenter(mainPane);
 
         final FlowPane bottomPane = new FlowPane();
@@ -75,7 +77,9 @@ public final class SettingsWindow extends Stage {
             cancel.setOnMouseClicked(e -> this.close());
             bottomPane.getChildren().add(cancel);
         }
+        bottomPane.setPadding(new Insets(5));
         bPane.setBottom(bottomPane);
+        bPane.setPadding(new Insets(5));
 
         this.setTitle("Emu - Settings");
         this.setScene(scene);
