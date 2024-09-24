@@ -144,6 +144,17 @@ public final class BitUtils {
     }
 
     /**
+     * Computes the bitwise AND and returns it as a short.
+     *
+     * @param a The left-hand side operand.
+     * @param b The right-hand side operand.
+     * @return The bitwise AND as a short.
+     */
+    public static short and(final short a, final short b) {
+        return asShort(a & b);
+    }
+
+    /**
      * Computes the bitwise OR and returns it as a byte.
      *
      * @param a The first operand.

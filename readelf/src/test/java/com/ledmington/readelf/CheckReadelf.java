@@ -21,6 +21,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -32,6 +34,9 @@ import java.util.stream.Stream;
 
 public final class CheckReadelf {
 
+    private static final PrintWriter out = System.console() != null
+            ? System.console().writer()
+            : new PrintWriter(System.out, false, StandardCharsets.UTF_8);
     private static final boolean isWindows =
             System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
     private static final String fatJarPath;
@@ -53,9 +58,10 @@ public final class CheckReadelf {
 
     private static boolean isELF(final Path p) {
         try (final InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
-            final byte[] buffer = new byte[4];
+            final int expectedBytes = 4;
+            final byte[] buffer = new byte[expectedBytes];
             final int bytesRead = is.read(buffer);
-            if (bytesRead != 4) {
+            if (bytesRead != expectedBytes) {
                 throw new RuntimeException();
             }
             return buffer[0] == (byte) 0x7f
@@ -72,17 +78,19 @@ public final class CheckReadelf {
         final List<String> lines = new ArrayList<>();
         try {
             process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = reader.readLine();
-            while (line != null) {
-                lines.add(line);
-                line = reader.readLine();
+            try (final BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line = reader.readLine();
+                while (line != null) {
+                    lines.add(line);
+                    line = reader.readLine();
+                }
             }
             final int exitCode = process.waitFor();
             if (exitCode != 0) {
-                System.out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d\n", exitCode);
-                System.out.println(String.join("\n", lines));
-                System.out.println();
+                out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d%n", exitCode);
+                out.println(String.join("\n", lines));
+                out.println();
             }
         } catch (final IOException | InterruptedException e) {
             throw new RuntimeException(e);
@@ -108,16 +116,16 @@ public final class CheckReadelf {
 
     private static void checkDiff(final List<String> expected, final List<String> actual) {
         if (expected.equals(actual)) {
-            System.out.println("\u001b[32mOK\u001b[0m");
+            out.println("\u001b[32mOK\u001b[0m");
             return;
         }
 
-        System.out.println("\u001b[31mERROR\u001b[0m");
+        out.println("\u001b[31mERROR\u001b[0m");
 
         final int minSize = Math.min(expected.size(), actual.size());
         final int maxSize = Math.max(expected.size(), actual.size());
-        final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |<| %s\u001b[47m \u001b[0m\n";
-        final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |>| %s\u001b[47m \u001b[0m\n";
+        final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |<| %s\u001b[47m \u001b[0m%n";
+        final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |>| %s\u001b[47m \u001b[0m%n";
 
         // start of the different block
         int start = -1;
@@ -126,40 +134,40 @@ public final class CheckReadelf {
             final String a = actual.get(i);
             if (e.equals(a)) {
                 if (start != -1) {
-                    System.out.println("----------");
+                    out.println("----------");
                     for (int j = start; j < i; j++) {
                         final String a2 = actual.get(j);
-                        System.out.printf(fmtActual, j, a2.replace("\t", "\\t"));
+                        out.printf(fmtActual, j, a2);
                     }
                     start = -1;
-                    System.out.println("==========");
+                    out.println("==========");
                 }
             } else {
                 if (start == -1) {
                     start = i;
-                    System.out.println("==========");
+                    out.println("==========");
                 }
-                System.out.printf(fmtExpected, i, e.replace("\t", "\\t"));
+                out.printf(fmtExpected, i, e);
             }
         }
 
         if (expected.size() > minSize) {
             for (int i = minSize; i < expected.size(); i++) {
                 final String e = expected.get(i);
-                System.out.printf(fmtExpected, i, e.replace("\t", "\\t"));
+                out.printf(fmtExpected, i, e);
             }
         } else if (actual.size() > minSize) {
             for (int i = minSize; i < actual.size(); i++) {
                 final String a = actual.get(i);
-                System.out.printf(fmtActual, i, a.replace("\t", "\\t"));
+                out.printf(fmtActual, i, a);
             }
         }
 
-        System.out.println();
+        out.println();
     }
 
     private static void test(final Path p, final boolean wide) {
-        System.out.print(p.toString() + (wide ? " (wide)" : "") + " ... ");
+        out.print(p.toString() + (wide ? " (wide)" : "") + " ... ");
         final List<String> outputSystemReadelf = runSystemReadelf(p, wide);
         final List<String> outputCustomReadelf = runCustomReadelf(p, wide);
         checkDiff(outputSystemReadelf, outputCustomReadelf);
@@ -167,11 +175,11 @@ public final class CheckReadelf {
 
     public static void main(final String[] args) {
         if (args.length > 0) {
-            System.out.println("Arguments were passed on the command line but were not needed.");
+            out.println("Arguments were passed on the command line but were not needed.");
         }
 
         if (isWindows) {
-            System.out.println("It seems that you are running on a windows machine. This test will be disabled.");
+            out.println("It seems that you are running on a windows machine. This test will be disabled.");
             System.exit(0);
         }
 
@@ -187,9 +195,9 @@ public final class CheckReadelf {
 
         for (int i = 0; i < elfFiles.size(); i++) {
             final Path p = elfFiles.get(i);
-            System.out.printf(" [%d / %d] ", i * 2 + 1, elfFiles.size() * 2);
+            out.printf(" [%d / %d] ", i * 2 + 1, elfFiles.size() * 2);
             test(p, false);
-            System.out.printf(" [%d / %d] ", i * 2 + 2, elfFiles.size() * 2);
+            out.printf(" [%d / %d] ", i * 2 + 2, elfFiles.size() * 2);
             test(p, true);
         }
     }

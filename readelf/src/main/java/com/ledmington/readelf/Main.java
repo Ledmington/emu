@@ -80,6 +80,10 @@ public final class Main {
     private static boolean wide = false;
     private static boolean silentTruncation = false;
 
+    private static final String SYMBOL_NAME_SUFFIX = "[...]";
+    private static final short VERSYM_VERSION = (short) 0x7fff;
+    private static final short VERSYM_HIDDEN = (short) 0x8000;
+
     @SuppressWarnings("PMD.AvoidReassigningLoopVariables")
     public static void main(final String[] args) {
         MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -560,6 +564,7 @@ public final class Main {
         out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBucketsLength());
         out.println(" Length  Number     % of total  Coverage");
 
+        /* Reference: https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L14861 */
         long maxLength = 0L;
         long nsyms = 0L;
         final long[] lengths = new long[s.getBucketsLength()];
@@ -651,29 +656,37 @@ public final class Main {
 
         for (int i = 0; i < gvs.getVersionsLength(); i++) {
             if (i % 4 == 0) {
-                out.printf("  %03x:  ", i);
+                out.printf("  %03x:", i);
             }
             final short v = gvs.getVersion(i);
-            final String name =
-                    (v == 0 ? "*local*" : (v == 1 ? "*global*" : stringTable.getString(gvrs.getVersionNameOffset(v))));
 
-            out.printf("%2x %-13s", v, "(" + name + ")");
+            switch (v) {
+                case 0:
+                    out.print("   0 (*local*)    ");
+                    break;
+                case 1:
+                    out.print("   1 (*global*)   ");
+                    break;
+                default:
+                    final String s = String.format(
+                            "%4x%c", BitUtils.and(v, VERSYM_VERSION), BitUtils.and(v, VERSYM_HIDDEN) != 0 ? 'h' : ' ');
+                    int nn = s.length();
+                    out.print(s);
+                    final String name = stringTable.getString(gvrs.getVersionNameOffset(v));
+                    final String s2 = String.format("(%s%-" + Math.max(1, 12 - name.length()) + "s", name, ")");
+                    nn += s2.length();
+                    out.print(s2);
+                    final int width = 18;
+                    if (nn < width) {
+                        out.print(" ".repeat(Math.max(1, width - nn)));
+                    }
+                    break;
+            }
 
             final boolean finished = i >= gvs.getVersionsLength() - 1;
-            if (finished) {
-                out.println();
-                break;
-            }
-
             final boolean inLastColumn = i % 4 == 3;
-            final boolean nameTooLong = name.length() >= 12;
-            if (nameTooLong) {
-                out.print(" ");
-            }
-            if (inLastColumn) {
+            if (finished || inLastColumn) {
                 out.println();
-            } else {
-                out.print("  ");
             }
         }
     }
@@ -830,7 +843,7 @@ public final class Main {
                         out.printf("                 %x%n", rae.addend());
                     }
                 } else {
-                    out.println("unknown");
+                    throw new IllegalArgumentException(String.format("Unknown relocation addend entry '%s'", rae));
                 }
             } else {
                 final int symbolTableIndex = rae.symbolTableIndex();
@@ -863,7 +876,7 @@ public final class Main {
                         out.printf("                 %x%n", rae.addend());
                     }
                 } else {
-                    out.println("unknown");
+                    throw new IllegalArgumentException(String.format("Unknown relocation addend entry '%s'", rae));
                 }
             }
         }
@@ -1131,41 +1144,38 @@ public final class Main {
             final String symbolName = strtab.getString(ste.nameOffset());
             final short v = gvs.getVersion(i);
             final int versionNameOffset = gvrs.getVersionNameOffset(v);
+            final String sectionTableIndex = (ste.sectionTableIndex() == 0)
+                    ? "UND"
+                    : ((ste.sectionTableIndex() < 0) ? "ABS" : String.valueOf(ste.sectionTableIndex()));
 
-            if (versionNameOffset == -1) {
-                out.printf(
-                        "   %3d: %016x %5d %-6s  %-6s %-7s  %3s %s%n",
-                        i,
-                        ste.value(),
-                        ste.size(),
-                        ste.info().getType().getName(),
-                        ste.info().getBinding().getName(),
-                        ste.visibility().getName(),
-                        ste.sectionTableIndex() == 0
-                                ? "UND"
-                                : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
-                        wide ? symbolName : addSuffixIfLonger(symbolName, 21));
-            } else {
+            out.printf(
+                    "  %4d: %016x %5d %-6s  %-6s %-7s  %3s ",
+                    i,
+                    ste.value(),
+                    ste.size(),
+                    ste.info().getType().getName(),
+                    ste.info().getBinding().getName(),
+                    ste.visibility().getName(),
+                    sectionTableIndex);
+
+            String prefix = symbolName;
+            String suffix = "";
+            if (versionNameOffset != -1) {
                 final String version = strtab.getString(versionNameOffset);
                 final short versionNumber = gvrs.getVersion(v);
-                out.printf(
-                        "   %3d: %016x  %4d %-6s  %-6s %-7s  %3s %s@%s (%d)%n",
-                        i,
-                        ste.value(),
-                        ste.size(),
-                        ste.info().getType().getName(),
-                        ste.info().getBinding().getName(),
-                        ste.visibility().getName(),
-                        ste.sectionTableIndex() == 0
-                                ? "UND"
-                                : (ste.sectionTableIndex() < 0 ? "ABS" : ste.sectionTableIndex()),
-                        wide
-                                ? symbolName
-                                : addSuffixIfLonger(
-                                        symbolName, 21 - (1 + version.length() + (versionNumber >= 10 ? 5 : 4))),
-                        version,
-                        versionNumber);
+                suffix = "@" + version + " (" + versionNumber + ")";
             }
+
+            if (!wide && (prefix.length() + suffix.length()) > 21) {
+                if (suffix.length() > (21 - SYMBOL_NAME_SUFFIX.length())) {
+                    prefix = SYMBOL_NAME_SUFFIX;
+                } else {
+                    prefix = prefix.substring(0, (21 - SYMBOL_NAME_SUFFIX.length()) - suffix.length())
+                            + SYMBOL_NAME_SUFFIX;
+                }
+            }
+
+            out.println(prefix + suffix);
         }
     }
 
@@ -1441,7 +1451,7 @@ public final class Main {
     }
 
     private static String addSuffixIfLonger(final String s, final int maxLength) {
-        final String suffix = silentTruncation ? "" : "[...]";
+        final String suffix = silentTruncation ? "" : SYMBOL_NAME_SUFFIX;
         if (s.length() > maxLength) {
             return s.substring(0, Math.max(0, maxLength - suffix.length())) + suffix;
         }
