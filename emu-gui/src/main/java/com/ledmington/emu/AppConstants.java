@@ -55,7 +55,9 @@ public final class AppConstants {
     /** Shorthand monospace font family. */
     private static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
             ? "Consolas"
-            : Font.getDefault().getFamily();
+            : (Font.getFamilies().contains("Cousine")
+                    ? "Cousine"
+                    : Font.getDefault().getFamily());
 
     public static String getDefaultMonospaceFont() {
         return MONOSPACE_FONT_FAMILY;

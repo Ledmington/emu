@@ -30,14 +30,22 @@ public final class MemoryController implements Memory {
     private final IntervalArray canRead = new IntervalArray();
     private final IntervalArray canWrite = new IntervalArray();
     private final IntervalArray canExecute = new IntervalArray();
+    private final boolean breakOnWrongPermissions;
 
     /**
      * Creates a MemoryController with the given initializer.
      *
      * @param memInit The {@link MemoryInitializer} object to be used.
+     * @param breakOnWrongPermissions Decides whether this controller should throw an exception when accessing memory
+     *     with the wrong permissions.
      */
-    public MemoryController(final MemoryInitializer memInit) {
+    public MemoryController(final MemoryInitializer memInit, final boolean breakOnWrongPermissions) {
         this.mem = new RandomAccessMemory(Objects.requireNonNull(memInit));
+        this.breakOnWrongPermissions = breakOnWrongPermissions;
+    }
+
+    public MemoryController(final MemoryInitializer memInit) {
+        this(memInit, true);
     }
 
     private void reportIllegalRead(final long address) {
@@ -222,7 +230,7 @@ public final class MemoryController implements Memory {
 
     @Override
     public byte read(final long address) {
-        if (!canRead.get(address)) {
+        if (breakOnWrongPermissions && !canRead.get(address)) {
             reportIllegalRead(address);
         }
         return this.mem.read(address);
@@ -254,7 +262,7 @@ public final class MemoryController implements Memory {
      * @return The instruction byte at the given address.
      */
     public byte readCode(final long address) {
-        if (!canExecute.get(address)) {
+        if (breakOnWrongPermissions && !canExecute.get(address)) {
             reportIllegalExecution(address);
         }
         return this.mem.read(address);
@@ -262,7 +270,7 @@ public final class MemoryController implements Memory {
 
     @Override
     public void write(final long address, final byte value) {
-        if (!canWrite.get(address)) {
+        if (breakOnWrongPermissions && !canWrite.get(address)) {
             reportIllegalWrite(address);
         }
         mem.write(address, value);

@@ -107,107 +107,111 @@ public final class Main {
         final String shortVersionFlag = "-V";
         final String longVersionFlag = "--version";
 
+        label:
         for (int i = 0; i < args.length; i++) {
             final String arg = args[i];
 
-            if (shortHelpFlag.equals(arg) || longHelpFlag.equals(arg)) {
-                out.print(String.join(
-                        "\n",
-                        "",
-                        " emu - CPU emulator",
-                        "",
-                        " Usage: emu [OPTIONS] FILE",
-                        "",
-                        " Command line options:",
-                        "",
-                        " -h, --help   Shows this help message and exits.",
-                        " -q, --quiet  Only errors are reported.",
-                        " -v           Errors, warnings and info messages are reported.",
-                        " -vv          All messages are reported.",
-                        "",
-                        " --mem-init-random  Uninitialized memory has random values (default).",
-                        " --mem-init-zero    Uninitialized memory contains binary zero.",
-                        " --stack-size N     Number of bytes to allocate for the stack. Accepts only integers.",
-                        "                    Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
-                        " --base-address X   Memory location where to load the executable file (hexadecimal 64-bits).",
-                        " FILE               The ELF executable file to emulate.",
-                        ""));
-                out.flush();
-                System.exit(0);
-            } else if (shortQuietFlag.equals(arg) || longQuietFlag.equals(arg)) {
-                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-            } else if (verboseFlag.equals(arg)) {
-                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
-            } else if (veryVerboseFlag.equals(arg)) {
-                MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-            } else if (memoryInitializerRandomFlag.equals(arg)) {
-                EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
-            } else if (memoryInitializerZeroFlag.equals(arg)) {
-                EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
-            } else if (stackSizeFlag.equals(arg)) {
-                i++;
-                if (i >= args.length) {
-                    throw new IllegalArgumentException(String.format("Expected an argument after '%s'", stackSizeFlag));
+            switch (arg) {
+                case shortHelpFlag, longHelpFlag -> {
+                    out.print(String.join(
+                            "\n",
+                            "",
+                            " emu - CPU emulator",
+                            "",
+                            " Usage: emu [OPTIONS] FILE",
+                            "",
+                            " Command line options:",
+                            "",
+                            " -h, --help   Shows this help message and exits.",
+                            " -q, --quiet  Only errors are reported.",
+                            " -v           Errors, warnings and info messages are reported.",
+                            " -vv          All messages are reported.",
+                            "",
+                            " --mem-init-random  Uninitialized memory has random values (default).",
+                            " --mem-init-zero    Uninitialized memory contains binary zero.",
+                            " --stack-size N     Number of bytes to allocate for the stack. Accepts only integers.",
+                            "                    Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
+                            " --base-address X   Memory location where to load the executable file (hexadecimal 64-bits).",
+                            " FILE               The ELF executable file to emulate.",
+                            ""));
+                    out.flush();
+                    System.exit(0);
                 }
+                case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+                case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+                case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+                case memoryInitializerRandomFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
+                case memoryInitializerZeroFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+                case stackSizeFlag -> {
+                    i++;
+                    if (i >= args.length) {
+                        throw new IllegalArgumentException(
+                                String.format("Expected an argument after '%s'", stackSizeFlag));
+                    }
 
-                String s = args[i];
-                if (s.chars().allMatch(Character::isDigit)) {
-                    EmulatorConstants.setStackSize(Long.parseLong(s));
-                    continue;
+                    String s = args[i];
+                    if (s.chars().allMatch(Character::isDigit)) {
+                        EmulatorConstants.setStackSize(Long.parseLong(s));
+                        continue;
+                    }
+
+                    int k = 0;
+                    long bytes = 0L;
+                    while (k < s.length() && Character.isDigit(s.charAt(k))) {
+                        bytes = bytes * 10L + (s.charAt(k) - '0');
+                        k++;
+                    }
+
+                    s = s.substring(k);
+
+                    bytes = switch (s) {
+                        case "B" -> bytes;
+                        case "KB" -> bytes * 1_000L;
+                        case "MB" -> bytes * 1_000_000L;
+                        case "GB" -> bytes * 1_000_000_000L;
+                        case "TB" -> bytes * 1_000_000_000_000L;
+                        case "KiB" -> bytes * 1_024L;
+                        case "MiB" -> bytes * 1_024L * 1_024L;
+                        case "GiB" -> bytes * 1_024L * 1_024L * 1_024L;
+                        case "TiB" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L;
+                        case "b" -> bytes / 8L;
+                        case "Kb" -> bytes * 1_000L / 8L;
+                        case "Mb" -> bytes * 1_000_000L / 8L;
+                        case "Gb" -> bytes * 1_000_000_000L / 8L;
+                        case "Tb" -> bytes * 1_000_000_000_000L / 8L;
+                        case "Kib" -> bytes * 1_024L / 8L;
+                        case "Mib" -> bytes * 1_024L * 1_024L / 8L;
+                        case "Gib" -> bytes * 1_024L * 1_024L * 1_024L / 8L;
+                        case "Tib" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L / 8L;
+                        default -> throw new IllegalArgumentException(
+                                String.format("Invalid stack size '%s'", args[i]));
+                    };
+
+                    EmulatorConstants.setStackSize(bytes);
                 }
+                case baseAddressFlag -> {
+                    i++;
+                    if (i >= args.length) {
+                        throw new IllegalArgumentException(
+                                String.format("Expected an argument after '%s'", baseAddressFlag));
+                    }
 
-                int k = 0;
-                long bytes = 0L;
-                while (k < s.length() && Character.isDigit(s.charAt(k))) {
-                    bytes = bytes * 10L + (s.charAt(k) - '0');
-                    k++;
+                    EmulatorConstants.setBaseAddress(
+                            Long.parseLong(args[i].startsWith("0x") ? args[i].substring(2) : args[i], 16));
                 }
-
-                s = s.substring(k, s.length());
-
-                bytes = switch (s) {
-                    case "B" -> bytes * 1L;
-                    case "KB" -> bytes * 1_000L;
-                    case "MB" -> bytes * 1_000_000L;
-                    case "GB" -> bytes * 1_000_000_000L;
-                    case "TB" -> bytes * 1_000_000_000_000L;
-                    case "KiB" -> bytes * 1_024L;
-                    case "MiB" -> bytes * 1_024L * 1_024L;
-                    case "GiB" -> bytes * 1_024L * 1_024L * 1_024L;
-                    case "TiB" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L;
-                    case "b" -> bytes / 8L;
-                    case "Kb" -> bytes * 1_000L / 8L;
-                    case "Mb" -> bytes * 1_000_000L / 8L;
-                    case "Gb" -> bytes * 1_000_000_000L / 8L;
-                    case "Tb" -> bytes * 1_000_000_000_000L / 8L;
-                    case "Kib" -> bytes * 1_024L / 8L;
-                    case "Mib" -> bytes * 1_024L * 1_024L / 8L;
-                    case "Gib" -> bytes * 1_024L * 1_024L * 1_024L / 8L;
-                    case "Tib" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L / 8L;
-                    default -> throw new IllegalArgumentException(String.format("Invalid stack size '%s'", args[i]));
-                };
-
-                EmulatorConstants.setStackSize(bytes);
-            } else if (baseAddressFlag.equals(arg)) {
-                i++;
-                if (i >= args.length) {
-                    throw new IllegalArgumentException(
-                            String.format("Expected an argument after '%s'", baseAddressFlag));
+                case shortVersionFlag, longVersionFlag -> {
+                    out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
+                    out.flush();
+                    System.exit(0);
                 }
+                default -> {
+                    filename = arg;
 
-                EmulatorConstants.setBaseAddress(
-                        Long.parseLong(args[i].startsWith("0x") ? args[i].substring(2) : args[i], 16));
-            } else if (shortVersionFlag.equals(arg) || longVersionFlag.equals(arg)) {
-                out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
-                out.flush();
-                System.exit(0);
-            } else {
-                filename = arg;
-
-                // all the next command-line arguments are considered to be related to the
-                // executable to be emulated
-                innerArgs = Arrays.copyOfRange(args, i + 1, args.length);
-                break;
+                    // all the next command-line arguments are considered to be related to the
+                    // executable to be emulated
+                    innerArgs = Arrays.copyOfRange(args, i + 1, args.length);
+                    break label;
+                }
             }
         }
 

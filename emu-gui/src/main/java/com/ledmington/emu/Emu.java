@@ -51,7 +51,9 @@ public final class Emu {
             final Button elfViewerButton = new Button("ELF Viewer");
             elfViewerButton.setOnMouseClicked(e -> new ELFViewer(stage.getWidth(), stage.getHeight()).show());
             topPane.getChildren().add(elfViewerButton);
-            topPane.getChildren().add(new Button("Emulator"));
+            final Button emulatorViewButton = new Button("Emulator");
+            emulatorViewButton.setOnMouseClicked(e -> new EmulatorView().show());
+            topPane.getChildren().add(emulatorViewButton);
             final Button settingsButton = new Button("Settings");
             settingsButton.setOnMouseClicked(e -> new SettingsWindow().show());
             topPane.getChildren().add(settingsButton);
