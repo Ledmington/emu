@@ -28,6 +28,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -57,8 +60,7 @@ public final class EmulatorView extends Stage {
         final BorderPane mainPane = new BorderPane();
 
         final FlowPane topPane = new FlowPane();
-        final Button load = new Button();
-        load.setText("Load");
+        final Button load = new Button("Load");
         load.setOnAction(e -> {
             final FileChooser fc = new FileChooser();
             fc.setTitle("Select an ELF file to be loaded");
@@ -72,8 +74,7 @@ public final class EmulatorView extends Stage {
             }
         });
 
-        final Button settings = new Button();
-        settings.setText("Settings");
+        final Button settings = new Button("Settings");
         settings.setOnAction(e -> new SettingsWindow());
 
         topPane.setHgap(4);
@@ -113,6 +114,41 @@ public final class EmulatorView extends Stage {
 
         centerPane.setPadding(new Insets(5));
         mainPane.setCenter(centerPane);
+
+        final FlowPane bottomPane = new FlowPane();
+        final int maxSize = 20;
+        final Button step = new Button();
+        final ImageView imageStep = new ImageView(new Image(
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("icons/step.png"),
+                maxSize,
+                maxSize,
+                true,
+                true));
+        imageStep.setPreserveRatio(true);
+        imageStep.setSmooth(true);
+        imageStep.setCache(true);
+        step.setGraphic(imageStep);
+        step.setOnMouseClicked(e -> System.out.println("Clicked step"));
+        step.setTooltip(new Tooltip("Step"));
+        final Button run = new Button();
+        final ImageView imageRun = new ImageView(new Image(
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("icons/run.png"),
+                maxSize,
+                maxSize,
+                true,
+                true));
+        imageRun.setPreserveRatio(true);
+        imageRun.setSmooth(true);
+        imageRun.setCache(true);
+        run.setGraphic(imageRun);
+        run.setOnMouseClicked(e -> System.out.println("Clicked run"));
+        run.setTooltip(new Tooltip("Run"));
+        bottomPane.setHgap(4);
+        bottomPane.setPadding(new Insets(5));
+        bottomPane.setPrefWrapLength(300);
+        bottomPane.getChildren().addAll(step, run);
+
+        mainPane.setBottom(bottomPane);
 
         final Scene scene = new Scene(mainPane);
 

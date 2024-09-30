@@ -33,6 +33,8 @@ import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeaderFlags;
+import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -82,9 +84,12 @@ public final class ELFLoader {
         }
         if (elf.getSectionByName(".init_array").isPresent()) {
             runInitArray(
-                    (ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(), mem, rf, baseAddress
-                    // elf.getFileHeader().getEntryPointVirtualAddress()
-                    );
+                    (ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(),
+                    mem,
+                    rf,
+                    baseAddress,
+                    (SymbolTableSection) elf.getSectionByName(".symtab").orElseThrow(),
+                    (StringTableSection) elf.getSectionByName(".strtab").orElseThrow());
         }
         if (elf.getSectionByName(".init").isPresent()) {
             runInit();
@@ -120,10 +125,15 @@ public final class ELFLoader {
             final ConstructorsSection initArray,
             final MemoryController mem,
             final X86RegisterFile rf,
-            final long entryPointVirtualAddress) {
-        for (int i = 0; i < initArray.getConstructorsLength(); i++) {
-            logger.debug("Running .init_array[%d]", i);
+            final long entryPointVirtualAddress,
+            final SymbolTableSection symtab,
+            final StringTableSection strtab) {
+        logger.debug("Running %,d constructor(s) from .init_array", initArray.getNumConstructors());
+        for (int i = 0; i < initArray.getNumConstructors(); i++) {
             final long c = initArray.getConstructor(i);
+            final String ctorName =
+                    strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
+            logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
             X86Emulator.run(mem, rf, entryPointVirtualAddress + c);
         }
     }

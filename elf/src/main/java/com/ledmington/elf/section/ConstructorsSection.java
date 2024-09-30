@@ -89,7 +89,7 @@ public final class ConstructorsSection implements LoadableSection {
      *
      * @return The number of constructors.
      */
-    public int getConstructorsLength() {
+    public int getNumConstructors() {
         return constructors.length;
     }
 
