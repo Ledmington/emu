@@ -17,6 +17,8 @@
  */
 package com.ledmington.elf.section.sym;
 
+import java.util.NoSuchElementException;
+
 import com.ledmington.elf.section.Section;
 
 /** An interface for ELF sections which behave like a symbol table. */
@@ -36,4 +38,16 @@ public interface SymbolTable extends Section {
      * @return The i-th entry in the symbol table.
      */
     SymbolTableEntry getSymbolTableEntry(final int idx);
+
+    default SymbolTableEntry getSymbolWithValue(final long value) {
+        final int n = getSymbolTableLength();
+        for (int i = 0; i < n; i++) {
+            final SymbolTableEntry ste = getSymbolTableEntry(i);
+            if (ste.value() == value) {
+                return ste;
+            }
+        }
+        throw new NoSuchElementException(
+                String.format("No such symbol table entry with value %,d (0x%016x)", value, value));
+    }
 }

@@ -69,6 +69,8 @@ public final class GnuVersionSection implements LoadableSection {
     /**
      * Returns the number of versions contained in this section.
      *
+     * <p>Note: This number is the same as the number of entries in the '.dynsym' section.
+     *
      * @return The number of versions contained in this section.
      */
     public int getVersionsLength() {

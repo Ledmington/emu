@@ -564,7 +564,10 @@ public final class Main {
         out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBucketsLength());
         out.println(" Length  Number     % of total  Coverage");
 
-        /* Reference: https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L14861 */
+        /*
+         * Reference:
+         * https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L14861
+         */
         long maxLength = 0L;
         long nsyms = 0L;
         final long[] lengths = new long[s.getBucketsLength()];
@@ -1142,8 +1145,6 @@ public final class Main {
         for (int i = 0; i < s.getSymbolTableLength(); i++) {
             final SymbolTableEntry ste = s.getSymbolTableEntry(i);
             final String symbolName = strtab.getString(ste.nameOffset());
-            final short v = gvs.getVersion(i);
-            final int versionNameOffset = gvrs.getVersionNameOffset(v);
             final String sectionTableIndex = (ste.sectionTableIndex() == 0)
                     ? "UND"
                     : ((ste.sectionTableIndex() < 0) ? "ABS" : String.valueOf(ste.sectionTableIndex()));
@@ -1158,6 +1159,8 @@ public final class Main {
                     ste.visibility().getName(),
                     sectionTableIndex);
 
+            final short v = (i < gvs.getVersionsLength()) ? gvs.getVersion(i) : -1;
+            final int versionNameOffset = gvrs.getVersionNameOffset(v);
             String prefix = symbolName;
             String suffix = "";
             if (versionNameOffset != -1) {

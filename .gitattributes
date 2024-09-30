@@ -5,3 +5,6 @@
 *.elf binary
 
 *.test text eol=lf
+
+*.svg text
+*.png binary
