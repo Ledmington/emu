@@ -39,6 +39,12 @@ public interface SymbolTable extends Section {
      */
     SymbolTableEntry getSymbolTableEntry(final int idx);
 
+    /**
+     * Looks for a symbol with the given value and returns it.
+     *
+     * @param value The value to look for.
+     * @return The symbol with the given value, if it is present. Otherwise, a NoSuchElementException is thrown.
+     */
     default SymbolTableEntry getSymbolWithValue(final long value) {
         final int n = getSymbolTableLength();
         for (int i = 0; i < n; i++) {

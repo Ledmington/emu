@@ -48,14 +48,17 @@ import com.ledmington.elf.section.SectionHeaderFlags;
 public final class ELFView extends BorderPane {
 
     private record Range(int offset, int length) {
+
+        private static final int MINIMUM_ALLOWED_LENGTH = 1;
+
         public Range {
-            if (length < 1) {
+            if (length < MINIMUM_ALLOWED_LENGTH) {
                 throw new IllegalArgumentException(String.format("Invalid range [%d; %d+%d]", offset, offset, length));
             }
         }
 
         public Range(final int singleByte) {
-            this(singleByte, 1);
+            this(singleByte, MINIMUM_ALLOWED_LENGTH);
         }
     }
 

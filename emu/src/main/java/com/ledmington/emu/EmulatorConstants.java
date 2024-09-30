@@ -46,14 +46,19 @@ public final class EmulatorConstants {
     }
 
     /**
-     * Returns the current memory initializer.
+     * Returns the default memory initializer.
      *
-     * @return The current memory initializer.
+     * @return The default memory initializer.
      */
     public static MemoryInitializer getMemoryInitializer() {
         return memoryInitializer.get();
     }
 
+    /**
+     * Changes the default stack size.
+     *
+     * @param newStackSize The new default stack size.
+     */
     public static void setStackSize(final long newStackSize) {
         final long minStackSize = 1L;
         if (newStackSize < minStackSize) {
@@ -62,14 +67,29 @@ public final class EmulatorConstants {
         stackSize = newStackSize;
     }
 
+    /**
+     * Returns the default stack size.
+     *
+     * @return The default stack size.
+     */
     public static long getStackSize() {
         return stackSize;
     }
 
+    /**
+     * Changes the default base address.
+     *
+     * @param bAddr The new default base address.
+     */
     public static void setBaseAddress(final long bAddr) {
         baseAddress = bAddr;
     }
 
+    /**
+     * Returns the default base address.
+     *
+     * @return The default base address.
+     */
     public static long getbaseAddress() {
         return baseAddress;
     }
