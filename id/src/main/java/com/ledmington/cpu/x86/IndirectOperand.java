@@ -175,7 +175,8 @@ public final class IndirectOperand implements Operand {
                 + ";reg2="
                 + reg2.toString() + ";constant="
                 + constant + ";displacement="
-                + displacement.toString() + ";displacementType=" + displacementType + ";ptrSize=" + ptrSize
+                + (displacement == null ? "null" : displacement.toString()) + ";displacementType=" + displacementType
+                + ";ptrSize=" + ptrSize
                 + ")";
     }
 
