@@ -18,8 +18,6 @@
 package com.ledmington.emu;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,14 +38,11 @@ import javafx.stage.Stage;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register64;
-import com.ledmington.elf.ELFReader;
+import com.ledmington.cpu.x86.exc.ReservedOpcode;
+import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.mem.MemoryController;
 
 public final class EmulatorView extends Stage {
-
-    private static final int MAX_INSTRUCTIONS = 32;
-    private static final int MAX_MEMORY_LINES = 32;
-    private static final int MEMORY_BYTES_PER_LINE = 16;
 
     private X86RegisterFile regFile;
     private MemoryController mem;
@@ -166,17 +161,17 @@ public final class EmulatorView extends Stage {
         final InstructionFetcher instructionFetcher = new InstructionFetcher(this.mem, this.regFile);
         this.decoder = new InstructionDecoderV1(instructionFetcher);
         final String[] commandLineArguments = new String[0];
-        try {
-            ELFLoader.load(
-                    ELFReader.read(Files.readAllBytes(file.toPath())),
-                    mem,
-                    commandLineArguments,
-                    EmulatorConstants.getbaseAddress(),
-                    EmulatorConstants.getStackSize(),
-                    this.regFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        // try {
+        //     ELFLoader.load(
+        //             ELFReader.read(Files.readAllBytes(file.toPath())),
+        //             mem,
+        //             commandLineArguments,
+        //             EmulatorConstants.getbaseAddress(),
+        //             EmulatorConstants.getStackSize(),
+        //             this.regFile);
+        // } catch (IOException e) {
+        //     throw new RuntimeException(e);
+        // }
         updateRegisters();
         updateCode();
         updateMemory();
@@ -189,13 +184,20 @@ public final class EmulatorView extends Stage {
     }
 
     private void updateCode() {
-        final long rip = this.regFile.get(Register64.RIP);
         final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < MAX_INSTRUCTIONS; i++) {
+        final int n = AppConstants.getMaxCodeInstructions();
+        for (int i = 0; i < n; i++) {
+            final long rip = this.regFile.get(Register64.RIP);
+            String inst;
+            try {
+                inst = this.decoder.decode().toIntelSyntax();
+            } catch (final UnknownOpcode | ReservedOpcode | IllegalArgumentException e) {
+                inst = String.format(".byte 0x%02x", this.mem.readCode(rip));
+            }
             sb.append(" 0x")
                     .append(String.format("%016x", rip))
                     .append(" : ")
-                    .append(this.decoder.decode().toString())
+                    .append(inst)
                     .append('\n');
         }
         this.codeArea.setText(sb.toString());
@@ -204,9 +206,11 @@ public final class EmulatorView extends Stage {
     private void updateMemory() {
         final long baseAddress = 0L;
         final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < MAX_MEMORY_LINES * MEMORY_BYTES_PER_LINE; i++) {
-            final long address = baseAddress + i * MEMORY_BYTES_PER_LINE;
-            if (i % MEMORY_BYTES_PER_LINE == 0) {
+        final int n = AppConstants.getMaxMemoryLines();
+        final int k = AppConstants.getMemoryBytesPerLine();
+        for (int i = 0; i < n * k; i++) {
+            final long address = baseAddress + i * k;
+            if (i % k == 0) {
                 sb.append(" 0x").append(String.format("%016x", address)).append(" : ");
             }
             if (this.mem.isInitialized(address)) {
@@ -214,7 +218,7 @@ public final class EmulatorView extends Stage {
             } else {
                 sb.append(" xx ");
             }
-            if (i % MEMORY_BYTES_PER_LINE == MEMORY_BYTES_PER_LINE - 1) {
+            if (i % k == k - 1) {
                 sb.append('\n');
             }
         }

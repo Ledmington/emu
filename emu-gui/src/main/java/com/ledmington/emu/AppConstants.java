@@ -87,4 +87,43 @@ public final class AppConstants {
         }
         DEFAULT_FONT_SIZE = newFontSize;
     }
+
+    private static int MAX_CODE_INSTRUCTIONS = 50;
+
+    public static int getMaxCodeInstructions() {
+        return MAX_CODE_INSTRUCTIONS;
+    }
+
+    public static void setMaxCodeInstructions(final int n) {
+        if (n < 1) {
+            throw new IllegalArgumentException(String.format("Invalid max code instructions %,d", n));
+        }
+        MAX_CODE_INSTRUCTIONS = n;
+    }
+
+    private static int MAX_MEMORY_LINES = 50;
+
+    public static int getMaxMemoryLines() {
+        return MAX_MEMORY_LINES;
+    }
+
+    public static void setMaxMemoryLines(final int n) {
+        if (n < 1) {
+            throw new IllegalArgumentException(String.format("Invalid max memory lines %,d", n));
+        }
+        MAX_MEMORY_LINES = n;
+    }
+
+    private static int MEMORY_BYTES_PER_LINE = 16;
+
+    public static int getMemoryBytesPerLine() {
+        return MEMORY_BYTES_PER_LINE;
+    }
+
+    public static void setMemoryBytesPerLine(final int n) {
+        if (n < 1) {
+            throw new IllegalArgumentException(String.format("Invalid memory bytes per line %,d", n));
+        }
+        MEMORY_BYTES_PER_LINE = n;
+    }
 }

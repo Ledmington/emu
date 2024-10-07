@@ -27,6 +27,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
@@ -37,28 +38,46 @@ public final class SettingsWindow extends Stage {
 
     private final ComboBox<Label> fonts;
     private final Spinner<Integer> fontSize;
+    private final Spinner<Integer> maxCodeInstructions;
+    private final Spinner<Integer> maxMemoryLines;
+    private final Spinner<Integer> memoryBytesPerLine;
 
     public SettingsWindow() {
         final BorderPane bPane = new BorderPane();
         final Scene scene = new Scene(bPane);
 
-        final FlowPane mainPane = new FlowPane();
+        final GridPane mainPane = new GridPane();
         {
-            mainPane.getChildren().add(new Label("Font"));
-            fonts = new ComboBox<>();
+            mainPane.add(new Label("Font"), 0, 0);
+            this.fonts = new ComboBox<>();
             for (final String fontFamily : Font.getFamilies()) {
                 final Label lbl = getFontLabel(fontFamily);
-                fonts.getItems().add(lbl);
-                if (fonts.getValue() == null) {
-                    fonts.setValue(lbl);
+                this.fonts.getItems().add(lbl);
+                if (this.fonts.getValue() == null) {
+                    this.fonts.setValue(lbl);
                 }
             }
-            mainPane.getChildren().add(fonts);
+            mainPane.add(this.fonts, 1, 0);
         }
         {
-            mainPane.getChildren().add(new Label("Font Size"));
-            fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
-            mainPane.getChildren().add(fontSize);
+            mainPane.add(new Label("Font Size"), 0, 1);
+            this.fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
+            mainPane.add(this.fontSize, 1, 1);
+        }
+        {
+            mainPane.add(new Label("Max emulator instructions"), 0, 2);
+            this.maxCodeInstructions = new Spinner<>(1, 1000, AppConstants.getMaxCodeInstructions());
+            mainPane.add(this.maxCodeInstructions, 1, 2);
+        }
+        {
+            mainPane.add(new Label("Max emulator memory lines"), 0, 3);
+            this.maxMemoryLines = new Spinner<>(1, 1000, AppConstants.getMaxMemoryLines());
+            mainPane.add(this.maxMemoryLines, 1, 3);
+        }
+        {
+            mainPane.add(new Label("Memory bytes per line"), 0, 4);
+            this.memoryBytesPerLine = new Spinner<>(1, 1000, AppConstants.getMemoryBytesPerLine());
+            mainPane.add(this.memoryBytesPerLine, 1, 4);
         }
         mainPane.setPadding(new Insets(5));
         bPane.setCenter(mainPane);
@@ -68,8 +87,11 @@ public final class SettingsWindow extends Stage {
             final Button ok = new Button("OK");
             ok.setBackground(Background.fill(Color.LIGHTBLUE));
             ok.setOnMouseClicked(e -> {
-                AppConstants.setDefaultMonospaceFont(fonts.getValue().getText());
-                AppConstants.setDefaultFontSize(fontSize.getValue());
+                AppConstants.setDefaultMonospaceFont(this.fonts.getValue().getText());
+                AppConstants.setDefaultFontSize(this.fontSize.getValue());
+                AppConstants.setMaxCodeInstructions(this.maxCodeInstructions.getValue());
+                AppConstants.setMaxMemoryLines(this.maxMemoryLines.getValue());
+                AppConstants.setMemoryBytesPerLine(this.memoryBytesPerLine.getValue());
                 this.close();
             });
             bottomPane.getChildren().add(ok);
