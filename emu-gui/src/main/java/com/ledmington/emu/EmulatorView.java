@@ -18,6 +18,9 @@
 package com.ledmington.emu;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +35,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -40,6 +44,7 @@ import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.elf.ELFReader;
 import com.ledmington.mem.MemoryController;
 
 public final class EmulatorView extends Stage {
@@ -98,12 +103,14 @@ public final class EmulatorView extends Stage {
         final BorderPane codePane = new BorderPane();
         codePane.setTop(new Label("Code"));
         this.codeArea = new TextArea();
+        this.codeArea.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
         codePane.setCenter(this.codeArea);
         centerPane.setCenter(codePane);
 
         final BorderPane memoryPane = new BorderPane();
         memoryPane.setTop(new Label("Memory"));
         this.memoryArea = new TextArea();
+        this.memoryArea.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
         memoryPane.setCenter(this.memoryArea);
         centerPane.setRight(memoryPane);
 
@@ -111,14 +118,10 @@ public final class EmulatorView extends Stage {
         mainPane.setCenter(centerPane);
 
         final FlowPane bottomPane = new FlowPane();
-        final int maxSize = 20;
+        final int maxIconSize = 20;
         final Button step = new Button();
-        final ImageView imageStep = new ImageView(new Image(
-                Thread.currentThread().getContextClassLoader().getResourceAsStream("icons/step.png"),
-                maxSize,
-                maxSize,
-                true,
-                true));
+        final ImageView imageStep =
+                new ImageView(new Image(getResourceStream("icons/step.png"), maxIconSize, maxIconSize, true, true));
         imageStep.setPreserveRatio(true);
         imageStep.setSmooth(true);
         imageStep.setCache(true);
@@ -126,12 +129,8 @@ public final class EmulatorView extends Stage {
         step.setOnMouseClicked(e -> System.out.println("Clicked step"));
         step.setTooltip(new Tooltip("Step"));
         final Button run = new Button();
-        final ImageView imageRun = new ImageView(new Image(
-                Thread.currentThread().getContextClassLoader().getResourceAsStream("icons/run.png"),
-                maxSize,
-                maxSize,
-                true,
-                true));
+        final ImageView imageRun =
+                new ImageView(new Image(getResourceStream("icons/run.png"), maxIconSize, maxIconSize, true, true));
         imageRun.setPreserveRatio(true);
         imageRun.setSmooth(true);
         imageRun.setCache(true);
@@ -154,6 +153,10 @@ public final class EmulatorView extends Stage {
         this.show();
     }
 
+    private InputStream getResourceStream(final String name) {
+        return Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
+    }
+
     private void loadFile(final File file) {
         System.out.printf("Loading file '%s'\n", file.toString());
         this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
@@ -161,17 +164,17 @@ public final class EmulatorView extends Stage {
         final InstructionFetcher instructionFetcher = new InstructionFetcher(this.mem, this.regFile);
         this.decoder = new InstructionDecoderV1(instructionFetcher);
         final String[] commandLineArguments = new String[0];
-        // try {
-        //     ELFLoader.load(
-        //             ELFReader.read(Files.readAllBytes(file.toPath())),
-        //             mem,
-        //             commandLineArguments,
-        //             EmulatorConstants.getbaseAddress(),
-        //             EmulatorConstants.getStackSize(),
-        //             this.regFile);
-        // } catch (IOException e) {
-        //     throw new RuntimeException(e);
-        // }
+        try {
+            ELFLoader.load(
+                    ELFReader.read(Files.readAllBytes(file.toPath())),
+                    mem,
+                    commandLineArguments,
+                    EmulatorConstants.getbaseAddress(),
+                    EmulatorConstants.getStackSize(),
+                    this.regFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         updateRegisters();
         updateCode();
         updateMemory();
@@ -209,7 +212,7 @@ public final class EmulatorView extends Stage {
         final int n = AppConstants.getMaxMemoryLines();
         final int k = AppConstants.getMemoryBytesPerLine();
         for (int i = 0; i < n * k; i++) {
-            final long address = baseAddress + i * k;
+            final long address = baseAddress + (long) i * k;
             if (i % k == 0) {
                 sb.append(" 0x").append(String.format("%016x", address)).append(" : ");
             }
