@@ -200,6 +200,7 @@ public final class ELFLoader {
         final long totalCliBytesAligned =
                 (totalCliBytes % wordSize == 0) ? totalCliBytes : ((totalCliBytes & (wordSize - 1L)) + wordSize);
 
+        // TODO: implement this
         final long numAuxvEntries = 0L;
 
         final long numEnv = BitUtils.asLong(System.getenv().size());

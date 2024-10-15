@@ -32,7 +32,7 @@ public final class EmulatorConstants {
     private static long baseAddress = 0x8000000000000000L;
 
     /** The default stack size. */
-    private static long stackSize = 100_000_000L;
+    private static long stackSize = 8192L * 1024L;
 
     private EmulatorConstants() {}
 
