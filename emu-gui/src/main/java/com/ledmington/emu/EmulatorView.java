@@ -40,7 +40,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
@@ -49,6 +48,7 @@ import com.ledmington.mem.MemoryController;
 
 public final class EmulatorView extends Stage {
 
+    private X86Emulator cpu;
     private X86RegisterFile regFile;
     private MemoryController mem;
     private InstructionDecoder decoder;
@@ -126,7 +126,7 @@ public final class EmulatorView extends Stage {
         imageStep.setSmooth(true);
         imageStep.setCache(true);
         step.setGraphic(imageStep);
-        step.setOnMouseClicked(e -> System.out.println("Clicked step"));
+        step.setOnMouseClicked(e -> this.cpu.executeOne());
         step.setTooltip(new Tooltip("Step"));
         final Button run = new Button();
         final ImageView imageRun =
@@ -135,7 +135,7 @@ public final class EmulatorView extends Stage {
         imageRun.setSmooth(true);
         imageRun.setCache(true);
         run.setGraphic(imageRun);
-        run.setOnMouseClicked(e -> System.out.println("Clicked run"));
+        run.setOnMouseClicked(e -> this.cpu.execute());
         run.setTooltip(new Tooltip("Run"));
         bottomPane.setHgap(4);
         bottomPane.setPadding(new Insets(5));
@@ -161,12 +161,15 @@ public final class EmulatorView extends Stage {
         System.out.printf("Loading file '%s'\n", file.toString());
         this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
         this.regFile = new X86RegisterFile();
-        final InstructionFetcher instructionFetcher = new InstructionFetcher(this.mem, this.regFile);
-        this.decoder = new InstructionDecoderV1(instructionFetcher);
+        this.cpu = new X86Emulator(regFile, mem);
+
+        // TODO: implement this
         final String[] commandLineArguments = new String[0];
+
         try {
             ELFLoader.load(
                     ELFReader.read(Files.readAllBytes(file.toPath())),
+                    cpu,
                     mem,
                     commandLineArguments,
                     EmulatorConstants.getbaseAddress(),
@@ -175,6 +178,7 @@ public final class EmulatorView extends Stage {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         updateRegisters();
         updateCode();
         updateMemory();

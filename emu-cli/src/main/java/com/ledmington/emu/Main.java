@@ -72,9 +72,11 @@ public final class Main {
 
         final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
         final X86RegisterFile rf = new X86RegisterFile();
+        final X86Emulator cpu = new X86Emulator(rf, mem);
 
         ELFLoader.load(
                 elf,
+                cpu,
                 mem,
                 commandLineArguments,
                 EmulatorConstants.getbaseAddress(),
@@ -82,7 +84,8 @@ public final class Main {
                 rf);
 
         logger.info(" ### Execution start ### ");
-        X86Emulator.run(mem, rf, elf.getFileHeader().getEntryPointVirtualAddress());
+        cpu.setEntryPoint(elf.getFileHeader().getEntryPointVirtualAddress());
+        cpu.execute();
         logger.info(" ### Execution end ### ");
         ELFLoader.unload(elf);
     }

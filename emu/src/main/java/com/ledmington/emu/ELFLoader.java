@@ -64,6 +64,7 @@ public final class ELFLoader {
      */
     public static void load(
             final ELF elf,
+            final X86Emulator cpu,
             final MemoryController mem,
             final String[] commandLineArguments,
             final long baseAddress,
@@ -85,8 +86,7 @@ public final class ELFLoader {
         if (elf.getSectionByName(".init_array").isPresent()) {
             runInitArray(
                     (ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(),
-                    mem,
-                    rf,
+                    cpu,
                     baseAddress,
                     (SymbolTableSection) elf.getSectionByName(".symtab").orElseThrow(),
                     (StringTableSection) elf.getSectionByName(".strtab").orElseThrow());
@@ -123,8 +123,7 @@ public final class ELFLoader {
 
     private static void runInitArray(
             final ConstructorsSection initArray,
-            final MemoryController mem,
-            final X86RegisterFile rf,
+            final X86Emulator cpu,
             final long entryPointVirtualAddress,
             final SymbolTableSection symtab,
             final StringTableSection strtab) {
@@ -134,7 +133,8 @@ public final class ELFLoader {
             final String ctorName =
                     strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
             logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
-            X86Emulator.run(mem, rf, entryPointVirtualAddress + c);
+            cpu.setEntryPoint(entryPointVirtualAddress + c);
+            cpu.execute();
         }
     }
 
