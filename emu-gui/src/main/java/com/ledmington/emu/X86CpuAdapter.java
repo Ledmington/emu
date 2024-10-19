@@ -24,12 +24,12 @@ import java.util.Queue;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.mem.MemoryController;
 
-public final class X86EmulatorAdapter implements X86Emulator {
+public final class X86CpuAdapter implements X86Emulator {
 
 	private final X86Cpu cpu;
 	private final Queue<Instruction> instructions = new ArrayDeque<>();
 
-	public X86EmulatorAdapter(final X86RegisterFile regFile, final MemoryController mem) {
+	public X86CpuAdapter(final X86RegisterFile regFile, final MemoryController mem) {
 		this.cpu = new X86Cpu(Objects.requireNonNull(regFile), Objects.requireNonNull(mem));
 	}
 
@@ -50,6 +50,17 @@ public final class X86EmulatorAdapter implements X86Emulator {
 
 	@Override
 	public void executeOne(final Instruction inst) {
+		// each instruction gets added to a queue
 		instructions.add(inst);
+	}
+
+	public void doExecuteOne() {
+		this.cpu.executeOne(this.instructions.remove());
+	}
+
+	public void doExecute() {
+		while (!this.instructions.isEmpty()) {
+			doExecuteOne();
+		}
 	}
 }

@@ -49,7 +49,7 @@ import com.ledmington.mem.MemoryController;
 
 public final class EmulatorView extends Stage {
 
-	private X86Emulator cpu;
+	private X86CpuAdapter cpu;
 	private X86RegisterFile regFile;
 	private MemoryController mem;
 	private InstructionDecoder decoder;
@@ -127,7 +127,7 @@ public final class EmulatorView extends Stage {
 		imageStep.setSmooth(true);
 		imageStep.setCache(true);
 		step.setGraphic(imageStep);
-		step.setOnMouseClicked(e -> this.cpu.executeOne());
+		step.setOnMouseClicked(e -> this.cpu.doExecuteOne());
 		step.setTooltip(new Tooltip("Step"));
 		final Button run = new Button();
 		final ImageView imageRun =
@@ -136,7 +136,7 @@ public final class EmulatorView extends Stage {
 		imageRun.setSmooth(true);
 		imageRun.setCache(true);
 		run.setGraphic(imageRun);
-		run.setOnMouseClicked(e -> this.cpu.execute());
+		run.setOnMouseClicked(e -> this.cpu.doExecute());
 		run.setTooltip(new Tooltip("Run"));
 		bottomPane.setHgap(4);
 		bottomPane.setPadding(new Insets(5));
@@ -162,7 +162,7 @@ public final class EmulatorView extends Stage {
 		System.out.printf("Loading file '%s'\n", file.toString());
 		this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
 		this.regFile = new X86RegisterFile();
-		this.cpu = new X86EmulatorAdapter(regFile, mem);
+		this.cpu = new X86CpuAdapter(regFile, mem);
 		this.decoder = new InstructionDecoderV1(new InstructionFetcher(mem, regFile));
 
 		// TODO: implement this
