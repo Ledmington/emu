@@ -22,6 +22,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.PHTEntry;
@@ -60,7 +63,6 @@ public final class ELFLoader {
 	 * @param commandLineArguments The arguments to pass to the program.
 	 * @param baseAddress The address where to start loading the file.
 	 * @param stackSize The size in bytes of the stack.
-	 * @param rf Register file of the CPU.
 	 */
 	public static void load(
 			final ELF elf,
@@ -68,14 +70,16 @@ public final class ELFLoader {
 			final MemoryController mem,
 			final String[] commandLineArguments,
 			final long baseAddress,
-			final long stackSize,
-			final X86RegisterFile rf) {
+			final long stackSize) {
 		loadSegments(elf, mem, baseAddress);
 		loadSections(elf, mem, baseAddress);
 		final long highestAddress = setupStack(elf, stackSize, mem);
 
-		// we make RSP point at the last 8 bytes of allocated memory
-		rf.set(Register64.RSP, highestAddress + stackSize - 8L);
+		// We make RSP point at the last 8 bytes of allocated memory
+		final long stackPointer = highestAddress + stackSize - 8L;
+
+		// This is a fake instruction
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackPointer)));
 
 		loadCommandLineArgumentsAndEnvironmentVariables(
 				mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);

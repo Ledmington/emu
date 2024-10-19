@@ -31,7 +31,7 @@ public final class MemoryController implements Memory {
 	private final IntervalArray canWrite = new IntervalArray();
 	private final IntervalArray canExecute = new IntervalArray();
 
-	// TODO: this does seem like a poor design choice
+	// TODO: this seems like a poor design choice
 	private final boolean breakOnWrongPermissions;
 
 	/**

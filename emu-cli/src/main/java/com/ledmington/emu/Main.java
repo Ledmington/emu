@@ -72,7 +72,7 @@ public final class Main {
 
 		final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
 		final X86RegisterFile rf = new X86RegisterFile();
-		final X86Emulator cpu = new X86Emulator(rf, mem);
+		final X86Emulator cpu = new X86Cpu(rf, mem);
 
 		ELFLoader.load(
 				elf,
@@ -80,8 +80,7 @@ public final class Main {
 				mem,
 				commandLineArguments,
 				EmulatorConstants.getbaseAddress(),
-				EmulatorConstants.getStackSize(),
-				rf);
+				EmulatorConstants.getStackSize());
 
 		logger.info(" ### Execution start ### ");
 		cpu.setEntryPoint(elf.getFileHeader().getEntryPointVirtualAddress());

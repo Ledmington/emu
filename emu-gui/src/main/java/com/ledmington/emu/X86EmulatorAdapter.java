@@ -17,26 +17,39 @@
  */
 package com.ledmington.emu;
 
+import java.util.ArrayDeque;
+import java.util.Objects;
+import java.util.Queue;
+
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.Opcode;
+import com.ledmington.mem.MemoryController;
 
-public interface X86Emulator {
+public final class X86EmulatorAdapter implements X86Emulator {
 
-	void setEntryPoint(final long address);
+	private final X86Cpu cpu;
+	private final Queue<Instruction> instructions = new ArrayDeque<>();
 
-	/**
-	 * Automatically fetches instruction from the emulated memory and executes them. Continues indefinitely until it
-	 * encounters a {@link Opcode#HLT} instruction.
-	 */
-	void execute();
+	public X86EmulatorAdapter(final X86RegisterFile regFile, final MemoryController mem) {
+		this.cpu = new X86Cpu(Objects.requireNonNull(regFile), Objects.requireNonNull(mem));
+	}
 
-	/** Fetches next instruction and executes it. */
-	void executeOne();
+	@Override
+	public void setEntryPoint(final long address) {
+		cpu.setEntryPoint(address);
+	}
 
-	/**
-	 * Executes the given instruction without modifying the instruction pointer.
-	 *
-	 * @param inst The instruction to be executed.
-	 */
-	void executeOne(final Instruction inst);
+	@Override
+	public void execute() {
+		throw new Error("Not implemented");
+	}
+
+	@Override
+	public void executeOne() {
+		throw new Error("Not implemented");
+	}
+
+	@Override
+	public void executeOne(final Instruction inst) {
+		instructions.add(inst);
+	}
 }

@@ -18,7 +18,9 @@
 package com.ledmington.emu;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +44,7 @@ import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.elf.ELFReader;
 import com.ledmington.mem.MemoryController;
 
 public final class EmulatorView extends Stage {
@@ -159,24 +162,23 @@ public final class EmulatorView extends Stage {
 		System.out.printf("Loading file '%s'\n", file.toString());
 		this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
 		this.regFile = new X86RegisterFile();
-		this.cpu = new X86Emulator(regFile, mem);
+		this.cpu = new X86EmulatorAdapter(regFile, mem);
 		this.decoder = new InstructionDecoderV1(new InstructionFetcher(mem, regFile));
 
 		// TODO: implement this
 		final String[] commandLineArguments = new String[0];
 
-		/*try {
+		try {
 			ELFLoader.load(
 					ELFReader.read(Files.readAllBytes(file.toPath())),
 					cpu,
 					mem,
 					commandLineArguments,
 					EmulatorConstants.getbaseAddress(),
-					EmulatorConstants.getStackSize(),
-					this.regFile);
+					EmulatorConstants.getStackSize());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		}*/
+		}
 
 		updateRegisters();
 		updateCode();
