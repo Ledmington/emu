@@ -31,158 +31,158 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
  */
 public final class GnuVersionRequirementEntry {
 
-    private final short version;
-    private final int fileOffset;
-    private final int auxOffset;
-    private final int nextOffset;
-    private final GnuVersionRequirementAuxiliaryEntry[] aux;
+	private final short version;
+	private final int fileOffset;
+	private final int auxOffset;
+	private final int nextOffset;
+	private final GnuVersionRequirementAuxiliaryEntry[] aux;
 
-    /**
-     * Creates a new Verneed class with the given data.
-     *
-     * @param b The ReadOnlyByteBuffer to read data from.
-     */
-    public GnuVersionRequirementEntry(final ReadOnlyByteBuffer b) {
-        final long start = b.getPosition();
+	/**
+	 * Creates a new Verneed class with the given data.
+	 *
+	 * @param b The ReadOnlyByteBuffer to read data from.
+	 */
+	public GnuVersionRequirementEntry(final ReadOnlyByteBuffer b) {
+		final long start = b.getPosition();
 
-        this.version = b.read2();
-        final short count = b.read2();
-        this.fileOffset = b.read4();
-        this.auxOffset = b.read4();
-        this.nextOffset = b.read4();
+		this.version = b.read2();
+		final short count = b.read2();
+		this.fileOffset = b.read4();
+		this.auxOffset = b.read4();
+		this.nextOffset = b.read4();
 
-        if (version == 0) {
-            throw new IllegalArgumentException("Invalid Vernaux version: expected >=1 but was 0");
-        }
+		if (version == 0) {
+			throw new IllegalArgumentException("Invalid Vernaux version: expected >=1 but was 0");
+		}
 
-        final short minimumExpectedAuxEntries = 1;
-        if (count < minimumExpectedAuxEntries) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid number of Vernaux entries: expected at least 1 but was %,d (0x%04x)", count, count));
-        }
+		final short minimumExpectedAuxEntries = 1;
+		if (count < minimumExpectedAuxEntries) {
+			throw new IllegalArgumentException(String.format(
+					"Invalid number of Vernaux entries: expected at least 1 but was %,d (0x%04x)", count, count));
+		}
 
-        this.aux = new GnuVersionRequirementAuxiliaryEntry[count];
+		this.aux = new GnuVersionRequirementAuxiliaryEntry[count];
 
-        final long oldAlignment = b.getAlignment();
-        b.setAlignment(1L);
-        b.setPosition(start + BitUtils.asLong(auxOffset));
+		final long oldAlignment = b.getAlignment();
+		b.setAlignment(1L);
+		b.setPosition(start + BitUtils.asLong(auxOffset));
 
-        for (int i = 0; i < count; i++) {
-            final long entryStart = b.getPosition();
-            final int vna_hash = b.read4();
-            final short vna_flags = b.read2();
-            final short vna_other = b.read2();
-            final int vna_name = b.read4();
-            final int vna_next = b.read4();
-            this.aux[i] = new GnuVersionRequirementAuxiliaryEntry(vna_hash, vna_flags, vna_other, vna_name, vna_next);
+		for (int i = 0; i < count; i++) {
+			final long entryStart = b.getPosition();
+			final int vna_hash = b.read4();
+			final short vna_flags = b.read2();
+			final short vna_other = b.read2();
+			final int vna_name = b.read4();
+			final int vna_next = b.read4();
+			this.aux[i] = new GnuVersionRequirementAuxiliaryEntry(vna_hash, vna_flags, vna_other, vna_name, vna_next);
 
-            b.setPosition(entryStart + BitUtils.asLong(vna_next));
-        }
-        b.setAlignment(oldAlignment);
-    }
+			b.setPosition(entryStart + BitUtils.asLong(vna_next));
+		}
+		b.setAlignment(oldAlignment);
+	}
 
-    /**
-     * Version of structure. This value is currently set to 1, and will be reset if the versioning implementation is
-     * incompatibly altered.
-     *
-     * @return The version of this structure.
-     */
-    public short getVersion() {
-        return version;
-    }
+	/**
+	 * Version of structure. This value is currently set to 1, and will be reset if the versioning implementation is
+	 * incompatibly altered.
+	 *
+	 * @return The version of this structure.
+	 */
+	public short getVersion() {
+		return version;
+	}
 
-    /**
-     * Returns the offset to the file name string in the section header, in bytes.
-     *
-     * @return The offset to the file name string in the section header, in bytes.
-     */
-    public int getFileOffset() {
-        return fileOffset;
-    }
+	/**
+	 * Returns the offset to the file name string in the section header, in bytes.
+	 *
+	 * @return The offset to the file name string in the section header, in bytes.
+	 */
+	public int getFileOffset() {
+		return fileOffset;
+	}
 
-    /**
-     * Returns the offset to a corresponding entry in the vernaux array, in bytes.
-     *
-     * @return The offset to a corresponding entry in the vernaux array, in bytes.
-     */
-    public int getAuxOffset() {
-        return auxOffset;
-    }
+	/**
+	 * Returns the offset to a corresponding entry in the vernaux array, in bytes.
+	 *
+	 * @return The offset to a corresponding entry in the vernaux array, in bytes.
+	 */
+	public int getAuxOffset() {
+		return auxOffset;
+	}
 
-    /**
-     * Returns the offset to the next verneed entry, in bytes.
-     *
-     * @return The offset to the next verneed entry, in bytes.
-     */
-    public int getNextOffset() {
-        return nextOffset;
-    }
+	/**
+	 * Returns the offset to the next verneed entry, in bytes.
+	 *
+	 * @return The offset to the next verneed entry, in bytes.
+	 */
+	public int getNextOffset() {
+		return nextOffset;
+	}
 
-    /**
-     * Returns the number of associated verneed array entries.
-     *
-     * @return The number of associated verneed array entries.
-     */
-    public short getCount() {
-        return BitUtils.asShort(aux.length);
-    }
+	/**
+	 * Returns the number of associated verneed array entries.
+	 *
+	 * @return The number of associated verneed array entries.
+	 */
+	public short getCount() {
+		return BitUtils.asShort(aux.length);
+	}
 
-    /**
-     * Returns the number of associated verneed array entries.
-     *
-     * @return The number of associated verneed array entries.
-     */
-    public int getAuxiliaryLength() {
-        return aux.length;
-    }
+	/**
+	 * Returns the number of associated verneed array entries.
+	 *
+	 * @return The number of associated verneed array entries.
+	 */
+	public int getAuxiliaryLength() {
+		return aux.length;
+	}
 
-    /**
-     * Returns the i-th aux entry.
-     *
-     * @param idx The index of the entry to return.
-     * @return The i-th aux entry.
-     */
-    public GnuVersionRequirementAuxiliaryEntry getAuxiliary(final int idx) {
-        return aux[idx];
-    }
+	/**
+	 * Returns the i-th aux entry.
+	 *
+	 * @param idx The index of the entry to return.
+	 * @return The i-th aux entry.
+	 */
+	public GnuVersionRequirementAuxiliaryEntry getAuxiliary(final int idx) {
+		return aux[idx];
+	}
 
-    @Override
-    public String toString() {
-        return "GnuVersionRequirementEntry(version=" + version + ";count="
-                + aux.length + ";fileOffset="
-                + fileOffset + ";auxOffset="
-                + auxOffset + ";nextOffset="
-                + nextOffset + ";aux="
-                + Arrays.toString(aux) + ')';
-    }
+	@Override
+	public String toString() {
+		return "GnuVersionRequirementEntry(version=" + version + ";count="
+				+ aux.length + ";fileOffset="
+				+ fileOffset + ";auxOffset="
+				+ auxOffset + ";nextOffset="
+				+ nextOffset + ";aux="
+				+ Arrays.toString(aux) + ')';
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + HashUtils.hash(version);
-        h = 31 * h + fileOffset;
-        h = 31 * h + auxOffset;
-        h = 31 * h + nextOffset;
-        h = 31 * h + Arrays.hashCode(aux);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + HashUtils.hash(version);
+		h = 31 * h + fileOffset;
+		h = 31 * h + auxOffset;
+		h = 31 * h + nextOffset;
+		h = 31 * h + Arrays.hashCode(aux);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final GnuVersionRequirementEntry gvre = (GnuVersionRequirementEntry) other;
-        return this.version == gvre.version
-                && this.fileOffset == gvre.fileOffset
-                && this.auxOffset == gvre.auxOffset
-                && this.nextOffset == gvre.nextOffset
-                && Arrays.equals(this.aux, gvre.aux);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final GnuVersionRequirementEntry gvre = (GnuVersionRequirementEntry) other;
+		return this.version == gvre.version
+				&& this.fileOffset == gvre.fileOffset
+				&& this.auxOffset == gvre.auxOffset
+				&& this.nextOffset == gvre.nextOffset
+				&& Arrays.equals(this.aux, gvre.aux);
+	}
 }

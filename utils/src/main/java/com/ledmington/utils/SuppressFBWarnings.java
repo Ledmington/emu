@@ -26,18 +26,18 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.CLASS)
 public @interface SuppressFBWarnings {
-    /**
-     * The set of SpotBugs warnings that are to be suppressed in annotated element. The value can be a bug category,
-     * kind or pattern.
-     *
-     * @return The set of SpotBugs warning to be suppressed.
-     */
-    String[] value() default {};
+	/**
+	 * The set of SpotBugs warnings that are to be suppressed in annotated element. The value can be a bug category,
+	 * kind or pattern.
+	 *
+	 * @return The set of SpotBugs warning to be suppressed.
+	 */
+	String[] value() default {};
 
-    /**
-     * Optional documentation of the reason why the warning is suppressed.
-     *
-     * @return The reason why the warning is suppressed.
-     */
-    String justification() default "";
+	/**
+	 * Optional documentation of the reason why the warning is suppressed.
+	 *
+	 * @return The reason why the warning is suppressed.
+	 */
+	String justification() default "";
 }

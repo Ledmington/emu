@@ -25,15 +25,15 @@ import java.io.Serial;
  */
 public final class MemoryException extends RuntimeException {
 
-    @Serial
-    private static final long serialVersionUID = -8908344966805555310L;
+	@Serial
+	private static final long serialVersionUID = -8908344966805555310L;
 
-    /**
-     * Creates a new MemoryException with the given message.
-     *
-     * @param message The message of the exception.
-     */
-    public MemoryException(final String message) {
-        super(message);
-    }
+	/**
+	 * Creates a new MemoryException with the given message.
+	 *
+	 * @param message The message of the exception.
+	 */
+	public MemoryException(final String message) {
+		super(message);
+	}
 }

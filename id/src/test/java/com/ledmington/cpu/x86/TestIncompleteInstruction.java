@@ -34,45 +34,45 @@ import com.ledmington.utils.BitUtils;
 
 final class TestIncompleteInstruction extends X86Test {
 
-    static Stream<Arguments> incompleteInstructions() {
-        final Set<String> validInstructions =
-                instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
-        return validInstructions.stream()
-                .flatMap(hexCode -> {
-                    final String[] splitted = hexCode.split(" ");
-                    if (splitted.length == 1) { // NOPMD
-                        return Stream.of();
-                    }
-                    // for each instruction, we generate all prefixes that do not represent other
-                    // valid instructions
-                    final List<String> ll = new ArrayList<>();
-                    for (int i = 0; i < splitted.length; i++) {
-                        ll.add(String.join(" ", Arrays.copyOfRange(splitted, 0, i + 1)));
-                    }
-                    return ll.stream();
-                })
-                .distinct()
-                // avoid testing valid instructions assuming they're wrong
-                .filter(s -> !validInstructions.contains(s))
-                .sorted()
-                .map(Arguments::of);
-    }
+	static Stream<Arguments> incompleteInstructions() {
+		final Set<String> validInstructions =
+				instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
+		return validInstructions.stream()
+				.flatMap(hexCode -> {
+					final String[] splitted = hexCode.split(" ");
+					if (splitted.length == 1) { // NOPMD
+						return Stream.of();
+					}
+					// for each instruction, we generate all prefixes that do not represent other
+					// valid instructions
+					final List<String> ll = new ArrayList<>();
+					for (int i = 0; i < splitted.length; i++) {
+						ll.add(String.join(" ", Arrays.copyOfRange(splitted, 0, i + 1)));
+					}
+					return ll.stream();
+				})
+				.distinct()
+				// avoid testing valid instructions assuming they're wrong
+				.filter(s -> !validInstructions.contains(s))
+				.sorted()
+				.map(Arguments::of);
+	}
 
-    @ParameterizedTest
-    @MethodSource("incompleteInstructions")
-    void incorrectDecoding(final String hexCode) {
-        final String[] parsed = hexCode.split(" ");
-        final byte[] code = new byte[parsed.length];
-        for (int i = 0; i < parsed.length; i++) {
-            code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
-        }
+	@ParameterizedTest
+	@MethodSource("incompleteInstructions")
+	void incorrectDecoding(final String hexCode) {
+		final String[] parsed = hexCode.split(" ");
+		final byte[] code = new byte[parsed.length];
+		for (int i = 0; i < parsed.length; i++) {
+			code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
+		}
 
-        final InstructionDecoder id = new InstructionDecoderV1(code);
+		final InstructionDecoder id = new InstructionDecoderV1(code);
 
-        // Here we expect an ArrayIndexOutOfBoundsException to be thrown because,
-        // like CPUs which break when requesting a new byte and not finding it,
-        // the InstructionDecoder will ask for more bytes than are available and
-        // the ReadOnlyByteBufferV1 will throw this exception.
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> id.decodeAll(code.length));
-    }
+		// Here we expect an ArrayIndexOutOfBoundsException to be thrown because,
+		// like CPUs which break when requesting a new byte and not finding it,
+		// the InstructionDecoder will ask for more bytes than are available and
+		// the ReadOnlyByteBufferV1 will throw this exception.
+		assertThrows(ArrayIndexOutOfBoundsException.class, () -> id.decodeAll(code.length));
+	}
 }

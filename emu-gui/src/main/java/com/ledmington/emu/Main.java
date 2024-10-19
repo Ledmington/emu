@@ -27,57 +27,57 @@ import com.ledmington.utils.MiniLogger;
 
 public final class Main extends Application {
 
-    private static final PrintWriter out = System.console() == null
-            ? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
-            : System.console().writer();
+	private static final PrintWriter out = System.console() == null
+			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
+			: System.console().writer();
 
-    @Override
-    public void start(final Stage stage) {
-        new Emu(stage);
-    }
+	@Override
+	public void start(final Stage stage) {
+		new Emu(stage);
+	}
 
-    public static void main(final String[] args) {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
+	public static void main(final String[] args) {
+		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
-        final String shortHelpFlag = "-h";
-        final String longHelpFlag = "--help";
-        final String shortQuietFlag = "-q";
-        final String longQuietFlag = "--quiet";
-        final String verboseFlag = "-v";
-        final String veryVerboseFlag = "-vv";
+		final String shortHelpFlag = "-h";
+		final String longHelpFlag = "--help";
+		final String shortQuietFlag = "-q";
+		final String longQuietFlag = "--quiet";
+		final String verboseFlag = "-v";
+		final String veryVerboseFlag = "-vv";
 
-        for (final String arg : args) {
-            switch (arg) {
-                case shortHelpFlag, longHelpFlag -> {
-                    out.print(String.join(
-                            "\n",
-                            "",
-                            " emu - CPU emulator GUI",
-                            "",
-                            " Usage: emu [OPTIONS]",
-                            "",
-                            " Command line options:",
-                            "",
-                            " -h, --help   Shows this help message and exits.",
-                            " -q, --quiet  Only errors are reported.",
-                            " -v           Errors, warnings and info messages are reported.",
-                            " -vv          All messages are reported.",
-                            ""));
-                    out.flush();
-                    System.exit(0);
-                }
-                case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-                case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
-                case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-                default -> {
-                    out.printf("Unknown flag '%s'\n", arg);
-                    out.flush();
-                    System.exit(-1);
-                }
-            }
-        }
+		for (final String arg : args) {
+			switch (arg) {
+				case shortHelpFlag, longHelpFlag -> {
+					out.print(String.join(
+							"\n",
+							"",
+							" emu - CPU emulator GUI",
+							"",
+							" Usage: emu [OPTIONS]",
+							"",
+							" Command line options:",
+							"",
+							" -h, --help   Shows this help message and exits.",
+							" -q, --quiet  Only errors are reported.",
+							" -v           Errors, warnings and info messages are reported.",
+							" -vv          All messages are reported.",
+							""));
+					out.flush();
+					System.exit(0);
+				}
+				case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+				case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+				case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+				default -> {
+					out.printf("Unknown flag '%s'\n", arg);
+					out.flush();
+					System.exit(-1);
+				}
+			}
+		}
 
-        Application.launch(args);
-        out.flush();
-    }
+		Application.launch(args);
+		out.flush();
+	}
 }

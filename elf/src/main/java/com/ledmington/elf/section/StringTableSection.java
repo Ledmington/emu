@@ -25,93 +25,93 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** An ELF String table section. */
 public final class StringTableSection implements LoadableSection {
 
-    private final String name;
-    private final SectionHeader header;
-    private final char[] table;
+	private final String name;
+	private final SectionHeader header;
+	private final char[] table;
 
-    /**
-     * Creates a string table section object with the given data.
-     *
-     * @param name The name of this section.
-     * @param header The header of this section.
-     * @param b The ReadOnlyByteBuffer to read data from.
-     */
-    public StringTableSection(final String name, final SectionHeader header, final ReadOnlyByteBuffer b) {
-        this.name = Objects.requireNonNull(name);
-        this.header = Objects.requireNonNull(header);
+	/**
+	 * Creates a string table section object with the given data.
+	 *
+	 * @param name The name of this section.
+	 * @param header The header of this section.
+	 * @param b The ReadOnlyByteBuffer to read data from.
+	 */
+	public StringTableSection(final String name, final SectionHeader header, final ReadOnlyByteBuffer b) {
+		this.name = Objects.requireNonNull(name);
+		this.header = Objects.requireNonNull(header);
 
-        final int start = (int) header.getFileOffset();
-        final int size = (int) header.getSectionSize();
-        b.setPosition(start);
-        this.table = new char[size];
-        for (int i = 0; i < size; i++) {
-            table[i] = (char) b.read1();
-        }
-    }
+		final int start = (int) header.getFileOffset();
+		final int size = (int) header.getSectionSize();
+		b.setPosition(start);
+		this.table = new char[size];
+		for (int i = 0; i < size; i++) {
+			table[i] = (char) b.read1();
+		}
+	}
 
-    /**
-     * Returns the null-terminated string starting at the given index.
-     *
-     * @param stringStartIndex The index in the string table where the requested string starts.
-     * @return A non-null String object.
-     */
-    public String getString(final int stringStartIndex) {
-        final char nullChar = '\0';
-        final StringBuilder sb = new StringBuilder();
-        for (int i = stringStartIndex; i < table.length; i++) {
-            if (table[i] == nullChar) {
-                break;
-            }
-            sb.append(table[i]);
-        }
-        return sb.toString();
-    }
+	/**
+	 * Returns the null-terminated string starting at the given index.
+	 *
+	 * @param stringStartIndex The index in the string table where the requested string starts.
+	 * @return A non-null String object.
+	 */
+	public String getString(final int stringStartIndex) {
+		final char nullChar = '\0';
+		final StringBuilder sb = new StringBuilder();
+		for (int i = stringStartIndex; i < table.length; i++) {
+			if (table[i] == nullChar) {
+				break;
+			}
+			sb.append(table[i]);
+		}
+		return sb.toString();
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        final byte[] v = new byte[table.length];
-        for (int i = 0; i < table.length; i++) {
-            v[i] = (byte) table[i];
-        }
-        return v;
-    }
+	@Override
+	public byte[] getLoadableContent() {
+		final byte[] v = new byte[table.length];
+		for (int i = 0; i < table.length; i++) {
+			v[i] = (byte) table[i];
+		}
+		return v;
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + header.hashCode();
-        h = 31 * h + Arrays.hashCode(table);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + name.hashCode();
+		h = 31 * h + header.hashCode();
+		h = 31 * h + Arrays.hashCode(table);
+		return h;
+	}
 
-    @Override
-    public String toString() {
-        return "StringTableSection(name=" + name + ";header=" + header + ";table=" + new String(table) + ")";
-    }
+	@Override
+	public String toString() {
+		return "StringTableSection(name=" + name + ";header=" + header + ";table=" + new String(table) + ")";
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final StringTableSection sts = (StringTableSection) other;
-        return this.name.equals(sts.name) && this.header.equals(sts.header) && Arrays.equals(this.table, sts.table);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final StringTableSection sts = (StringTableSection) other;
+		return this.name.equals(sts.name) && this.header.equals(sts.header) && Arrays.equals(this.table, sts.table);
+	}
 }

@@ -43,25 +43,25 @@ import org.openjdk.jmh.infra.Blackhole;
 @Timeout(time = 5)
 public class Parsing {
 
-    static {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-    }
+	static {
+		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+	}
 
-    private byte[] fileBytes;
+	private byte[] fileBytes;
 
-    @Setup
-    public void setup() {
-        try {
-            fileBytes = Objects.requireNonNull(
-                            Thread.currentThread().getContextClassLoader().getResourceAsStream("hello.elf"))
-                    .readAllBytes();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	@Setup
+	public void setup() {
+		try {
+			fileBytes = Objects.requireNonNull(
+							Thread.currentThread().getContextClassLoader().getResourceAsStream("hello.elf"))
+					.readAllBytes();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    @Benchmark
-    public void parse(final Blackhole bh) {
-        bh.consume(ELFReader.read(fileBytes));
-    }
+	@Benchmark
+	public void parse(final Blackhole bh) {
+		bh.consume(ELFReader.read(fileBytes));
+	}
 }

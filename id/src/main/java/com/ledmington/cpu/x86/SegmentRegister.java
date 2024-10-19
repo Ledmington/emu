@@ -25,74 +25,74 @@ import java.util.Objects;
  */
 public final class SegmentRegister implements Register {
 
-    private final Register16 seg;
-    private final Register reg;
+	private final Register16 seg;
+	private final Register reg;
 
-    /**
-     * Creates a segment register with the given couple of registers.
-     *
-     * @param segment The 16-bit register.
-     * @param register The general-purpose register.
-     */
-    public SegmentRegister(final Register16 segment, final Register register) {
-        this.seg = Objects.requireNonNull(segment);
-        this.reg = Objects.requireNonNull(register);
-    }
+	/**
+	 * Creates a segment register with the given couple of registers.
+	 *
+	 * @param segment The 16-bit register.
+	 * @param register The general-purpose register.
+	 */
+	public SegmentRegister(final Register16 segment, final Register register) {
+		this.seg = Objects.requireNonNull(segment);
+		this.reg = Objects.requireNonNull(register);
+	}
 
-    /**
-     * Returns the segment.
-     *
-     * @return The segment.
-     */
-    public Register16 segment() {
-        return seg;
-    }
+	/**
+	 * Returns the segment.
+	 *
+	 * @return The segment.
+	 */
+	public Register16 segment() {
+		return seg;
+	}
 
-    /**
-     * Returns the general-purpose register.
-     *
-     * @return The general-purpose register.
-     */
-    public Register register() {
-        return reg;
-    }
+	/**
+	 * Returns the general-purpose register.
+	 *
+	 * @return The general-purpose register.
+	 */
+	public Register register() {
+		return reg;
+	}
 
-    @Override
-    public int bits() {
-        // TODO: check this
-        return reg.bits();
-    }
+	@Override
+	public int bits() {
+		// TODO: check this
+		return reg.bits();
+	}
 
-    @Override
-    public String toIntelSyntax() {
-        return reg.toIntelSyntax();
-    }
+	@Override
+	public String toIntelSyntax() {
+		return reg.toIntelSyntax();
+	}
 
-    @Override
-    public String toString() {
-        return "SegmentRegister(seg=" + seg + ";reg=" + reg + ')';
-    }
+	@Override
+	public String toString() {
+		return "SegmentRegister(seg=" + seg + ";reg=" + reg + ')';
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + seg.hashCode();
-        h = 31 * h + reg.hashCode();
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + seg.hashCode();
+		h = 31 * h + reg.hashCode();
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final SegmentRegister sr = (SegmentRegister) other;
-        return this.seg.equals(sr.seg) && this.reg.equals(sr.reg);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final SegmentRegister sr = (SegmentRegister) other;
+		return this.seg.equals(sr.seg) && this.reg.equals(sr.reg);
+	}
 }

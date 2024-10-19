@@ -22,50 +22,50 @@ import java.util.Objects;
 /** An ELF Null section. */
 public final class NullSection implements Section {
 
-    private final SectionHeader header;
+	private final SectionHeader header;
 
-    /**
-     * Creates a Null section with the given section header entry.
-     *
-     * @param sectionHeader The section header entry corresponding to this section.
-     */
-    public NullSection(final SectionHeader sectionHeader) {
-        this.header = Objects.requireNonNull(sectionHeader);
-    }
+	/**
+	 * Creates a Null section with the given section header entry.
+	 *
+	 * @param sectionHeader The section header entry corresponding to this section.
+	 */
+	public NullSection(final SectionHeader sectionHeader) {
+		this.header = Objects.requireNonNull(sectionHeader);
+	}
 
-    @Override
-    public String getName() {
-        return "";
-    }
+	@Override
+	public String getName() {
+		return "";
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public String toString() {
-        return "NullSection(header=" + header + ")";
-    }
+	@Override
+	public String toString() {
+		return "NullSection(header=" + header + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + header.hashCode();
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + header.hashCode();
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        return this.header.equals(((NullSection) other).header);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		return this.header.equals(((NullSection) other).header);
+	}
 }

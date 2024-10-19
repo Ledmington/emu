@@ -22,15 +22,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 final class TestDynamicTableEntryTag {
-    @Test
-    void allDynamicTableEntryTagsAreValid() {
-        for (final DynamicTableEntryTag dtet : DynamicTableEntryTag.values()) {
-            assertEquals(
-                    dtet,
-                    DynamicTableEntryTag.fromCode(dtet.getCode()),
-                    () -> String.format(
-                            "Expected DynamicTableEntryTag object %s with code 0x%016x to be valid but wasn't",
-                            dtet, dtet.getCode()));
-        }
-    }
+	@Test
+	void allDynamicTableEntryTagsAreValid() {
+		for (final DynamicTableEntryTag dtet : DynamicTableEntryTag.values()) {
+			assertEquals(
+					dtet,
+					DynamicTableEntryTag.fromCode(dtet.getCode()),
+					() -> String.format(
+							"Expected DynamicTableEntryTag object %s with code 0x%016x to be valid but wasn't",
+							dtet, dtet.getCode()));
+		}
+	}
 }

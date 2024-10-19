@@ -36,227 +36,227 @@ import com.ledmington.utils.MiniLogger;
 
 public final class Main {
 
-    private static final MiniLogger logger = MiniLogger.getLogger("emu");
-    private static final PrintWriter out = System.console() == null
-            ? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
-            : System.console().writer();
+	private static final MiniLogger logger = MiniLogger.getLogger("emu");
+	private static final PrintWriter out = System.console() == null
+			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
+			: System.console().writer();
 
-    private static ELF parseELF(final String filename) {
-        final File file = new File(filename);
-        if (!file.exists()) {
-            throw new IllegalArgumentException(String.format("File '%s' does not exist%n", filename));
-        }
+	private static ELF parseELF(final String filename) {
+		final File file = new File(filename);
+		if (!file.exists()) {
+			throw new IllegalArgumentException(String.format("File '%s' does not exist%n", filename));
+		}
 
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(Paths.get(filename));
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+		byte[] bytes;
+		try {
+			bytes = Files.readAllBytes(Paths.get(filename));
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 
-        logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
+		logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
 
-        return ELFReader.read(bytes);
-    }
+		return ELFReader.read(bytes);
+	}
 
-    private static void run(final String filename, final String... commandLineArguments) {
-        final ELF elf = parseELF(filename);
-        logger.info("ELF file parsed successfully");
+	private static void run(final String filename, final String... commandLineArguments) {
+		final ELF elf = parseELF(filename);
+		logger.info("ELF file parsed successfully");
 
-        if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
-                && elf.getFileHeader().getFileType() != FileType.ET_DYN) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-                    elf.getFileHeader().getFileType()));
-        }
+		if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
+				&& elf.getFileHeader().getFileType() != FileType.ET_DYN) {
+			throw new IllegalArgumentException(String.format(
+					"Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
+					elf.getFileHeader().getFileType()));
+		}
 
-        final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
-        final X86RegisterFile rf = new X86RegisterFile();
-        final X86Emulator cpu = new X86Emulator(rf, mem);
+		final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
+		final X86RegisterFile rf = new X86RegisterFile();
+		final X86Emulator cpu = new X86Emulator(rf, mem);
 
-        ELFLoader.load(
-                elf,
-                cpu,
-                mem,
-                commandLineArguments,
-                EmulatorConstants.getbaseAddress(),
-                EmulatorConstants.getStackSize(),
-                rf);
+		ELFLoader.load(
+				elf,
+				cpu,
+				mem,
+				commandLineArguments,
+				EmulatorConstants.getbaseAddress(),
+				EmulatorConstants.getStackSize(),
+				rf);
 
-        logger.info(" ### Execution start ### ");
-        cpu.setEntryPoint(elf.getFileHeader().getEntryPointVirtualAddress());
-        cpu.execute();
-        logger.info(" ### Execution end ### ");
-        ELFLoader.unload(elf);
-    }
+		logger.info(" ### Execution start ### ");
+		cpu.setEntryPoint(elf.getFileHeader().getEntryPointVirtualAddress());
+		cpu.execute();
+		logger.info(" ### Execution end ### ");
+		ELFLoader.unload(elf);
+	}
 
-    private static long parseLongHex(final String s) {
-        if (s.isEmpty() || s.length() > 16) {
-            throw new IllegalArgumentException(String.format("'%s' is an invalid 64-bit hex value.", s));
-        }
-        long x = 0L;
-        for (int i = s.length() - 1; i >= 0; i--) {
-            final char c = s.charAt(i);
-            final long y =
-                    switch (c) {
-                        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> (long) (c - '0');
-                        case 'a', 'b', 'c', 'd', 'e', 'f' -> (long) (c - 'a');
-                        case 'A', 'B', 'C', 'D', 'E', 'F' -> (long) (c - 'A');
-                        default -> throw new IllegalArgumentException(
-                                String.format("'%c' is not a hexadecimal character.", c));
-                    };
-            x = (x << 4) | y;
-        }
-        return x;
-    }
+	private static long parseLongHex(final String s) {
+		if (s.isEmpty() || s.length() > 16) {
+			throw new IllegalArgumentException(String.format("'%s' is an invalid 64-bit hex value.", s));
+		}
+		long x = 0L;
+		for (int i = s.length() - 1; i >= 0; i--) {
+			final char c = s.charAt(i);
+			final long y =
+					switch (c) {
+						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> (long) (c - '0');
+						case 'a', 'b', 'c', 'd', 'e', 'f' -> (long) (c - 'a');
+						case 'A', 'B', 'C', 'D', 'E', 'F' -> (long) (c - 'A');
+						default -> throw new IllegalArgumentException(
+								String.format("'%c' is not a hexadecimal character.", c));
+					};
+			x = (x << 4) | y;
+		}
+		return x;
+	}
 
-    @SuppressWarnings("PMD.AvoidCatchingThrowable")
-    public static void main(final String[] args) {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
+	@SuppressWarnings("PMD.AvoidCatchingThrowable")
+	public static void main(final String[] args) {
+		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
-        String filename = null;
-        String[] innerArgs = null;
+		String filename = null;
+		String[] innerArgs = null;
 
-        final String shortHelpFlag = "-h";
-        final String longHelpFlag = "--help";
-        final String shortQuietFlag = "-q";
-        final String longQuietFlag = "--quiet";
-        final String verboseFlag = "-v";
-        final String veryVerboseFlag = "-vv";
-        final String memoryInitializerRandomFlag = "--mem-init-random";
-        final String memoryInitializerZeroFlag = "--mem-init-zero";
-        final String stackSizeFlag = "--stack-size";
-        final String baseAddressFlag = "--base-address";
-        final String shortVersionFlag = "-V";
-        final String longVersionFlag = "--version";
+		final String shortHelpFlag = "-h";
+		final String longHelpFlag = "--help";
+		final String shortQuietFlag = "-q";
+		final String longQuietFlag = "--quiet";
+		final String verboseFlag = "-v";
+		final String veryVerboseFlag = "-vv";
+		final String memoryInitializerRandomFlag = "--mem-init-random";
+		final String memoryInitializerZeroFlag = "--mem-init-zero";
+		final String stackSizeFlag = "--stack-size";
+		final String baseAddressFlag = "--base-address";
+		final String shortVersionFlag = "-V";
+		final String longVersionFlag = "--version";
 
-        label:
-        for (int i = 0; i < args.length; i++) {
-            final String arg = args[i];
+		label:
+		for (int i = 0; i < args.length; i++) {
+			final String arg = args[i];
 
-            switch (arg) {
-                case shortHelpFlag, longHelpFlag -> {
-                    out.print(String.join(
-                            "\n",
-                            "",
-                            " emu - CPU emulator",
-                            "",
-                            " Usage: emu [OPTIONS] FILE",
-                            "",
-                            " Command line options:",
-                            "",
-                            " -h, --help   Shows this help message and exits.",
-                            " -q, --quiet  Only errors are reported.",
-                            " -v           Errors, warnings and info messages are reported.",
-                            " -vv          All messages are reported.",
-                            "",
-                            " --mem-init-random  Uninitialized memory has random values (default).",
-                            " --mem-init-zero    Uninitialized memory contains binary zero.",
-                            " --stack-size N     Number of bytes to allocate for the stack. Accepts only integers.",
-                            "                    Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
-                            " --base-address X   Memory location where to load the executable file (hexadecimal 64-bits).",
-                            " FILE               The ELF executable file to emulate.",
-                            ""));
-                    out.flush();
-                    System.exit(0);
-                }
-                case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-                case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
-                case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-                case memoryInitializerRandomFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
-                case memoryInitializerZeroFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
-                case stackSizeFlag -> {
-                    i++;
-                    if (i >= args.length) {
-                        throw new IllegalArgumentException(
-                                String.format("Expected an argument after '%s'", stackSizeFlag));
-                    }
+			switch (arg) {
+				case shortHelpFlag, longHelpFlag -> {
+					out.print(String.join(
+							"\n",
+							"",
+							" emu - CPU emulator",
+							"",
+							" Usage: emu [OPTIONS] FILE",
+							"",
+							" Command line options:",
+							"",
+							" -h, --help   Shows this help message and exits.",
+							" -q, --quiet  Only errors are reported.",
+							" -v           Errors, warnings and info messages are reported.",
+							" -vv          All messages are reported.",
+							"",
+							" --mem-init-random  Uninitialized memory has random values (default).",
+							" --mem-init-zero    Uninitialized memory contains binary zero.",
+							" --stack-size N     Number of bytes to allocate for the stack. Accepts only integers.",
+							"                    Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
+							" --base-address X   Memory location where to load the executable file (hexadecimal 64-bits).",
+							" FILE               The ELF executable file to emulate.",
+							""));
+					out.flush();
+					System.exit(0);
+				}
+				case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+				case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+				case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+				case memoryInitializerRandomFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
+				case memoryInitializerZeroFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+				case stackSizeFlag -> {
+					i++;
+					if (i >= args.length) {
+						throw new IllegalArgumentException(
+								String.format("Expected an argument after '%s'", stackSizeFlag));
+					}
 
-                    String s = args[i];
-                    if (s.chars().allMatch(Character::isDigit)) {
-                        EmulatorConstants.setStackSize(Long.parseLong(s));
-                        continue;
-                    }
+					String s = args[i];
+					if (s.chars().allMatch(Character::isDigit)) {
+						EmulatorConstants.setStackSize(Long.parseLong(s));
+						continue;
+					}
 
-                    int k = 0;
-                    long bytes = 0L;
-                    while (k < s.length() && Character.isDigit(s.charAt(k))) {
-                        bytes = bytes * 10L + (s.charAt(k) - '0');
-                        k++;
-                    }
+					int k = 0;
+					long bytes = 0L;
+					while (k < s.length() && Character.isDigit(s.charAt(k))) {
+						bytes = bytes * 10L + (s.charAt(k) - '0');
+						k++;
+					}
 
-                    s = s.substring(k);
+					s = s.substring(k);
 
-                    bytes = switch (s) {
-                        case "B" -> bytes;
-                        case "KB" -> bytes * 1_000L;
-                        case "MB" -> bytes * 1_000_000L;
-                        case "GB" -> bytes * 1_000_000_000L;
-                        case "TB" -> bytes * 1_000_000_000_000L;
-                        case "KiB" -> bytes * 1_024L;
-                        case "MiB" -> bytes * 1_024L * 1_024L;
-                        case "GiB" -> bytes * 1_024L * 1_024L * 1_024L;
-                        case "TiB" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L;
-                        case "b" -> bytes / 8L;
-                        case "Kb" -> bytes * 1_000L / 8L;
-                        case "Mb" -> bytes * 1_000_000L / 8L;
-                        case "Gb" -> bytes * 1_000_000_000L / 8L;
-                        case "Tb" -> bytes * 1_000_000_000_000L / 8L;
-                        case "Kib" -> bytes * 1_024L / 8L;
-                        case "Mib" -> bytes * 1_024L * 1_024L / 8L;
-                        case "Gib" -> bytes * 1_024L * 1_024L * 1_024L / 8L;
-                        case "Tib" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L / 8L;
-                        default -> throw new IllegalArgumentException(
-                                String.format("Invalid stack size '%s'", args[i]));
-                    };
+					bytes = switch (s) {
+						case "B" -> bytes;
+						case "KB" -> bytes * 1_000L;
+						case "MB" -> bytes * 1_000_000L;
+						case "GB" -> bytes * 1_000_000_000L;
+						case "TB" -> bytes * 1_000_000_000_000L;
+						case "KiB" -> bytes * 1_024L;
+						case "MiB" -> bytes * 1_024L * 1_024L;
+						case "GiB" -> bytes * 1_024L * 1_024L * 1_024L;
+						case "TiB" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L;
+						case "b" -> bytes / 8L;
+						case "Kb" -> bytes * 1_000L / 8L;
+						case "Mb" -> bytes * 1_000_000L / 8L;
+						case "Gb" -> bytes * 1_000_000_000L / 8L;
+						case "Tb" -> bytes * 1_000_000_000_000L / 8L;
+						case "Kib" -> bytes * 1_024L / 8L;
+						case "Mib" -> bytes * 1_024L * 1_024L / 8L;
+						case "Gib" -> bytes * 1_024L * 1_024L * 1_024L / 8L;
+						case "Tib" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L / 8L;
+						default -> throw new IllegalArgumentException(
+								String.format("Invalid stack size '%s'", args[i]));
+					};
 
-                    EmulatorConstants.setStackSize(bytes);
-                }
-                case baseAddressFlag -> {
-                    i++;
-                    if (i >= args.length) {
-                        throw new IllegalArgumentException(
-                                String.format("Expected an argument after '%s'", baseAddressFlag));
-                    }
+					EmulatorConstants.setStackSize(bytes);
+				}
+				case baseAddressFlag -> {
+					i++;
+					if (i >= args.length) {
+						throw new IllegalArgumentException(
+								String.format("Expected an argument after '%s'", baseAddressFlag));
+					}
 
-                    EmulatorConstants.setBaseAddress(
-                            args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
-                }
-                case shortVersionFlag, longVersionFlag -> {
-                    out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
-                    out.flush();
-                    System.exit(0);
-                }
-                default -> {
-                    filename = arg;
+					EmulatorConstants.setBaseAddress(
+							args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
+				}
+				case shortVersionFlag, longVersionFlag -> {
+					out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
+					out.flush();
+					System.exit(0);
+				}
+				default -> {
+					filename = arg;
 
-                    // all the next command-line arguments are considered to be related to the
-                    // executable to be emulated
-                    innerArgs = Arrays.copyOfRange(args, i + 1, args.length);
-                    break label;
-                }
-            }
-        }
+					// all the next command-line arguments are considered to be related to the
+					// executable to be emulated
+					innerArgs = Arrays.copyOfRange(args, i + 1, args.length);
+					break label;
+				}
+			}
+		}
 
-        if (filename == null) {
-            out.println("Expected the name of the file to run.");
-            out.flush();
-            System.exit(-1);
-        }
+		if (filename == null) {
+			out.println("Expected the name of the file to run.");
+			out.flush();
+			System.exit(-1);
+		}
 
-        logger.info(
-                "Executing %s",
-                Stream.concat(Stream.of(filename), Arrays.stream(innerArgs))
-                        .map(s -> "'" + s + "'")
-                        .collect(Collectors.joining(" ")));
+		logger.info(
+				"Executing %s",
+				Stream.concat(Stream.of(filename), Arrays.stream(innerArgs))
+						.map(s -> "'" + s + "'")
+						.collect(Collectors.joining(" ")));
 
-        try {
-            run(filename, innerArgs);
-        } catch (final Throwable t) {
-            logger.error(t);
-            out.flush();
-            System.exit(-1);
-        }
-        out.flush();
-    }
+		try {
+			run(filename, innerArgs);
+		} catch (final Throwable t) {
+			logger.error(t);
+			out.flush();
+			System.exit(-1);
+		}
+		out.flush();
+	}
 }

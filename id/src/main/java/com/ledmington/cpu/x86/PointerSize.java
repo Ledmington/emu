@@ -20,55 +20,55 @@ package com.ledmington.cpu.x86;
 /** The size of a pointer (indirect operand) in an x86 instruction. */
 public enum PointerSize {
 
-    /** Pointer to byte (8 bits). */
-    BYTE_PTR(8),
+	/** Pointer to byte (8 bits). */
+	BYTE_PTR(8),
 
-    /** Pointer to word (16 bits). */
-    WORD_PTR(16),
+	/** Pointer to word (16 bits). */
+	WORD_PTR(16),
 
-    /** Pointer to double word (32 bits). */
-    DWORD_PTR(32),
+	/** Pointer to double word (32 bits). */
+	DWORD_PTR(32),
 
-    /** Pointer to quadword (64 bits). */
-    QWORD_PTR(64),
+	/** Pointer to quadword (64 bits). */
+	QWORD_PTR(64),
 
-    /** Pointer to word for XMM registers (2x64 bits). */
-    XMMWORD_PTR(128);
+	/** Pointer to word for XMM registers (2x64 bits). */
+	XMMWORD_PTR(128);
 
-    private final int size;
+	private final int size;
 
-    PointerSize(final int size) {
-        this.size = size;
-    }
+	PointerSize(final int size) {
+		this.size = size;
+	}
 
-    /**
-     * Returns the number of bits represented by this pointer size.
-     *
-     * @return The number of bits represented by this pointer size.
-     */
-    public int getSize() {
-        return size;
-    }
+	/**
+	 * Returns the number of bits represented by this pointer size.
+	 *
+	 * @return The number of bits represented by this pointer size.
+	 */
+	public int getSize() {
+		return size;
+	}
 
-    /**
-     * Returns the proper PointerSize object from corresponding to the given size in bits.
-     *
-     * @param size The size in bits of the pointer.
-     * @return The proper PointerSize object.
-     */
-    public static PointerSize fromSize(final int size) {
-        return switch (size) {
-            case 8 -> BYTE_PTR;
-            case 16 -> WORD_PTR;
-            case 32 -> DWORD_PTR;
-            case 64 -> QWORD_PTR;
-            case 128 -> XMMWORD_PTR;
-            default -> throw new IllegalStateException("Unexpected value: " + size);
-        };
-    }
+	/**
+	 * Returns the proper PointerSize object from corresponding to the given size in bits.
+	 *
+	 * @param size The size in bits of the pointer.
+	 * @return The proper PointerSize object.
+	 */
+	public static PointerSize fromSize(final int size) {
+		return switch (size) {
+			case 8 -> BYTE_PTR;
+			case 16 -> WORD_PTR;
+			case 32 -> DWORD_PTR;
+			case 64 -> QWORD_PTR;
+			case 128 -> XMMWORD_PTR;
+			default -> throw new IllegalStateException("Unexpected value: " + size);
+		};
+	}
 
-    @Override
-    public String toString() {
-        return "PointerSize(bits=" + size + ")";
-    }
+	@Override
+	public String toString() {
+		return "PointerSize(bits=" + size + ")";
+	}
 }

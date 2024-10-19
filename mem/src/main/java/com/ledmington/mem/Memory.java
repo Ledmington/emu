@@ -24,28 +24,28 @@ package com.ledmington.mem;
  */
 public interface Memory {
 
-    /**
-     * Reads a single byte from the given address.
-     *
-     * @param address The address to read from.
-     * @return The byte word contained at the given address.
-     */
-    byte read(final long address);
+	/**
+	 * Reads a single byte from the given address.
+	 *
+	 * @param address The address to read from.
+	 * @return The byte word contained at the given address.
+	 */
+	byte read(final long address);
 
-    /**
-     * Writes the given byte word at the given address, overwriting any value previously stored at that location.
-     *
-     * @param address The address to write at.
-     * @param value The value to write.
-     */
-    void write(final long address, final byte value);
+	/**
+	 * Writes the given byte word at the given address, overwriting any value previously stored at that location.
+	 *
+	 * @param address The address to write at.
+	 * @param value The value to write.
+	 */
+	void write(final long address, final byte value);
 
-    /**
-     * Checks whether the given address is initialized or not. A memory address is said to be initialized if it has been
-     * written to at least once.
-     *
-     * @param address The address to be checked.
-     * @return True if it is initialized, false otherwise.
-     */
-    boolean isInitialized(final long address);
+	/**
+	 * Checks whether the given address is initialized or not. A memory address is said to be initialized if it has been
+	 * written to at least once.
+	 *
+	 * @param address The address to be checked.
+	 * @return True if it is initialized, false otherwise.
+	 */
+	boolean isInitialized(final long address);
 }

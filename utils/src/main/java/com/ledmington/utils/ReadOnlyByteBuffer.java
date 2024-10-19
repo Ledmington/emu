@@ -23,218 +23,218 @@ package com.ledmington.utils;
  */
 public interface ReadOnlyByteBuffer {
 
-    /**
-     * Returns the current endianness.
-     *
-     * @return True for little-endian, false for big-endian.
-     */
-    boolean isLittleEndian();
+	/**
+	 * Returns the current endianness.
+	 *
+	 * @return True for little-endian, false for big-endian.
+	 */
+	boolean isLittleEndian();
 
-    /**
-     * Changes the current endianness.
-     *
-     * @param isLittleEndian The new endianness: true for little-endian, false for big-endian.
-     */
-    void setEndianness(final boolean isLittleEndian);
+	/**
+	 * Changes the current endianness.
+	 *
+	 * @param isLittleEndian The new endianness: true for little-endian, false for big-endian.
+	 */
+	void setEndianness(final boolean isLittleEndian);
 
-    /**
-     * Sets the given alignment to be used while reading.
-     *
-     * @param newAlignment The new alignment.
-     */
-    void setAlignment(final long newAlignment);
+	/**
+	 * Sets the given alignment to be used while reading.
+	 *
+	 * @param newAlignment The new alignment.
+	 */
+	void setAlignment(final long newAlignment);
 
-    /**
-     * Returns the current alignment.
-     *
-     * @return The number of bytes to align to.
-     */
-    long getAlignment();
+	/**
+	 * Returns the current alignment.
+	 *
+	 * @return The number of bytes to align to.
+	 */
+	long getAlignment();
 
-    /**
-     * Changes the position in the buffer.
-     *
-     * @param newPosition The new position in the buffer.
-     */
-    void setPosition(final long newPosition);
+	/**
+	 * Changes the position in the buffer.
+	 *
+	 * @param newPosition The new position in the buffer.
+	 */
+	void setPosition(final long newPosition);
 
-    /**
-     * Returns the current position in the buffer.
-     *
-     * @return The current position in the buffer.
-     */
-    long getPosition();
+	/**
+	 * Returns the current position in the buffer.
+	 *
+	 * @return The current position in the buffer.
+	 */
+	long getPosition();
 
-    /**
-     * Reads 1 byte from the buffer.
-     *
-     * @return The byte read.
-     */
-    byte read();
+	/**
+	 * Reads 1 byte from the buffer.
+	 *
+	 * @return The byte read.
+	 */
+	byte read();
 
-    private void move() {
-        setPosition(getPosition() + 1L);
-    }
+	private void move() {
+		setPosition(getPosition() + 1L);
+	}
 
-    private void moveAndAlign() {
-        move();
-        final long alignment = getAlignment();
-        if (getPosition() % alignment != 0) {
-            setPosition((getPosition() / alignment + 1L) * alignment);
-        }
-    }
+	private void moveAndAlign() {
+		move();
+		final long alignment = getAlignment();
+		if (getPosition() % alignment != 0) {
+			setPosition((getPosition() / alignment + 1L) * alignment);
+		}
+	}
 
-    /**
-     * Reads 1 byte and moves the cursor.
-     *
-     * @return The byte read.
-     */
-    default byte read1() {
-        final byte x = read();
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 1 byte and moves the cursor.
+	 *
+	 * @return The byte read.
+	 */
+	default byte read1() {
+		final byte x = read();
+		moveAndAlign();
+		return x;
+	}
 
-    /**
-     * Reads 2 bytes with the current endianness.
-     *
-     * @return The 2 bytes read as a short.
-     */
-    default short read2() {
-        return isLittleEndian() ? read2LE() : read2BE();
-    }
+	/**
+	 * Reads 2 bytes with the current endianness.
+	 *
+	 * @return The 2 bytes read as a short.
+	 */
+	default short read2() {
+		return isLittleEndian() ? read2LE() : read2BE();
+	}
 
-    /**
-     * Reads 2 bytes in little-endian without modifying the endianness.
-     *
-     * @return The 2 bytes read as a short.
-     */
-    default short read2LE() {
-        short x = (short) 0x0000;
-        x |= BitUtils.asShort(read());
-        move();
-        x |= BitUtils.asShort(read() << 8);
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 2 bytes in little-endian without modifying the endianness.
+	 *
+	 * @return The 2 bytes read as a short.
+	 */
+	default short read2LE() {
+		short x = (short) 0x0000;
+		x |= BitUtils.asShort(read());
+		move();
+		x |= BitUtils.asShort(read() << 8);
+		moveAndAlign();
+		return x;
+	}
 
-    /**
-     * Reads 2 bytes in big-endian without modifying the endianness.
-     *
-     * @return The 2 bytes read as a short.
-     */
-    default short read2BE() {
-        short x = (short) 0x0000;
-        x |= BitUtils.asShort(read() << 8);
-        move();
-        x |= BitUtils.asShort(read());
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 2 bytes in big-endian without modifying the endianness.
+	 *
+	 * @return The 2 bytes read as a short.
+	 */
+	default short read2BE() {
+		short x = (short) 0x0000;
+		x |= BitUtils.asShort(read() << 8);
+		move();
+		x |= BitUtils.asShort(read());
+		moveAndAlign();
+		return x;
+	}
 
-    /**
-     * Reads 4 bytes with the current endianness.
-     *
-     * @return The 4 bytes read as an int.
-     */
-    default int read4() {
-        return isLittleEndian() ? read4LE() : read4BE();
-    }
+	/**
+	 * Reads 4 bytes with the current endianness.
+	 *
+	 * @return The 4 bytes read as an int.
+	 */
+	default int read4() {
+		return isLittleEndian() ? read4LE() : read4BE();
+	}
 
-    /**
-     * Reads 4 bytes in little-endian without modifying the endianness.
-     *
-     * @return The 4 bytes read as an int.
-     */
-    default int read4LE() {
-        int x = 0x00000000;
-        x |= BitUtils.asInt(read());
-        move();
-        x |= (BitUtils.asInt(read()) << 8);
-        move();
-        x |= (BitUtils.asInt(read()) << 16);
-        move();
-        x |= (BitUtils.asInt(read()) << 24);
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 4 bytes in little-endian without modifying the endianness.
+	 *
+	 * @return The 4 bytes read as an int.
+	 */
+	default int read4LE() {
+		int x = 0x00000000;
+		x |= BitUtils.asInt(read());
+		move();
+		x |= (BitUtils.asInt(read()) << 8);
+		move();
+		x |= (BitUtils.asInt(read()) << 16);
+		move();
+		x |= (BitUtils.asInt(read()) << 24);
+		moveAndAlign();
+		return x;
+	}
 
-    /**
-     * Reads 4 bytes in big-endian without modifying the endianness.
-     *
-     * @return The 4 bytes read as an int.
-     */
-    default int read4BE() {
-        int x = 0x00000000;
-        x |= (BitUtils.asInt(read()) << 24);
-        move();
-        x |= (BitUtils.asInt(read()) << 16);
-        move();
-        x |= (BitUtils.asInt(read()) << 8);
-        move();
-        x |= BitUtils.asInt(read());
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 4 bytes in big-endian without modifying the endianness.
+	 *
+	 * @return The 4 bytes read as an int.
+	 */
+	default int read4BE() {
+		int x = 0x00000000;
+		x |= (BitUtils.asInt(read()) << 24);
+		move();
+		x |= (BitUtils.asInt(read()) << 16);
+		move();
+		x |= (BitUtils.asInt(read()) << 8);
+		move();
+		x |= BitUtils.asInt(read());
+		moveAndAlign();
+		return x;
+	}
 
-    /**
-     * Reads 8 bytes with the current endianness.
-     *
-     * @return The 8 bytes read as a long.
-     */
-    default long read8() {
-        return isLittleEndian() ? read8LE() : read8BE();
-    }
+	/**
+	 * Reads 8 bytes with the current endianness.
+	 *
+	 * @return The 8 bytes read as a long.
+	 */
+	default long read8() {
+		return isLittleEndian() ? read8LE() : read8BE();
+	}
 
-    /**
-     * Reads 8 bytes in little-endian without modifying the endianness.
-     *
-     * @return The 8 bytes read as a long.
-     */
-    default long read8LE() {
-        long x = 0x0000000000000000L;
-        x |= BitUtils.asLong(read());
-        move();
-        x |= (BitUtils.asLong(read()) << 8);
-        move();
-        x |= (BitUtils.asLong(read()) << 16);
-        move();
-        x |= (BitUtils.asLong(read()) << 24);
-        move();
-        x |= (BitUtils.asLong(read()) << 32);
-        move();
-        x |= (BitUtils.asLong(read()) << 40);
-        move();
-        x |= (BitUtils.asLong(read()) << 48);
-        move();
-        x |= (BitUtils.asLong(read()) << 56);
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 8 bytes in little-endian without modifying the endianness.
+	 *
+	 * @return The 8 bytes read as a long.
+	 */
+	default long read8LE() {
+		long x = 0x0000000000000000L;
+		x |= BitUtils.asLong(read());
+		move();
+		x |= (BitUtils.asLong(read()) << 8);
+		move();
+		x |= (BitUtils.asLong(read()) << 16);
+		move();
+		x |= (BitUtils.asLong(read()) << 24);
+		move();
+		x |= (BitUtils.asLong(read()) << 32);
+		move();
+		x |= (BitUtils.asLong(read()) << 40);
+		move();
+		x |= (BitUtils.asLong(read()) << 48);
+		move();
+		x |= (BitUtils.asLong(read()) << 56);
+		moveAndAlign();
+		return x;
+	}
 
-    /**
-     * Reads 8 bytes in big-endian without modifying the endianness.
-     *
-     * @return The 8 bytes read as a long.
-     */
-    default long read8BE() {
-        long x = 0x0000000000000000L;
-        x |= (BitUtils.asLong(read()) << 56);
-        move();
-        x |= (BitUtils.asLong(read()) << 48);
-        move();
-        x |= (BitUtils.asLong(read()) << 40);
-        move();
-        x |= (BitUtils.asLong(read()) << 32);
-        move();
-        x |= (BitUtils.asLong(read()) << 24);
-        move();
-        x |= (BitUtils.asLong(read()) << 16);
-        move();
-        x |= (BitUtils.asLong(read()) << 8);
-        move();
-        x |= BitUtils.asLong(read());
-        moveAndAlign();
-        return x;
-    }
+	/**
+	 * Reads 8 bytes in big-endian without modifying the endianness.
+	 *
+	 * @return The 8 bytes read as a long.
+	 */
+	default long read8BE() {
+		long x = 0x0000000000000000L;
+		x |= (BitUtils.asLong(read()) << 56);
+		move();
+		x |= (BitUtils.asLong(read()) << 48);
+		move();
+		x |= (BitUtils.asLong(read()) << 40);
+		move();
+		x |= (BitUtils.asLong(read()) << 32);
+		move();
+		x |= (BitUtils.asLong(read()) << 24);
+		move();
+		x |= (BitUtils.asLong(read()) << 16);
+		move();
+		x |= (BitUtils.asLong(read()) << 8);
+		move();
+		x |= BitUtils.asLong(read());
+		moveAndAlign();
+		return x;
+	}
 }

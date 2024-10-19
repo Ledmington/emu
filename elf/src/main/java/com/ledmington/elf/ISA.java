@@ -23,93 +23,93 @@ import java.util.Map;
 /** The ISA which can be specified in an ELF header. */
 public enum ISA {
 
-    /** Unknown ISA. */
-    UNKNOWN((short) 0x0000, "Not specified"),
+	/** Unknown ISA. */
+	UNKNOWN((short) 0x0000, "Not specified"),
 
-    /** AT{@literal &}T WE 32100. */
-    AT_T_WE_32100((short) 0x0001, "AT&T WE 32100"),
+	/** AT{@literal &}T WE 32100. */
+	AT_T_WE_32100((short) 0x0001, "AT&T WE 32100"),
 
-    /** Intel 80386. */
-    Intel_80386((short) 0x0003, "Intel 80386"),
+	/** Intel 80386. */
+	Intel_80386((short) 0x0003, "Intel 80386"),
 
-    /** PowerPC. */
-    PPC((short) 0x0014, "PowerPC"),
+	/** PowerPC. */
+	PPC((short) 0x0014, "PowerPC"),
 
-    /** ARM. */
-    ARM((short) 0x0028, "ARM"),
+	/** ARM. */
+	ARM((short) 0x0028, "ARM"),
 
-    /** AMD x86_64. */
-    AMD_X86_64((short) 0x003e, "Advanced Micro Devices X86-64"),
+	/** AMD x86_64. */
+	AMD_X86_64((short) 0x003e, "Advanced Micro Devices X86-64"),
 
-    /** Intel L10M. */
-    Intel_L10M((short) 0x00b4, "Intel L10M"),
+	/** Intel L10M. */
+	Intel_L10M((short) 0x00b4, "Intel L10M"),
 
-    /** Intel K10M. */
-    Intel_K10M((short) 0x00b5, "Intel K10M");
+	/** Intel K10M. */
+	Intel_K10M((short) 0x00b5, "Intel K10M");
 
-    private static final Map<Short, ISA> codeToISA = new HashMap<>();
+	private static final Map<Short, ISA> codeToISA = new HashMap<>();
 
-    static {
-        for (final ISA x : ISA.values()) {
-            if (codeToISA.containsKey(x.code)) {
-                throw new IllegalStateException(String.format(
-                        "ISA enum value with code %d (0x%02x) and name '%s' already exists", x.code, x.code, x.name));
-            }
-            codeToISA.put(x.code, x);
-        }
-    }
+	static {
+		for (final ISA x : ISA.values()) {
+			if (codeToISA.containsKey(x.code)) {
+				throw new IllegalStateException(String.format(
+						"ISA enum value with code %d (0x%02x) and name '%s' already exists", x.code, x.code, x.name));
+			}
+			codeToISA.put(x.code, x);
+		}
+	}
 
-    /**
-     * Checks whether the given code is a valid ELF ISA.
-     *
-     * @param code The code representing the ISA.
-     * @return True if the given code exists, false otherwise.
-     */
-    public static boolean isValid(final short code) {
-        return codeToISA.containsKey(code);
-    }
+	/**
+	 * Checks whether the given code is a valid ELF ISA.
+	 *
+	 * @param code The code representing the ISA.
+	 * @return True if the given code exists, false otherwise.
+	 */
+	public static boolean isValid(final short code) {
+		return codeToISA.containsKey(code);
+	}
 
-    /**
-     * Returns the {@link ISA} corresponding to the given code.
-     *
-     * @param code The code representing the ISA.
-     * @return The ISA object corresponding to the given code.
-     */
-    public static ISA fromCode(final short code) {
-        if (!codeToISA.containsKey(code)) {
-            throw new IllegalArgumentException(String.format("Unknown ISA identifier: 0x%02x", code));
-        }
-        return codeToISA.get(code);
-    }
+	/**
+	 * Returns the {@link ISA} corresponding to the given code.
+	 *
+	 * @param code The code representing the ISA.
+	 * @return The ISA object corresponding to the given code.
+	 */
+	public static ISA fromCode(final short code) {
+		if (!codeToISA.containsKey(code)) {
+			throw new IllegalArgumentException(String.format("Unknown ISA identifier: 0x%02x", code));
+		}
+		return codeToISA.get(code);
+	}
 
-    private final short code;
-    private final String name;
+	private final short code;
+	private final String name;
 
-    ISA(final short code, final String name) {
-        this.code = code;
-        this.name = name;
-    }
+	ISA(final short code, final String name) {
+		this.code = code;
+		this.name = name;
+	}
 
-    /**
-     * Hexadecimal 16-bits code.
-     *
-     * @return The code of this ISA object.
-     */
-    public short getCode() {
-        return code;
-    }
+	/**
+	 * Hexadecimal 16-bits code.
+	 *
+	 * @return The code of this ISA object.
+	 */
+	public short getCode() {
+		return code;
+	}
 
-    /**
-     * Name of the ISA.
-     *
-     * @return A string representation of this ISA object.
-     */
-    public String getName() {
-        return name;
-    }
+	/**
+	 * Name of the ISA.
+	 *
+	 * @return A string representation of this ISA object.
+	 */
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public String toString() {
-        return "ISA(code=" + code + ";name=" + name + ')';
-    }
+	@Override
+	public String toString() {
+		return "ISA(code=" + code + ";name=" + name + ')';
+	}
 }

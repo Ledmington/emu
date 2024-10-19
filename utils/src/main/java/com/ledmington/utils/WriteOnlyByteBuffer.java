@@ -20,75 +20,75 @@ package com.ledmington.utils;
 /** An interface for a ByteBuffer which allows only write operations. */
 public interface WriteOnlyByteBuffer {
 
-    /**
-     * Writes the given byte at the current address.
-     *
-     * @param b The byte to be written.
-     */
-    void write(final byte b);
+	/**
+	 * Writes the given byte at the current address.
+	 *
+	 * @param b The byte to be written.
+	 */
+	void write(final byte b);
 
-    /**
-     * Writes the given short with the current endianness at the current position.
-     *
-     * @param s The 2-byte value to be written.
-     */
-    void write(final short s);
+	/**
+	 * Writes the given short with the current endianness at the current position.
+	 *
+	 * @param s The 2-byte value to be written.
+	 */
+	void write(final short s);
 
-    /**
-     * Writes the given int with the current endianness at the current position.
-     *
-     * @param x The 4-byte value to be written.
-     */
-    void write(final int x);
+	/**
+	 * Writes the given int with the current endianness at the current position.
+	 *
+	 * @param x The 4-byte value to be written.
+	 */
+	void write(final int x);
 
-    /**
-     * Writes the fiven long with the current endianness at the current position.
-     *
-     * @param x The 8-byte value to be written.
-     */
-    void write(final long x);
+	/**
+	 * Writes the fiven long with the current endianness at the current position.
+	 *
+	 * @param x The 8-byte value to be written.
+	 */
+	void write(final long x);
 
-    /**
-     * Writes the array of bytes at the current position. It is equivalent to call write() on each element in order.
-     *
-     * @param bytes The byte array to be written.
-     */
-    void write(final byte[] bytes);
+	/**
+	 * Writes the array of bytes at the current position. It is equivalent to call write() on each element in order.
+	 *
+	 * @param bytes The byte array to be written.
+	 */
+	void write(final byte[] bytes);
 
-    /**
-     * Writes the array of ints, each with the current endianness, at the current position. It is equivalent to call
-     * write() on each element in order.
-     *
-     * @param ints The int array to be written.
-     */
-    void write(final int... ints);
+	/**
+	 * Writes the array of ints, each with the current endianness, at the current position. It is equivalent to call
+	 * write() on each element in order.
+	 *
+	 * @param ints The int array to be written.
+	 */
+	void write(final int... ints);
 
-    /**
-     * Writes the array of longs, each with the current endianness, at the current position. It is equivalent to call
-     * write() on each element in order.
-     *
-     * @param longs The long array to be written.
-     */
-    void write(final long... longs);
+	/**
+	 * Writes the array of longs, each with the current endianness, at the current position. It is equivalent to call
+	 * write() on each element in order.
+	 *
+	 * @param longs The long array to be written.
+	 */
+	void write(final long... longs);
 
-    /**
-     * Returns the array that has been written.
-     *
-     * @return The backing array.
-     */
-    byte[] array();
+	/**
+	 * Returns the array that has been written.
+	 *
+	 * @return The backing array.
+	 */
+	byte[] array();
 
-    /**
-     * Returns the current position in the buffer.
-     *
-     * @return The position in the buffer.
-     */
-    int getPosition();
+	/**
+	 * Returns the current position in the buffer.
+	 *
+	 * @return The position in the buffer.
+	 */
+	int getPosition();
 
-    /**
-     * Changes the current position to the given one.
-     *
-     * @param newPosition The new position in the buffer.
-     */
-    void setPosition(final int newPosition);
+	/**
+	 * Changes the current position to the given one.
+	 *
+	 * @param newPosition The new position in the buffer.
+	 */
+	void setPosition(final int newPosition);
 }

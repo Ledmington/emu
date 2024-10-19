@@ -34,72 +34,72 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestIntervalArray {
 
-    private static final RandomGenerator rng =
-            RandomGeneratorFactory.getDefault().create(System.nanoTime());
+	private static final RandomGenerator rng =
+			RandomGeneratorFactory.getDefault().create(System.nanoTime());
 
-    private IntervalArray ia;
+	private IntervalArray ia;
 
-    @BeforeEach
-    public void setup() {
-        ia = new IntervalArray();
-    }
+	@BeforeEach
+	public void setup() {
+		ia = new IntervalArray();
+	}
 
-    @Test
-    void initiallyAllFalse() {
-        final Set<Long> positions =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
-        for (final long x : positions) {
-            assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
-        }
-    }
+	@Test
+	void initiallyAllFalse() {
+		final Set<Long> positions =
+				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		for (final long x : positions) {
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
+		}
+	}
 
-    private static Stream<Arguments> pairsOfMemoryLocations() {
-        return Stream.of(Arguments.of(0L, 0L), Arguments.of(-1L, 1L), Arguments.of(0x1234L, 0x4567L));
-    }
+	private static Stream<Arguments> pairsOfMemoryLocations() {
+		return Stream.of(Arguments.of(0L, 0L), Arguments.of(-1L, 1L), Arguments.of(0x1234L, 0x4567L));
+	}
 
-    @ParameterizedTest
-    @MethodSource("pairsOfMemoryLocations")
-    void setAndGet(final long start, final long end) {
-        ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-        ia.set(start, end);
-        for (long x = start; x <= end; x++) {
-            final long finalX = x;
-            assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", finalX));
-        }
-    }
+	@ParameterizedTest
+	@MethodSource("pairsOfMemoryLocations")
+	void setAndGet(final long start, final long end) {
+		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
+		ia.set(start, end);
+		for (long x = start; x <= end; x++) {
+			final long finalX = x;
+			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", finalX));
+		}
+	}
 
-    @Test
-    void setTwiceAndGet() {
-        ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-        final Set<Long> positions =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
-        for (final long x : positions) {
-            ia.set(x);
-            ia.set(x);
-            assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", x));
-        }
-    }
+	@Test
+	void setTwiceAndGet() {
+		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
+		final Set<Long> positions =
+				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		for (final long x : positions) {
+			ia.set(x);
+			ia.set(x);
+			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", x));
+		}
+	}
 
-    @ParameterizedTest
-    @MethodSource("pairsOfMemoryLocations")
-    void resetAndGet(final long start, final long end) {
-        ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
-        ia.reset(start, end);
-        for (long x = start; x <= end; x++) {
-            final long finalX = x;
-            assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", finalX));
-        }
-    }
+	@ParameterizedTest
+	@MethodSource("pairsOfMemoryLocations")
+	void resetAndGet(final long start, final long end) {
+		ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
+		ia.reset(start, end);
+		for (long x = start; x <= end; x++) {
+			final long finalX = x;
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", finalX));
+		}
+	}
 
-    @Test
-    void resetTwiceAndGet() {
-        ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
-        final Set<Long> addresses =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
-        for (final long x : addresses) {
-            ia.reset(x);
-            ia.reset(x);
-            assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
-        }
-    }
+	@Test
+	void resetTwiceAndGet() {
+		ia.set(Long.MIN_VALUE, Long.MAX_VALUE);
+		final Set<Long> addresses =
+				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		for (final long x : addresses) {
+			ia.reset(x);
+			ia.reset(x);
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
+		}
+	}
 }

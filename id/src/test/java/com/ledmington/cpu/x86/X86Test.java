@@ -37,47 +37,47 @@ import com.ledmington.utils.MiniLogger.LoggingLevel;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class X86Test {
 
-    private static final String testInputFileName = "x86.test.asm";
-    private static List<Arguments> args;
+	private static final String testInputFileName = "x86.test.asm";
+	private static List<Arguments> args;
 
-    @BeforeAll
-    static void setup() {
-        MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
+	@BeforeAll
+	static void setup() {
+		MiniLogger.setMinimumLevel(LoggingLevel.DEBUG);
 
-        args = new ArrayList<>();
-        final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        try (final BufferedReader br =
-                Files.newBufferedReader(Paths.get(Objects.requireNonNull(classloader.getResource(testInputFileName))
-                                .toURI())
-                        .toFile()
-                        .toPath()
-                        .normalize()
-                        .toAbsolutePath())) {
-            int i = 0;
-            for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
-                if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
-                    continue;
-                }
+		args = new ArrayList<>();
+		final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		try (final BufferedReader br =
+				Files.newBufferedReader(Paths.get(Objects.requireNonNull(classloader.getResource(testInputFileName))
+								.toURI())
+						.toFile()
+						.toPath()
+						.normalize()
+						.toAbsolutePath())) {
+			int i = 0;
+			for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
+				if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
+					continue;
+				}
 
-                final String[] splitted = line.split("\\|");
-                final int expectedSides = 2;
-                if (splitted.length != expectedSides) {
-                    throw new IllegalArgumentException(
-                            String.format("Line %,d: '%s' is not formatted correctly", i, line));
-                }
-                args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
-            }
-        } catch (final IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
+				final String[] splitted = line.split("\\|");
+				final int expectedSides = 2;
+				if (splitted.length != expectedSides) {
+					throw new IllegalArgumentException(
+							String.format("Line %,d: '%s' is not formatted correctly", i, line));
+				}
+				args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
+			}
+		} catch (final IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    @AfterAll
-    static void teardown() {
-        args.clear();
-    }
+	@AfterAll
+	static void teardown() {
+		args.clear();
+	}
 
-    static Stream<Arguments> instructions() {
-        return args.stream();
-    }
+	static Stream<Arguments> instructions() {
+		return args.stream();
+	}
 }

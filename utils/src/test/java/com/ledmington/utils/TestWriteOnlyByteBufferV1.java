@@ -30,86 +30,86 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 final class TestWriteOnlyByteBufferV1 {
 
-    private static final RandomGenerator rng =
-            RandomGeneratorFactory.getDefault().create(System.nanoTime());
+	private static final RandomGenerator rng =
+			RandomGeneratorFactory.getDefault().create(System.nanoTime());
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void bytes(final boolean endianness) {
-        final int length = 200;
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
-        final ByteBuffer ref = ByteBuffer.allocate(length);
-        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
-        for (int i = 0; i < length; i++) {
-            final byte b = BitUtils.asByte(rng.nextInt());
-            ref.put(b);
-            bb.write(b);
-        }
-        assertArrayEquals(
-                ref.array(),
-                bb.array(),
-                () -> String.format(
-                        "Expected byte array to be %s but was %s",
-                        Arrays.toString(ref.array()), Arrays.toString(bb.array())));
-    }
+	@ParameterizedTest
+	@ValueSource(booleans = {false, true})
+	void bytes(final boolean endianness) {
+		final int length = 200;
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final ByteBuffer ref = ByteBuffer.allocate(length);
+		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+		for (int i = 0; i < length; i++) {
+			final byte b = BitUtils.asByte(rng.nextInt());
+			ref.put(b);
+			bb.write(b);
+		}
+		assertArrayEquals(
+				ref.array(),
+				bb.array(),
+				() -> String.format(
+						"Expected byte array to be %s but was %s",
+						Arrays.toString(ref.array()), Arrays.toString(bb.array())));
+	}
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void words(final boolean endianness) {
-        final int length = 200;
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
-        final ByteBuffer ref = ByteBuffer.allocate(length);
-        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
-        for (int i = 0; i < length; i += 2) {
-            final short s = BitUtils.asShort(rng.nextInt());
-            ref.putShort(s);
-            bb.write(s);
-        }
-        assertArrayEquals(
-                ref.array(),
-                bb.array(),
-                () -> String.format(
-                        "Expected word array to be %s but was %s",
-                        Arrays.toString(ref.array()), Arrays.toString(bb.array())));
-    }
+	@ParameterizedTest
+	@ValueSource(booleans = {false, true})
+	void words(final boolean endianness) {
+		final int length = 200;
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final ByteBuffer ref = ByteBuffer.allocate(length);
+		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+		for (int i = 0; i < length; i += 2) {
+			final short s = BitUtils.asShort(rng.nextInt());
+			ref.putShort(s);
+			bb.write(s);
+		}
+		assertArrayEquals(
+				ref.array(),
+				bb.array(),
+				() -> String.format(
+						"Expected word array to be %s but was %s",
+						Arrays.toString(ref.array()), Arrays.toString(bb.array())));
+	}
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void doubleWords(final boolean endianness) {
-        final int length = 200;
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
-        final ByteBuffer ref = ByteBuffer.allocate(length);
-        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
-        for (int i = 0; i < length; i += 4) {
-            final int x = rng.nextInt();
-            ref.putInt(x);
-            bb.write(x);
-        }
-        assertArrayEquals(
-                ref.array(),
-                bb.array(),
-                () -> String.format(
-                        "Expected doubleword array to be %s but was %s",
-                        Arrays.toString(ref.array()), Arrays.toString(bb.array())));
-    }
+	@ParameterizedTest
+	@ValueSource(booleans = {false, true})
+	void doubleWords(final boolean endianness) {
+		final int length = 200;
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final ByteBuffer ref = ByteBuffer.allocate(length);
+		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+		for (int i = 0; i < length; i += 4) {
+			final int x = rng.nextInt();
+			ref.putInt(x);
+			bb.write(x);
+		}
+		assertArrayEquals(
+				ref.array(),
+				bb.array(),
+				() -> String.format(
+						"Expected doubleword array to be %s but was %s",
+						Arrays.toString(ref.array()), Arrays.toString(bb.array())));
+	}
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void quadWords(final boolean endianness) {
-        final int length = 200;
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
-        final ByteBuffer ref = ByteBuffer.allocate(length);
-        ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
-        for (int i = 0; i < length; i += 8) {
-            final long x = rng.nextLong();
-            ref.putLong(x);
-            bb.write(x);
-        }
-        assertArrayEquals(
-                ref.array(),
-                bb.array(),
-                () -> String.format(
-                        "Expected quadword array to be %s but was %s",
-                        Arrays.toString(ref.array()), Arrays.toString(bb.array())));
-    }
+	@ParameterizedTest
+	@ValueSource(booleans = {false, true})
+	void quadWords(final boolean endianness) {
+		final int length = 200;
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final ByteBuffer ref = ByteBuffer.allocate(length);
+		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
+		for (int i = 0; i < length; i += 8) {
+			final long x = rng.nextLong();
+			ref.putLong(x);
+			bb.write(x);
+		}
+		assertArrayEquals(
+				ref.array(),
+				bb.array(),
+				() -> String.format(
+						"Expected quadword array to be %s but was %s",
+						Arrays.toString(ref.array()), Arrays.toString(bb.array())));
+	}
 }

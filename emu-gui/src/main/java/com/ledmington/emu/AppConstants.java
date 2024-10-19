@@ -23,107 +23,107 @@ import javafx.scene.text.Font;
 
 public final class AppConstants {
 
-    private AppConstants() {}
+	private AppConstants() {}
 
-    /**
-     * Shorthand field which holds the name of the Operating System MiniSim is running on. NOTE: for Linux-based
-     * distributions, this will be just "Linux".
-     */
-    public static final String OSName = System.getProperty("os.name");
+	/**
+	 * Shorthand field which holds the name of the Operating System MiniSim is running on. NOTE: for Linux-based
+	 * distributions, this will be just "Linux".
+	 */
+	public static final String OSName = System.getProperty("os.name");
 
-    /**
-     * Shorthand field which holds the version of the Operating System MiniSim is running on. NOTE: for Linux-based
-     * distributions, this will be the Linux kernel version.
-     */
-    public static final String OSVersion = System.getProperty("os.version");
+	/**
+	 * Shorthand field which holds the version of the Operating System MiniSim is running on. NOTE: for Linux-based
+	 * distributions, this will be the Linux kernel version.
+	 */
+	public static final String OSVersion = System.getProperty("os.version");
 
-    /** Shorthand field which holds the version of Java MiniSim is running on. */
-    public static final String javaVersion = System.getProperty("java.version");
+	/** Shorthand field which holds the version of Java MiniSim is running on. */
+	public static final String javaVersion = System.getProperty("java.version");
 
-    /**
-     * Shorthand field which holds the version of JVM MiniSim is running on. NOTE: usually this is similar to
-     * {@link #javaVersion}.
-     */
-    public static final String jvmVersion = System.getProperty("java.vm.version");
+	/**
+	 * Shorthand field which holds the version of JVM MiniSim is running on. NOTE: usually this is similar to
+	 * {@link #javaVersion}.
+	 */
+	public static final String jvmVersion = System.getProperty("java.vm.version");
 
-    /** Shorthand field which holds the version of JavaFX MiniSim is running on. */
-    public static final String javafxVersion = System.getProperty("javafx.version");
+	/** Shorthand field which holds the version of JavaFX MiniSim is running on. */
+	public static final String javafxVersion = System.getProperty("javafx.version");
 
-    /** Shorthand field which holds the path where all the temporary files/folders are stored by the OS. */
-    public static final String tmpDirectoryPath = System.getProperty("java.io.tmpdir");
+	/** Shorthand field which holds the path where all the temporary files/folders are stored by the OS. */
+	public static final String tmpDirectoryPath = System.getProperty("java.io.tmpdir");
 
-    /** Shorthand monospace font family. */
-    private static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
-            ? "Consolas"
-            : (Font.getFamilies().contains("Cousine")
-                    ? "Cousine"
-                    : Font.getDefault().getFamily());
+	/** Shorthand monospace font family. */
+	private static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
+			? "Consolas"
+			: (Font.getFamilies().contains("Cousine")
+					? "Cousine"
+					: Font.getDefault().getFamily());
 
-    public static String getDefaultMonospaceFont() {
-        return MONOSPACE_FONT_FAMILY;
-    }
+	public static String getDefaultMonospaceFont() {
+		return MONOSPACE_FONT_FAMILY;
+	}
 
-    public static void setDefaultMonospaceFont(final String monospaceFontFamily) {
-        Objects.requireNonNull(monospaceFontFamily);
-        if (monospaceFontFamily.isEmpty()
-                || monospaceFontFamily.isBlank()
-                || !Font.getFamilies().contains(monospaceFontFamily)) {
-            throw new IllegalArgumentException(String.format("Illegal font family name '%s'", monospaceFontFamily));
-        }
-        MONOSPACE_FONT_FAMILY = monospaceFontFamily;
-    }
+	public static void setDefaultMonospaceFont(final String monospaceFontFamily) {
+		Objects.requireNonNull(monospaceFontFamily);
+		if (monospaceFontFamily.isEmpty()
+				|| monospaceFontFamily.isBlank()
+				|| !Font.getFamilies().contains(monospaceFontFamily)) {
+			throw new IllegalArgumentException(String.format("Illegal font family name '%s'", monospaceFontFamily));
+		}
+		MONOSPACE_FONT_FAMILY = monospaceFontFamily;
+	}
 
-    /** Shorthand default font size. */
-    private static int DEFAULT_FONT_SIZE = 12;
+	/** Shorthand default font size. */
+	private static int DEFAULT_FONT_SIZE = 12;
 
-    public static int getDefaultFontSize() {
-        return DEFAULT_FONT_SIZE;
-    }
+	public static int getDefaultFontSize() {
+		return DEFAULT_FONT_SIZE;
+	}
 
-    public static void setDefaultFontSize(final int newFontSize) {
-        final int minFontSize = 1;
-        if (newFontSize <= minFontSize) {
-            throw new IllegalArgumentException(String.format("Invalid font size: %,d", newFontSize));
-        }
-        DEFAULT_FONT_SIZE = newFontSize;
-    }
+	public static void setDefaultFontSize(final int newFontSize) {
+		final int minFontSize = 1;
+		if (newFontSize <= minFontSize) {
+			throw new IllegalArgumentException(String.format("Invalid font size: %,d", newFontSize));
+		}
+		DEFAULT_FONT_SIZE = newFontSize;
+	}
 
-    private static int MAX_CODE_INSTRUCTIONS = 50;
+	private static int MAX_CODE_INSTRUCTIONS = 50;
 
-    public static int getMaxCodeInstructions() {
-        return MAX_CODE_INSTRUCTIONS;
-    }
+	public static int getMaxCodeInstructions() {
+		return MAX_CODE_INSTRUCTIONS;
+	}
 
-    public static void setMaxCodeInstructions(final int n) {
-        if (n < 1) {
-            throw new IllegalArgumentException(String.format("Invalid max code instructions %,d", n));
-        }
-        MAX_CODE_INSTRUCTIONS = n;
-    }
+	public static void setMaxCodeInstructions(final int n) {
+		if (n < 1) {
+			throw new IllegalArgumentException(String.format("Invalid max code instructions %,d", n));
+		}
+		MAX_CODE_INSTRUCTIONS = n;
+	}
 
-    private static int MAX_MEMORY_LINES = 50;
+	private static int MAX_MEMORY_LINES = 50;
 
-    public static int getMaxMemoryLines() {
-        return MAX_MEMORY_LINES;
-    }
+	public static int getMaxMemoryLines() {
+		return MAX_MEMORY_LINES;
+	}
 
-    public static void setMaxMemoryLines(final int n) {
-        if (n < 1) {
-            throw new IllegalArgumentException(String.format("Invalid max memory lines %,d", n));
-        }
-        MAX_MEMORY_LINES = n;
-    }
+	public static void setMaxMemoryLines(final int n) {
+		if (n < 1) {
+			throw new IllegalArgumentException(String.format("Invalid max memory lines %,d", n));
+		}
+		MAX_MEMORY_LINES = n;
+	}
 
-    private static int MEMORY_BYTES_PER_LINE = 16;
+	private static int MEMORY_BYTES_PER_LINE = 16;
 
-    public static int getMemoryBytesPerLine() {
-        return MEMORY_BYTES_PER_LINE;
-    }
+	public static int getMemoryBytesPerLine() {
+		return MEMORY_BYTES_PER_LINE;
+	}
 
-    public static void setMemoryBytesPerLine(final int n) {
-        if (n < 1) {
-            throw new IllegalArgumentException(String.format("Invalid memory bytes per line %,d", n));
-        }
-        MEMORY_BYTES_PER_LINE = n;
-    }
+	public static void setMemoryBytesPerLine(final int n) {
+		if (n < 1) {
+			throw new IllegalArgumentException(String.format("Invalid memory bytes per line %,d", n));
+		}
+		MEMORY_BYTES_PER_LINE = n;
+	}
 }

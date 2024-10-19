@@ -20,47 +20,47 @@ package com.ledmington.cpu.x86;
 /** A prefix for an x86 instruction which changes its behavior. */
 public enum InstructionPrefix {
 
-    /** Executes this instruction atomically. */
-    LOCK((byte) 0xf0),
+	/** Executes this instruction atomically. */
+	LOCK((byte) 0xf0),
 
-    /** Equivalent to REPNE. Executes the instruction until the ECX (to be checked) register is not zero. */
-    REPNZ((byte) 0xf2),
+	/** Equivalent to REPNE. Executes the instruction until the ECX (to be checked) register is not zero. */
+	REPNZ((byte) 0xf2),
 
-    /** Equivalent to REPE and REPZ. Executes the instruction until the ECX (to be checked) register is zero. */
-    REP((byte) 0xf3);
+	/** Equivalent to REPE and REPZ. Executes the instruction until the ECX (to be checked) register is zero. */
+	REP((byte) 0xf3);
 
-    private final byte code;
+	private final byte code;
 
-    InstructionPrefix(final byte code) {
-        this.code = code;
-    }
+	InstructionPrefix(final byte code) {
+		this.code = code;
+	}
 
-    /**
-     * Returns the proper instruction prefix object corresponding to the given byte.
-     *
-     * @param x The byte with the prefix.
-     * @return The InstructionPrefix object.
-     */
-    public static InstructionPrefix fromByte(final byte x) {
-        return switch (x) {
-            case (byte) 0xf0 -> LOCK;
-            case (byte) 0xf2 -> REPNZ;
-            case (byte) 0xf3 -> REP;
-            default -> throw new IllegalArgumentException();
-        };
-    }
+	/**
+	 * Returns the proper instruction prefix object corresponding to the given byte.
+	 *
+	 * @param x The byte with the prefix.
+	 * @return The InstructionPrefix object.
+	 */
+	public static InstructionPrefix fromByte(final byte x) {
+		return switch (x) {
+			case (byte) 0xf0 -> LOCK;
+			case (byte) 0xf2 -> REPNZ;
+			case (byte) 0xf3 -> REP;
+			default -> throw new IllegalArgumentException();
+		};
+	}
 
-    /**
-     * Returns the 1-byte code with this prefix.
-     *
-     * @return The 1-byte code with this prefix.
-     */
-    public byte getCode() {
-        return code;
-    }
+	/**
+	 * Returns the 1-byte code with this prefix.
+	 *
+	 * @return The 1-byte code with this prefix.
+	 */
+	public byte getCode() {
+		return code;
+	}
 
-    @Override
-    public String toString() {
-        return "InstructionPrefix(code=" + code + ')';
-    }
+	@Override
+	public String toString() {
+		return "InstructionPrefix(code=" + code + ')';
+	}
 }

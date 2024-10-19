@@ -44,33 +44,33 @@ import org.openjdk.jmh.infra.Blackhole;
 @Timeout(time = 5)
 public class Decoding {
 
-    static {
-        MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
-    }
+	static {
+		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+	}
 
-    // Bytes of the instruction 'cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef'
-    private final byte[] instructionBytes = new byte[] {
-        (byte) 0x66,
-        (byte) 0x41,
-        (byte) 0x81,
-        (byte) 0xbc,
-        (byte) 0x89,
-        (byte) 0x78,
-        (byte) 0x56,
-        (byte) 0x34,
-        (byte) 0x12,
-        (byte) 0xef,
-        (byte) 0xbe
-    };
-    private InstructionDecoder id;
+	// Bytes of the instruction 'cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef'
+	private final byte[] instructionBytes = new byte[] {
+		(byte) 0x66,
+		(byte) 0x41,
+		(byte) 0x81,
+		(byte) 0xbc,
+		(byte) 0x89,
+		(byte) 0x78,
+		(byte) 0x56,
+		(byte) 0x34,
+		(byte) 0x12,
+		(byte) 0xef,
+		(byte) 0xbe
+	};
+	private InstructionDecoder id;
 
-    @Setup(Level.Invocation)
-    public void setup() {
-        id = new InstructionDecoderV1(instructionBytes);
-    }
+	@Setup(Level.Invocation)
+	public void setup() {
+		id = new InstructionDecoderV1(instructionBytes);
+	}
 
-    @Benchmark
-    public void parse(final Blackhole bh) {
-        bh.consume(id.decode());
-    }
+	@Benchmark
+	public void parse(final Blackhole bh) {
+		bh.consume(id.decode());
+	}
 }

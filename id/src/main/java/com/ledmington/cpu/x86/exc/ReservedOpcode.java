@@ -25,17 +25,17 @@ import java.io.Serial;
  */
 public final class ReservedOpcode extends RuntimeException {
 
-    @Serial
-    private static final long serialVersionUID = 5003238481425708141L;
+	@Serial
+	private static final long serialVersionUID = 5003238481425708141L;
 
-    /**
-     * Creates a ReversedOpcode runtime exception with a proper message. Since, usually, all reserved opcodes are made
-     * of two bytes, this constructors also needs two bytes.
-     *
-     * @param firstByte The first byte of the opcode.
-     * @param secondByte The second byte of the opcode.
-     */
-    public ReservedOpcode(final byte firstByte, final byte secondByte) {
-        super(String.format("Reserved opcode 0x%02x%02x", firstByte, secondByte));
-    }
+	/**
+	 * Creates a ReversedOpcode runtime exception with a proper message. Since, usually, all reserved opcodes are made
+	 * of two bytes, this constructors also needs two bytes.
+	 *
+	 * @param firstByte The first byte of the opcode.
+	 * @param secondByte The second byte of the opcode.
+	 */
+	public ReservedOpcode(final byte firstByte, final byte secondByte) {
+		super(String.format("Reserved opcode 0x%02x%02x", firstByte, secondByte));
+	}
 }

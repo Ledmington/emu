@@ -20,41 +20,41 @@ package com.ledmington.elf.section;
 /** An entry for the Dynamic section (.dyn). */
 public final class DynamicTableEntry {
 
-    private final DynamicTableEntryTag tag;
-    private final long content;
+	private final DynamicTableEntryTag tag;
+	private final long content;
 
-    /**
-     * Creates an entry for the dynamic table. The tag and the content are always considered to be 64-bits. For ELF32,
-     * the higher 32 bits are always zero.
-     *
-     * @param tag The 64-bit tag.
-     * @param content The 64-bit content.
-     */
-    public DynamicTableEntry(final long tag, final long content) {
-        this.tag = DynamicTableEntryTag.fromCode(tag);
-        this.content = content;
-    }
+	/**
+	 * Creates an entry for the dynamic table. The tag and the content are always considered to be 64-bits. For ELF32,
+	 * the higher 32 bits are always zero.
+	 *
+	 * @param tag The 64-bit tag.
+	 * @param content The 64-bit content.
+	 */
+	public DynamicTableEntry(final long tag, final long content) {
+		this.tag = DynamicTableEntryTag.fromCode(tag);
+		this.content = content;
+	}
 
-    /**
-     * Returns the tag of this dynamic table entry.
-     *
-     * @return The tag of this entry.
-     */
-    public DynamicTableEntryTag getTag() {
-        return tag;
-    }
+	/**
+	 * Returns the tag of this dynamic table entry.
+	 *
+	 * @return The tag of this entry.
+	 */
+	public DynamicTableEntryTag getTag() {
+		return tag;
+	}
 
-    /**
-     * Returns the content of this dynamic table entry.
-     *
-     * @return The 64-bit content.
-     */
-    public long getContent() {
-        return content;
-    }
+	/**
+	 * Returns the content of this dynamic table entry.
+	 *
+	 * @return The 64-bit content.
+	 */
+	public long getContent() {
+		return content;
+	}
 
-    @Override
-    public String toString() {
-        return "DynamicTableEntry(tag=" + tag + ";content=" + String.format("0x%016x", content) + ")";
-    }
+	@Override
+	public String toString() {
+		return "DynamicTableEntry(tag=" + tag + ";content=" + String.format("0x%016x", content) + ")";
+	}
 }

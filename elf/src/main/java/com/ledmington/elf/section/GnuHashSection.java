@@ -32,164 +32,164 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
  */
 public final class GnuHashSection implements LoadableSection {
 
-    private final String name;
-    private final SectionHeader header;
-    private final boolean is32Bit;
-    private final int symIndex;
-    private final int bloomShift;
-    private final long[] bloom;
-    private final int[] buckets;
+	private final String name;
+	private final SectionHeader header;
+	private final boolean is32Bit;
+	private final int symIndex;
+	private final int bloomShift;
+	private final long[] bloom;
+	private final int[] buckets;
 
-    /**
-     * Creates the GNU hash section with the given data.
-     *
-     * @param name The name of this section.
-     * @param sectionHeader The header of this section.
-     * @param b The ReadOnlyByteBuffer to read data from.
-     * @param is32Bit Used for alignment.
-     */
-    public GnuHashSection(
-            final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        this.name = Objects.requireNonNull(name);
-        this.header = Objects.requireNonNull(sectionHeader);
-        this.is32Bit = is32Bit;
+	/**
+	 * Creates the GNU hash section with the given data.
+	 *
+	 * @param name The name of this section.
+	 * @param sectionHeader The header of this section.
+	 * @param b The ReadOnlyByteBuffer to read data from.
+	 * @param is32Bit Used for alignment.
+	 */
+	public GnuHashSection(
+			final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+		this.name = Objects.requireNonNull(name);
+		this.header = Objects.requireNonNull(sectionHeader);
+		this.is32Bit = is32Bit;
 
-        b.setPosition(sectionHeader.getFileOffset());
+		b.setPosition(sectionHeader.getFileOffset());
 
-        final int nBuckets = b.read4();
-        this.symIndex = b.read4();
-        final int bloomSize = b.read4();
-        this.bloomShift = b.read4();
-        this.bloom = new long[bloomSize];
-        this.buckets = new int[nBuckets];
+		final int nBuckets = b.read4();
+		this.symIndex = b.read4();
+		final int bloomSize = b.read4();
+		this.bloomShift = b.read4();
+		this.bloom = new long[bloomSize];
+		this.buckets = new int[nBuckets];
 
-        for (int i = 0; i < bloomSize; i++) {
-            bloom[i] = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-        }
+		for (int i = 0; i < bloomSize; i++) {
+			bloom[i] = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+		}
 
-        for (int i = 0; i < nBuckets; i++) {
-            buckets[i] = b.read4();
-        }
-    }
+		for (int i = 0; i < nBuckets; i++) {
+			buckets[i] = b.read4();
+		}
+	}
 
-    /**
-     * Returns the number of symbols which cannot be looked up using {@code .gnu.hash}.
-     *
-     * @return The number of symbols which cannot be looked up using this section.
-     */
-    public int getSymbolTableIndex() {
-        return symIndex;
-    }
+	/**
+	 * Returns the number of symbols which cannot be looked up using {@code .gnu.hash}.
+	 *
+	 * @return The number of symbols which cannot be looked up using this section.
+	 */
+	public int getSymbolTableIndex() {
+		return symIndex;
+	}
 
-    /**
-     * Returns the number of elements in the bloom filter.
-     *
-     * @return The number of elements in the bloom filter.
-     */
-    public int getBloomFilterLength() {
-        return bloom.length;
-    }
+	/**
+	 * Returns the number of elements in the bloom filter.
+	 *
+	 * @return The number of elements in the bloom filter.
+	 */
+	public int getBloomFilterLength() {
+		return bloom.length;
+	}
 
-    /**
-     * Returns the i-th element of the bloom filter.
-     *
-     * @param idx The index of the element to retrieve.
-     * @return The i-th element in the bloom filter.
-     */
-    public long getBloomFilter(final int idx) {
-        return bloom[idx];
-    }
+	/**
+	 * Returns the i-th element of the bloom filter.
+	 *
+	 * @param idx The index of the element to retrieve.
+	 * @return The i-th element in the bloom filter.
+	 */
+	public long getBloomFilter(final int idx) {
+		return bloom[idx];
+	}
 
-    /**
-     * Returns the number of buckets.
-     *
-     * @return The number of buckets.
-     */
-    public int getBucketsLength() {
-        return buckets.length;
-    }
+	/**
+	 * Returns the number of buckets.
+	 *
+	 * @return The number of buckets.
+	 */
+	public int getBucketsLength() {
+		return buckets.length;
+	}
 
-    /**
-     * Returns the i-th bucket.
-     *
-     * @param idx The index of the bucket ot retrieve.
-     * @return The i-th bucket
-     */
-    public int getBucket(final int idx) {
-        return buckets[idx];
-    }
+	/**
+	 * Returns the i-th bucket.
+	 *
+	 * @param idx The index of the bucket ot retrieve.
+	 * @return The i-th bucket
+	 */
+	public int getBucket(final int idx) {
+		return buckets[idx];
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer bb =
-                new WriteOnlyByteBufferV1(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
-        bb.write(buckets.length);
-        bb.write(symIndex);
-        bb.write(bloom.length);
-        bb.write(bloomShift);
-        for (final long l : bloom) {
-            if (is32Bit) {
-                bb.write(BitUtils.asInt(l));
-            } else {
-                bb.write(l);
-            }
-        }
-        bb.write(buckets);
-        return bb.array();
-    }
+	@Override
+	public byte[] getLoadableContent() {
+		final WriteOnlyByteBuffer bb =
+				new WriteOnlyByteBufferV1(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
+		bb.write(buckets.length);
+		bb.write(symIndex);
+		bb.write(bloom.length);
+		bb.write(bloomShift);
+		for (final long l : bloom) {
+			if (is32Bit) {
+				bb.write(BitUtils.asInt(l));
+			} else {
+				bb.write(l);
+			}
+		}
+		bb.write(buckets);
+		return bb.array();
+	}
 
-    @Override
-    public String toString() {
-        return "GnuHashSection(name=" + name + ";header="
-                + header + ";is32Bit="
-                + is32Bit + ";symOffset="
-                + symIndex + ";bloomShift="
-                + bloomShift + ";bloom="
-                + Arrays.toString(bloom) + ";buckets="
-                + Arrays.toString(buckets) + ')';
-    }
+	@Override
+	public String toString() {
+		return "GnuHashSection(name=" + name + ";header="
+				+ header + ";is32Bit="
+				+ is32Bit + ";symOffset="
+				+ symIndex + ";bloomShift="
+				+ bloomShift + ";bloom="
+				+ Arrays.toString(bloom) + ";buckets="
+				+ Arrays.toString(buckets) + ')';
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + header.hashCode();
-        h = 31 * h + HashUtils.hash(is32Bit);
-        h = 31 * h + symIndex;
-        h = 31 * h + bloomShift;
-        h = 31 * h + Arrays.hashCode(bloom);
-        h = 31 * h + Arrays.hashCode(buckets);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + name.hashCode();
+		h = 31 * h + header.hashCode();
+		h = 31 * h + HashUtils.hash(is32Bit);
+		h = 31 * h + symIndex;
+		h = 31 * h + bloomShift;
+		h = 31 * h + Arrays.hashCode(bloom);
+		h = 31 * h + Arrays.hashCode(buckets);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final GnuHashSection ghs = (GnuHashSection) other;
-        return this.name.equals(ghs.name)
-                && this.header.equals(ghs.header)
-                && this.is32Bit == ghs.is32Bit
-                && this.symIndex == ghs.symIndex
-                && this.bloomShift == ghs.bloomShift
-                && Arrays.equals(this.bloom, ghs.bloom)
-                && Arrays.equals(this.buckets, ghs.buckets);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final GnuHashSection ghs = (GnuHashSection) other;
+		return this.name.equals(ghs.name)
+				&& this.header.equals(ghs.header)
+				&& this.is32Bit == ghs.is32Bit
+				&& this.symIndex == ghs.symIndex
+				&& this.bloomShift == ghs.bloomShift
+				&& Arrays.equals(this.bloom, ghs.bloom)
+				&& Arrays.equals(this.buckets, ghs.buckets);
+	}
 }

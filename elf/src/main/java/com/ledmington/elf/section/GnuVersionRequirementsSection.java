@@ -33,171 +33,171 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
  */
 public final class GnuVersionRequirementsSection implements LoadableSection {
 
-    private static final String standardName = ".gnu.version_r";
+	private static final String standardName = ".gnu.version_r";
 
-    /**
-     * Returns the standard name of this special section.
-     *
-     * @return The string ".gnu.version_r".
-     */
-    public static String getStandardName() {
-        return standardName;
-    }
+	/**
+	 * Returns the standard name of this special section.
+	 *
+	 * @return The string ".gnu.version_r".
+	 */
+	public static String getStandardName() {
+		return standardName;
+	}
 
-    private final SectionHeader header;
-    private final GnuVersionRequirementEntry[] entries;
+	private final SectionHeader header;
+	private final GnuVersionRequirementEntry[] entries;
 
-    /**
-     * Creates the GNU version requirements section with the given header.
-     *
-     * @param sectionHeader The header for this section.
-     * @param b The {@link ReadOnlyByteBuffer} to read data from.
-     * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_VERNEEDNUM from.
-     */
-    public GnuVersionRequirementsSection(
-            final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
-        this.header = Objects.requireNonNull(sectionHeader);
+	/**
+	 * Creates the GNU version requirements section with the given header.
+	 *
+	 * @param sectionHeader The header for this section.
+	 * @param b The {@link ReadOnlyByteBuffer} to read data from.
+	 * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_VERNEEDNUM from.
+	 */
+	public GnuVersionRequirementsSection(
+			final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
+		this.header = Objects.requireNonNull(sectionHeader);
 
-        int versionRequirementsEntryNum = 0;
-        {
-            for (int i = 0; i < dynamicSection.getTableLength(); i++) {
-                if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
-                    versionRequirementsEntryNum =
-                            BitUtils.asInt(dynamicSection.getEntry(i).getContent());
-                    break;
-                }
-            }
-        }
+		int versionRequirementsEntryNum = 0;
+		{
+			for (int i = 0; i < dynamicSection.getTableLength(); i++) {
+				if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
+					versionRequirementsEntryNum =
+							BitUtils.asInt(dynamicSection.getEntry(i).getContent());
+					break;
+				}
+			}
+		}
 
-        final long oldAlignment = b.getAlignment();
-        b.setAlignment(1L);
-        b.setPosition(sectionHeader.getFileOffset());
+		final long oldAlignment = b.getAlignment();
+		b.setAlignment(1L);
+		b.setPosition(sectionHeader.getFileOffset());
 
-        this.entries = new GnuVersionRequirementEntry[versionRequirementsEntryNum];
-        for (int i = 0; i < this.entries.length; i++) {
-            final long entryStart = b.getPosition();
-            this.entries[i] = new GnuVersionRequirementEntry(b);
+		this.entries = new GnuVersionRequirementEntry[versionRequirementsEntryNum];
+		for (int i = 0; i < this.entries.length; i++) {
+			final long entryStart = b.getPosition();
+			this.entries[i] = new GnuVersionRequirementEntry(b);
 
-            b.setPosition(entryStart + BitUtils.asLong(entries[i].getNextOffset()));
-        }
+			b.setPosition(entryStart + BitUtils.asLong(entries[i].getNextOffset()));
+		}
 
-        b.setAlignment(oldAlignment);
-    }
+		b.setAlignment(oldAlignment);
+	}
 
-    /**
-     * Returns the number of version requirements in this section.
-     *
-     * @return The number of version requirements.
-     */
-    public int getRequirementsLength() {
-        return entries.length;
-    }
+	/**
+	 * Returns the number of version requirements in this section.
+	 *
+	 * @return The number of version requirements.
+	 */
+	public int getRequirementsLength() {
+		return entries.length;
+	}
 
-    /**
-     * Returns the i-th version requirement.
-     *
-     * @param idx The index of the version requirement to retrieve.
-     * @return The i-th version requirement.
-     */
-    public GnuVersionRequirementEntry getEntry(final int idx) {
-        return entries[idx];
-    }
+	/**
+	 * Returns the i-th version requirement.
+	 *
+	 * @param idx The index of the version requirement to retrieve.
+	 * @return The i-th version requirement.
+	 */
+	public GnuVersionRequirementEntry getEntry(final int idx) {
+		return entries[idx];
+	}
 
-    /**
-     * Returns the name offset of the auxiliary entry with the given version.
-     *
-     * @param version The version to look for.
-     * @return The name offset of the entry.
-     */
-    public int getVersionNameOffset(final short version) {
-        for (final GnuVersionRequirementEntry gvre : entries) {
-            for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
-                if (gvre.getAuxiliary(i).other() == version) {
-                    return gvre.getAuxiliary(i).nameOffset();
-                }
-            }
-        }
-        return -1;
-    }
+	/**
+	 * Returns the name offset of the auxiliary entry with the given version.
+	 *
+	 * @param version The version to look for.
+	 * @return The name offset of the entry.
+	 */
+	public int getVersionNameOffset(final short version) {
+		for (final GnuVersionRequirementEntry gvre : entries) {
+			for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
+				if (gvre.getAuxiliary(i).other() == version) {
+					return gvre.getAuxiliary(i).nameOffset();
+				}
+			}
+		}
+		return -1;
+	}
 
-    /**
-     * Returns the 'other' field of the auxiliary entry with the given version.
-     *
-     * @param version The version to look for.
-     * @return The 'other' field of the entry.
-     */
-    public short getVersion(final short version) {
-        for (final GnuVersionRequirementEntry gvre : entries) {
-            for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
-                if (gvre.getAuxiliary(i).other() == version) {
-                    return gvre.getAuxiliary(i).other();
-                }
-            }
-        }
-        return -1;
-    }
+	/**
+	 * Returns the 'other' field of the auxiliary entry with the given version.
+	 *
+	 * @param version The version to look for.
+	 * @return The 'other' field of the entry.
+	 */
+	public short getVersion(final short version) {
+		for (final GnuVersionRequirementEntry gvre : entries) {
+			for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
+				if (gvre.getAuxiliary(i).other() == version) {
+					return gvre.getAuxiliary(i).other();
+				}
+			}
+		}
+		return -1;
+	}
 
-    @Override
-    public String getName() {
-        return standardName;
-    }
+	@Override
+	public String getName() {
+		return standardName;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        int bytesNeeded = (2 + 2 + 4 + 4 + 4) * entries.length;
-        for (final GnuVersionRequirementEntry gvre : entries) {
-            bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
-        }
-        final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded);
-        for (final GnuVersionRequirementEntry gvre : entries) {
-            wb.write(gvre.getVersion());
-            wb.write(gvre.getCount());
-            wb.write(gvre.getFileOffset());
-            wb.write(gvre.getAuxOffset());
-            wb.write(gvre.getNextOffset());
+	@Override
+	public byte[] getLoadableContent() {
+		int bytesNeeded = (2 + 2 + 4 + 4 + 4) * entries.length;
+		for (final GnuVersionRequirementEntry gvre : entries) {
+			bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
+		}
+		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded);
+		for (final GnuVersionRequirementEntry gvre : entries) {
+			wb.write(gvre.getVersion());
+			wb.write(gvre.getCount());
+			wb.write(gvre.getFileOffset());
+			wb.write(gvre.getAuxOffset());
+			wb.write(gvre.getNextOffset());
 
-            for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
-                final GnuVersionRequirementAuxiliaryEntry aux = gvre.getAuxiliary(i);
-                wb.write(aux.hash());
-                wb.write(aux.flags());
-                wb.write(aux.other());
-                wb.write(aux.nameOffset());
-                wb.write(aux.nextOffset());
-            }
-        }
-        return wb.array();
-    }
+			for (int i = 0; i < gvre.getAuxiliaryLength(); i++) {
+				final GnuVersionRequirementAuxiliaryEntry aux = gvre.getAuxiliary(i);
+				wb.write(aux.hash());
+				wb.write(aux.flags());
+				wb.write(aux.other());
+				wb.write(aux.nameOffset());
+				wb.write(aux.nextOffset());
+			}
+		}
+		return wb.array();
+	}
 
-    @Override
-    public String toString() {
-        return "GnuVersionRequirementsSection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
-    }
+	@Override
+	public String toString() {
+		return "GnuVersionRequirementsSection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + header.hashCode();
-        h = 31 * h + Arrays.hashCode(entries);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + header.hashCode();
+		h = 31 * h + Arrays.hashCode(entries);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final GnuVersionRequirementsSection gvrs = (GnuVersionRequirementsSection) other;
-        return this.header.equals(gvrs.header) && Arrays.equals(this.entries, gvrs.entries);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final GnuVersionRequirementsSection gvrs = (GnuVersionRequirementsSection) other;
+		return this.header.equals(gvrs.header) && Arrays.equals(this.entries, gvrs.entries);
+	}
 }

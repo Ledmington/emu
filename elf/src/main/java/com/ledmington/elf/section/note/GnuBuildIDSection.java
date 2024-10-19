@@ -26,86 +26,86 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** The .note.gnu.build-id ELF section. */
 public final class GnuBuildIDSection implements NoteSection {
 
-    private final SectionHeader header;
-    private final NoteSectionEntry[] entries;
+	private final SectionHeader header;
+	private final NoteSectionEntry[] entries;
 
-    /**
-     * Creates a .note.gnu.build-id section with the given data.
-     *
-     * @param sectionHeader The header of this section.
-     * @param b The ReadOnlyByteBuffer to read data from.
-     */
-    public GnuBuildIDSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.header = Objects.requireNonNull(sectionHeader);
+	/**
+	 * Creates a .note.gnu.build-id section with the given data.
+	 *
+	 * @param sectionHeader The header of this section.
+	 * @param b The ReadOnlyByteBuffer to read data from.
+	 */
+	public GnuBuildIDSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+		this.header = Objects.requireNonNull(sectionHeader);
 
-        if (header.getEntrySize() != 0) {
-            throw new IllegalArgumentException(String.format(
-                    "The .note.gnu.build-id section doesn't have fixed-size entries but its header says they should be %,d bytes each",
-                    header.getEntrySize()));
-        }
+		if (header.getEntrySize() != 0) {
+			throw new IllegalArgumentException(String.format(
+					"The .note.gnu.build-id section doesn't have fixed-size entries but its header says they should be %,d bytes each",
+					header.getEntrySize()));
+		}
 
-        b.setPosition(sectionHeader.getFileOffset());
-        b.setAlignment(sectionHeader.getAlignment());
-        this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
+		b.setPosition(sectionHeader.getFileOffset());
+		b.setAlignment(sectionHeader.getAlignment());
+		this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
 
-        final int expectedEntries = 1;
-        if (entries.length != expectedEntries) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid .note.gnu.build-id section: expected %,d note entry but found %,d: %s",
-                    expectedEntries, entries.length, Arrays.toString(entries)));
-        }
+		final int expectedEntries = 1;
+		if (entries.length != expectedEntries) {
+			throw new IllegalArgumentException(String.format(
+					"Invalid .note.gnu.build-id section: expected %,d note entry but found %,d: %s",
+					expectedEntries, entries.length, Arrays.toString(entries)));
+		}
 
-        if (!"GNU".equals(entries[0].getName())) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid owner for .note.gnu.build-id section: expected 'GNU' but was '%s'", entries[0].getName()));
-        }
-    }
+		if (!"GNU".equals(entries[0].getName())) {
+			throw new IllegalArgumentException(String.format(
+					"Invalid owner for .note.gnu.build-id section: expected 'GNU' but was '%s'", entries[0].getName()));
+		}
+	}
 
-    @Override
-    public String getName() {
-        return ".note.gnu.build-id";
-    }
+	@Override
+	public String getName() {
+		return ".note.gnu.build-id";
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public int getNumEntries() {
-        return entries.length;
-    }
+	@Override
+	public int getNumEntries() {
+		return entries.length;
+	}
 
-    @Override
-    public NoteSectionEntry getEntry(final int idx) {
-        return entries[idx];
-    }
+	@Override
+	public NoteSectionEntry getEntry(final int idx) {
+		return entries[idx];
+	}
 
-    @Override
-    public String toString() {
-        return "GnuBuildIDSection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
-    }
+	@Override
+	public String toString() {
+		return "GnuBuildIDSection(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + header.hashCode();
-        h = 31 * h + Arrays.hashCode(entries);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + header.hashCode();
+		h = 31 * h + Arrays.hashCode(entries);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final GnuBuildIDSection gbis = (GnuBuildIDSection) other;
-        return this.header.equals(gbis.header) && Arrays.equals(this.entries, gbis.entries);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final GnuBuildIDSection gbis = (GnuBuildIDSection) other;
+		return this.header.equals(gbis.header) && Arrays.equals(this.entries, gbis.entries);
+	}
 }

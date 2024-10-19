@@ -147,12 +147,13 @@ spotless {
             include path('**', '*.java')
             exclude path('**', 'build', '**'), path('**', 'build-*', '**'), path('**', 'bin', '**')
         }
+        setEncoding('utf-8')
         removeUnusedImports()
+        palantirJavaFormat('2.50.0').formatJavadoc(true)
+        indentWithTabs()
         formatAnnotations()
         trimTrailingWhitespace()
         endWithNewline()
-        setEncoding('utf-8')
-        palantirJavaFormat('2.50.0').formatJavadoc(true)
 
         // check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
         importOrder('java', 'javax', 'javafx', 'org.junit', 'com', 'com.ledmington', 'org', group as String)

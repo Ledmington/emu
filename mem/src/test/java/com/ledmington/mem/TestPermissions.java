@@ -34,141 +34,141 @@ import com.ledmington.utils.BitUtils;
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 final class TestPermissions {
 
-    private static final RandomGenerator rng =
-            RandomGeneratorFactory.getDefault().create(System.nanoTime());
+	private static final RandomGenerator rng =
+			RandomGeneratorFactory.getDefault().create(System.nanoTime());
 
-    private MemoryController mem;
+	private MemoryController mem;
 
-    @BeforeEach
-    void setup() {
-        mem = new MemoryController(MemoryInitializer.random());
-    }
+	@BeforeEach
+	void setup() {
+		mem = new MemoryController(MemoryInitializer.random());
+	}
 
-    @Test
-    void cantReadByDefault() {
-        final Set<Long> positions =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+	@Test
+	void cantReadByDefault() {
+		final Set<Long> positions =
+				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
-        for (final long address : positions) {
-            assertThrows(MemoryException.class, () -> mem.read(address));
-        }
-    }
+		for (final long address : positions) {
+			assertThrows(MemoryException.class, () -> mem.read(address));
+		}
+	}
 
-    @Test
-    void cantExecuteByDefault() {
-        final Set<Long> positions =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+	@Test
+	void cantExecuteByDefault() {
+		final Set<Long> positions =
+				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
-        for (final long address : positions) {
-            assertThrows(MemoryException.class, () -> mem.readCode(address));
-        }
-    }
+		for (final long address : positions) {
+			assertThrows(MemoryException.class, () -> mem.readCode(address));
+		}
+	}
 
-    @Test
-    void cantWriteByDefault() {
-        final Set<Long> positions =
-                Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+	@Test
+	void cantWriteByDefault() {
+		final Set<Long> positions =
+				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
-        for (final long address : positions) {
-            assertThrows(MemoryException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
-        }
-    }
+		for (final long address : positions) {
+			assertThrows(MemoryException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
+		}
+	}
 
-    @Test
-    void canRead() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, true, false, false);
+	@Test
+	void canRead() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, true, false, false);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.read(finalI));
-            assertThrows(MemoryException.class, () -> mem.readCode(finalI));
-            assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.read(finalI));
+			assertThrows(MemoryException.class, () -> mem.readCode(finalI));
+			assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+		}
+	}
 
-    @Test
-    void canWrite() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, false, true, false);
+	@Test
+	void canWrite() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, false, true, false);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-            assertThrows(MemoryException.class, () -> mem.read(finalI));
-            assertThrows(MemoryException.class, () -> mem.readCode(finalI));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+			assertThrows(MemoryException.class, () -> mem.read(finalI));
+			assertThrows(MemoryException.class, () -> mem.readCode(finalI));
+		}
+	}
 
-    @Test
-    void canReadAndWrite() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, true, true, false);
+	@Test
+	void canReadAndWrite() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, true, true, false);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.read(finalI));
-            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-            assertThrows(MemoryException.class, () -> mem.readCode(finalI));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.read(finalI));
+			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+			assertThrows(MemoryException.class, () -> mem.readCode(finalI));
+		}
+	}
 
-    @Test
-    void canExecute() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, false, false, true);
+	@Test
+	void canExecute() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, false, false, true);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.readCode(finalI));
-            assertThrows(MemoryException.class, () -> mem.read(finalI));
-            assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.readCode(finalI));
+			assertThrows(MemoryException.class, () -> mem.read(finalI));
+			assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+		}
+	}
 
-    @Test
-    void canReadAndExecute() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, true, false, true);
+	@Test
+	void canReadAndExecute() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, true, false, true);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.read(finalI));
-            assertDoesNotThrow(() -> mem.readCode(finalI));
-            assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.read(finalI));
+			assertDoesNotThrow(() -> mem.readCode(finalI));
+			assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+		}
+	}
 
-    @Test
-    void canWriteAndExecute() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, false, true, true);
+	@Test
+	void canWriteAndExecute() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, false, true, true);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.readCode(finalI));
-            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-            assertThrows(MemoryException.class, () -> mem.read(finalI));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.readCode(finalI));
+			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+			assertThrows(MemoryException.class, () -> mem.read(finalI));
+		}
+	}
 
-    @Test
-    void canReadWriteAndExecute() {
-        final long start = rng.nextLong();
-        final long end = start + 100L;
-        mem.setPermissions(start, end, true, true, true);
+	@Test
+	void canReadWriteAndExecute() {
+		final long start = rng.nextLong();
+		final long end = start + 100L;
+		mem.setPermissions(start, end, true, true, true);
 
-        for (long i = start; i <= end; i++) {
-            final long finalI = i;
-            assertDoesNotThrow(() -> mem.readCode(finalI));
-            assertDoesNotThrow(() -> mem.read(finalI));
-            assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-        }
-    }
+		for (long i = start; i <= end; i++) {
+			final long finalI = i;
+			assertDoesNotThrow(() -> mem.readCode(finalI));
+			assertDoesNotThrow(() -> mem.read(finalI));
+			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+		}
+	}
 }

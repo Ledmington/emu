@@ -26,77 +26,77 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** A "non-special" PROGBITS ELF section. */
 public final class BasicProgBitsSection implements ProgBitsSection {
 
-    private final String name;
-    private final SectionHeader header;
-    private final byte[] content;
+	private final String name;
+	private final SectionHeader header;
+	private final byte[] content;
 
-    /**
-     * Creates a BasicProgBitsSection with the given name and header by parsing bytes read from the ReadOnlyByteBuffer.
-     *
-     * @param name The name of this section.
-     * @param sectionHeader The header of this section.
-     * @param b The buffer to read bytes from.
-     */
-    public BasicProgBitsSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.name = Objects.requireNonNull(name);
-        this.header = Objects.requireNonNull(sectionHeader);
+	/**
+	 * Creates a BasicProgBitsSection with the given name and header by parsing bytes read from the ReadOnlyByteBuffer.
+	 *
+	 * @param name The name of this section.
+	 * @param sectionHeader The header of this section.
+	 * @param b The buffer to read bytes from.
+	 */
+	public BasicProgBitsSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+		this.name = Objects.requireNonNull(name);
+		this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition(sectionHeader.getFileOffset());
-        final long oldAlignment = b.getAlignment();
-        b.setAlignment(1L);
-        final int size = BitUtils.asInt(sectionHeader.getSectionSize());
-        this.content = new byte[size];
-        for (int i = 0; i < size; i++) {
-            this.content[i] = b.read1();
-        }
-        b.setAlignment(oldAlignment);
-    }
+		b.setPosition(sectionHeader.getFileOffset());
+		final long oldAlignment = b.getAlignment();
+		b.setAlignment(1L);
+		final int size = BitUtils.asInt(sectionHeader.getSectionSize());
+		this.content = new byte[size];
+		for (int i = 0; i < size; i++) {
+			this.content[i] = b.read1();
+		}
+		b.setAlignment(oldAlignment);
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        final byte[] v = new byte[content.length];
-        System.arraycopy(content, 0, v, 0, content.length);
-        return v;
-    }
+	@Override
+	public byte[] getLoadableContent() {
+		final byte[] v = new byte[content.length];
+		System.arraycopy(content, 0, v, 0, content.length);
+		return v;
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + header.hashCode();
-        h = 31 * h + Arrays.hashCode(content);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + name.hashCode();
+		h = 31 * h + header.hashCode();
+		h = 31 * h + Arrays.hashCode(content);
+		return h;
+	}
 
-    @Override
-    public String toString() {
-        return "BasicProgBitsSection(name=" + name + ";header=" + header + ";content=" + Arrays.toString(content) + ')';
-    }
+	@Override
+	public String toString() {
+		return "BasicProgBitsSection(name=" + name + ";header=" + header + ";content=" + Arrays.toString(content) + ')';
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final BasicProgBitsSection bpbs = (BasicProgBitsSection) other;
-        return this.name.equals(bpbs.name)
-                && this.header.equals(bpbs.header)
-                && Arrays.equals(this.content, bpbs.content);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final BasicProgBitsSection bpbs = (BasicProgBitsSection) other;
+		return this.name.equals(bpbs.name)
+				&& this.header.equals(bpbs.header)
+				&& Arrays.equals(this.content, bpbs.content);
+	}
 }

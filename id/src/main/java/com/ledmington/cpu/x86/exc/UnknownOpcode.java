@@ -22,25 +22,25 @@ import java.io.Serial;
 /** This exception is thrown when an unknown opcode is detected during instruction decoding. */
 public final class UnknownOpcode extends RuntimeException {
 
-    @Serial
-    private static final long serialVersionUID = 2581758152120570603L;
+	@Serial
+	private static final long serialVersionUID = 2581758152120570603L;
 
-    /**
-     * Creates a UnknownOpcode runtime exception with a proper message for a single byte opcode.
-     *
-     * @param opcodeByte The unknown opcode.
-     */
-    public UnknownOpcode(final byte opcodeByte) {
-        super(String.format("Unknown opcode 0x%02x", opcodeByte));
-    }
+	/**
+	 * Creates a UnknownOpcode runtime exception with a proper message for a single byte opcode.
+	 *
+	 * @param opcodeByte The unknown opcode.
+	 */
+	public UnknownOpcode(final byte opcodeByte) {
+		super(String.format("Unknown opcode 0x%02x", opcodeByte));
+	}
 
-    /**
-     * Creates a UnknownOpcode runtime exception with a proper message for a 2-bytes opcode.
-     *
-     * @param firstByte The unknown opcode's first byte.
-     * @param secondByte The unknown opcode's second byte.
-     */
-    public UnknownOpcode(final byte firstByte, final byte secondByte) {
-        super(String.format("Unknown opcode 0x%02x%02x", firstByte, secondByte));
-    }
+	/**
+	 * Creates a UnknownOpcode runtime exception with a proper message for a 2-bytes opcode.
+	 *
+	 * @param firstByte The unknown opcode's first byte.
+	 * @param secondByte The unknown opcode's second byte.
+	 */
+	public UnknownOpcode(final byte firstByte, final byte secondByte) {
+		super(String.format("Unknown opcode 0x%02x%02x", firstByte, secondByte));
+	}
 }

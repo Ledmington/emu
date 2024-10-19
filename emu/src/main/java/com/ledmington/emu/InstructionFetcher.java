@@ -29,60 +29,60 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** A class which represents the part of the emulated CPU which reads instructions from memory during execution. */
 public final class InstructionFetcher implements ReadOnlyByteBuffer {
 
-    private final Supplier<Long> instructionPointerReader;
-    private final Consumer<Long> instructionPointerWriter;
-    private final Function<Long, Byte> memReader;
+	private final Supplier<Long> instructionPointerReader;
+	private final Consumer<Long> instructionPointerWriter;
+	private final Function<Long, Byte> memReader;
 
-    /**
-     * Creates an InstructionFetcher with the given MemoryController and register file.
-     *
-     * @param mem The memory controller to retrieve instructions from.
-     * @param regFile The register file to get and set the instruction pointer.
-     */
-    public InstructionFetcher(final MemoryController mem, final X86RegisterFile regFile) {
-        Objects.requireNonNull(regFile);
-        this.instructionPointerReader = () -> regFile.get(Register64.RIP);
-        this.instructionPointerWriter = x -> regFile.set(Register64.RIP, x);
-        this.memReader = mem::readCode;
-    }
+	/**
+	 * Creates an InstructionFetcher with the given MemoryController and register file.
+	 *
+	 * @param mem The memory controller to retrieve instructions from.
+	 * @param regFile The register file to get and set the instruction pointer.
+	 */
+	public InstructionFetcher(final MemoryController mem, final X86RegisterFile regFile) {
+		Objects.requireNonNull(regFile);
+		this.instructionPointerReader = () -> regFile.get(Register64.RIP);
+		this.instructionPointerWriter = x -> regFile.set(Register64.RIP, x);
+		this.memReader = mem::readCode;
+	}
 
-    @Override
-    public boolean isLittleEndian() {
-        return false;
-    }
+	@Override
+	public boolean isLittleEndian() {
+		return false;
+	}
 
-    @Override
-    public void setEndianness(final boolean isLittleEndian) {
-        throw new UnsupportedOperationException("InstructionFetcher does not allow to change the endianness");
-    }
+	@Override
+	public void setEndianness(final boolean isLittleEndian) {
+		throw new UnsupportedOperationException("InstructionFetcher does not allow to change the endianness");
+	}
 
-    @Override
-    public long getAlignment() {
-        return 1L;
-    }
+	@Override
+	public long getAlignment() {
+		return 1L;
+	}
 
-    @Override
-    public void setAlignment(final long newAlignment) {
-        throw new UnsupportedOperationException("InstructionFetcher does not allow to change the byte alignment");
-    }
+	@Override
+	public void setAlignment(final long newAlignment) {
+		throw new UnsupportedOperationException("InstructionFetcher does not allow to change the byte alignment");
+	}
 
-    @Override
-    public void setPosition(final long newPosition) {
-        instructionPointerWriter.accept(newPosition);
-    }
+	@Override
+	public void setPosition(final long newPosition) {
+		instructionPointerWriter.accept(newPosition);
+	}
 
-    @Override
-    public long getPosition() {
-        return instructionPointerReader.get();
-    }
+	@Override
+	public long getPosition() {
+		return instructionPointerReader.get();
+	}
 
-    @Override
-    public byte read() {
-        return memReader.apply(instructionPointerReader.get());
-    }
+	@Override
+	public byte read() {
+		return memReader.apply(instructionPointerReader.get());
+	}
 
-    @Override
-    public String toString() {
-        return "InstructionFetcher(rip=" + instructionPointerReader.get() + ')';
-    }
+	@Override
+	public String toString() {
+		return "InstructionFetcher(rip=" + instructionPointerReader.get() + ')';
+	}
 }

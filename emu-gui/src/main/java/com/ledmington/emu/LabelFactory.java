@@ -22,12 +22,12 @@ import javafx.scene.text.Font;
 
 public final class LabelFactory {
 
-    private LabelFactory() {}
+	private LabelFactory() {}
 
-    public static Label getDefaultLabel(final String text) {
-        final Label lbl = new Label(text);
-        lbl.setWrapText(false);
-        lbl.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
-        return lbl;
-    }
+	public static Label getDefaultLabel(final String text) {
+		final Label lbl = new Label(text);
+		lbl.setWrapText(false);
+		lbl.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
+		return lbl;
+	}
 }

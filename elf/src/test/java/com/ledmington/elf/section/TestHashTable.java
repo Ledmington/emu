@@ -28,18 +28,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestHashTable {
 
-    private static Stream<Arguments> knownHashes() {
-        return Stream.of(
-                Arguments.of("a", 0x00000061),
-                Arguments.of("__libc_start_main", 0x0177ff8e),
-                Arguments.of("pthread_mutex_lock", 0x0de6a18b),
-                Arguments.of("strcasecmp", 0x098e13c0));
-    }
+	private static Stream<Arguments> knownHashes() {
+		return Stream.of(
+				Arguments.of("a", 0x00000061),
+				Arguments.of("__libc_start_main", 0x0177ff8e),
+				Arguments.of("pthread_mutex_lock", 0x0de6a18b),
+				Arguments.of("strcasecmp", 0x098e13c0));
+	}
 
-    @ParameterizedTest
-    @MethodSource("knownHashes")
-    void testKnownHashes(final String symbolname, final int hash) {
-        final int actual = HashTableSection.hash(symbolname.getBytes(StandardCharsets.UTF_8));
-        assertEquals(hash, actual, () -> String.format("Expected 0x%08x but was 0x%08x", hash, actual));
-    }
+	@ParameterizedTest
+	@MethodSource("knownHashes")
+	void testKnownHashes(final String symbolname, final int hash) {
+		final int actual = HashTableSection.hash(symbolname.getBytes(StandardCharsets.UTF_8));
+		assertEquals(hash, actual, () -> String.format("Expected 0x%08x but was 0x%08x", hash, actual));
+	}
 }

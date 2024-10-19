@@ -22,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 final class TestSectionHeaderType {
-    @Test
-    void allSectionHeaderTypesAreValid() {
-        for (final SectionHeaderType sht : SectionHeaderType.values()) {
-            assertTrue(
-                    SectionHeaderType.isValid(sht.getCode()),
-                    () -> String.format(
-                            "Expected SectionHeaderType object %s with code 0x%08x to be valid but wasn't",
-                            sht, sht.getCode()));
-        }
-    }
+	@Test
+	void allSectionHeaderTypesAreValid() {
+		for (final SectionHeaderType sht : SectionHeaderType.values()) {
+			assertTrue(
+					SectionHeaderType.isValid(sht.getCode()),
+					() -> String.format(
+							"Expected SectionHeaderType object %s with code 0x%08x to be valid but wasn't",
+							sht, sht.getCode()));
+		}
+	}
 }

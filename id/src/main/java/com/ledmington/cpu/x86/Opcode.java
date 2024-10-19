@@ -22,402 +22,402 @@ import java.util.Objects;
 /** X86 opcode mnemonics. */
 public enum Opcode {
 
-    /** Add with carry. */
-    ADC("adc"),
+	/** Add with carry. */
+	ADC("adc"),
 
-    /** Add. */
-    ADD("add"),
+	/** Add. */
+	ADD("add"),
 
-    /** Add scalar double-precision floating-point values. */
-    ADDSD("addsd"),
+	/** Add scalar double-precision floating-point values. */
+	ADDSD("addsd"),
 
-    /** Logical AND. */
-    AND("and"),
+	/** Logical AND. */
+	AND("and"),
 
-    /** Bit swap. */
-    BSWAP("bswap"),
+	/** Bit swap. */
+	BSWAP("bswap"),
 
-    /** Bit test. */
-    BT("bt"),
+	/** Bit test. */
+	BT("bt"),
 
-    /** Bit test and complement. */
-    BTC("btc"),
+	/** Bit test and complement. */
+	BTC("btc"),
 
-    /** Bit test and reset. */
-    BTR("btr"),
+	/** Bit test and reset. */
+	BTR("btr"),
 
-    /** Bit test and set. */
-    BTS("bts"),
+	/** Bit test and set. */
+	BTS("bts"),
 
-    /** Call procedure. */
-    CALL("call"),
+	/** Call procedure. */
+	CALL("call"),
 
-    /** Convert doubleword to quadword. */
-    CDQ("cdq"),
+	/** Convert doubleword to quadword. */
+	CDQ("cdq"),
 
-    /** Convert doubleword to quadword. */
-    CDQE("cdqe"),
+	/** Convert doubleword to quadword. */
+	CDQE("cdqe"),
 
-    /** Conditional move if above. */
-    CMOVA("cmova"),
+	/** Conditional move if above. */
+	CMOVA("cmova"),
 
-    /** Conditional move if above or equal. */
-    CMOVAE("cmovae"),
+	/** Conditional move if above or equal. */
+	CMOVAE("cmovae"),
 
-    /** Conditional move if below. */
-    CMOVB("cmovb"),
+	/** Conditional move if below. */
+	CMOVB("cmovb"),
 
-    /** Conditional move if below or equal. */
-    CMOVBE("cmovbe"),
+	/** Conditional move if below or equal. */
+	CMOVBE("cmovbe"),
 
-    /** Conditional move if equal. */
-    CMOVE("cmove"),
+	/** Conditional move if equal. */
+	CMOVE("cmove"),
 
-    /** Conditional move if greater. */
-    CMOVG("cmovg"),
+	/** Conditional move if greater. */
+	CMOVG("cmovg"),
 
-    /** Conditional move if greater or equal. */
-    CMOVGE("cmovge"),
+	/** Conditional move if greater or equal. */
+	CMOVGE("cmovge"),
 
-    /** Conditional move if less. */
-    CMOVL("cmovl"),
+	/** Conditional move if less. */
+	CMOVL("cmovl"),
 
-    /** Conditional move if less or equal. */
-    CMOVLE("cmovle"),
+	/** Conditional move if less or equal. */
+	CMOVLE("cmovle"),
 
-    /** Conditional move if not equal. */
-    CMOVNE("cmovne"),
+	/** Conditional move if not equal. */
+	CMOVNE("cmovne"),
 
-    /** Conditional move if not signed. */
-    CMOVNS("cmovns"),
+	/** Conditional move if not signed. */
+	CMOVNS("cmovns"),
 
-    /** Conditional move if signed. */
-    CMOVS("cmovs"),
+	/** Conditional move if signed. */
+	CMOVS("cmovs"),
 
-    /** Compare two operands. */
-    CMP("cmp"),
+	/** Compare two operands. */
+	CMP("cmp"),
 
-    /** Compare and exchange. */
-    CMPXCHG("cmpxchg"),
+	/** Compare and exchange. */
+	CMPXCHG("cmpxchg"),
 
-    /** CPU identification. */
-    CPUID("cpuid"),
+	/** CPU identification. */
+	CPUID("cpuid"),
 
-    /** Convert doubleword integer to scalar double precision floating-point value. */
-    CVTSI2SD("cvtsi2sd"),
+	/** Convert doubleword integer to scalar double precision floating-point value. */
+	CVTSI2SD("cvtsi2sd"),
 
-    /** Convert word to doubleword. */
-    CWDE("cwde"),
+	/** Convert word to doubleword. */
+	CWDE("cwde"),
 
-    /** Decrement. */
-    DEC("dec"),
+	/** Decrement. */
+	DEC("dec"),
 
-    /** Unsigned divide. */
-    DIV("div"),
+	/** Unsigned divide. */
+	DIV("div"),
 
-    /** Divide scalar double-precision floating-point values. */
-    DIVSD("divsd"),
+	/** Divide scalar double-precision floating-point values. */
+	DIVSD("divsd"),
 
-    /** Terminate an indirect branch in 32-bit mode. */
-    ENDBR32("endbr32"),
+	/** Terminate an indirect branch in 32-bit mode. */
+	ENDBR32("endbr32"),
 
-    /** Terminate an indirect branch in 64-bit mode. */
-    ENDBR64("endbr64"),
+	/** Terminate an indirect branch in 64-bit mode. */
+	ENDBR64("endbr64"),
 
-    /** Halt. */
-    HLT("hlt"),
+	/** Halt. */
+	HLT("hlt"),
 
-    /** Signed divide. */
-    IDIV("idiv"),
+	/** Signed divide. */
+	IDIV("idiv"),
 
-    /** Signed multiply. */
-    IMUL("imul"),
+	/** Signed multiply. */
+	IMUL("imul"),
 
-    /** Increment. */
-    INC("inc"),
+	/** Increment. */
+	INC("inc"),
 
-    /** Increment shadow stack pointer. */
-    INCSSPQ("incsspq"),
+	/** Increment shadow stack pointer. */
+	INCSSPQ("incsspq"),
 
-    /** Call to interrupt procedure. */
-    INT3("int3"),
+	/** Call to interrupt procedure. */
+	INT3("int3"),
 
-    /** Unsigned conditional jump if above. */
-    JA("ja"),
+	/** Unsigned conditional jump if above. */
+	JA("ja"),
 
-    /** Unsigned conditional jump if above or equal. */
-    JAE("jae"),
+	/** Unsigned conditional jump if above or equal. */
+	JAE("jae"),
 
-    /** Unsigned conditional jump if below. */
-    JB("jb"),
+	/** Unsigned conditional jump if below. */
+	JB("jb"),
 
-    /** Unsigned conditional jump if below or equal. */
-    JBE("jbe"),
+	/** Unsigned conditional jump if below or equal. */
+	JBE("jbe"),
 
-    /** Unsigned conditional jump if equal. */
-    JE("je"),
+	/** Unsigned conditional jump if equal. */
+	JE("je"),
 
-    /** Signed conditional jump if greater. */
-    JG("jg"),
+	/** Signed conditional jump if greater. */
+	JG("jg"),
 
-    /** Signed conditional jump if greater or equal. */
-    JGE("jge"),
+	/** Signed conditional jump if greater or equal. */
+	JGE("jge"),
 
-    /** Signed conditional jump if less. */
-    JL("jl"),
+	/** Signed conditional jump if less. */
+	JL("jl"),
 
-    /** Signed conditional jump if less or equal. */
-    JLE("jle"),
+	/** Signed conditional jump if less or equal. */
+	JLE("jle"),
 
-    /** Unconditional jump. */
-    JMP("jmp"),
+	/** Unconditional jump. */
+	JMP("jmp"),
 
-    /** Unsigned conditional jump if not equal. */
-    JNE("jne"),
+	/** Unsigned conditional jump if not equal. */
+	JNE("jne"),
 
-    /** Conditional jump if not signed. */
-    JNS("jns"),
+	/** Conditional jump if not signed. */
+	JNS("jns"),
 
-    /** Conditional jump if parity. */
-    JP("jp"),
+	/** Conditional jump if parity. */
+	JP("jp"),
 
-    /** Conditional jump if signed. */
-    JS("js"),
+	/** Conditional jump if signed. */
+	JS("js"),
 
-    /** Load effective address. */
-    LEA("lea"),
+	/** Load effective address. */
+	LEA("lea"),
 
-    /** High-level procedure exit. */
-    LEAVE("leave"),
+	/** High-level procedure exit. */
+	LEAVE("leave"),
 
-    /** Move to/from registers and memory. */
-    MOV("mov"),
+	/** Move to/from registers and memory. */
+	MOV("mov"),
 
-    /** Move a 64-bit immediate into a 64-bit register. */
-    MOVABS("movabs"),
+	/** Move a 64-bit immediate into a 64-bit register. */
+	MOVABS("movabs"),
 
-    /** Move aligned packed double-precision floating-point values. */
-    MOVAPD("movapd"),
+	/** Move aligned packed double-precision floating-point values. */
+	MOVAPD("movapd"),
 
-    /** Move aligned packed single-precision floating-point values. */
-    MOVAPS("movaps"),
+	/** Move aligned packed single-precision floating-point values. */
+	MOVAPS("movaps"),
 
-    /** Move aligned double-quadword. */
-    MOVDQA("movdqa"),
+	/** Move aligned double-quadword. */
+	MOVDQA("movdqa"),
 
-    /** Move packed single-precision floating-point values high to low. */
-    MOVHLPS("movhlps"),
+	/** Move packed single-precision floating-point values high to low. */
+	MOVHLPS("movhlps"),
 
-    /**
-     * Move two packed single precision floating-point values to and from the high quadword of an XMM register and
-     * memory.
-     */
-    MOVHPS("movhps"),
+	/**
+	 * Move two packed single precision floating-point values to and from the high quadword of an XMM register and
+	 * memory.
+	 */
+	MOVHPS("movhps"),
 
-    /** Move quadword. */
-    MOVQ("movq"),
+	/** Move quadword. */
+	MOVQ("movq"),
 
-    /** Move string. */
-    MOVS("movs"),
+	/** Move string. */
+	MOVS("movs"),
 
-    /** Move double-word string. */
-    MOVSD("movsd"),
+	/** Move double-word string. */
+	MOVSD("movsd"),
 
-    /** Move and sign-extend. */
-    MOVSX("movsx"),
+	/** Move and sign-extend. */
+	MOVSX("movsx"),
 
-    /** Move and sign-extend doubleword. */
-    MOVSXD("movsxd"),
+	/** Move and sign-extend doubleword. */
+	MOVSXD("movsxd"),
 
-    /** Move unaligned packed single precision floating-point values into XMM register. */
-    MOVUPS("movups"),
+	/** Move unaligned packed single precision floating-point values into XMM register. */
+	MOVUPS("movups"),
 
-    /** Move and zero-extend. */
-    MOVZX("movzx"),
+	/** Move and zero-extend. */
+	MOVZX("movzx"),
 
-    /** Unsigned multiply. */
-    MUL("mul"),
+	/** Unsigned multiply. */
+	MUL("mul"),
 
-    /** Two's complement negation. */
-    NEG("neg"),
+	/** Two's complement negation. */
+	NEG("neg"),
 
-    /** No operation. */
-    NOP("nop"),
+	/** No operation. */
+	NOP("nop"),
 
-    /** Logical NOT. */
-    NOT("not"),
+	/** Logical NOT. */
+	NOT("not"),
 
-    /** Logical OR. */
-    OR("or"),
+	/** Logical OR. */
+	OR("or"),
 
-    /** Add packed quadword integers. */
-    PADDQ("paddq"),
+	/** Add packed quadword integers. */
+	PADDQ("paddq"),
 
-    /** Logical AND (MMX/XMM registers). */
-    PAND("pand"),
+	/** Logical AND (MMX/XMM registers). */
+	PAND("pand"),
 
-    /** Compare packed doublewords for equal. */
-    PCMPEQD("pcmpeqd"),
+	/** Compare packed doublewords for equal. */
+	PCMPEQD("pcmpeqd"),
 
-    /** Pop a value from the stack. */
-    POP("pop"),
+	/** Pop a value from the stack. */
+	POP("pop"),
 
-    /** Logical OR (MMX/XMM registers). */
-    POR("por"),
+	/** Logical OR (MMX/XMM registers). */
+	POR("por"),
 
-    /**
-     * Non-temporal data—fetch data into location close to the processor, minimizing cache pollution. Pentium III
-     * processor: 1st-level cache Pentium 4 and Intel Xeon processor: 2nd-level cache
-     */
-    PREFETCHNTA("prefetchnta"),
+	/**
+	 * Non-temporal data—fetch data into location close to the processor, minimizing cache pollution. Pentium III
+	 * processor: 1st-level cache Pentium 4 and Intel Xeon processor: 2nd-level cache
+	 */
+	PREFETCHNTA("prefetchnta"),
 
-    /**
-     * Temporal data—fetch data into all levels of cache hierarchy. Pentium III processor: 1st-level cache or 2nd-level
-     * cache Pentium 4 and Intel Xeon processor: 2nd-level cache
-     */
-    PREFETCHT0("prefetcht0"),
+	/**
+	 * Temporal data—fetch data into all levels of cache hierarchy. Pentium III processor: 1st-level cache or 2nd-level
+	 * cache Pentium 4 and Intel Xeon processor: 2nd-level cache
+	 */
+	PREFETCHT0("prefetcht0"),
 
-    /**
-     * Temporal data—fetch data into level 2 cache and higher. Pentium III processor: 2nd-level cache Pentium 4 and
-     * Intel Xeon processor: 2nd-level cache
-     */
-    PREFETCHT1("prefetcht1"),
+	/**
+	 * Temporal data—fetch data into level 2 cache and higher. Pentium III processor: 2nd-level cache Pentium 4 and
+	 * Intel Xeon processor: 2nd-level cache
+	 */
+	PREFETCHT1("prefetcht1"),
 
-    /**
-     * Temporal data—fetch data into level 2 cache and higher. Pentium III processor: 2nd-level cache Pentium 4 and
-     * Intel Xeon processor: 2nd-level cache
-     */
-    PREFETCHT2("prefetcht2"),
+	/**
+	 * Temporal data—fetch data into level 2 cache and higher. Pentium III processor: 2nd-level cache Pentium 4 and
+	 * Intel Xeon processor: 2nd-level cache
+	 */
+	PREFETCHT2("prefetcht2"),
 
-    /** Shuffle packed doublewords. */
-    PSHUFD("pshufd"),
+	/** Shuffle packed doublewords. */
+	PSHUFD("pshufd"),
 
-    /** Shuffle packed integer word in MMX register. */
-    PSHUFW("pshufw"),
+	/** Shuffle packed integer word in MMX register. */
+	PSHUFW("pshufw"),
 
-    /** Subtract packed quadword integers. */
-    PSUBQ("psubq"),
+	/** Subtract packed quadword integers. */
+	PSUBQ("psubq"),
 
-    /** Unpack high data. */
-    PUNPCKHQDQ("punpckhqdq"),
+	/** Unpack high data. */
+	PUNPCKHQDQ("punpckhqdq"),
 
-    /** Unpack low-order doublewords. */
-    PUNPCKLDQ("punpckldq"),
+	/** Unpack low-order doublewords. */
+	PUNPCKLDQ("punpckldq"),
 
-    /** Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register. */
-    PUNPCKLQDQ("punpcklqdq"),
+	/** Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register. */
+	PUNPCKLQDQ("punpcklqdq"),
 
-    /** Push word, doubleword or quadword onto the stack. */
-    PUSH("push"),
+	/** Push word, doubleword or quadword onto the stack. */
+	PUSH("push"),
 
-    /** Logical XOR (MMX/XMM registers). */
-    PXOR("pxor"),
+	/** Logical XOR (MMX/XMM registers). */
+	PXOR("pxor"),
 
-    /** Read random number. */
-    RDRAND("rdrand"),
+	/** Read random number. */
+	RDRAND("rdrand"),
 
-    /** Read random seed. */
-    RDSEED("rdseed"),
+	/** Read random seed. */
+	RDSEED("rdseed"),
 
-    /** Read shadow stack pointer. */
-    RDSSPQ("rdsspq"),
+	/** Read shadow stack pointer. */
+	RDSSPQ("rdsspq"),
 
-    /** Return from procedure. */
-    RET("ret"),
+	/** Return from procedure. */
+	RET("ret"),
 
-    /** Arithmetic shift right. */
-    SAR("sar"),
+	/** Arithmetic shift right. */
+	SAR("sar"),
 
-    /** Integer subtraction with borrow. */
-    SBB("sbb"),
+	/** Integer subtraction with borrow. */
+	SBB("sbb"),
 
-    /** Set byte if above. */
-    SETA("seta"),
+	/** Set byte if above. */
+	SETA("seta"),
 
-    /** Set byte if above or equal. */
-    SETAE("setae"),
+	/** Set byte if above or equal. */
+	SETAE("setae"),
 
-    /** Set byte if below. */
-    SETB("setb"),
+	/** Set byte if below. */
+	SETB("setb"),
 
-    /** Set byte if below or equal. */
-    SETBE("setbe"),
+	/** Set byte if below or equal. */
+	SETBE("setbe"),
 
-    /** Set byte if equal. */
-    SETE("sete"),
+	/** Set byte if equal. */
+	SETE("sete"),
 
-    /** Set byte if greater. */
-    SETG("setg"),
+	/** Set byte if greater. */
+	SETG("setg"),
 
-    /** Set byte if greater or equal. */
-    SETGE("setge"),
+	/** Set byte if greater or equal. */
+	SETGE("setge"),
 
-    /** Set byte if less. */
-    SETL("setl"),
+	/** Set byte if less. */
+	SETL("setl"),
 
-    /** Set byte if less or equal. */
-    SETLE("setle"),
+	/** Set byte if less or equal. */
+	SETLE("setle"),
 
-    /** Set byte if not equal. */
-    SETNE("setne"),
+	/** Set byte if not equal. */
+	SETNE("setne"),
 
-    /** Logical shift left. */
-    SHL("shl"),
+	/** Logical shift left. */
+	SHL("shl"),
 
-    /** Logical shift right. */
-    SHR("shr"),
+	/** Logical shift right. */
+	SHR("shr"),
 
-    /** Shuffles values in packed double-precision floating-point operands. */
-    SHUFPD("shufpd"),
+	/** Shuffles values in packed double-precision floating-point operands. */
+	SHUFPD("shufpd"),
 
-    /** Shuffles values in packed single-precision floating-point operands. */
-    SHUFPS("shufps"),
+	/** Shuffles values in packed single-precision floating-point operands. */
+	SHUFPS("shufps"),
 
-    /** Store string. */
-    STOS("stos"),
+	/** Store string. */
+	STOS("stos"),
 
-    /** Subtract. */
-    SUB("sub"),
+	/** Subtract. */
+	SUB("sub"),
 
-    /** Logical compare. */
-    TEST("test"),
+	/** Logical compare. */
+	TEST("test"),
 
-    /** Unordered compare scalar double-precision floating-point values and set EFLAGS. */
-    UCOMISD("ucomisd"),
+	/** Unordered compare scalar double-precision floating-point values and set EFLAGS. */
+	UCOMISD("ucomisd"),
 
-    /** Unordered compare scalar single-precision floating-point values and set EFLAGS. */
-    UCOMISS("ucomiss"),
+	/** Unordered compare scalar single-precision floating-point values and set EFLAGS. */
+	UCOMISS("ucomiss"),
 
-    /** Undefined instruction. */
-    UD2("ud2"),
+	/** Undefined instruction. */
+	UD2("ud2"),
 
-    /** Exchange and add. */
-    XADD("xadd"),
+	/** Exchange and add. */
+	XADD("xadd"),
 
-    /** Exchange. */
-    XCHG("xchg"),
+	/** Exchange. */
+	XCHG("xchg"),
 
-    /** Reads the state of an extended control register. */
-    XGETBV("xgetbv"),
+	/** Reads the state of an extended control register. */
+	XGETBV("xgetbv"),
 
-    /** Logical XOR. */
-    XOR("xor"),
+	/** Logical XOR. */
+	XOR("xor"),
 
-    /** Bitwise logical XOR of single-precision ploating-point values. */
-    XORPS("xorps");
+	/** Bitwise logical XOR of single-precision ploating-point values. */
+	XORPS("xorps");
 
-    private final String mnemonicString;
+	private final String mnemonicString;
 
-    Opcode(final String mnemonicString) {
-        this.mnemonicString = Objects.requireNonNull(mnemonicString);
-    }
+	Opcode(final String mnemonicString) {
+		this.mnemonicString = Objects.requireNonNull(mnemonicString);
+	}
 
-    /**
-     * Returns the mnemonic for this opcode.
-     *
-     * @return The mnemonic for this opcode.
-     */
-    public String mnemonic() {
-        return mnemonicString;
-    }
+	/**
+	 * Returns the mnemonic for this opcode.
+	 *
+	 * @return The mnemonic for this opcode.
+	 */
+	public String mnemonic() {
+		return mnemonicString;
+	}
 }

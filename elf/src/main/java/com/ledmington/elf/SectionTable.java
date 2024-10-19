@@ -22,18 +22,18 @@ import com.ledmington.elf.section.Section;
 /** An interface for ELF files/objects which behave like a section table. */
 public interface SectionTable {
 
-    /**
-     * Returns the number of sections.
-     *
-     * @return The number of sections.
-     */
-    int getSectionTableLength();
+	/**
+	 * Returns the number of sections.
+	 *
+	 * @return The number of sections.
+	 */
+	int getSectionTableLength();
 
-    /**
-     * Returns the i-th section.
-     *
-     * @param idx The index of the section to return.
-     * @return The i-th section.
-     */
-    Section getSection(final int idx);
+	/**
+	 * Returns the i-th section.
+	 *
+	 * @param idx The index of the section to return.
+	 * @return The i-th section.
+	 */
+	Section getSection(final int idx);
 }

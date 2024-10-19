@@ -32,125 +32,125 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
 /** An ELF Relocation table with explicit addends. */
 public final class RelocationAddendSection implements LoadableSection {
 
-    private final String name;
-    private final SectionHeader header;
-    private final boolean is32Bit;
-    private final RelocationAddendEntry[] relocationAddendTable;
+	private final String name;
+	private final SectionHeader header;
+	private final boolean is32Bit;
+	private final RelocationAddendEntry[] relocationAddendTable;
 
-    /**
-     * Creates a RelocationAddendSection with the given data.
-     *
-     * @param name The name of this section.
-     * @param sectionHeader The header of this section.
-     * @param b The readOnlyByteBuffer to read data from.
-     * @param is32Bit Used for alignment.
-     * @param isa The ISA to be used to parse entries.
-     */
-    public RelocationAddendSection(
-            final String name,
-            final SectionHeader sectionHeader,
-            final ReadOnlyByteBuffer b,
-            final boolean is32Bit,
-            final ISA isa) {
-        this.name = Objects.requireNonNull(name);
-        this.header = Objects.requireNonNull(sectionHeader);
-        this.is32Bit = is32Bit;
+	/**
+	 * Creates a RelocationAddendSection with the given data.
+	 *
+	 * @param name The name of this section.
+	 * @param sectionHeader The header of this section.
+	 * @param b The readOnlyByteBuffer to read data from.
+	 * @param is32Bit Used for alignment.
+	 * @param isa The ISA to be used to parse entries.
+	 */
+	public RelocationAddendSection(
+			final String name,
+			final SectionHeader sectionHeader,
+			final ReadOnlyByteBuffer b,
+			final boolean is32Bit,
+			final ISA isa) {
+		this.name = Objects.requireNonNull(name);
+		this.header = Objects.requireNonNull(sectionHeader);
+		this.is32Bit = is32Bit;
 
-        b.setPosition(sectionHeader.getFileOffset());
-        final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
-        this.relocationAddendTable = new RelocationAddendEntry[nEntries];
+		b.setPosition(sectionHeader.getFileOffset());
+		final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
+		this.relocationAddendTable = new RelocationAddendEntry[nEntries];
 
-        for (int i = 0; i < nEntries; i++) {
-            final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            final int symbolTableIndex =
-                    is32Bit ? BitUtils.asInt((info & 0x000000000000ff00L) >>> 8) : BitUtils.asInt(info >>> 32);
-            final RelocationAddendEntryType type = RelocationAddendEntryType.fromCode(
-                    isa, is32Bit ? BitUtils.asInt(BitUtils.asByte(info)) : BitUtils.asInt(info));
-            final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-            this.relocationAddendTable[i] = new RelocationAddendEntry(offset, symbolTableIndex, type, addend);
-        }
-    }
+		for (int i = 0; i < nEntries; i++) {
+			final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+			final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+			final int symbolTableIndex =
+					is32Bit ? BitUtils.asInt((info & 0x000000000000ff00L) >>> 8) : BitUtils.asInt(info >>> 32);
+			final RelocationAddendEntryType type = RelocationAddendEntryType.fromCode(
+					isa, is32Bit ? BitUtils.asInt(BitUtils.asByte(info)) : BitUtils.asInt(info));
+			final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+			this.relocationAddendTable[i] = new RelocationAddendEntry(offset, symbolTableIndex, type, addend);
+		}
+	}
 
-    /**
-     * Returns the number of entries in the relocation section.
-     *
-     * @return The number of entries in the relocation section.
-     */
-    public int getRelocationAddendTableLength() {
-        return relocationAddendTable.length;
-    }
+	/**
+	 * Returns the number of entries in the relocation section.
+	 *
+	 * @return The number of entries in the relocation section.
+	 */
+	public int getRelocationAddendTableLength() {
+		return relocationAddendTable.length;
+	}
 
-    /**
-     * Returns the i-th entry in the relocation section.
-     *
-     * @param idx The index of the entry to return.
-     * @return The i-th entry in the relocation section.
-     */
-    public RelocationAddendEntry getRelocationAddendEntry(final int idx) {
-        return relocationAddendTable[idx];
-    }
+	/**
+	 * Returns the i-th entry in the relocation section.
+	 *
+	 * @param idx The index of the entry to return.
+	 * @return The i-th entry in the relocation section.
+	 */
+	public RelocationAddendEntry getRelocationAddendEntry(final int idx) {
+		return relocationAddendTable[idx];
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24));
-        for (final RelocationAddendEntry entry : relocationAddendTable) {
-            if (is32Bit) {
-                bb.write(BitUtils.asInt(entry.offset()));
-                bb.write(((entry.symbolTableIndex() & 0x000000ff) << 8)
-                        | (entry.type().getCode() & 0x000000ff));
-                bb.write(BitUtils.asInt(entry.addend()));
-            } else {
-                bb.write(entry.offset());
-                bb.write((BitUtils.asLong(entry.symbolTableIndex()) << 32)
-                        | (BitUtils.asLong(entry.type().getCode())));
-                bb.write(entry.addend());
-            }
-        }
-        return bb.array();
-    }
+	@Override
+	public byte[] getLoadableContent() {
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24));
+		for (final RelocationAddendEntry entry : relocationAddendTable) {
+			if (is32Bit) {
+				bb.write(BitUtils.asInt(entry.offset()));
+				bb.write(((entry.symbolTableIndex() & 0x000000ff) << 8)
+						| (entry.type().getCode() & 0x000000ff));
+				bb.write(BitUtils.asInt(entry.addend()));
+			} else {
+				bb.write(entry.offset());
+				bb.write((BitUtils.asLong(entry.symbolTableIndex()) << 32)
+						| (BitUtils.asLong(entry.type().getCode())));
+				bb.write(entry.addend());
+			}
+		}
+		return bb.array();
+	}
 
-    @Override
-    public String toString() {
-        return "RelocationAddendSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit
-                + ";relocationAddendTable=" + Arrays.toString(relocationAddendTable) + ")";
-    }
+	@Override
+	public String toString() {
+		return "RelocationAddendSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit
+				+ ";relocationAddendTable=" + Arrays.toString(relocationAddendTable) + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + header.hashCode();
-        h = 31 * h + HashUtils.hash(is32Bit);
-        h = 31 * h + Arrays.hashCode(relocationAddendTable);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + name.hashCode();
+		h = 31 * h + header.hashCode();
+		h = 31 * h + HashUtils.hash(is32Bit);
+		h = 31 * h + Arrays.hashCode(relocationAddendTable);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final RelocationAddendSection ras = (RelocationAddendSection) other;
-        return this.name.equals(ras.name)
-                && this.header.equals(ras.header)
-                && this.is32Bit == ras.is32Bit
-                && Arrays.equals(this.relocationAddendTable, ras.relocationAddendTable);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final RelocationAddendSection ras = (RelocationAddendSection) other;
+		return this.name.equals(ras.name)
+				&& this.header.equals(ras.header)
+				&& this.is32Bit == ras.is32Bit
+				&& Arrays.equals(this.relocationAddendTable, ras.relocationAddendTable);
+	}
 }

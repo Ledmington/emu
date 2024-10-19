@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 final class TestFileType {
-    @Test
-    void allFileTypesAreValid() {
-        for (final FileType ft : FileType.values()) {
-            assertTrue(
-                    FileType.isValid(ft.getCode()),
-                    () -> String.format(
-                            "Expected FileType object %s with code 0x%04x to be valid but wasn't", ft, ft.getCode()));
-        }
-    }
+	@Test
+	void allFileTypesAreValid() {
+		for (final FileType ft : FileType.values()) {
+			assertTrue(
+					FileType.isValid(ft.getCode()),
+					() -> String.format(
+							"Expected FileType object %s with code 0x%04x to be valid but wasn't", ft, ft.getCode()));
+		}
+	}
 }

@@ -25,72 +25,72 @@ import com.ledmington.mem.MemoryInitializer;
 /** A class to hold constants for the emulator execution. */
 public final class EmulatorConstants {
 
-    /** The default memory initializer */
-    private static Supplier<MemoryInitializer> memoryInitializer = MemoryInitializer::random;
+	/** The default memory initializer */
+	private static Supplier<MemoryInitializer> memoryInitializer = MemoryInitializer::random;
 
-    /** Base address where to load the executable file. */
-    private static long baseAddress = 0x8000000000000000L;
+	/** Base address where to load the executable file. */
+	private static long baseAddress = 0x8000000000000000L;
 
-    /** The default stack size. */
-    private static long stackSize = 8192L * 1024L;
+	/** The default stack size. */
+	private static long stackSize = 8192L * 1024L;
 
-    private EmulatorConstants() {}
+	private EmulatorConstants() {}
 
-    /**
-     * Allows to change the memory initializer of the emulator.
-     *
-     * @param memInit The new memory initializer.
-     */
-    public static void setMemoryInitializer(final Supplier<MemoryInitializer> memInit) {
-        memoryInitializer = Objects.requireNonNull(memInit);
-    }
+	/**
+	 * Allows to change the memory initializer of the emulator.
+	 *
+	 * @param memInit The new memory initializer.
+	 */
+	public static void setMemoryInitializer(final Supplier<MemoryInitializer> memInit) {
+		memoryInitializer = Objects.requireNonNull(memInit);
+	}
 
-    /**
-     * Returns the default memory initializer.
-     *
-     * @return The default memory initializer.
-     */
-    public static MemoryInitializer getMemoryInitializer() {
-        return memoryInitializer.get();
-    }
+	/**
+	 * Returns the default memory initializer.
+	 *
+	 * @return The default memory initializer.
+	 */
+	public static MemoryInitializer getMemoryInitializer() {
+		return memoryInitializer.get();
+	}
 
-    /**
-     * Changes the default stack size.
-     *
-     * @param newStackSize The new default stack size.
-     */
-    public static void setStackSize(final long newStackSize) {
-        final long minStackSize = 1L;
-        if (newStackSize < minStackSize) {
-            throw new IllegalArgumentException("Stack size must be at least 1");
-        }
-        stackSize = newStackSize;
-    }
+	/**
+	 * Changes the default stack size.
+	 *
+	 * @param newStackSize The new default stack size.
+	 */
+	public static void setStackSize(final long newStackSize) {
+		final long minStackSize = 1L;
+		if (newStackSize < minStackSize) {
+			throw new IllegalArgumentException("Stack size must be at least 1");
+		}
+		stackSize = newStackSize;
+	}
 
-    /**
-     * Returns the default stack size.
-     *
-     * @return The default stack size.
-     */
-    public static long getStackSize() {
-        return stackSize;
-    }
+	/**
+	 * Returns the default stack size.
+	 *
+	 * @return The default stack size.
+	 */
+	public static long getStackSize() {
+		return stackSize;
+	}
 
-    /**
-     * Changes the default base address.
-     *
-     * @param bAddr The new default base address.
-     */
-    public static void setBaseAddress(final long bAddr) {
-        baseAddress = bAddr;
-    }
+	/**
+	 * Changes the default base address.
+	 *
+	 * @param bAddr The new default base address.
+	 */
+	public static void setBaseAddress(final long bAddr) {
+		baseAddress = bAddr;
+	}
 
-    /**
-     * Returns the default base address.
-     *
-     * @return The default base address.
-     */
-    public static long getbaseAddress() {
-        return baseAddress;
-    }
+	/**
+	 * Returns the default base address.
+	 *
+	 * @return The default base address.
+	 */
+	public static long getbaseAddress() {
+		return baseAddress;
+	}
 }

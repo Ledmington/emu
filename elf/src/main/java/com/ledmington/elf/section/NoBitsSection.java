@@ -22,55 +22,55 @@ import java.util.Objects;
 /** An ELF section which allocates memory without initialization. */
 public final class NoBitsSection implements Section {
 
-    private final String name;
-    private final SectionHeader header;
+	private final String name;
+	private final SectionHeader header;
 
-    /**
-     * Creates a NoBitsSection with the given data.
-     *
-     * @param name The name of this section.
-     * @param sectionHeader The header of this section.
-     */
-    public NoBitsSection(final String name, final SectionHeader sectionHeader) {
-        this.name = Objects.requireNonNull(name);
-        this.header = Objects.requireNonNull(sectionHeader);
-    }
+	/**
+	 * Creates a NoBitsSection with the given data.
+	 *
+	 * @param name The name of this section.
+	 * @param sectionHeader The header of this section.
+	 */
+	public NoBitsSection(final String name, final SectionHeader sectionHeader) {
+		this.name = Objects.requireNonNull(name);
+		this.header = Objects.requireNonNull(sectionHeader);
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public String toString() {
-        return "NoBitsSection(name=" + name + ";header=" + header + ")";
-    }
+	@Override
+	public String toString() {
+		return "NoBitsSection(name=" + name + ";header=" + header + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + header.hashCode();
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + name.hashCode();
+		h = 31 * h + header.hashCode();
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final NoBitsSection nbs = (NoBitsSection) other;
-        return this.name.equals(nbs.name) && this.header.equals(nbs.header);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final NoBitsSection nbs = (NoBitsSection) other;
+		return this.name.equals(nbs.name) && this.header.equals(nbs.header);
+	}
 }

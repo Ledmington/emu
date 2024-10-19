@@ -31,43 +31,43 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
  * @param visibility The visibility object of this symbol.
  */
 public record SymbolTableEntry(
-        int nameOffset,
-        short sectionTableIndex,
-        long value,
-        long size,
-        SymbolTableEntryInfo info,
-        SymbolTableEntryVisibility visibility) {
+		int nameOffset,
+		short sectionTableIndex,
+		long value,
+		long size,
+		SymbolTableEntryInfo info,
+		SymbolTableEntryVisibility visibility) {
 
-    /**
-     * Reads a symbol table entry from the given buffer.
-     *
-     * @param b The {@link ReadOnlyByteBuffer} to read data from.
-     * @param is32Bit Used for correct parsing.
-     * @return A symbol table entry.
-     */
-    public static SymbolTableEntry read(final ReadOnlyByteBuffer b, final boolean is32Bit) {
-        int name;
-        long val;
-        long sz;
-        SymbolTableEntryVisibility vis;
-        SymbolTableEntryInfo inf;
-        short sti;
-        if (is32Bit) {
-            name = b.read4();
-            val = BitUtils.asLong(b.read4());
-            sz = BitUtils.asLong(b.read4());
-            inf = SymbolTableEntryInfo.fromByte(b.read1());
-            vis = SymbolTableEntryVisibility.fromByte(b.read1());
-            sti = b.read2();
-        } else {
-            name = b.read4();
-            inf = SymbolTableEntryInfo.fromByte(b.read1());
-            vis = SymbolTableEntryVisibility.fromByte(b.read1());
-            sti = b.read2();
-            val = b.read8();
-            sz = b.read8();
-        }
+	/**
+	 * Reads a symbol table entry from the given buffer.
+	 *
+	 * @param b The {@link ReadOnlyByteBuffer} to read data from.
+	 * @param is32Bit Used for correct parsing.
+	 * @return A symbol table entry.
+	 */
+	public static SymbolTableEntry read(final ReadOnlyByteBuffer b, final boolean is32Bit) {
+		int name;
+		long val;
+		long sz;
+		SymbolTableEntryVisibility vis;
+		SymbolTableEntryInfo inf;
+		short sti;
+		if (is32Bit) {
+			name = b.read4();
+			val = BitUtils.asLong(b.read4());
+			sz = BitUtils.asLong(b.read4());
+			inf = SymbolTableEntryInfo.fromByte(b.read1());
+			vis = SymbolTableEntryVisibility.fromByte(b.read1());
+			sti = b.read2();
+		} else {
+			name = b.read4();
+			inf = SymbolTableEntryInfo.fromByte(b.read1());
+			vis = SymbolTableEntryVisibility.fromByte(b.read1());
+			sti = b.read2();
+			val = b.read8();
+			sz = b.read8();
+		}
 
-        return new SymbolTableEntry(name, sti, val, sz, inf, vis);
-    }
+		return new SymbolTableEntry(name, sti, val, sz, inf, vis);
+	}
 }

@@ -20,10 +20,10 @@ package com.ledmington.cpu.x86;
 /** Interface for all x86 register types. */
 public interface Register extends Operand {
 
-    /**
-     * Returns the size of this register.
-     *
-     * @return The size in bits of this register.
-     */
-    int bits();
+	/**
+	 * Returns the size of this register.
+	 *
+	 * @return The size in bits of this register.
+	 */
+	int bits();
 }

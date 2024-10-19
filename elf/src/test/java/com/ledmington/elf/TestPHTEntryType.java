@@ -22,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 final class TestPHTEntryType {
-    @Test
-    void allPHTEntryTypesAreValid() {
-        for (final PHTEntryType phtet : PHTEntryType.values()) {
-            assertTrue(
-                    PHTEntryType.isValid(phtet.getCode()),
-                    () -> String.format(
-                            "Expected PHTEntryType object %s with code 0x%08x to be valid but wasn't",
-                            phtet, phtet.getCode()));
-        }
-    }
+	@Test
+	void allPHTEntryTypesAreValid() {
+		for (final PHTEntryType phtet : PHTEntryType.values()) {
+			assertTrue(
+					PHTEntryType.isValid(phtet.getCode()),
+					() -> String.format(
+							"Expected PHTEntryType object %s with code 0x%08x to be valid but wasn't",
+							phtet, phtet.getCode()));
+		}
+	}
 }

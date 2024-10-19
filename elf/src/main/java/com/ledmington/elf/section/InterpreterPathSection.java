@@ -25,81 +25,81 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** The .interp ELF section. */
 public final class InterpreterPathSection implements ProgBitsSection {
 
-    private final SectionHeader header;
-    private final String interpreterFilePath;
+	private final SectionHeader header;
+	private final String interpreterFilePath;
 
-    /**
-     * Creates a new .interp ELF section with the given data.
-     *
-     * @param sectionHeader The header of this section.
-     * @param b The ReadOnlyByteBuffer to read data from.
-     */
-    public InterpreterPathSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.header = Objects.requireNonNull(sectionHeader);
+	/**
+	 * Creates a new .interp ELF section with the given data.
+	 *
+	 * @param sectionHeader The header of this section.
+	 * @param b The ReadOnlyByteBuffer to read data from.
+	 */
+	public InterpreterPathSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+		this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition(sectionHeader.getFileOffset());
-        final long start = b.getPosition();
-        final long size = sectionHeader.getSectionSize();
-        b.setAlignment(1L);
+		b.setPosition(sectionHeader.getFileOffset());
+		final long start = b.getPosition();
+		final long size = sectionHeader.getSectionSize();
+		b.setAlignment(1L);
 
-        final StringBuilder sb = new StringBuilder();
-        char c = (char) b.read1();
-        while (b.getPosition() < start + size && c != '\0') {
-            sb.append(c);
-            c = (char) b.read1();
-        }
-        this.interpreterFilePath = sb.toString();
-    }
+		final StringBuilder sb = new StringBuilder();
+		char c = (char) b.read1();
+		while (b.getPosition() < start + size && c != '\0') {
+			sb.append(c);
+			c = (char) b.read1();
+		}
+		this.interpreterFilePath = sb.toString();
+	}
 
-    /**
-     * Returns the required interpreter's file path.
-     *
-     * @return The interpreter's file path as a String.
-     */
-    public String getInterpreterFilePath() {
-        return interpreterFilePath;
-    }
+	/**
+	 * Returns the required interpreter's file path.
+	 *
+	 * @return The interpreter's file path as a String.
+	 */
+	public String getInterpreterFilePath() {
+		return interpreterFilePath;
+	}
 
-    @Override
-    public String getName() {
-        return ".interp";
-    }
+	@Override
+	public String getName() {
+		return ".interp";
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        return interpreterFilePath.getBytes(StandardCharsets.UTF_8);
-    }
+	@Override
+	public byte[] getLoadableContent() {
+		return interpreterFilePath.getBytes(StandardCharsets.UTF_8);
+	}
 
-    @Override
-    public String toString() {
-        return "InterpreterPathSection(header=" + header + ";interpreterPath=" + interpreterFilePath + ")";
-    }
+	@Override
+	public String toString() {
+		return "InterpreterPathSection(header=" + header + ";interpreterPath=" + interpreterFilePath + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + header.hashCode();
-        h = 31 * h + interpreterFilePath.hashCode();
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + header.hashCode();
+		h = 31 * h + interpreterFilePath.hashCode();
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final InterpreterPathSection ips = (InterpreterPathSection) other;
-        return this.header.equals(ips.header) && this.interpreterFilePath.equals(ips.interpreterFilePath);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final InterpreterPathSection ips = (InterpreterPathSection) other;
+		return this.header.equals(ips.header) && this.interpreterFilePath.equals(ips.interpreterFilePath);
+	}
 }

@@ -33,100 +33,100 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
  */
 public final class GnuVersionSection implements LoadableSection {
 
-    private static final String standardName = ".gnu.version";
+	private static final String standardName = ".gnu.version";
 
-    /**
-     * Returns the standard name of this section.
-     *
-     * @return The string ".gnu.version".
-     */
-    public static String getStandardName() {
-        return standardName;
-    }
+	/**
+	 * Returns the standard name of this section.
+	 *
+	 * @return The string ".gnu.version".
+	 */
+	public static String getStandardName() {
+		return standardName;
+	}
 
-    private final SectionHeader header;
-    private final short[] versions;
+	private final SectionHeader header;
+	private final short[] versions;
 
-    /**
-     * Creates a GNU Version section with the given header and parses the content from the ReadOnlyByteBuffer b.
-     *
-     * @param sectionHeader The header of this section.
-     * @param b The ReadOnlyByteBuffer to read the contents from.
-     */
-    public GnuVersionSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.header = Objects.requireNonNull(sectionHeader);
+	/**
+	 * Creates a GNU Version section with the given header and parses the content from the ReadOnlyByteBuffer b.
+	 *
+	 * @param sectionHeader The header of this section.
+	 * @param b The ReadOnlyByteBuffer to read the contents from.
+	 */
+	public GnuVersionSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+		this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition(sectionHeader.getFileOffset());
-        final int nEntries = BitUtils.asInt(sectionHeader.getSectionSize() / 2L);
-        this.versions = new short[nEntries];
-        for (int i = 0; i < nEntries; i++) {
-            versions[i] = b.read2();
-        }
-    }
+		b.setPosition(sectionHeader.getFileOffset());
+		final int nEntries = BitUtils.asInt(sectionHeader.getSectionSize() / 2L);
+		this.versions = new short[nEntries];
+		for (int i = 0; i < nEntries; i++) {
+			versions[i] = b.read2();
+		}
+	}
 
-    /**
-     * Returns the number of versions contained in this section.
-     *
-     * @return The number of versions contained in this section.
-     */
-    public int getVersionsLength() {
-        return versions.length;
-    }
+	/**
+	 * Returns the number of versions contained in this section.
+	 *
+	 * @return The number of versions contained in this section.
+	 */
+	public int getVersionsLength() {
+		return versions.length;
+	}
 
-    /**
-     * Returns the i-th version in this section.
-     *
-     * @param idx The index of the version to find.
-     * @return The i-th version in this section.
-     */
-    public short getVersion(final int idx) {
-        return versions[idx];
-    }
+	/**
+	 * Returns the i-th version in this section.
+	 *
+	 * @param idx The index of the version to find.
+	 * @return The i-th version in this section.
+	 */
+	public short getVersion(final int idx) {
+		return versions[idx];
+	}
 
-    @Override
-    public String getName() {
-        return standardName;
-    }
+	@Override
+	public String getName() {
+		return standardName;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public byte[] getLoadableContent() {
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2);
-        for (final short version : versions) {
-            bb.write(version);
-        }
-        return bb.array();
-    }
+	@Override
+	public byte[] getLoadableContent() {
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2);
+		for (final short version : versions) {
+			bb.write(version);
+		}
+		return bb.array();
+	}
 
-    @Override
-    public String toString() {
-        return "GnuVersionSection(header=" + header + ";versions=" + Arrays.toString(versions) + ")";
-    }
+	@Override
+	public String toString() {
+		return "GnuVersionSection(header=" + header + ";versions=" + Arrays.toString(versions) + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + header.hashCode();
-        h = 31 * h + Arrays.hashCode(versions);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + header.hashCode();
+		h = 31 * h + Arrays.hashCode(versions);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final GnuVersionSection gvs = (GnuVersionSection) other;
-        return this.header.equals(gvs.header) && Arrays.equals(this.versions, gvs.versions);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final GnuVersionSection gvs = (GnuVersionSection) other;
+		return this.header.equals(gvs.header) && Arrays.equals(this.versions, gvs.versions);
+	}
 }

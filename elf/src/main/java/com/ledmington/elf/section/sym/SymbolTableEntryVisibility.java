@@ -27,85 +27,85 @@ import java.util.Objects;
  */
 public enum SymbolTableEntryVisibility {
 
-    /**
-     * The visibility of symbols with the STV_DEFAULT attribute is as specified by the symbol's binding type. That is,
-     * global and weak symbols are visible outside of their defining component, the executable file or shared object.
-     * Local symbols are hidden. Global and weak symbols can also be preempted, that is, they may by interposed by
-     * definitions of the same name in another component.
-     */
-    STV_DEFAULT((byte) 0, "DEFAULT"),
+	/**
+	 * The visibility of symbols with the STV_DEFAULT attribute is as specified by the symbol's binding type. That is,
+	 * global and weak symbols are visible outside of their defining component, the executable file or shared object.
+	 * Local symbols are hidden. Global and weak symbols can also be preempted, that is, they may by interposed by
+	 * definitions of the same name in another component.
+	 */
+	STV_DEFAULT((byte) 0, "DEFAULT"),
 
-    /** This visibility attribute is currently reserved. */
-    STV_INTERNAL((byte) 1, "INTERNAL"),
+	/** This visibility attribute is currently reserved. */
+	STV_INTERNAL((byte) 1, "INTERNAL"),
 
-    /**
-     * A symbol defined in the current component is hidden if its name is not visible to other components. Such a symbol
-     * is necessarily protected. This attribute is used to control the external interface of a component. An object
-     * named by such a symbol may still be referenced from another component if its address is passed outside.
-     *
-     * <p>A hidden symbol contained in a relocatable object is either removed or converted to STB_LOCAL binding by the
-     * link-editor when the relocatable object is included in an executable file or shared object.
-     */
-    STV_HIDDEN((byte) 2, "HIDDEN"),
+	/**
+	 * A symbol defined in the current component is hidden if its name is not visible to other components. Such a symbol
+	 * is necessarily protected. This attribute is used to control the external interface of a component. An object
+	 * named by such a symbol may still be referenced from another component if its address is passed outside.
+	 *
+	 * <p>A hidden symbol contained in a relocatable object is either removed or converted to STB_LOCAL binding by the
+	 * link-editor when the relocatable object is included in an executable file or shared object.
+	 */
+	STV_HIDDEN((byte) 2, "HIDDEN"),
 
-    /**
-     * A symbol defined in the current component is protected if it is visible in other components but cannot be
-     * preempted. Any reference to such a symbol from within the defining component must be resolved to the definition
-     * in that component, even if there is a definition in another component that would interpose by the default rules.
-     * A symbol with STB_LOCAL binding will not have STV_PROTECTED visibility.
-     */
-    STV_PROTECTED((byte) 3, "PROTECTED");
+	/**
+	 * A symbol defined in the current component is protected if it is visible in other components but cannot be
+	 * preempted. Any reference to such a symbol from within the defining component must be resolved to the definition
+	 * in that component, even if there is a definition in another component that would interpose by the default rules.
+	 * A symbol with STB_LOCAL binding will not have STV_PROTECTED visibility.
+	 */
+	STV_PROTECTED((byte) 3, "PROTECTED");
 
-    private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
+	private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
 
-    static {
-        for (final SymbolTableEntryVisibility visibility : SymbolTableEntryVisibility.values()) {
-            codeToVisibility.put(visibility.code, visibility);
-        }
-    }
+	static {
+		for (final SymbolTableEntryVisibility visibility : SymbolTableEntryVisibility.values()) {
+			codeToVisibility.put(visibility.code, visibility);
+		}
+	}
 
-    /**
-     * Returns the STV object corresponding to the given code.
-     *
-     * @param code The code representing the STV object.
-     * @return The STV object.
-     */
-    public static SymbolTableEntryVisibility fromByte(final byte code) {
-        if (!codeToVisibility.containsKey(code)) {
-            throw new IllegalArgumentException(
-                    String.format("Unknown Symbol table entry visibility identifier: 0x%02x", code));
-        }
-        return codeToVisibility.get(code);
-    }
+	/**
+	 * Returns the STV object corresponding to the given code.
+	 *
+	 * @param code The code representing the STV object.
+	 * @return The STV object.
+	 */
+	public static SymbolTableEntryVisibility fromByte(final byte code) {
+		if (!codeToVisibility.containsKey(code)) {
+			throw new IllegalArgumentException(
+					String.format("Unknown Symbol table entry visibility identifier: 0x%02x", code));
+		}
+		return codeToVisibility.get(code);
+	}
 
-    private final byte code;
-    private final String name;
+	private final byte code;
+	private final String name;
 
-    private SymbolTableEntryVisibility(final byte code, final String name) {
-        this.code = code;
-        this.name = Objects.requireNonNull(name);
-    }
+	private SymbolTableEntryVisibility(final byte code, final String name) {
+		this.code = code;
+		this.name = Objects.requireNonNull(name);
+	}
 
-    /**
-     * Returns the 8-bit code of this STV object.
-     *
-     * @return The byte representing the code.
-     */
-    public byte getCode() {
-        return code;
-    }
+	/**
+	 * Returns the 8-bit code of this STV object.
+	 *
+	 * @return The byte representing the code.
+	 */
+	public byte getCode() {
+		return code;
+	}
 
-    /**
-     * Returns the name of this STV object without the "STV_" prefix.
-     *
-     * @return The name of this STV object.
-     */
-    public String getName() {
-        return name;
-    }
+	/**
+	 * Returns the name of this STV object without the "STV_" prefix.
+	 *
+	 * @return The name of this STV object.
+	 */
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public String toString() {
-        return "SymbolTableEntryVisibility(code=" + code + ";name=" + name + ')';
-    }
+	@Override
+	public String toString() {
+		return "SymbolTableEntryVisibility(code=" + code + ";name=" + name + ')';
+	}
 }

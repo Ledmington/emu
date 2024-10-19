@@ -30,88 +30,88 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
 /** An ELF section with type SHT_NOTE (.note*). */
 public interface NoteSection extends LoadableSection {
 
-    /**
-     * Reads an array of NoteSectionEntry objects by parsing the given ReadOnlyByteBuffer.
-     *
-     * @param b The byte buffer to read the entries from.
-     * @param length Maximum number of bytes to read.
-     * @return A non-null array of NoteSectionEntry.
-     */
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-    static NoteSectionEntry[] loadNoteSectionEntries(final ReadOnlyByteBuffer b, final long length) {
-        final long start = b.getPosition();
-        final List<NoteSectionEntry> entries = new ArrayList<>();
+	/**
+	 * Reads an array of NoteSectionEntry objects by parsing the given ReadOnlyByteBuffer.
+	 *
+	 * @param b The byte buffer to read the entries from.
+	 * @param length Maximum number of bytes to read.
+	 * @return A non-null array of NoteSectionEntry.
+	 */
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+	static NoteSectionEntry[] loadNoteSectionEntries(final ReadOnlyByteBuffer b, final long length) {
+		final long start = b.getPosition();
+		final List<NoteSectionEntry> entries = new ArrayList<>();
 
-        // for alignment
-        final long bytes = 4L;
-        final long byteShift = 2L;
+		// for alignment
+		final long bytes = 4L;
+		final long byteShift = 2L;
 
-        b.setAlignment(1L);
-        while (b.getPosition() - start < length) {
-            final int namesz = b.read4();
-            final int descsz = b.read4();
-            final int type = b.read4();
+		b.setAlignment(1L);
+		while (b.getPosition() - start < length) {
+			final int namesz = b.read4();
+			final int descsz = b.read4();
+			final int type = b.read4();
 
-            final byte[] nameBytes = new byte[namesz];
-            for (int i = 0; i < namesz; i++) {
-                nameBytes[i] = b.read1();
-            }
-            final String name = new String(
-                    nameBytes, 0, nameBytes[namesz - 1] == '\0' ? namesz - 1 : namesz, StandardCharsets.UTF_8);
+			final byte[] nameBytes = new byte[namesz];
+			for (int i = 0; i < namesz; i++) {
+				nameBytes[i] = b.read1();
+			}
+			final String name = new String(
+					nameBytes, 0, nameBytes[namesz - 1] == '\0' ? namesz - 1 : namesz, StandardCharsets.UTF_8);
 
-            final byte[] descriptionBytes = new byte[descsz];
-            for (int i = 0; i < descsz; i++) {
-                descriptionBytes[i] = b.read1();
-            }
+			final byte[] descriptionBytes = new byte[descsz];
+			for (int i = 0; i < descsz; i++) {
+				descriptionBytes[i] = b.read1();
+			}
 
-            // Manually align the position
-            final long newPosition = (b.getPosition() % bytes != 0L)
-                    ? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
-                    : b.getPosition();
-            b.setPosition(newPosition);
+			// Manually align the position
+			final long newPosition = (b.getPosition() % bytes != 0L)
+					? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
+					: b.getPosition();
+			b.setPosition(newPosition);
 
-            final NoteSectionEntry nse =
-                    new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(name, type));
-            entries.add(nse);
-        }
+			final NoteSectionEntry nse =
+					new NoteSectionEntry(name, descriptionBytes, NoteSectionEntryType.fromCode(name, type));
+			entries.add(nse);
+		}
 
-        return entries.toArray(new NoteSectionEntry[0]);
-    }
+		return entries.toArray(new NoteSectionEntry[0]);
+	}
 
-    /**
-     * Returns the number of entries in the note section table.
-     *
-     * @return The number of entries.
-     */
-    int getNumEntries();
+	/**
+	 * Returns the number of entries in the note section table.
+	 *
+	 * @return The number of entries.
+	 */
+	int getNumEntries();
 
-    /**
-     * Returns the entry at the given index in the note section table.
-     *
-     * @param idx The index of the entry.
-     * @return The entry at teh given index.
-     */
-    NoteSectionEntry getEntry(final int idx);
+	/**
+	 * Returns the entry at the given index in the note section table.
+	 *
+	 * @param idx The index of the entry.
+	 * @return The entry at teh given index.
+	 */
+	NoteSectionEntry getEntry(final int idx);
 
-    @Override
-    default byte[] getLoadableContent() {
-        final int numEntries = getNumEntries();
-        final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(IntStream.range(0, numEntries)
-                .map(i -> getEntry(i).getAlignedSize())
-                .sum());
-        int runningTotal = 0;
-        for (int i = 0; i < numEntries; i++) {
-            final NoteSectionEntry nse = getEntry(i);
-            bb.write(nse.getName().length());
-            bb.write(nse.getDescriptionLength());
-            bb.write(nse.getType().getCode());
-            bb.write(nse.getName().getBytes(StandardCharsets.UTF_8));
-            for (int j = 0; j < nse.getDescriptionLength(); j++) {
-                bb.write(nse.getDescriptionByte(j));
-            }
-            runningTotal += nse.getAlignedSize();
-            bb.setPosition(runningTotal);
-        }
-        return bb.array();
-    }
+	@Override
+	default byte[] getLoadableContent() {
+		final int numEntries = getNumEntries();
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(IntStream.range(0, numEntries)
+				.map(i -> getEntry(i).getAlignedSize())
+				.sum());
+		int runningTotal = 0;
+		for (int i = 0; i < numEntries; i++) {
+			final NoteSectionEntry nse = getEntry(i);
+			bb.write(nse.getName().length());
+			bb.write(nse.getDescriptionLength());
+			bb.write(nse.getType().getCode());
+			bb.write(nse.getName().getBytes(StandardCharsets.UTF_8));
+			for (int j = 0; j < nse.getDescriptionLength(); j++) {
+				bb.write(nse.getDescriptionByte(j));
+			}
+			runningTotal += nse.getAlignedSize();
+			bb.setPosition(runningTotal);
+		}
+		return bb.array();
+	}
 }

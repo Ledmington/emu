@@ -29,50 +29,50 @@ import javafx.stage.Stage;
 
 public final class ELFViewer extends Stage {
 
-    private final ELFView view;
+	private final ELFView view;
 
-    public ELFViewer(final double width, final double height) {
-        final BorderPane mainPane = new BorderPane();
+	public ELFViewer(final double width, final double height) {
+		final BorderPane mainPane = new BorderPane();
 
-        this.view = new ELFView(this);
+		this.view = new ELFView(this);
 
-        final FlowPane topPane = new FlowPane();
-        final Button load = new Button();
-        load.setText("Load");
-        load.setOnAction(e -> {
-            final FileChooser fc = new FileChooser();
-            fc.setTitle("Select an ELF file to be loaded");
-            fc.getExtensionFilters()
-                    .addAll(
-                            new FileChooser.ExtensionFilter("ELF files", "*.elf", "*.bin", "*.out"),
-                            new FileChooser.ExtensionFilter("Shared objects", "*.o"),
-                            new FileChooser.ExtensionFilter("Shared libraries", "*.so"),
-                            new FileChooser.ExtensionFilter("Static libraries", "*.a"),
-                            new FileChooser.ExtensionFilter("All files", "*.*"));
-            final File selectedFile = fc.showOpenDialog(this);
-            if (selectedFile != null) {
-                this.view.loadFile(selectedFile);
-            }
-        });
+		final FlowPane topPane = new FlowPane();
+		final Button load = new Button();
+		load.setText("Load");
+		load.setOnAction(e -> {
+			final FileChooser fc = new FileChooser();
+			fc.setTitle("Select an ELF file to be loaded");
+			fc.getExtensionFilters()
+					.addAll(
+							new FileChooser.ExtensionFilter("ELF files", "*.elf", "*.bin", "*.out"),
+							new FileChooser.ExtensionFilter("Shared objects", "*.o"),
+							new FileChooser.ExtensionFilter("Shared libraries", "*.so"),
+							new FileChooser.ExtensionFilter("Static libraries", "*.a"),
+							new FileChooser.ExtensionFilter("All files", "*.*"));
+			final File selectedFile = fc.showOpenDialog(this);
+			if (selectedFile != null) {
+				this.view.loadFile(selectedFile);
+			}
+		});
 
-        final Button settings = new Button();
-        settings.setText("Settings");
-        settings.setOnAction(e -> new SettingsWindow());
+		final Button settings = new Button();
+		settings.setText("Settings");
+		settings.setOnAction(e -> new SettingsWindow());
 
-        topPane.setHgap(4);
-        topPane.setPadding(new Insets(5));
-        topPane.setPrefWrapLength(300);
-        topPane.getChildren().addAll(load, settings);
+		topPane.setHgap(4);
+		topPane.setPadding(new Insets(5));
+		topPane.setPrefWrapLength(300);
+		topPane.getChildren().addAll(load, settings);
 
-        mainPane.setTop(topPane);
-        mainPane.setCenter(this.view);
-        final Scene scene = new Scene(mainPane);
+		mainPane.setTop(topPane);
+		mainPane.setCenter(this.view);
+		final Scene scene = new Scene(mainPane);
 
-        this.setScene(scene);
-        this.setTitle("Emu - ELF Viewer");
-        this.setWidth(width);
-        this.setHeight(height);
-        this.centerOnScreen();
-        this.show();
-    }
+		this.setScene(scene);
+		this.setTitle("Emu - ELF Viewer");
+		this.setWidth(width);
+		this.setHeight(height);
+		this.centerOnScreen();
+		this.show();
+	}
 }

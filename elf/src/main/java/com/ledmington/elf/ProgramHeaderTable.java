@@ -20,18 +20,18 @@ package com.ledmington.elf;
 /** An interface for ELF files/objects which behave like a program header table. */
 public interface ProgramHeaderTable {
 
-    /**
-     * Returns the number of program headers.
-     *
-     * @return The number of program headers.
-     */
-    int getProgramHeaderTableLength();
+	/**
+	 * Returns the number of program headers.
+	 *
+	 * @return The number of program headers.
+	 */
+	int getProgramHeaderTableLength();
 
-    /**
-     * Returns the i-th program header.
-     *
-     * @param idx The index of the program header to return.
-     * @return The i-th program header.
-     */
-    PHTEntry getProgramHeader(final int idx);
+	/**
+	 * Returns the i-th program header.
+	 *
+	 * @param idx The index of the program header to return.
+	 * @return The i-th program header.
+	 */
+	PHTEntry getProgramHeader(final int idx);
 }

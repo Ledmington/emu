@@ -22,18 +22,18 @@ import java.util.List;
 /** Common interface for x86 instruction decoders. */
 public interface InstructionDecoder {
 
-    /**
-     * Decodes all instructions that are found up to n bytes ahead.
-     *
-     * @param nBytesToDecode Maximum number of bytes to read.
-     * @return A list of decoded instructions.
-     */
-    List<Instruction> decodeAll(final int nBytesToDecode);
+	/**
+	 * Decodes all instructions that are found up to n bytes ahead.
+	 *
+	 * @param nBytesToDecode Maximum number of bytes to read.
+	 * @return A list of decoded instructions.
+	 */
+	List<Instruction> decodeAll(final int nBytesToDecode);
 
-    /**
-     * Decodes a single instruction reading as few bytes as possible.
-     *
-     * @return The decoded instruction.
-     */
-    Instruction decode();
+	/**
+	 * Decodes a single instruction reading as few bytes as possible.
+	 *
+	 * @return The decoded instruction.
+	 */
+	Instruction decode();
 }

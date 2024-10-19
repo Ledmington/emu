@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 final class TestISA {
-    @Test
-    void allISAAreValid() {
-        for (final ISA isa : ISA.values()) {
-            assertTrue(
-                    ISA.isValid(isa.getCode()),
-                    () -> String.format(
-                            "Expected ISA object %s with code 0x%04x to be valid but wasn't", isa, isa.getCode()));
-        }
-    }
+	@Test
+	void allISAAreValid() {
+		for (final ISA isa : ISA.values()) {
+			assertTrue(
+					ISA.isValid(isa.getCode()),
+					() -> String.format(
+							"Expected ISA object %s with code 0x%04x to be valid but wasn't", isa, isa.getCode()));
+		}
+	}
 }

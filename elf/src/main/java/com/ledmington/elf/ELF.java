@@ -31,102 +31,102 @@ import com.ledmington.elf.section.Section;
  */
 public final class ELF implements ProgramHeaderTable, SectionTable {
 
-    private final FileHeader fileHeader;
-    private final PHTEntry[] programHeaderTable;
-    private final Section[] sectionTable;
+	private final FileHeader fileHeader;
+	private final PHTEntry[] programHeaderTable;
+	private final Section[] sectionTable;
 
-    /**
-     * Creates an ELF object.
-     *
-     * @param fileHeader The file header containing general information about the file.
-     * @param programHeaderTable The program header table containing information about memory segments.
-     * @param sectionTable The section table containing information about file sections.
-     */
-    public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section... sectionTable) {
-        this.fileHeader = Objects.requireNonNull(fileHeader);
-        this.programHeaderTable = new PHTEntry[Objects.requireNonNull(programHeaderTable).length];
-        for (int i = 0; i < programHeaderTable.length; i++) {
-            this.programHeaderTable[i] = Objects.requireNonNull(programHeaderTable[i]);
-        }
-        this.sectionTable = new Section[Objects.requireNonNull(sectionTable).length];
-        for (int i = 0; i < sectionTable.length; i++) {
-            this.sectionTable[i] = Objects.requireNonNull(sectionTable[i]);
-        }
-    }
+	/**
+	 * Creates an ELF object.
+	 *
+	 * @param fileHeader The file header containing general information about the file.
+	 * @param programHeaderTable The program header table containing information about memory segments.
+	 * @param sectionTable The section table containing information about file sections.
+	 */
+	public ELF(final FileHeader fileHeader, final PHTEntry[] programHeaderTable, final Section... sectionTable) {
+		this.fileHeader = Objects.requireNonNull(fileHeader);
+		this.programHeaderTable = new PHTEntry[Objects.requireNonNull(programHeaderTable).length];
+		for (int i = 0; i < programHeaderTable.length; i++) {
+			this.programHeaderTable[i] = Objects.requireNonNull(programHeaderTable[i]);
+		}
+		this.sectionTable = new Section[Objects.requireNonNull(sectionTable).length];
+		for (int i = 0; i < sectionTable.length; i++) {
+			this.sectionTable[i] = Objects.requireNonNull(sectionTable[i]);
+		}
+	}
 
-    /**
-     * Returns the File Header of this ELF file object.
-     *
-     * @return The File Header.
-     */
-    public FileHeader getFileHeader() {
-        return fileHeader;
-    }
+	/**
+	 * Returns the File Header of this ELF file object.
+	 *
+	 * @return The File Header.
+	 */
+	public FileHeader getFileHeader() {
+		return fileHeader;
+	}
 
-    @Override
-    public int getProgramHeaderTableLength() {
-        return programHeaderTable.length;
-    }
+	@Override
+	public int getProgramHeaderTableLength() {
+		return programHeaderTable.length;
+	}
 
-    @Override
-    public PHTEntry getProgramHeader(int idx) {
-        return programHeaderTable[idx];
-    }
+	@Override
+	public PHTEntry getProgramHeader(int idx) {
+		return programHeaderTable[idx];
+	}
 
-    @Override
-    public int getSectionTableLength() {
-        return sectionTable.length;
-    }
+	@Override
+	public int getSectionTableLength() {
+		return sectionTable.length;
+	}
 
-    @Override
-    public Section getSection(final int idx) {
-        return sectionTable[idx];
-    }
+	@Override
+	public Section getSection(final int idx) {
+		return sectionTable[idx];
+	}
 
-    /**
-     * Looks for a section with the given name inside the Section Table and returns it.
-     *
-     * @param name The name of the section to look for.
-     * @return The Section encountered such that {@code s.getName().equals(name)} returns true.
-     */
-    public Optional<Section> getSectionByName(final String name) {
-        for (final Section s : sectionTable) {
-            if (s.getName().equals(name)) {
-                return Optional.of(s);
-            }
-        }
-        return Optional.empty();
-    }
+	/**
+	 * Looks for a section with the given name inside the Section Table and returns it.
+	 *
+	 * @param name The name of the section to look for.
+	 * @return The Section encountered such that {@code s.getName().equals(name)} returns true.
+	 */
+	public Optional<Section> getSectionByName(final String name) {
+		for (final Section s : sectionTable) {
+			if (s.getName().equals(name)) {
+				return Optional.of(s);
+			}
+		}
+		return Optional.empty();
+	}
 
-    @Override
-    public String toString() {
-        return "ELF(fileHeader=" + fileHeader + ";programHeaderTable=" + Arrays.toString(programHeaderTable)
-                + ";sectionTable=" + Arrays.toString(sectionTable) + ")";
-    }
+	@Override
+	public String toString() {
+		return "ELF(fileHeader=" + fileHeader + ";programHeaderTable=" + Arrays.toString(programHeaderTable)
+				+ ";sectionTable=" + Arrays.toString(sectionTable) + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + fileHeader.hashCode();
-        h = 31 * h + Arrays.hashCode(programHeaderTable);
-        h = 31 * h + Arrays.hashCode(sectionTable);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + fileHeader.hashCode();
+		h = 31 * h + Arrays.hashCode(programHeaderTable);
+		h = 31 * h + Arrays.hashCode(sectionTable);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final ELF elf = (ELF) other;
-        return this.fileHeader.equals(elf.fileHeader)
-                && Arrays.equals(this.programHeaderTable, elf.programHeaderTable)
-                && Arrays.equals(this.sectionTable, elf.sectionTable);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final ELF elf = (ELF) other;
+		return this.fileHeader.equals(elf.fileHeader)
+				&& Arrays.equals(this.programHeaderTable, elf.programHeaderTable)
+				&& Arrays.equals(this.sectionTable, elf.sectionTable);
+	}
 }

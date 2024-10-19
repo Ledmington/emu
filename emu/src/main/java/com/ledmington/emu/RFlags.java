@@ -20,69 +20,69 @@ package com.ledmington.emu;
 /** X86 RFlags values. */
 public enum RFlags {
 
-    /** ID Flag (ID). System flag. */
-    ID(21),
+	/** ID Flag (ID). System flag. */
+	ID(21),
 
-    /** Virtual Interrupt Pending (VIP). System flag. */
-    VirtualInterruptPending(20),
+	/** Virtual Interrupt Pending (VIP). System flag. */
+	VirtualInterruptPending(20),
 
-    /** Virtual Interrupt Flag (VIF). System flag. */
-    VirtualInterrupt(19),
+	/** Virtual Interrupt Flag (VIF). System flag. */
+	VirtualInterrupt(19),
 
-    /** Alignment Check / Access Control (AC). System flag. */
-    AlignmentCheck(18),
+	/** Alignment Check / Access Control (AC). System flag. */
+	AlignmentCheck(18),
 
-    /** Virtual-8068 Mode (VM). System flag. */
-    Virtual8086Mode(17),
+	/** Virtual-8068 Mode (VM). System flag. */
+	Virtual8086Mode(17),
 
-    /** Resume Flag (RF). System flag. */
-    Resume(16),
+	/** Resume Flag (RF). System flag. */
+	Resume(16),
 
-    /** Nested Task (NT). System flag. */
-    NestedTask(14),
+	/** Nested Task (NT). System flag. */
+	NestedTask(14),
 
-    /** I/O Privilege Level. System flag. */
-    IOPrivilegeLevel(12),
+	/** I/O Privilege Level. System flag. */
+	IOPrivilegeLevel(12),
 
-    /** Overflow Flag (OF). Status flag. */
-    Overflow(11),
+	/** Overflow Flag (OF). Status flag. */
+	Overflow(11),
 
-    /** Direction Flag (DF). Control flag. */
-    Direction(10),
+	/** Direction Flag (DF). Control flag. */
+	Direction(10),
 
-    /** Interrupt Enable Flag (IF). System flag. */
-    InterruptEnable(9),
+	/** Interrupt Enable Flag (IF). System flag. */
+	InterruptEnable(9),
 
-    /** Trap Flag (TF). System flag. */
-    Trap(8),
+	/** Trap Flag (TF). System flag. */
+	Trap(8),
 
-    /** Sign Flag (SF). Status flag. */
-    Sign(7),
+	/** Sign Flag (SF). Status flag. */
+	Sign(7),
 
-    /** Zero Flag (ZF). Status flag. */
-    Zero(6),
+	/** Zero Flag (ZF). Status flag. */
+	Zero(6),
 
-    /** Auxiliary Carry Flag (AF). Status flag. */
-    AuxiliaryCarry(4),
+	/** Auxiliary Carry Flag (AF). Status flag. */
+	AuxiliaryCarry(4),
 
-    /** Parity Flag (PF). Status flag. */
-    Parity(2),
+	/** Parity Flag (PF). Status flag. */
+	Parity(2),
 
-    /** Carry Flag (CF). Status flag. */
-    Carry(0);
+	/** Carry Flag (CF). Status flag. */
+	Carry(0);
 
-    private final int bitIndex;
+	private final int bitIndex;
 
-    RFlags(final int bit) {
-        this.bitIndex = bit;
-    }
+	RFlags(final int bit) {
+		this.bitIndex = bit;
+	}
 
-    /**
-     * Returns the bit index of the flag.
-     *
-     * @return The bit index of the flag.
-     */
-    public int bit() {
-        return bitIndex;
-    }
+	/**
+	 * Returns the bit index of the flag.
+	 *
+	 * @return The bit index of the flag.
+	 */
+	public int bit() {
+		return bitIndex;
+	}
 }

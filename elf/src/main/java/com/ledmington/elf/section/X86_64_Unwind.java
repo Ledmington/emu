@@ -22,55 +22,55 @@ import java.util.Objects;
 /** A x86_64 specific unwind ELF section (such as '.eh_frame'). */
 public final class X86_64_Unwind implements Section {
 
-    private final String name;
-    private final SectionHeader header;
+	private final String name;
+	private final SectionHeader header;
 
-    /**
-     * Creates a x86_64 unwind section with the given data.
-     *
-     * @param name The name of this section.
-     * @param sectionHeader The header of this section.
-     */
-    public X86_64_Unwind(final String name, final SectionHeader sectionHeader) {
-        this.name = Objects.requireNonNull(name);
-        this.header = Objects.requireNonNull(sectionHeader);
-    }
+	/**
+	 * Creates a x86_64 unwind section with the given data.
+	 *
+	 * @param name The name of this section.
+	 * @param sectionHeader The header of this section.
+	 */
+	public X86_64_Unwind(final String name, final SectionHeader sectionHeader) {
+		this.name = Objects.requireNonNull(name);
+		this.header = Objects.requireNonNull(sectionHeader);
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public String toString() {
-        return "X86_64_Unwind(name=" + name + ";header=" + header + ")";
-    }
+	@Override
+	public String toString() {
+		return "X86_64_Unwind(name=" + name + ";header=" + header + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + name.hashCode();
-        h = 31 * h + header.hashCode();
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + name.hashCode();
+		h = 31 * h + header.hashCode();
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final X86_64_Unwind nbs = (X86_64_Unwind) other;
-        return this.name.equals(nbs.name) && this.header.equals(nbs.header);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final X86_64_Unwind nbs = (X86_64_Unwind) other;
+		return this.name.equals(nbs.name) && this.header.equals(nbs.header);
+	}
 }

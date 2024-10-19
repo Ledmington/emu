@@ -26,76 +26,76 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** A .note.stapsdt ELF section. */
 public final class SystemtapUSDTSection implements NoteSection {
 
-    private final SectionHeader header;
-    private final NoteSectionEntry[] entries;
+	private final SectionHeader header;
+	private final NoteSectionEntry[] entries;
 
-    /**
-     * Creates a .note.stapsdt section with the given data.
-     *
-     * @param sectionHeader The header of this section.
-     * @param b The ReadOnlyByteBuffer to read data from.
-     */
-    public SystemtapUSDTSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
-        this.header = Objects.requireNonNull(sectionHeader);
+	/**
+	 * Creates a .note.stapsdt section with the given data.
+	 *
+	 * @param sectionHeader The header of this section.
+	 * @param b The ReadOnlyByteBuffer to read data from.
+	 */
+	public SystemtapUSDTSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+		this.header = Objects.requireNonNull(sectionHeader);
 
-        b.setPosition(sectionHeader.getFileOffset());
-        b.setAlignment(sectionHeader.getAlignment());
-        this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
+		b.setPosition(sectionHeader.getFileOffset());
+		b.setAlignment(sectionHeader.getAlignment());
+		this.entries = NoteSection.loadNoteSectionEntries(b, sectionHeader.getSectionSize());
 
-        for (int i = 0; i < entries.length; i++) {
-            if (!"stapsdt".equals(entries[i].getName())) {
-                throw new IllegalArgumentException(String.format(
-                        "Invalid owner for entry n.%d in .note.stapsdt section: expected 'stapsdt' but was '%s'",
-                        i, entries[i].getName()));
-            }
-        }
-    }
+		for (int i = 0; i < entries.length; i++) {
+			if (!"stapsdt".equals(entries[i].getName())) {
+				throw new IllegalArgumentException(String.format(
+						"Invalid owner for entry n.%d in .note.stapsdt section: expected 'stapsdt' but was '%s'",
+						i, entries[i].getName()));
+			}
+		}
+	}
 
-    @Override
-    public String getName() {
-        return ".note.stapsdt";
-    }
+	@Override
+	public String getName() {
+		return ".note.stapsdt";
+	}
 
-    @Override
-    public SectionHeader getHeader() {
-        return header;
-    }
+	@Override
+	public SectionHeader getHeader() {
+		return header;
+	}
 
-    @Override
-    public int getNumEntries() {
-        return entries.length;
-    }
+	@Override
+	public int getNumEntries() {
+		return entries.length;
+	}
 
-    @Override
-    public NoteSectionEntry getEntry(final int idx) {
-        return entries[idx];
-    }
+	@Override
+	public NoteSectionEntry getEntry(final int idx) {
+		return entries[idx];
+	}
 
-    @Override
-    public String toString() {
-        return "SystemtapUSDT(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
-    }
+	@Override
+	public String toString() {
+		return "SystemtapUSDT(header=" + header + ";entries=" + Arrays.toString(entries) + ")";
+	}
 
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + header.hashCode();
-        h = 31 * h + Arrays.hashCode(entries);
-        return h;
-    }
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + header.hashCode();
+		h = 31 * h + Arrays.hashCode(entries);
+		return h;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (this == other) {
-            return true;
-        }
-        if (!this.getClass().equals(other.getClass())) {
-            return false;
-        }
-        final SystemtapUSDTSection ss = (SystemtapUSDTSection) other;
-        return this.header.equals(ss.header) && Arrays.equals(this.entries, ss.entries);
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!this.getClass().equals(other.getClass())) {
+			return false;
+		}
+		final SystemtapUSDTSection ss = (SystemtapUSDTSection) other;
+		return this.header.equals(ss.header) && Arrays.equals(this.entries, ss.entries);
+	}
 }

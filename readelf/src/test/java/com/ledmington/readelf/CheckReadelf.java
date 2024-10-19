@@ -34,171 +34,171 @@ import java.util.stream.Stream;
 
 public final class CheckReadelf {
 
-    private static final PrintWriter out = System.console() != null
-            ? System.console().writer()
-            : new PrintWriter(System.out, false, StandardCharsets.UTF_8);
-    private static final boolean isWindows =
-            System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
-    private static final String fatJarPath;
+	private static final PrintWriter out = System.console() != null
+			? System.console().writer()
+			: new PrintWriter(System.out, false, StandardCharsets.UTF_8);
+	private static final boolean isWindows =
+			System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
+	private static final String fatJarPath;
 
-    static {
-        try (final Stream<Path> s = Files.find(
-                        Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
-                .filter(p -> p.getFileName().toString().startsWith("emu-readelf")
-                        && p.getFileName().toString().endsWith(".jar"))) {
-            fatJarPath = s.max(Comparator.comparingLong(a -> a.toFile().length()))
-                    .orElseThrow()
-                    .normalize()
-                    .toAbsolutePath()
-                    .toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	static {
+		try (final Stream<Path> s = Files.find(
+						Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
+				.filter(p -> p.getFileName().toString().startsWith("emu-readelf")
+						&& p.getFileName().toString().endsWith(".jar"))) {
+			fatJarPath = s.max(Comparator.comparingLong(a -> a.toFile().length()))
+					.orElseThrow()
+					.normalize()
+					.toAbsolutePath()
+					.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private static boolean isELF(final Path p) {
-        try (final InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
-            final int expectedBytes = 4;
-            final byte[] buffer = new byte[expectedBytes];
-            final int bytesRead = is.read(buffer);
-            if (bytesRead != expectedBytes) {
-                throw new RuntimeException();
-            }
-            return buffer[0] == (byte) 0x7f
-                    && buffer[1] == (byte) 0x45
-                    && buffer[2] == (byte) 0x4c
-                    && buffer[3] == (byte) 0x46;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private static boolean isELF(final Path p) {
+		try (final InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
+			final int expectedBytes = 4;
+			final byte[] buffer = new byte[expectedBytes];
+			final int bytesRead = is.read(buffer);
+			if (bytesRead != expectedBytes) {
+				throw new RuntimeException();
+			}
+			return buffer[0] == (byte) 0x7f
+					&& buffer[1] == (byte) 0x45
+					&& buffer[2] == (byte) 0x4c
+					&& buffer[3] == (byte) 0x46;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private static List<String> run(final String... cmd) {
-        final Process process;
-        final List<String> lines = new ArrayList<>();
-        try {
-            process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            try (final BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                String line = reader.readLine();
-                while (line != null) {
-                    lines.add(line);
-                    line = reader.readLine();
-                }
-            }
-            final int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d%n", exitCode);
-                out.println(String.join("\n", lines));
-                out.println();
-            }
-        } catch (final IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+	private static List<String> run(final String... cmd) {
+		final Process process;
+		final List<String> lines = new ArrayList<>();
+		try {
+			process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+			try (final BufferedReader reader =
+					new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+				String line = reader.readLine();
+				while (line != null) {
+					lines.add(line);
+					line = reader.readLine();
+				}
+			}
+			final int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d%n", exitCode);
+				out.println(String.join("\n", lines));
+				out.println();
+			}
+		} catch (final IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 
-        return lines;
-    }
+		return lines;
+	}
 
-    private static List<String> runSystemReadelf(final Path p, final boolean wide) {
-        final String systemReadelf = "/usr/bin/readelf";
-        final String[] cmd = wide
-                ? new String[] {systemReadelf, "-a", "-W", p.toString()}
-                : new String[] {systemReadelf, "-a", p.toString()};
-        return run(cmd);
-    }
+	private static List<String> runSystemReadelf(final Path p, final boolean wide) {
+		final String systemReadelf = "/usr/bin/readelf";
+		final String[] cmd = wide
+				? new String[] {systemReadelf, "-a", "-W", p.toString()}
+				: new String[] {systemReadelf, "-a", p.toString()};
+		return run(cmd);
+	}
 
-    private static List<String> runCustomReadelf(final Path p, final boolean wide) {
-        final String[] cmd = wide
-                ? new String[] {"java", "-jar", fatJarPath, "-a", "-W", p.toString()}
-                : new String[] {"java", "-jar", fatJarPath, "-a", p.toString()};
-        return run(cmd);
-    }
+	private static List<String> runCustomReadelf(final Path p, final boolean wide) {
+		final String[] cmd = wide
+				? new String[] {"java", "-jar", fatJarPath, "-a", "-W", p.toString()}
+				: new String[] {"java", "-jar", fatJarPath, "-a", p.toString()};
+		return run(cmd);
+	}
 
-    private static void checkDiff(final List<String> expected, final List<String> actual) {
-        if (expected.equals(actual)) {
-            out.println("\u001b[32mOK\u001b[0m");
-            return;
-        }
+	private static void checkDiff(final List<String> expected, final List<String> actual) {
+		if (expected.equals(actual)) {
+			out.println("\u001b[32mOK\u001b[0m");
+			return;
+		}
 
-        out.println("\u001b[31mERROR\u001b[0m");
+		out.println("\u001b[31mERROR\u001b[0m");
 
-        final int minSize = Math.min(expected.size(), actual.size());
-        final int maxSize = Math.max(expected.size(), actual.size());
-        final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |<| %s\u001b[47m \u001b[0m%n";
-        final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |>| %s\u001b[47m \u001b[0m%n";
+		final int minSize = Math.min(expected.size(), actual.size());
+		final int maxSize = Math.max(expected.size(), actual.size());
+		final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |<| %s\u001b[47m \u001b[0m%n";
+		final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |>| %s\u001b[47m \u001b[0m%n";
 
-        // start of the different block
-        int start = -1;
-        for (int i = 0; i < minSize; i++) {
-            final String e = expected.get(i);
-            final String a = actual.get(i);
-            if (e.equals(a)) {
-                if (start != -1) {
-                    out.println("----------");
-                    for (int j = start; j < i; j++) {
-                        final String a2 = actual.get(j);
-                        out.printf(fmtActual, j, a2);
-                    }
-                    start = -1;
-                    out.println("==========");
-                }
-            } else {
-                if (start == -1) {
-                    start = i;
-                    out.println("==========");
-                }
-                out.printf(fmtExpected, i, e);
-            }
-        }
+		// start of the different block
+		int start = -1;
+		for (int i = 0; i < minSize; i++) {
+			final String e = expected.get(i);
+			final String a = actual.get(i);
+			if (e.equals(a)) {
+				if (start != -1) {
+					out.println("----------");
+					for (int j = start; j < i; j++) {
+						final String a2 = actual.get(j);
+						out.printf(fmtActual, j, a2);
+					}
+					start = -1;
+					out.println("==========");
+				}
+			} else {
+				if (start == -1) {
+					start = i;
+					out.println("==========");
+				}
+				out.printf(fmtExpected, i, e);
+			}
+		}
 
-        if (expected.size() > minSize) {
-            for (int i = minSize; i < expected.size(); i++) {
-                final String e = expected.get(i);
-                out.printf(fmtExpected, i, e);
-            }
-        } else if (actual.size() > minSize) {
-            for (int i = minSize; i < actual.size(); i++) {
-                final String a = actual.get(i);
-                out.printf(fmtActual, i, a);
-            }
-        }
+		if (expected.size() > minSize) {
+			for (int i = minSize; i < expected.size(); i++) {
+				final String e = expected.get(i);
+				out.printf(fmtExpected, i, e);
+			}
+		} else if (actual.size() > minSize) {
+			for (int i = minSize; i < actual.size(); i++) {
+				final String a = actual.get(i);
+				out.printf(fmtActual, i, a);
+			}
+		}
 
-        out.println();
-    }
+		out.println();
+	}
 
-    private static void test(final Path p, final boolean wide) {
-        out.print(p.toString() + (wide ? " (wide)" : "") + " ... ");
-        final List<String> outputSystemReadelf = runSystemReadelf(p, wide);
-        final List<String> outputCustomReadelf = runCustomReadelf(p, wide);
-        checkDiff(outputSystemReadelf, outputCustomReadelf);
-    }
+	private static void test(final Path p, final boolean wide) {
+		out.print(p.toString() + (wide ? " (wide)" : "") + " ... ");
+		final List<String> outputSystemReadelf = runSystemReadelf(p, wide);
+		final List<String> outputCustomReadelf = runCustomReadelf(p, wide);
+		checkDiff(outputSystemReadelf, outputCustomReadelf);
+	}
 
-    public static void main(final String[] args) {
-        if (args.length > 0) {
-            out.println("Arguments were passed on the command line but were not needed.");
-        }
+	public static void main(final String[] args) {
+		if (args.length > 0) {
+			out.println("Arguments were passed on the command line but were not needed.");
+		}
 
-        if (isWindows) {
-            out.println("It seems that you are running on a windows machine. This test will be disabled.");
-            System.exit(0);
-        }
+		if (isWindows) {
+			out.println("It seems that you are running on a windows machine. This test will be disabled.");
+			System.exit(0);
+		}
 
-        final List<Path> elfFiles;
-        try (final Stream<Path> s = Files.find(
-                Path.of("/usr/bin").normalize().toAbsolutePath(),
-                1,
-                (p, bfa) -> bfa.isRegularFile() && p.toFile().length() >= 4L && isELF(p))) {
-            elfFiles = s.distinct().sorted().toList();
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+		final List<Path> elfFiles;
+		try (final Stream<Path> s = Files.find(
+				Path.of("/usr/bin").normalize().toAbsolutePath(),
+				1,
+				(p, bfa) -> bfa.isRegularFile() && p.toFile().length() >= 4L && isELF(p))) {
+			elfFiles = s.distinct().sorted().toList();
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 
-        for (int i = 0; i < elfFiles.size(); i++) {
-            final Path p = elfFiles.get(i);
-            out.printf(" [%d / %d] ", i * 2 + 1, elfFiles.size() * 2);
-            test(p, false);
-            out.printf(" [%d / %d] ", i * 2 + 2, elfFiles.size() * 2);
-            test(p, true);
-        }
-    }
+		for (int i = 0; i < elfFiles.size(); i++) {
+			final Path p = elfFiles.get(i);
+			out.printf(" [%d / %d] ", i * 2 + 1, elfFiles.size() * 2);
+			test(p, false);
+			out.printf(" [%d / %d] ", i * 2 + 2, elfFiles.size() * 2);
+			test(p, true);
+		}
+	}
 }

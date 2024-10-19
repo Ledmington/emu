@@ -22,38 +22,38 @@ import com.ledmington.utils.BitUtils;
 /** A collection of utility static methods for parsing register codes. */
 public final class Registers {
 
-    /**
-     * Performs a bitwise OR with the given byte and a byte with the given value in the third bit.
-     *
-     * @param b The value of the third bit.
-     * @param x The byte to be ORed.
-     * @return xxxxxxxx OR 0000b000.
-     */
-    public static byte combine(final boolean b, final byte x) {
-        return BitUtils.asByte(x | (b ? ((byte) 0b00001000) : 0));
-    }
+	/**
+	 * Performs a bitwise OR with the given byte and a byte with the given value in the third bit.
+	 *
+	 * @param b The value of the third bit.
+	 * @param x The byte to be ORed.
+	 * @return xxxxxxxx OR 0000b000.
+	 */
+	public static byte combine(final boolean b, final byte x) {
+		return BitUtils.asByte(x | (b ? ((byte) 0b00001000) : 0));
+	}
 
-    /**
-     * Returns the proper general-purpose register by choosing which type/size based on the given arguments.
-     *
-     * @param registerCode The "base" code of the register.
-     * @param isOperand64Bit If not 16 bits, selects a 64-bit register if true, a 32-bit register otherwise.
-     * @param extension A single bit extension for the "base" code of the register.
-     * @param hasOperandSizeOverridePrefix If true, selects a 16-bit register, otherwise the result depends on
-     *     isOperand64Bit.
-     * @return The selected register corresponding to the arguments passed.
-     */
-    public static Register fromCode(
-            final byte registerCode,
-            final boolean isOperand64Bit,
-            final boolean extension,
-            final boolean hasOperandSizeOverridePrefix) {
-        return hasOperandSizeOverridePrefix
-                ? Register16.fromByte(combine(extension, registerCode))
-                : isOperand64Bit
-                        ? Register64.fromByte(combine(extension, registerCode))
-                        : Register32.fromByte(combine(extension, registerCode));
-    }
+	/**
+	 * Returns the proper general-purpose register by choosing which type/size based on the given arguments.
+	 *
+	 * @param registerCode The "base" code of the register.
+	 * @param isOperand64Bit If not 16 bits, selects a 64-bit register if true, a 32-bit register otherwise.
+	 * @param extension A single bit extension for the "base" code of the register.
+	 * @param hasOperandSizeOverridePrefix If true, selects a 16-bit register, otherwise the result depends on
+	 *     isOperand64Bit.
+	 * @return The selected register corresponding to the arguments passed.
+	 */
+	public static Register fromCode(
+			final byte registerCode,
+			final boolean isOperand64Bit,
+			final boolean extension,
+			final boolean hasOperandSizeOverridePrefix) {
+		return hasOperandSizeOverridePrefix
+				? Register16.fromByte(combine(extension, registerCode))
+				: isOperand64Bit
+						? Register64.fromByte(combine(extension, registerCode))
+						: Register32.fromByte(combine(extension, registerCode));
+	}
 
-    private Registers() {}
+	private Registers() {}
 }

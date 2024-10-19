@@ -30,18 +30,18 @@ import com.ledmington.elf.section.gnu.GnuHashSection;
 
 final class TestGnuHash {
 
-    private static Stream<Arguments> knownHashes() {
-        return Stream.of(
-                Arguments.of("a", 0x0002b606),
-                Arguments.of("__libc_start_main", 0xf63d4e2e),
-                Arguments.of("pthread_mutex_lock", 0x4f152227),
-                Arguments.of("strcasecmp", 0xb3850d3a));
-    }
+	private static Stream<Arguments> knownHashes() {
+		return Stream.of(
+				Arguments.of("a", 0x0002b606),
+				Arguments.of("__libc_start_main", 0xf63d4e2e),
+				Arguments.of("pthread_mutex_lock", 0x4f152227),
+				Arguments.of("strcasecmp", 0xb3850d3a));
+	}
 
-    @ParameterizedTest
-    @MethodSource("knownHashes")
-    void testKnownHashes(final String symbolname, final int hash) {
-        final int actual = GnuHashSection.hash(symbolname.getBytes(StandardCharsets.UTF_8));
-        assertEquals(hash, actual, () -> String.format("Expected 0x%08x but was 0x%08x", hash, actual));
-    }
+	@ParameterizedTest
+	@MethodSource("knownHashes")
+	void testKnownHashes(final String symbolname, final int hash) {
+		final int actual = GnuHashSection.hash(symbolname.getBytes(StandardCharsets.UTF_8));
+		assertEquals(hash, actual, () -> String.format("Expected 0x%08x but was 0x%08x", hash, actual));
+	}
 }
