@@ -22,7 +22,7 @@ String authorMail = 'filippo.barbari@gmail.com'
 String appName = 'emu'
 ext.appNameLowerCase = appName.toLowerCase(Locale.US)
 
-ext.junitVersion = '5.11.2'
+ext.junitVersion = '5.11.3'
 // End tunables
 
 allprojects {
