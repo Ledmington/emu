@@ -95,7 +95,8 @@ public final class AppConstants {
 	}
 
 	public static void setMaxCodeInstructions(final int n) {
-		if (n < 1) {
+		final int minCodeInstructions = 1;
+		if (n < minCodeInstructions) {
 			throw new IllegalArgumentException(String.format("Invalid max code instructions %,d", n));
 		}
 		MAX_CODE_INSTRUCTIONS = n;
@@ -108,7 +109,8 @@ public final class AppConstants {
 	}
 
 	public static void setMaxMemoryLines(final int n) {
-		if (n < 1) {
+		final int minMemoryLines = 1;
+		if (n < minMemoryLines) {
 			throw new IllegalArgumentException(String.format("Invalid max memory lines %,d", n));
 		}
 		MAX_MEMORY_LINES = n;
@@ -121,7 +123,8 @@ public final class AppConstants {
 	}
 
 	public static void setMemoryBytesPerLine(final int n) {
-		if (n < 1) {
+		final int minMemoryBytesPerLine = 1;
+		if (n < minMemoryBytesPerLine) {
 			throw new IllegalArgumentException(String.format("Invalid memory bytes per line %,d", n));
 		}
 		MEMORY_BYTES_PER_LINE = n;

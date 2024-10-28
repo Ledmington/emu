@@ -57,22 +57,26 @@ public final class X86Cpu implements X86Emulator {
 		this.dec = new InstructionDecoderV1(instFetch);
 	}
 
+	@Override
 	public void setEntryPoint(final long entryPointVirtualAddress) {
 		this.entryPointVirtualAddress = entryPointVirtualAddress;
 		this.instFetch.setPosition(entryPointVirtualAddress);
 		logger.debug("Entry point virtual address : 0x%x", entryPointVirtualAddress);
 	}
 
+	@Override
 	public void execute() {
 		while (state != State.HALTED) {
 			executeOne();
 		}
 	}
 
+	@Override
 	public void executeOne() {
 		executeOne(dec.decode());
 	}
 
+	@Override
 	public void executeOne(final Instruction inst) {
 		logger.debug(inst.toIntelSyntax());
 		switch (inst.opcode()) {

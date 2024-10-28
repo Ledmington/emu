@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -32,6 +33,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
@@ -46,6 +48,11 @@ import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderFlags;
 
 public final class ELFView extends BorderPane {
+
+	private static final int MAX_ROWS = 16;
+	private static final int MAX_GROUPS_PER_ROW = 4;
+	private static final int MAX_BYTES_PER_GROUP = 4;
+	private static final int MAX_BYTES_PER_ROW = MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP;
 
 	private record Range(int offset, int length) {
 
@@ -63,49 +70,26 @@ public final class ELFView extends BorderPane {
 	}
 
 	private final Stage parent;
-	private final TextArea textArea = new TextArea();
+	private final TextArea addressArea = new TextArea();
+	private final TextArea hexContentArea = new TextArea();
+	private final TextArea asciiContentArea = new TextArea();
 	private final TreeView<Label> tree;
-	private static final int nBytesPerBlock = 4;
-	private static final int nBlocksPerRow = 4;
-	private static final int nBytesPerRow = nBytesPerBlock * nBlocksPerRow;
-
-	private static int computeTextPosition(final int byteIndex) {
-		/*
-		 * Here we can compute start and end of the range with a "closed" formula
-		 * because we assume that the output is strictly formatted.
-		 * If this is not the case, the formula needs to be rewritten.
-		 */
-
-		// counting all characters (space + '0x' + hex_address + ' : ')
-		final int prefixLength = 1 + 2 + 8 + 3;
-		// (' ' + actual characters + '\n')
-		final int suffixLength = 3 + nBytesPerRow + 1;
-		// (... + actual bytes + spaces between blocks + ...)
-		final int totalRowLength = prefixLength + nBytesPerRow * 2 + (nBlocksPerRow - 1) + suffixLength;
-		// final int byteIdInRow = byteIndex % nBytesPerRow;
-		final int byteIdInBlock = byteIndex % nBytesPerBlock;
-		final int myRow = byteIndex / nBytesPerRow;
-		final int myBlock = byteIndex / nBytesPerBlock;
-		final int blockIdInRow = myBlock % nBlocksPerRow;
-		return myRow * totalRowLength // rows before
-				+ prefixLength // prefix of my row
-				+ blockIdInRow * (nBytesPerBlock * 2) // bytes in blocks before mine
-				+ (blockIdInRow - 1) // spaces between blocks
-				+ byteIdInBlock * 2 // bytes before me
-		;
-	}
 
 	private final BiFunction<String, Range, TreeItem<Label>> factory = (name, range) -> {
 		final Label lbl = new Label(name);
 		lbl.setOnMouseClicked(e -> {
-			if (range.length() == 1) {
-				final int pos = computeTextPosition(range.offset());
-				textArea.selectRange(pos, pos + 2);
-				return;
-			}
+			final int startRowIndex = range.offset() / MAX_BYTES_PER_ROW;
+			final int endRowIndex = (range.offset() + range.length()) / MAX_BYTES_PER_ROW;
 
-			textArea.selectRange(
-					computeTextPosition(range.offset()), computeTextPosition(range.offset() + range.length()));
+			addressArea.selectRange(
+					startRowIndex * (2 + 16 + 1), Math.max(startRowIndex + 1, endRowIndex) * (2 + 16 + 1));
+
+			asciiContentArea.selectRange(
+					startRowIndex * (MAX_BYTES_PER_ROW + 1) + (range.offset() % MAX_BYTES_PER_ROW),
+					endRowIndex * (MAX_BYTES_PER_ROW + 1) + ((range.offset() + range.length()) % MAX_BYTES_PER_ROW));
+
+			// TODO
+			hexContentArea.selectRange(range.offset(), range.offset() + range.length());
 		});
 		return new TreeItem<>(lbl);
 	};
@@ -117,9 +101,29 @@ public final class ELFView extends BorderPane {
 		tree = new TreeView<>(root);
 		tree.setEditable(false);
 		this.setLeft(tree);
-		textArea.setEditable(false);
-		this.setRight(textArea);
+
+		final Font defaultFont = new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize());
+
+		final GridPane grid = new GridPane(10, 2);
+
+		addressArea.setEditable(false);
+		addressArea.setFont(defaultFont);
+		addressArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "0x0000000000000000")));
+		grid.add(addressArea, 0, 0);
+
+		hexContentArea.setEditable(false);
+		hexContentArea.setFont(defaultFont);
+		hexContentArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "00000000 00000000 00000000 00000000")));
+		grid.add(hexContentArea, 1, 0);
+
+		asciiContentArea.setEditable(false);
+		asciiContentArea.setFont(defaultFont);
+		asciiContentArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "................")));
+		grid.add(asciiContentArea, 2, 0);
+
+		this.setRight(grid);
 		this.setPadding(new Insets(5));
+		parent.sizeToScene();
 	}
 
 	public void loadFile(final File elfFile) {
@@ -135,7 +139,7 @@ public final class ELFView extends BorderPane {
 
 		final ELF elf = ELFReader.read(fileBytes);
 		initializeTreeView(elf);
-		initializeTextArea(fileBytes);
+		initializeGridView(fileBytes);
 		this.parent.sizeToScene();
 	}
 
@@ -303,34 +307,43 @@ public final class ELFView extends BorderPane {
 		root.getChildren().addAll(List.of(fileHeader, PHTRoot, SHTRoot));
 	}
 
-	private void initializeTextArea(final byte[] fileBytes) {
-		final StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < fileBytes.length; i++) {
-			if (i % nBytesPerRow == 0) {
-				// start of the row
-				sb.append(" 0x").append(String.format("%08x", i)).append(" : ");
-			}
-			sb.append(String.format("%02x", fileBytes[i]));
-			if (i % nBytesPerBlock == nBytesPerBlock - 1) {
-				sb.append(' ');
-			}
-			if (i % nBytesPerRow == nBytesPerRow - 1) {
-				sb.append("   ");
-				final int startOfTheRow = i - (i % nBytesPerRow);
-				for (int j = 0; j < nBytesPerRow; j++) {
-					final byte x = fileBytes[startOfTheRow + j];
-					if (isAsciiPrintable(x)) {
-						sb.append((char) x);
+	private void initializeGridView(final byte[] fileBytes) {
+		// we only care about the first MAX_ROWS * MAX_GROUPS_PER_ROW *
+		// MAX_BYTES_PER_GROUP bytes
+		final StringBuilder sbAddress = new StringBuilder();
+		final StringBuilder sbHex = new StringBuilder();
+		final StringBuilder sbAscii = new StringBuilder();
+
+		for (int row = 0; row < MAX_ROWS; row++) {
+			sbAddress.append(String.format("0x%016x", (long) (row * MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP)));
+
+			for (int group = 0; group < MAX_GROUPS_PER_ROW; group++) {
+				for (int b = 0; b < MAX_BYTES_PER_GROUP; b++) {
+					final int byteIndex =
+							row * MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP + group * MAX_BYTES_PER_GROUP + b;
+					sbHex.append(String.format("%02x", fileBytes[byteIndex]));
+					if (isAsciiPrintable(fileBytes[byteIndex])) {
+						sbAscii.append((char) fileBytes[byteIndex]);
 					} else {
-						sb.append('.');
+						sbAscii.append('.');
 					}
 				}
-				sb.append('\n');
+
+				if (group < MAX_GROUPS_PER_ROW - 1) {
+					sbHex.append(' ');
+				}
+			}
+
+			if (row < MAX_ROWS - 1) {
+				sbAddress.append('\n');
+				sbHex.append('\n');
+				sbAscii.append('\n');
 			}
 		}
 
-		textArea.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
-		this.textArea.setText(sb.toString());
+		addressArea.setText(sbAddress.toString());
+		hexContentArea.setText(sbHex.toString());
+		asciiContentArea.setText(sbAscii.toString());
 	}
 
 	private boolean isAsciiPrintable(final byte x) {

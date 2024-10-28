@@ -40,12 +40,12 @@ public final class X86CpuAdapter implements X86Emulator {
 
 	@Override
 	public void execute() {
-		throw new Error("Not implemented");
+		cpu.execute();
 	}
 
 	@Override
 	public void executeOne() {
-		throw new Error("Not implemented");
+		cpu.executeOne();
 	}
 
 	@Override
