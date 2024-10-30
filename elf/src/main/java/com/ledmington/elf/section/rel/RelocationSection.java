@@ -55,6 +55,25 @@ public final class RelocationSection implements Section {
 		}
 	}
 
+	/**
+	 * Returns the number of relocation entries.
+	 *
+	 * @return The number of relocation entries.
+	 */
+	public int getNumRelocationEntries() {
+		return relocationTable.length;
+	}
+
+	/**
+	 * Returns the i-th relocation entry.
+	 *
+	 * @param idx The index of the relocation entry.
+	 * @return The i-th relocation entry.
+	 */
+	public RelocationEntry getRelocationEntry(final int idx) {
+		return relocationTable[idx];
+	}
+
 	@Override
 	public String getName() {
 		return name;

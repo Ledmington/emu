@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -46,8 +47,11 @@ import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.utils.MiniLogger;
 
 public final class EmulatorView extends Stage {
+
+	private static final MiniLogger logger = MiniLogger.getLogger("emu-gui");
 
 	private X86CpuAdapter cpu;
 	private X86RegisterFile regFile;
@@ -71,7 +75,7 @@ public final class EmulatorView extends Stage {
 							new FileChooser.ExtensionFilter("All files", "*.*"));
 			final File selectedFile = fc.showOpenDialog(this);
 			if (selectedFile != null) {
-				this.loadFile(selectedFile);
+				Platform.runLater(() -> this.loadFile(selectedFile));
 			}
 		});
 
@@ -159,7 +163,7 @@ public final class EmulatorView extends Stage {
 	}
 
 	private void loadFile(final File file) {
-		System.out.printf("Loading file '%s'\n", file.toString());
+		logger.info("Loading file '%s'", file.toString());
 		this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
 		this.regFile = new X86RegisterFile();
 		this.cpu = new X86CpuAdapter(regFile, mem);
@@ -174,7 +178,7 @@ public final class EmulatorView extends Stage {
 					cpu,
 					mem,
 					commandLineArguments,
-					EmulatorConstants.getbaseAddress(),
+					EmulatorConstants.getBaseAddress(),
 					EmulatorConstants.getStackSize());
 		} catch (IOException e) {
 			throw new RuntimeException(e);

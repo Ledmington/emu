@@ -17,50 +17,46 @@
  */
 package com.ledmington.emu;
 
-import java.util.ArrayDeque;
-import java.util.Objects;
-import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.utils.MiniLogger;
 
-public final class X86CpuAdapter implements X86Emulator {
+// TODO: refactor avoiding inheritance
+public final class X86CpuAdapter extends X86Cpu {
 
-	private final X86Cpu cpu;
-	private final Queue<Instruction> instructions = new ArrayDeque<>();
+	private static final MiniLogger logger = MiniLogger.getLogger("x86-cpu-adapter");
+
+	private CompletableFuture<Void> fut = new CompletableFuture<>();
 
 	public X86CpuAdapter(final X86RegisterFile regFile, final MemoryController mem) {
-		this.cpu = new X86Cpu(Objects.requireNonNull(regFile), Objects.requireNonNull(mem));
-	}
-
-	@Override
-	public void setEntryPoint(final long address) {
-		cpu.setEntryPoint(address);
-	}
-
-	@Override
-	public void execute() {
-		cpu.execute();
-	}
-
-	@Override
-	public void executeOne() {
-		cpu.executeOne();
+		super(regFile, mem);
 	}
 
 	@Override
 	public void executeOne(final Instruction inst) {
+
+		logger.debug("submitted %s", inst.toIntelSyntax());
+
+		// block until the user want to execute
+		try {
+			fut.get();
+		} catch (final InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+
+		logger.debug("actually executing %s", inst.toIntelSyntax());
 		// each instruction gets added to a queue
-		instructions.add(inst);
+		super.executeOne(inst);
 	}
 
 	public void doExecuteOne() {
-		this.cpu.executeOne(this.instructions.remove());
+		fut.complete(null);
 	}
 
 	public void doExecute() {
-		while (!this.instructions.isEmpty()) {
-			doExecuteOne();
-		}
+		throw new Error("Not implemented");
 	}
 }

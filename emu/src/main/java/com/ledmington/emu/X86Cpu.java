@@ -34,7 +34,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
 /** Emulator of an x86 CPU. */
-public final class X86Cpu implements X86Emulator {
+public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 

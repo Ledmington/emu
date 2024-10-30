@@ -79,7 +79,7 @@ public final class Main {
 				cpu,
 				mem,
 				commandLineArguments,
-				EmulatorConstants.getbaseAddress(),
+				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getStackSize());
 
 		logger.info(" ### Execution start ### ");

@@ -46,6 +46,12 @@ public final class MemoryController implements Memory {
 		this.breakOnWrongPermissions = breakOnWrongPermissions;
 	}
 
+	/**
+	 * Creates a MemoryController with the given initializer and the default behavior of breaking when accessing memory
+	 * with the wrong permissions.
+	 *
+	 * @param memInit The {@link MemoryInitializer} object to be used.
+	 */
 	public MemoryController(final MemoryInitializer memInit) {
 		this(memInit, true);
 	}

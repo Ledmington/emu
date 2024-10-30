@@ -90,7 +90,7 @@ public final class EmulatorConstants {
 	 *
 	 * @return The default base address.
 	 */
-	public static long getbaseAddress() {
+	public static long getBaseAddress() {
 		return baseAddress;
 	}
 }

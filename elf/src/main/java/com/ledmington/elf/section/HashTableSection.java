@@ -77,6 +77,44 @@ public final class HashTableSection implements LoadableSection {
 	}
 
 	/**
+	 * Returns the number of buckets.
+	 *
+	 * @return The number of buckets.
+	 */
+	public int getNumBuckets() {
+		return buckets.length;
+	}
+
+	/**
+	 * Returns the i-th bucket.
+	 *
+	 * @param idx The index of the bucket.
+	 * @return The i-th bucket.
+	 */
+	public int getBucket(final int idx) {
+		return buckets[idx];
+	}
+
+	/**
+	 * Returns the number of chains.
+	 *
+	 * @return The number of chains.
+	 */
+	public int getNumChains() {
+		return chains.length;
+	}
+
+	/**
+	 * Returns the i-th chain value.
+	 *
+	 * @param idx The index of the chain.
+	 * @return The i-th chain.
+	 */
+	public int getChain(final int idx) {
+		return chains[idx];
+	}
+
+	/**
 	 * Computes the hash of the given byte-array as defined <a href=
 	 * "https://www.sco.com/developers/gabi/latest/ch5.dynamic.html#hash">here</a> (Figure 5-13).
 	 *

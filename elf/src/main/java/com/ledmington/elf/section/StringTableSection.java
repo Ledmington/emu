@@ -67,6 +67,16 @@ public final class StringTableSection implements LoadableSection {
 		return sb.toString();
 	}
 
+	/**
+	 * Returns the i-th character in the table.
+	 *
+	 * @param idx The index of the character.
+	 * @return The i-th character in the table.
+	 */
+	public char getChar(final int idx) {
+		return table[idx];
+	}
+
 	@Override
 	public String getName() {
 		return name;

@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import java.io.File;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -48,10 +49,10 @@ public final class ELFViewer extends Stage {
 							new FileChooser.ExtensionFilter("Shared objects", "*.o"),
 							new FileChooser.ExtensionFilter("Shared libraries", "*.so"),
 							new FileChooser.ExtensionFilter("Static libraries", "*.a"),
-							new FileChooser.ExtensionFilter("All files", "*.*"));
+							new FileChooser.ExtensionFilter("All files", "*"));
 			final File selectedFile = fc.showOpenDialog(this);
 			if (selectedFile != null) {
-				this.view.loadFile(selectedFile);
+				Platform.runLater(() -> this.view.loadFile(selectedFile));
 			}
 		});
 

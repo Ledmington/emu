@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 
 import com.ledmington.utils.MiniLogger;
@@ -64,6 +65,7 @@ public final class Main extends Application {
 							" -vv          All messages are reported.",
 							""));
 					out.flush();
+					Platform.exit();
 					System.exit(0);
 				}
 				case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
@@ -72,6 +74,7 @@ public final class Main extends Application {
 				default -> {
 					out.printf("Unknown flag '%s'\n", arg);
 					out.flush();
+					Platform.exit();
 					System.exit(-1);
 				}
 			}
@@ -79,5 +82,6 @@ public final class Main extends Application {
 
 		Application.launch(args);
 		out.flush();
+		Platform.exit();
 	}
 }

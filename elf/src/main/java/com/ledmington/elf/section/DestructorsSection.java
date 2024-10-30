@@ -94,6 +94,25 @@ public final class DestructorsSection implements LoadableSection {
 		return header;
 	}
 
+	/**
+	 * Returns the number of destructors.
+	 *
+	 * @return The number of destructors.
+	 */
+	public int getNumDestructors() {
+		return destructors.length;
+	}
+
+	/**
+	 * Returns the i-th destructor.
+	 *
+	 * @param idx The index of the destructor to return.
+	 * @return The i-th destructor.
+	 */
+	public long getDestructor(final int idx) {
+		return destructors[idx];
+	}
+
 	@Override
 	public byte[] getLoadableContent() {
 		final int wordSize = is32Bit ? 4 : 8;
