@@ -19,16 +19,20 @@ package com.ledmington.emu;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -46,20 +50,25 @@ import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.elf.section.SectionHeaderFlags;
+import com.ledmington.utils.MiniLogger;
 
 public final class ELFView extends BorderPane {
 
-	private static final int MAX_ROWS = 16;
+	private static final MiniLogger logger = MiniLogger.getLogger("emu-gui");
+
+	// TODO: move these into settings
+	private static final int MAX_ROWS = 32;
 	private static final int MAX_GROUPS_PER_ROW = 4;
 	private static final int MAX_BYTES_PER_GROUP = 4;
 	private static final int MAX_BYTES_PER_ROW = MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP;
+	private static final int ADDRESS_BYTES = 4;
 
 	private record Range(int offset, int length) {
 
 		private static final int MINIMUM_ALLOWED_LENGTH = 1;
 
 		public Range {
-			if (length < MINIMUM_ALLOWED_LENGTH) {
+			if (offset < 0 || length < MINIMUM_ALLOWED_LENGTH) {
 				throw new IllegalArgumentException(String.format("Invalid range [%d; %d+%d]", offset, offset, length));
 			}
 		}
@@ -73,33 +82,82 @@ public final class ELFView extends BorderPane {
 	private final TextArea addressArea = new TextArea();
 	private final TextArea hexContentArea = new TextArea();
 	private final TextArea asciiContentArea = new TextArea();
-	private final TreeView<Label> tree;
+	private final TreeView<String> tree;
+	private final Map<TreeItem<String>, Range> ranges = new HashMap<>();
 
-	private final BiFunction<String, Range, TreeItem<Label>> factory = (name, range) -> {
-		final Label lbl = new Label(name);
-		lbl.setOnMouseClicked(e -> {
-			final int startRowIndex = range.offset() / MAX_BYTES_PER_ROW;
-			final int endRowIndex = (range.offset() + range.length()) / MAX_BYTES_PER_ROW;
+	// The actual index of the first byte displayed
+	private File file = null;
+	private int startByte = 0;
 
-			addressArea.selectRange(
-					startRowIndex * (2 + 16 + 1), Math.max(startRowIndex + 1, endRowIndex) * (2 + 16 + 1));
-
-			asciiContentArea.selectRange(
-					startRowIndex * (MAX_BYTES_PER_ROW + 1) + (range.offset() % MAX_BYTES_PER_ROW),
-					endRowIndex * (MAX_BYTES_PER_ROW + 1) + ((range.offset() + range.length()) % MAX_BYTES_PER_ROW));
-
-			// TODO
-			hexContentArea.selectRange(range.offset(), range.offset() + range.length());
-		});
-		return new TreeItem<>(lbl);
+	private final BiFunction<String, Range, TreeItem<String>> factory = (name, range) -> {
+		final TreeItem<String> ti = new TreeItem<>(name);
+		ranges.put(ti, range);
+		return ti;
 	};
 
 	public ELFView(final Stage parent) {
 		this.parent = Objects.requireNonNull(parent);
 
-		final TreeItem<Label> root = new TreeItem<>(new Label("<no file>"));
+		final TreeItem<String> root = new TreeItem<>("<no file>");
 		tree = new TreeView<>(root);
 		tree.setEditable(false);
+		tree.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<>() {
+			@Override
+			public void changed(
+					final ObservableValue<? extends TreeItem<String>> observable,
+					final TreeItem<String> oldValue,
+					final TreeItem<String> selectedItem) {
+				if (!ranges.containsKey(selectedItem)) {
+					return;
+				}
+
+				final Range range = ranges.get(selectedItem);
+
+				if (range.offset() > startByte + MAX_ROWS * MAX_BYTES_PER_ROW
+						|| range.offset() + range.length() < startByte) {
+					logger.debug(
+							"Range [%,d; %,d] is outside the displayed range [%,d; %,d]",
+							range.offset(),
+							range.offset() + range.length(),
+							startByte,
+							startByte + MAX_ROWS * MAX_BYTES_PER_ROW);
+
+					// If we cannot display the given range, we load another chunk from the file
+					updateGrid(range.offset());
+				}
+
+				final int start = range.offset() - startByte;
+				final int end = range.offset() + range.length() - startByte;
+
+				final int startRowIndex = start / MAX_BYTES_PER_ROW;
+				final int endRowIndex = end / MAX_BYTES_PER_ROW;
+
+				addressArea.selectRange(
+						startRowIndex * (2 + 2 * ADDRESS_BYTES + 1), (endRowIndex + 1) * (2 + 2 * ADDRESS_BYTES + 1));
+
+				asciiContentArea.selectRange(
+						startRowIndex * (MAX_BYTES_PER_ROW + 1) + (start % MAX_BYTES_PER_ROW),
+						endRowIndex * (MAX_BYTES_PER_ROW + 1) + (end % MAX_BYTES_PER_ROW));
+
+				final int rowLength = 2 * MAX_BYTES_PER_ROW + (MAX_GROUPS_PER_ROW - 1) + 1;
+				final int groupLength = 2 * MAX_BYTES_PER_GROUP;
+				final int startGroupIndexInRow = (start % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
+				final int startByteIndexInGroup = (start % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
+				final int endGroupIndexInRow = (end % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
+				final int endByteIndexInGroup = (end % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
+				final int startActualIndex = startRowIndex * rowLength
+						+ startGroupIndexInRow * groupLength
+						+ startGroupIndexInRow
+						+ startByteIndexInGroup * 2;
+				final int endActualIndex = endRowIndex * rowLength
+						+ endGroupIndexInRow * groupLength
+						+ endGroupIndexInRow
+						+ endByteIndexInGroup * 2
+						+ (endByteIndexInGroup == 0 ? -1 : 0);
+
+				hexContentArea.selectRange(startActualIndex, endActualIndex);
+			}
+		});
 		this.setLeft(tree);
 
 		final Font defaultFont = new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize());
@@ -108,17 +166,21 @@ public final class ELFView extends BorderPane {
 
 		addressArea.setEditable(false);
 		addressArea.setFont(defaultFont);
-		addressArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "0x0000000000000000")));
+		addressArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "0x" + "0".repeat(2 * ADDRESS_BYTES))));
 		grid.add(addressArea, 0, 0);
 
 		hexContentArea.setEditable(false);
 		hexContentArea.setFont(defaultFont);
-		hexContentArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "00000000 00000000 00000000 00000000")));
+		hexContentArea.setText(String.join(
+				"\n",
+				Collections.nCopies(
+						MAX_ROWS,
+						String.join(" ", Collections.nCopies(MAX_GROUPS_PER_ROW, "xx".repeat(MAX_BYTES_PER_GROUP))))));
 		grid.add(hexContentArea, 1, 0);
 
 		asciiContentArea.setEditable(false);
 		asciiContentArea.setFont(defaultFont);
-		asciiContentArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, "................")));
+		asciiContentArea.setText(String.join("\n", Collections.nCopies(MAX_ROWS, ".".repeat(MAX_BYTES_PER_ROW))));
 		grid.add(asciiContentArea, 2, 0);
 
 		this.setRight(grid);
@@ -127,8 +189,10 @@ public final class ELFView extends BorderPane {
 	}
 
 	public void loadFile(final File elfFile) {
+		ranges.clear();
 		tree.getRoot().getChildren().clear();
-		tree.getTreeItem(0).setValue(new Label(elfFile.getName()));
+		tree.getTreeItem(0).setValue(elfFile.getName());
+		this.file = elfFile;
 
 		final byte[] fileBytes;
 		try {
@@ -139,183 +203,205 @@ public final class ELFView extends BorderPane {
 
 		final ELF elf = ELFReader.read(fileBytes);
 		initializeTreeView(elf);
-		initializeGridView(fileBytes);
+
+		updateGrid(0);
+
 		this.parent.sizeToScene();
 	}
 
 	private void initializeTreeView(final ELF elf) {
-		final TreeItem<Label> root = tree.getTreeItem(0);
+		final TreeItem<String> root = tree.getTreeItem(0);
 
-		final TreeItem<Label> fileHeader = new TreeItem<>(new Label("File Header"));
+		final TreeItem<String> fileHeader = new TreeItem<>("File Header");
 		final FileHeader fh = elf.getFileHeader();
-		final int wordSize = fh.is32Bit() ? 4 : 8;
-		final List<TreeItem<Label>> fileHeaderElements = new ArrayList<>();
-		{
-			int i = 4;
-			fileHeaderElements.add(factory.apply("Class = " + (fh.is32Bit() ? "32 bit" : "64 bit"), new Range(i)));
-			i++;
-			fileHeaderElements.add(factory.apply(
-					"Endianness = " + (fh.isLittleEndian() ? "little-endian" : "big-endian"), new Range(i)));
-			i += 2;
-			fileHeaderElements.add(factory.apply("OS/ABI = " + fh.getOSABI().getName(), new Range(i)));
-			i++;
-			fileHeaderElements.add(factory.apply("ABI version = " + fh.getABIVersion(), new Range(i)));
-			i++;
-			fileHeaderElements.add(
-					factory.apply("File type = " + fh.getFileType().name().replaceFirst("^ET_", ""), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(factory.apply("ISA = " + fh.getISA().getName(), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(factory.apply("Version = " + fh.getVersion(), new Range(i, 4)));
-			i += 4;
-			fileHeaderElements.add(
-					factory.apply("Entrypoint = " + fh.getEntryPointVirtualAddress(), new Range(i, wordSize)));
-			i += wordSize;
-			fileHeaderElements.add(
-					factory.apply("PHT offset = " + fh.getProgramHeaderTableOffset(), new Range(i, wordSize)));
-			i += wordSize;
-			fileHeaderElements.add(
-					factory.apply("SHT offset = " + fh.getSectionHeaderTableOffset(), new Range(i, wordSize)));
-			i += wordSize;
-			fileHeaderElements.add(factory.apply("Flags = " + fh.getFlags(), new Range(i, 4)));
-			i += 4;
-			fileHeaderElements.add(factory.apply("Header size = " + fh.getHeaderSize(), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(
-					factory.apply("PHT entry size = " + fh.getProgramHeaderTableEntrySize(), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(
-					factory.apply("PHT entries = " + fh.getNumProgramHeaderTableEntries(), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(
-					factory.apply("SHT entry size = " + fh.getSectionHeaderTableEntrySize(), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(
-					factory.apply("SHT entries = " + fh.getNumSectionHeaderTableEntries(), new Range(i, 2)));
-			i += 2;
-			fileHeaderElements.add(
-					factory.apply("shstrndx = " + fh.getSectionHeaderStringTableIndex(), new Range(i, 2)));
-		}
-		fileHeader.getChildren().addAll(fileHeaderElements);
+		fileHeader.getChildren().addAll(initializeFileHeader(fh));
 
-		final TreeItem<Label> PHTRoot = new TreeItem<>(new Label("Program Header Table"));
+		final TreeItem<String> PHTRoot = new TreeItem<>("Program Header Table");
 		final ProgramHeaderTable pht = elf;
-		final List<TreeItem<Label>> PHTElements = new ArrayList<>();
-		{
-			final long PHTOffset = fh.getProgramHeaderTableOffset();
-			final long PHTEntrySize = fh.getProgramHeaderTableEntrySize();
-			for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
-				final TreeItem<Label> x = factory.apply(
-						String.valueOf(i), new Range((int) (PHTOffset + i * PHTEntrySize), (int) PHTEntrySize));
-				PHTElements.add(x);
+		PHTRoot.getChildren().addAll(initializeProgramHeaderTable(fh, pht));
 
-				final PHTEntry phte = pht.getProgramHeader(i);
-				final long entryOffset = PHTOffset + i * PHTEntrySize;
-				int k = (int) entryOffset;
-				x.getChildren().add(factory.apply("Type = " + phte.getType().getName(), new Range(k, 4)));
-				k += 4;
-				x.getChildren()
-						.add(factory.apply(
-								"Flags = " + (phte.isReadable() ? "R" : " ") + (phte.isWriteable() ? "W" : " ")
-										+ (phte.isExecutable() ? "X" : " "),
-								new Range(k, 4)));
-				k += 4;
-				x.getChildren()
-						.add(factory.apply("Segment offset = " + phte.getSegmentOffset(), new Range(k, wordSize)));
-				k += wordSize;
-				x.getChildren()
-						.add(factory.apply(
-								"Segment vaddr = " + phte.getSegmentVirtualAddress(), new Range(k, wordSize)));
-				k += wordSize;
-				x.getChildren()
-						.add(factory.apply(
-								"Segment paddr = " + phte.getSegmentPhysicalAddress(), new Range(k, wordSize)));
-				k += wordSize;
-				x.getChildren()
-						.add(factory.apply("Segment file size = " + phte.getSegmentFileSize(), new Range(k, wordSize)));
-				k += wordSize;
-				x.getChildren()
-						.add(factory.apply(
-								"Segment memory size = " + phte.getSegmentMemorySize(), new Range(k, wordSize)));
-				k += wordSize;
-				x.getChildren()
-						.add(factory.apply("Segment alignment = " + phte.getAlignment(), new Range(k, wordSize)));
-			}
-		}
-		PHTRoot.getChildren().addAll(PHTElements);
-
-		final TreeItem<Label> SHTRoot = new TreeItem<>(new Label("Section Table"));
+		final TreeItem<String> SHTRoot = new TreeItem<>("Section Table");
 		final SectionTable st = elf;
-		final List<TreeItem<Label>> STElements = new ArrayList<>();
-		{
-			for (int i = 0; i < st.getSectionTableLength(); i++) {
-				final Section s = st.getSection(i);
-				final SectionHeader sh = s.getHeader();
-				final TreeItem<Label> x = new TreeItem<>(new Label(s.getName().isEmpty() ? "(null)" : s.getName()));
-				STElements.add(x);
-
-				final long sectionHeaderOffset =
-						fh.getSectionHeaderTableOffset() + (long) i * fh.getSectionHeaderTableEntrySize();
-				final TreeItem<Label> shRoot = factory.apply(
-						"Section Header", new Range((int) sectionHeaderOffset, fh.getSectionHeaderTableEntrySize()));
-				x.getChildren().add(shRoot);
-				{
-					int k = (int) sectionHeaderOffset;
-					shRoot.getChildren().add(factory.apply("Name offset = " + sh.getNameOffset(), new Range(k, 4)));
-					k += 4;
-					shRoot.getChildren()
-							.add(factory.apply("Type = " + sh.getType().getName(), new Range(k, 4)));
-					k += 4;
-					shRoot.getChildren()
-							.add(factory.apply(
-									"Flags = "
-											+ sh.getFlags().stream()
-													.map(SectionHeaderFlags::getName)
-													.collect(Collectors.joining(", ")),
-									new Range(k, wordSize)));
-					k += wordSize;
-					shRoot.getChildren()
-							.add(factory.apply("Vaddr = " + sh.getVirtualAddress(), new Range(k, wordSize)));
-					k += wordSize;
-					shRoot.getChildren()
-							.add(factory.apply("File offset = " + sh.getFileOffset(), new Range(k, wordSize)));
-					k += wordSize;
-					shRoot.getChildren()
-							.add(factory.apply("Section size = " + sh.getSectionSize(), new Range(k, wordSize)));
-					k += wordSize;
-					shRoot.getChildren()
-							.add(factory.apply("Linked section = " + sh.getLinkedSectionIndex(), new Range(k, 4)));
-					k += 4;
-					shRoot.getChildren().add(factory.apply("sh_info = " + sh.getInfo(), new Range(k, 4)));
-					k += 4;
-					shRoot.getChildren().add(factory.apply("Alignment = " + sh.getAlignment(), new Range(k, wordSize)));
-					k += wordSize;
-					shRoot.getChildren()
-							.add(factory.apply("Entry size = " + sh.getEntrySize(), new Range(k, wordSize)));
-				}
-
-				if (sh.getSectionSize() == 0L) {
-					x.getChildren().add(new TreeItem<>(new Label("Section Content")));
-				} else {
-					x.getChildren().add(factory.apply("Section Content", new Range((int) sh.getFileOffset(), (int)
-							sh.getSectionSize())));
-				}
-			}
-		}
-		SHTRoot.getChildren().addAll(STElements);
+		SHTRoot.getChildren().addAll(initializeSectionTable(fh, st));
 
 		root.getChildren().addAll(List.of(fileHeader, PHTRoot, SHTRoot));
 	}
 
-	private void initializeGridView(final byte[] fileBytes) {
+	private List<TreeItem<String>> initializeFileHeader(final FileHeader fh) {
+		final List<TreeItem<String>> fileHeaderElements = new ArrayList<>();
+		final int wordSize = fh.is32Bit() ? 4 : 8;
+
+		int i = 0;
+		fileHeaderElements.add(factory.apply("Signature = 0x7f454c46", new Range(i, 4)));
+		i += 4;
+		fileHeaderElements.add(factory.apply("Class = " + (fh.is32Bit() ? "32 bit" : "64 bit"), new Range(i)));
+		i++;
+		fileHeaderElements.add(
+				factory.apply("Endianness = " + (fh.isLittleEndian() ? "little-endian" : "big-endian"), new Range(i)));
+		i++;
+		fileHeaderElements.add(factory.apply("Version = 1", new Range(i)));
+		i++;
+		fileHeaderElements.add(factory.apply("OS/ABI = " + fh.getOSABI().getName(), new Range(i)));
+		i++;
+		fileHeaderElements.add(factory.apply("ABI version = " + fh.getABIVersion(), new Range(i)));
+		i++;
+		fileHeaderElements.add(
+				factory.apply("File type = " + fh.getFileType().name().replaceFirst("^ET_", ""), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(factory.apply("ISA = " + fh.getISA().getName(), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(factory.apply("Version = " + fh.getVersion(), new Range(i, 4)));
+		i += 4;
+		fileHeaderElements.add(
+				factory.apply("Entrypoint = " + fh.getEntryPointVirtualAddress(), new Range(i, wordSize)));
+		i += wordSize;
+		fileHeaderElements.add(
+				factory.apply("PHT offset = " + fh.getProgramHeaderTableOffset(), new Range(i, wordSize)));
+		i += wordSize;
+		fileHeaderElements.add(
+				factory.apply("SHT offset = " + fh.getSectionHeaderTableOffset(), new Range(i, wordSize)));
+		i += wordSize;
+		fileHeaderElements.add(factory.apply("Flags = " + fh.getFlags(), new Range(i, 4)));
+		i += 4;
+		fileHeaderElements.add(factory.apply("Header size = " + fh.getHeaderSize(), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(
+				factory.apply("PHT entry size = " + fh.getProgramHeaderTableEntrySize(), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(factory.apply("PHT entries = " + fh.getNumProgramHeaderTableEntries(), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(
+				factory.apply("SHT entry size = " + fh.getSectionHeaderTableEntrySize(), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(factory.apply("SHT entries = " + fh.getNumSectionHeaderTableEntries(), new Range(i, 2)));
+		i += 2;
+		fileHeaderElements.add(factory.apply("shstrndx = " + fh.getSectionHeaderStringTableIndex(), new Range(i, 2)));
+
+		return fileHeaderElements;
+	}
+
+	private List<TreeItem<String>> initializeProgramHeaderTable(final FileHeader fh, final ProgramHeaderTable pht) {
+		final List<TreeItem<String>> PHTElements = new ArrayList<>();
+		final int wordSize = fh.is32Bit() ? 4 : 8;
+
+		final long PHTOffset = fh.getProgramHeaderTableOffset();
+		final long PHTEntrySize = fh.getProgramHeaderTableEntrySize();
+		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
+			final TreeItem<String> x = factory.apply(
+					String.valueOf(i), new Range((int) (PHTOffset + i * PHTEntrySize), (int) PHTEntrySize));
+			PHTElements.add(x);
+
+			final PHTEntry phte = pht.getProgramHeader(i);
+			final long entryOffset = PHTOffset + i * PHTEntrySize;
+			int k = (int) entryOffset;
+			x.getChildren().add(factory.apply("Type = " + phte.getType().getName(), new Range(k, 4)));
+			k += 4;
+			x.getChildren()
+					.add(factory.apply(
+							"Flags = " + (phte.isReadable() ? "R" : " ") + (phte.isWriteable() ? "W" : " ")
+									+ (phte.isExecutable() ? "X" : " "),
+							new Range(k, 4)));
+			k += 4;
+			x.getChildren().add(factory.apply("Segment offset = " + phte.getSegmentOffset(), new Range(k, wordSize)));
+			k += wordSize;
+			x.getChildren()
+					.add(factory.apply("Segment vaddr = " + phte.getSegmentVirtualAddress(), new Range(k, wordSize)));
+			k += wordSize;
+			x.getChildren()
+					.add(factory.apply("Segment paddr = " + phte.getSegmentPhysicalAddress(), new Range(k, wordSize)));
+			k += wordSize;
+			x.getChildren()
+					.add(factory.apply("Segment file size = " + phte.getSegmentFileSize(), new Range(k, wordSize)));
+			k += wordSize;
+			x.getChildren()
+					.add(factory.apply("Segment memory size = " + phte.getSegmentMemorySize(), new Range(k, wordSize)));
+			k += wordSize;
+			x.getChildren().add(factory.apply("Segment alignment = " + phte.getAlignment(), new Range(k, wordSize)));
+		}
+
+		return PHTElements;
+	}
+
+	private List<TreeItem<String>> initializeSectionTable(final FileHeader fh, final SectionTable st) {
+		final List<TreeItem<String>> STElements = new ArrayList<>();
+		final int wordSize = fh.is32Bit() ? 4 : 8;
+
+		for (int i = 0; i < st.getSectionTableLength(); i++) {
+			final Section s = st.getSection(i);
+			final SectionHeader sh = s.getHeader();
+			final TreeItem<String> x = new TreeItem<>(s.getName().isEmpty() ? "(null)" : s.getName());
+			STElements.add(x);
+
+			final long sectionHeaderOffset =
+					fh.getSectionHeaderTableOffset() + (long) i * fh.getSectionHeaderTableEntrySize();
+			final TreeItem<String> shRoot = factory.apply(
+					"Section Header", new Range((int) sectionHeaderOffset, fh.getSectionHeaderTableEntrySize()));
+			x.getChildren().add(shRoot);
+			{
+				int k = (int) sectionHeaderOffset;
+				shRoot.getChildren().add(factory.apply("Name offset = " + sh.getNameOffset(), new Range(k, 4)));
+				k += 4;
+				shRoot.getChildren().add(factory.apply("Type = " + sh.getType().getName(), new Range(k, 4)));
+				k += 4;
+				shRoot.getChildren()
+						.add(factory.apply(
+								"Flags = "
+										+ (sh.getFlags().isEmpty()
+												? "(none)"
+												: sh.getFlags().stream()
+														.map(SectionHeaderFlags::getName)
+														.collect(Collectors.joining(", "))),
+								new Range(k, wordSize)));
+				k += wordSize;
+				shRoot.getChildren().add(factory.apply("Vaddr = " + sh.getVirtualAddress(), new Range(k, wordSize)));
+				k += wordSize;
+				shRoot.getChildren().add(factory.apply("File offset = " + sh.getFileOffset(), new Range(k, wordSize)));
+				k += wordSize;
+				shRoot.getChildren()
+						.add(factory.apply("Section size = " + sh.getSectionSize(), new Range(k, wordSize)));
+				k += wordSize;
+				shRoot.getChildren()
+						.add(factory.apply("Linked section = " + sh.getLinkedSectionIndex(), new Range(k, 4)));
+				k += 4;
+				shRoot.getChildren().add(factory.apply("sh_info = " + sh.getInfo(), new Range(k, 4)));
+				k += 4;
+				shRoot.getChildren().add(factory.apply("Alignment = " + sh.getAlignment(), new Range(k, wordSize)));
+				k += wordSize;
+				shRoot.getChildren().add(factory.apply("Entry size = " + sh.getEntrySize(), new Range(k, wordSize)));
+			}
+
+			if (sh.getSectionSize() == 0L) {
+				x.getChildren().add(new TreeItem<>("No Content"));
+			} else {
+				// TODO: add custom section content
+				x.getChildren().add(factory.apply("Section Content", new Range((int) sh.getFileOffset(), (int)
+						sh.getSectionSize())));
+			}
+		}
+
+		return STElements;
+	}
+
+	private void updateGrid(final int startByte) {
+		this.startByte = startByte;
+
 		// we only care about the first MAX_ROWS * MAX_GROUPS_PER_ROW *
 		// MAX_BYTES_PER_GROUP bytes
+		final byte[] fileBytes = new byte[MAX_ROWS * MAX_BYTES_PER_ROW];
+		try (final RandomAccessFile raf = new RandomAccessFile(this.file, "r")) {
+			raf.skipBytes(startByte);
+			raf.readFully(fileBytes);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 		final StringBuilder sbAddress = new StringBuilder();
 		final StringBuilder sbHex = new StringBuilder();
 		final StringBuilder sbAscii = new StringBuilder();
 
 		for (int row = 0; row < MAX_ROWS; row++) {
-			sbAddress.append(String.format("0x%016x", (long) (row * MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP)));
+			sbAddress.append(String.format("0x%0" + (2 * ADDRESS_BYTES) + "x", (long)
+					(startByte + row * MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP)));
 
 			for (int group = 0; group < MAX_GROUPS_PER_ROW; group++) {
 				for (int b = 0; b < MAX_BYTES_PER_GROUP; b++) {

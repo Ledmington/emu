@@ -91,9 +91,8 @@ public final class Emu {
 						return;
 					}
 
-					final long memoryUsed = Runtime.getRuntime().totalMemory()
-							- Runtime.getRuntime().freeMemory();
 					final long totalMemory = Runtime.getRuntime().totalMemory();
+					final long memoryUsed = totalMemory - Runtime.getRuntime().freeMemory();
 
 					memoryUsageLabel.setText(
 							String.format("Java heap: %d / %d MB", memoryUsed / 1_000_000L, totalMemory / 1_000_000L));
