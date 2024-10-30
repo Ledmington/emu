@@ -1184,16 +1184,16 @@ public final class Main {
 
 	private static void printSectionHeaders(final SectionTable sections, final FileHeader fh) {
 		if (wide) {
-			out.println(
-					"""
-							Section Headers:
-							[Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al""");
+			out.println(String.join(
+					"\n",
+					"Section Headers:",
+					"  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al"));
 		} else {
-			out.println(
-					"""
-							Section Headers:
-							[Nr] Name              Type             Address           Offset
-								Size              EntSize          Flags  Link  Info  Align""");
+			out.println(String.join(
+					"\n",
+					"Section Headers:",
+					"  [Nr] Name              Type             Address           Offset",
+					"       Size              EntSize          Flags  Link  Info  Align"));
 		}
 
 		for (int i = 0; i < sections.getSectionTableLength(); i++) {
@@ -1244,12 +1244,12 @@ public final class Main {
 			}
 		}
 
-		out.println(
-				"""
-						Key to Flags:
-						W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
-						L (link order), O (extra OS processing required), G (group), T (TLS),
-						C (compressed), x (unknown), o (OS specific), E (exclude),""");
+		out.println(String.join(
+				"\n",
+				"Key to Flags:",
+				"  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),",
+				"  L (link order), O (extra OS processing required), G (group), T (TLS),",
+				"  C (compressed), x (unknown), o (OS specific), E (exclude),"));
 
 		if (fh.getOSABI() == OSABI.Linux || fh.getOSABI() == OSABI.FreeBSD) {
 			out.print("  R (retain), D (mbind), ");
@@ -1268,16 +1268,16 @@ public final class Main {
 
 	private static void printProgramHeaders(final ProgramHeaderTable pht, final ELF elf) {
 		if (wide) {
-			out.println(
-					"""
-							Program Headers:
-							Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align""");
+			out.println(String.join(
+					"\n",
+					"Program Headers:",
+					"  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align"));
 		} else {
-			out.println(
-					"""
-							Program Headers:
-							Type           Offset             VirtAddr           PhysAddr
-											FileSiz            MemSiz              Flags  Align""");
+			out.println(String.join(
+					"\n",
+					"Program Headers:",
+					"  Type           Offset             VirtAddr           PhysAddr",
+					"                 FileSiz            MemSiz              Flags  Align"));
 		}
 
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
@@ -1422,35 +1422,35 @@ public final class Main {
 	}
 
 	private static void printHelp() {
-		out.println(
-				"""
-						Usage: readelf <option(s)> elf-file(s)
-						Display information about the contents of ELF format files
-						Options are:
-						-a --all               Equivalent to: -h -l -S -s -r -d -V -A -I
-						-h --file-header       Display the ELF file header
-						-l --program-headers   Display the program headers
-							--segments          An alias for --program-headers
-						-S --section-headers   Display the sections' header
-							--sections          An alias for --section-headers
-						-g --section-groups    Display the section groups
-						-t --section-details   Display the section details
-						-e --headers           Equivalent to: -h -l -S
-						-s --syms              Display the symbol table
-							--symbols           An alias for --syms
-							--dyn-syms          Display the dynamic symbol table
-						-n --notes             Display the core notes (if present)
-						-r --relocs            Display the relocations (if present)
-						-d --dynamic           Display the dynamic section (if present)
-						-V --version-info      Display the version sections (if present)
-						-x --hex-dump=<number|name>
-												Dump the contents of section <number|name> as bytes
-						-p --string-dump=<number|name>
-												Dump the contents of section <number|name> as strings
-						-W --wide              Allow output width to exceed 80 characters
-						-T --silent-truncation If a symbol name is truncated, do not add [...] suffix
-						-H --help              Display this information
-						-v --version           Display the version number of readelf""");
+		out.println(String.join(
+				"\n",
+				"Usage: readelf <option(s)> elf-file(s)",
+				" Display information about the contents of ELF format files",
+				" Options are:",
+				"  -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I",
+				"  -h --file-header       Display the ELF file header",
+				"  -l --program-headers   Display the program headers",
+				"     --segments          An alias for --program-headers",
+				"  -S --section-headers   Display the sections' header",
+				"     --sections          An alias for --section-headers",
+				"  -g --section-groups    Display the section groups",
+				"  -t --section-details   Display the section details",
+				"  -e --headers           Equivalent to: -h -l -S",
+				"  -s --syms              Display the symbol table",
+				"     --symbols           An alias for --syms",
+				"     --dyn-syms          Display the dynamic symbol table",
+				"  -n --notes             Display the core notes (if present)",
+				"  -r --relocs            Display the relocations (if present)",
+				"  -d --dynamic           Display the dynamic section (if present)",
+				"  -V --version-info      Display the version sections (if present)",
+				"  -x --hex-dump=<number|name>",
+				"                         Dump the contents of section <number|name> as bytes",
+				"  -p --string-dump=<number|name>",
+				"                         Dump the contents of section <number|name> as strings",
+				"  -W --wide              Allow output width to exceed 80 characters",
+				"  -T --silent-truncation If a symbol name is truncated, do not add [...] suffix",
+				"  -H --help              Display this information",
+				"  -v --version           Display the version number of readelf"));
 	}
 
 	private static String addSuffixIfLonger(final String s, final int maxLength) {

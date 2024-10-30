@@ -64,11 +64,11 @@ public final class Emu {
 		{
 			mainPane.setCenter(
 					new Label(
-							"""
-									Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).
-
-									If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.
-									"""));
+							String.join(
+									"\n",
+									"Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).",
+									"",
+									"If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.")));
 		}
 		bPane.setCenter(mainPane);
 
