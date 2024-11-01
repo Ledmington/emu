@@ -21,60 +21,62 @@ package com.ledmington.emu;
 public enum RFlags {
 
 	/** ID Flag (ID). System flag. */
-	ID(21),
+	ID(21, '?'),
 
 	/** Virtual Interrupt Pending (VIP). System flag. */
-	VirtualInterruptPending(20),
+	VirtualInterruptPending(20, '?'),
 
 	/** Virtual Interrupt Flag (VIF). System flag. */
-	VirtualInterrupt(19),
+	VirtualInterrupt(19, '?'),
 
 	/** Alignment Check / Access Control (AC). System flag. */
-	AlignmentCheck(18),
+	AlignmentCheck(18, '?'),
 
 	/** Virtual-8068 Mode (VM). System flag. */
-	Virtual8086Mode(17),
+	Virtual8086Mode(17, 'V'),
 
 	/** Resume Flag (RF). System flag. */
-	Resume(16),
+	Resume(16, 'R'),
 
 	/** Nested Task (NT). System flag. */
-	NestedTask(14),
+	NestedTask(14, 'N'),
 
 	/** I/O Privilege Level. System flag. */
-	IOPrivilegeLevel(12),
+	IOPrivilegeLevel(12, '?'),
 
 	/** Overflow Flag (OF). Status flag. */
-	Overflow(11),
+	Overflow(11, 'O'),
 
 	/** Direction Flag (DF). Control flag. */
-	Direction(10),
+	Direction(10, 'D'),
 
 	/** Interrupt Enable Flag (IF). System flag. */
-	InterruptEnable(9),
+	InterruptEnable(9, 'I'),
 
 	/** Trap Flag (TF). System flag. */
-	Trap(8),
+	Trap(8, 'T'),
 
 	/** Sign Flag (SF). Status flag. */
-	Sign(7),
+	Sign(7, 'S'),
 
 	/** Zero Flag (ZF). Status flag. */
-	Zero(6),
+	Zero(6, 'Z'),
 
 	/** Auxiliary Carry Flag (AF). Status flag. */
-	AuxiliaryCarry(4),
+	AuxiliaryCarry(4, 'A'),
 
 	/** Parity Flag (PF). Status flag. */
-	Parity(2),
+	Parity(2, 'P'),
 
 	/** Carry Flag (CF). Status flag. */
-	Carry(0);
+	Carry(0, 'C');
 
 	private final int bitIndex;
+	private final char initial;
 
-	RFlags(final int bit) {
+	RFlags(final int bit, final char initial) {
 		this.bitIndex = bit;
+		this.initial = initial;
 	}
 
 	/**
@@ -84,5 +86,9 @@ public enum RFlags {
 	 */
 	public int bit() {
 		return bitIndex;
+	}
+
+	public char getInitial() {
+		return initial;
 	}
 }

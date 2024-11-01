@@ -29,7 +29,7 @@ import java.util.Objects;
 public final class MiniLogger {
 
 	private static final Map<String, MiniLogger> ALL_LOGGERS = new HashMap<>();
-	private static final long BEGINNING = System.nanoTime();
+	private static final long BEGINNING = System.currentTimeMillis();
 	private static PrintWriter stdout = System.console() == null
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
@@ -92,8 +92,7 @@ public final class MiniLogger {
 	}
 
 	private String getFormattedTime() {
-		long t = System.nanoTime() - BEGINNING;
-		t /= 1_000_000;
+		long t = System.currentTimeMillis() - BEGINNING;
 		final long milliseconds = t % 1000;
 		t /= 1000;
 		final long seconds = t % 60;

@@ -27,6 +27,10 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.Opcode;
+import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.elf.FileType;
@@ -83,7 +87,8 @@ public final class Main {
 				EmulatorConstants.getStackSize());
 
 		logger.info(" ### Execution start ### ");
-		cpu.setEntryPoint(elf.getFileHeader().getEntryPointVirtualAddress());
+		cpu.executeOne(new Instruction(
+				Opcode.MOV, Register64.RIP, new Immediate(elf.getFileHeader().getEntryPointVirtualAddress())));
 		cpu.execute();
 		logger.info(" ### Execution end ### ");
 		ELFLoader.unload(elf);

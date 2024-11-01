@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu;
+package com.ledmington.view;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -46,9 +46,9 @@ public final class SettingsWindow extends Stage {
 		final BorderPane bPane = new BorderPane();
 		final Scene scene = new Scene(bPane);
 
-		final GridPane mainPane = new GridPane();
+		final GridPane mainPane = new GridPane(10, 5);
 		{
-			mainPane.add(new Label("Font"), 0, 0);
+			mainPane.add(LabelFactory.getDefaultLabel("Font"), 0, 0);
 			this.fonts = new ComboBox<>();
 			for (final String fontFamily : Font.getFamilies()) {
 				final Label lbl = getFontLabel(fontFamily);
@@ -60,22 +60,22 @@ public final class SettingsWindow extends Stage {
 			mainPane.add(this.fonts, 1, 0);
 		}
 		{
-			mainPane.add(new Label("Font Size"), 0, 1);
+			mainPane.add(LabelFactory.getDefaultLabel("Font Size"), 0, 1);
 			this.fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
 			mainPane.add(this.fontSize, 1, 1);
 		}
 		{
-			mainPane.add(new Label("Max emulator instructions"), 0, 2);
+			mainPane.add(LabelFactory.getDefaultLabel("Max emulator instructions"), 0, 2);
 			this.maxCodeInstructions = new Spinner<>(1, 1000, AppConstants.getMaxCodeInstructions());
 			mainPane.add(this.maxCodeInstructions, 1, 2);
 		}
 		{
-			mainPane.add(new Label("Max emulator memory lines"), 0, 3);
+			mainPane.add(LabelFactory.getDefaultLabel("Max emulator memory lines"), 0, 3);
 			this.maxMemoryLines = new Spinner<>(1, 1000, AppConstants.getMaxMemoryLines());
 			mainPane.add(this.maxMemoryLines, 1, 3);
 		}
 		{
-			mainPane.add(new Label("Memory bytes per line"), 0, 4);
+			mainPane.add(LabelFactory.getDefaultLabel("Memory bytes per line"), 0, 4);
 			this.memoryBytesPerLine = new Spinner<>(1, 1000, AppConstants.getMemoryBytesPerLine());
 			mainPane.add(this.memoryBytesPerLine, 1, 4);
 		}

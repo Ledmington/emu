@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu;
+package com.ledmington.view;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -63,12 +63,13 @@ public final class Emu {
 		final BorderPane mainPane = new BorderPane();
 		{
 			mainPane.setCenter(
-					new Label(
+					LabelFactory.getDefaultLabel(
 							String.join(
 									"\n",
 									"Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).",
 									"",
 									"If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.")));
+			mainPane.setPadding(new Insets(5));
 		}
 		bPane.setCenter(mainPane);
 

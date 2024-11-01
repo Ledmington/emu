@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu;
+package com.ledmington.view;
 
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +34,7 @@ public final class Main extends Application {
 
 	@Override
 	public void start(final Stage stage) {
+		Platform.setImplicitExit(true);
 		new Emu(stage);
 	}
 

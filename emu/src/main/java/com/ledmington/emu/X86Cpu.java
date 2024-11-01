@@ -58,13 +58,6 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	@Override
-	public void setEntryPoint(final long entryPointVirtualAddress) {
-		this.entryPointVirtualAddress = entryPointVirtualAddress;
-		this.instFetch.setPosition(entryPointVirtualAddress);
-		logger.debug("Entry point virtual address : 0x%x", entryPointVirtualAddress);
-	}
-
-	@Override
 	public void execute() {
 		while (state != State.HALTED) {
 			executeOne();
@@ -111,10 +104,12 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SAR -> {
-				if (inst.firstOperand() instanceof Register64) {
-					final long r1 = rf.get((Register64) inst.firstOperand());
+				if (inst.firstOperand() instanceof Register64 op1) {
+					final long r1 = rf.get(op1);
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
-					rf.set((Register64) inst.firstOperand(), r1 >> imm);
+					final long result = r1 >> imm;
+					rf.set(op1, result);
+					rf.set(RFlags.Zero, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SAR has %,d bits", ((Register) inst.firstOperand()).bits()));
@@ -131,19 +126,21 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case XOR -> {
-				switch (((Register) inst.firstOperand()).bits()) {
-					case 8 -> {
-						final byte r1 = rf.get((Register8) inst.firstOperand());
-						final byte r2 = rf.get((Register8) inst.secondOperand());
-						rf.set((Register8) inst.firstOperand(), BitUtils.xor(r1, r2));
+				if (inst.firstOperand() instanceof Register op1 && inst.secondOperand() instanceof Register op2) {
+					switch (op1.bits()) {
+						case 8 -> {
+							final byte r1 = rf.get((Register8) op1);
+							final byte r2 = rf.get((Register8) op2);
+							rf.set((Register8) op1, BitUtils.xor(r1, r2));
+						}
+						case 32 -> {
+							final int r1 = rf.get((Register32) op1);
+							final int r2 = rf.get((Register32) op2);
+							rf.set((Register32) op1, r1 ^ r2);
+						}
+						default -> throw new IllegalArgumentException(
+								String.format("Don't know what to do when XOR has %,d bits", op1.bits()));
 					}
-					case 32 -> {
-						final int r1 = rf.get((Register32) inst.firstOperand());
-						final int r2 = rf.get((Register32) inst.secondOperand());
-						rf.set((Register32) inst.firstOperand(), r1 ^ r2);
-					}
-					default -> throw new IllegalArgumentException(String.format(
-							"Don't know what to do when XOR has %,d bits", ((Register) inst.firstOperand()).bits()));
 				}
 			}
 			case AND -> {

@@ -18,9 +18,6 @@
 package com.ledmington.emu;
 
 import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.mem.MemoryController;
@@ -29,9 +26,8 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 /** A class which represents the part of the emulated CPU which reads instructions from memory during execution. */
 public final class InstructionFetcher implements ReadOnlyByteBuffer {
 
-	private final Supplier<Long> instructionPointerReader;
-	private final Consumer<Long> instructionPointerWriter;
-	private final Function<Long, Byte> memReader;
+	private final MemoryController mem;
+	private final X86RegisterFile regFile;
 
 	/**
 	 * Creates an InstructionFetcher with the given MemoryController and register file.
@@ -40,10 +36,8 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
 	 * @param regFile The register file to get and set the instruction pointer.
 	 */
 	public InstructionFetcher(final MemoryController mem, final X86RegisterFile regFile) {
-		Objects.requireNonNull(regFile);
-		this.instructionPointerReader = () -> regFile.get(Register64.RIP);
-		this.instructionPointerWriter = x -> regFile.set(Register64.RIP, x);
-		this.memReader = mem::readCode;
+		this.mem = Objects.requireNonNull(mem);
+		this.regFile = Objects.requireNonNull(regFile);
 	}
 
 	@Override
@@ -68,21 +62,21 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
 
 	@Override
 	public void setPosition(final long newPosition) {
-		instructionPointerWriter.accept(newPosition);
+		regFile.set(Register64.RIP, newPosition);
 	}
 
 	@Override
 	public long getPosition() {
-		return instructionPointerReader.get();
+		return regFile.get(Register64.RIP);
 	}
 
 	@Override
 	public byte read() {
-		return memReader.apply(instructionPointerReader.get());
+		return mem.readCode(getPosition());
 	}
 
 	@Override
 	public String toString() {
-		return "InstructionFetcher(rip=" + instructionPointerReader.get() + ')';
+		return "InstructionFetcher(rip=" + getPosition() + ')';
 	}
 }

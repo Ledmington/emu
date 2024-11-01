@@ -22,8 +22,6 @@ import com.ledmington.cpu.x86.Opcode;
 
 public interface X86Emulator {
 
-	void setEntryPoint(final long address);
-
 	/**
 	 * Automatically fetches instruction from the emulated memory and executes them. Continues indefinitely until it
 	 * encounters a {@link Opcode#HLT} instruction.

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu;
+package com.ledmington.view;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
@@ -110,55 +108,49 @@ public final class ELFView extends BorderPane {
 		final TreeItem<String> root = new TreeItem<>("<no file>");
 		tree = new TreeView<>(root);
 		tree.setEditable(false);
-		tree.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<>() {
-			@Override
-			public void changed(
-					final ObservableValue<? extends TreeItem<String>> observable,
-					final TreeItem<String> oldValue,
-					final TreeItem<String> selectedItem) {
-				if (!ranges.containsKey(selectedItem)) {
-					return;
-				}
-
-				final Range range = ranges.get(selectedItem);
-
-				if (range.offset() > startByte + MAX_ROWS * MAX_BYTES_PER_ROW
-						|| range.offset() + range.length() < startByte) {
-					// If we cannot display the given range, we load another chunk from the file
-					updateGrid(range.offset());
-				}
-
-				final int start = range.offset() - startByte;
-				final int end = range.offset() + range.length() - startByte;
-
-				final int startRowIndex = start / MAX_BYTES_PER_ROW;
-				final int endRowIndex = end / MAX_BYTES_PER_ROW;
-
-				addressArea.selectRange(
-						startRowIndex * (2 + 2 * ADDRESS_BYTES + 1), (endRowIndex + 1) * (2 + 2 * ADDRESS_BYTES + 1));
-
-				asciiContentArea.selectRange(
-						startRowIndex * (MAX_BYTES_PER_ROW + 1) + (start % MAX_BYTES_PER_ROW),
-						endRowIndex * (MAX_BYTES_PER_ROW + 1) + (end % MAX_BYTES_PER_ROW));
-
-				final int rowLength = 2 * MAX_BYTES_PER_ROW + (MAX_GROUPS_PER_ROW - 1) + 1;
-				final int groupLength = 2 * MAX_BYTES_PER_GROUP;
-				final int startGroupIndexInRow = (start % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
-				final int startByteIndexInGroup = (start % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
-				final int endGroupIndexInRow = (end % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
-				final int endByteIndexInGroup = (end % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
-				final int startActualIndex = startRowIndex * rowLength
-						+ startGroupIndexInRow * groupLength
-						+ startGroupIndexInRow
-						+ startByteIndexInGroup * 2;
-				final int endActualIndex = endRowIndex * rowLength
-						+ endGroupIndexInRow * groupLength
-						+ endGroupIndexInRow
-						+ endByteIndexInGroup * 2
-						+ (endByteIndexInGroup == 0 ? -1 : 0);
-
-				hexContentArea.selectRange(startActualIndex, endActualIndex);
+		tree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, selectedItem) -> {
+			if (!ranges.containsKey(selectedItem)) {
+				return;
 			}
+
+			final Range range = ranges.get(selectedItem);
+
+			if (range.offset() > startByte + MAX_ROWS * MAX_BYTES_PER_ROW
+					|| range.offset() + range.length() < startByte) {
+				// If we cannot display the given range, we load another chunk from the file
+				updateGrid(range.offset());
+			}
+
+			final int start = range.offset() - startByte;
+			final int end = range.offset() + range.length() - startByte;
+
+			final int startRowIndex = start / MAX_BYTES_PER_ROW;
+			final int endRowIndex = end / MAX_BYTES_PER_ROW;
+
+			addressArea.selectRange(
+					startRowIndex * (2 + 2 * ADDRESS_BYTES + 1), (endRowIndex + 1) * (2 + 2 * ADDRESS_BYTES + 1));
+
+			asciiContentArea.selectRange(
+					startRowIndex * (MAX_BYTES_PER_ROW + 1) + (start % MAX_BYTES_PER_ROW),
+					endRowIndex * (MAX_BYTES_PER_ROW + 1) + (end % MAX_BYTES_PER_ROW));
+
+			final int rowLength = 2 * MAX_BYTES_PER_ROW + (MAX_GROUPS_PER_ROW - 1) + 1;
+			final int groupLength = 2 * MAX_BYTES_PER_GROUP;
+			final int startGroupIndexInRow = (start % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
+			final int startByteIndexInGroup = (start % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
+			final int endGroupIndexInRow = (end % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
+			final int endByteIndexInGroup = (end % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
+			final int startActualIndex = startRowIndex * rowLength
+					+ startGroupIndexInRow * groupLength
+					+ startGroupIndexInRow
+					+ startByteIndexInGroup * 2;
+			final int endActualIndex = endRowIndex * rowLength
+					+ endGroupIndexInRow * groupLength
+					+ endGroupIndexInRow
+					+ endByteIndexInGroup * 2
+					+ (endByteIndexInGroup == 0 ? -1 : 0);
+
+			hexContentArea.selectRange(startActualIndex, endActualIndex);
 		});
 		this.setLeft(tree);
 
@@ -219,12 +211,10 @@ public final class ELFView extends BorderPane {
 		fileHeader.getChildren().addAll(initializeFileHeader(fh));
 
 		final TreeItem<String> PHTRoot = new TreeItem<>("Program Header Table");
-		final ProgramHeaderTable pht = elf;
-		PHTRoot.getChildren().addAll(initializeProgramHeaderTable(fh, pht));
+		PHTRoot.getChildren().addAll(initializeProgramHeaderTable(fh, elf));
 
 		final TreeItem<String> SHTRoot = new TreeItem<>("Section Table");
-		final SectionTable st = elf;
-		SHTRoot.getChildren().addAll(initializeSectionTable(fh, st));
+		SHTRoot.getChildren().addAll(initializeSectionTable(fh, elf));
 
 		root.getChildren().addAll(List.of(fileHeader, PHTRoot, SHTRoot));
 	}
@@ -598,8 +588,7 @@ public final class ELFView extends BorderPane {
 			return;
 		}
 
-		final int start = (int) gvrs.getHeader().getFileOffset();
-		int entryStart = start;
+		int entryStart = (int) gvrs.getHeader().getFileOffset();
 		for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
 			final GnuVersionRequirementEntry gvre = gvrs.getEntry(i);
 			final TreeItem<String> x = new TreeItem<>("#" + i);

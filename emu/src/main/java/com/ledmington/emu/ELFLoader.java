@@ -137,7 +137,7 @@ public final class ELFLoader {
 			final String ctorName =
 					strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
 			logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
-			cpu.setEntryPoint(entryPointVirtualAddress + c);
+			cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(entryPointVirtualAddress + c)));
 			cpu.execute();
 		}
 	}

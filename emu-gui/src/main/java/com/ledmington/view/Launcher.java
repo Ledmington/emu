@@ -15,19 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu;
+package com.ledmington.view;
 
-import javafx.scene.control.Label;
-import javafx.scene.text.Font;
-
-public final class LabelFactory {
-
-	private LabelFactory() {}
-
-	public static Label getDefaultLabel(final String text) {
-		final Label lbl = new Label(text);
-		lbl.setWrapText(false);
-		lbl.setFont(new Font(AppConstants.getDefaultMonospaceFont(), AppConstants.getDefaultFontSize()));
-		return lbl;
+public final class Launcher {
+	public static void main(final String[] args) {
+		Main.main(args);
 	}
 }

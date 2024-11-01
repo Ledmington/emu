@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu;
+package com.ledmington.view;
 
 import java.io.File;
 
@@ -51,9 +51,11 @@ public final class ELFViewer extends Stage {
 							new FileChooser.ExtensionFilter("Static libraries", "*.a"),
 							new FileChooser.ExtensionFilter("All files", "*"));
 			final File selectedFile = fc.showOpenDialog(this);
-			if (selectedFile != null) {
-				Platform.runLater(() -> this.view.loadFile(selectedFile));
+			if (selectedFile == null) {
+				return;
 			}
+
+			Platform.runLater(() -> this.view.loadFile(selectedFile));
 		});
 
 		final Button settings = new Button();
