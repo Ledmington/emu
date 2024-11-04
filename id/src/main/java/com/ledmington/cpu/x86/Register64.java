@@ -22,7 +22,7 @@ import java.util.Objects;
 /** An x86 64-bit general-purpose register. */
 public enum Register64 implements Register {
 
-	/** The register RAX. */
+	/** The register RAX. Usually contains the return value of a function call. */
 	RAX("rax"),
 
 	/** The register RBX. */
@@ -40,10 +40,10 @@ public enum Register64 implements Register {
 	/** The register RDI. */
 	RDI("rdi"),
 
-	/** The register RSP. */
+	/** The register RSP. Usually points to the top (the end) of the current stack frame. */
 	RSP("rsp"),
 
-	/** The register RBP. */
+	/** The register RBP. Usually points to the base (the start) of the current stack frame. */
 	RBP("rbp"),
 
 	/** The register R8. */

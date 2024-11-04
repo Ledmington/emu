@@ -75,8 +75,7 @@ public final class Main {
 		}
 
 		final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
-		final X86RegisterFile rf = new X86RegisterFile();
-		final X86Emulator cpu = new X86Cpu(rf, mem);
+		final X86Emulator cpu = new X86Cpu(mem);
 
 		ELFLoader.load(
 				elf,

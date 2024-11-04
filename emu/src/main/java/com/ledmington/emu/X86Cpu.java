@@ -32,6 +32,7 @@ import com.ledmington.cpu.x86.RelativeOffset;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /** Emulator of an x86 CPU. */
 public class X86Cpu implements X86Emulator {
@@ -43,15 +44,19 @@ public class X86Cpu implements X86Emulator {
 		HALTED
 	}
 
-	private final X86RegisterFile rf;
+	private final RegisterFile rf = new X86RegisterFile();
 	private final MemoryController mem;
 	private final InstructionFetcher instFetch;
 	private final InstructionDecoder dec;
 	private State state = State.RUNNING;
 	private long entryPointVirtualAddress = 0L;
 
-	public X86Cpu(final X86RegisterFile rf, final MemoryController mem) {
-		this.rf = Objects.requireNonNull(rf);
+	/**
+	 * Creates a new x86 CPU with the given memory controller.
+	 *
+	 * @param mem The object to be used to access the memory.
+	 */
+	public X86Cpu(final MemoryController mem) {
 		this.mem = Objects.requireNonNull(mem);
 		this.instFetch = new InstructionFetcher(mem, rf);
 		this.dec = new InstructionDecoderV1(instFetch);
@@ -180,9 +185,15 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case PUSH -> {
-				final Register64 src = (Register64) inst.firstOperand();
+				final long value =
+						switch (inst.firstOperand()) {
+							case Register64 r64 -> rf.get(r64);
+							case Immediate imm -> imm.asLong();
+							default -> throw new IllegalArgumentException("Unexpected value: " + inst.firstOperand());
+						};
+
 				final long rsp = rf.get(Register64.RSP);
-				mem.write(rsp, rf.get(src));
+				mem.write(rsp, value);
 				// the stack "grows downward"
 				rf.set(Register64.RSP, rsp - 8L);
 			}
@@ -205,15 +216,33 @@ public class X86Cpu implements X86Emulator {
 				final long result = computeIndirectOperand(rf, src);
 				rf.set(Register64.RIP, result);
 			}
+			case RET -> {
+				// TODO: check this
+				final long prev = rf.get(Register64.RSP) + 8L;
+
+				// If we read 0x0, we have exhausted the stack
+				if (mem.read8(prev) == 0L) {
+					state = State.HALTED;
+				} else {
+					rf.set(Register64.RSP, prev);
+					rf.set(Register64.RIP, mem.read8(prev));
+				}
+			}
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented");
 			case HLT -> state = State.HALTED;
 			default -> throw new IllegalStateException(String.format("Unknwon instruction %s", inst.toIntelSyntax()));
 		}
 	}
 
-	private long computeIndirectOperand(final X86RegisterFile rf, final IndirectOperand io) {
+	private long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
 		return ((io.base() == null) ? 0L : rf.get((Register64) io.base()))
 				+ ((io.index() == null) ? 0L : rf.get((Register64) io.index())) * io.scale()
 				+ io.getDisplacement();
+	}
+
+	@Override
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "We know that this object is immutable.")
+	public ImmutableRegisterFile getRegisters() {
+		return rf;
 	}
 }

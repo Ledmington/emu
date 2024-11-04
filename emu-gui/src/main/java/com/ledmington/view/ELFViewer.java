@@ -35,7 +35,7 @@ public final class ELFViewer extends Stage {
 	public ELFViewer(final double width, final double height) {
 		final BorderPane mainPane = new BorderPane();
 
-		this.view = new ELFView(this);
+		this.view = new ELFView();
 
 		final FlowPane topPane = new FlowPane();
 		final Button load = new Button();

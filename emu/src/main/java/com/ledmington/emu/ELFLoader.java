@@ -31,12 +31,15 @@ import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.ProgramHeaderTable;
 import com.ledmington.elf.SectionTable;
+import com.ledmington.elf.section.BasicProgBitsSection;
 import com.ledmington.elf.section.ConstructorsSection;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.sym.SymbolTableEntry;
+import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
@@ -59,6 +62,7 @@ public final class ELFLoader {
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
+	 * @param cpu The CPU to be used to execute some instructions, if needed.
 	 * @param mem The emulated memory where to load the file.
 	 * @param commandLineArguments The arguments to pass to the program.
 	 * @param baseAddress The address where to start loading the file.
@@ -78,8 +82,9 @@ public final class ELFLoader {
 		// We make RSP point at the last 8 bytes of allocated memory
 		final long stackPointer = highestAddress + stackSize - 8L;
 
-		// This is a fake instruction
+		// These are fake instructions to setup the stack
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackPointer)));
+		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0L)));
 
 		loadCommandLineArgumentsAndEnvironmentVariables(
 				mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
@@ -96,7 +101,12 @@ public final class ELFLoader {
 					(StringTableSection) elf.getSectionByName(".strtab").orElseThrow());
 		}
 		if (elf.getSectionByName(".init").isPresent()) {
-			runInit();
+			runInit(
+					(BasicProgBitsSection) elf.getSectionByName(".init").orElseThrow(),
+					cpu,
+					baseAddress,
+					(SymbolTableSection) elf.getSectionByName(".symtab").orElseThrow(),
+					(StringTableSection) elf.getSectionByName(".strtab").orElseThrow());
 		}
 		if (elf.getSectionByName(".ctors").isPresent()) {
 			runCtors();
@@ -121,6 +131,11 @@ public final class ELFLoader {
 		}
 	}
 
+	private static void runFrom(final X86Emulator cpu, final long startAddress) {
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(startAddress)));
+		cpu.execute();
+	}
+
 	private static void runPreInitArray() {
 		notImplemented();
 	}
@@ -137,13 +152,27 @@ public final class ELFLoader {
 			final String ctorName =
 					strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
 			logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
-			cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(entryPointVirtualAddress + c)));
-			cpu.execute();
+			runFrom(cpu, entryPointVirtualAddress + c);
 		}
 	}
 
-	private static void runInit() {
-		notImplemented();
+	private static void runInit(
+			final BasicProgBitsSection init,
+			final X86Emulator cpu,
+			final long entryPointVirtualAddress,
+			final SymbolTableSection symtab,
+			final StringTableSection strtab) {
+		for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+			final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
+			if (ste.info().getType() == SymbolTableEntryType.STT_FUNC
+					&& ste.value() >= init.getHeader().getFileOffset()
+					&& ste.value()
+							< init.getHeader().getFileOffset()
+									+ init.getHeader().getSectionSize()) {
+				logger.debug("Running constructor '%s' from .init", strtab.getString(ste.nameOffset()));
+				runFrom(cpu, entryPointVirtualAddress + ste.value());
+			}
+		}
 	}
 
 	private static void runCtors() {

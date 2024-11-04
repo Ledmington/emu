@@ -73,7 +73,7 @@ public final class Main extends Application {
 				case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
 				case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
 				default -> {
-					out.printf("Unknown flag '%s'\n", arg);
+					out.printf("Unknown flag '%s'%n", arg);
 					out.flush();
 					Platform.exit();
 					System.exit(-1);

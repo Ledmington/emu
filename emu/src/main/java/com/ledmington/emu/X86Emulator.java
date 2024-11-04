@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 
+/** Common interface to represent an x86 Emulator. */
 public interface X86Emulator {
 
 	/**
@@ -37,4 +38,11 @@ public interface X86Emulator {
 	 * @param inst The instruction to be executed.
 	 */
 	void executeOne(final Instruction inst);
+
+	/**
+	 * Returns an immutable view of the registers in use.
+	 *
+	 * @return An immutable view of the registers in use.
+	 */
+	ImmutableRegisterFile getRegisters();
 }

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -50,9 +51,10 @@ import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.EmulatorConstants;
+import com.ledmington.emu.ImmutableRegisterFile;
 import com.ledmington.emu.InstructionFetcher;
 import com.ledmington.emu.RFlags;
-import com.ledmington.emu.X86RegisterFile;
+import com.ledmington.emu.RegisterFile;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.MiniLogger;
 
@@ -63,13 +65,8 @@ public final class EmulatorView extends Stage {
 
 	// The CPU used to emulate
 	private X86CpuAdapter cpu;
-	// The register file of the CPU
-	private X86RegisterFile regFile;
 	// The memory controller used by the CPU
 	private MemoryController mem;
-	// An external decoder used to decode instructions in the GUI without modifying
-	// the state of the CPU
-	private InstructionDecoder decoder;
 	private final Button stepBtn = new Button();
 	private final Button runBtn = new Button();
 	private final TextArea codeArea = new TextArea();
@@ -133,8 +130,8 @@ public final class EmulatorView extends Stage {
 			for (final Register64 r : Register64.values()) {
 				registerPane.add(LabelFactory.getDefaultLabel(r.name()), 0, row);
 				final Label rl = LabelFactory.getDefaultLabel("0x" + "0".repeat(16));
-				rl.setTooltip(new Tooltip("Click to see the memory at [" + r.name() + "]"));
-				rl.setOnMouseClicked(e -> updateMemory(regFile.get(r)
+				rl.setTooltip(TooltipFactory.getDefaultTooltip("Click to see the memory at [" + r.name() + "]"));
+				rl.setOnMouseClicked(e -> updateMemory(cpu.getRegisters().get(r)
 						- ((long) AppConstants.getMaxMemoryLines() * AppConstants.getMemoryBytesPerLine()) / 2L));
 				registerPane.add(rl, 1, row);
 				regLabels.put(r, rl);
@@ -142,7 +139,7 @@ public final class EmulatorView extends Stage {
 			}
 
 			registerPane.add(LabelFactory.getDefaultLabel("RFLAGS"), 0, row);
-			this.rflagsLabel = LabelFactory.getDefaultLabel("-".repeat(RFlags.values().length));
+			this.rflagsLabel = LabelFactory.getDefaultLabel("");
 			registerPane.add(rflagsLabel, 1, row);
 			row++;
 
@@ -189,7 +186,7 @@ public final class EmulatorView extends Stage {
 			this.cpu.doExecuteOne();
 			updateRegisters();
 			updateCode();
-			updateMemory(regFile.get(Register64.RIP));
+			updateMemory(cpu.getRegisters().get(Register64.RIP));
 		});
 		this.stepBtn.setTooltip(new Tooltip("Step"));
 
@@ -204,7 +201,7 @@ public final class EmulatorView extends Stage {
 			this.cpu.doExecute();
 			updateRegisters();
 			updateCode();
-			updateMemory(regFile.get(Register64.RIP));
+			updateMemory(cpu.getRegisters().get(Register64.RIP));
 		});
 		this.runBtn.setTooltip(new Tooltip("Run"));
 
@@ -231,9 +228,7 @@ public final class EmulatorView extends Stage {
 	private void loadFile(final File file) {
 		logger.info("Loading file '%s'", file.toString());
 		this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
-		this.regFile = new X86RegisterFile();
-		this.cpu = new X86CpuAdapter(regFile, mem);
-		this.decoder = new InstructionDecoderV1(new InstructionFetcher(mem, regFile));
+		this.cpu = new X86CpuAdapter(mem);
 
 		// TODO: implement this
 		final String[] commandLineArguments = new String[0];
@@ -252,41 +247,46 @@ public final class EmulatorView extends Stage {
 
 		updateRegisters();
 		updateCode();
-		updateMemory(regFile.get(Register64.RIP));
+		updateMemory(cpu.getRegisters().get(Register64.RIP));
 	}
 
 	private void updateRegisters() {
+		final ImmutableRegisterFile regFile = this.cpu.getRegisters();
+
 		for (final Register64 r : Register64.values()) {
-			this.regLabels.get(r).setText(String.format("0x%016x", this.regFile.get(r)));
+			this.regLabels.get(r).setText(String.format("0x%016x", regFile.get(r)));
 		}
 
 		for (final Register16 s : new Register16[] {
 			Register16.CS, Register16.DS, Register16.SS, Register16.ES, Register16.FS, Register16.GS
 		}) {
-			this.segLabels.get(s).setText(String.format("0x%04x", this.regFile.get(s)));
+			this.segLabels.get(s).setText(String.format("0x%04x", regFile.get(s)));
 		}
 
-		final StringBuilder sb = new StringBuilder();
-		Arrays.stream(RFlags.values())
-				.sorted(Comparator.comparingInt(RFlags::bit))
-				.forEach(f -> sb.append(regFile.isSet(f) ? f.getInitial() : '-'));
-		this.rflagsLabel.setText(sb.toString());
+		this.rflagsLabel.setText("|"
+				+ Arrays.stream(RFlags.values())
+						.sorted(Comparator.comparingInt(RFlags::bit))
+						.map(f -> regFile.isSet(f) ? f.getSymbol() : "")
+						.collect(Collectors.joining("|"))
+				+ "|");
 	}
 
 	private void updateCode() {
+		final RegisterFile regFile = (RegisterFile) cpu.getRegisters();
+		final InstructionDecoder decoder = new InstructionDecoderV1(new InstructionFetcher(this.mem, regFile));
 		final StringBuilder sb = new StringBuilder();
 		final int n = AppConstants.getMaxCodeInstructions();
-		final long originalRIP = this.regFile.get(Register64.RIP);
+		final long originalRIP = regFile.get(Register64.RIP);
 		long rip = originalRIP;
 		for (int i = 0; i < n; i++) {
 			final long startRIP = rip;
-			this.regFile.set(Register64.RIP, rip);
+			regFile.set(Register64.RIP, rip);
 			sb.append("0x").append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", rip));
 
 			String inst;
 			try {
-				inst = this.decoder.decode().toIntelSyntax();
-				rip = this.regFile.get(Register64.RIP);
+				inst = decoder.decode().toIntelSyntax();
+				rip = regFile.get(Register64.RIP);
 			} catch (final UnknownOpcode | ReservedOpcode | IllegalArgumentException e) {
 				inst = String.format(".byte 0x%02x", this.mem.readCode(rip));
 				rip = startRIP + 1L;
@@ -294,7 +294,7 @@ public final class EmulatorView extends Stage {
 			sb.append(" : ").append(inst).append('\n');
 		}
 		this.codeArea.setText(sb.toString());
-		this.regFile.set(Register64.RIP, originalRIP);
+		regFile.set(Register64.RIP, originalRIP);
 	}
 
 	private void updateMemory(final long baseAddress) {

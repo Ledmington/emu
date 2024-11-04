@@ -52,7 +52,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 	 *
 	 * @param b The byte buffer to read bytes from.
 	 */
-	@SuppressFBWarnings("EI_EXPOSE_REP2")
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "We are taking a reference to an immutable object.")
 	public InstructionDecoderV1(final ReadOnlyByteBuffer b) {
 		this.b = Objects.requireNonNull(b);
 	}

@@ -28,7 +28,7 @@ import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 
 /** This class represents the set of registers used by an x86-64 processor during execution. */
-public final class X86RegisterFile {
+public final class X86RegisterFile implements RegisterFile {
 
 	// General-purpose registers
 	private final long[] gpr = new long[16];
@@ -44,12 +44,7 @@ public final class X86RegisterFile {
 	/** Creates the register file initializing every register to 0. */
 	public X86RegisterFile() {}
 
-	/**
-	 * Returns the value of the given 8-bit register as a byte.
-	 *
-	 * @param r The register to be read.
-	 * @return The value in the register.
-	 */
+	@Override
 	public byte get(final Register8 r) {
 		return switch (r) {
 			case AL -> BitUtils.asByte(gpr[0]);
@@ -75,12 +70,7 @@ public final class X86RegisterFile {
 		};
 	}
 
-	/**
-	 * Sets the value of the given 8-bit register to given byte. This operation does not modify the other registers.
-	 *
-	 * @param r The Register to be overwritten.
-	 * @param v The value to be written.
-	 */
+	@Override
 	public void set(final Register8 r, final byte v) {
 		switch (r) {
 			case AL -> gpr[0] = (gpr[0] & 0xffffffffffffff00L) | BitUtils.asLong(v);
@@ -106,12 +96,7 @@ public final class X86RegisterFile {
 		}
 	}
 
-	/**
-	 * Returns the value of the given 16-bit register as a short.
-	 *
-	 * @param r The register to be read.
-	 * @return The value in the register.
-	 */
+	@Override
 	public short get(final Register16 r) {
 		return switch (r) {
 			case AX -> BitUtils.asShort(gpr[0]);
@@ -139,12 +124,7 @@ public final class X86RegisterFile {
 		};
 	}
 
-	/**
-	 * Sets the value of the given 16-bit register to given short. This operation does not modify the other registers.
-	 *
-	 * @param r The Register to be overwritten.
-	 * @param v The value to be written.
-	 */
+	@Override
 	public void set(final Register16 r, final short v) {
 		switch (r) {
 			case AX -> gpr[0] = (gpr[0] & 0xffffffffff0000L) | BitUtils.asLong(v);
@@ -172,12 +152,7 @@ public final class X86RegisterFile {
 		}
 	}
 
-	/**
-	 * Returns the value of the given 32-bit register as an int.
-	 *
-	 * @param r The Register to be read.
-	 * @return The value of the register.
-	 */
+	@Override
 	public int get(final Register32 r) {
 		return switch (r) {
 			case EAX -> BitUtils.asInt(gpr[0]);
@@ -200,12 +175,7 @@ public final class X86RegisterFile {
 		};
 	}
 
-	/**
-	 * Sets the value of the given 32-bit register to given int. This operation does not modify the other registers.
-	 *
-	 * @param r The Register to be overwritten.
-	 * @param v The value to be written.
-	 */
+	@Override
 	public void set(final Register32 r, final int v) {
 		switch (r) {
 			case EAX -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | BitUtils.asLong(v);
@@ -228,12 +198,7 @@ public final class X86RegisterFile {
 		}
 	}
 
-	/**
-	 * Returns the value of the given 64-bit register as a long.
-	 *
-	 * @param r The Register to be read.
-	 * @return The value of the register.
-	 */
+	@Override
 	public long get(final Register64 r) {
 		return switch (r) {
 			case RAX -> gpr[0];
@@ -256,12 +221,7 @@ public final class X86RegisterFile {
 		};
 	}
 
-	/**
-	 * Sets the value of the given 64-bit register to given long. This operation does not modify the other registers.
-	 *
-	 * @param r The Register to be overwritten.
-	 * @param v The value to be written.
-	 */
+	@Override
 	public void set(final Register64 r, final long v) {
 		switch (r) {
 			case RAX -> gpr[0] = v;
@@ -284,22 +244,12 @@ public final class X86RegisterFile {
 		}
 	}
 
-	/**
-	 * Checks whether the given flag is set.
-	 *
-	 * @param f The flag to be checked.
-	 * @return True if it is set, false otherwise.
-	 */
+	@Override
 	public boolean isSet(final RFlags f) {
 		return (rflags & (1L << f.bit())) != 0L;
 	}
 
-	/**
-	 * Sets the given flag to the given value.
-	 *
-	 * @param f The flag to be set.
-	 * @param v The value to be written.
-	 */
+	@Override
 	public void set(final RFlags f, final boolean v) {
 		if (v) {
 			set(f);

@@ -27,7 +27,7 @@ import com.ledmington.utils.ReadOnlyByteBuffer;
 public final class InstructionFetcher implements ReadOnlyByteBuffer {
 
 	private final MemoryController mem;
-	private final X86RegisterFile regFile;
+	private final RegisterFile regFile;
 
 	/**
 	 * Creates an InstructionFetcher with the given MemoryController and register file.
@@ -35,7 +35,7 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
 	 * @param mem The memory controller to retrieve instructions from.
 	 * @param regFile The register file to get and set the instruction pointer.
 	 */
-	public InstructionFetcher(final MemoryController mem, final X86RegisterFile regFile) {
+	public InstructionFetcher(final MemoryController mem, final RegisterFile regFile) {
 		this.mem = Objects.requireNonNull(mem);
 		this.regFile = Objects.requireNonNull(regFile);
 	}
