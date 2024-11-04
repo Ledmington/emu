@@ -21,62 +21,62 @@ package com.ledmington.emu;
 public enum RFlags {
 
 	/** ID Flag (ID). System flag. */
-	ID(21, '?'),
+	ID(21, "ID"),
 
 	/** Virtual Interrupt Pending (VIP). System flag. */
-	VirtualInterruptPending(20, '?'),
+	VirtualInterruptPending(20, "VIP"),
 
 	/** Virtual Interrupt Flag (VIF). System flag. */
-	VirtualInterrupt(19, '?'),
+	VirtualInterrupt(19, "VIF"),
 
 	/** Alignment Check / Access Control (AC). System flag. */
-	AlignmentCheck(18, '?'),
+	AlignmentCheck(18, "AC"),
 
 	/** Virtual-8068 Mode (VM). System flag. */
-	Virtual8086Mode(17, 'V'),
+	Virtual8086Mode(17, "VM"),
 
 	/** Resume Flag (RF). System flag. */
-	Resume(16, 'R'),
+	Resume(16, "RF"),
 
 	/** Nested Task (NT). System flag. */
-	NestedTask(14, 'N'),
+	NestedTask(14, "NT"),
 
-	/** I/O Privilege Level. System flag. */
-	IOPrivilegeLevel(12, '?'),
+	/** I/O Privilege Level (IOPL). System flag. */
+	IOPrivilegeLevel(12, "IOPL"),
 
 	/** Overflow Flag (OF). Status flag. */
-	Overflow(11, 'O'),
+	Overflow(11, "OF"),
 
 	/** Direction Flag (DF). Control flag. */
-	Direction(10, 'D'),
+	Direction(10, "DF"),
 
 	/** Interrupt Enable Flag (IF). System flag. */
-	InterruptEnable(9, 'I'),
+	InterruptEnable(9, "IF"),
 
 	/** Trap Flag (TF). System flag. */
-	Trap(8, 'T'),
+	Trap(8, "TF"),
 
 	/** Sign Flag (SF). Status flag. */
-	Sign(7, 'S'),
+	Sign(7, "SF"),
 
 	/** Zero Flag (ZF). Status flag. */
-	Zero(6, 'Z'),
+	Zero(6, "ZF"),
 
 	/** Auxiliary Carry Flag (AF). Status flag. */
-	AuxiliaryCarry(4, 'A'),
+	AuxiliaryCarry(4, "AF"),
 
 	/** Parity Flag (PF). Status flag. */
-	Parity(2, 'P'),
+	Parity(2, "PF"),
 
 	/** Carry Flag (CF). Status flag. */
-	Carry(0, 'C');
+	Carry(0, "CF");
 
 	private final int bitIndex;
-	private final char initial;
+	private final String symbol;
 
-	RFlags(final int bit, final char initial) {
+	RFlags(final int bit, final String symbol) {
 		this.bitIndex = bit;
-		this.initial = initial;
+		this.symbol = symbol;
 	}
 
 	/**
@@ -88,7 +88,12 @@ public enum RFlags {
 		return bitIndex;
 	}
 
-	public char getInitial() {
-		return initial;
+	/**
+	 * Returns a String representing the flag.
+	 *
+	 * @return The unique String representing the flag.
+	 */
+	public String getSymbol() {
+		return symbol;
 	}
 }
