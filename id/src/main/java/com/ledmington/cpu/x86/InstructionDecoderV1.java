@@ -1367,6 +1367,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		final byte XCHG_EDI_EAX_OPCODE = (byte) 0x97;
 		final byte CDQE_OPCODE = (byte) 0x98;
 		final byte CDQ_OPCODE = (byte) 0x99;
+		final byte LAHF_OPCODE = (byte) 0x9f;
 		final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
 		final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
 		final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
@@ -1409,6 +1410,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
 			case INT3_OPCODE -> new Instruction(Opcode.INT3);
 			case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
+			case LAHF_OPCODE -> new Instruction(Opcode.LAHF);
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 

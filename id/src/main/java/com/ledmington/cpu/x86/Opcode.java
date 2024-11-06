@@ -184,6 +184,9 @@ public enum Opcode {
 	/** Conditional jump if signed. */
 	JS("js"),
 
+	/** Load status flags into AH register. */
+	LAHF("lahf"),
+
 	/** Load effective address. */
 	LEA("lea"),
 

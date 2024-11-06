@@ -1413,3 +1413,6 @@ rdsspq rax | f3 48 0f 1e c8
 # Incsspq
 incsspq r11 | f3 49 0f ae eb
 incsspq rax | f3 48 0f ae e8
+
+# Lahf
+lahf | 9f
