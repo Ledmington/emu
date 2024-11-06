@@ -55,17 +55,18 @@ public class X86Test {
 						.toAbsolutePath())) {
 			int i = 0;
 			for (String line = br.readLine(); line != null; line = br.readLine(), i++) {
-				if (line.isEmpty() || line.isBlank() || line.startsWith("#")) {
+				if (line.isEmpty() || line.isBlank() || line.charAt(0) == '#') {
 					continue;
 				}
 
-				final String[] splitted = line.split("\\|");
-				final int expectedSides = 2;
-				if (splitted.length != expectedSides) {
+				final int idx = line.indexOf('|');
+				if (idx < 0 || idx != line.lastIndexOf('|')) {
 					throw new IllegalArgumentException(
 							String.format("Line %,d: '%s' is not formatted correctly", i, line));
 				}
-				args.add(Arguments.of(splitted[0].strip(), splitted[1].strip()));
+				args.add(Arguments.of(
+						line.substring(0, idx - 1).strip(),
+						line.substring(idx + 1).strip()));
 			}
 		} catch (final IOException | URISyntaxException e) {
 			throw new RuntimeException(e);

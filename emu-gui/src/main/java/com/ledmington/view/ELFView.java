@@ -518,7 +518,9 @@ public final class ELFView extends BorderPane {
 		int i = 0;
 		while (i < strtab.getHeader().getSectionSize()) {
 			final String s = strtab.getString(i);
-			root.getChildren().add(getTreeItem(s, start + i, s.length()));
+			if (!s.isEmpty()) {
+				root.getChildren().add(getTreeItem(s, start + i, s.length()));
+			}
 			i += s.length() + 1;
 		}
 	}

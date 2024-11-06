@@ -39,7 +39,7 @@ public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 
-	private enum State {
+	protected enum State {
 		RUNNING,
 		HALTED
 	}
@@ -48,7 +48,7 @@ public class X86Cpu implements X86Emulator {
 	private final MemoryController mem;
 	private final InstructionFetcher instFetch;
 	private final InstructionDecoder dec;
-	private State state = State.RUNNING;
+	protected State state = State.RUNNING;
 	private long entryPointVirtualAddress = 0L;
 
 	/**
@@ -64,6 +64,7 @@ public class X86Cpu implements X86Emulator {
 
 	@Override
 	public void execute() {
+		state = State.RUNNING;
 		while (state != State.HALTED) {
 			executeOne();
 		}
@@ -79,10 +80,15 @@ public class X86Cpu implements X86Emulator {
 		logger.debug(inst.toIntelSyntax());
 		switch (inst.opcode()) {
 			case SUB -> {
-				if (inst.firstOperand() instanceof Register64) {
-					final long r1 = rf.get((Register64) inst.firstOperand());
-					final long r2 = rf.get((Register64) inst.secondOperand());
-					rf.set((Register64) inst.firstOperand(), r1 - r2);
+				if (inst.firstOperand() instanceof Register64 op1) {
+					final long r1 = rf.get(op1);
+					final long r2 =
+							switch (inst.secondOperand()) {
+								case Register64 op2 -> rf.get(op2);
+								case Immediate imm -> imm.asLong();
+								default -> throw new IllegalArgumentException();
+							};
+					rf.set(op1, r1 - r2);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SUB has %,d bits", ((Register) inst.firstOperand()).bits()));
@@ -212,8 +218,14 @@ public class X86Cpu implements X86Emulator {
 			}
 			case CALL -> {
 				// TODO: check this
-				final IndirectOperand src = (IndirectOperand) inst.firstOperand();
-				final long result = computeIndirectOperand(rf, src);
+				final long result;
+				if (inst.firstOperand() instanceof IndirectOperand iop) {
+					result = computeIndirectOperand(rf, iop);
+				} else if (inst.firstOperand() instanceof Register64 r64) {
+					result = rf.get(r64);
+				} else {
+					throw new IllegalArgumentException();
+				}
 				rf.set(Register64.RIP, result);
 			}
 			case RET -> {

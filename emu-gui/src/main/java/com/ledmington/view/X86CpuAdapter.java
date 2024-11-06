@@ -85,6 +85,9 @@ public final class X86CpuAdapter extends X86Cpu {
 	}
 
 	public void doExecute() {
-		throw new Error("Not implemented");
+		super.state = State.RUNNING;
+		while (state != State.HALTED) {
+			this.doExecuteOne();
+		}
 	}
 }

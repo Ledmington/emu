@@ -78,15 +78,13 @@ public final class FormatTestFiles {
 					continue;
 				}
 				// comments are stripped before being added
-				if (line.startsWith("#")) {
+				if (line.charAt(0) == '#') {
 					lines.add(Set.of(line.strip()));
 					isGroupEnded = true;
 					continue;
 				}
 
-				final String[] splitted = line.split("\\|");
-
-				if (splitted.length != 2) {
+				if (line.indexOf('|') < 0 || line.indexOf('|') != line.lastIndexOf('|')) {
 					throw new IllegalArgumentException(
 							String.format("Line %,d: '%s' is not formatted correctly", lineIndex, line));
 				}
@@ -143,7 +141,7 @@ public final class FormatTestFiles {
 
 	private static void writeAllLines(final List<String> lines, final String filePath) {
 		try {
-			Files.writeString(Path.of(filePath), String.join("%n", lines), StandardOpenOption.WRITE);
+			Files.writeString(Path.of(filePath), String.join("\n", lines), StandardOpenOption.WRITE);
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
