@@ -328,6 +328,9 @@ public enum Opcode {
 	/** Return from procedure. */
 	RET("ret"),
 
+	/** Load status flags into AH register. */
+	SAHF("sahf"),
+
 	/** Arithmetic shift right. */
 	SAR("sar"),
 

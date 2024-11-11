@@ -35,9 +35,9 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class X86Test {
+public class X64Test {
 
-	private static final String testInputFileName = "x86.test.asm";
+	private static final String testInputFileName = "x64.test.asm";
 	private static List<Arguments> args;
 
 	@BeforeAll

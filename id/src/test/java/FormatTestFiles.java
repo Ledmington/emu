@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.AvoidInstantiatingObjectsInLoops"})
 public final class FormatTestFiles {
@@ -42,13 +42,17 @@ public final class FormatTestFiles {
 			out.println("Command-line arguments were provided but not needed. Ignoring them.");
 		}
 
-		final String testInputFileName = "x86.test.asm";
-		final String testInputFile =
-				new File(String.join(File.separator, "src", "test", "resources", testInputFileName)).getAbsolutePath();
+		try (final Stream<Path> s = Files.list(Path.of("src", "test", "resources"))
+				.filter(p -> p.toFile().isFile() && p.toFile().getName().endsWith(".test.asm"))) {
+			s.forEach(testInputFile -> {
+				out.printf("Formatting '%s'%n", testInputFile.toFile().getName());
 
-		final List<String> allLines = readAllLines(testInputFile);
-
-		writeAllLines(allLines, testInputFile);
+				final List<String> allLines = readAllLines(String.valueOf(testInputFile.toFile()));
+				writeAllLines(allLines, String.valueOf(testInputFile.toFile()));
+			});
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static List<String> readAllLines(final String filepath) {
@@ -120,8 +124,8 @@ public final class FormatTestFiles {
 
 			final Set<TestCase> tc = new HashSet<>();
 			for (final String s : ss) {
-				final String[] splitted = s.split("\\|");
-				tc.add(new TestCase(splitted[0].strip(), splitted[1].strip()));
+				final String[] sp = s.split("\\|");
+				tc.add(new TestCase(sp[0].strip(), sp[1].strip()));
 			}
 
 			tc.stream()

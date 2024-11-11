@@ -23,7 +23,7 @@ import java.util.Objects;
 public final class IndirectOperandBuilder {
 
 	private Register baseRegister;
-	private Integer c;
+	private int c = 1;
 	private Register indexRegister;
 	private Long displacement;
 	private DisplacementType displacementType = DisplacementType.LONG;
@@ -66,7 +66,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder constant(final int c) {
-		if (this.c != null) {
+		if (this.c != 1) {
 			throw new IllegalArgumentException("Cannot define constant twice");
 		}
 		if (c != 1 && c != 2 && c != 4 && c != 8) {
@@ -176,16 +176,15 @@ public final class IndirectOperandBuilder {
 		alreadyBuilt = true;
 
 		if (baseRegister != null) {
-			if (indexRegister == null || c == null) {
-				throw new IllegalArgumentException("Cannot build an IndirectOperand with reg1=" + baseRegister + ", "
-						+ (indexRegister == null ? "no reg2" : "reg2=" + indexRegister) + ", "
-						+ (c == null ? "no constant" : "constant=" + c) + ", "
-						+ (displacement == null ? "no displacement" : "displacement=" + displacement));
+			if (indexRegister == null) {
+				throw new IllegalArgumentException(
+						"Cannot build an IndirectOperand with reg1=" + baseRegister + ", no reg2, constant=" + c + ", "
+								+ (displacement == null ? "no displacement" : "displacement=" + displacement));
 			}
-			return new IndirectOperand(baseRegister, indexRegister, c, displacement, displacementType, ptrSize);
 
+			return new IndirectOperand(baseRegister, indexRegister, c, displacement, displacementType, ptrSize);
 		} else {
-			if (c != null) {
+			if (c != 1) {
 				if (indexRegister == null) {
 					throw new IllegalArgumentException(
 							"Cannot build an IndirectOperand with no reg1, no reg2, constant=" + c + ", "
@@ -200,10 +199,10 @@ public final class IndirectOperandBuilder {
 				}
 
 				if (indexRegister != null) {
-					return new IndirectOperand(null, indexRegister, 0, displacement, displacementType, ptrSize);
+					return new IndirectOperand(null, indexRegister, 1, displacement, displacementType, ptrSize);
 				} else {
 					// [displacement]
-					return new IndirectOperand(null, null, 0, displacement, displacementType, ptrSize);
+					return new IndirectOperand(null, null, 1, displacement, displacementType, ptrSize);
 				}
 			}
 		}

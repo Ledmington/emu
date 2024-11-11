@@ -145,7 +145,7 @@ public final class IndirectOperand implements Operand {
 			sb.append(reg2.toIntelSyntax());
 			shouldAddSign = true;
 		}
-		if (constant != 0 && constant != 1) {
+		if (constant != 1) {
 			sb.append('*').append(constant);
 			shouldAddSign = true;
 		}

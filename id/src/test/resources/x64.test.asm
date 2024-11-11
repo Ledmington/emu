@@ -1,5 +1,5 @@
 #
-# Input file for x86 (32-bit) instruction decoding
+# Input file for x86 (64-bit) instruction decoding
 #
 # Lines that are:
 # - empty
@@ -1044,8 +1044,8 @@ movsd xmm0,QWORD PTR [rbx]                   | f2 0f 10 03
 movsd xmm14,QWORD PTR [ebx+edi*8+0x12345678] | 67 f2 44 0f 10 b4 fb 78 56 34 12
 movsd xmm14,QWORD PTR [rbx+rdi*8+0x12345678] | f2 44 0f 10 b4 fb 78 56 34 12
 
-# Endbr32
-endbr32 | f3 0f 1e fb
+# Endbr64
+endbr64 | f3 0f 1e fa
 
 # Inc
 inc ah   | fe c4
@@ -1410,3 +1410,9 @@ rdsspq rax | f3 48 0f 1e c8
 # Incsspq
 incsspq r11 | f3 49 0f ae eb
 incsspq rax | f3 48 0f ae e8
+
+# Lahf
+lahf | 9f
+
+# Sahf
+sahf | 9e

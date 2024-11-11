@@ -18,6 +18,7 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
@@ -28,7 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.ledmington.utils.BitUtils;
 
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
-final class TestDecoding extends X86Test {
+final class TestDecoding extends X64Test {
 
 	@ParameterizedTest
 	@MethodSource("instructions")
@@ -44,7 +45,13 @@ final class TestDecoding extends X86Test {
 		assertNotNull(instructions, "InstructionDecoder returned a null List");
 		final int codeLen = instructions.size();
 		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));
-		final String decoded = instructions.getFirst().toIntelSyntax();
+		final Instruction first = instructions.getFirst();
+		final String decoded = first.toIntelSyntax();
+		assertFalse(
+				first.isLegacy(),
+				() -> String.format(
+						"%s ('%s') is a valid instruction but it is for legacy/compatibility 32-bit mode, not for 64-bit mode.",
+						first, first.toIntelSyntax()));
 		assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
 	}
 }

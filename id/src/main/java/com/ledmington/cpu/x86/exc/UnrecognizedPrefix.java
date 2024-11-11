@@ -20,22 +20,15 @@ package com.ledmington.cpu.x86.exc;
 import java.io.Serial;
 
 /**
- * This exception is thrown when a reserved opcode is recognized. It doesn't mean that the instruction is invalid or
- * that the opcode is unknown.
+ * This exception is thrown when a prefix is detected during opcode decoding, meaning that it was not properly
+ * recognized by earlier decoding steps.
  */
-public final class ReservedOpcode extends RuntimeException {
+public final class UnrecognizedPrefix extends RuntimeException {
 
 	@Serial
-	private static final long serialVersionUID = 5003238481425708141L;
+	private static final long serialVersionUID = -5061777630768344350L;
 
-	/**
-	 * Creates a ReversedOpcode runtime exception with a proper message. Since, usually, all reserved opcodes are made
-	 * of two bytes, this constructors also needs two bytes.
-	 *
-	 * @param firstByte The first byte of the opcode.
-	 * @param secondByte The second byte of the opcode.
-	 */
-	public ReservedOpcode(final byte firstByte, final byte secondByte) {
-		super(String.format("Reserved opcode 0x%02x%02x", firstByte, secondByte));
+	public UnrecognizedPrefix(final String type, final long position) {
+		super(String.format("Found an unrecognized " + type + " prefix at byte 0x%016x", position));
 	}
 }

@@ -34,8 +34,10 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.elf.FileType;
+import com.ledmington.elf.ISA;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
+import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -74,7 +76,14 @@ public final class Main {
 					elf.getFileHeader().getFileType()));
 		}
 
-		final MemoryController mem = new MemoryController(EmulatorConstants.getMemoryInitializer());
+		if (elf.getFileHeader().getISA() != ISA.AMD_X86_64) {
+			throw new IllegalArgumentException(String.format(
+					"This file requires ISA %s, which is not implemented",
+					elf.getFileHeader().getISA().getName()));
+		}
+
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));
 		final X86Emulator cpu = new X86Cpu(mem);
 
 		ELFLoader.load(

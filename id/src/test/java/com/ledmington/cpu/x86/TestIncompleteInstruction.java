@@ -32,7 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.utils.BitUtils;
 
-final class TestIncompleteInstruction extends X86Test {
+final class TestIncompleteInstruction extends X64Test {
 
 	static Stream<Arguments> incompleteInstructions() {
 		final Set<String> validInstructions =

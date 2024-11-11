@@ -49,7 +49,6 @@ public class X86Cpu implements X86Emulator {
 	private final InstructionFetcher instFetch;
 	private final InstructionDecoder dec;
 	protected State state = State.RUNNING;
-	private long entryPointVirtualAddress = 0L;
 
 	/**
 	 * Creates a new x86 CPU with the given memory controller.
@@ -95,14 +94,16 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case ADD -> {
-				if (inst.firstOperand() instanceof Register64) {
-					final long r1 = rf.get((Register64) inst.firstOperand());
-					final long r2 = rf.get((Register64) inst.secondOperand());
-					rf.set((Register64) inst.firstOperand(), r1 + r2);
-				} else {
-					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when ADD has %,d bits", ((Register) inst.firstOperand()).bits()));
-				}
+				final Register64 op1 = (Register64) inst.firstOperand();
+				final long r1 = rf.get(op1);
+				final long r2 =
+						switch (inst.secondOperand()) {
+							case Register64 op2 -> rf.get(op2);
+							case Immediate imm -> imm.asLong();
+							default -> throw new IllegalArgumentException(
+									String.format("Unknown second argument type %s", inst.secondOperand()));
+						};
+				rf.set(op1, r1 + r2);
 			}
 			case SHR -> {
 				if (inst.firstOperand() instanceof Register64) {
@@ -183,8 +184,7 @@ public class X86Cpu implements X86Emulator {
 				final Register64 dest = (Register64) inst.firstOperand();
 				switch (inst.secondOperand()) {
 					case Register64 src -> rf.set(dest, rf.get(src));
-					case IndirectOperand io -> rf.set(
-							dest, mem.read8(entryPointVirtualAddress + computeIndirectOperand(rf, io)));
+					case IndirectOperand io -> rf.set(dest, mem.read8(computeIndirectOperand(rf, io)));
 					case Immediate imm -> rf.set(dest, imm.asLong());
 					default -> throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'", inst.secondOperand()));

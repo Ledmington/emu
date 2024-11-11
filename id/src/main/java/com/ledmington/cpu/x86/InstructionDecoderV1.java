@@ -26,6 +26,7 @@ import java.util.stream.IntStream;
 
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
@@ -1367,6 +1368,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		final byte XCHG_EDI_EAX_OPCODE = (byte) 0x97;
 		final byte CDQE_OPCODE = (byte) 0x98;
 		final byte CDQ_OPCODE = (byte) 0x99;
+		final byte SAHF_OPCODE = (byte) 0x9e;
 		final byte LAHF_OPCODE = (byte) 0x9f;
 		final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
 		final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
@@ -1410,6 +1412,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
 			case INT3_OPCODE -> new Instruction(Opcode.INT3);
 			case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
+			case SAHF_OPCODE -> new Instruction(Opcode.SAHF);
 			case LAHF_OPCODE -> new Instruction(Opcode.LAHF);
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
@@ -1870,16 +1873,11 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
 			case LEA_OPCODE -> parseRM(pref, Opcode.LEA);
 
-			case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(String.format(
-					"Found an unrecognized operand size override prefix at byte 0x%08x", b.getPosition()));
-			case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new IllegalArgumentException(String.format(
-					"Found an unrecognized address size override prefix at byte 0x%08x", b.getPosition()));
-			case (byte) 0xf0 -> throw new IllegalArgumentException(
-					String.format("Found an unrecognized LOCK prefix at byte 0x%08x", b.getPosition()));
-			case (byte) 0xf2 -> throw new IllegalArgumentException(
-					String.format("Found an unrecognized REPNE prefix at byte 0x%08x", b.getPosition()));
-			case (byte) 0xf3 -> throw new IllegalArgumentException(
-					String.format("Found an unrecognized REP prefix at byte 0x%08x", b.getPosition()));
+			case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("operand size override", b.getPosition());
+			case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("address size override", b.getPosition());
+			case (byte) 0xf0 -> throw new UnrecognizedPrefix("LOCK", b.getPosition());
+			case (byte) 0xf2 -> throw new UnrecognizedPrefix("REPNE", b.getPosition());
+			case (byte) 0xf3 -> throw new UnrecognizedPrefix("REP", b.getPosition());
 			default -> throw new UnknownOpcode(opcodeFirstByte);
 		};
 	}

@@ -48,6 +48,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
 import com.ledmington.elf.ELFReader;
 import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.EmulatorConstants;
@@ -56,6 +57,7 @@ import com.ledmington.emu.InstructionFetcher;
 import com.ledmington.emu.RFlags;
 import com.ledmington.emu.RegisterFile;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.MiniLogger;
 
 public final class EmulatorView extends Stage {
@@ -227,7 +229,7 @@ public final class EmulatorView extends Stage {
 
 	private void loadFile(final File file) {
 		logger.info("Loading file '%s'", file.toString());
-		this.mem = new MemoryController(EmulatorConstants.getMemoryInitializer(), false);
+		this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), false);
 		this.cpu = new X86CpuAdapter(mem);
 
 		// TODO: implement this
@@ -287,7 +289,7 @@ public final class EmulatorView extends Stage {
 			try {
 				inst = decoder.decode().toIntelSyntax();
 				rip = regFile.get(Register64.RIP);
-			} catch (final UnknownOpcode | ReservedOpcode | IllegalArgumentException e) {
+			} catch (final UnknownOpcode | ReservedOpcode | UnrecognizedPrefix e) {
 				inst = String.format(".byte 0x%02x", this.mem.readCode(rip));
 				rip = startRIP + 1L;
 			}

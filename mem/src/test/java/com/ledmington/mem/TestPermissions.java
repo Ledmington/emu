@@ -41,7 +41,7 @@ final class TestPermissions {
 
 	@BeforeEach
 	void setup() {
-		mem = new MemoryController(MemoryInitializer.random());
+		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()));
 	}
 
 	@Test

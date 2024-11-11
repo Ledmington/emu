@@ -28,6 +28,16 @@ public final class BitUtils {
 	private BitUtils() {}
 
 	/**
+	 * Converts the given short to a byte by truncating it.
+	 *
+	 * @param s The short to be converted.
+	 * @return The rightmost byte of the given short.
+	 */
+	public static byte asByte(final short s) {
+		return (byte) (s & 0x000000ff);
+	}
+
+	/**
 	 * Converts the given int to a byte by truncating it.
 	 *
 	 * @param x The int to be converted.
@@ -58,6 +68,16 @@ public final class BitUtils {
 	}
 
 	/**
+	 * Converts the given int to a short by truncating it.
+	 *
+	 * @param x The int to be converted.
+	 * @return The 2 rightmost bytes of the given int.
+	 */
+	public static short asShort(final int x) {
+		return (short) (x & 0x0000ffff);
+	}
+
+	/**
 	 * Converts the given long to a short by truncating it.
 	 *
 	 * @param l The long to be converted.
@@ -75,6 +95,16 @@ public final class BitUtils {
 	 */
 	public static int asInt(final byte b) {
 		return ((int) b) & 0x000000ff;
+	}
+
+	/**
+	 * Converts the given short to an int by zero-extending it.
+	 *
+	 * @param s The short to be converted.
+	 * @return An int with the given short as the 2 rightmost bytes.
+	 */
+	public static int asInt(final short s) {
+		return ((int) s) & 0x0000ffff;
 	}
 
 	/**
@@ -186,10 +216,21 @@ public final class BitUtils {
 	 *
 	 * @param b The byte to be shifted.
 	 * @param x The number of bits to shift.
-	 * @return The shifted byte, as a byte.
+	 * @return The shifted value, as a byte.
 	 */
 	public static byte shr(final byte b, final int x) {
 		return asByte((b >>> x) & (0x000000ff >>> x));
+	}
+
+	/**
+	 * Shift (logical) to the right and return as a long.
+	 *
+	 * @param l The long to be shifted.
+	 * @param x The number of bits to shift.
+	 * @return The shifted value, as a long.
+	 */
+	public static long shr(final long l, final int x) {
+		return l >>> x;
 	}
 
 	/**
@@ -197,10 +238,21 @@ public final class BitUtils {
 	 *
 	 * @param b The byte to be shifted.
 	 * @param x The number of bits to shift.
-	 * @return The shifted byte, as a byte.
+	 * @return The shifted value, as a byte.
 	 */
 	public static byte shl(final byte b, final int x) {
 		return asByte(b << x);
+	}
+
+	/**
+	 * Shift (logical) to the left and return as a long.
+	 *
+	 * @param l The long to be shifted.
+	 * @param x The number of bits to shift.
+	 * @return The shifted value, as a long.
+	 */
+	public static long shl(final long l, final int x) {
+		return l << x;
 	}
 
 	/**

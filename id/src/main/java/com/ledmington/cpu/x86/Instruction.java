@@ -232,6 +232,13 @@ public final class Instruction {
 		return sb.toString();
 	}
 
+	public boolean isLegacy() {
+		if (code == Opcode.ENDBR32) {
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
