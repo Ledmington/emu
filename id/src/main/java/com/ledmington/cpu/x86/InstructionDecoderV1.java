@@ -1755,10 +1755,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 						default -> new Immediate((long) b.read2LE());
 					};
 				} else {
-					imm = switch (r.bits()) {
-						case 32 -> imm32();
-						default -> new Immediate((long) b.read4LE());
-					};
+					imm = r.bits() == 32 ? imm32() : new Immediate((long) b.read4LE());
 				}
 				yield new Instruction(opcode, r, imm);
 			}
@@ -1878,7 +1875,10 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case (byte) 0xf0 -> throw new UnrecognizedPrefix("LOCK", b.getPosition());
 			case (byte) 0xf2 -> throw new UnrecognizedPrefix("REPNE", b.getPosition());
 			case (byte) 0xf3 -> throw new UnrecognizedPrefix("REP", b.getPosition());
-			default -> throw new UnknownOpcode(opcodeFirstByte);
+			default -> {
+				logger.debug("0x%02x 0x%02x 0x%02x 0x%02x", opcodeFirstByte, b.read1(), b.read1(), b.read1());
+				throw new UnknownOpcode(opcodeFirstByte);
+			}
 		};
 	}
 
@@ -2134,7 +2134,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
 	@Override
 	public String toString() {
-		return "InstructionDecoderV1(b=" + b.toString() + ")";
+		return "InstructionDecoderV1(b=" + b + ")";
 	}
 
 	@Override

@@ -3,6 +3,7 @@
 
 The project is divided as follows:
 - `emu-cli` : the actual executable emulator (CLI version)
+- `emu-gui` : the emulator + ELF viewer (GUI version)
 - `emu` : the core components of the emulator
 - `readelf` : a utility executable to mimic the behavior of GNU's `readelf`
 - `elf` : ELF file parser

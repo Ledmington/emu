@@ -162,15 +162,14 @@ public final class ELFLoader {
 			final long entryPointVirtualAddress,
 			final SymbolTableSection symtab,
 			final StringTableSection strtab) {
+		final long sectionStart = entryPointVirtualAddress + init.getHeader().getFileOffset();
+		final long sectionEnd = sectionStart + init.getHeader().getSectionSize();
 		for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 			final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
-			if (ste.info().getType() == SymbolTableEntryType.STT_FUNC
-					&& ste.value() >= init.getHeader().getFileOffset()
-					&& ste.value()
-							< init.getHeader().getFileOffset()
-									+ init.getHeader().getSectionSize()) {
+			final long start = entryPointVirtualAddress + ste.value();
+			if (ste.info().getType() == SymbolTableEntryType.STT_FUNC && start >= sectionStart && start < sectionEnd) {
 				logger.debug("Running constructor '%s' from .init", strtab.getString(ste.nameOffset()));
-				runFrom(cpu, entryPointVirtualAddress + ste.value());
+				runFrom(cpu, start);
 			}
 		}
 	}

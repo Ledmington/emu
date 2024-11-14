@@ -96,7 +96,10 @@ public final class Main {
 
 		logger.info(" ### Execution start ### ");
 		cpu.executeOne(new Instruction(
-				Opcode.MOV, Register64.RIP, new Immediate(elf.getFileHeader().getEntryPointVirtualAddress())));
+				Opcode.MOV,
+				Register64.RIP,
+				new Immediate(
+						EmulatorConstants.getBaseAddress() + elf.getFileHeader().getEntryPointVirtualAddress())));
 		cpu.execute();
 		logger.info(" ### Execution end ### ");
 		ELFLoader.unload(elf);
