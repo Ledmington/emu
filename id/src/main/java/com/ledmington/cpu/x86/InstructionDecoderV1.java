@@ -1876,7 +1876,11 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case (byte) 0xf2 -> throw new UnrecognizedPrefix("REPNE", b.getPosition());
 			case (byte) 0xf3 -> throw new UnrecognizedPrefix("REP", b.getPosition());
 			default -> {
-				logger.debug("0x%02x 0x%02x 0x%02x 0x%02x", opcodeFirstByte, b.read1(), b.read1(), b.read1());
+				final long pos = b.getPosition();
+				logger.debug(
+						"Unknown opcode: 0x%02x 0x%02x 0x%02x 0x%02x",
+						opcodeFirstByte, b.read1(), b.read1(), b.read1());
+				b.setPosition(pos);
 				throw new UnknownOpcode(opcodeFirstByte);
 			}
 		};

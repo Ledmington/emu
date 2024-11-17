@@ -138,21 +138,13 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case XOR -> {
-				if (inst.firstOperand() instanceof Register op1 && inst.secondOperand() instanceof Register op2) {
-					switch (op1.bits()) {
-						case 8 -> {
-							final byte r1 = rf.get((Register8) op1);
-							final byte r2 = rf.get((Register8) op2);
-							rf.set((Register8) op1, BitUtils.xor(r1, r2));
-						}
-						case 32 -> {
-							final int r1 = rf.get((Register32) op1);
-							final int r2 = rf.get((Register32) op2);
-							rf.set((Register32) op1, r1 ^ r2);
-						}
-						default -> throw new IllegalArgumentException(
-								String.format("Don't know what to do when XOR has %,d bits", op1.bits()));
-					}
+				if (inst.firstOperand() instanceof Register8 r1_8 && inst.secondOperand() instanceof Register8 r2_8) {
+					rf.set(r1_8, BitUtils.xor(rf.get(r1_8), rf.get(r2_8)));
+				} else if (inst.firstOperand() instanceof Register32 r1_32
+						&& inst.secondOperand() instanceof Register8 r2_32) {
+					rf.set(r1_32, rf.get(r1_32) ^ rf.get(r2_32));
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s", inst));
 				}
 			}
 			case AND -> {
@@ -195,7 +187,8 @@ public class X86Cpu implements X86Emulator {
 						switch (inst.firstOperand()) {
 							case Register64 r64 -> rf.get(r64);
 							case Immediate imm -> imm.asLong();
-							default -> throw new IllegalArgumentException("Unexpected value: " + inst.firstOperand());
+							default -> throw new IllegalArgumentException(
+									String.format("Unexpected argument %s", inst.firstOperand()));
 						};
 
 				final long rsp = rf.get(Register64.RSP);
@@ -242,7 +235,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented");
 			case HLT -> state = State.HALTED;
-			default -> throw new IllegalStateException(String.format("Unknwon instruction %s", inst.toIntelSyntax()));
+			default -> throw new IllegalStateException(String.format("Unknown instruction %s", inst.toIntelSyntax()));
 		}
 	}
 
