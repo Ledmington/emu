@@ -25,7 +25,9 @@ import static com.ledmington.utils.BitUtils.shl;
 import static com.ledmington.utils.BitUtils.shr;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
@@ -49,6 +51,20 @@ public final class X86RegisterFile implements RegisterFile {
 
 	/** Creates the register file initializing every register to 0. */
 	public X86RegisterFile() {}
+
+	/**
+	 * Creates a register file by copying the one given in input.
+	 *
+	 * @param regFile The register file to be copied.
+	 */
+	public X86RegisterFile(final ImmutableRegisterFile regFile) {
+		Objects.requireNonNull(regFile);
+		final X86RegisterFile regs = (X86RegisterFile) regFile;
+		System.arraycopy(regs.gpr, 0, this.gpr, 0, 16);
+		System.arraycopy(regs.seg, 0, this.seg, 0, 6);
+		this.rip = regs.rip;
+		this.rflags = regs.rflags;
+	}
 
 	@Override
 	public byte get(final Register8 r) {
@@ -276,9 +292,14 @@ public final class X86RegisterFile implements RegisterFile {
 	public String toString() {
 		return "X86RegisterFile("
 				+ Arrays.stream(Register64.values())
-						.map(r -> String.format("%s=0x%016x", r.toIntelSyntax(), get(r)))
-						.collect(Collectors.joining(";"))
-				+ ")";
+						.map(r -> String.format("%s=0x%016x", r.name(), get(r)))
+						.collect(Collectors.joining(","))
+				+ ","
+				+ Stream.of(Register16.CS, Register16.DS, Register16.ES, Register16.FS, Register16.GS, Register16.SS)
+						.map(r -> String.format("%s=0x%016x", r.name(), get(r)))
+						.collect(Collectors.joining(","))
+				+ ",RFLAGS="
+				+ String.format("0x%016x", rflags) + ")";
 	}
 
 	@Override
@@ -287,7 +308,11 @@ public final class X86RegisterFile implements RegisterFile {
 		for (final long r : gpr) {
 			h = 31 * h + HashUtils.hash(r);
 		}
+		for (final short s : seg) {
+			h = 31 * h + HashUtils.hash(s);
+		}
 		h = 31 * h + HashUtils.hash(rip);
+		h = 31 * h + HashUtils.hash(rflags);
 		return h;
 	}
 
@@ -303,6 +328,9 @@ public final class X86RegisterFile implements RegisterFile {
 			return false;
 		}
 		final X86RegisterFile regs = (X86RegisterFile) other;
-		return Arrays.equals(this.gpr, regs.gpr) && this.rip == regs.rip;
+		return Arrays.equals(this.gpr, regs.gpr)
+				&& Arrays.equals(this.seg, regs.seg)
+				&& this.rip == regs.rip
+				&& this.rflags == regs.rflags;
 	}
 }

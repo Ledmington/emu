@@ -22,8 +22,10 @@ import java.util.Objects;
 /** This class allows an easier construction of an IndirectOperand object. */
 public final class IndirectOperandBuilder {
 
+	private static final int DEFAULT_CONSTANT = 1;
+
 	private Register baseRegister;
-	private int c = 1;
+	private int c = DEFAULT_CONSTANT;
 	private Register indexRegister;
 	private Long displacement;
 	private DisplacementType displacementType = DisplacementType.LONG;
@@ -66,7 +68,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder constant(final int c) {
-		if (this.c != 1) {
+		if (this.c != DEFAULT_CONSTANT) {
 			throw new IllegalArgumentException("Cannot define constant twice");
 		}
 		if (c != 1 && c != 2 && c != 4 && c != 8) {
@@ -184,7 +186,7 @@ public final class IndirectOperandBuilder {
 
 			return new IndirectOperand(baseRegister, indexRegister, c, displacement, displacementType, ptrSize);
 		} else {
-			if (c != 1) {
+			if (c != DEFAULT_CONSTANT) {
 				if (indexRegister == null) {
 					throw new IllegalArgumentException(
 							"Cannot build an IndirectOperand with no reg1, no reg2, constant=" + c + ", "

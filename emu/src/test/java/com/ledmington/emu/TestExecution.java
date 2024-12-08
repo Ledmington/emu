@@ -77,18 +77,12 @@ final class TestExecution {
 		final Register64 r2 = Register64.values()[rng.nextInt(0, Register64.values().length)];
 		final long oldValue1 = cpu.getRegisters().get(r1);
 		final long oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(r1, oldValue1 + oldValue2);
 		cpu.executeOne(new Instruction(Opcode.ADD, r1, r2));
 		assertEquals(
-				oldValue1 + oldValue2,
-				cpu.getRegisters().get(r1),
-				() -> String.format(
-						"Expected register %s to have value 0x%016x but was 0x%016x",
-						r1, oldValue1 + oldValue2, cpu.getRegisters().get(r1)));
-		assertEquals(
-				oldValue2,
-				cpu.getRegisters().get(r2),
-				() -> String.format(
-						"Expected register %s to have value 0x%016x but was 0x%016x",
-						r2, oldValue2, cpu.getRegisters().get(r2)));
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 }

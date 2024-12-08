@@ -22,6 +22,7 @@ import java.util.Objects;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /** A class which represents the part of the emulated CPU which reads instructions from memory during execution. */
 public final class InstructionFetcher implements ReadOnlyByteBuffer {
@@ -35,6 +36,7 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
 	 * @param mem The memory controller to retrieve instructions from.
 	 * @param regFile The register file to get and set the instruction pointer.
 	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need these objects as they are.")
 	public InstructionFetcher(final MemoryController mem, final RegisterFile regFile) {
 		this.mem = Objects.requireNonNull(mem);
 		this.regFile = Objects.requireNonNull(regFile);

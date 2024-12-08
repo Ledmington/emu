@@ -232,6 +232,11 @@ public final class Instruction {
 		return sb.toString();
 	}
 
+	/**
+	 * Checks whether this instruction is part of the legacy/compatibility x86 set.
+	 *
+	 * @return True if it is legacy, false otherwise.
+	 */
 	public boolean isLegacy() {
 		if (code == Opcode.ENDBR32) {
 			return true;

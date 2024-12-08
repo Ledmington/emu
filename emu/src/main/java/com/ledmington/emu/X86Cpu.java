@@ -39,8 +39,13 @@ public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 
+	/** The state of the CPU. */
 	protected enum State {
+
+		/** The default state of the CPU, meaning that it is able to execute instructions. */
 		RUNNING,
+
+		/** The state in which the CPU has completed execution. */
 		HALTED
 	}
 
@@ -48,6 +53,11 @@ public class X86Cpu implements X86Emulator {
 	private final MemoryController mem;
 	private final InstructionFetcher instFetch;
 	private final InstructionDecoder dec;
+
+	/**
+	 * The current state of the CPU. Children classes cna modify this field before executing instructions or to forcibly
+	 * terminate execution.
+	 */
 	protected State state = State.RUNNING;
 
 	/**
@@ -55,6 +65,7 @@ public class X86Cpu implements X86Emulator {
 	 *
 	 * @param mem The object to be used to access the memory.
 	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public X86Cpu(final MemoryController mem) {
 		this.mem = Objects.requireNonNull(mem);
 		this.instFetch = new InstructionFetcher(mem, rf);
@@ -69,13 +80,21 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	private void assertIsRunning() {
+		if (state != State.RUNNING) {
+			throw new IllegalStateException("Cannot execute instruction if the state is not RUNNING.");
+		}
+	}
+
 	@Override
 	public void executeOne() {
+		assertIsRunning();
 		executeOne(dec.decode());
 	}
 
 	@Override
 	public void executeOne(final Instruction inst) {
+		assertIsRunning();
 		logger.debug(inst.toIntelSyntax());
 		switch (inst.opcode()) {
 			case SUB -> {
@@ -226,7 +245,8 @@ public class X86Cpu implements X86Emulator {
 				final long prev = rf.get(Register64.RSP) + 8L;
 
 				// If we read 0x0, we have exhausted the stack
-				if (mem.read8(prev) == 0L) {
+				final long zero = 0L;
+				if (mem.read8(prev) == zero) {
 					state = State.HALTED;
 				} else {
 					rf.set(Register64.RSP, prev);

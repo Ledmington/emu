@@ -28,7 +28,13 @@ public final class UnrecognizedPrefix extends RuntimeException {
 	@Serial
 	private static final long serialVersionUID = -5061777630768344350L;
 
+	/**
+	 * Creates a new UnrecognizedPrefix runtime exception with a proper message.
+	 *
+	 * @param type The type of the prefix.
+	 * @param position The position of the unrecognized prefix.
+	 */
 	public UnrecognizedPrefix(final String type, final long position) {
-		super(String.format("Found an unrecognized " + type + " prefix at byte 0x%016x", position));
+		super(String.format("Found an unrecognized %s prefix at byte 0x%016x", type, position));
 	}
 }

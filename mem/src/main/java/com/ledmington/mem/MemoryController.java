@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /** This is the part of the memory which implements read-write-execute permissions. */
 public final class MemoryController implements Memory {
@@ -37,9 +38,11 @@ public final class MemoryController implements Memory {
 	/**
 	 * Creates a MemoryController with the given initializer.
 	 *
+	 * @param memory The Memory object to wrap with permission checking.
 	 * @param breakOnWrongPermissions Decides whether this controller should throw an exception when accessing memory
 	 *     with the wrong permissions.
 	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public MemoryController(final Memory memory, final boolean breakOnWrongPermissions) {
 		this.mem = Objects.requireNonNull(memory);
 		this.breakOnWrongPermissions = breakOnWrongPermissions;
@@ -48,6 +51,8 @@ public final class MemoryController implements Memory {
 	/**
 	 * Creates a MemoryController with the given initializer and the default behavior of breaking when accessing memory
 	 * with the wrong permissions.
+	 *
+	 * @param memory The Memory object to wrap with permission checking.
 	 */
 	public MemoryController(final Memory memory) {
 		this(memory, true);
