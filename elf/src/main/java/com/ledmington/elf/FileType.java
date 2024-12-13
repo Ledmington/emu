@@ -33,7 +33,7 @@ public enum FileType {
 	ET_EXEC((short) 0x0002, "Executable file"),
 
 	/** Shared object or Position-Independent Executable file. */
-	ET_DYN((short) 0x0003, "Position-Independent Executable file"),
+	ET_DYN((short) 0x0003, "Shared object or Position-Independent Executable file"),
 
 	/** Core file. */
 	ET_CORE((short) 0x0004, "Core file");

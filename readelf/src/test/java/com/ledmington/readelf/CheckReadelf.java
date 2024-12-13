@@ -124,8 +124,9 @@ public final class CheckReadelf {
 
 		final int minSize = Math.min(expected.size(), actual.size());
 		final int maxSize = Math.max(expected.size(), actual.size());
-		final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |<| %s\u001b[47m \u001b[0m%n";
-		final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |>| %s\u001b[47m \u001b[0m%n";
+		// 'r' stands for "Reference" and 'a' stands for "Actual"
+		final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |r| %s\u001b[47m \u001b[0m%n";
+		final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |a| %s\u001b[47m \u001b[0m%n";
 
 		// start of the different block
 		int start = -1;

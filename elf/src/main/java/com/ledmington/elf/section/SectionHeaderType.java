@@ -118,7 +118,7 @@ public enum SectionHeaderType {
 	SHT_GNU_HASH(0x6ffffff6, "GNU_HASH", "GNU Hash table"),
 
 	/** Version definition section. */
-	SHT_GNU_verdef(0x6ffffffd, "GNU_verdef", "GNU version symbol definitions"),
+	SHT_GNU_verdef(0x6ffffffd, "VERDEF", "GNU version symbol definitions"),
 
 	/** Version needs section. */
 	SHT_GNU_verneed(0x6ffffffe, "VERNEED", "GNU version symbol needed elements"),
@@ -188,7 +188,7 @@ public enum SectionHeaderType {
 	private final String name;
 	private final String description;
 
-	private SectionHeaderType(final int code, final String name, final String description) {
+	SectionHeaderType(final int code, final String name, final String description) {
 		this.code = code;
 		this.name = name;
 		this.description = description;

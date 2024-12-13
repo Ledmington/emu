@@ -92,11 +92,7 @@ public enum SectionHeaderFlags {
 	/** This section holds thread-local storage. Each thread within a process has a distinct instance of this data. */
 	SHF_TLS(0x00000000000400L, "TLS", "Section hold thread-local data", 'T'),
 
-	/** All bits included in this mask are reserved for OS-specific semantics. */
-	SHF_MASKOS(0x000000000ff00000L, "OS", "OS specific", 'o'),
-
-	/** All bits included in this mask are reserved for processor-specific semantics. */
-	SHF_MASKPROC(0x00000000f0000000L, "PROC", "Processor specific", 'p'),
+	SHF_GNU_RETAIN(0x0000000000200000L, "GNU", "GNU Retain", 'R'),
 
 	/**
 	 * SHF_ORDERED is an older version of the functionality provided by SHF_LINK_ORDER, and has been superseded by
@@ -132,6 +128,14 @@ public enum SectionHeaderFlags {
 			.map(SectionHeaderFlags::getCode)
 			.reduce(0L, (a, b) -> a | b);
 
+	private static boolean isOSSpecific(final long code) {
+		return (code & 0x000000000ff00000L) != 0L;
+	}
+
+	private static boolean isCPUSpecific(final long code) {
+		return (code & 0x00000000f0000000L) != 0L;
+	}
+
 	/**
 	 * Checks whether the given flags are valid.
 	 *
@@ -150,6 +154,14 @@ public enum SectionHeaderFlags {
 	 */
 	public static Set<SectionHeaderFlags> fromLong(final long flags) {
 		if (!isValid(flags)) {
+			if (isOSSpecific(flags)) {
+				throw new IllegalArgumentException(
+						String.format("Unknown OS-specific Section header flag: 0x%016x", flags));
+			}
+			if (isCPUSpecific(flags)) {
+				throw new IllegalArgumentException(
+						String.format("Unknown CPU-specific Section header flag: 0x%016x", flags));
+			}
 			throw new IllegalArgumentException(String.format("Invalid SHF flags 0x%016x", flags));
 		}
 		final Set<SectionHeaderFlags> shf = new TreeSet<>();

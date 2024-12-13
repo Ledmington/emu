@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -40,6 +39,7 @@ import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicTableEntry;
 import com.ledmington.elf.section.DynamicTableEntryTag;
+import com.ledmington.elf.section.HashTableSection;
 import com.ledmington.elf.section.InterpreterPathSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
@@ -103,6 +103,7 @@ public final class Main {
 		boolean displayRelocationSections = false;
 		boolean displayVersionSections = false;
 		boolean displayGnuHashSection = false;
+		boolean displayHashSection = false;
 		boolean displaySectionGroups = false;
 		Optional<Integer> sectionIndexToBeHexDumped = Optional.empty();
 		Optional<String> sectionNameToBeHexDumped = Optional.empty();
@@ -138,6 +139,7 @@ public final class Main {
 					displayRelocationSections = true;
 					displayVersionSections = true;
 					displayGnuHashSection = true;
+					displayHashSection = true;
 					displaySectionGroups = true;
 					break;
 				case "-l", "--program-headers", "--segments":
@@ -176,6 +178,10 @@ public final class Main {
 					break;
 				case "-V", "--version-info":
 					displayVersionSections = true;
+					break;
+				case "-I", "--histogram":
+					displayGnuHashSection = true;
+					displayHashSection = true;
 					break;
 				case "-x":
 					// --hex-dump=<number|name>
@@ -384,8 +390,18 @@ public final class Main {
 			}
 		}
 
+		final Optional<Section> hash = elf.getSectionByName(".hash");
+		if (displayHashSection) {
+			if (hash.isPresent()) {
+				printHashSection((HashTableSection) hash.orElseThrow());
+			}
+		}
+
 		final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
 		if (displayGnuHashSection) {
+			if (displayHashSection && hash.isPresent()) {
+				out.println();
+			}
 			if (gnuhash.isPresent()) {
 				printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
 			}
@@ -560,22 +576,70 @@ public final class Main {
 		out.println("There are no section groups in this file.");
 	}
 
-	private static void printGnuHashSection(final GnuHashSection s) {
-		out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), s.getBucketsLength());
+	private static void printHashSection(final HashTableSection s) {
+		out.printf("Histogram for bucket list length (total of %d buckets):%n", s.getNumBuckets());
 		out.println(" Length  Number     % of total  Coverage");
 
 		/*
 		 * Reference:
-		 * https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L14861
+		 * https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L14778
 		 */
 		long maxLength = 0L;
 		long nsyms = 0L;
-		final long[] lengths = new long[s.getBucketsLength()];
-		for (long hn = 0L; hn < s.getBucketsLength(); hn++) {
+		final long[] lengths = new long[s.getNumBuckets()];
+		final boolean[] visited = new boolean[s.getNumChains()];
+		for (long hn = 0L; hn < s.getNumBuckets(); hn++) {
+			for (long si = s.getBucket(BitUtils.asInt(hn)); si > 0L; si = s.getChain(BitUtils.asInt(si))) {
+				nsyms++;
+				if (maxLength < ++lengths[BitUtils.asInt(hn)]) {
+					maxLength++;
+				}
+				if (si >= s.getNumChains() || visited[BitUtils.asInt(si)]) {
+					out.println("histogram chain is corrupt");
+					break;
+				}
+				visited[BitUtils.asInt(si)] = true;
+			}
+		}
+
+		final long[] counts = new long[BitUtils.asInt(maxLength + 1L)];
+		for (long hn = 0L; hn < s.getNumBuckets(); hn++) {
+			counts[BitUtils.asInt(lengths[BitUtils.asInt(hn)])]++;
+		}
+
+		if (s.getNumBuckets() > 0) {
+			long nzero_counts = 0L;
+			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], (counts[0] * 100.0) / s.getNumBuckets());
+			for (long i = 1L; i <= maxLength; i++) {
+				nzero_counts += counts[BitUtils.asInt(i)] * i;
+				out.printf(
+						"%7d  %-10d (%5.1f%%)    %5.1f%%%n",
+						i,
+						counts[BitUtils.asInt(i)],
+						(counts[BitUtils.asInt(i)] * 100.0) / s.getNumBuckets(),
+						(nzero_counts * 100.0) / nsyms);
+			}
+		}
+	}
+
+	private static void printGnuHashSection(final GnuHashSection s) {
+		final int nGnuBuckets = s.getBucketsLength();
+
+		out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), nGnuBuckets);
+		out.println(" Length  Number     % of total  Coverage");
+
+		/*
+		 * Reference:
+		 * https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c#L14858
+		 */
+		long maxLength = 0L;
+		long nsyms = 0L;
+		final long[] lengths = new long[nGnuBuckets];
+		for (long hn = 0L; hn < nGnuBuckets; hn++) {
 			if (s.getBucket(BitUtils.asInt(hn)) != 0) {
 				long length = 1L;
 				for (long off = s.getBucket(BitUtils.asInt(hn)) - s.getSymbolTableIndex();
-						off < s.getChainsLength() && ((s.getChain(BitUtils.asInt(off)) & 1) == 0);
+						off < BitUtils.asLong(s.getChainsLength()) && ((s.getChain(BitUtils.asInt(off)) & 1) == 0);
 						off++) {
 					length++;
 				}
@@ -589,21 +653,19 @@ public final class Main {
 		}
 
 		final long[] counts = new long[BitUtils.asInt(maxLength + 1L)];
-		for (long hn = 0L; hn < s.getBucketsLength(); hn++) {
+		for (long hn = 0L; hn < nGnuBuckets; hn++) {
 			counts[BitUtils.asInt(lengths[BitUtils.asInt(hn)])]++;
 		}
 
-		if (s.getBucketsLength() > 0) {
+		if (nGnuBuckets > 0) {
 			long nzero_counts = 0L;
-			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], (counts[0] * 100.0) / s.getBucketsLength());
+			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], (counts[0] * 100.0) / nGnuBuckets);
 			for (long j = 1L; j <= maxLength; j++) {
-				nzero_counts += counts[BitUtils.asInt(j)] * j;
+				final long cj = counts[BitUtils.asInt(j)];
+				nzero_counts += cj * j;
 				out.printf(
 						"%7d  %-10d (%5.1f%%)    %5.1f%%%n",
-						j,
-						counts[BitUtils.asInt(j)],
-						(counts[BitUtils.asInt(j)] * 100.0) / s.getBucketsLength(),
-						(nzero_counts * 100.0) / nsyms);
+						j, cj, (cj * 100.0) / nGnuBuckets, (nzero_counts * 100.0) / nsyms);
 			}
 		}
 	}
@@ -661,7 +723,7 @@ public final class Main {
 			if (i % 4 == 0) {
 				out.printf("  %03x:", i);
 			}
-			final short v = gvs.getVersion(i);
+			short v = gvs.getVersion(i);
 
 			switch (v) {
 				case 0:
@@ -671,11 +733,14 @@ public final class Main {
 					out.print("   1 (*global*)   ");
 					break;
 				default:
-					final String s = String.format(
-							"%4x%c", BitUtils.and(v, VERSYM_VERSION), BitUtils.and(v, VERSYM_HIDDEN) != 0 ? 'h' : ' ');
+					final boolean isHidden = BitUtils.and(v, VERSYM_HIDDEN) != 0;
+					v = BitUtils.and(v, VERSYM_VERSION);
+					final String s = String.format("%4x%c", v, isHidden ? 'h' : ' ');
 					int nn = s.length();
 					out.print(s);
-					final String name = stringTable.getString(gvrs.getVersionNameOffset(v));
+					final String name = (gvrs.getVersionNameOffset(v) >= 0)
+							? stringTable.getString(gvrs.getVersionNameOffset(v))
+							: "";
 					final String s2 = String.format("(%s%-" + Math.max(1, 12 - name.length()) + "s", name, ")");
 					nn += s2.length();
 					out.print(s2);
@@ -865,9 +930,12 @@ public final class Main {
 						|| type == RelocationAddendEntryType.R_X86_64_JUMP_SLOT
 						|| type == RelocationAddendEntryType.R_X86_64_COPY
 						|| type == RelocationAddendEntryType.R_X86_64_IRELATIVE
-						|| type == RelocationAddendEntryType.R_X86_64_64) {
+						|| type == RelocationAddendEntryType.R_X86_64_64
+						|| type == RelocationAddendEntryType.R_X86_64_TPOFF64
+						|| type == RelocationAddendEntryType.R_X86_64_DTPOFF64
+						|| type == RelocationAddendEntryType.R_X86_64_DTPMOD64) {
 					// S
-					if (hasSymbolTable) {
+					if (hasSymbolTable && symbol.nameOffset() != 0) {
 						final String symbolName = symstrtab.getString(symbol.nameOffset());
 						out.printf(
 								"%016x %s%s + %x%n",
@@ -1205,10 +1273,7 @@ public final class Main {
 			final long fileOffset = sh.getFileOffset();
 			final long sectionSize = sh.getSectionSize();
 			final long entrySize = sh.getEntrySize();
-			final String flags = sh.getFlags().stream()
-					.map(SectionHeaderFlags::getId)
-					.collect(Collector.of(
-							StringBuilder::new, StringBuilder::append, StringBuilder::append, StringBuilder::toString));
+			final String flags = sh.getFlags().stream().map(f -> "" + f.getId()).collect(Collectors.joining());
 			final int link = sh.getLinkedSectionIndex();
 			final int info = sh.getInfo();
 			final long alignment = sh.getAlignment();
@@ -1447,6 +1512,7 @@ public final class Main {
 				"                         Dump the contents of section <number|name> as bytes",
 				"  -p --string-dump=<number|name>",
 				"                         Dump the contents of section <number|name> as strings",
+				"  -I --histogram         Display histogram of bucket list lengths",
 				"  -W --wide              Allow output width to exceed 80 characters",
 				"  -T --silent-truncation If a symbol name is truncated, do not add [...] suffix",
 				"  -H --help              Display this information",

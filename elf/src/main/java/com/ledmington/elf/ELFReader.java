@@ -207,7 +207,7 @@ public final class ELFReader {
 			throw new IllegalArgumentException(String.format(
 					"Invalid value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
 					alignment, alignment));
-		} else if ((segmentVirtualAddress % alignment) != (segmentOffset % alignment)) {
+		} else if (alignment != 0 && (segmentVirtualAddress % alignment) != (segmentOffset % alignment)) {
 			throw new IllegalArgumentException(String.format(
 					"Invalid value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
 					segmentVirtualAddress, alignment, segmentOffset, alignment));
@@ -289,11 +289,11 @@ public final class ELFReader {
 	private static Section[] readSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
 		final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
-		final int shstr_offset = (int) sectionHeaderTable[sectionHeaderTable.length - 1].getFileOffset();
+		final int shstrndx = fileHeader.getSectionHeaderStringTableIndex();
+		final int shstr_offset = (int) sectionHeaderTable[shstrndx].getFileOffset();
 		DynamicSection dynamicSection = null;
-		sectionTable[sectionTable.length - 1] =
-				new StringTableSection(".shstrtab", sectionHeaderTable[sectionHeaderTable.length - 1], b);
-		final StringTableSection shstrtab = (StringTableSection) sectionTable[sectionTable.length - 1];
+		sectionTable[shstrndx] = new StringTableSection(".shstrtab", sectionHeaderTable[shstrndx], b);
+		final StringTableSection shstrtab = (StringTableSection) sectionTable[shstrndx];
 
 		// Since some section may require the .dynamic section for correct parsing, we
 		// need to parse that first
