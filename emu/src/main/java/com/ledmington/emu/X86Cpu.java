@@ -160,19 +160,23 @@ public class X86Cpu implements X86Emulator {
 				if (inst.firstOperand() instanceof Register8 r1_8 && inst.secondOperand() instanceof Register8 r2_8) {
 					rf.set(r1_8, BitUtils.xor(rf.get(r1_8), rf.get(r2_8)));
 				} else if (inst.firstOperand() instanceof Register32 r1_32
-						&& inst.secondOperand() instanceof Register8 r2_32) {
+						&& inst.secondOperand() instanceof Register32 r2_32) {
 					rf.set(r1_32, rf.get(r1_32) ^ rf.get(r2_32));
+				} else if (inst.firstOperand() instanceof Register64 r1_64
+						&& inst.secondOperand() instanceof Register64 r2_64) {
+					rf.set(r1_64, rf.get(r1_64) ^ rf.get(r2_64));
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with %s", inst));
 				}
 			}
 			case AND -> {
-				if (inst.firstOperand() instanceof Register64 r64) {
-					final long imm64 = ((Immediate) inst.secondOperand()).asLong();
-					rf.set(r64, rf.get(r64) & imm64);
+				if (inst.firstOperand() instanceof Register64 r1 && inst.secondOperand() instanceof Register64 r2) {
+					rf.set(r1, rf.get(r1) & rf.get(r2));
+				} else if (inst.firstOperand() instanceof Register64 r1
+						&& inst.secondOperand() instanceof Immediate imm) {
+					rf.set(r1, rf.get(r1) & imm.asLong());
 				} else {
-					throw new IllegalArgumentException(
-							String.format("Unknown type of first operand '%s'", inst.firstOperand()));
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s", inst));
 				}
 			}
 			case TEST -> {

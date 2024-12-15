@@ -19,11 +19,15 @@ package com.ledmington.emu;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Arrays;
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
@@ -71,15 +75,61 @@ final class TestExecution {
 		}
 	}
 
-	@Test
-	void add() {
-		final Register64 r1 = Register64.values()[rng.nextInt(0, Register64.values().length)];
-		final Register64 r2 = Register64.values()[rng.nextInt(0, Register64.values().length)];
+	private static Stream<Arguments> pairs() {
+		return Arrays.stream(Register64.values())
+				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs")
+	void add(final Register64 r1, final Register64 r2) {
 		final long oldValue1 = cpu.getRegisters().get(r1);
 		final long oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(r1, oldValue1 + oldValue2);
 		cpu.executeOne(new Instruction(Opcode.ADD, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs")
+	void sub(final Register64 r1, final Register64 r2) {
+		final long oldValue1 = cpu.getRegisters().get(r1);
+		final long oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(r1, oldValue1 - oldValue2);
+		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs")
+	void xor(final Register64 r1, final Register64 r2) {
+		final long oldValue1 = cpu.getRegisters().get(r1);
+		final long oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(r1, oldValue1 ^ oldValue2);
+		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs")
+	void and(final Register64 r1, final Register64 r2) {
+		final long oldValue1 = cpu.getRegisters().get(r1);
+		final long oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(r1, oldValue1 & oldValue2);
+		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
