@@ -24,52 +24,52 @@ public enum RFlags {
 	ID(21, "ID"),
 
 	/** Virtual Interrupt Pending (VIP). System flag. */
-	VirtualInterruptPending(20, "VIP"),
+	VIRTUAL_INTERRUPT_PENDING(20, "VIP"),
 
 	/** Virtual Interrupt Flag (VIF). System flag. */
-	VirtualInterrupt(19, "VIF"),
+	VIRTUAL_INTERRUPT(19, "VIF"),
 
 	/** Alignment Check / Access Control (AC). System flag. */
-	AlignmentCheck(18, "AC"),
+	ALIGNMENT_CHECK(18, "AC"),
 
 	/** Virtual-8068 Mode (VM). System flag. */
-	Virtual8086Mode(17, "VM"),
+	VIRTUAL_8086_MODE(17, "VM"),
 
 	/** Resume Flag (RF). System flag. */
-	Resume(16, "RF"),
+	RESUME(16, "RF"),
 
 	/** Nested Task (NT). System flag. */
-	NestedTask(14, "NT"),
+	NESTED_TASK(14, "NT"),
 
 	/** I/O Privilege Level (IOPL). System flag. */
-	IOPrivilegeLevel(12, "IOPL"),
+	IO_PRIVILEGE_LEVEL(12, "IOPL"),
 
 	/** Overflow Flag (OF). Status flag. */
-	Overflow(11, "OF"),
+	OVERFLOW(11, "OF"),
 
 	/** Direction Flag (DF). Control flag. */
-	Direction(10, "DF"),
+	DIRECTION(10, "DF"),
 
 	/** Interrupt Enable Flag (IF). System flag. */
-	InterruptEnable(9, "IF"),
+	INTERRUPT_ENABLE(9, "IF"),
 
 	/** Trap Flag (TF). System flag. */
-	Trap(8, "TF"),
+	TRAP(8, "TF"),
 
 	/** Sign Flag (SF). Status flag. */
-	Sign(7, "SF"),
+	SIGN(7, "SF"),
 
 	/** Zero Flag (ZF). Status flag. */
-	Zero(6, "ZF"),
+	ZERO(6, "ZF"),
 
 	/** Auxiliary Carry Flag (AF). Status flag. */
-	AuxiliaryCarry(4, "AF"),
+	AUXILIARY_CARRY(4, "AF"),
 
 	/** Parity Flag (PF). Status flag. */
-	Parity(2, "PF"),
+	PARITY(2, "PF"),
 
 	/** Carry Flag (CF). Status flag. */
-	Carry(0, "CF");
+	CARRY(0, "CF");
 
 	private final int bitIndex;
 	private final String symbol;

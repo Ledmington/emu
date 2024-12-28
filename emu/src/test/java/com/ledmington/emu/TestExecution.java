@@ -25,6 +25,7 @@ import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -80,18 +81,22 @@ final class TestExecution {
 				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
 	}
 
-	@ParameterizedTest
-	@MethodSource("pairs")
-	void add(final Register64 r1, final Register64 r2) {
-		final long oldValue1 = cpu.getRegisters().get(r1);
-		final long oldValue2 = cpu.getRegisters().get(r2);
-		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-		expected.set(r1, oldValue1 + oldValue2);
-		cpu.executeOne(new Instruction(Opcode.ADD, r1, r2));
-		assertEquals(
-				expected,
-				cpu.getRegisters(),
-				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	@Test
+	void add() {
+		for (final Register64 a : Register64.values()) {
+			for (final Register64 b : Register64.values()) {
+				final long oldValue1 = cpu.getRegisters().get(a);
+				final long oldValue2 = cpu.getRegisters().get(b);
+				final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+				expected.set(a, oldValue1 + oldValue2);
+				cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+				assertEquals(
+						expected,
+						cpu.getRegisters(),
+						() -> String.format(
+								"Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+			}
+		}
 	}
 
 	@ParameterizedTest

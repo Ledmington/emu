@@ -106,7 +106,9 @@ public class X86Cpu implements X86Emulator {
 								case Immediate imm -> imm.asLong();
 								default -> throw new IllegalArgumentException();
 							};
-					rf.set(op1, r1 - r2);
+					final long result = r1 - r2;
+					rf.set(op1, result);
+					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SUB has %,d bits", ((Register) inst.firstOperand()).bits()));
@@ -122,13 +124,17 @@ public class X86Cpu implements X86Emulator {
 							default -> throw new IllegalArgumentException(
 									String.format("Unknown second argument type %s", inst.secondOperand()));
 						};
-				rf.set(op1, r1 + r2);
+				final long result = r1 + r2;
+				rf.set(op1, result);
+				rf.set(RFlags.ZERO, result == 0L);
 			}
 			case SHR -> {
 				if (inst.firstOperand() instanceof Register64) {
 					final long r1 = rf.get((Register64) inst.firstOperand());
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
-					rf.set((Register64) inst.firstOperand(), r1 >>> imm);
+					final long result = r1 >>> imm;
+					rf.set((Register64) inst.firstOperand(), result);
+					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SHR has %,d bits", ((Register) inst.firstOperand()).bits()));
@@ -140,7 +146,7 @@ public class X86Cpu implements X86Emulator {
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
 					final long result = r1 >> imm;
 					rf.set(op1, result);
-					rf.set(RFlags.Zero, result == 0L);
+					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SAR has %,d bits", ((Register) inst.firstOperand()).bits()));
@@ -150,7 +156,9 @@ public class X86Cpu implements X86Emulator {
 				if (inst.firstOperand() instanceof Register64) {
 					final long r1 = rf.get((Register64) inst.firstOperand());
 					final byte imm = rf.get((Register8) inst.secondOperand());
-					rf.set((Register64) inst.firstOperand(), r1 << imm);
+					final long result = r1 << imm;
+					rf.set((Register64) inst.firstOperand(), result);
+					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SHL has %,d bits", ((Register) inst.firstOperand()).bits()));
@@ -182,7 +190,7 @@ public class X86Cpu implements X86Emulator {
 			case TEST -> {
 				final long r1 = rf.get((Register64) inst.firstOperand());
 				final long r2 = rf.get((Register64) inst.secondOperand());
-				rf.set(RFlags.Zero, (r1 & r2) == 0L);
+				rf.set(RFlags.ZERO, (r1 & r2) == 0L);
 			}
 			case JMP -> {
 				final long offset = (inst.firstOperand() instanceof Register64)
@@ -191,7 +199,7 @@ public class X86Cpu implements X86Emulator {
 				instFetch.setPosition(instFetch.getPosition() + offset);
 			}
 			case JE -> {
-				if (rf.isSet(RFlags.Zero)) {
+				if (rf.isSet(RFlags.ZERO)) {
 					instFetch.setPosition(instFetch.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
 				}
 			}
