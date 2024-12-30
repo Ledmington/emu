@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.ledmington.cpu.x86.Immediate;
@@ -97,16 +98,16 @@ public final class ELFLoader {
 					(ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(),
 					cpu,
 					baseAddress,
-					(SymbolTableSection) elf.getSectionByName(".symtab").orElseThrow(),
-					(StringTableSection) elf.getSectionByName(".strtab").orElseThrow());
+					elf.getSectionByName(".symtab"),
+					elf.getSectionByName(".strtab"));
 		}
 		if (elf.getSectionByName(".init").isPresent()) {
 			runInit(
 					(BasicProgBitsSection) elf.getSectionByName(".init").orElseThrow(),
 					cpu,
 					baseAddress,
-					(SymbolTableSection) elf.getSectionByName(".symtab").orElseThrow(),
-					(StringTableSection) elf.getSectionByName(".strtab").orElseThrow());
+					elf.getSectionByName(".symtab"),
+					elf.getSectionByName(".strtab"));
 		}
 		if (elf.getSectionByName(".ctors").isPresent()) {
 			runCtors();
@@ -144,14 +145,20 @@ public final class ELFLoader {
 			final ConstructorsSection initArray,
 			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
-			final SymbolTableSection symtab,
-			final StringTableSection strtab) {
+			final Optional<Section> symtab,
+			final Optional<Section> strtab) {
 		logger.debug("Running %,d constructor(s) from .init_array", initArray.getNumConstructors());
 		for (int i = 0; i < initArray.getNumConstructors(); i++) {
 			final long c = initArray.getConstructor(i);
-			final String ctorName =
-					strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
-			logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
+			if (symtab.isPresent() && strtab.isPresent()) {
+				final String ctorName = ((StringTableSection) strtab.orElseThrow())
+						.getString(((SymbolTableSection) symtab.orElseThrow())
+								.getSymbolWithValue(c)
+								.nameOffset());
+				logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
+			} else {
+				logger.debug("Running .init_array[%d] = %,d (0x%016x)", i, c, c);
+			}
 			runFrom(cpu, entryPointVirtualAddress + c);
 		}
 	}
@@ -160,17 +167,34 @@ public final class ELFLoader {
 			final BasicProgBitsSection init,
 			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
-			final SymbolTableSection symtab,
-			final StringTableSection strtab) {
+			final Optional<Section> symtab,
+			final Optional<Section> strtab) {
+		// FIXME: can we just run code in .init like this or do we need to find actual FUNC symbols in it?
 		final long sectionStart = entryPointVirtualAddress + init.getHeader().getFileOffset();
 		final long sectionEnd = sectionStart + init.getHeader().getSectionSize();
-		for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
-			final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
-			final long start = entryPointVirtualAddress + ste.value();
-			if (ste.info().getType() == SymbolTableEntryType.STT_FUNC && start >= sectionStart && start < sectionEnd) {
-				logger.debug("Running constructor '%s' from .init", strtab.getString(ste.nameOffset()));
-				runFrom(cpu, start);
+
+		if (symtab.isPresent()) {
+			final SymbolTableSection sts = (SymbolTableSection) symtab.orElseThrow();
+			for (int i = 0; i < sts.getSymbolTableLength(); i++) {
+				final SymbolTableEntry ste = sts.getSymbolTableEntry(i);
+				final long start = sectionStart + ste.value();
+
+				if (ste.info().getType() == SymbolTableEntryType.STT_FUNC
+						&& start >= sectionStart
+						&& start < sectionEnd) {
+					if (strtab.isPresent()) {
+						logger.debug(
+								"Running constructor '%s' from .init",
+								((StringTableSection) strtab.orElseThrow()).getString(ste.nameOffset()));
+					} else {
+						logger.debug("Running constructor from .init");
+					}
+					runFrom(cpu, start);
+				}
 			}
+		} else {
+			logger.debug("Running constructor from .init");
+			runFrom(cpu, sectionStart);
 		}
 	}
 

@@ -20,6 +20,7 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.HashUtils;
 
 /**
  * This class maps the following cases:
@@ -43,7 +44,7 @@ public final class IndirectOperand implements Operand {
 	private final Register reg1;
 	private final int constant;
 	private final Register reg2;
-	private final Long displacement;
+	private final long displacement;
 	private final DisplacementType displacementType;
 	private final PointerSize ptrSize;
 
@@ -60,7 +61,7 @@ public final class IndirectOperand implements Operand {
 			final Register reg1,
 			final Register reg2,
 			final int constant,
-			final Long displacement,
+			final long displacement,
 			final DisplacementType displacementType,
 			final PointerSize ptrSize) {
 		this.reg1 = reg1;
@@ -150,7 +151,7 @@ public final class IndirectOperand implements Operand {
 			sb.append('*').append(constant);
 			shouldAddSign = true;
 		}
-		if (displacement != null) {
+		if (displacement != 0L) {
 			long d = displacement;
 			if (displacement < 0) {
 				d = switch (displacementType) {
@@ -172,11 +173,11 @@ public final class IndirectOperand implements Operand {
 	@Override
 	public String toString() {
 		return "IndirectOperand(reg1="
-				+ ((reg1 == null) ? "null" : reg1.toString())
+				+ (reg1 == null ? "null" : reg1.toString())
 				+ ";reg2="
 				+ reg2.toString() + ";constant="
 				+ constant + ";displacement="
-				+ (displacement == null ? "null" : displacement.toString()) + ";displacementType=" + displacementType
+				+ displacement + ";displacementType=" + displacementType
 				+ ";ptrSize=" + ptrSize
 				+ ")";
 	}
@@ -187,7 +188,7 @@ public final class IndirectOperand implements Operand {
 		h = 31 * h + reg1.hashCode();
 		h = 31 * h + constant;
 		h = 31 * h + reg2.hashCode();
-		h = 31 * h + displacement.hashCode();
+		h = 31 * h + HashUtils.hash(displacement);
 		h = 31 * h + displacementType.hashCode();
 		h = 31 * h + ptrSize.hashCode();
 		return h;
@@ -208,7 +209,7 @@ public final class IndirectOperand implements Operand {
 		return this.reg1.equals(io.reg1)
 				&& this.constant == io.constant
 				&& this.reg2.equals(io.reg2)
-				&& this.displacement.equals(io.displacement)
+				&& this.displacement == io.displacement
 				&& this.displacementType.equals(io.displacementType)
 				&& this.ptrSize.equals(io.ptrSize);
 	}

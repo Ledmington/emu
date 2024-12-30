@@ -115,18 +115,28 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case ADD -> {
-				final Register64 op1 = (Register64) inst.firstOperand();
-				final long r1 = rf.get(op1);
-				final long r2 =
-						switch (inst.secondOperand()) {
-							case Register64 op2 -> rf.get(op2);
-							case Immediate imm -> imm.asLong();
-							default -> throw new IllegalArgumentException(
-									String.format("Unknown second argument type %s", inst.secondOperand()));
-						};
-				final long result = r1 + r2;
-				rf.set(op1, result);
-				rf.set(RFlags.ZERO, result == 0L);
+				if (inst.firstOperand() instanceof IndirectOperand iop) {
+					final long address = computeIndirectOperand(rf, iop);
+					final Register8 op2 = (Register8) inst.secondOperand();
+					final byte r1 = mem.read(address);
+					final byte r2 = rf.get(op2);
+					final byte result = BitUtils.asByte(r1 + r2);
+					mem.write(address, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else {
+					final Register64 op1 = (Register64) inst.firstOperand();
+					final long r1 = rf.get(op1);
+					final long r2 =
+							switch (inst.secondOperand()) {
+								case Register64 op2 -> rf.get(op2);
+								case Immediate imm -> imm.asLong();
+								default -> throw new IllegalArgumentException(
+										String.format("Unknown second argument type %s", inst.secondOperand()));
+							};
+					final long result = r1 + r2;
+					rf.set(op1, result);
+					rf.set(RFlags.ZERO, result == 0L);
+				}
 			}
 			case SHR -> {
 				if (inst.firstOperand() instanceof Register64) {

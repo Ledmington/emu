@@ -184,7 +184,13 @@ public final class IndirectOperandBuilder {
 								+ (displacement == null ? "no displacement" : "displacement=" + displacement));
 			}
 
-			return new IndirectOperand(baseRegister, indexRegister, c, displacement, displacementType, ptrSize);
+			return new IndirectOperand(
+					baseRegister,
+					indexRegister,
+					c,
+					displacement == null ? 0L : displacement,
+					displacementType,
+					ptrSize);
 		} else {
 			if (c != DEFAULT_CONSTANT) {
 				if (indexRegister == null) {
@@ -193,7 +199,8 @@ public final class IndirectOperandBuilder {
 									+ (displacement == null ? "no displacement" : "displacement=" + displacement));
 				}
 
-				return new IndirectOperand(null, indexRegister, c, displacement, displacementType, ptrSize);
+				return new IndirectOperand(
+						null, indexRegister, c, displacement == null ? 0L : displacement, displacementType, ptrSize);
 			} else {
 				if (indexRegister == null && displacement == null) {
 					throw new IllegalArgumentException(
@@ -201,7 +208,13 @@ public final class IndirectOperandBuilder {
 				}
 
 				if (indexRegister != null) {
-					return new IndirectOperand(null, indexRegister, 1, displacement, displacementType, ptrSize);
+					return new IndirectOperand(
+							null,
+							indexRegister,
+							1,
+							displacement == null ? 0L : displacement,
+							displacementType,
+							ptrSize);
 				} else {
 					// [displacement]
 					return new IndirectOperand(null, null, 1, displacement, displacementType, ptrSize);
