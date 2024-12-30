@@ -1096,7 +1096,7 @@ public final class Main {
 							out.print("<None>");
 						}
 						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
-								.map(t -> t.getDescription())
+								.map(GnuPropertyType::getDescription)
 								.collect(Collectors.joining(", ")));
 					}
 					out.println();
@@ -1115,7 +1115,7 @@ public final class Main {
 							out.print("<None>");
 						}
 						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
-								.map(t -> t.getDescription())
+								.map(GnuPropertyType::getDescription)
 								.collect(Collectors.joining(", ")));
 					}
 					out.println();
@@ -1134,7 +1134,7 @@ public final class Main {
 							out.print("<None>");
 						}
 						out.print(GnuPropertyType.decodeX86ISAFeature1(bitmask).stream()
-								.map(t -> t.getDescription())
+								.map(GnuPropertyType::getDescription)
 								.collect(Collectors.joining(", ")));
 					}
 					out.print(wide ? ", " : "\n");
@@ -1153,7 +1153,7 @@ public final class Main {
 							out.print("<None>");
 						}
 						out.print(GnuPropertyType.decodeX86ISAFeature2(bitmask).stream()
-								.map(t -> t.getDescription())
+								.map(GnuPropertyType::getDescription)
 								.collect(Collectors.joining(", ")));
 					}
 					out.print(wide ? ", " : "\n");
