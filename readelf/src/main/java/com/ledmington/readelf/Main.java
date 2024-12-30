@@ -1080,9 +1080,27 @@ public final class Main {
 			final int datasz = robb.read4();
 			switch (type) {
 				case GNU_PROPERTY_NO_COPY_ON_PROTECTED,
-						GNU_PROPERTY_STACK_SIZE,
-						GNU_PROPERTY_X86_ISA_1_USED -> throw new UnsupportedOperationException(
+						GNU_PROPERTY_STACK_SIZE -> throw new UnsupportedOperationException(
 						"Unimplemented case: " + type);
+				case GNU_PROPERTY_X86_ISA_1_USED -> {
+					final long expectedBytes = 8L;
+					if (robb.getPosition() > expectedBytes) {
+						out.print(wide ? "" : "\t");
+					}
+					out.print("x86 ISA used: ");
+					if (datasz != expectedDataSize) {
+						out.printf("<corrupt length: %x> ", datasz);
+					} else {
+						int bitmask = robb.read4();
+						if (bitmask == 0) {
+							out.print("<None>");
+						}
+						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
+								.map(t -> t.getDescription())
+								.collect(Collectors.joining(", ")));
+					}
+					out.println();
+				}
 				case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
 					final long expectedBytes = 8L;
 					if (robb.getPosition() > expectedBytes) {
@@ -1096,20 +1114,9 @@ public final class Main {
 						if (bitmask == 0) {
 							out.print("<None>");
 						}
-						while (bitmask != 0) {
-							final int bit = bitmask & (-bitmask);
-							bitmask &= (~bit);
-							switch (bit) {
-								case 1 -> out.print("x86-64-baseline");
-								case 2 -> out.print("x86-64-v2");
-								case 4 -> out.print("x86-64-v3");
-								case 8 -> out.print("x86-64-v4");
-								default -> out.printf("<unknown: %x>", bit);
-							}
-							if (bitmask != 0) {
-								out.print(", ");
-							}
-						}
+						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
+								.map(t -> t.getDescription())
+								.collect(Collectors.joining(", ")));
 					}
 					out.println();
 				}
@@ -1126,20 +1133,28 @@ public final class Main {
 						if (bitmask == 0) {
 							out.print("<None>");
 						}
-						while (bitmask != 0) {
-							final int bit = bitmask & (-bitmask);
-							bitmask &= (~bit);
-							switch (bit) {
-								case 1 -> out.print("IBT");
-								case 2 -> out.print("SHSTK");
-								case 4 -> out.print("LAM_U48");
-								case 8 -> out.print("LAM_U57");
-								default -> out.printf("<unknown: %x>", bit);
-							}
-							if (bitmask != 0) {
-								out.print(", ");
-							}
+						out.print(GnuPropertyType.decodeX86ISAFeature1(bitmask).stream()
+								.map(t -> t.getDescription())
+								.collect(Collectors.joining(", ")));
+					}
+					out.print(wide ? ", " : "\n");
+				}
+				case GNU_PROPERTY_X86_FEATURE_2_USED -> {
+					final long expectedBytes = 8L;
+					if (robb.getPosition() > expectedBytes) {
+						out.print(wide ? "" : "\t");
+					}
+					out.print("x86 feature: ");
+					if (datasz != expectedDataSize) {
+						out.printf("<corrupt length: %x> ", datasz);
+					} else {
+						int bitmask = robb.read4();
+						if (bitmask == 0) {
+							out.print("<None>");
 						}
+						out.print(GnuPropertyType.decodeX86ISAFeature2(bitmask).stream()
+								.map(t -> t.getDescription())
+								.collect(Collectors.joining(", ")));
 					}
 					out.print(wide ? ", " : "\n");
 				}
