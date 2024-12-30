@@ -151,7 +151,7 @@ public final class Main {
 
 			switch (arg) {
 				case shortHelpFlag, longHelpFlag -> {
-					out.print(String.join(
+					out.println(String.join(
 							"\n",
 							"",
 							" emu - CPU emulator",
