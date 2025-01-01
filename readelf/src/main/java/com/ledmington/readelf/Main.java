@@ -591,7 +591,8 @@ public final class Main {
 		for (long hn = 0L; hn < s.getNumBuckets(); hn++) {
 			for (long si = s.getBucket(BitUtils.asInt(hn)); si > 0L; si = s.getChain(BitUtils.asInt(si))) {
 				nsyms++;
-				if (maxLength < ++lengths[BitUtils.asInt(hn)]) {
+				++lengths[BitUtils.asInt(hn)];
+				if (maxLength < lengths[BitUtils.asInt(hn)]) {
 					maxLength++;
 				}
 				if (si >= s.getNumChains() || visited[BitUtils.asInt(si)]) {
@@ -1064,6 +1065,14 @@ public final class Main {
 		out.printf("    Arguments: %s%n", arguments);
 	}
 
+	private static void corruptLength(final int datasz) {
+		out.printf("<corrupt length: %x> ", datasz);
+	}
+
+	private static void none() {
+		out.print("<None>");
+	}
+
 	private static void printGNUProperties(final NoteSectionEntry nse) {
 		final int expectedDataSize = 4;
 		final byte[] v = new byte[nse.getDescriptionLength()];
@@ -1079,9 +1088,6 @@ public final class Main {
 			final GnuPropertyType type = GnuPropertyType.fromCode(code);
 			final int datasz = robb.read4();
 			switch (type) {
-				case GNU_PROPERTY_NO_COPY_ON_PROTECTED,
-						GNU_PROPERTY_STACK_SIZE -> throw new UnsupportedOperationException(
-						"Unimplemented case: " + type);
 				case GNU_PROPERTY_X86_ISA_1_USED -> {
 					final long expectedBytes = 8L;
 					if (robb.getPosition() > expectedBytes) {
@@ -1089,11 +1095,11 @@ public final class Main {
 					}
 					out.print("x86 ISA used: ");
 					if (datasz != expectedDataSize) {
-						out.printf("<corrupt length: %x> ", datasz);
+						corruptLength(datasz);
 					} else {
 						int bitmask = robb.read4();
 						if (bitmask == 0) {
-							out.print("<None>");
+							none();
 						}
 						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
 								.map(GnuPropertyType::getDescription)
@@ -1108,11 +1114,11 @@ public final class Main {
 					}
 					out.print("x86 ISA needed: ");
 					if (datasz != expectedDataSize) {
-						out.printf("<corrupt length: %x> ", datasz);
+						corruptLength(datasz);
 					} else {
 						int bitmask = robb.read4();
 						if (bitmask == 0) {
-							out.print("<None>");
+							none();
 						}
 						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
 								.map(GnuPropertyType::getDescription)
@@ -1127,11 +1133,11 @@ public final class Main {
 					}
 					out.print("x86 feature: ");
 					if (datasz != expectedDataSize) {
-						out.printf("<corrupt length: %x> ", datasz);
+						corruptLength(datasz);
 					} else {
 						int bitmask = robb.read4();
 						if (bitmask == 0) {
-							out.print("<None>");
+							none();
 						}
 						out.print(GnuPropertyType.decodeX86ISAFeature1(bitmask).stream()
 								.map(GnuPropertyType::getDescription)
@@ -1146,11 +1152,11 @@ public final class Main {
 					}
 					out.print("x86 feature: ");
 					if (datasz != expectedDataSize) {
-						out.printf("<corrupt length: %x> ", datasz);
+						corruptLength(datasz);
 					} else {
 						int bitmask = robb.read4();
 						if (bitmask == 0) {
-							out.print("<None>");
+							none();
 						}
 						out.print(GnuPropertyType.decodeX86ISAFeature2(bitmask).stream()
 								.map(GnuPropertyType::getDescription)
@@ -1158,6 +1164,7 @@ public final class Main {
 					}
 					out.print(wide ? ", " : "\n");
 				}
+				default -> throw new IllegalArgumentException(String.format("Unknown GNU property type '%s'.", type));
 			}
 
 			// skipping 4 bytes for alignment
@@ -1288,40 +1295,27 @@ public final class Main {
 			final long fileOffset = sh.getFileOffset();
 			final long sectionSize = sh.getSectionSize();
 			final long entrySize = sh.getEntrySize();
-			final String flags = sh.getFlags().stream().map(f -> "" + f.getId()).collect(Collectors.joining());
+			final String flags =
+					sh.getFlags().stream().map(f -> String.valueOf(f.getId())).collect(Collectors.joining());
 			final int link = sh.getLinkedSectionIndex();
 			final int info = sh.getInfo();
 			final long alignment = sh.getAlignment();
 
-			if (wide) {
-				out.printf(
-						"  [%2d] %-17s %-15s %016x %06x %06x %02x %3s %2d %3d %2d%n",
-						i,
-						name,
-						typeName,
-						virtualAddress,
-						fileOffset,
-						sectionSize,
-						entrySize,
-						flags,
-						link,
-						info,
-						alignment);
-			} else {
-				out.printf(
-						"  [%2d] %-17s %-16s %016x  %08x%n       %016x  %016x %3s    %4d  %4d     %d%n",
-						i,
-						name,
-						typeName,
-						virtualAddress,
-						fileOffset,
-						sectionSize,
-						entrySize,
-						flags,
-						link,
-						info,
-						alignment);
-			}
+			out.printf(
+					wide
+							? "  [%2d] %-17s %-15s %016x %06x %06x %02x %3s %2d %3d %2d%n"
+							: "  [%2d] %-17s %-16s %016x  %08x%n       %016x  %016x %3s    %4d  %4d     %d%n",
+					i,
+					name,
+					typeName,
+					virtualAddress,
+					fileOffset,
+					sectionSize,
+					entrySize,
+					flags,
+					link,
+					info,
+					alignment);
 		}
 
 		out.println(String.join(

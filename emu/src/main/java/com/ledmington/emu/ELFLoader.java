@@ -93,21 +93,28 @@ public final class ELFLoader {
 		if (elf.getSectionByName(".preinit_array").isPresent()) {
 			runPreInitArray();
 		}
-		if (elf.getSectionByName(".init_array").isPresent()) {
+
+		final Optional<Section> symtab = elf.getSectionByName(".symtab");
+		final Optional<Section> strtab = elf.getSectionByName(".strtab");
+
+		final Optional<Section> initArray = elf.getSectionByName(".init_array");
+		if (initArray.isPresent()) {
 			runInitArray(
-					(ConstructorsSection) elf.getSectionByName(".init_array").orElseThrow(),
+					(ConstructorsSection) initArray.orElseThrow(),
 					cpu,
 					baseAddress,
-					elf.getSectionByName(".symtab"),
-					elf.getSectionByName(".strtab"));
+					symtab.isPresent() ? (SymbolTableSection) symtab.orElseThrow() : null,
+					strtab.isPresent() ? (StringTableSection) strtab.orElseThrow() : null);
 		}
-		if (elf.getSectionByName(".init").isPresent()) {
+
+		final Optional<Section> init = elf.getSectionByName(".init");
+		if (init.isPresent()) {
 			runInit(
-					(BasicProgBitsSection) elf.getSectionByName(".init").orElseThrow(),
+					(BasicProgBitsSection) init.orElseThrow(),
 					cpu,
 					baseAddress,
-					elf.getSectionByName(".symtab"),
-					elf.getSectionByName(".strtab"));
+					symtab.isPresent() ? (SymbolTableSection) symtab.orElseThrow() : null,
+					strtab.isPresent() ? (StringTableSection) strtab.orElseThrow() : null);
 		}
 		if (elf.getSectionByName(".ctors").isPresent()) {
 			runCtors();
@@ -145,16 +152,14 @@ public final class ELFLoader {
 			final ConstructorsSection initArray,
 			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
-			final Optional<Section> symtab,
-			final Optional<Section> strtab) {
+			final SymbolTableSection symtab,
+			final StringTableSection strtab) {
 		logger.debug("Running %,d constructor(s) from .init_array", initArray.getNumConstructors());
 		for (int i = 0; i < initArray.getNumConstructors(); i++) {
 			final long c = initArray.getConstructor(i);
-			if (symtab.isPresent() && strtab.isPresent()) {
-				final String ctorName = ((StringTableSection) strtab.orElseThrow())
-						.getString(((SymbolTableSection) symtab.orElseThrow())
-								.getSymbolWithValue(c)
-								.nameOffset());
+			if (symtab != null && strtab != null) {
+				final String ctorName =
+						strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
 				logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
 			} else {
 				logger.debug("Running .init_array[%d] = %,d (0x%016x)", i, c, c);
@@ -167,25 +172,22 @@ public final class ELFLoader {
 			final BasicProgBitsSection init,
 			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
-			final Optional<Section> symtab,
-			final Optional<Section> strtab) {
+			final SymbolTableSection symtab,
+			final StringTableSection strtab) {
 		// FIXME: can we just run code in .init like this or do we need to find actual FUNC symbols in it?
 		final long sectionStart = entryPointVirtualAddress + init.getHeader().getFileOffset();
 		final long sectionEnd = sectionStart + init.getHeader().getSectionSize();
 
-		if (symtab.isPresent()) {
-			final SymbolTableSection sts = (SymbolTableSection) symtab.orElseThrow();
-			for (int i = 0; i < sts.getSymbolTableLength(); i++) {
-				final SymbolTableEntry ste = sts.getSymbolTableEntry(i);
+		if (symtab != null) {
+			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
 				final long start = sectionStart + ste.value();
 
 				if (ste.info().getType() == SymbolTableEntryType.STT_FUNC
 						&& start >= sectionStart
 						&& start < sectionEnd) {
-					if (strtab.isPresent()) {
-						logger.debug(
-								"Running constructor '%s' from .init",
-								((StringTableSection) strtab.orElseThrow()).getString(ste.nameOffset()));
+					if (strtab != null) {
+						logger.debug("Running constructor '%s' from .init", strtab.getString(ste.nameOffset()));
 					} else {
 						logger.debug("Running constructor from .init");
 					}

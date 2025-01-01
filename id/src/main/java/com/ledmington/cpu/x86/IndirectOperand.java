@@ -151,7 +151,8 @@ public final class IndirectOperand implements Operand {
 			sb.append('*').append(constant);
 			shouldAddSign = true;
 		}
-		if (displacement != 0L) {
+		final long defaultDisplacement = 0L;
+		if (displacement != defaultDisplacement) {
 			long d = displacement;
 			if (displacement < 0) {
 				d = switch (displacementType) {

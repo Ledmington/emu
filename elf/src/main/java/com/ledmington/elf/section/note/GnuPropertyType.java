@@ -200,11 +200,12 @@ public enum GnuPropertyType {
 		throw new IllegalArgumentException(String.format("Unknown GNU property type code %d (0x%08x)", code, code));
 	}
 
-	public static List<GnuPropertyType> decodeX86ISA(int code) {
+	public static List<GnuPropertyType> decodeX86ISA(final int code) {
 		final List<GnuPropertyType> codes = new ArrayList<>();
-		while (code != 0) {
-			final int bit = code & (-code);
-			code &= ~bit;
+		int bitmask = code;
+		while (bitmask != 0) {
+			final int bit = bitmask & (-bitmask);
+			bitmask &= ~bit;
 			if (bit == GNU_PROPERTY_X86_ISA_1_BASELINE.getCode()) {
 				codes.add(GNU_PROPERTY_X86_ISA_1_BASELINE);
 			} else if (bit == GNU_PROPERTY_X86_ISA_1_V2.getCode()) {
@@ -214,17 +215,19 @@ public enum GnuPropertyType {
 			} else if (bit == GNU_PROPERTY_X86_ISA_1_V4.getCode()) {
 				codes.add(GNU_PROPERTY_X86_ISA_1_V4);
 			} else {
-				throw new IllegalArgumentException(String.format("Unknown code: %d (0x%08x)", code, code));
+				throw new IllegalArgumentException(
+						String.format("Unknown bit %d (0x%08x) in code %d (0x%08x).", bit, bit, code, code));
 			}
 		}
 		return Collections.unmodifiableList(codes);
 	}
 
-	public static List<GnuPropertyType> decodeX86ISAFeature1(int code) {
+	public static List<GnuPropertyType> decodeX86ISAFeature1(final int code) {
 		final List<GnuPropertyType> codes = new ArrayList<>();
-		while (code != 0) {
-			final int bit = code & (-code);
-			code &= ~bit;
+		int bitmask = code;
+		while (bitmask != 0) {
+			final int bit = bitmask & (-bitmask);
+			bitmask &= ~bit;
 			if (bit == GNU_PROPERTY_X86_FEATURE_1_IBT.getCode()) {
 				codes.add(GNU_PROPERTY_X86_FEATURE_1_IBT);
 			} else if (bit == GNU_PROPERTY_X86_FEATURE_1_SHSTK.getCode()) {
@@ -234,17 +237,19 @@ public enum GnuPropertyType {
 			} else if (bit == GNU_PROPERTY_X86_FEATURE_1_LAM_U57.getCode()) {
 				codes.add(GNU_PROPERTY_X86_FEATURE_1_LAM_U57);
 			} else {
-				throw new IllegalArgumentException(String.format("Unknown code: %d (0x%08x)", code, code));
+				throw new IllegalArgumentException(
+						String.format("Unknown bit %d (0x%08x) in code %d (0x%08x).", bit, bit, code, code));
 			}
 		}
 		return Collections.unmodifiableList(codes);
 	}
 
-	public static List<GnuPropertyType> decodeX86ISAFeature2(int code) {
+	public static List<GnuPropertyType> decodeX86ISAFeature2(final int code) {
 		final List<GnuPropertyType> codes = new ArrayList<>();
-		while (code != 0) {
-			final int bit = code & (-code);
-			code &= ~bit;
+		int bitmask = code;
+		while (bitmask != 0) {
+			final int bit = bitmask & (-bitmask);
+			bitmask &= ~bit;
 			if (bit == GNU_PROPERTY_X86_FEATURE_2_X86.getCode()) {
 				codes.add(GNU_PROPERTY_X86_FEATURE_2_X86);
 			} else if (bit == GNU_PROPERTY_X86_FEATURE_2_X87.getCode()) {
@@ -270,7 +275,8 @@ public enum GnuPropertyType {
 			} else if (bit == GNU_PROPERTY_X86_FEATURE_2_XSAVEC.getCode()) {
 				codes.add(GNU_PROPERTY_X86_FEATURE_2_XSAVEC);
 			} else {
-				throw new IllegalArgumentException(String.format("Unknown code: %d (0x%08x)", code, code));
+				throw new IllegalArgumentException(
+						String.format("Unknown bit %d (0x%08x) in code %d (0x%08x).", bit, bit, code, code));
 			}
 		}
 		return Collections.unmodifiableList(codes);
