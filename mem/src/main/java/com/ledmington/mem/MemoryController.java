@@ -34,6 +34,7 @@ public final class MemoryController implements Memory {
 
 	// TODO: this seems like a poor design choice
 	private final boolean breakOnWrongPermissions;
+	private final boolean breakWhenReadingUninitializedMemory;
 
 	/**
 	 * Creates a MemoryController with the given initializer.
@@ -43,9 +44,13 @@ public final class MemoryController implements Memory {
 	 *     with the wrong permissions.
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
-	public MemoryController(final Memory memory, final boolean breakOnWrongPermissions) {
+	public MemoryController(
+			final Memory memory,
+			final boolean breakOnWrongPermissions,
+			final boolean breakWhenReadingUninitializedMemory) {
 		this.mem = Objects.requireNonNull(memory);
 		this.breakOnWrongPermissions = breakOnWrongPermissions;
+		this.breakWhenReadingUninitializedMemory = breakWhenReadingUninitializedMemory;
 	}
 
 	/**
@@ -55,7 +60,7 @@ public final class MemoryController implements Memory {
 	 * @param memory The Memory object to wrap with permission checking.
 	 */
 	public MemoryController(final Memory memory) {
-		this(memory, true);
+		this(memory, true, true);
 	}
 
 	private void reportIllegalRead(final long address) {
@@ -243,6 +248,9 @@ public final class MemoryController implements Memory {
 		if (breakOnWrongPermissions && !canRead.get(address)) {
 			reportIllegalRead(address);
 		}
+		if (breakWhenReadingUninitializedMemory && !isInitialized(address)) {
+			reportIllegalRead(address);
+		}
 		return this.mem.read(address);
 	}
 
@@ -274,6 +282,9 @@ public final class MemoryController implements Memory {
 	public byte readCode(final long address) {
 		if (breakOnWrongPermissions && !canExecute.get(address)) {
 			reportIllegalExecution(address);
+		}
+		if (breakWhenReadingUninitializedMemory && !isInitialized(address)) {
+			reportIllegalRead(address);
 		}
 		return this.mem.read(address);
 	}

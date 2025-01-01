@@ -229,7 +229,7 @@ public final class EmulatorView extends Stage {
 
 	private void loadFile(final File file) {
 		logger.info("Loading file '%s'", file.toString());
-		this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), false);
+		this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), false, false);
 		this.cpu = new X86CpuAdapter(mem);
 
 		// TODO: implement this

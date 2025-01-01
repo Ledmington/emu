@@ -83,7 +83,7 @@ public final class ELFLoader {
 		// We make RSP point at the last 8 bytes of allocated memory
 		final long stackPointer = highestAddress + stackSize - 8L;
 
-		// These are fake instructions to setup the stack
+		// These are fake instructions to set up the stack
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackPointer)));
 		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0L)));
 
@@ -174,7 +174,6 @@ public final class ELFLoader {
 			final long entryPointVirtualAddress,
 			final SymbolTableSection symtab,
 			final StringTableSection strtab) {
-		// FIXME: can we just run code in .init like this or do we need to find actual FUNC symbols in it?
 		final long sectionStart = entryPointVirtualAddress + init.getHeader().getFileOffset();
 		final long sectionEnd = sectionStart + init.getHeader().getSectionSize();
 
@@ -195,8 +194,9 @@ public final class ELFLoader {
 				}
 			}
 		} else {
-			logger.debug("Running constructor from .init");
-			runFrom(cpu, sectionStart);
+			// Can we just execute everything in .init?
+			logger.debug("Ignoring contents of .init (for now)");
+			// runFrom(cpu, sectionStart);
 		}
 	}
 
