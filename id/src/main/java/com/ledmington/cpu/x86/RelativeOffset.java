@@ -30,21 +30,21 @@ public final class RelativeOffset implements Operand {
 	/**
 	 * Creates a RelativeOffset by sign-extending the given byte.
 	 *
-	 * @param x The byte reresenting the offset.
+	 * @param x The byte representing the offset.
 	 * @return A sign-extended RelativeOffset.
 	 */
 	public static RelativeOffset of(final byte x) {
-		return new RelativeOffset((long) x);
+		return new RelativeOffset(x);
 	}
 
 	/**
 	 * Creates a RelativeOffset by sign-extending the given int.
 	 *
-	 * @param x The int reresenting the offset.
+	 * @param x The int representing the offset.
 	 * @return A sign-extended RelativeOffset.
 	 */
 	public static RelativeOffset of(final int x) {
-		return new RelativeOffset((long) x);
+		return new RelativeOffset(x);
 	}
 
 	private RelativeOffset(final long value) {

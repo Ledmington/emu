@@ -17,6 +17,9 @@
  */
 package com.ledmington.emu;
 
+import java.util.Optional;
+import java.util.stream.IntStream;
+
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
@@ -25,6 +28,10 @@ import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileType;
 import com.ledmington.elf.ISA;
+import com.ledmington.elf.section.Section;
+import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.sym.SymbolTableEntryType;
+import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.MiniLogger;
@@ -64,12 +71,32 @@ public final class Emu {
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getStackSize());
 
-		logger.info(" ### Execution start ### ");
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,
 				Register64.RIP,
 				new Immediate(
 						EmulatorConstants.getBaseAddress() + elf.getFileHeader().getEntryPointVirtualAddress())));
+
+		logger.info(" ### Execution start ### ");
+		{
+			final Optional<Section> sym = elf.getSectionByName(".symtab");
+			final Optional<Section> str = elf.getSectionByName(".strtab");
+			if (sym.isPresent() && str.isPresent()) {
+				final SymbolTableSection symtab = (SymbolTableSection) sym.orElseThrow();
+				final StringTableSection strtab = (StringTableSection) str.orElseThrow();
+				final Optional<String> entryPointFunction = IntStream.range(0, symtab.getSymbolTableLength())
+						.mapToObj(symtab::getSymbolTableEntry)
+						.filter(ste -> ste.info().getType() == SymbolTableEntryType.STT_FUNC
+								&& ste.value() == elf.getFileHeader().getEntryPointVirtualAddress())
+						.map(ste -> strtab.getString(ste.nameOffset()))
+						.findFirst();
+				if (entryPointFunction.isPresent()) {
+					logger.debug("Executing '%s'", entryPointFunction.orElseThrow());
+				} else {
+					logger.debug("No name for entrypoint function");
+				}
+			}
+		}
 		cpu.execute();
 		logger.info(" ### Execution end ### ");
 		ELFLoader.unload(elf);

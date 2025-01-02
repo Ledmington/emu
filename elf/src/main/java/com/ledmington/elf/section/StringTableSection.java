@@ -56,6 +56,12 @@ public final class StringTableSection implements LoadableSection {
 	 * @return A non-null String object.
 	 */
 	public String getString(final int stringStartIndex) {
+		if (stringStartIndex < 0 || stringStartIndex >= table.length) {
+			throw new IllegalArgumentException(String.format(
+					"Invalid string starting index %,d (0x%08x) for table with %,d characters.",
+					stringStartIndex, stringStartIndex, table.length));
+		}
+
 		final char nullChar = '\0';
 		final StringBuilder sb = new StringBuilder();
 		for (int i = stringStartIndex; i < table.length; i++) {

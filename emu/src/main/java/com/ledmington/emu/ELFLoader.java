@@ -85,6 +85,7 @@ public final class ELFLoader {
 
 		// These are fake instructions to set up the stack
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackPointer)));
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RBP, new Immediate(stackPointer)));
 		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0L)));
 
 		loadCommandLineArgumentsAndEnvironmentVariables(
@@ -228,9 +229,13 @@ public final class ELFLoader {
 					st.getSection(i).getHeader().getVirtualAddress()
 							+ st.getSection(i).getHeader().getSectionSize());
 		}
+
+		// Make sure that the base address is 16-byte aligned
+		highestAddress = (highestAddress + 0xf) & (~0xf);
+
 		logger.debug(
-				"Setting stack size to %,d bytes (%.3f MB) starting at 0x%x",
-				stackSize, (double) stackSize / 1_000_000.0, highestAddress + stackSize);
+				"Setting stack size to %,d bytes (%.3f MB) at 0x%x-0x%x",
+				stackSize, (double) stackSize / 1_000_000.0, highestAddress, highestAddress + stackSize);
 		mem.setPermissions(highestAddress, highestAddress + stackSize, true, true, false);
 		return highestAddress;
 	}

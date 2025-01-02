@@ -256,10 +256,29 @@ public class X86Cpu implements X86Emulator {
 				switch (inst.secondOperand()) {
 					case Register64 src -> rf.set(dest, rf.get(src));
 					case IndirectOperand io -> rf.set(dest, mem.read8(computeIndirectOperand(rf, io)));
-					case Immediate imm -> rf.set(dest, imm.asLong());
+					case Immediate imm -> {
+						// Zero-extend immediates
+						final long v =
+								switch (imm.bits()) {
+									case 8 -> BitUtils.asLong(imm.asByte());
+									case 16 -> BitUtils.asLong(imm.asShort());
+									case 32 -> BitUtils.asLong(imm.asInt());
+									case 64 -> imm.asLong();
+									default -> throw new IllegalStateException(
+											String.format("Unexpected value: %,d.", imm.bits()));
+								};
+						rf.set(dest, v);
+					}
 					default -> throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'", inst.secondOperand()));
 				}
+			}
+			case MOVSXD -> {
+				logger.debug("RSI = 0x%016x", rf.get(Register64.RSI));
+				final long address = computeIndirectOperand(rf, (IndirectOperand) inst.secondOperand());
+				logger.debug("Address = 0x%016x", address);
+				final long x = mem.read4(address);
+				rf.set((Register64) inst.firstOperand(), x);
 			}
 			case PUSH -> {
 				final long value =
@@ -271,9 +290,10 @@ public class X86Cpu implements X86Emulator {
 						};
 
 				final long rsp = rf.get(Register64.RSP);
-				mem.write(rsp, value);
+				final long newRSP = rsp - 8L;
+				mem.write(newRSP, value);
 				// the stack "grows downward"
-				rf.set(Register64.RSP, rsp - 8L);
+				rf.set(Register64.RSP, newRSP);
 			}
 			case POP -> {
 				final Register64 dest = (Register64) inst.firstOperand();
@@ -289,16 +309,27 @@ public class X86Cpu implements X86Emulator {
 				rf.set(dest, result);
 			}
 			case CALL -> {
-				// TODO: check this
-				final long result;
-				if (inst.firstOperand() instanceof IndirectOperand iop) {
-					result = computeIndirectOperand(rf, iop);
-				} else if (inst.firstOperand() instanceof Register64 r64) {
-					result = rf.get(r64);
-				} else {
-					throw new IllegalArgumentException();
-				}
-				rf.set(Register64.RIP, result);
+				// This points to the instruction right next to 'CALL ...'
+				final long rip = rf.get(Register64.RIP);
+
+				// Push the return address (the position of the next instruction) on top of the stack.
+				// This little subroutine may be replaced entirely by a PUSH instruction and a MOV
+				final long oldStackPointer = rf.get(Register64.RSP);
+				final long newStackPointer = oldStackPointer - 8L;
+				rf.set(Register64.RSP, newStackPointer);
+				mem.write(newStackPointer, rip);
+
+				// TODO: check this (should modify stack pointers)
+				final long relativeAddress =
+						switch (inst.firstOperand()) {
+							case IndirectOperand iop -> computeIndirectOperand(rf, iop);
+							case Register64 r64 -> rf.get(r64);
+							case RelativeOffset ro -> ro.getValue();
+							default -> throw new IllegalArgumentException(
+									String.format("Don't know what to do with '%s'.", inst.firstOperand()));
+						};
+
+				rf.set(Register64.RIP, rip + relativeAddress);
 			}
 			case RET -> {
 				// TODO: check this
@@ -315,7 +346,8 @@ public class X86Cpu implements X86Emulator {
 			}
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented");
 			case HLT -> state = State.HALTED;
-			default -> throw new IllegalStateException(String.format("Unknown instruction %s", inst.toIntelSyntax()));
+			default -> throw new IllegalArgumentException(
+					String.format("Unknown instruction %s", inst.toIntelSyntax()));
 		}
 	}
 

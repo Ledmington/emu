@@ -96,7 +96,7 @@ public final class Immediate implements Operand {
 	 */
 	public byte asByte() {
 		if (type != Type.BYTE) {
-			throw new IllegalArgumentException("This immediate is not 8 bits");
+			throw new IllegalArgumentException(String.format("This immediate is not 8 bits but %,d.", bits()));
 		}
 		return BitUtils.asByte(value);
 	}
@@ -108,7 +108,7 @@ public final class Immediate implements Operand {
 	 */
 	public short asShort() {
 		if (type != Type.SHORT) {
-			throw new IllegalArgumentException("This immediate is not 16 bits");
+			throw new IllegalArgumentException(String.format("This immediate is not 16 bits but %,d.", bits()));
 		}
 		return BitUtils.asShort(value);
 	}
@@ -120,7 +120,7 @@ public final class Immediate implements Operand {
 	 */
 	public int asInt() {
 		if (type != Type.INT) {
-			throw new IllegalArgumentException("This immediate is not 32 bits");
+			throw new IllegalArgumentException(String.format("This immediate is not 32 bits but %,d.", bits()));
 		}
 		return BitUtils.asInt(value);
 	}
@@ -132,7 +132,7 @@ public final class Immediate implements Operand {
 	 */
 	public long asLong() {
 		if (type != Type.LONG) {
-			throw new IllegalArgumentException("This immediate is not 64 bits");
+			throw new IllegalArgumentException(String.format("This immediate is not 64 bits but %,d.", bits()));
 		}
 		return value;
 	}

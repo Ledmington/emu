@@ -254,8 +254,17 @@ public final class MemoryController implements Memory {
 		return this.mem.read(address);
 	}
 
+	public int read4(final long address) {
+		int x = 0x00000000;
+		x |= BitUtils.asInt(read(address));
+		x |= (BitUtils.asInt(read(address + 1L)) << 8);
+		x |= (BitUtils.asInt(read(address + 2L)) << 16);
+		x |= (BitUtils.asInt(read(address + 3L)) << 24);
+		return x;
+	}
+
 	/**
-	 * Reads 8 contiguous byte starting from the given address.
+	 * Reads 8 contiguous bytes starting from the given address.
 	 *
 	 * @param address The address to start reading from.
 	 * @return A 64-bit value read.
@@ -274,7 +283,7 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * This behaves exactly like a normal read but it checks execute permissions instead of read permissions.
+	 * This behaves exactly like a normal read, but it checks execute permissions instead of read permissions.
 	 *
 	 * @param address The 64-bit address to read the instructions from.
 	 * @return The instruction byte at the given address.
@@ -320,7 +329,7 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * Writes the given value in the memory withuot checking nor modifying permissions.
+	 * Writes the given value in the memory without checking nor modifying permissions.
 	 *
 	 * @param start The start of the address range.
 	 * @param bytes The length of the address range.
@@ -333,7 +342,7 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * Writes the given bytes in the memory withuot checking nor modifying permissions.
+	 * Writes the given bytes in the memory without checking nor modifying permissions.
 	 *
 	 * @param start The start of the address range.
 	 * @param values The non-null array of 8-bit values to be written.
