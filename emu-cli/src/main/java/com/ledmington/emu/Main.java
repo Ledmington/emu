@@ -23,17 +23,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.ledmington.cpu.x86.Immediate;
-import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.Opcode;
-import com.ledmington.cpu.x86.Register64;
-import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFParser;
-import com.ledmington.elf.FileType;
-import com.ledmington.elf.ISA;
-import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
-import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -42,46 +32,6 @@ public final class Main {
 	private static final PrintWriter out = System.console() == null
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
-
-	private static void run(final String filename, final String... commandLineArguments) {
-		final ELF elf = ELFParser.parse(filename);
-		logger.info("ELF file parsed successfully");
-
-		if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
-				&& elf.getFileHeader().getFileType() != FileType.ET_DYN) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-					elf.getFileHeader().getFileType()));
-		}
-
-		if (elf.getFileHeader().getISA() != ISA.AMD_X86_64) {
-			throw new IllegalArgumentException(String.format(
-					"This file requires ISA %s, which is not implemented",
-					elf.getFileHeader().getISA().getName()));
-		}
-
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));
-		final X86Emulator cpu = new X86Cpu(mem);
-
-		ELFLoader.load(
-				elf,
-				cpu,
-				mem,
-				commandLineArguments,
-				EmulatorConstants.getBaseAddress(),
-				EmulatorConstants.getStackSize());
-
-		logger.info(" ### Execution start ### ");
-		cpu.executeOne(new Instruction(
-				Opcode.MOV,
-				Register64.RIP,
-				new Immediate(
-						EmulatorConstants.getBaseAddress() + elf.getFileHeader().getEntryPointVirtualAddress())));
-		cpu.execute();
-		logger.info(" ### Execution end ### ");
-		ELFLoader.unload(elf);
-	}
 
 	private static long parseLongHex(final String s) {
 		if (s.isEmpty() || s.length() > 16) {
@@ -244,7 +194,7 @@ public final class Main {
 						.collect(Collectors.joining(" ")));
 
 		try {
-			run(filename, innerArgs);
+			Emu.run(filename, innerArgs);
 		} catch (final Throwable t) {
 			logger.error(t);
 			out.flush();
