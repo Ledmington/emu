@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFReader;
+import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
 import com.ledmington.elf.ISA;
 import com.ledmington.elf.OSABI;
@@ -257,7 +257,7 @@ public final class Main {
 
 		final ELF elf;
 		try {
-			elf = ELFReader.read(Files.readAllBytes(Path.of(filename)));
+			elf = ELFParser.parse(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}

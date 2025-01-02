@@ -17,6 +17,10 @@
  */
 package com.ledmington.elf;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 import com.ledmington.elf.section.BasicProgBitsSection;
@@ -51,31 +55,49 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
-/** A reader of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
-public final class ELFReader {
+/** A parser of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
+public final class ELFParser {
 
-	private static final MiniLogger logger = MiniLogger.getLogger("elf-reader");
+	private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
 
 	private static ReadOnlyByteBuffer b;
 
-	private ELFReader() {}
+	private ELFParser() {}
+
+	public static ELF parse(final String filename) {
+		final File file = new File(filename);
+		if (!file.exists()) {
+			throw new IllegalArgumentException(String.format("File '%s' does not exist.", filename));
+		}
+
+		final byte[] bytes;
+		try {
+			bytes = Files.readAllBytes(Paths.get(filename));
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
+
+		return parse(bytes);
+	}
 
 	/**
-	 * Reads the given byte-array and returns an ELF file object.
+	 * Parses the given byte-array and returns an {@link ELF} file object.
 	 *
-	 * @param bytes The byte-array to be read.
+	 * @param bytes The byte-array to be parsed.
 	 * @return An ELF file object.
 	 */
-	public static ELF read(final byte[] bytes) {
+	public static ELF parse(final byte[] bytes) {
 		b = new ReadOnlyByteBufferV1(bytes);
-		final FileHeader fileHeader = readFileHeader();
-		final PHTEntry[] programHeaderTable = readProgramHeaderTable(fileHeader);
-		final SectionHeader[] sectionHeaderTable = readSectionHeaderTable(fileHeader);
-		final Section[] sectionTable = readSectionTable(fileHeader, sectionHeaderTable);
+		final FileHeader fileHeader = parseFileHeader();
+		final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
+		final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
+		final Section[] sectionTable = parseSectionTable(fileHeader, sectionHeaderTable);
 		return new ELF(fileHeader, programHeaderTable, sectionTable);
 	}
 
-	private static FileHeader readFileHeader() {
+	private static FileHeader parseFileHeader() {
 		final int magicNumber = b.read4BE();
 		final int ELF_MAGIC_NUMBER = 0x7f454c46;
 		if (magicNumber != ELF_MAGIC_NUMBER) {
@@ -256,7 +278,7 @@ public final class ELFReader {
 				entrySize);
 	}
 
-	private static PHTEntry[] readProgramHeaderTable(final FileHeader fileHeader) {
+	private static PHTEntry[] parseProgramHeaderTable(final FileHeader fileHeader) {
 		final int nPHTEntries = fileHeader.getNumProgramHeaderTableEntries();
 		final PHTEntry[] programHeaderTable = new PHTEntry[nPHTEntries];
 		final int PHTOffset = (int) fileHeader.getProgramHeaderTableOffset();
@@ -271,7 +293,7 @@ public final class ELFReader {
 		return programHeaderTable;
 	}
 
-	private static SectionHeader[] readSectionHeaderTable(final FileHeader fileHeader) {
+	private static SectionHeader[] parseSectionHeaderTable(final FileHeader fileHeader) {
 		final int nSHTEntries = fileHeader.getNumSectionHeaderTableEntries();
 		final SectionHeader[] sectionHeaderTable = new SectionHeader[nSHTEntries];
 		final int SHTOffset = (int) fileHeader.getSectionHeaderTableOffset();
@@ -286,7 +308,7 @@ public final class ELFReader {
 		return sectionHeaderTable;
 	}
 
-	private static Section[] readSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
+	private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
 		final Section[] sectionTable = new Section[fileHeader.getNumSectionHeaderTableEntries()];
 
 		final int shstrndx = fileHeader.getSectionHeaderStringTableIndex();

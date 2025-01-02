@@ -62,6 +62,6 @@ public class Parsing {
 
 	@Benchmark
 	public void parse(final Blackhole bh) {
-		bh.consume(ELFReader.read(fileBytes));
+		bh.consume(ELFParser.parse(fileBytes));
 	}
 }

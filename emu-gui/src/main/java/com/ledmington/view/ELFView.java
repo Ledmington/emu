@@ -20,7 +20,6 @@ package com.ledmington.view;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +36,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 
 import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFReader;
+import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
 import com.ledmington.elf.PHTEntry;
 import com.ledmington.elf.ProgramHeaderTable;
@@ -177,14 +176,7 @@ public final class ELFView extends BorderPane {
 		tree.getTreeItem(0).setValue(elfFile.getName());
 		this.file = elfFile;
 
-		final byte[] fileBytes;
-		try {
-			fileBytes = Files.readAllBytes(elfFile.toPath());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		final ELF elf = ELFReader.read(fileBytes);
+		final ELF elf = ELFParser.parse(elfFile.toPath().toString());
 		initializeTreeView(elf);
 
 		updateGrid(0);

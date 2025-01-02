@@ -18,9 +18,7 @@
 package com.ledmington.view;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -49,7 +47,7 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.elf.ELFReader;
+import com.ledmington.elf.ELFParser;
 import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.EmulatorConstants;
 import com.ledmington.emu.ImmutableRegisterFile;
@@ -235,17 +233,13 @@ public final class EmulatorView extends Stage {
 		// TODO: implement this
 		final String[] commandLineArguments = new String[0];
 
-		try {
-			ELFLoader.load(
-					ELFReader.read(Files.readAllBytes(file.toPath())),
-					cpu,
-					mem,
-					commandLineArguments,
-					EmulatorConstants.getBaseAddress(),
-					EmulatorConstants.getStackSize());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		ELFLoader.load(
+				ELFParser.parse(file.toPath().toString()),
+				cpu,
+				mem,
+				commandLineArguments,
+				EmulatorConstants.getBaseAddress(),
+				EmulatorConstants.getStackSize());
 
 		updateRegisters();
 		updateCode();

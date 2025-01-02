@@ -17,12 +17,8 @@
  */
 package com.ledmington.emu;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,7 +28,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFReader;
+import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileType;
 import com.ledmington.elf.ISA;
 import com.ledmington.mem.MemoryController;
@@ -47,26 +43,8 @@ public final class Main {
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
 
-	private static ELF parseELF(final String filename) {
-		final File file = new File(filename);
-		if (!file.exists()) {
-			throw new IllegalArgumentException(String.format("File '%s' does not exist%n", filename));
-		}
-
-		byte[] bytes;
-		try {
-			bytes = Files.readAllBytes(Paths.get(filename));
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
-
-		return ELFReader.read(bytes);
-	}
-
 	private static void run(final String filename, final String... commandLineArguments) {
-		final ELF elf = parseELF(filename);
+		final ELF elf = ELFParser.parse(filename);
 		logger.info("ELF file parsed successfully");
 
 		if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
