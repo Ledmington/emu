@@ -25,6 +25,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
@@ -108,6 +109,7 @@ public class X86Cpu implements X86Emulator {
 							};
 					final long result = r1 - r2;
 					rf.set(op1, result);
+					rf.resetFlags();
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
@@ -115,27 +117,59 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case ADD -> {
-				if (inst.firstOperand() instanceof IndirectOperand iop) {
-					final long address = computeIndirectOperand(rf, iop);
-					final Register8 op2 = (Register8) inst.secondOperand();
-					final byte r1 = mem.read(address);
-					final byte r2 = rf.get(op2);
-					final byte result = BitUtils.asByte(r1 + r2);
-					mem.write(address, result);
-					rf.set(RFlags.ZERO, result == 0);
-				} else {
-					final Register64 op1 = (Register64) inst.firstOperand();
-					final long r1 = rf.get(op1);
-					final long r2 =
-							switch (inst.secondOperand()) {
-								case Register64 op2 -> rf.get(op2);
-								case Immediate imm -> imm.asLong();
-								default -> throw new IllegalArgumentException(
-										String.format("Unknown second argument type %s", inst.secondOperand()));
-							};
-					final long result = r1 + r2;
-					rf.set(op1, result);
-					rf.set(RFlags.ZERO, result == 0L);
+				switch (inst.firstOperand()) {
+					case Register8 op1 -> {
+						final byte r1 = rf.get(op1);
+						final byte r2 = rf.get((Register8) inst.secondOperand());
+						final byte result = BitUtils.asByte(r1 + r2);
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					case Register16 op1 -> {
+						final short r1 = rf.get(op1);
+						final short r2 = rf.get((Register16) inst.secondOperand());
+						final short result = BitUtils.asShort(r1 + r2);
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					case Register32 op1 -> {
+						final int r1 = rf.get(op1);
+						final int r2 = rf.get((Register32) inst.secondOperand());
+						final int result = r1 + r2;
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					case Register64 op1 -> {
+						final long r1 = rf.get(op1);
+						final long r2 =
+								switch (inst.secondOperand()) {
+									case Register64 op2 -> rf.get(op2);
+									case Immediate imm -> imm.asLong();
+									default -> throw new IllegalArgumentException(
+											String.format("Unknown second argument type %s", inst.secondOperand()));
+								};
+						final long result = r1 + r2;
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0L);
+					}
+					case IndirectOperand iop -> {
+						final long address = computeIndirectOperand(rf, iop);
+						final Register8 op2 = (Register8) inst.secondOperand();
+						final byte r1 = mem.read(address);
+						final byte r2 = rf.get(op2);
+						final byte result = BitUtils.asByte(r1 + r2);
+						mem.write(address, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					default -> {
+						throw new IllegalArgumentException(
+								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
+					}
 				}
 			}
 			case SHR -> {
@@ -144,6 +178,7 @@ public class X86Cpu implements X86Emulator {
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
 					final long result = r1 >>> imm;
 					rf.set((Register64) inst.firstOperand(), result);
+					rf.resetFlags();
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
@@ -156,6 +191,7 @@ public class X86Cpu implements X86Emulator {
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
 					final long result = r1 >> imm;
 					rf.set(op1, result);
+					rf.resetFlags();
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
@@ -168,6 +204,7 @@ public class X86Cpu implements X86Emulator {
 					final byte imm = rf.get((Register8) inst.secondOperand());
 					final long result = r1 << imm;
 					rf.set((Register64) inst.firstOperand(), result);
+					rf.resetFlags();
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
@@ -200,6 +237,7 @@ public class X86Cpu implements X86Emulator {
 			case TEST -> {
 				final long r1 = rf.get((Register64) inst.firstOperand());
 				final long r2 = rf.get((Register64) inst.secondOperand());
+				rf.resetFlags();
 				rf.set(RFlags.ZERO, (r1 & r2) == 0L);
 			}
 			case JMP -> {

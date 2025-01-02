@@ -64,4 +64,6 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param v The value to be written.
 	 */
 	void set(final RFlags f, final boolean v);
+
+	void resetFlags();
 }

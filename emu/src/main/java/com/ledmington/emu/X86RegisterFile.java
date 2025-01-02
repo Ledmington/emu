@@ -280,6 +280,11 @@ public final class X86RegisterFile implements RegisterFile {
 		}
 	}
 
+	@Override
+	public void resetFlags() {
+		rflags = 0L;
+	}
+
 	private void set(final RFlags f) {
 		rflags |= (1L << f.bit());
 	}
