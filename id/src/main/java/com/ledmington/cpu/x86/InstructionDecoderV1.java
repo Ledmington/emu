@@ -34,8 +34,8 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 import com.ledmington.utils.SuppressFBWarnings;
 
 /**
- * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes : Paragraph 2.1.1.
- * Instruction opcodes : Appendix A. (pag. 2839)
+ * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
+ * Instruction opcodes: Appendix A. (pag. 2839)
  */
 public final class InstructionDecoderV1 implements InstructionDecoder {
 
@@ -61,7 +61,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 	/**
 	 * Creates an InstructionDecoder by wrapping the given byte array.
 	 *
-	 * @param code A non-null and non empty byte array.
+	 * @param code A non-null and non-empty byte array.
 	 */
 	public InstructionDecoderV1(final byte[] code) {
 		this.b = new ReadOnlyByteBufferV1(Objects.requireNonNull(code));
@@ -1350,7 +1350,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		final byte JLE_DISP8_OPCODE = (byte) 0x7e;
 		final byte JG_DISP8_OPCODE = (byte) 0x7f;
 		final byte TEST_R8_R8_OPCODE = (byte) 0x84;
-		final byte TEST_R32_R32_OPCODE = (byte) 0x85; // this can work on all non 8-bit registers
+		final byte TEST_R32_R32_OPCODE = (byte) 0x85; // this can work on all non-8-bit registers
 		final byte XCHG_INDIRECT8_R8_OPCODE = (byte) 0x86;
 		final byte XCHG_INDIRECT32_R32_OPCODE = (byte) 0x87;
 		final byte MOV_MEM8_REG8_OPCODE = (byte) 0x88;
@@ -1604,9 +1604,15 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 								pref.rex().isOperand64Bit(),
 								pref.rex().getModRMRegExtension(),
 								pref.hasOperandSizeOverridePrefix()),
-						parseIndirectOperand(pref, modrm)
-								.pointer(PointerSize.DWORD_PTR)
-								.build());
+						(modrm.mod() != MODRM_MOD_NO_DISP)
+								? parseIndirectOperand(pref, modrm)
+										.pointer(PointerSize.DWORD_PTR)
+										.build()
+								: Registers.fromCode(
+										modrm.rm(),
+										false, // pref.rex().isOperand64Bit(),
+										pref.rex().getModRMRMExtension(),
+										pref.hasOperandSizeOverridePrefix()));
 			}
 
 				// OP Indirect8,R8
@@ -1897,8 +1903,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		boolean hasAddressSizeOverridePrefix = false;
 
 		// FIXME: is there a better way to do this?
-		// (technically there is no limit to the number of prefixes an instruction can
-		// have)
+		// (technically there is no limit to the number of prefixes an instruction can have)
 		while (true) {
 			byte x = b.read1();
 

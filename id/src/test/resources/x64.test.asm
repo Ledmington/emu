@@ -432,6 +432,520 @@ movsx rsi,bl                              | 48 0f be f3
 movsx rsi,di                              | 48 0f bf f7
 
 # Movsxd
+movsxd r10,eax  | 4c 63 d0
+movsxd r10,ebp  | 4c 63 d5
+movsxd r10,ebx  | 4c 63 d3
+movsxd r10,ecx  | 4c 63 d1
+movsxd r10,edi  | 4c 63 d7
+movsxd r10,edx  | 4c 63 d2
+movsxd r10,esi  | 4c 63 d6
+movsxd r10,esp  | 4c 63 d4
+movsxd r10,r10d | 4d 63 d2
+movsxd r10,r11d | 4d 63 d3
+movsxd r10,r12d | 4d 63 d4
+movsxd r10,r13d | 4d 63 d5
+movsxd r10,r14d | 4d 63 d6
+movsxd r10,r15d | 4d 63 d7
+movsxd r10,r8d  | 4d 63 d0
+movsxd r10,r9d  | 4d 63 d1
+movsxd r11,eax  | 4c 63 d8
+movsxd r11,ebp  | 4c 63 dd
+movsxd r11,ebx  | 4c 63 db
+movsxd r11,ecx  | 4c 63 d9
+movsxd r11,edi  | 4c 63 df
+movsxd r11,edx  | 4c 63 da
+movsxd r11,esi  | 4c 63 de
+movsxd r11,esp  | 4c 63 dc
+movsxd r11,r10d | 4d 63 da
+movsxd r11,r11d | 4d 63 db
+movsxd r11,r12d | 4d 63 dc
+movsxd r11,r13d | 4d 63 dd
+movsxd r11,r14d | 4d 63 de
+movsxd r11,r15d | 4d 63 df
+movsxd r11,r8d  | 4d 63 d8
+movsxd r11,r9d  | 4d 63 d9
+movsxd r12,eax  | 4c 63 e0
+movsxd r12,ebp  | 4c 63 e5
+movsxd r12,ebx  | 4c 63 e3
+movsxd r12,ecx  | 4c 63 e1
+movsxd r12,edi  | 4c 63 e7
+movsxd r12,edx  | 4c 63 e2
+movsxd r12,esi  | 4c 63 e6
+movsxd r12,esp  | 4c 63 e4
+movsxd r12,r10d | 4d 63 e2
+movsxd r12,r11d | 4d 63 e3
+movsxd r12,r12d | 4d 63 e4
+movsxd r12,r13d | 4d 63 e5
+movsxd r12,r14d | 4d 63 e6
+movsxd r12,r15d | 4d 63 e7
+movsxd r12,r8d  | 4d 63 e0
+movsxd r12,r9d  | 4d 63 e1
+movsxd r13,eax  | 4c 63 e8
+movsxd r13,ebp  | 4c 63 ed
+movsxd r13,ebx  | 4c 63 eb
+movsxd r13,ecx  | 4c 63 e9
+movsxd r13,edi  | 4c 63 ef
+movsxd r13,edx  | 4c 63 ea
+movsxd r13,esi  | 4c 63 ee
+movsxd r13,esp  | 4c 63 ec
+movsxd r13,r10d | 4d 63 ea
+movsxd r13,r11d | 4d 63 eb
+movsxd r13,r12d | 4d 63 ec
+movsxd r13,r13d | 4d 63 ed
+movsxd r13,r14d | 4d 63 ee
+movsxd r13,r15d | 4d 63 ef
+movsxd r13,r8d  | 4d 63 e8
+movsxd r13,r9d  | 4d 63 e9
+movsxd r14,eax  | 4c 63 f0
+movsxd r14,ebp  | 4c 63 f5
+movsxd r14,ebx  | 4c 63 f3
+movsxd r14,ecx  | 4c 63 f1
+movsxd r14,edi  | 4c 63 f7
+movsxd r14,edx  | 4c 63 f2
+movsxd r14,esi  | 4c 63 f6
+movsxd r14,esp  | 4c 63 f4
+movsxd r14,r10d | 4d 63 f2
+movsxd r14,r11d | 4d 63 f3
+movsxd r14,r12d | 4d 63 f4
+movsxd r14,r13d | 4d 63 f5
+movsxd r14,r14d | 4d 63 f6
+movsxd r14,r15d | 4d 63 f7
+movsxd r14,r8d  | 4d 63 f0
+movsxd r14,r9d  | 4d 63 f1
+movsxd r15,eax  | 4c 63 f8
+movsxd r15,ebp  | 4c 63 fd
+movsxd r15,ebx  | 4c 63 fb
+movsxd r15,ecx  | 4c 63 f9
+movsxd r15,edi  | 4c 63 ff
+movsxd r15,edx  | 4c 63 fa
+movsxd r15,esi  | 4c 63 fe
+movsxd r15,esp  | 4c 63 fc
+movsxd r15,r10d | 4d 63 fa
+movsxd r15,r11d | 4d 63 fb
+movsxd r15,r12d | 4d 63 fc
+movsxd r15,r13d | 4d 63 fd
+movsxd r15,r14d | 4d 63 fe
+movsxd r15,r15d | 4d 63 ff
+movsxd r15,r8d  | 4d 63 f8
+movsxd r15,r9d  | 4d 63 f9
+movsxd r8,eax   | 4c 63 c0
+movsxd r8,ebp   | 4c 63 c5
+movsxd r8,ebx   | 4c 63 c3
+movsxd r8,ecx   | 4c 63 c1
+movsxd r8,edi   | 4c 63 c7
+movsxd r8,edx   | 4c 63 c2
+movsxd r8,esi   | 4c 63 c6
+movsxd r8,esp   | 4c 63 c4
+movsxd r8,r10d  | 4d 63 c2
+movsxd r8,r11d  | 4d 63 c3
+movsxd r8,r12d  | 4d 63 c4
+movsxd r8,r13d  | 4d 63 c5
+movsxd r8,r14d  | 4d 63 c6
+movsxd r8,r15d  | 4d 63 c7
+movsxd r8,r8d   | 4d 63 c0
+movsxd r8,r9d   | 4d 63 c1
+movsxd r9,eax   | 4c 63 c8
+movsxd r9,ebp   | 4c 63 cd
+movsxd r9,ebx   | 4c 63 cb
+movsxd r9,ecx   | 4c 63 c9
+movsxd r9,edi   | 4c 63 cf
+movsxd r9,edx   | 4c 63 ca
+movsxd r9,esi   | 4c 63 ce
+movsxd r9,esp   | 4c 63 cc
+movsxd r9,r10d  | 4d 63 ca
+movsxd r9,r11d  | 4d 63 cb
+movsxd r9,r12d  | 4d 63 cc
+movsxd r9,r13d  | 4d 63 cd
+movsxd r9,r14d  | 4d 63 ce
+movsxd r9,r15d  | 4d 63 cf
+movsxd r9,r8d   | 4d 63 c8
+movsxd r9,r9d   | 4d 63 c9
+movsxd rax,eax  | 48 63 c0
+movsxd rax,ebp  | 48 63 c5
+movsxd rax,ebx  | 48 63 c3
+movsxd rax,ecx  | 48 63 c1
+movsxd rax,edi  | 48 63 c7
+movsxd rax,edx  | 48 63 c2
+movsxd rax,esi  | 48 63 c6
+movsxd rax,esp  | 48 63 c4
+movsxd rax,r10d | 49 63 c2
+movsxd rax,r11d | 49 63 c3
+movsxd rax,r12d | 49 63 c4
+movsxd rax,r13d | 49 63 c5
+movsxd rax,r14d | 49 63 c6
+movsxd rax,r15d | 49 63 c7
+movsxd rax,r8d  | 49 63 c0
+movsxd rax,r9d  | 49 63 c1
+movsxd rbp,eax  | 48 63 e8
+movsxd rbp,ebp  | 48 63 ed
+movsxd rbp,ebx  | 48 63 eb
+movsxd rbp,ecx  | 48 63 e9
+movsxd rbp,edi  | 48 63 ef
+movsxd rbp,edx  | 48 63 ea
+movsxd rbp,esi  | 48 63 ee
+movsxd rbp,esp  | 48 63 ec
+movsxd rbp,r10d | 49 63 ea
+movsxd rbp,r11d | 49 63 eb
+movsxd rbp,r12d | 49 63 ec
+movsxd rbp,r13d | 49 63 ed
+movsxd rbp,r14d | 49 63 ee
+movsxd rbp,r15d | 49 63 ef
+movsxd rbp,r8d  | 49 63 e8
+movsxd rbp,r9d  | 49 63 e9
+movsxd rbx,eax  | 48 63 d8
+movsxd rbx,ebp  | 48 63 dd
+movsxd rbx,ebx  | 48 63 db
+movsxd rbx,ecx  | 48 63 d9
+movsxd rbx,edi  | 48 63 df
+movsxd rbx,edx  | 48 63 da
+movsxd rbx,esi  | 48 63 de
+movsxd rbx,esp  | 48 63 dc
+movsxd rbx,r10d | 49 63 da
+movsxd rbx,r11d | 49 63 db
+movsxd rbx,r12d | 49 63 dc
+movsxd rbx,r13d | 49 63 dd
+movsxd rbx,r14d | 49 63 de
+movsxd rbx,r15d | 49 63 df
+movsxd rbx,r8d  | 49 63 d8
+movsxd rbx,r9d  | 49 63 d9
+movsxd rcx,eax  | 48 63 c8
+movsxd rcx,ebp  | 48 63 cd
+movsxd rcx,ebx  | 48 63 cb
+movsxd rcx,ecx  | 48 63 c9
+movsxd rcx,edi  | 48 63 cf
+movsxd rcx,edx  | 48 63 ca
+movsxd rcx,esi  | 48 63 ce
+movsxd rcx,esp  | 48 63 cc
+movsxd rcx,r10d | 49 63 ca
+movsxd rcx,r11d | 49 63 cb
+movsxd rcx,r12d | 49 63 cc
+movsxd rcx,r13d | 49 63 cd
+movsxd rcx,r14d | 49 63 ce
+movsxd rcx,r15d | 49 63 cf
+movsxd rcx,r8d  | 49 63 c8
+movsxd rcx,r9d  | 49 63 c9
+movsxd rdi,eax  | 48 63 f8
+movsxd rdi,ebp  | 48 63 fd
+movsxd rdi,ebx  | 48 63 fb
+movsxd rdi,ecx  | 48 63 f9
+movsxd rdi,edi  | 48 63 ff
+movsxd rdi,edx  | 48 63 fa
+movsxd rdi,esi  | 48 63 fe
+movsxd rdi,esp  | 48 63 fc
+movsxd rdi,r10d | 49 63 fa
+movsxd rdi,r11d | 49 63 fb
+movsxd rdi,r12d | 49 63 fc
+movsxd rdi,r13d | 49 63 fd
+movsxd rdi,r14d | 49 63 fe
+movsxd rdi,r15d | 49 63 ff
+movsxd rdi,r8d  | 49 63 f8
+movsxd rdi,r9d  | 49 63 f9
+movsxd rdx,eax  | 48 63 d0
+movsxd rdx,ebp  | 48 63 d5
+movsxd rdx,ebx  | 48 63 d3
+movsxd rdx,ecx  | 48 63 d1
+movsxd rdx,edi  | 48 63 d7
+movsxd rdx,edx  | 48 63 d2
+movsxd rdx,esi  | 48 63 d6
+movsxd rdx,esp  | 48 63 d4
+movsxd rdx,r10d | 49 63 d2
+movsxd rdx,r11d | 49 63 d3
+movsxd rdx,r12d | 49 63 d4
+movsxd rdx,r13d | 49 63 d5
+movsxd rdx,r14d | 49 63 d6
+movsxd rdx,r15d | 49 63 d7
+movsxd rdx,r8d  | 49 63 d0
+movsxd rdx,r9d  | 49 63 d1
+movsxd rsi,eax  | 48 63 f0
+movsxd rsi,ebp  | 48 63 f5
+movsxd rsi,ebx  | 48 63 f3
+movsxd rsi,ecx  | 48 63 f1
+movsxd rsi,edi  | 48 63 f7
+movsxd rsi,edx  | 48 63 f2
+movsxd rsi,esi  | 48 63 f6
+movsxd rsi,esp  | 48 63 f4
+movsxd rsi,r10d | 49 63 f2
+movsxd rsi,r11d | 49 63 f3
+movsxd rsi,r12d | 49 63 f4
+movsxd rsi,r13d | 49 63 f5
+movsxd rsi,r14d | 49 63 f6
+movsxd rsi,r15d | 49 63 f7
+movsxd rsi,r8d  | 49 63 f0
+movsxd rsi,r9d  | 49 63 f1
+movsxd rsp,eax  | 48 63 e0
+movsxd rsp,ebp  | 48 63 e5
+movsxd rsp,ebx  | 48 63 e3
+movsxd rsp,ecx  | 48 63 e1
+movsxd rsp,edi  | 48 63 e7
+movsxd rsp,edx  | 48 63 e2
+movsxd rsp,esi  | 48 63 e6
+movsxd rsp,esp  | 48 63 e4
+movsxd rsp,r10d | 49 63 e2
+movsxd rsp,r11d | 49 63 e3
+movsxd rsp,r12d | 49 63 e4
+movsxd rsp,r13d | 49 63 e5
+movsxd rsp,r14d | 49 63 e6
+movsxd rsp,r15d | 49 63 e7
+movsxd rsp,r8d  | 49 63 e0
+movsxd rsp,r9d  | 49 63 e1
+#
+movsxd r10,DWORD PTR [r10] | 4d 63 12
+movsxd r10,DWORD PTR [r11] | 4d 63 13
+movsxd r10,DWORD PTR [r12] | 4d 63 14 24
+movsxd r10,DWORD PTR [r13] | 4d 63 55 00
+movsxd r10,DWORD PTR [r14] | 4d 63 16
+movsxd r10,DWORD PTR [r15] | 4d 63 17
+movsxd r10,DWORD PTR [r8]  | 4d 63 10
+movsxd r10,DWORD PTR [r9]  | 4d 63 11
+movsxd r10,DWORD PTR [rax] | 4c 63 10
+movsxd r10,DWORD PTR [rbp] | 4c 63 55 00
+movsxd r10,DWORD PTR [rbx] | 4c 63 13
+movsxd r10,DWORD PTR [rcx] | 4c 63 11
+movsxd r10,DWORD PTR [rdi] | 4c 63 17
+movsxd r10,DWORD PTR [rdx] | 4c 63 12
+movsxd r10,DWORD PTR [rsi] | 4c 63 16
+movsxd r10,DWORD PTR [rsp] | 4c 63 14 24
+movsxd r11,DWORD PTR [r10] | 4d 63 1a
+movsxd r11,DWORD PTR [r11] | 4d 63 1b
+movsxd r11,DWORD PTR [r12] | 4d 63 1c 24
+movsxd r11,DWORD PTR [r13] | 4d 63 5d 00
+movsxd r11,DWORD PTR [r14] | 4d 63 1e
+movsxd r11,DWORD PTR [r15] | 4d 63 1f
+movsxd r11,DWORD PTR [r8]  | 4d 63 18
+movsxd r11,DWORD PTR [r9]  | 4d 63 19
+movsxd r11,DWORD PTR [rax] | 4c 63 18
+movsxd r11,DWORD PTR [rbp] | 4c 63 5d 00
+movsxd r11,DWORD PTR [rbx] | 4c 63 1b
+movsxd r11,DWORD PTR [rcx] | 4c 63 19
+movsxd r11,DWORD PTR [rdi] | 4c 63 1f
+movsxd r11,DWORD PTR [rdx] | 4c 63 1a
+movsxd r11,DWORD PTR [rsi] | 4c 63 1e
+movsxd r11,DWORD PTR [rsp] | 4c 63 1c 24
+movsxd r12,DWORD PTR [r10] | 4d 63 22
+movsxd r12,DWORD PTR [r11] | 4d 63 23
+movsxd r12,DWORD PTR [r12] | 4d 63 24 24
+movsxd r12,DWORD PTR [r13] | 4d 63 65 00
+movsxd r12,DWORD PTR [r14] | 4d 63 26
+movsxd r12,DWORD PTR [r15] | 4d 63 27
+movsxd r12,DWORD PTR [r8]  | 4d 63 20
+movsxd r12,DWORD PTR [r9]  | 4d 63 21
+movsxd r12,DWORD PTR [rax] | 4c 63 20
+movsxd r12,DWORD PTR [rbp] | 4c 63 65 00
+movsxd r12,DWORD PTR [rbx] | 4c 63 23
+movsxd r12,DWORD PTR [rcx] | 4c 63 21
+movsxd r12,DWORD PTR [rdi] | 4c 63 27
+movsxd r12,DWORD PTR [rdx] | 4c 63 22
+movsxd r12,DWORD PTR [rsi] | 4c 63 26
+movsxd r12,DWORD PTR [rsp] | 4c 63 24 24
+movsxd r13,DWORD PTR [r10] | 4d 63 2a
+movsxd r13,DWORD PTR [r11] | 4d 63 2b
+movsxd r13,DWORD PTR [r12] | 4d 63 2c 24
+movsxd r13,DWORD PTR [r13] | 4d 63 6d 00
+movsxd r13,DWORD PTR [r14] | 4d 63 2e
+movsxd r13,DWORD PTR [r15] | 4d 63 2f
+movsxd r13,DWORD PTR [r8]  | 4d 63 28
+movsxd r13,DWORD PTR [r9]  | 4d 63 29
+movsxd r13,DWORD PTR [rax] | 4c 63 28
+movsxd r13,DWORD PTR [rbp] | 4c 63 6d 00
+movsxd r13,DWORD PTR [rbx] | 4c 63 2b
+movsxd r13,DWORD PTR [rcx] | 4c 63 29
+movsxd r13,DWORD PTR [rdi] | 4c 63 2f
+movsxd r13,DWORD PTR [rdx] | 4c 63 2a
+movsxd r13,DWORD PTR [rsi] | 4c 63 2e
+movsxd r13,DWORD PTR [rsp] | 4c 63 2c 24
+movsxd r14,DWORD PTR [r10] | 4d 63 32
+movsxd r14,DWORD PTR [r11] | 4d 63 33
+movsxd r14,DWORD PTR [r12] | 4d 63 34 24
+movsxd r14,DWORD PTR [r13] | 4d 63 75 00
+movsxd r14,DWORD PTR [r14] | 4d 63 36
+movsxd r14,DWORD PTR [r15] | 4d 63 37
+movsxd r14,DWORD PTR [r8]  | 4d 63 30
+movsxd r14,DWORD PTR [r9]  | 4d 63 31
+movsxd r14,DWORD PTR [rax] | 4c 63 30
+movsxd r14,DWORD PTR [rbp] | 4c 63 75 00
+movsxd r14,DWORD PTR [rbx] | 4c 63 33
+movsxd r14,DWORD PTR [rcx] | 4c 63 31
+movsxd r14,DWORD PTR [rdi] | 4c 63 37
+movsxd r14,DWORD PTR [rdx] | 4c 63 32
+movsxd r14,DWORD PTR [rsi] | 4c 63 36
+movsxd r14,DWORD PTR [rsp] | 4c 63 34 24
+movsxd r15,DWORD PTR [r10] | 4d 63 3a
+movsxd r15,DWORD PTR [r11] | 4d 63 3b
+movsxd r15,DWORD PTR [r12] | 4d 63 3c 24
+movsxd r15,DWORD PTR [r13] | 4d 63 7d 00
+movsxd r15,DWORD PTR [r14] | 4d 63 3e
+movsxd r15,DWORD PTR [r15] | 4d 63 3f
+movsxd r15,DWORD PTR [r8]  | 4d 63 38
+movsxd r15,DWORD PTR [r9]  | 4d 63 39
+movsxd r15,DWORD PTR [rax] | 4c 63 38
+movsxd r15,DWORD PTR [rbp] | 4c 63 7d 00
+movsxd r15,DWORD PTR [rbx] | 4c 63 3b
+movsxd r15,DWORD PTR [rcx] | 4c 63 39
+movsxd r15,DWORD PTR [rdi] | 4c 63 3f
+movsxd r15,DWORD PTR [rdx] | 4c 63 3a
+movsxd r15,DWORD PTR [rsi] | 4c 63 3e
+movsxd r15,DWORD PTR [rsp] | 4c 63 3c 24
+movsxd r8,DWORD PTR [r10]  | 4d 63 02
+movsxd r8,DWORD PTR [r11]  | 4d 63 03
+movsxd r8,DWORD PTR [r12]  | 4d 63 04 24
+movsxd r8,DWORD PTR [r13]  | 4d 63 45 00
+movsxd r8,DWORD PTR [r14]  | 4d 63 06
+movsxd r8,DWORD PTR [r15]  | 4d 63 07
+movsxd r8,DWORD PTR [r8]   | 4d 63 00
+movsxd r8,DWORD PTR [r9]   | 4d 63 01
+movsxd r8,DWORD PTR [rax]  | 4c 63 00
+movsxd r8,DWORD PTR [rbp]  | 4c 63 45 00
+movsxd r8,DWORD PTR [rbx]  | 4c 63 03
+movsxd r8,DWORD PTR [rcx]  | 4c 63 01
+movsxd r8,DWORD PTR [rdi]  | 4c 63 07
+movsxd r8,DWORD PTR [rdx]  | 4c 63 02
+movsxd r8,DWORD PTR [rsi]  | 4c 63 06
+movsxd r8,DWORD PTR [rsp]  | 4c 63 04 24
+movsxd r9,DWORD PTR [r10]  | 4d 63 0a
+movsxd r9,DWORD PTR [r11]  | 4d 63 0b
+movsxd r9,DWORD PTR [r12]  | 4d 63 0c 24
+movsxd r9,DWORD PTR [r13]  | 4d 63 4d 00
+movsxd r9,DWORD PTR [r14]  | 4d 63 0e
+movsxd r9,DWORD PTR [r15]  | 4d 63 0f
+movsxd r9,DWORD PTR [r8]   | 4d 63 08
+movsxd r9,DWORD PTR [r9]   | 4d 63 09
+movsxd r9,DWORD PTR [rax]  | 4c 63 08
+movsxd r9,DWORD PTR [rbp]  | 4c 63 4d 00
+movsxd r9,DWORD PTR [rbx]  | 4c 63 0b
+movsxd r9,DWORD PTR [rcx]  | 4c 63 09
+movsxd r9,DWORD PTR [rdi]  | 4c 63 0f
+movsxd r9,DWORD PTR [rdx]  | 4c 63 0a
+movsxd r9,DWORD PTR [rsi]  | 4c 63 0e
+movsxd r9,DWORD PTR [rsp]  | 4c 63 0c 24
+movsxd rax,DWORD PTR [r10] | 49 63 02
+movsxd rax,DWORD PTR [r11] | 49 63 03
+movsxd rax,DWORD PTR [r12] | 49 63 04 24
+movsxd rax,DWORD PTR [r13] | 49 63 45 00
+movsxd rax,DWORD PTR [r14] | 49 63 06
+movsxd rax,DWORD PTR [r15] | 49 63 07
+movsxd rax,DWORD PTR [r8]  | 49 63 00
+movsxd rax,DWORD PTR [r9]  | 49 63 01
+movsxd rax,DWORD PTR [rax] | 48 63 00
+movsxd rax,DWORD PTR [rbp] | 48 63 45 00
+movsxd rax,DWORD PTR [rbx] | 48 63 03
+movsxd rax,DWORD PTR [rcx] | 48 63 01
+movsxd rax,DWORD PTR [rdi] | 48 63 07
+movsxd rax,DWORD PTR [rdx] | 48 63 02
+movsxd rax,DWORD PTR [rsi] | 48 63 06
+movsxd rax,DWORD PTR [rsp] | 48 63 04 24
+movsxd rbp,DWORD PTR [r10] | 49 63 2a
+movsxd rbp,DWORD PTR [r11] | 49 63 2b
+movsxd rbp,DWORD PTR [r12] | 49 63 2c 24
+movsxd rbp,DWORD PTR [r13] | 49 63 6d 00
+movsxd rbp,DWORD PTR [r14] | 49 63 2e
+movsxd rbp,DWORD PTR [r15] | 49 63 2f
+movsxd rbp,DWORD PTR [r8]  | 49 63 28
+movsxd rbp,DWORD PTR [r9]  | 49 63 29
+movsxd rbp,DWORD PTR [rax] | 48 63 28
+movsxd rbp,DWORD PTR [rbp] | 48 63 6d 00
+movsxd rbp,DWORD PTR [rbx] | 48 63 2b
+movsxd rbp,DWORD PTR [rcx] | 48 63 29
+movsxd rbp,DWORD PTR [rdi] | 48 63 2f
+movsxd rbp,DWORD PTR [rdx] | 48 63 2a
+movsxd rbp,DWORD PTR [rsi] | 48 63 2e
+movsxd rbp,DWORD PTR [rsp] | 48 63 2c 24
+movsxd rbx,DWORD PTR [r10] | 49 63 1a
+movsxd rbx,DWORD PTR [r11] | 49 63 1b
+movsxd rbx,DWORD PTR [r12] | 49 63 1c 24
+movsxd rbx,DWORD PTR [r13] | 49 63 5d 00
+movsxd rbx,DWORD PTR [r14] | 49 63 1e
+movsxd rbx,DWORD PTR [r15] | 49 63 1f
+movsxd rbx,DWORD PTR [r8]  | 49 63 18
+movsxd rbx,DWORD PTR [r9]  | 49 63 19
+movsxd rbx,DWORD PTR [rax] | 48 63 18
+movsxd rbx,DWORD PTR [rbp] | 48 63 5d 00
+movsxd rbx,DWORD PTR [rbx] | 48 63 1b
+movsxd rbx,DWORD PTR [rcx] | 48 63 19
+movsxd rbx,DWORD PTR [rdi] | 48 63 1f
+movsxd rbx,DWORD PTR [rdx] | 48 63 1a
+movsxd rbx,DWORD PTR [rsi] | 48 63 1e
+movsxd rbx,DWORD PTR [rsp] | 48 63 1c 24
+movsxd rcx,DWORD PTR [r10] | 49 63 0a
+movsxd rcx,DWORD PTR [r11] | 49 63 0b
+movsxd rcx,DWORD PTR [r12] | 49 63 0c 24
+movsxd rcx,DWORD PTR [r13] | 49 63 4d 00
+movsxd rcx,DWORD PTR [r14] | 49 63 0e
+movsxd rcx,DWORD PTR [r15] | 49 63 0f
+movsxd rcx,DWORD PTR [r8]  | 49 63 08
+movsxd rcx,DWORD PTR [r9]  | 49 63 09
+movsxd rcx,DWORD PTR [rax] | 48 63 08
+movsxd rcx,DWORD PTR [rbp] | 48 63 4d 00
+movsxd rcx,DWORD PTR [rbx] | 48 63 0b
+movsxd rcx,DWORD PTR [rcx] | 48 63 09
+movsxd rcx,DWORD PTR [rdi] | 48 63 0f
+movsxd rcx,DWORD PTR [rdx] | 48 63 0a
+movsxd rcx,DWORD PTR [rsi] | 48 63 0e
+movsxd rcx,DWORD PTR [rsp] | 48 63 0c 24
+movsxd rdi,DWORD PTR [r10] | 49 63 3a
+movsxd rdi,DWORD PTR [r11] | 49 63 3b
+movsxd rdi,DWORD PTR [r12] | 49 63 3c 24
+movsxd rdi,DWORD PTR [r13] | 49 63 7d 00
+movsxd rdi,DWORD PTR [r14] | 49 63 3e
+movsxd rdi,DWORD PTR [r15] | 49 63 3f
+movsxd rdi,DWORD PTR [r8]  | 49 63 38
+movsxd rdi,DWORD PTR [r9]  | 49 63 39
+movsxd rdi,DWORD PTR [rax] | 48 63 38
+movsxd rdi,DWORD PTR [rbp] | 48 63 7d 00
+movsxd rdi,DWORD PTR [rbx] | 48 63 3b
+movsxd rdi,DWORD PTR [rcx] | 48 63 39
+movsxd rdi,DWORD PTR [rdi] | 48 63 3f
+movsxd rdi,DWORD PTR [rdx] | 48 63 3a
+movsxd rdi,DWORD PTR [rsi] | 48 63 3e
+movsxd rdi,DWORD PTR [rsp] | 48 63 3c 24
+movsxd rdx,DWORD PTR [r10] | 49 63 12
+movsxd rdx,DWORD PTR [r11] | 49 63 13
+movsxd rdx,DWORD PTR [r12] | 49 63 14 24
+movsxd rdx,DWORD PTR [r13] | 49 63 55 00
+movsxd rdx,DWORD PTR [r14] | 49 63 16
+movsxd rdx,DWORD PTR [r15] | 49 63 17
+movsxd rdx,DWORD PTR [r8]  | 49 63 10
+movsxd rdx,DWORD PTR [r9]  | 49 63 11
+movsxd rdx,DWORD PTR [rax] | 48 63 10
+movsxd rdx,DWORD PTR [rbp] | 48 63 55 00
+movsxd rdx,DWORD PTR [rbx] | 48 63 13
+movsxd rdx,DWORD PTR [rcx] | 48 63 11
+movsxd rdx,DWORD PTR [rdi] | 48 63 17
+movsxd rdx,DWORD PTR [rdx] | 48 63 12
+movsxd rdx,DWORD PTR [rsi] | 48 63 16
+movsxd rdx,DWORD PTR [rsp] | 48 63 14 24
+movsxd rsi,DWORD PTR [r10] | 49 63 32
+movsxd rsi,DWORD PTR [r11] | 49 63 33
+movsxd rsi,DWORD PTR [r12] | 49 63 34 24
+movsxd rsi,DWORD PTR [r13] | 49 63 75 00
+movsxd rsi,DWORD PTR [r14] | 49 63 36
+movsxd rsi,DWORD PTR [r15] | 49 63 37
+movsxd rsi,DWORD PTR [r8]  | 49 63 30
+movsxd rsi,DWORD PTR [r9]  | 49 63 31
+movsxd rsi,DWORD PTR [rax] | 48 63 30
+movsxd rsi,DWORD PTR [rbp] | 48 63 75 00
+movsxd rsi,DWORD PTR [rbx] | 48 63 33
+movsxd rsi,DWORD PTR [rcx] | 48 63 31
+movsxd rsi,DWORD PTR [rdi] | 48 63 37
+movsxd rsi,DWORD PTR [rdx] | 48 63 32
+movsxd rsi,DWORD PTR [rsi] | 48 63 36
+movsxd rsi,DWORD PTR [rsp] | 48 63 34 24
+movsxd rsp,DWORD PTR [r10] | 49 63 22
+movsxd rsp,DWORD PTR [r11] | 49 63 23
+movsxd rsp,DWORD PTR [r12] | 49 63 24 24
+movsxd rsp,DWORD PTR [r13] | 49 63 65 00
+movsxd rsp,DWORD PTR [r14] | 49 63 26
+movsxd rsp,DWORD PTR [r15] | 49 63 27
+movsxd rsp,DWORD PTR [r8]  | 49 63 20
+movsxd rsp,DWORD PTR [r9]  | 49 63 21
+movsxd rsp,DWORD PTR [rax] | 48 63 20
+movsxd rsp,DWORD PTR [rbp] | 48 63 65 00
+movsxd rsp,DWORD PTR [rbx] | 48 63 23
+movsxd rsp,DWORD PTR [rcx] | 48 63 21
+movsxd rsp,DWORD PTR [rdi] | 48 63 27
+movsxd rsp,DWORD PTR [rdx] | 48 63 22
+movsxd rsp,DWORD PTR [rsi] | 48 63 26
+movsxd rsp,DWORD PTR [rsp] | 48 63 24 24
+#
 movsxd rdx,DWORD PTR [r11+r15*4+0x12345678] | 4b 63 94 bb 78 56 34 12
 
 # Push
