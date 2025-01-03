@@ -35,7 +35,7 @@ final class TestHashUtils {
 		assertNotEquals(
 				f,
 				t,
-				() -> String.format("Expected hashes of booleans to be different but were 0x%08x and 0x%08x", f, t));
+				() -> String.format("Expected hashes of booleans to be different but were 0x%08x and 0x%08x.", f, t));
 	}
 
 	@Test
@@ -44,36 +44,31 @@ final class TestHashUtils {
 		for (int i = 0; i < 256; i++) {
 			v.add(HashUtils.hash(BitUtils.asByte(i)));
 		}
-		assertEquals(256, v.size(), () -> String.format("Expected to have 256 unique values but were %,d", v.size()));
+		assertEquals(256, v.size(), () -> String.format("Expected to have 256 unique values but were %,d.", v.size()));
 	}
 
 	@Test
 	void hashShorts() {
-		final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(System.nanoTime());
 		final Set<Integer> v = new HashSet<>();
-		final short x = BitUtils.asShort(rng.nextInt());
-		final int limit = 100;
-		for (int i = 0; i < limit; i++) {
-			v.add(HashUtils.hash(BitUtils.asShort(x + BitUtils.asShort(i))));
+		for (int i = 0; i < 65_536; i++) {
+			v.add(HashUtils.hash(BitUtils.asShort(i)));
 		}
 		assertEquals(
-				limit,
-				v.size(),
-				() -> String.format("Expected to have %,d unique values but were %,d", limit, v.size()));
+				65_536, v.size(), () -> String.format("Expected to have 65'536 unique values but were %,d.", v.size()));
 	}
 
 	@Test
 	void hashLongs() {
+		// Here we check that we can generate at least 1e6 unique hashes from 64-bit values.
 		final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(System.nanoTime());
+		final int limit = 1_000_000;
 		final Set<Integer> v = new HashSet<>();
-		final long x = rng.nextLong();
-		final int limit = 100;
-		for (int i = 0; i < limit; i++) {
-			v.add(HashUtils.hash(x + BitUtils.asLong(i)));
+		for (int i = 0; i < 1_000_000_000 && v.size() < limit; i++) {
+			v.add(HashUtils.hash(rng.nextLong()));
 		}
 		assertEquals(
 				limit,
 				v.size(),
-				() -> String.format("Expected to have %,d unique values but were %,d", limit, v.size()));
+				() -> String.format("Expected to have %,d unique values but were %,d.", limit, v.size()));
 	}
 }

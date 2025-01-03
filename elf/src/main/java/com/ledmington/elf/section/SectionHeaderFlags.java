@@ -92,6 +92,7 @@ public enum SectionHeaderFlags {
 	/** This section holds thread-local storage. Each thread within a process has a distinct instance of this data. */
 	SHF_TLS(0x00000000000400L, "TLS", "Section hold thread-local data", 'T'),
 
+	/** This section represents a linker Garbage Collection root. */
 	SHF_GNU_RETAIN(0x0000000000200000L, "GNU", "GNU Retain", 'R'),
 
 	/**

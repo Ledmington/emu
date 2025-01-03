@@ -65,5 +65,6 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 */
 	void set(final RFlags f, final boolean v);
 
+	/** Resets all RFLAGS. */
 	void resetFlags();
 }

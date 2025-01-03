@@ -37,10 +37,12 @@ public enum GnuPropertyType {
 
 	/** A 4-byte unsigned integer property: A bit is set if it is set in all relocatable inputs. */
 	GNU_PROPERTY_UINT32_AND_LO(0xb0000000),
+	/** End range of {@link GnuPropertyType#GNU_PROPERTY_UINT32_AND_LO}. */
 	GNU_PROPERTY_UINT32_AND_HI(0xb0007fff),
 
 	/** A 4-byte unsigned integer property: A bit is set if it is set in any relocatable inputs. */
 	GNU_PROPERTY_UINT32_OR_LO(0xb0008000),
+	/** End range of {@link GnuPropertyType#GNU_PROPERTY_UINT32_OR_LO}. */
 	GNU_PROPERTY_UINT32_OR_HI(0xb000ffff),
 
 	/** The needed properties by the object file. */
@@ -58,34 +60,14 @@ public enum GnuPropertyType {
 	/** Application-specific semantics, hi */
 	GNU_PROPERTY_HIUSER(0xffffffff),
 
-	GNU_PROPERTY_X86_COMPAT_ISA_1_USED(0xc0000000),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_NEEDED(0xc0000001),
-
-	GNU_PROPERTY_X86_COMPAT_ISA_1_486(1),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_586(1 << 1),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_686(1 << 2),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_SSE(1 << 3),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_SSE2(1 << 4),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_SSE3(1 << 5),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_SSSE3(1 << 6),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_SSE4_1(1 << 7),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_SSE4_2(1 << 8),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX(1 << 9),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX2(1 << 10),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512F(1 << 11),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512CD(1 << 12),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512ER(1 << 13),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512PF(1 << 14),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512VL(1 << 15),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512DQ(1 << 16),
-	GNU_PROPERTY_X86_COMPAT_ISA_1_AVX512BW(1 << 17),
-
 	/** A 4-byte unsigned integer property: A bit is set if it is set in all relocatable inputs. */
 	GNU_PROPERTY_X86_UINT32_AND_LO(0xc0000002),
+	/** End range of {@link GnuPropertyType#GNU_PROPERTY_X86_UINT32_AND_LO}. */
 	GNU_PROPERTY_X86_UINT32_AND_HI(0xc0007fff),
 
 	/** A 4-byte unsigned integer property: A bit is set if it is set in any relocatable inputs. */
 	GNU_PROPERTY_X86_UINT32_OR_LO(0xc0008000),
+	/** End range of {@link GnuPropertyType#GNU_PROPERTY_X86_UINT32_OR_LO}. */
 	GNU_PROPERTY_X86_UINT32_OR_HI(0xc000ffff),
 
 	/**
@@ -93,23 +75,26 @@ public enum GnuPropertyType {
 	 * present in all relocatable inputs.
 	 */
 	GNU_PROPERTY_X86_UINT32_OR_AND_LO(0xc0010000),
+	/** End range of {@link GnuPropertyType#GNU_PROPERTY_X86_UINT32_OR_AND_LO}. */
 	GNU_PROPERTY_X86_UINT32_OR_AND_HI(0xc0017fff),
 
 	/** X86 processor-specific features used in a program. */
 	GNU_PROPERTY_X86_FEATURE_1_AND(GNU_PROPERTY_X86_UINT32_AND_LO.getCode()),
 
-	/**
-	 * The x86 instruction sets indicated by the corresponding bits are used in a program, and they must be supported by
-	 * the hardware.
-	 */
+	/** This bit indicates that this property contains a list of x86 ISAs needed for execution. */
 	GNU_PROPERTY_X86_ISA_1_NEEDED(GNU_PROPERTY_X86_UINT32_OR_LO.getCode() + 2),
+	/** This bit indicates that this property contains a list of x86 features needed for execution. */
 	GNU_PROPERTY_X86_FEATURE_2_NEEDED(GNU_PROPERTY_X86_UINT32_OR_LO.getCode() + 1),
 
 	/**
-	 * The x86 instruction sets indicated by the corresponding bits are used in a program. Their support in the hardware
-	 * is optional.
+	 * This bit indicates that this property contains a list of x86 ISAs used by the program during execution but are
+	 * not needed.
 	 */
 	GNU_PROPERTY_X86_ISA_1_USED(GNU_PROPERTY_X86_UINT32_OR_AND_LO.getCode() + 2),
+	/**
+	 * This bit indicates that this property contains a list of x86 features used by the program during execution but
+	 * are not needed.
+	 */
 	GNU_PROPERTY_X86_FEATURE_2_USED(GNU_PROPERTY_X86_UINT32_OR_AND_LO.getCode() + 1),
 
 	/**
@@ -210,6 +195,12 @@ public enum GnuPropertyType {
 		throw new IllegalArgumentException(String.format("Unknown GNU property type code %d (0x%08x)", code, code));
 	}
 
+	/**
+	 * Decodes the given 32-bit code assuming it represents an x86 ISA GNU property.
+	 *
+	 * @param code The x86 ISA GNU property.
+	 * @return A List of properties regarding the x86 ISA features used.
+	 */
 	public static List<GnuPropertyType> decodeX86ISA(final int code) {
 		final List<GnuPropertyType> codes = new ArrayList<>();
 		int bitmask = code;
@@ -232,6 +223,12 @@ public enum GnuPropertyType {
 		return Collections.unmodifiableList(codes);
 	}
 
+	/**
+	 * Decodes the given 32-bit code assuming it represents an x86 ISA "feature 1" GNU property.
+	 *
+	 * @param code The x86 ISA "feature 1" GNU property.
+	 * @return A List of properties regarding the x86 ISA features used.
+	 */
 	public static List<GnuPropertyType> decodeX86ISAFeature1(final int code) {
 		final List<GnuPropertyType> codes = new ArrayList<>();
 		int bitmask = code;
@@ -254,6 +251,12 @@ public enum GnuPropertyType {
 		return Collections.unmodifiableList(codes);
 	}
 
+	/**
+	 * Decodes the given 32-bit code assuming it represents an x86 ISA "feature 2" GNU property.
+	 *
+	 * @param code The x86 ISA "feature 2" GNU property.
+	 * @return A List of properties regarding the x86 ISA features used.
+	 */
 	public static List<GnuPropertyType> decodeX86ISAFeature2(final int code) {
 		final List<GnuPropertyType> codes = new ArrayList<>();
 		int bitmask = code;

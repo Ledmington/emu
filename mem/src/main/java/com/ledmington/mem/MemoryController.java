@@ -42,6 +42,8 @@ public final class MemoryController implements Memory {
 	 * @param memory The Memory object to wrap with permission checking.
 	 * @param breakOnWrongPermissions Decides whether this controller should throw an exception when accessing memory
 	 *     with the wrong permissions.
+	 * @param breakWhenReadingUninitializedMemory Decides whether this controller should throw an exception when reading
+	 *     uninitialized memory.
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public MemoryController(
@@ -254,6 +256,12 @@ public final class MemoryController implements Memory {
 		return this.mem.read(address);
 	}
 
+	/**
+	 * Reads 4 contiguous bytes starting from the given address.
+	 *
+	 * @param address The address to start reading from.
+	 * @return A 32-bit value read.
+	 */
 	public int read4(final long address) {
 		int x = 0x00000000;
 		x |= BitUtils.asInt(read(address));
