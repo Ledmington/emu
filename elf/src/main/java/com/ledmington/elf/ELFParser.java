@@ -64,6 +64,12 @@ public final class ELFParser {
 
 	private ELFParser() {}
 
+	/**
+	 * Parses the given file and returns an {@link ELF} file object.
+	 *
+	 * @param filename The name of the file to be parsed.
+	 * @return An ELF file object.
+	 */
 	public static ELF parse(final String filename) {
 		final File file = new File(filename);
 		if (!file.exists()) {

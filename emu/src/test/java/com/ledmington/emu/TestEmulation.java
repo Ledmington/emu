@@ -17,6 +17,8 @@
  */
 package com.ledmington.emu;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,18 +27,18 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
 /** End-to-end testing emulating entire executables. */
-public final class TestEmulation {
+final class TestEmulation {
 
 	@Test
 	void doNothing() {
 		final Path p;
 		try {
-			p = Paths.get(
-					Objects.requireNonNull(this.getClass().getClassLoader().getResource("do_nothing.elf"))
-							.toURI());
+			p = Paths.get(Objects.requireNonNull(
+							Thread.currentThread().getContextClassLoader().getResource("do_nothing.elf"))
+					.toURI());
 		} catch (final URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
-		Emu.run(p.toString());
+		assertDoesNotThrow(() -> Emu.run(p.toString()));
 	}
 }

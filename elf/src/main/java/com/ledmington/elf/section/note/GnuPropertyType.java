@@ -161,10 +161,20 @@ public enum GnuPropertyType {
 		this(code, "UNKNOWN");
 	}
 
+	/**
+	 * Returns the 32-bit code of this GNU property type.
+	 *
+	 * @return The 32-bit code of this GNU property type.
+	 */
 	public int getCode() {
 		return code;
 	}
 
+	/**
+	 * Returns a String with the description of this type as GNU's <code>readelf</code> would print it.
+	 *
+	 * @return The description of this type.
+	 */
 	public String getDescription() {
 		return description;
 	}
