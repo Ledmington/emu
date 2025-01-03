@@ -25,7 +25,6 @@ import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -85,97 +84,81 @@ final class TestExecution {
 
 	private static Stream<Arguments> pairs32() {
 		return Arrays.stream(Register32.values())
-				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
+				.flatMap(r -> Arrays.stream(Register32.values()).map(x -> Arguments.of(r, x)));
 	}
 
 	private static Stream<Arguments> pairs16() {
 		return Arrays.stream(Register16.values())
-				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
+				.flatMap(r -> Arrays.stream(Register16.values()).map(x -> Arguments.of(r, x)));
 	}
 
 	private static Stream<Arguments> pairs8() {
 		return Arrays.stream(Register8.values())
-				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
+				.flatMap(r -> Arrays.stream(Register8.values()).map(x -> Arguments.of(r, x)));
 	}
 
-	@Test
-	void add64() {
-		for (final Register64 a : Register64.values()) {
-			for (final Register64 b : Register64.values()) {
-				final long oldValue1 = cpu.getRegisters().get(a);
-				final long oldValue2 = cpu.getRegisters().get(b);
-				final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-				final long result = oldValue1 + oldValue2;
-				expected.set(a, result);
-				expected.set(RFlags.ZERO, result == 0L);
-				cpu.executeOne(new Instruction(Opcode.ADD, a, b));
-				assertEquals(
-						expected,
-						cpu.getRegisters(),
-						() -> String.format(
-								"Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
-			}
-		}
+	@ParameterizedTest
+	@MethodSource("pairs64")
+	void add64(final Register64 a, final Register64 b) {
+		final long oldValue1 = cpu.getRegisters().get(a);
+		final long oldValue2 = cpu.getRegisters().get(b);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final long result = oldValue1 + oldValue2;
+		expected.set(a, result);
+		expected.set(RFlags.ZERO, result == 0L);
+		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
-	@Test
-	void add32() {
-		for (final Register32 a : Register32.values()) {
-			for (final Register32 b : Register32.values()) {
-				final int oldValue1 = cpu.getRegisters().get(a);
-				final int oldValue2 = cpu.getRegisters().get(b);
-				final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-				final int result = oldValue1 + oldValue2;
-				expected.set(a, result);
-				expected.set(RFlags.ZERO, result == 0L);
-				cpu.executeOne(new Instruction(Opcode.ADD, a, b));
-				assertEquals(
-						expected,
-						cpu.getRegisters(),
-						() -> String.format(
-								"Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
-			}
-		}
+	@ParameterizedTest
+	@MethodSource("pairs32")
+	void add32(final Register32 a, final Register32 b) {
+		final int oldValue1 = cpu.getRegisters().get(a);
+		final int oldValue2 = cpu.getRegisters().get(b);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 + oldValue2;
+		expected.set(a, result);
+		expected.set(RFlags.ZERO, result == 0L);
+		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
-	@Test
-	void add16() {
-		for (final Register16 a : Register16.values()) {
-			for (final Register16 b : Register16.values()) {
-				final short oldValue1 = cpu.getRegisters().get(a);
-				final short oldValue2 = cpu.getRegisters().get(b);
-				final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-				final short result = BitUtils.asShort(oldValue1 + oldValue2);
-				expected.set(a, result);
-				expected.set(RFlags.ZERO, result == 0);
-				cpu.executeOne(new Instruction(Opcode.ADD, a, b));
-				assertEquals(
-						expected,
-						cpu.getRegisters(),
-						() -> String.format(
-								"Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
-			}
-		}
+	@ParameterizedTest
+	@MethodSource("pairs16")
+	void add16(final Register16 a, final Register16 b) {
+		final short oldValue1 = cpu.getRegisters().get(a);
+		final short oldValue2 = cpu.getRegisters().get(b);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final short result = BitUtils.asShort(oldValue1 + oldValue2);
+		expected.set(a, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
-	@Test
-	void add8() {
-		for (final Register8 a : Register8.values()) {
-			for (final Register8 b : Register8.values()) {
-				final byte oldValue1 = cpu.getRegisters().get(a);
-				final byte oldValue2 = cpu.getRegisters().get(b);
-				final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-				final byte result = BitUtils.asByte(oldValue1 + oldValue2);
-				expected.set(a, result);
-				expected.set(RFlags.ZERO, result == 0);
-				cpu.executeOne(new Instruction(Opcode.ADD, a, b));
-				assertEquals(
-						expected,
-						cpu.getRegisters(),
-						() -> String.format(
-								"Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
-			}
-		}
+	@ParameterizedTest
+	@MethodSource("pairs8")
+	void add8(final Register8 a, final Register8 b) {
+		final byte oldValue1 = cpu.getRegisters().get(a);
+		final byte oldValue2 = cpu.getRegisters().get(b);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final byte result = BitUtils.asByte(oldValue1 + oldValue2);
+		expected.set(a, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
 	@ParameterizedTest
