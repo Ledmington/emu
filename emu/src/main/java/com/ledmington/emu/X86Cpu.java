@@ -166,10 +166,8 @@ public class X86Cpu implements X86Emulator {
 						rf.resetFlags();
 						rf.set(RFlags.ZERO, result == 0);
 					}
-					default -> {
-						throw new IllegalArgumentException(
-								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
-					}
+					default -> throw new IllegalArgumentException(
+							String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
 				}
 			}
 			case SHR -> {
@@ -234,6 +232,13 @@ public class X86Cpu implements X86Emulator {
 					throw new IllegalArgumentException(String.format("Don't know what to do with %s", inst));
 				}
 			}
+			case CMP -> {
+				final long a = mem.read8(computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand()));
+				final long b = ((Immediate) inst.secondOperand()).asLong();
+				final long result = a - b;
+				rf.resetFlags();
+				rf.set(RFlags.ZERO, result == 0L);
+			}
 			case TEST -> {
 				final long r1 = rf.get((Register64) inst.firstOperand());
 				final long r2 = rf.get((Register64) inst.secondOperand());
@@ -252,32 +257,32 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case MOV -> {
-				final Register64 dest = (Register64) inst.firstOperand();
-				switch (inst.secondOperand()) {
-					case Register64 src -> rf.set(dest, rf.get(src));
-					case IndirectOperand io -> rf.set(dest, mem.read8(computeIndirectOperand(rf, io)));
-					case Immediate imm -> {
-						// Zero-extend immediates
-						final long v =
-								switch (imm.bits()) {
-									case 8 -> BitUtils.asLong(imm.asByte());
-									case 16 -> BitUtils.asLong(imm.asShort());
-									case 32 -> BitUtils.asLong(imm.asInt());
-									case 64 -> imm.asLong();
-									default -> throw new IllegalStateException(
-											String.format("Unexpected value: %,d.", imm.bits()));
-								};
-						rf.set(dest, v);
-					}
-					default -> throw new IllegalArgumentException(
+				if (inst.firstOperand() instanceof Register64 op1 && inst.secondOperand() instanceof Register64 op2) {
+					rf.set(op1, rf.get(op2));
+				} else if (inst.firstOperand() instanceof Register64 op1
+						&& inst.secondOperand() instanceof Immediate imm) {
+					rf.set(
+							op1,
+							switch (imm.bits()) {
+								case 32 -> BitUtils.asLong(imm.asInt());
+								case 64 -> imm.asLong();
+								default -> throw new Error("Unreachable.");
+							});
+				} else if (inst.firstOperand() instanceof Register64 op1
+						&& inst.secondOperand() instanceof IndirectOperand iop) {
+					final long address = computeIndirectOperand(rf, iop);
+					rf.set(op1, mem.read8(address));
+				} else if (inst.firstOperand() instanceof IndirectOperand iop
+						&& inst.secondOperand() instanceof Register64 op2) {
+					final long address = computeIndirectOperand(rf, iop);
+					mem.write(address, rf.get(op2));
+				} else {
+					throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'", inst.secondOperand()));
 				}
 			}
 			case MOVSXD -> {
-				logger.debug("RSI = 0x%016x", rf.get(Register64.RSI));
-				final long address = computeIndirectOperand(rf, (IndirectOperand) inst.secondOperand());
-				logger.debug("Address = 0x%016x", address);
-				final long x = mem.read4(address);
+				final long x = rf.get((Register32) inst.secondOperand());
 				rf.set((Register64) inst.firstOperand(), x);
 			}
 			case PUSH -> {
@@ -331,21 +336,22 @@ public class X86Cpu implements X86Emulator {
 
 				rf.set(Register64.RIP, rip + relativeAddress);
 			}
-			case RET -> {
-				// TODO: check this
-				final long prev = rf.get(Register64.RSP) + 8L;
+				/*case RET -> {
+					// TODO: check this
+					final long prev = rf.get(Register64.RSP) + 8L;
 
-				// If we read 0x0, we have exhausted the stack
-				final long zero = 0L;
-				if (mem.read8(prev) == zero) {
-					state = State.HALTED;
-				} else {
-					rf.set(Register64.RSP, prev);
-					rf.set(Register64.RIP, mem.read8(prev));
-				}
-			}
+					// If we read 0x0, we have exhausted the stack
+					final long zero = 0L;
+					if (mem.read8(prev) == zero) {
+						state = State.HALTED;
+					} else {
+						rf.set(Register64.RSP, prev);
+						rf.set(Register64.RIP, mem.read8(prev));
+					}
+				}*/
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented");
 			case HLT -> state = State.HALTED;
+			case NOP -> {}
 			default -> throw new IllegalArgumentException(
 					String.format("Unknown instruction %s", inst.toIntelSyntax()));
 		}
