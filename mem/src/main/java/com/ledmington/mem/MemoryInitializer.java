@@ -41,7 +41,7 @@ public interface MemoryInitializer extends Supplier<Byte> {
 	/**
 	 * Initializes the memory to all zeroes.
 	 *
-	 * @return A memory initializer which return always the zero byte.
+	 * @return A memory initializer which returns always the zero byte.
 	 */
 	static MemoryInitializer zero() {
 		return () -> (byte) 0x00;

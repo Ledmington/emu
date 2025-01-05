@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/** A class to mimic the behavior of a real-world RAM. */
+/** A class to mimic the behaviour of a real-world RAM. */
 public final class RandomAccessMemory implements Memory {
 
 	private final MemoryInitializer init;
@@ -53,6 +53,28 @@ public final class RandomAccessMemory implements Memory {
 
 	@Override
 	public String toString() {
-		return "RandomAccessMemory(initializer=" + init + "m=" + m + ')';
+		return "RandomAccessMemory(initializer=" + init + ";m=" + m + ')';
+	}
+
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + init.hashCode();
+		h = 31 * h + m.hashCode();
+		return h;
+	}
+
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof final RandomAccessMemory ram)) {
+			return false;
+		}
+		return this.init.equals(ram.init) && this.m.equals(ram.m);
 	}
 }
