@@ -280,6 +280,7 @@ public final class MemoryController implements Memory {
 	 * @return A 64-bit value read.
 	 */
 	public long read8(final long address) {
+		// Little-ednian
 		long x = 0x0000000000000000L;
 		x |= BitUtils.asLong(read(address));
 		x |= (BitUtils.asLong(read(address + 1L)) << 8);
@@ -323,14 +324,15 @@ public final class MemoryController implements Memory {
 	 * @param value The 64-bit value to write.
 	 */
 	public void write(final long address, final long value) {
-		write(address, BitUtils.asByte(value >> 56));
-		write(address + 1L, BitUtils.asByte(value >> 48));
-		write(address + 2L, BitUtils.asByte(value >> 40));
-		write(address + 3L, BitUtils.asByte(value >> 32));
-		write(address + 4L, BitUtils.asByte(value >> 24));
-		write(address + 5L, BitUtils.asByte(value >> 16));
-		write(address + 6L, BitUtils.asByte(value >> 8));
-		write(address + 7L, BitUtils.asByte(value));
+		// Little-endian
+		write(address, BitUtils.asByte(value));
+		write(address + 1L, BitUtils.asByte(value >> 8));
+		write(address + 2L, BitUtils.asByte(value >> 16));
+		write(address + 3L, BitUtils.asByte(value >> 24));
+		write(address + 4L, BitUtils.asByte(value >> 32));
+		write(address + 5L, BitUtils.asByte(value >> 40));
+		write(address + 6L, BitUtils.asByte(value >> 48));
+		write(address + 7L, BitUtils.asByte(value >> 56));
 	}
 
 	@Override

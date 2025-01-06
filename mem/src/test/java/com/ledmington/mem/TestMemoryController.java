@@ -19,23 +19,53 @@ package com.ledmington.mem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
+import java.util.random.RandomGenerator;
+import java.util.random.RandomGeneratorFactory;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestMemoryController {
-	@Test
-	void multiByteRead() {
+
+	private static final RandomGenerator rng =
+			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+
+	private static Stream<Arguments> randomMemoryLocations() {
+		return Stream.generate(rng::nextLong).distinct().limit(100).map(Arguments::of);
+	}
+
+	@ParameterizedTest
+	@MethodSource("randomMemoryLocations")
+	void multiByteRead(final long address) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		final long start = 0x5a5a5a5a00000000L;
-		mem.setPermissions(start, start + 7L, true, true, false);
-		mem.write(start, (byte) 0x00);
-		mem.write(start + 1L, (byte) 0x01);
-		mem.write(start + 2L, (byte) 0x02);
-		mem.write(start + 3L, (byte) 0x03);
-		mem.write(start + 4L, (byte) 0x04);
-		mem.write(start + 5L, (byte) 0x05);
-		mem.write(start + 6L, (byte) 0x06);
-		mem.write(start + 7L, (byte) 0x07);
-		assertEquals(0x0706050403020100L, mem.read8(start));
+		mem.setPermissions(address, address + 7L, true, true, false);
+		mem.write(address, (byte) 0x00);
+		mem.write(address + 1L, (byte) 0x01);
+		mem.write(address + 2L, (byte) 0x02);
+		mem.write(address + 3L, (byte) 0x03);
+		mem.write(address + 4L, (byte) 0x04);
+		mem.write(address + 5L, (byte) 0x05);
+		mem.write(address + 6L, (byte) 0x06);
+		mem.write(address + 7L, (byte) 0x07);
+		assertEquals(
+				0x0706050403020100L,
+				mem.read8(address),
+				() -> String.format("Expected 0x%016x but was 0x%016x.", 0x0706050403020100L, mem.read8(address)));
+	}
+
+	@ParameterizedTest
+	@MethodSource("randomMemoryLocations")
+	void multiByteWrite(final long address) {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		mem.setPermissions(address, address + 7L, true, true, false);
+		mem.write(address, 0x0706050403020100L);
+		assertEquals(
+				0x0706050403020100L,
+				mem.read8(address),
+				() -> String.format("Expected 0x%016x but was 0x%016x.", 0x0706050403020100L, mem.read8(address)));
 	}
 }

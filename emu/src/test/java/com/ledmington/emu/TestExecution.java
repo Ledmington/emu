@@ -25,10 +25,12 @@ import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register16;
@@ -37,6 +39,8 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.MemoryInitializer;
+import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 
 final class TestExecution {
@@ -203,5 +207,89 @@ final class TestExecution {
 				expected,
 				cpu.getRegisters(),
 				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@Test
+	void push() {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		final X86Cpu cpu = new X86Cpu(mem);
+		final long base = rng.nextLong();
+		mem.setPermissions(base - 8L, base, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		mem.write(base - 8L, 0L);
+		final long val = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(val)));
+
+		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+
+		final long newRSP = base - 8L;
+		assertEquals(
+				newRSP,
+				cpu.getRegisters().get(Register64.RSP),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						newRSP, cpu.getRegisters().get(Register64.RSP)));
+		assertEquals(
+				val,
+				mem.read8(newRSP),
+				() -> String.format("Expected 0x%016x but was 0x%016x.", val, mem.read8(newRSP)));
+	}
+
+	@Test
+	void pop() {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		final X86Cpu cpu = new X86Cpu(mem);
+		final long base = rng.nextLong();
+		mem.setPermissions(base, base + 7L, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		final long val = rng.nextLong();
+		mem.write(base, val);
+
+		cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+
+		final long newRSP = base + 8L;
+		assertEquals(
+				val,
+				cpu.getRegisters().get(Register64.RAX),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						val, cpu.getRegisters().get(Register64.RAX)));
+		assertEquals(
+				newRSP,
+				cpu.getRegisters().get(Register64.RSP),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						newRSP, cpu.getRegisters().get(Register64.RSP)));
+	}
+
+	@Test
+	void pushAndPop() {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		final X86Cpu cpu = new X86Cpu(mem);
+		final long base = rng.nextLong();
+		mem.setPermissions(base - 8L, base, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		final long val = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(val)));
+		mem.write(base - 8L, 0L);
+
+		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+		cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+
+		assertEquals(
+				base,
+				cpu.getRegisters().get(Register64.RSP),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						base, cpu.getRegisters().get(Register64.RSP)));
+		assertEquals(
+				val,
+				cpu.getRegisters().get(Register64.RAX),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						val, cpu.getRegisters().get(Register64.RAX)));
 	}
 }

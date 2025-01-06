@@ -56,7 +56,7 @@ public class X86Cpu implements X86Emulator {
 	private final InstructionDecoder dec;
 
 	/**
-	 * The current state of the CPU. Children classes cna modify this field before executing instructions or to forcibly
+	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
 	 * terminate execution.
 	 */
 	protected State state = State.RUNNING;
@@ -235,9 +235,10 @@ public class X86Cpu implements X86Emulator {
 			case CMP -> {
 				final long a = mem.read8(computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand()));
 				final long b = ((Immediate) inst.secondOperand()).asLong();
-				final long result = a - b;
+				final long result = b - a;
 				rf.resetFlags();
 				rf.set(RFlags.ZERO, result == 0L);
+				rf.set(RFlags.SIGN, result < 0L);
 			}
 			case TEST -> {
 				final long r1 = rf.get((Register64) inst.firstOperand());
