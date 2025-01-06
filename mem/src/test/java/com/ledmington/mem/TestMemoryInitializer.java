@@ -18,6 +18,7 @@
 package com.ledmington.mem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.random.RandomGenerator;
@@ -41,7 +42,7 @@ final class TestMemoryInitializer {
 					(byte) 0x00,
 					mem.read(address),
 					() -> String.format(
-							"Expected read at 0x%016x to return 0 but was 0x%02x", address, mem.read(address)));
+							"Expected read at 0x%016x to return 0 but was 0x%02x.", address, mem.read(address)));
 		}
 	}
 
@@ -55,6 +56,13 @@ final class TestMemoryInitializer {
 								.collect(Collectors.toSet())
 								.size()
 						> 1,
-				"mem.read() returned always the same value");
+				"mem.read() returned always the same value.");
+	}
+
+	@Test
+	void randomReturnsDifferentValueAtSamePlace() {
+		final Memory mem = new RandomAccessMemory(MemoryInitializer.random());
+		final long address = rng.nextLong();
+		assertNotEquals(mem.read(address), mem.read(address));
 	}
 }
