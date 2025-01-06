@@ -219,7 +219,7 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof Register64 r2_64) {
 					rf.set(r1_64, rf.get(r1_64) ^ rf.get(r2_64));
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s", inst));
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
 				}
 			}
 			case AND -> {
@@ -229,7 +229,7 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof Immediate imm) {
 					rf.set(r1, rf.get(r1) & imm.asLong());
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s", inst));
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
 				}
 			}
 			case CMP -> {
@@ -296,10 +296,10 @@ public class X86Cpu implements X86Emulator {
 						};
 
 				final long rsp = rf.get(Register64.RSP);
-				final long newRSP = rsp - 8L;
-				mem.write(newRSP, value);
 				// the stack "grows downward"
+				final long newRSP = rsp - 8L;
 				rf.set(Register64.RSP, newRSP);
+				mem.write(newRSP, value);
 			}
 			case POP -> {
 				final Register64 dest = (Register64) inst.firstOperand();

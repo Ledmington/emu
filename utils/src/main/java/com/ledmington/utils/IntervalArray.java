@@ -29,7 +29,7 @@ public final class IntervalArray {
 		private Block {
 			if (end < start) {
 				throw new IllegalArgumentException(
-						String.format("Invalid start (0x%x) and end (0x%x) of a block", start, end));
+						String.format("Invalid start (0x%016x) and end (0x016%x) of a block.", start, end));
 			}
 		}
 	}

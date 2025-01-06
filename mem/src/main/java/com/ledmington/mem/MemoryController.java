@@ -224,7 +224,7 @@ public final class MemoryController implements Memory {
 			final boolean executable) {
 		if (endBlockAddress < startBlockAddress) {
 			throw new IllegalArgumentException(String.format(
-					"Invalid endBlockAddress (0x%x) was less than startBlockAddress (0x%x)",
+					"Invalid endBlockAddress (0x%016x) was less than startBlockAddress (0x%016x).",
 					startBlockAddress, endBlockAddress));
 		}
 
@@ -280,7 +280,7 @@ public final class MemoryController implements Memory {
 	 * @return A 64-bit value read.
 	 */
 	public long read8(final long address) {
-		// Little-ednian
+		// Little-endian
 		long x = 0x0000000000000000L;
 		x |= BitUtils.asLong(read(address));
 		x |= (BitUtils.asLong(read(address + 1L)) << 8);
