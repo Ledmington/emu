@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** A class to contain list of ranges of boolean values. */
+/** A class to contain a list of ranges of boolean values. */
 // TODO: this can be optimized into a segment tree.
 public final class IntervalArray {
 
@@ -143,5 +143,31 @@ public final class IntervalArray {
 		}
 		sortBlocks();
 		mergeBlocks();
+	}
+
+	@Override
+	public String toString() {
+		return "IntervalArray(blocks=" + blocks + ")";
+	}
+
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + blocks.hashCode();
+		return h;
+	}
+
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof final IntervalArray ia)) {
+			return false;
+		}
+		return this.blocks.equals(ia.blocks);
 	}
 }

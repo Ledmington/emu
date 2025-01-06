@@ -108,7 +108,9 @@ public final class MemoryController implements Memory {
 
 		final StringBuilder sb = new StringBuilder(128);
 
-		sb.append("\nLegend:\n Uninitialized=xx ")
+		sb.append("\nLegend:\n")
+				.append(white)
+				.append(" Uninitialized=xx ")
 				.append(red)
 				.append("Readable")
 				.append(reset)
@@ -377,5 +379,32 @@ public final class MemoryController implements Memory {
 				+ canRead + ";canWrite="
 				+ canWrite + ";canExecute="
 				+ canExecute + ')';
+	}
+
+	@Override
+	public int hashCode() {
+		int h = 17;
+		h = 31 * h + mem.hashCode();
+		h = 31 * h + canRead.hashCode();
+		h = 31 * h + canWrite.hashCode();
+		h = 31 * h + canExecute.hashCode();
+		return h;
+	}
+
+	@Override
+	public boolean equals(final Object other) {
+		if (other == null) {
+			return false;
+		}
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof final MemoryController m)) {
+			return false;
+		}
+		return this.mem.equals(m)
+				&& this.canRead.equals(m.canRead)
+				&& this.canWrite.equals(m.canWrite)
+				&& this.canExecute.equals(m.canExecute);
 	}
 }
