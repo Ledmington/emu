@@ -83,7 +83,7 @@ public enum OSABI {
 	private static final Map<Byte, OSABI> codeToABI = new HashMap<>();
 
 	static {
-		for (final OSABI x : OSABI.values()) {
+		for (final OSABI x : values()) {
 			if (codeToABI.containsKey(x.code)) {
 				throw new IllegalStateException(String.format(
 						"OSABI enum value with code %d (0x%02x) and name '%s' already exists",

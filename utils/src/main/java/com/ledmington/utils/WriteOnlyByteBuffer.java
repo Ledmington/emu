@@ -25,35 +25,35 @@ public interface WriteOnlyByteBuffer {
 	 *
 	 * @param b The byte to be written.
 	 */
-	void write(final byte b);
+	void write(byte b);
 
 	/**
 	 * Writes the given short with the current endianness at the current position.
 	 *
 	 * @param s The 2-byte value to be written.
 	 */
-	void write(final short s);
+	void write(short s);
 
 	/**
 	 * Writes the given int with the current endianness at the current position.
 	 *
 	 * @param x The 4-byte value to be written.
 	 */
-	void write(final int x);
+	void write(int x);
 
 	/**
 	 * Writes the fiven long with the current endianness at the current position.
 	 *
 	 * @param x The 8-byte value to be written.
 	 */
-	void write(final long x);
+	void write(long x);
 
 	/**
 	 * Writes the array of bytes at the current position. It is equivalent to call write() on each element in order.
 	 *
 	 * @param bytes The byte array to be written.
 	 */
-	void write(final byte[] bytes);
+	void write(byte[] bytes);
 
 	/**
 	 * Writes the array of ints, each with the current endianness, at the current position. It is equivalent to call
@@ -61,7 +61,7 @@ public interface WriteOnlyByteBuffer {
 	 *
 	 * @param ints The int array to be written.
 	 */
-	void write(final int... ints);
+	void write(int... ints);
 
 	/**
 	 * Writes the array of longs, each with the current endianness, at the current position. It is equivalent to call
@@ -69,7 +69,7 @@ public interface WriteOnlyByteBuffer {
 	 *
 	 * @param longs The long array to be written.
 	 */
-	void write(final long... longs);
+	void write(long... longs);
 
 	/**
 	 * Returns the array that has been written.
@@ -90,5 +90,5 @@ public interface WriteOnlyByteBuffer {
 	 *
 	 * @param newPosition The new position in the buffer.
 	 */
-	void setPosition(final int newPosition);
+	void setPosition(int newPosition);
 }

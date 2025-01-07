@@ -17,13 +17,6 @@
  */
 package com.ledmington.emu;
 
-import static com.ledmington.utils.BitUtils.asByte;
-import static com.ledmington.utils.BitUtils.asInt;
-import static com.ledmington.utils.BitUtils.asLong;
-import static com.ledmington.utils.BitUtils.asShort;
-import static com.ledmington.utils.BitUtils.shl;
-import static com.ledmington.utils.BitUtils.shr;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -33,6 +26,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 
 /** This class represents the set of registers used by an x86-64 processor during execution. */
@@ -69,74 +63,74 @@ public final class X86RegisterFile implements RegisterFile {
 	@Override
 	public byte get(final Register8 r) {
 		return switch (r) {
-			case AL -> asByte(gpr[0]);
-			case BL -> asByte(gpr[1]);
-			case CL -> asByte(gpr[2]);
-			case DL -> asByte(gpr[3]);
-			case AH -> asByte(shr(gpr[0], 8));
-			case BH -> asByte(shr(gpr[1], 8));
-			case CH -> asByte(shr(gpr[2], 8));
-			case DH -> asByte(shr(gpr[3], 8));
-			case SPL -> asByte(gpr[4]);
-			case BPL -> asByte(gpr[5]);
-			case DIL -> asByte(gpr[6]);
-			case SIL -> asByte(gpr[7]);
-			case R8B -> asByte(gpr[8]);
-			case R9B -> asByte(gpr[9]);
-			case R10B -> asByte(gpr[10]);
-			case R11B -> asByte(gpr[11]);
-			case R12B -> asByte(gpr[12]);
-			case R13B -> asByte(gpr[13]);
-			case R14B -> asByte(gpr[14]);
-			case R15B -> asByte(gpr[15]);
+			case AL -> BitUtils.asByte(gpr[0]);
+			case BL -> BitUtils.asByte(gpr[1]);
+			case CL -> BitUtils.asByte(gpr[2]);
+			case DL -> BitUtils.asByte(gpr[3]);
+			case AH -> BitUtils.asByte(BitUtils.shr(gpr[0], 8));
+			case BH -> BitUtils.asByte(BitUtils.shr(gpr[1], 8));
+			case CH -> BitUtils.asByte(BitUtils.shr(gpr[2], 8));
+			case DH -> BitUtils.asByte(BitUtils.shr(gpr[3], 8));
+			case SPL -> BitUtils.asByte(gpr[4]);
+			case BPL -> BitUtils.asByte(gpr[5]);
+			case DIL -> BitUtils.asByte(gpr[6]);
+			case SIL -> BitUtils.asByte(gpr[7]);
+			case R8B -> BitUtils.asByte(gpr[8]);
+			case R9B -> BitUtils.asByte(gpr[9]);
+			case R10B -> BitUtils.asByte(gpr[10]);
+			case R11B -> BitUtils.asByte(gpr[11]);
+			case R12B -> BitUtils.asByte(gpr[12]);
+			case R13B -> BitUtils.asByte(gpr[13]);
+			case R14B -> BitUtils.asByte(gpr[14]);
+			case R15B -> BitUtils.asByte(gpr[15]);
 		};
 	}
 
 	@Override
 	public void set(final Register8 r, final byte v) {
 		switch (r) {
-			case AL -> gpr[0] = (gpr[0] & 0xffffffffffffff00L) | asLong(v);
-			case BL -> gpr[1] = (gpr[1] & 0xffffffffffffff00L) | asLong(v);
-			case CL -> gpr[2] = (gpr[2] & 0xffffffffffffff00L) | asLong(v);
-			case DL -> gpr[3] = (gpr[3] & 0xffffffffffffff00L) | asLong(v);
-			case AH -> gpr[0] = (gpr[0] & 0xffffffffffff00ffL) | shl(asLong(v), 8);
-			case BH -> gpr[1] = (gpr[1] & 0xffffffffffff00ffL) | shl(asLong(v), 8);
-			case CH -> gpr[2] = (gpr[2] & 0xffffffffffff00ffL) | shl(asLong(v), 8);
-			case DH -> gpr[3] = (gpr[3] & 0xffffffffffff00ffL) | shl(asLong(v), 8);
-			case SPL -> gpr[4] = (gpr[4] & 0xffffffffffffff00L) | asLong(v);
-			case BPL -> gpr[5] = (gpr[5] & 0xffffffffffffff00L) | asLong(v);
-			case DIL -> gpr[6] = (gpr[6] & 0xffffffffffffff00L) | asLong(v);
-			case SIL -> gpr[7] = (gpr[7] & 0xffffffffffffff00L) | asLong(v);
-			case R8B -> gpr[8] = (gpr[8] & 0xffffffffffffff00L) | asLong(v);
-			case R9B -> gpr[9] = (gpr[9] & 0xffffffffffffff00L) | asLong(v);
-			case R10B -> gpr[10] = (gpr[10] & 0xffffffffffffff00L) | asLong(v);
-			case R11B -> gpr[11] = (gpr[11] & 0xffffffffffffff00L) | asLong(v);
-			case R12B -> gpr[12] = (gpr[12] & 0xffffffffffffff00L) | asLong(v);
-			case R13B -> gpr[13] = (gpr[13] & 0xffffffffffffff00L) | asLong(v);
-			case R14B -> gpr[14] = (gpr[14] & 0xffffffffffffff00L) | asLong(v);
-			case R15B -> gpr[15] = (gpr[15] & 0xffffffffffffff00L) | asLong(v);
+			case AL -> gpr[0] = (gpr[0] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case BL -> gpr[1] = (gpr[1] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case CL -> gpr[2] = (gpr[2] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case DL -> gpr[3] = (gpr[3] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case AH -> gpr[0] = (gpr[0] & 0xffffffffffff00ffL) | BitUtils.shl(BitUtils.asLong(v), 8);
+			case BH -> gpr[1] = (gpr[1] & 0xffffffffffff00ffL) | BitUtils.shl(BitUtils.asLong(v), 8);
+			case CH -> gpr[2] = (gpr[2] & 0xffffffffffff00ffL) | BitUtils.shl(BitUtils.asLong(v), 8);
+			case DH -> gpr[3] = (gpr[3] & 0xffffffffffff00ffL) | BitUtils.shl(BitUtils.asLong(v), 8);
+			case SPL -> gpr[4] = (gpr[4] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case BPL -> gpr[5] = (gpr[5] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case DIL -> gpr[6] = (gpr[6] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case SIL -> gpr[7] = (gpr[7] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R8B -> gpr[8] = (gpr[8] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R9B -> gpr[9] = (gpr[9] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R10B -> gpr[10] = (gpr[10] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R11B -> gpr[11] = (gpr[11] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R12B -> gpr[12] = (gpr[12] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R13B -> gpr[13] = (gpr[13] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R14B -> gpr[14] = (gpr[14] & 0xffffffffffffff00L) | BitUtils.asLong(v);
+			case R15B -> gpr[15] = (gpr[15] & 0xffffffffffffff00L) | BitUtils.asLong(v);
 		}
 	}
 
 	@Override
 	public short get(final Register16 r) {
 		return switch (r) {
-			case AX -> asShort(gpr[0]);
-			case BX -> asShort(gpr[1]);
-			case CX -> asShort(gpr[2]);
-			case DX -> asShort(gpr[3]);
-			case SP -> asShort(gpr[4]);
-			case BP -> asShort(gpr[5]);
-			case SI -> asShort(gpr[6]);
-			case DI -> asShort(gpr[7]);
-			case R8W -> asShort(gpr[8]);
-			case R9W -> asShort(gpr[9]);
-			case R10W -> asShort(gpr[10]);
-			case R11W -> asShort(gpr[11]);
-			case R12W -> asShort(gpr[12]);
-			case R13W -> asShort(gpr[13]);
-			case R14W -> asShort(gpr[14]);
-			case R15W -> asShort(gpr[15]);
+			case AX -> BitUtils.asShort(gpr[0]);
+			case BX -> BitUtils.asShort(gpr[1]);
+			case CX -> BitUtils.asShort(gpr[2]);
+			case DX -> BitUtils.asShort(gpr[3]);
+			case SP -> BitUtils.asShort(gpr[4]);
+			case BP -> BitUtils.asShort(gpr[5]);
+			case SI -> BitUtils.asShort(gpr[6]);
+			case DI -> BitUtils.asShort(gpr[7]);
+			case R8W -> BitUtils.asShort(gpr[8]);
+			case R9W -> BitUtils.asShort(gpr[9]);
+			case R10W -> BitUtils.asShort(gpr[10]);
+			case R11W -> BitUtils.asShort(gpr[11]);
+			case R12W -> BitUtils.asShort(gpr[12]);
+			case R13W -> BitUtils.asShort(gpr[13]);
+			case R14W -> BitUtils.asShort(gpr[14]);
+			case R15W -> BitUtils.asShort(gpr[15]);
 			case CS -> seg[0];
 			case DS -> seg[1];
 			case ES -> seg[2];
@@ -149,22 +143,22 @@ public final class X86RegisterFile implements RegisterFile {
 	@Override
 	public void set(final Register16 r, final short v) {
 		switch (r) {
-			case AX -> gpr[0] = (gpr[0] & 0xffffffffff0000L) | asLong(v);
-			case BX -> gpr[1] = (gpr[1] & 0xffffffffff0000L) | asLong(v);
-			case CX -> gpr[2] = (gpr[2] & 0xffffffffff0000L) | asLong(v);
-			case DX -> gpr[3] = (gpr[3] & 0xffffffffff0000L) | asLong(v);
-			case SP -> gpr[4] = (gpr[4] & 0xffffffffff0000L) | asLong(v);
-			case BP -> gpr[5] = (gpr[5] & 0xffffffffff0000L) | asLong(v);
-			case SI -> gpr[6] = (gpr[6] & 0xffffffffff0000L) | asLong(v);
-			case DI -> gpr[7] = (gpr[7] & 0xffffffffff0000L) | asLong(v);
-			case R8W -> gpr[8] = (gpr[8] & 0xffffffffff0000L) | asLong(v);
-			case R9W -> gpr[9] = (gpr[9] & 0xffffffffff0000L) | asLong(v);
-			case R10W -> gpr[10] = (gpr[10] & 0xffffffffff0000L) | asLong(v);
-			case R11W -> gpr[11] = (gpr[11] & 0xffffffffff0000L) | asLong(v);
-			case R12W -> gpr[12] = (gpr[12] & 0xffffffffff0000L) | asLong(v);
-			case R13W -> gpr[13] = (gpr[13] & 0xffffffffff0000L) | asLong(v);
-			case R14W -> gpr[14] = (gpr[14] & 0xffffffffff0000L) | asLong(v);
-			case R15W -> gpr[15] = (gpr[15] & 0xffffffffff0000L) | asLong(v);
+			case AX -> gpr[0] = (gpr[0] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case BX -> gpr[1] = (gpr[1] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case CX -> gpr[2] = (gpr[2] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case DX -> gpr[3] = (gpr[3] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case SP -> gpr[4] = (gpr[4] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case BP -> gpr[5] = (gpr[5] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case SI -> gpr[6] = (gpr[6] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case DI -> gpr[7] = (gpr[7] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R8W -> gpr[8] = (gpr[8] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R9W -> gpr[9] = (gpr[9] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R10W -> gpr[10] = (gpr[10] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R11W -> gpr[11] = (gpr[11] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R12W -> gpr[12] = (gpr[12] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R13W -> gpr[13] = (gpr[13] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R14W -> gpr[14] = (gpr[14] & 0xffffffffff0000L) | BitUtils.asLong(v);
+			case R15W -> gpr[15] = (gpr[15] & 0xffffffffff0000L) | BitUtils.asLong(v);
 			case CS -> seg[0] = v;
 			case DS -> seg[1] = v;
 			case ES -> seg[2] = v;
@@ -177,46 +171,46 @@ public final class X86RegisterFile implements RegisterFile {
 	@Override
 	public int get(final Register32 r) {
 		return switch (r) {
-			case EAX -> asInt(gpr[0]);
-			case EBX -> asInt(gpr[1]);
-			case ECX -> asInt(gpr[2]);
-			case EDX -> asInt(gpr[3]);
-			case ESP -> asInt(gpr[4]);
-			case EBP -> asInt(gpr[5]);
-			case ESI -> asInt(gpr[6]);
-			case EDI -> asInt(gpr[7]);
-			case R8D -> asInt(gpr[8]);
-			case R9D -> asInt(gpr[9]);
-			case R10D -> asInt(gpr[10]);
-			case R11D -> asInt(gpr[11]);
-			case R12D -> asInt(gpr[12]);
-			case R13D -> asInt(gpr[13]);
-			case R14D -> asInt(gpr[14]);
-			case R15D -> asInt(gpr[15]);
-			case EIP -> asInt(rip);
+			case EAX -> BitUtils.asInt(gpr[0]);
+			case EBX -> BitUtils.asInt(gpr[1]);
+			case ECX -> BitUtils.asInt(gpr[2]);
+			case EDX -> BitUtils.asInt(gpr[3]);
+			case ESP -> BitUtils.asInt(gpr[4]);
+			case EBP -> BitUtils.asInt(gpr[5]);
+			case ESI -> BitUtils.asInt(gpr[6]);
+			case EDI -> BitUtils.asInt(gpr[7]);
+			case R8D -> BitUtils.asInt(gpr[8]);
+			case R9D -> BitUtils.asInt(gpr[9]);
+			case R10D -> BitUtils.asInt(gpr[10]);
+			case R11D -> BitUtils.asInt(gpr[11]);
+			case R12D -> BitUtils.asInt(gpr[12]);
+			case R13D -> BitUtils.asInt(gpr[13]);
+			case R14D -> BitUtils.asInt(gpr[14]);
+			case R15D -> BitUtils.asInt(gpr[15]);
+			case EIP -> BitUtils.asInt(rip);
 		};
 	}
 
 	@Override
 	public void set(final Register32 r, final int v) {
 		switch (r) {
-			case EAX -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | asLong(v);
-			case EBX -> gpr[1] = (gpr[1] & 0xffffffff00000000L) | asLong(v);
-			case ECX -> gpr[2] = (gpr[2] & 0xffffffff00000000L) | asLong(v);
-			case EDX -> gpr[3] = (gpr[3] & 0xffffffff00000000L) | asLong(v);
-			case ESP -> gpr[4] = (gpr[4] & 0xffffffff00000000L) | asLong(v);
-			case EBP -> gpr[5] = (gpr[5] & 0xffffffff00000000L) | asLong(v);
-			case ESI -> gpr[6] = (gpr[6] & 0xffffffff00000000L) | asLong(v);
-			case EDI -> gpr[7] = (gpr[7] & 0xffffffff00000000L) | asLong(v);
-			case R8D -> gpr[8] = (gpr[8] & 0xffffffff00000000L) | asLong(v);
-			case R9D -> gpr[9] = (gpr[9] & 0xffffffff00000000L) | asLong(v);
-			case R10D -> gpr[10] = (gpr[10] & 0xffffffff00000000L) | asLong(v);
-			case R11D -> gpr[11] = (gpr[11] & 0xffffffff00000000L) | asLong(v);
-			case R12D -> gpr[12] = (gpr[12] & 0xffffffff00000000L) | asLong(v);
-			case R13D -> gpr[13] = (gpr[13] & 0xffffffff00000000L) | asLong(v);
-			case R14D -> gpr[14] = (gpr[14] & 0xffffffff00000000L) | asLong(v);
-			case R15D -> gpr[15] = (gpr[15] & 0xffffffff00000000L) | asLong(v);
-			case EIP -> rip = (rip & 0xffffffff00000000L) | asLong(v);
+			case EAX -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case EBX -> gpr[1] = (gpr[1] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case ECX -> gpr[2] = (gpr[2] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case EDX -> gpr[3] = (gpr[3] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case ESP -> gpr[4] = (gpr[4] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case EBP -> gpr[5] = (gpr[5] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case ESI -> gpr[6] = (gpr[6] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case EDI -> gpr[7] = (gpr[7] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R8D -> gpr[8] = (gpr[8] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R9D -> gpr[9] = (gpr[9] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R10D -> gpr[10] = (gpr[10] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R11D -> gpr[11] = (gpr[11] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R12D -> gpr[12] = (gpr[12] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R13D -> gpr[13] = (gpr[13] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R14D -> gpr[14] = (gpr[14] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case R15D -> gpr[15] = (gpr[15] & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case EIP -> rip = (rip & 0xffffffff00000000L) | BitUtils.asLong(v);
 		}
 	}
 

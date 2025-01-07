@@ -44,7 +44,7 @@ public enum SymbolTableEntryBinding {
 	private static final Map<Byte, SymbolTableEntryBinding> codeToBind = new HashMap<>();
 
 	static {
-		for (final SymbolTableEntryBinding bind : SymbolTableEntryBinding.values()) {
+		for (final SymbolTableEntryBinding bind : values()) {
 			codeToBind.put(bind.code, bind);
 		}
 	}
@@ -82,7 +82,7 @@ public enum SymbolTableEntryBinding {
 	private final byte code;
 	private final String name;
 
-	private SymbolTableEntryBinding(final byte code, final String name) {
+	SymbolTableEntryBinding(final byte code, final String name) {
 		this.code = code;
 		this.name = Objects.requireNonNull(name);
 	}

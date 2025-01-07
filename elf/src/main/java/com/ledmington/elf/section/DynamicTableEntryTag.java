@@ -287,7 +287,7 @@ public enum DynamicTableEntryTag {
 	private final long code;
 	private final String name;
 
-	private DynamicTableEntryTag(final long code, final String name) {
+	DynamicTableEntryTag(final long code, final String name) {
 		this.code = code;
 		this.name = Objects.requireNonNull(name);
 	}

@@ -148,7 +148,7 @@ public final class BitUtils {
 	}
 
 	/**
-	 * Returns an 8 character long string containing the bits of the given byte.
+	 * Returns an 8-character long string containing the bits of the given byte.
 	 *
 	 * @param b The byte to be converted.
 	 * @return A String with the bits of b.
@@ -208,7 +208,7 @@ public final class BitUtils {
 	 * @return The bitwise XOR as a byte.
 	 */
 	public static byte xor(final byte a, final byte b) {
-		return BitUtils.asByte(a ^ b);
+		return asByte(a ^ b);
 	}
 
 	/**
@@ -262,9 +262,7 @@ public final class BitUtils {
 	 * @return An array of 4 big endian bytes.
 	 */
 	public static byte[] asBEBytes(final int x) {
-		return new byte[] {
-			BitUtils.asByte(x), BitUtils.asByte(x >>> 8), BitUtils.asByte(x >>> 16), BitUtils.asByte(x >>> 24)
-		};
+		return new byte[] {asByte(x), asByte(x >>> 8), asByte(x >>> 16), asByte(x >>> 24)};
 	}
 
 	/**
@@ -275,14 +273,14 @@ public final class BitUtils {
 	 */
 	public static byte[] asBEBytes(final long x) {
 		return new byte[] {
-			BitUtils.asByte(x),
-			BitUtils.asByte(x >>> 8),
-			BitUtils.asByte(x >>> 16),
-			BitUtils.asByte(x >>> 24),
-			BitUtils.asByte(x >>> 32),
-			BitUtils.asByte(x >>> 40),
-			BitUtils.asByte(x >>> 48),
-			BitUtils.asByte(x >>> 56)
+			asByte(x),
+			asByte(x >>> 8),
+			asByte(x >>> 16),
+			asByte(x >>> 24),
+			asByte(x >>> 32),
+			asByte(x >>> 40),
+			asByte(x >>> 48),
+			asByte(x >>> 56)
 		};
 	}
 }

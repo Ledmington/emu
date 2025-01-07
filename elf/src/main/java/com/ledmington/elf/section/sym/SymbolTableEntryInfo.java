@@ -26,6 +26,9 @@ public final class SymbolTableEntryInfo {
 
 	private static final byte mask = (byte) 0x0f;
 
+	private final SymbolTableEntryBinding bind;
+	private final SymbolTableEntryType type;
+
 	/**
 	 * Creates a new STE info object from the given 8-bit code.
 	 *
@@ -37,9 +40,6 @@ public final class SymbolTableEntryInfo {
 				SymbolTableEntryBinding.fromCode(BitUtils.and(BitUtils.shr(info, 4), mask)),
 				SymbolTableEntryType.fromCode(BitUtils.and(info, mask)));
 	}
-
-	private final SymbolTableEntryBinding bind;
-	private final SymbolTableEntryType type;
 
 	private SymbolTableEntryInfo(final SymbolTableEntryBinding bind, final SymbolTableEntryType type) {
 		this.bind = Objects.requireNonNull(bind);

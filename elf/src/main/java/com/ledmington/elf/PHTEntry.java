@@ -48,14 +48,14 @@ public final class PHTEntry {
 	 * @param alignment Byte alignment.
 	 */
 	public PHTEntry(
-			PHTEntryType type,
-			int flags,
-			long segmentOffset,
-			long segmentVirtualAddress,
-			long segmentPhysicalAddress,
-			long segmentFileSize,
-			long segmentMemorySize,
-			long alignment) {
+			final PHTEntryType type,
+			final int flags,
+			final long segmentOffset,
+			final long segmentVirtualAddress,
+			final long segmentPhysicalAddress,
+			final long segmentFileSize,
+			final long segmentMemorySize,
+			final long alignment) {
 		this.type = Objects.requireNonNull(type);
 		this.readable = (flags & PHTEntryFlags.PF_R.getCode()) != 0;
 		this.writeable = (flags & PHTEntryFlags.PF_W.getCode()) != 0;

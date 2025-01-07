@@ -65,9 +65,9 @@ public interface NoteSection extends LoadableSection {
 			}
 
 			// Manually align the position
-			final long newPosition = (b.getPosition() % bytes != 0L)
-					? (((b.getPosition() >>> byteShift) + 1L) << byteShift)
-					: b.getPosition();
+			final long newPosition = (b.getPosition() % bytes == 0L)
+					? b.getPosition()
+					: (((b.getPosition() >>> byteShift) + 1L) << byteShift);
 			b.setPosition(newPosition);
 
 			final NoteSectionEntry nse =

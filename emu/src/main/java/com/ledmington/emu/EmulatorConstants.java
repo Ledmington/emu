@@ -37,7 +37,7 @@ public final class EmulatorConstants {
 	private EmulatorConstants() {}
 
 	/**
-	 * Allows to change the memory initializer of the emulator.
+	 * Allows changing the memory initializer of the emulator.
 	 *
 	 * @param memInit The new memory initializer.
 	 */

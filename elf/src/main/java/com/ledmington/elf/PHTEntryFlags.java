@@ -35,7 +35,7 @@ public enum PHTEntryFlags {
 	private static final Map<Integer, PHTEntryFlags> codeToFlags = new HashMap<>();
 
 	static {
-		for (final PHTEntryFlags x : PHTEntryFlags.values()) {
+		for (final PHTEntryFlags x : values()) {
 			if (codeToFlags.containsKey(x.code)) {
 				throw new IllegalStateException(
 						String.format("PHT flags enum value with code %d (0x%02x) already exists", x.code, x.code));

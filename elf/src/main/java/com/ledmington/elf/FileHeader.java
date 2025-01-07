@@ -67,23 +67,23 @@ public final class FileHeader {
 	 * @param shstrtab_index The index of the String Table in the SHT.
 	 */
 	public FileHeader(
-			boolean is32Bit,
-			boolean isLittleEndian,
-			byte version,
-			OSABI osabi,
-			byte ABIVersion,
-			FileType fileType,
-			ISA isa,
-			long entryPointVirtualAddress,
-			long programHeaderTableOffset,
-			long sectionHeaderTableOffset,
-			int flags,
-			short headerSize,
-			short programHeaderTableEntrySize,
-			short nProgramHeaderTableEntries,
-			short sectionHeaderTableEntrySize,
-			short nSectionHeaderTableEntries,
-			short shstrtab_index) {
+			final boolean is32Bit,
+			final boolean isLittleEndian,
+			final byte version,
+			final OSABI osabi,
+			final byte ABIVersion,
+			final FileType fileType,
+			final ISA isa,
+			final long entryPointVirtualAddress,
+			final long programHeaderTableOffset,
+			final long sectionHeaderTableOffset,
+			final int flags,
+			final short headerSize,
+			final short programHeaderTableEntrySize,
+			final short nProgramHeaderTableEntries,
+			final short sectionHeaderTableEntrySize,
+			final short nSectionHeaderTableEntries,
+			final short shstrtab_index) {
 		this.bits = is32Bit;
 		this.endianness = isLittleEndian;
 		this.version = version;

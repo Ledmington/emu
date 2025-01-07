@@ -73,7 +73,7 @@ public final class BasicNoteSection implements NoteSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		throw new Error("Not implemented");
+		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	@Override

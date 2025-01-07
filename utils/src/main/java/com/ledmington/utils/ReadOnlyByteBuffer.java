@@ -35,14 +35,14 @@ public interface ReadOnlyByteBuffer {
 	 *
 	 * @param isLittleEndian The new endianness: true for little-endian, false for big-endian.
 	 */
-	void setEndianness(final boolean isLittleEndian);
+	void setEndianness(boolean isLittleEndian);
 
 	/**
 	 * Sets the given alignment to be used while reading.
 	 *
 	 * @param newAlignment The new alignment.
 	 */
-	void setAlignment(final long newAlignment);
+	void setAlignment(long newAlignment);
 
 	/**
 	 * Returns the current alignment.
@@ -56,7 +56,7 @@ public interface ReadOnlyByteBuffer {
 	 *
 	 * @param newPosition The new position in the buffer.
 	 */
-	void setPosition(final long newPosition);
+	void setPosition(long newPosition);
 
 	/**
 	 * Returns the current position in the buffer.

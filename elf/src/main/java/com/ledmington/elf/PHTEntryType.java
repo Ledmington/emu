@@ -146,7 +146,7 @@ public enum PHTEntryType {
 	private final String name;
 	private final String description;
 
-	private PHTEntryType(final int code, final String name, final String description) {
+	PHTEntryType(final int code, final String name, final String description) {
 		this.code = code;
 		this.name = Objects.requireNonNull(name);
 		this.description = Objects.requireNonNull(description);

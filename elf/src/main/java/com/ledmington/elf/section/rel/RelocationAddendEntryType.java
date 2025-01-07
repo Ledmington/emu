@@ -37,11 +37,11 @@ public enum RelocationAddendEntryType {
 	R_X86_64_NONE(0),
 	/** Direct 64 bit */
 	R_X86_64_64(1),
-	/** PC relative 32 bit signed */
+	/** PC relative 32-bit signed */
 	R_X86_64_PC32(2),
 	/** 32 bit GOT entry */
 	R_X86_64_GOT32(3),
-	/** 32 bit PLT address */
+	/** 32-bit PLT address */
 	R_X86_64_PLT32(4),
 	/** Copy symbol at runtime */
 	R_X86_64_COPY(5),
@@ -51,11 +51,11 @@ public enum RelocationAddendEntryType {
 	R_X86_64_JUMP_SLOT(7),
 	/** Adjust by program base */
 	R_X86_64_RELATIVE(8),
-	/** 32 bit signed PC relative offset to GOT */
+	/** 32-bit signed PC relative offset to GOT */
 	R_X86_64_GOTPCREL(9),
 	/** Direct 32 bit zero extended */
 	R_X86_64_32(10),
-	/** Direct 32 bit sign extended */
+	/** Direct 32-bit sign extended */
 	R_X86_64_32S(11),
 	/** Direct 16 bit zero extended */
 	R_X86_64_16(12),
@@ -71,13 +71,13 @@ public enum RelocationAddendEntryType {
 	R_X86_64_DTPOFF64(17),
 	/** Offset in initial TLS block */
 	R_X86_64_TPOFF64(18),
-	/** 32 bit signed PC relative offset to two GOT entries for GD symbol */
+	/** 32-bit signed PC relative offset to two GOT entries for GD symbol */
 	R_X86_64_TLSGD(19),
-	/** 32 bit signed PC relative offset to two GOT entries for LD symbol */
+	/** 32-bit signed PC relative offset to two GOT entries for LD symbol */
 	R_X86_64_TLSLD(20),
 	/** Offset in TLS block */
 	R_X86_64_DTPOFF32(21),
-	/** 32 bit signed PC relative offset to GOT entry for IE symbol */
+	/** 32-bit signed PC relative offset to GOT entry for IE symbol */
 	R_X86_64_GOTTPOFF(22),
 	/** Offset in initial TLS block */
 	R_X86_64_TPOFF32(23),
@@ -85,7 +85,7 @@ public enum RelocationAddendEntryType {
 	R_X86_64_PC64(24),
 	/** 64 bit offset to GOT */
 	R_X86_64_GOTOFF64(25),
-	/** 32 bit signed pc relative offset to GOT */
+	/** 32-bit signed pc relative offset to GOT */
 	R_X86_64_GOTPC32(26),
 	/** 64-bit GOT entry offset */
 	R_X86_64_GOT64(27),
@@ -113,9 +113,9 @@ public enum RelocationAddendEntryType {
 	R_X86_64_RELATIVE64(38),
 	// 39 Reserved was R_X86_64_PC32_BND
 	// 40 Reserved was R_X86_64_PLT32_BND
-	/** Load from 32 bit signed pc relative offset to GOT entry without REX prefix, relaxable. */
+	/** Load from 32-bit signed pc relative offset to GOT entry without REX prefix, relaxable. */
 	R_X86_64_GOTPCRELX(41),
-	/** Load from 32 bit signed pc relative offset to GOT entry with REX prefix, relaxable. */
+	/** Load from 32-bit signed pc relative offset to GOT entry with REX prefix, relaxable. */
 	R_X86_64_REX_GOTPCRELX(42),
 	/** Unknown/undefined. */
 	R_X86_64_NUM(43);

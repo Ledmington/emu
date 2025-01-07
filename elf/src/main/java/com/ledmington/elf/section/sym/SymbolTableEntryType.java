@@ -45,7 +45,7 @@ public enum SymbolTableEntryType {
 
 	/**
 	 * A file symbol has STB_LOCAL binding, its section index is SHN_ABS, and it precedes the other STB_LOCAL symbols
-	 * for the file, if it is present.
+	 * for the file if it is present.
 	 */
 	STT_FILE((byte) 0x04, "FILE"),
 
@@ -57,12 +57,12 @@ public enum SymbolTableEntryType {
 	 * symbol, not the actual address.
 	 *
 	 * <p>Thread-local storage relocations can only reference symbols with type STT_TLS. A reference to a symbol of type
-	 * STT_TLS from an allocatable section, can only be achieved by using special thread-local storage relocations. A
+	 * STT_TLS from an allocatable section can only be achieved by using special thread-local storage relocations. A
 	 * reference to a symbol of type STT_TLS from a non-allocatable section does not have this restriction.
 	 */
 	STT_TLS((byte) 0x06, "TLS"),
 
-	/** Symbol is indirect code object. */
+	/** Symbol is an indirect code object. */
 	STT_GNU_IFUNC((byte) 0x0a, "IFUNC");
 
 	private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
@@ -106,7 +106,7 @@ public enum SymbolTableEntryType {
 	private final byte code;
 	private final String name;
 
-	private SymbolTableEntryType(final byte code, final String name) {
+	SymbolTableEntryType(final byte code, final String name) {
 		this.code = code;
 		this.name = Objects.requireNonNull(name);
 	}

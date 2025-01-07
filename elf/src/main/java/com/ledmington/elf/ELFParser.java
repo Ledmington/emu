@@ -116,14 +116,14 @@ public final class ELFParser {
 			throw new IllegalArgumentException(
 					String.format("Invalid bit format, expected 1 or 2 but was %,d (0x%02x)", format, format));
 		}
-		final boolean is32Bit = (format == 1);
+		final boolean is32Bit = format == 1;
 
 		final byte endianness = b.read1();
 		if (endianness != 1 && endianness != 2) {
 			throw new IllegalArgumentException(
 					String.format("Invalid endianness, expected 1 or 2 but was %,d (0x%02x)", endianness, endianness));
 		}
-		final boolean isLittleEndian = (endianness == 1);
+		final boolean isLittleEndian = endianness == 1;
 		b.setEndianness(isLittleEndian);
 
 		final byte ELFVersion = b.read1();

@@ -59,10 +59,13 @@ public enum SymbolTableEntryVisibility {
 	private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
 
 	static {
-		for (final SymbolTableEntryVisibility visibility : SymbolTableEntryVisibility.values()) {
+		for (final SymbolTableEntryVisibility visibility : values()) {
 			codeToVisibility.put(visibility.code, visibility);
 		}
 	}
+
+	private final byte code;
+	private final String name;
 
 	/**
 	 * Returns the STV object corresponding to the given code.
@@ -78,10 +81,7 @@ public enum SymbolTableEntryVisibility {
 		return codeToVisibility.get(code);
 	}
 
-	private final byte code;
-	private final String name;
-
-	private SymbolTableEntryVisibility(final byte code, final String name) {
+	SymbolTableEntryVisibility(final byte code, final String name) {
 		this.code = code;
 		this.name = Objects.requireNonNull(name);
 	}

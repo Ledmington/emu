@@ -113,7 +113,7 @@ public final class RelocationAddendSection implements LoadableSection {
 			} else {
 				bb.write(entry.offset());
 				bb.write((BitUtils.asLong(entry.symbolTableIndex()) << 32)
-						| (BitUtils.asLong(entry.type().getCode())));
+						| BitUtils.asLong(entry.type().getCode()));
 				bb.write(entry.addend());
 			}
 		}

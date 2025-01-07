@@ -37,7 +37,7 @@ public interface X86Emulator {
 	 *
 	 * @param inst The instruction to be executed.
 	 */
-	void executeOne(final Instruction inst);
+	void executeOne(Instruction inst);
 
 	/**
 	 * Returns an immutable view of the registers in use.

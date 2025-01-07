@@ -52,16 +52,16 @@ public final class SectionHeader {
 	 * @param entrySize The size in bytes of each entry of this section.
 	 */
 	public SectionHeader(
-			int nameOffset,
-			SectionHeaderType type,
-			long flags,
-			long virtualAddress,
-			long fileOffset,
-			long sectionSize,
-			int linkedSectionIndex,
-			int sh_info,
-			long alignment,
-			long entrySize) {
+			final int nameOffset,
+			final SectionHeaderType type,
+			final long flags,
+			final long virtualAddress,
+			final long fileOffset,
+			final long sectionSize,
+			final int linkedSectionIndex,
+			final int sh_info,
+			final long alignment,
+			final long entrySize) {
 		this.nameOffset = nameOffset;
 		this.type = type;
 		this.flags = Objects.requireNonNull(SectionHeaderFlags.fromLong(flags));

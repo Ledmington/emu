@@ -125,9 +125,8 @@ public enum SectionHeaderFlags {
 	 */
 	SHF_EXCLUDE(0x0000000008000000L, "EXCLUDE", "Section is excluded unless referenced or allocated (Solaris)", 'E');
 
-	private static final long SHF_MASK = Arrays.stream(SectionHeaderFlags.values())
-			.map(SectionHeaderFlags::getCode)
-			.reduce(0L, (a, b) -> a | b);
+	private static final long SHF_MASK =
+			Arrays.stream(values()).map(SectionHeaderFlags::getCode).reduce(0L, (a, b) -> a | b);
 
 	private static boolean isOSSpecific(final long code) {
 		return (code & 0x000000000ff00000L) != 0L;
@@ -166,7 +165,7 @@ public enum SectionHeaderFlags {
 			throw new IllegalArgumentException(String.format("Invalid SHF flags 0x%016x", flags));
 		}
 		final Set<SectionHeaderFlags> shf = new TreeSet<>();
-		for (final SectionHeaderFlags f : SectionHeaderFlags.values()) {
+		for (final SectionHeaderFlags f : values()) {
 			if ((flags & f.code) != 0L) { // NOPMD
 				shf.add(f);
 			}

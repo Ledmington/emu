@@ -41,7 +41,7 @@ public enum FileType {
 	private static final Map<Short, FileType> codeToFileType = new HashMap<>();
 
 	static {
-		for (final FileType x : FileType.values()) {
+		for (final FileType x : values()) {
 			if (codeToFileType.containsKey(x.code)) {
 				throw new IllegalStateException(String.format(
 						"ELF file type enum value with code %d (0x%02x) and name '%s' already exists",

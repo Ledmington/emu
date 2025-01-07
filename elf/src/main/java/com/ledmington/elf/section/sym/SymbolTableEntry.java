@@ -46,12 +46,12 @@ public record SymbolTableEntry(
 	 * @return A symbol table entry.
 	 */
 	public static SymbolTableEntry read(final ReadOnlyByteBuffer b, final boolean is32Bit) {
-		int name;
-		long val;
-		long sz;
-		SymbolTableEntryVisibility vis;
-		SymbolTableEntryInfo inf;
-		short sti;
+		final int name;
+		final long val;
+		final long sz;
+		final SymbolTableEntryVisibility vis;
+		final SymbolTableEntryInfo inf;
+		final short sti;
 		if (is32Bit) {
 			name = b.read4();
 			val = BitUtils.asLong(b.read4());

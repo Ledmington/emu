@@ -50,7 +50,7 @@ public enum ISA {
 	private static final Map<Short, ISA> codeToISA = new HashMap<>();
 
 	static {
-		for (final ISA x : ISA.values()) {
+		for (final ISA x : values()) {
 			if (codeToISA.containsKey(x.code)) {
 				throw new IllegalStateException(String.format(
 						"ISA enum value with code %d (0x%02x) and name '%s' already exists", x.code, x.code, x.name));
