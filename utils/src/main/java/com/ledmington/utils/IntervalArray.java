@@ -55,12 +55,10 @@ public final class IntervalArray {
 		return false;
 	}
 
-	private void sortBlocks() {
+	private void sortAndMerge() {
 		// sorting by the starting address is sufficient
 		blocks.sort(Comparator.comparingLong(Block::start));
-	}
 
-	private void mergeBlocks() {
 		int i = 0;
 		while (i < blocks.size() - 1) {
 			final Block curr = blocks.get(i);
@@ -77,16 +75,6 @@ public final class IntervalArray {
 	}
 
 	/**
-	 * Sets the boolean value at the given address to true. Does not throw exceptions in case it is already true. It is
-	 * equivalent to calling {@code set(address, address)}.
-	 *
-	 * @param address The address of the value.
-	 */
-	public void set(final long address) {
-		set(address, address);
-	}
-
-	/**
 	 * Sets the boolean values in the given range to true. Does not throw exceptions in case it is already true.
 	 *
 	 * @param startAddress The start (inclusive) of the range.
@@ -94,18 +82,7 @@ public final class IntervalArray {
 	 */
 	public void set(final long startAddress, final long endAddress) {
 		blocks.add(new Block(startAddress, endAddress));
-		sortBlocks();
-		mergeBlocks();
-	}
-
-	/**
-	 * Sets the boolean value at the given address to false. Does not throw exceptions in case it is already false. It
-	 * is equivalent to calling {@code reset(address, address)}.
-	 *
-	 * @param address The address of the value.
-	 */
-	public void reset(final long address) {
-		reset(address, address);
+		sortAndMerge();
 	}
 
 	/**
@@ -141,8 +118,7 @@ public final class IntervalArray {
 				}
 			}
 		}
-		sortBlocks();
-		mergeBlocks();
+		sortAndMerge();
 	}
 
 	@Override

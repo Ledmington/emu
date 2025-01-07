@@ -49,7 +49,7 @@ final class TestIntervalArray {
 		final Set<Long> positions =
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 		for (final long x : positions) {
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", x));
 		}
 	}
 
@@ -64,7 +64,7 @@ final class TestIntervalArray {
 		ia.set(start, end);
 		for (long x = start; x <= end; x++) {
 			final long finalX = x;
-			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", finalX));
+			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
 		}
 	}
 
@@ -74,9 +74,9 @@ final class TestIntervalArray {
 		final Set<Long> positions =
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 		for (final long x : positions) {
-			ia.set(x);
-			ia.set(x);
-			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false", x));
+			ia.set(x, x);
+			ia.set(x, x);
+			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", x));
 		}
 	}
 
@@ -87,7 +87,7 @@ final class TestIntervalArray {
 		ia.reset(start, end);
 		for (long x = start; x <= end; x++) {
 			final long finalX = x;
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", finalX));
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
 		}
 	}
 
@@ -97,9 +97,35 @@ final class TestIntervalArray {
 		final Set<Long> addresses =
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 		for (final long x : addresses) {
-			ia.reset(x);
-			ia.reset(x);
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true", x));
+			ia.reset(x, x);
+			ia.reset(x, x);
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", x));
+		}
+	}
+
+	@Test
+	void setOverlappingRegions() {
+		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
+		ia.set(0, 10);
+		ia.set(5, 15);
+		for (long x = 0; x <= 15; x++) {
+			final long finalX = x;
+			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
+		}
+	}
+
+	@Test
+	void resetOverlappingRegions() {
+		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
+		ia.set(0, 10);
+		ia.reset(5, 15);
+		for (long x = 0; x < 5; x++) {
+			final long finalX = x;
+			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
+		}
+		for (long x = 5; x <= 15; x++) {
+			final long finalX = x;
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
 		}
 	}
 }
