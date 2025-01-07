@@ -43,6 +43,7 @@ import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.JUnitTestContainsTooManyAsserts"})
 final class TestExecution {
 
 	private static final RandomGenerator rng =

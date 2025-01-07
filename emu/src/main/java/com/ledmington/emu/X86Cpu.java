@@ -197,11 +197,11 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SHL -> {
-				if (inst.firstOperand() instanceof Register64) {
-					final long r1 = rf.get((Register64) inst.firstOperand());
+				if (inst.firstOperand() instanceof Register64 op1) {
+					final long r1 = rf.get(op1);
 					final byte imm = rf.get((Register8) inst.secondOperand());
 					final long result = r1 << imm;
-					rf.set((Register64) inst.firstOperand(), result);
+					rf.set(op1, result);
 					rf.resetFlags();
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
@@ -233,9 +233,10 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case CMP -> {
-				final long a = mem.read8(computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand()));
+				final long address = computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand());
+				final long a = mem.read8(address);
 				final long b = ((Immediate) inst.secondOperand()).asLong();
-				final long result = b - a;
+				final long result = a - b;
 				rf.resetFlags();
 				rf.set(RFlags.ZERO, result == 0L);
 				rf.set(RFlags.SIGN, result < 0L);
