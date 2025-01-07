@@ -5,11 +5,6 @@
 		xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>Emu ruleset</description>
 
-    <rule ref="category/java/errorprone.xml">
-        <!-- Avoid reporting System.exit() -->
-        <exclude name="DoNotTerminateVM" />
-    </rule>
-
     <rule ref="category/java/bestpractices.xml">
         <!-- Avoid reporting custom logger calls -->
         <exclude name="GuardLogStatement" />
@@ -21,9 +16,26 @@
             <property name="forReassign" value="skip" />
         </properties>
     </rule>
+
+    <rule ref="category/java/codestyle.xml" />
+
+    <rule ref="category/java/design.xml" />
+
+    <rule ref="category/java/documentation.xml">
+        <exclude name="CommentSize" />
+    </rule>
+
+    <rule ref="category/java/errorprone.xml">
+        <!-- Avoid reporting System.exit() -->
+        <exclude name="DoNotTerminateVM" />
+    </rule>
+
+    <rule ref="category/java/multithreading.xml" />
     
     <rule ref="category/java/performance.xml">
         <!-- Avoid reporting redundant field initialization -->
         <exclude name="RedundantFieldInitializer" />
     </rule>
+
+    <rule ref="category/java/security.xml" />
 </ruleset>
