@@ -29,7 +29,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class TestUninitializedMemory {
+import com.ledmington.mem.exc.AccessToUninitializedMemoryException;
+
+final class TestUninitializedMemory {
 
 	private static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(System.nanoTime());
@@ -49,7 +51,7 @@ public final class TestUninitializedMemory {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			assertThrows(MemoryException.class, () -> mem.read(address));
+			assertThrows(AccessToUninitializedMemoryException.class, () -> mem.read(address));
 		}
 	}
 
@@ -73,7 +75,7 @@ public final class TestUninitializedMemory {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			assertThrows(MemoryException.class, () -> mem.readCode(address));
+			assertThrows(AccessToUninitializedMemoryException.class, () -> mem.readCode(address));
 		}
 	}
 

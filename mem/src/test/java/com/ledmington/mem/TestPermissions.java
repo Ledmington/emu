@@ -29,6 +29,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.ledmington.mem.exc.IllegalExecutionException;
+import com.ledmington.mem.exc.IllegalReadException;
+import com.ledmington.mem.exc.IllegalWriteException;
 import com.ledmington.utils.BitUtils;
 
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
@@ -50,7 +53,7 @@ final class TestPermissions {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			assertThrows(MemoryException.class, () -> mem.read(address));
+			assertThrows(IllegalReadException.class, () -> mem.read(address));
 		}
 	}
 
@@ -60,7 +63,7 @@ final class TestPermissions {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			assertThrows(MemoryException.class, () -> mem.readCode(address));
+			assertThrows(IllegalExecutionException.class, () -> mem.readCode(address));
 		}
 	}
 
@@ -70,7 +73,7 @@ final class TestPermissions {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			assertThrows(MemoryException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
+			assertThrows(IllegalWriteException.class, () -> mem.write(address, BitUtils.asByte(rng.nextInt())));
 		}
 	}
 
@@ -83,8 +86,8 @@ final class TestPermissions {
 		for (long i = start; i <= end; i++) {
 			final long finalI = i;
 			assertDoesNotThrow(() -> mem.read(finalI));
-			assertThrows(MemoryException.class, () -> mem.readCode(finalI));
-			assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+			assertThrows(IllegalExecutionException.class, () -> mem.readCode(finalI));
+			assertThrows(IllegalWriteException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
 		}
 	}
 
@@ -97,8 +100,8 @@ final class TestPermissions {
 		for (long i = start; i <= end; i++) {
 			final long finalI = i;
 			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-			assertThrows(MemoryException.class, () -> mem.read(finalI));
-			assertThrows(MemoryException.class, () -> mem.readCode(finalI));
+			assertThrows(IllegalReadException.class, () -> mem.read(finalI));
+			assertThrows(IllegalExecutionException.class, () -> mem.readCode(finalI));
 		}
 	}
 
@@ -112,7 +115,7 @@ final class TestPermissions {
 			final long finalI = i;
 			assertDoesNotThrow(() -> mem.read(finalI));
 			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-			assertThrows(MemoryException.class, () -> mem.readCode(finalI));
+			assertThrows(IllegalExecutionException.class, () -> mem.readCode(finalI));
 		}
 	}
 
@@ -125,8 +128,8 @@ final class TestPermissions {
 		for (long i = start; i <= end; i++) {
 			final long finalI = i;
 			assertDoesNotThrow(() -> mem.readCode(finalI));
-			assertThrows(MemoryException.class, () -> mem.read(finalI));
-			assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+			assertThrows(IllegalReadException.class, () -> mem.read(finalI));
+			assertThrows(IllegalWriteException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
 		}
 	}
 
@@ -140,7 +143,7 @@ final class TestPermissions {
 			final long finalI = i;
 			assertDoesNotThrow(() -> mem.read(finalI));
 			assertDoesNotThrow(() -> mem.readCode(finalI));
-			assertThrows(MemoryException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
+			assertThrows(IllegalWriteException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
 		}
 	}
 
@@ -154,7 +157,7 @@ final class TestPermissions {
 			final long finalI = i;
 			assertDoesNotThrow(() -> mem.readCode(finalI));
 			assertDoesNotThrow(() -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
-			assertThrows(MemoryException.class, () -> mem.read(finalI));
+			assertThrows(IllegalReadException.class, () -> mem.read(finalI));
 		}
 	}
 

@@ -235,8 +235,8 @@ public final class ELFLoader {
 
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3f MB) at 0x%x-0x%x",
-				stackSize, (double) stackSize / 1_000_000.0, highestAddress, highestAddress + stackSize);
-		mem.setPermissions(highestAddress, highestAddress + stackSize, true, true, false);
+				stackSize, (double) stackSize / 1_000_000.0, highestAddress, highestAddress + stackSize - 1L);
+		mem.setPermissions(highestAddress, highestAddress + stackSize - 1L, true, true, false);
 		return highestAddress;
 	}
 
@@ -346,12 +346,12 @@ public final class ELFLoader {
 			logger.debug(
 					"Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
 					start,
-					end,
+					end - 1L,
 					end - start,
 					(phte.isReadable() ? "R" : "")
 							+ (phte.isWriteable() ? "W" : "")
 							+ (phte.isExecutable() ? "X" : ""));
-			mem.setPermissions(start, end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
+			mem.setPermissions(start, end - 1L, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
 		}
 	}
 

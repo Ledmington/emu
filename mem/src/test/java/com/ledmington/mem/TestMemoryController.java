@@ -18,6 +18,7 @@
 package com.ledmington.mem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
@@ -26,6 +27,10 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import com.ledmington.mem.exc.IllegalReadException;
+import com.ledmington.mem.exc.IllegalWriteException;
 
 final class TestMemoryController {
 
@@ -67,5 +72,27 @@ final class TestMemoryController {
 				0x0706050403020100L,
 				mem.read8(address),
 				() -> String.format("Expected 0x%016x but was 0x%016x.", 0x0706050403020100L, mem.read8(address)));
+	}
+
+	@ParameterizedTest
+	@ValueSource(longs = {0L, 1L, 2L, 3L, 4L, 5L, 6L})
+	void unalignedMultiByteRead(final long offset) {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		final long address = rng.nextLong();
+		mem.setPermissions(address, address + offset, true, false, false);
+		mem.initialize(address, 8, (byte) 0x00);
+		assertThrows(IllegalReadException.class, () -> mem.read8(address));
+	}
+
+	@ParameterizedTest
+	@ValueSource(longs = {0L, 1L, 2L, 3L, 4L, 5L, 6L})
+	void unalignedMultiByteWrite(final long offset) {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		final long address = rng.nextLong();
+		mem.setPermissions(address, address + offset, false, true, false);
+		mem.initialize(address, 8, (byte) 0x00);
+		assertThrows(IllegalWriteException.class, () -> mem.write(address, 0L));
 	}
 }
