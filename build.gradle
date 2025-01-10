@@ -4,7 +4,7 @@ plugins {
     id 'pmd'
     id 'com.github.spotbugs' version '6.0.27'
     id 'com.adarshr.test-logger' version '4.0.0'
-    id 'com.diffplug.spotless' version '6.25.0'
+    id 'com.diffplug.spotless' version '7.0.1'
     id 'com.github.ben-manes.versions' version '0.51.0'
     id 'de.undercouch.download' version '5.6.0'
 }
@@ -78,12 +78,12 @@ allprojects {
     }
 
     jacoco {
-        toolVersion = "0.8.12"
+        toolVersion = '0.8.12'
         reportsDirectory = layout.buildDirectory.dir('jacoco')
     }
 
     testlogger {
-        theme 'standard'
+        theme 'standard-parallel'
 
         showExceptions true
         showStackTraces true
@@ -108,10 +108,11 @@ allprojects {
     }
 
     pmd {
+        toolVersion = '7.9.0'
+        ignoreFailures = false
         consoleOutput = true
-        toolVersion = "7.2.0"
         rulesMinimumPriority = 5
-        threads = 1
+        threads = 1 // Each PMD instance for each module runs serially
         incrementalAnalysis = true
         ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "ruleset.xml"))
     }
@@ -137,7 +138,7 @@ spotless {
     format 'misc', {
         target '*.md', '.gitignore', '.gitattributes'
         trimTrailingWhitespace()
-        indentWithTabs()
+        leadingSpacesToTabs()
         endWithNewline()
         setEncoding('utf-8')
     }
@@ -150,7 +151,7 @@ spotless {
         setEncoding('utf-8')
         removeUnusedImports()
         palantirJavaFormat('2.50.0').formatJavadoc(true)
-        indentWithTabs()
+        leadingSpacesToTabs()
         formatAnnotations()
         trimTrailingWhitespace()
         endWithNewline()
