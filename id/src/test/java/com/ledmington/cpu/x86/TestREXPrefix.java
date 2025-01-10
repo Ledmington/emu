@@ -64,10 +64,10 @@ final class TestREXPrefix {
 					for (final boolean b : v) {
 						final byte prefix = BitUtils.or(
 								(byte) 0x40,
-								(w ? (byte) 0x08 : 0),
-								(r ? (byte) 0x04 : 0),
-								(x ? (byte) 0x02 : 0),
-								(b ? (byte) 0x01 : 0));
+								w ? (byte) 0x08 : 0,
+								r ? (byte) 0x04 : 0,
+								x ? (byte) 0x02 : 0,
+								b ? (byte) 0x01 : 0);
 
 						args.add(Arguments.of(w, r, x, b, prefix));
 					}

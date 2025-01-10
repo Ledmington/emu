@@ -129,9 +129,9 @@ public final class FormatTestFiles {
 			}
 
 			tc.stream()
-					.sorted((a, b) -> ((a.mnemonic().equals(b.mnemonic()))
-							? (a.hex().compareTo(b.hex()))
-							: (a.mnemonic().compareTo(b.mnemonic()))))
+					.sorted((a, b) -> a.mnemonic().equals(b.mnemonic())
+							? a.hex().compareTo(b.hex())
+							: a.mnemonic().compareTo(b.mnemonic()))
 					.forEach(e -> allLines.add(String.format(fmt + " | %s", e.mnemonic(), e.hex())));
 		}
 

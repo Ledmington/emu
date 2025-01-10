@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -71,8 +71,8 @@ public final class EmulatorView extends Stage {
 	private final Button runBtn = new Button();
 	private final TextArea codeArea = new TextArea();
 	private final TextArea memoryArea = new TextArea();
-	private final Map<Register64, Label> regLabels = new HashMap<>();
-	private final Map<Register16, Label> segLabels = new HashMap<>();
+	private final Map<Register64, Label> regLabels = new EnumMap<>(Register64.class);
+	private final Map<Register16, Label> segLabels = new EnumMap<>(Register16.class);
 	private final Label rflagsLabel;
 
 	public EmulatorView() {

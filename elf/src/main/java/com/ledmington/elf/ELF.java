@@ -69,7 +69,7 @@ public final class ELF implements ProgramHeaderTable, SectionTable {
 	}
 
 	@Override
-	public PHTEntry getProgramHeader(int idx) {
+	public PHTEntry getProgramHeader(final int idx) {
 		return programHeaderTable[idx];
 	}
 

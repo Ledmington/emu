@@ -610,15 +610,15 @@ public final class Main {
 
 		if (s.getNumBuckets() > 0) {
 			long nzero_counts = 0L;
-			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], (counts[0] * 100.0) / s.getNumBuckets());
+			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], counts[0] * 100.0 / s.getNumBuckets());
 			for (long i = 1L; i <= maxLength; i++) {
 				nzero_counts += counts[BitUtils.asInt(i)] * i;
 				out.printf(
 						"%7d  %-10d (%5.1f%%)    %5.1f%%%n",
 						i,
 						counts[BitUtils.asInt(i)],
-						(counts[BitUtils.asInt(i)] * 100.0) / s.getNumBuckets(),
-						(nzero_counts * 100.0) / nsyms);
+						counts[BitUtils.asInt(i)] * 100.0 / s.getNumBuckets(),
+						nzero_counts * 100.0 / nsyms);
 			}
 		}
 	}
@@ -660,13 +660,13 @@ public final class Main {
 
 		if (nGnuBuckets > 0) {
 			long nzero_counts = 0L;
-			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], (counts[0] * 100.0) / nGnuBuckets);
+			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], counts[0] * 100.0 / nGnuBuckets);
 			for (long j = 1L; j <= maxLength; j++) {
 				final long cj = counts[BitUtils.asInt(j)];
 				nzero_counts += cj * j;
 				out.printf(
 						"%7d  %-10d (%5.1f%%)    %5.1f%%%n",
-						j, cj, (cj * 100.0) / nGnuBuckets, (nzero_counts * 100.0) / nsyms);
+						j, cj, cj * 100.0 / nGnuBuckets, nzero_counts * 100.0 / nsyms);
 			}
 		}
 	}
@@ -1097,7 +1097,7 @@ public final class Main {
 					if (datasz != expectedDataSize) {
 						corruptLength(datasz);
 					} else {
-						int bitmask = robb.read4();
+						final int bitmask = robb.read4();
 						if (bitmask == 0) {
 							none();
 						}
@@ -1116,7 +1116,7 @@ public final class Main {
 					if (datasz != expectedDataSize) {
 						corruptLength(datasz);
 					} else {
-						int bitmask = robb.read4();
+						final int bitmask = robb.read4();
 						if (bitmask == 0) {
 							none();
 						}
@@ -1135,7 +1135,7 @@ public final class Main {
 					if (datasz != expectedDataSize) {
 						corruptLength(datasz);
 					} else {
-						int bitmask = robb.read4();
+						final int bitmask = robb.read4();
 						if (bitmask == 0) {
 							none();
 						}
@@ -1154,7 +1154,7 @@ public final class Main {
 					if (datasz != expectedDataSize) {
 						corruptLength(datasz);
 					} else {
-						int bitmask = robb.read4();
+						final int bitmask = robb.read4();
 						if (bitmask == 0) {
 							none();
 						}

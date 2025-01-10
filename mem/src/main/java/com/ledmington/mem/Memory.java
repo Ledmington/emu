@@ -30,7 +30,7 @@ public interface Memory {
 	 * @param address The address to read from.
 	 * @return The byte word contained at the given address.
 	 */
-	byte read(final long address);
+	byte read(long address);
 
 	/**
 	 * Writes the given byte word at the given address, overwriting any value previously stored at that location.
@@ -38,7 +38,7 @@ public interface Memory {
 	 * @param address The address to write at.
 	 * @param value The value to write.
 	 */
-	void write(final long address, final byte value);
+	void write(long address, byte value);
 
 	/**
 	 * Checks whether the given address is initialized or not. A memory address is said to be initialized if it has been
@@ -47,5 +47,5 @@ public interface Memory {
 	 * @param address The address to be checked.
 	 * @return True if it is initialized, false otherwise.
 	 */
-	boolean isInitialized(final long address);
+	boolean isInitialized(long address);
 }

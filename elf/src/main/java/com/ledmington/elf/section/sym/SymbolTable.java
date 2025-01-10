@@ -37,7 +37,7 @@ public interface SymbolTable extends Section {
 	 * @param idx The index of the entry to return.
 	 * @return The i-th entry in the symbol table.
 	 */
-	SymbolTableEntry getSymbolTableEntry(final int idx);
+	SymbolTableEntry getSymbolTableEntry(int idx);
 
 	/**
 	 * Looks for a symbol with the given value and returns it.

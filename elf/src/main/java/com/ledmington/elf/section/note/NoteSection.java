@@ -91,7 +91,7 @@ public interface NoteSection extends LoadableSection {
 	 * @param idx The index of the entry.
 	 * @return The entry at teh given index.
 	 */
-	NoteSectionEntry getEntry(final int idx);
+	NoteSectionEntry getEntry(int idx);
 
 	@Override
 	default byte[] getLoadableContent() {

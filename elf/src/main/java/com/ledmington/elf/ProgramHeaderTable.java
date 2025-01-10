@@ -33,5 +33,5 @@ public interface ProgramHeaderTable {
 	 * @param idx The index of the program header to return.
 	 * @return The i-th program header.
 	 */
-	PHTEntry getProgramHeader(final int idx);
+	PHTEntry getProgramHeader(int idx);
 }

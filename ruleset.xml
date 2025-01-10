@@ -17,12 +17,32 @@
         </properties>
     </rule>
 
-    <rule ref="category/java/codestyle.xml" />
+    <rule ref="category/java/codestyle.xml">
+        <!-- Avoid reporting reporting variables with a short name -->
+        <exclude name="ShortVariable" />
+        <!-- Avoid reporting methods with early exits -->
+        <exclude name="OnlyOneReturn" />
+        <!-- Avoid reporting default constructors -->
+        <exclude name ="UnnecessaryConstructor" />
+    </rule>
 
-    <rule ref="category/java/design.xml" />
+    <!-- Avoid reporting missing constructors in test classes -->
+    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor">
+        <excludePattern>.*Test.*\.java</excludePattern> <!-- Exclude all test files -->
+    </rule>
+
+    <rule ref="category/java/design.xml">
+        <!-- Avoid reporting usage of classes from outside the package hierarchy -->
+	    <exclude name="LoosePackageCoupling" />
+    </rule>
 
     <rule ref="category/java/documentation.xml">
+        <!-- Avoid reporting comments with too many lines -->
         <exclude name="CommentSize" />
+        <!-- Avoid reporting missing comments on private fields -->
+        <exclude name="CommentRequired" />
+        <!-- Avoid reporting constructors with empty body -->
+        <exclude name ="UncommentedEmptyConstructor" />
     </rule>
 
     <rule ref="category/java/errorprone.xml">

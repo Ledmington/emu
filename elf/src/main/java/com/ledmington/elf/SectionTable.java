@@ -35,5 +35,5 @@ public interface SectionTable {
 	 * @param idx The index of the section to return.
 	 * @return The i-th section.
 	 */
-	Section getSection(final int idx);
+	Section getSection(int idx);
 }

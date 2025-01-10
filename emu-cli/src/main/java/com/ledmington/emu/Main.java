@@ -124,7 +124,8 @@ public final class Main {
 					int k = 0;
 					long bytes = 0L;
 					while (k < s.length() && Character.isDigit(s.charAt(k))) {
-						bytes = bytes * 10L + (s.charAt(k) - '0');
+						final long idx = (long) (s.charAt(k) - '0');
+						bytes = bytes * 10L + idx;
 						k++;
 					}
 

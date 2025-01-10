@@ -32,9 +32,9 @@ import com.ledmington.utils.SuppressFBWarnings;
 public final class MemoryController implements Memory {
 
 	private final Memory mem;
-	private final IntervalArray canRead = new IntervalArray();
-	private final IntervalArray canWrite = new IntervalArray();
-	private final IntervalArray canExecute = new IntervalArray();
+	private final IntervalArray readableAddresses = new IntervalArray();
+	private final IntervalArray writableAddresses = new IntervalArray();
+	private final IntervalArray executableAddresses = new IntervalArray();
 
 	// TODO: this seems like a poor design choice
 	private final boolean breakOnWrongPermissions;
@@ -69,6 +69,18 @@ public final class MemoryController implements Memory {
 		this(memory, true, true);
 	}
 
+	private boolean canRead(final long address) {
+		return readableAddresses.get(address);
+	}
+
+	private boolean canWrite(final long address) {
+		return writableAddresses.get(address);
+	}
+
+	private boolean canExecute(final long address) {
+		return executableAddresses.get(address);
+	}
+
 	private String reportIllegalAccess(final String message, final long address, final int length) {
 		final String reset = "\u001B[0m";
 		final String bold = "\u001B[1m";
@@ -84,7 +96,7 @@ public final class MemoryController implements Memory {
 		final long bytesPerLine = 16;
 
 		// The start of the given range must be in the middle 16-bytes aligned line
-		final long startAddress = (address / bytesPerLine) * bytesPerLine - bytesPerLine * linesAround;
+		final long startAddress = address / bytesPerLine * bytesPerLine - bytesPerLine * linesAround;
 
 		final StringBuilder sb = new StringBuilder(128);
 
@@ -128,9 +140,9 @@ public final class MemoryController implements Memory {
 			if (x >= address && x < address + length) {
 				sb.append(bold);
 			}
-			final boolean r = canRead.get(x);
-			final boolean w = canWrite.get(x);
-			final boolean e = canExecute.get(x);
+			final boolean r = canRead(x);
+			final boolean w = canWrite(x);
+			final boolean e = canExecute(x);
 			if (r && !w && !e) {
 				sb.append(red);
 			}
@@ -256,27 +268,27 @@ public final class MemoryController implements Memory {
 		}
 
 		if (readable) {
-			canRead.set(startBlockAddress, endBlockAddress);
+			readableAddresses.set(startBlockAddress, endBlockAddress);
 		} else {
-			canRead.reset(startBlockAddress, endBlockAddress);
+			readableAddresses.reset(startBlockAddress, endBlockAddress);
 		}
 
 		if (writeable) {
-			canWrite.set(startBlockAddress, endBlockAddress);
+			writableAddresses.set(startBlockAddress, endBlockAddress);
 		} else {
-			canWrite.reset(startBlockAddress, endBlockAddress);
+			writableAddresses.reset(startBlockAddress, endBlockAddress);
 		}
 
 		if (executable) {
-			canExecute.set(startBlockAddress, endBlockAddress);
+			executableAddresses.set(startBlockAddress, endBlockAddress);
 		} else {
-			canExecute.reset(startBlockAddress, endBlockAddress);
+			executableAddresses.reset(startBlockAddress, endBlockAddress);
 		}
 	}
 
 	private void checkRead(final long address, final int length) {
 		for (int i = 0; i < length; i++) {
-			if (breakOnWrongPermissions && !canRead.get(address + i)) {
+			if (breakOnWrongPermissions && !canRead(address + i)) {
 				reportIllegalRead(address, length);
 			}
 			if (breakWhenReadingUninitializedMemory && !isInitialized(address + i)) {
@@ -332,7 +344,7 @@ public final class MemoryController implements Memory {
 
 	private void checkExecute(final long address, final int length) {
 		for (int i = 0; i < length; i++) {
-			if (breakOnWrongPermissions && !canExecute.get(address + i)) {
+			if (breakOnWrongPermissions && !canExecute(address + i)) {
 				reportIllegalExecution(address, length);
 			}
 			if (breakWhenReadingUninitializedMemory && !isInitialized(address + i)) {
@@ -354,7 +366,7 @@ public final class MemoryController implements Memory {
 
 	private void checkWrite(final long address, final int length) {
 		for (int i = 0; i < length; i++) {
-			if (breakOnWrongPermissions && !canWrite.get(address + i)) {
+			if (breakOnWrongPermissions && !canWrite(address + i)) {
 				reportIllegalWrite(address, length);
 			}
 		}
@@ -429,18 +441,18 @@ public final class MemoryController implements Memory {
 	@Override
 	public String toString() {
 		return "MemoryController(mem=" + mem + ";canRead="
-				+ canRead + ";canWrite="
-				+ canWrite + ";canExecute="
-				+ canExecute + ')';
+				+ readableAddresses + ";canWrite="
+				+ writableAddresses + ";canExecute="
+				+ executableAddresses + ')';
 	}
 
 	@Override
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + mem.hashCode();
-		h = 31 * h + canRead.hashCode();
-		h = 31 * h + canWrite.hashCode();
-		h = 31 * h + canExecute.hashCode();
+		h = 31 * h + readableAddresses.hashCode();
+		h = 31 * h + writableAddresses.hashCode();
+		h = 31 * h + executableAddresses.hashCode();
 		return h;
 	}
 
@@ -456,8 +468,8 @@ public final class MemoryController implements Memory {
 			return false;
 		}
 		return this.mem.equals(m)
-				&& this.canRead.equals(m.canRead)
-				&& this.canWrite.equals(m.canWrite)
-				&& this.canExecute.equals(m.canExecute);
+				&& this.readableAddresses.equals(m.readableAddresses)
+				&& this.writableAddresses.equals(m.writableAddresses)
+				&& this.executableAddresses.equals(m.executableAddresses);
 	}
 }

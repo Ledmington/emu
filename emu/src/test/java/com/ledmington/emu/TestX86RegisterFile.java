@@ -41,7 +41,7 @@ final class TestX86RegisterFile {
 	private static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(System.nanoTime());
 	private X86RegisterFile regFile;
-	private static final Register8[] all8BitRegisters = new Register8[] {
+	private static final Register8[] all8BitRegisters = {
 		Register8.AL,
 		Register8.AH,
 		Register8.BL,
@@ -63,7 +63,7 @@ final class TestX86RegisterFile {
 		Register8.SIL,
 		Register8.DIL
 	};
-	private static final Register16[] all16BitRegisters = new Register16[] {
+	private static final Register16[] all16BitRegisters = {
 		Register16.AX,
 		Register16.BX,
 		Register16.CX,
@@ -87,7 +87,7 @@ final class TestX86RegisterFile {
 		Register16.GS,
 		Register16.SS
 	};
-	private static final Register32[] all32BitRegisters = new Register32[] {
+	private static final Register32[] all32BitRegisters = {
 		Register32.EAX,
 		Register32.EBX,
 		Register32.ECX,
@@ -106,7 +106,7 @@ final class TestX86RegisterFile {
 		Register32.R15D,
 		Register32.EIP
 	};
-	private static final Register64[] all64BitRegisters = new Register64[] {
+	private static final Register64[] all64BitRegisters = {
 		Register64.RAX,
 		Register64.RBX,
 		Register64.RCX,
@@ -131,7 +131,7 @@ final class TestX86RegisterFile {
 		regFile = new X86RegisterFile();
 	}
 
-	static Stream<Arguments> all8BitsRegisters() {
+	private static Stream<Arguments> all8BitsRegisters() {
 		return Arrays.stream(all8BitRegisters).map(Arguments::of);
 	}
 
@@ -172,7 +172,7 @@ final class TestX86RegisterFile {
 		}
 	}
 
-	static Stream<Arguments> all16BitsRegisters() {
+	private static Stream<Arguments> all16BitsRegisters() {
 		return Arrays.stream(all16BitRegisters).map(Arguments::of);
 	}
 
@@ -188,7 +188,7 @@ final class TestX86RegisterFile {
 	@ParameterizedTest
 	@MethodSource("all16BitsRegisters")
 	void setToValue(final Register16 r) {
-		final short x = BitUtils.asShort(rng.nextInt(1, 65536));
+		final short x = BitUtils.asShort(rng.nextInt(1, 65_536));
 		regFile.set(r, x);
 		assertEquals(
 				x,
@@ -199,7 +199,7 @@ final class TestX86RegisterFile {
 	@ParameterizedTest
 	@MethodSource("all16BitsRegisters")
 	void setToValueShouldNotChangeOtherRegisters(final Register16 r) {
-		final short x = BitUtils.asShort(rng.nextInt(1, 65536));
+		final short x = BitUtils.asShort(rng.nextInt(1, 65_536));
 		regFile.set(r, x);
 
 		for (final Register16 other : all16BitRegisters) {
@@ -213,7 +213,7 @@ final class TestX86RegisterFile {
 		}
 	}
 
-	static Stream<Arguments> all32BitsRegisters() {
+	private static Stream<Arguments> all32BitsRegisters() {
 		return Arrays.stream(all32BitRegisters).map(Arguments::of);
 	}
 
@@ -254,7 +254,7 @@ final class TestX86RegisterFile {
 		}
 	}
 
-	static Stream<Arguments> all64BitsRegisters() {
+	private static Stream<Arguments> all64BitsRegisters() {
 		return Arrays.stream(all64BitRegisters).map(Arguments::of);
 	}
 

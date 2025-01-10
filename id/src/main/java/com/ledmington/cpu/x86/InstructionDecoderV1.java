@@ -1905,7 +1905,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		// FIXME: is there a better way to do this?
 		// (technically there is no limit to the number of prefixes an instruction can have)
 		while (true) {
-			byte x = b.read1();
+			final byte x = b.read1();
 
 			if (isLegacyPrefixGroup1(x)) {
 				p1 = Optional.of(InstructionPrefix.fromByte(x));
@@ -1978,7 +1978,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
 		final RexPrefix rexPrefix = pref.rex();
 		final byte rm = modrm.rm();
-		Operand operand1;
+		final Operand operand1;
 
 		// Table at page 530
 		final byte mod = modrm.mod();
@@ -2015,7 +2015,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		final RexPrefix rexPrefix = pref.rex();
 		final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
 		final IndirectOperandBuilder iob = IndirectOperand.builder();
-		SIB sib;
+		final SIB sib;
 		if (modrm.mod() != MODRM_MOD_NO_DISP && modrm.rm() == 0b00000100) {
 			// SIB needed
 			sib = sib();

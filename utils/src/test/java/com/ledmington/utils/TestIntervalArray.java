@@ -115,6 +115,7 @@ final class TestIntervalArray {
 	}
 
 	@Test
+	@SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
 	void resetOverlappingRegions() {
 		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
 		ia.set(0, 10);
