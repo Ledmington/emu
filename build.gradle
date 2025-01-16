@@ -23,6 +23,10 @@ String appName = 'emu'
 ext.appNameLowerCase = appName.toLowerCase(Locale.US)
 
 ext.junitVersion = '5.11.4'
+ext.jacocoVersion = '0.8.12'
+ext.pmdVersion = '7.9.0'
+ext.spotbugsVersion = '4.9.0'
+ext.palantirVersion = '2.50.0'
 // End tunables
 
 allprojects {
@@ -78,7 +82,7 @@ allprojects {
     }
 
     jacoco {
-        toolVersion = '0.8.12'
+        toolVersion = "${jacocoVersion}"
         reportsDirectory = layout.buildDirectory.dir('jacoco')
     }
 
@@ -108,7 +112,7 @@ allprojects {
     }
 
     pmd {
-        toolVersion = '7.9.0'
+        toolVersion = "${pmdVersion}"
         ignoreFailures = false
         consoleOutput = true
         rulesMinimumPriority = 5
@@ -118,8 +122,7 @@ allprojects {
     }
 
     spotbugs {
-        toolVersion = '4.9.0'
-
+        toolVersion = "${spotbugsVersion}"
         ignoreFailures = false
         showStackTraces = true
         showProgress = false // too verbose for parallel output
@@ -150,7 +153,7 @@ spotless {
         }
         setEncoding('utf-8')
         removeUnusedImports()
-        palantirJavaFormat('2.50.0').formatJavadoc(true)
+        palantirJavaFormat("${palantirVersion}").formatJavadoc(true)
         leadingSpacesToTabs()
         formatAnnotations()
         trimTrailingWhitespace()
