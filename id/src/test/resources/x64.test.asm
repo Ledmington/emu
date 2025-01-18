@@ -128,15 +128,27 @@ js 0x12345678 | 0f 88 78 56 34 12
 jp 0x12       | 7a 12
 jp 0x12345678 | 0f 8a 78 56 34 12
 # Jmp
-jmp 0x12                             | eb 12
-jmp 0x12345678                       | e9 78 56 34 12
-jmp DWORD PTR [r11]                  | 66 41 ff 2b
+jmp 0x12       | eb 12
+jmp 0x12345678 | e9 78 56 34 12
+#
+jmp ax   | 66 ff e0
+jmp r11  | 41 ff e3
+jmp r11w | 66 41 ff e3
+jmp rax  | ff e0
+#
+jmp DWORD PTR [r11]  | 66 41 ff 2b
+jmp DWORD PTR [r11d] | 67 66 41 ff 2b
+jmp QWORD PTR [r11]  | 41 ff 23
+jmp QWORD PTR [r11d] | 67 41 ff 23
+jmp WORD PTR [r11]   | 66 41 ff 23
+jmp WORD PTR [r11d]  | 67 66 41 ff 23
+#
+jmp DWORD PTR [eax+ecx*4+0x12345678] | 67 66 ff ac 88 78 56 34 12
 jmp DWORD PTR [rax+rcx*4+0x12345678] | 66 ff ac 88 78 56 34 12
-jmp QWORD PTR [r11]                  | 41 ff 23
+jmp QWORD PTR [eax+ecx*4+0x12345678] | 67 ff a4 88 78 56 34 12
 jmp QWORD PTR [rax+rcx*4+0x12345678] | ff a4 88 78 56 34 12
-jmp WORD PTR [r11]                   | 66 41 ff 23
-jmp r11                              | 41 ff e3
-jmp rax                              | ff e0
+jmp WORD PTR [eax+ecx*4+0x12345678]  | 67 66 ff a4 88 78 56 34 12
+jmp WORD PTR [rax+rcx*4+0x12345678]  | 66 ff a4 88 78 56 34 12
 
 # Cmove
 cmove ecx,DWORD PTR [r8+rax*4+0x12345678] | 41 0f 44 8c 80 78 56 34 12
