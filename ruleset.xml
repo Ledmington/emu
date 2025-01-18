@@ -18,17 +18,22 @@
     </rule>
 
     <rule ref="category/java/codestyle.xml">
-        <!-- Avoid reporting reporting variables with a short name -->
+        <!-- Avoid reporting variables with a short name -->
         <exclude name="ShortVariable" />
+        <!-- Avoid reporting variables with a long name -->
+        <exclude name="LongVariable" />
+        <!-- Avoid reporting methods with a short name -->
+        <exclude name="ShortMethodName" />
+        <!-- Avoid reporting classes with a short name -->
+        <exclude name="ShortClassName" />
         <!-- Avoid reporting methods with early exits -->
         <exclude name="OnlyOneReturn" />
         <!-- Avoid reporting default constructors -->
-        <exclude name ="UnnecessaryConstructor" />
-    </rule>
-
-    <!-- Avoid reporting missing constructors in test classes -->
-    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor">
-        <excludePattern>.*Test.*\.java</excludePattern> <!-- Exclude all test files -->
+        <exclude name="UnnecessaryConstructor" />
+        <!-- Avoid reporting fields not declared in camel case -->
+        <exclude name="FieldNamingConventions" />
+        <!-- Avoid reporting variables not declared in camel case -->
+        <exclude name="LocalVariableNamingConventions" />
     </rule>
 
     <rule ref="category/java/design.xml">
@@ -42,7 +47,7 @@
         <!-- Avoid reporting missing comments on private fields -->
         <exclude name="CommentRequired" />
         <!-- Avoid reporting constructors with empty body -->
-        <exclude name ="UncommentedEmptyConstructor" />
+        <exclude name="UncommentedEmptyConstructor" />
     </rule>
 
     <rule ref="category/java/errorprone.xml">
