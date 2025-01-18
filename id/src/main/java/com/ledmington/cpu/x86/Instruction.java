@@ -176,7 +176,7 @@ public final class Instruction {
 			return imm.bits();
 		}
 
-		if (op1 != null && op1 instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
+		if (op1 instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
 			return io.explicitPtrSize();
 		}
 
@@ -212,6 +212,7 @@ public final class Instruction {
 	 *
 	 * @return A String representation of this instruction with Intel syntax.
 	 */
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public String toIntelSyntax() {
 		final StringBuilder sb = new StringBuilder();
 		if (this.prefix != null) {
@@ -238,10 +239,7 @@ public final class Instruction {
 	 * @return True if it is legacy, false otherwise.
 	 */
 	public boolean isLegacy() {
-		if (code == Opcode.ENDBR32) {
-			return true;
-		}
-		return false;
+		return code == Opcode.ENDBR32;
 	}
 
 	@Override

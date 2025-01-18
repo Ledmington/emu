@@ -31,7 +31,7 @@ public interface ImmutableRegisterFile {
 	 * @param r The register to be read.
 	 * @return The value in the register.
 	 */
-	byte get(final Register8 r);
+	byte get(Register8 r);
 
 	/**
 	 * Returns the value of the given 16-bit register as a short.
@@ -39,7 +39,7 @@ public interface ImmutableRegisterFile {
 	 * @param r The register to be read.
 	 * @return The value in the register.
 	 */
-	short get(final Register16 r);
+	short get(Register16 r);
 
 	/**
 	 * Returns the value of the given 32-bit register as an int.
@@ -47,7 +47,7 @@ public interface ImmutableRegisterFile {
 	 * @param r The Register to be read.
 	 * @return The value of the register.
 	 */
-	int get(final Register32 r);
+	int get(Register32 r);
 
 	/**
 	 * Returns the value of the given 64-bit register as a long.
@@ -55,7 +55,7 @@ public interface ImmutableRegisterFile {
 	 * @param r The Register to be read.
 	 * @return The value of the register.
 	 */
-	long get(final Register64 r);
+	long get(Register64 r);
 
 	/**
 	 * Checks whether the given flag is set.
@@ -63,5 +63,5 @@ public interface ImmutableRegisterFile {
 	 * @param f The flag to be checked.
 	 * @return True if it is set, false otherwise.
 	 */
-	boolean isSet(final RFlags f);
+	boolean isSet(RFlags f);
 }

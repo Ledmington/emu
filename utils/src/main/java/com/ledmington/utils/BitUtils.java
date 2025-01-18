@@ -64,7 +64,7 @@ public final class BitUtils {
 	 * @return A short with the given byte as the rightmost one.
 	 */
 	public static short asShort(final byte b) {
-		return (short) (((short) b) & (short) 0x00ff);
+		return (short) (b & (short) 0x00ff);
 	}
 
 	/**
@@ -94,7 +94,7 @@ public final class BitUtils {
 	 * @return An int with the given byte as the rightmost one.
 	 */
 	public static int asInt(final byte b) {
-		return ((int) b) & 0x000000ff;
+		return b & 0x000000ff;
 	}
 
 	/**
@@ -104,7 +104,7 @@ public final class BitUtils {
 	 * @return An int with the given short as the 2 rightmost bytes.
 	 */
 	public static int asInt(final short s) {
-		return ((int) s) & 0x0000ffff;
+		return s & 0x0000ffff;
 	}
 
 	/**
@@ -124,7 +124,7 @@ public final class BitUtils {
 	 * @return A long with the given byte as the rightmost one.
 	 */
 	public static long asLong(final byte b) {
-		return ((long) b) & 0x00000000000000ffL;
+		return b & 0x00000000000000ffL;
 	}
 
 	/**
@@ -134,7 +134,7 @@ public final class BitUtils {
 	 * @return A long with the given short as the 2 rightmost bytes.
 	 */
 	public static long asLong(final short s) {
-		return ((long) s) & 0x000000000000ffffL;
+		return s & 0x000000000000ffffL;
 	}
 
 	/**
@@ -144,7 +144,7 @@ public final class BitUtils {
 	 * @return A long with the given int as the 4 rightmost bytes.
 	 */
 	public static long asLong(final int x) {
-		return ((long) x) & 0x00000000ffffffffL;
+		return x & 0x00000000ffffffffL;
 	}
 
 	/**

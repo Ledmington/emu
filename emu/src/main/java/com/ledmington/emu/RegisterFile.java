@@ -31,7 +31,7 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
 	 */
-	void set(final Register8 r, final byte v);
+	void set(Register8 r, byte v);
 
 	/**
 	 * Sets the value of the given 16-bit register to given short. This operation does not modify the other registers.
@@ -39,7 +39,7 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
 	 */
-	void set(final Register16 r, final short v);
+	void set(Register16 r, short v);
 
 	/**
 	 * Sets the value of the given 32-bit register to given int. This operation does not modify the other registers.
@@ -47,7 +47,7 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
 	 */
-	void set(final Register32 r, final int v);
+	void set(Register32 r, int v);
 
 	/**
 	 * Sets the value of the given 64-bit register to given long. This operation does not modify the other registers.
@@ -55,7 +55,7 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
 	 */
-	void set(final Register64 r, final long v);
+	void set(Register64 r, long v);
 
 	/**
 	 * Sets the given flag to the given value.
@@ -63,7 +63,7 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param f The flag to be set.
 	 * @param v The value to be written.
 	 */
-	void set(final RFlags f, final boolean v);
+	void set(RFlags f, boolean v);
 
 	/** Resets all RFLAGS. */
 	void resetFlags();

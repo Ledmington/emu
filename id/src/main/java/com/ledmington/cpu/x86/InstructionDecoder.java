@@ -28,7 +28,7 @@ public interface InstructionDecoder {
 	 * @param nBytesToDecode Maximum number of bytes to read.
 	 * @return A list of decoded instructions.
 	 */
-	List<Instruction> decodeAll(final int nBytesToDecode);
+	List<Instruction> decodeAll(int nBytesToDecode);
 
 	/**
 	 * Decodes a single instruction reading as few bytes as possible.

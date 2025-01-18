@@ -85,9 +85,9 @@ public final class RelativeOffset implements Operand {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof RelativeOffset ro)) {
 			return false;
 		}
-		return this.value == ((RelativeOffset) other).value;
+		return this.value == ro.value;
 	}
 }

@@ -235,7 +235,7 @@ public final class ELFLoader {
 
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3f MB) at 0x%x-0x%x",
-				stackSize, (double) stackSize / 1_000_000.0, highestAddress, highestAddress + stackSize - 1L);
+				stackSize, stackSize / 1_000_000.0, highestAddress, highestAddress + stackSize - 1L);
 		mem.setPermissions(highestAddress, highestAddress + stackSize - 1L, true, true, false);
 		return highestAddress;
 	}

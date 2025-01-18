@@ -57,7 +57,7 @@ public final class IndirectOperand implements Operand {
 		return new IndirectOperandBuilder();
 	}
 
-	IndirectOperand(
+	/* default */ IndirectOperand(
 			final Register reg1,
 			final Register reg2,
 			final int constant,
@@ -131,7 +131,7 @@ public final class IndirectOperand implements Operand {
 	public String toIntelSyntax() {
 		final StringBuilder sb = new StringBuilder();
 		boolean shouldAddSign = false;
-		if (reg2 != null && reg2 instanceof SegmentRegister sr) {
+		if (reg2 instanceof SegmentRegister sr) {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');
