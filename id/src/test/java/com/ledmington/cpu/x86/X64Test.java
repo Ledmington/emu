@@ -78,7 +78,7 @@ public class X64Test {
 		args.clear();
 	}
 
-	static Stream<Arguments> instructions() {
+	protected static Stream<Arguments> instructions() {
 		return args.stream();
 	}
 }

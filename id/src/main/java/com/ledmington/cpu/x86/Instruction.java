@@ -20,6 +20,8 @@ package com.ledmington.cpu.x86;
 import java.util.Locale;
 import java.util.Objects;
 
+import com.ledmington.cpu.x86.exc.InvalidInstruction;
+
 /** High-level representation of an x86 instruction. */
 public final class Instruction {
 
@@ -40,15 +42,25 @@ public final class Instruction {
 		this.op1 = firstOperand;
 		if (firstOperand == null && secondOperand != null) {
 			throw new IllegalArgumentException(String.format(
-					"Cannot have an x86 instruction with a second operand (%s) but not a first", secondOperand));
+					"Cannot have an x86 instruction with a second operand (%s) but not a first.", secondOperand));
 		}
 		this.op2 = secondOperand;
 		if (thirdOperand != null && (firstOperand == null || secondOperand == null)) {
 			throw new IllegalArgumentException(String.format(
-					"Cannot have an x86 instruction with a third operand (%s) but not a first or a second",
+					"Cannot have an x86 instruction with a third operand (%s) but not a first or a second.",
 					thirdOperand));
 		}
 		this.op3 = thirdOperand;
+
+		if (code == Opcode.MOV) {
+			if (op3 != null
+					|| op1 instanceof Immediate
+					|| (op1 instanceof IndirectOperand && op2 instanceof IndirectOperand)
+					|| op1.bits() != op2.bits()) {
+				throw new InvalidInstruction(
+						String.format("'%s %s, %s, %s' is not a valid instruction.", code, op1, op2, op3));
+			}
+		}
 	}
 
 	/**

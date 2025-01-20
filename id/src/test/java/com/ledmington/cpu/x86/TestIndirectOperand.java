@@ -28,7 +28,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestIndirectOperand {
-	static Stream<Arguments> correctIndirectOperands() {
+
+	private static Stream<Arguments> correctIndirectOperands() {
 		return Stream.of(
 				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX), "[eax]"),
 				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp((byte) 0x12), "[eax+0x12]"),
@@ -95,7 +96,7 @@ final class TestIndirectOperand {
 						"Expected indirect operand '%s' to be '%s' but wasn't", io.toIntelSyntax(), expected));
 	}
 
-	static Stream<Arguments> wrongIndirectOperands() {
+	private static Stream<Arguments> wrongIndirectOperands() {
 		return Stream.<Supplier<IndirectOperandBuilder>>of(
 						() -> IndirectOperand.builder().constant(-1),
 						() -> IndirectOperand.builder().constant(0),

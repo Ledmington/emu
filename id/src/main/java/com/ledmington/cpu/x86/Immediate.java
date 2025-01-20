@@ -75,11 +75,7 @@ public final class Immediate implements Operand {
 		this(x, Type.LONG);
 	}
 
-	/**
-	 * Return the size (in terms of bits) of this Immediate object.
-	 *
-	 * @return The number of bits based on the type of this Immediate.
-	 */
+	@Override
 	public int bits() {
 		return switch (type) {
 			case BYTE -> 8;

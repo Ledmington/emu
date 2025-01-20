@@ -15,7 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.cpu.x86;
+package com.ledmington.cpu.x86.exc;
 
-/** Interface for all x86 register types. */
-public interface Register extends Operand {}
+import java.io.Serial;
+
+public final class InvalidInstruction extends RuntimeException {
+
+	@Serial
+	private static final long serialVersionUID = 9195004233257266304L;
+
+	public InvalidInstruction(final String msg) {
+		super(msg);
+	}
+}

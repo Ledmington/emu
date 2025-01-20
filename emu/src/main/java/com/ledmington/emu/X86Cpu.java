@@ -99,21 +99,57 @@ public class X86Cpu implements X86Emulator {
 		logger.debug(inst.toIntelSyntax());
 		switch (inst.opcode()) {
 			case SUB -> {
-				if (inst.firstOperand() instanceof Register64 op1) {
-					final long r1 = rf.get(op1);
-					final long r2 =
-							switch (inst.secondOperand()) {
-								case Register64 op2 -> rf.get(op2);
-								case Immediate imm -> imm.asLong();
-								default -> throw new IllegalArgumentException();
-							};
-					final long result = r1 - r2;
-					rf.set(op1, result);
-					rf.resetFlags();
-					rf.set(RFlags.ZERO, result == 0L);
-				} else {
-					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SUB has %,d bits", ((Register) inst.firstOperand()).bits()));
+				switch (inst.firstOperand()) {
+					case Register8 op1 -> {
+						final byte r1 = rf.get(op1);
+						final byte r2 = rf.get((Register8) inst.secondOperand());
+						final byte result = BitUtils.asByte(r1 - r2);
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					case Register16 op1 -> {
+						final short r1 = rf.get(op1);
+						final short r2 = rf.get((Register16) inst.secondOperand());
+						final short result = BitUtils.asShort(r1 - r2);
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					case Register32 op1 -> {
+						final int r1 = rf.get(op1);
+						final int r2 = rf.get((Register32) inst.secondOperand());
+						final int result = r1 - r2;
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					case Register64 op1 -> {
+						final long r1 = rf.get(op1);
+						final long r2 =
+								switch (inst.secondOperand()) {
+									case Register64 op2 -> rf.get(op2);
+									case Immediate imm -> imm.asLong();
+									default -> throw new IllegalArgumentException(
+											String.format("Unknown second argument type %s", inst.secondOperand()));
+								};
+						final long result = r1 - r2;
+						rf.set(op1, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0L);
+					}
+					case IndirectOperand iop -> {
+						final long address = computeIndirectOperand(rf, iop);
+						final Register8 op2 = (Register8) inst.secondOperand();
+						final byte r1 = mem.read(address);
+						final byte r2 = rf.get(op2);
+						final byte result = BitUtils.asByte(r1 + r2);
+						mem.write(address, result);
+						rf.resetFlags();
+						rf.set(RFlags.ZERO, result == 0);
+					}
+					default -> throw new IllegalArgumentException(
+							String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
 				}
 			}
 			case ADD -> {
@@ -233,6 +269,8 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case CMP -> {
+				logger.debug("RDI   = 0x%016x", rf.get(Register64.RDI));
+				logger.debug("RDI-8 = 0x%016x", rf.get(Register64.RDI) - 8L);
 				final long address = computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand());
 				final long a = mem.read8(address);
 				final long b = ((Immediate) inst.secondOperand()).asLong();
@@ -260,6 +298,15 @@ public class X86Cpu implements X86Emulator {
 			}
 			case MOV -> {
 				if (inst.firstOperand() instanceof Register64 op1 && inst.secondOperand() instanceof Register64 op2) {
+					rf.set(op1, rf.get(op2));
+				} else if (inst.firstOperand() instanceof Register32 op1
+						&& inst.secondOperand() instanceof Register32 op2) {
+					rf.set(op1, rf.get(op2));
+				} else if (inst.firstOperand() instanceof Register16 op1
+						&& inst.secondOperand() instanceof Register16 op2) {
+					rf.set(op1, rf.get(op2));
+				} else if (inst.firstOperand() instanceof Register8 op1
+						&& inst.secondOperand() instanceof Register8 op2) {
 					rf.set(op1, rf.get(op2));
 				} else if (inst.firstOperand() instanceof Register64 op1
 						&& inst.secondOperand() instanceof Immediate imm) {
@@ -301,6 +348,8 @@ public class X86Cpu implements X86Emulator {
 				final long newRSP = rsp - 8L;
 				rf.set(Register64.RSP, newRSP);
 				mem.write(newRSP, value);
+				logger.debug("RSP = 0x%016x", rf.get(Register64.RSP));
+				logger.debug("RBP = 0x%016x", rf.get(Register64.RBP));
 			}
 			case POP -> {
 				final Register64 dest = (Register64) inst.firstOperand();

@@ -34,7 +34,7 @@ import com.ledmington.utils.BitUtils;
 
 final class TestIncompleteInstruction extends X64Test {
 
-	static Stream<Arguments> incompleteInstructions() {
+	private static Stream<Arguments> incompleteInstructions() {
 		final Set<String> validInstructions =
 				instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
 		return validInstructions.stream()

@@ -100,8 +100,12 @@ public final class IntervalArray {
 				if (curr.end() >= endAddress) {
 					// the given range fits entirely in this block
 					blocks.remove(i);
-					blocks.add(i, new Block(curr.start(), startAddress - 1));
-					blocks.add(i + 1, new Block(endAddress + 1, curr.end()));
+					if (startAddress > curr.start()) {
+						blocks.add(i, new Block(curr.start(), startAddress - 1));
+					}
+					if (curr.end() > endAddress) {
+						blocks.add(i + 1, new Block(endAddress + 1, curr.end()));
+					}
 				} else {
 					// the given range takes up only the right "half" of this block
 					blocks.set(i, new Block(curr.start(), startAddress - 1));

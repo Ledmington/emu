@@ -26,4 +26,11 @@ public interface Operand {
 	 * @return A String representation of this operand with Intel syntax.
 	 */
 	String toIntelSyntax();
+
+	/**
+	 * Returns the size of this operand.
+	 *
+	 * @return The size in bits of this operand.
+	 */
+	int bits();
 }

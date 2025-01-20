@@ -106,9 +106,9 @@ final class TestIntervalArray {
 	@Test
 	void setOverlappingRegions() {
 		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-		ia.set(0, 10);
-		ia.set(5, 15);
-		for (long x = 0; x <= 15; x++) {
+		ia.set(0L, 10L);
+		ia.set(5L, 15L);
+		for (long x = 0L; x <= 15L; x++) {
 			final long finalX = x;
 			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
 		}
@@ -118,13 +118,24 @@ final class TestIntervalArray {
 	@SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
 	void resetOverlappingRegions() {
 		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
-		ia.set(0, 10);
-		ia.reset(5, 15);
-		for (long x = 0; x < 5; x++) {
+		ia.set(0L, 10L);
+		ia.reset(5L, 15L);
+		for (long x = 0L; x < 5L; x++) {
 			final long finalX = x;
 			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
 		}
-		for (long x = 5; x <= 15; x++) {
+		for (long x = 5L; x <= 15L; x++) {
+			final long finalX = x;
+			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
+		}
+	}
+
+	@Test
+	void setAndResetSameBlock() {
+		ia.reset(Long.MIN_VALUE, Long.MAX_VALUE);
+		ia.set(0L, 10L);
+		ia.reset(0L, 10L);
+		for (long x = 0L; x <= 10L; x++) {
 			final long finalX = x;
 			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
 		}

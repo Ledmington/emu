@@ -108,6 +108,14 @@ public final class IndirectOperand implements Operand {
 		return displacement;
 	}
 
+	@Override
+	public int bits() {
+		if (hasExplicitPtrSize()) {
+			return ptrSize.getSize();
+		}
+		return reg2.bits();
+	}
+
 	/**
 	 * Checks whether this indirect operand has been built with an explicit pointer size or it has been inferred from
 	 * its arguments.

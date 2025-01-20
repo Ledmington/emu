@@ -56,6 +56,11 @@ public final class RelativeOffset implements Operand {
 		return String.format("0x%x", value);
 	}
 
+	@Override
+	public int bits() {
+		return 64;
+	}
+
 	/**
 	 * Returns the value of this RelativeOffset.
 	 *
