@@ -53,12 +53,19 @@ public final class Instruction {
 		this.op3 = thirdOperand;
 
 		if (code == Opcode.MOV) {
-			if (op3 != null
-					|| op1 instanceof Immediate
-					|| (op1 instanceof IndirectOperand && op2 instanceof IndirectOperand)
-					|| op1.bits() != op2.bits()) {
-				throw new InvalidInstruction(
-						String.format("'%s %s, %s, %s' is not a valid instruction.", code, op1, op2, op3));
+			if (op3 != null) {
+				throw new InvalidInstruction("MOV cannot have 3 operands.");
+			}
+			if (op1 instanceof Immediate) {
+				throw new InvalidInstruction("Destination operand of MOV cannot be an immediate value.");
+			}
+			if (op1 instanceof IndirectOperand && op2 instanceof IndirectOperand) {
+				throw new InvalidInstruction("MOV cannot have two indirect operands.");
+			}
+			if (op1.bits() != op2.bits()) {
+				throw new InvalidInstruction(String.format(
+						"MOV cannot have two operands of different sizes: were %,d (%s) and %,d (%s) bits, respectively.",
+						op1.bits(), op1, op2.bits(), op2));
 			}
 		}
 	}
