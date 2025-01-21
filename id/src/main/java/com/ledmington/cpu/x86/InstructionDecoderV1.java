@@ -158,12 +158,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 					Opcode.INC,
 					isIndirectOperandNeeded(modrm)
 							? parseIndirectOperand(pref, modrm)
-									.pointer(
-											pref.hasOperandSizeOverridePrefix()
-													? PointerSize.WORD_PTR
-													: pref.rex().isOperand64Bit()
-															? PointerSize.QWORD_PTR
-															: PointerSize.DWORD_PTR)
+									.pointer(getPointerSize(pref))
 									.build()
 							: Registers.fromCode(
 									modrm.rm(),
@@ -175,12 +170,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 					Opcode.DEC,
 					isIndirectOperandNeeded(modrm)
 							? parseIndirectOperand(pref, modrm)
-									.pointer(
-											pref.hasOperandSizeOverridePrefix()
-													? PointerSize.WORD_PTR
-													: pref.rex().isOperand64Bit()
-															? PointerSize.QWORD_PTR
-															: PointerSize.DWORD_PTR)
+									.pointer(getPointerSize(pref))
 									.build()
 							: Registers.fromCode(
 									modrm.rm(),
@@ -248,6 +238,12 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case 0b00000111 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
 			default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 		};
+	}
+
+	private static PointerSize getPointerSize(final Prefixes pref) {
+		return pref.hasOperandSizeOverridePrefix()
+				? PointerSize.WORD_PTR
+				: pref.rex().isOperand64Bit() ? PointerSize.QWORD_PTR : PointerSize.DWORD_PTR;
 	}
 
 	private Instruction parseExtendedOpcodeGroup3(final byte opcodeFirstByte, final Prefixes pref) {
@@ -738,12 +734,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 				yield new Instruction(
 						Opcode.NOP,
 						parseIndirectOperand(pref, modrm)
-								.pointer(
-										pref.hasOperandSizeOverridePrefix()
-												? PointerSize.WORD_PTR
-												: pref.rex().isOperand64Bit()
-														? PointerSize.QWORD_PTR
-														: PointerSize.DWORD_PTR)
+								.pointer(getPointerSize(pref))
 								.build());
 			}
 
