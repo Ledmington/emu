@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestSIB {
 
-	static Stream<Arguments> scales() {
+	private static Stream<Arguments> scales() {
 		return Stream.of(
 				Arguments.of((byte) 0x00, (byte) 0x00),
 				Arguments.of((byte) 0x40, (byte) 0x01),
@@ -46,7 +46,7 @@ final class TestSIB {
 						"Expected scale of SIB byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
 	}
 
-	static Stream<Arguments> indexes() {
+	private static Stream<Arguments> indexes() {
 		return Stream.of(
 				Arguments.of((byte) 0x00, (byte) 0x00),
 				Arguments.of((byte) 0x08, (byte) 0x01),
@@ -69,7 +69,7 @@ final class TestSIB {
 						"Expected index of SIB byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
 	}
 
-	static Stream<Arguments> bases() {
+	private static Stream<Arguments> bases() {
 		return Stream.of(
 				Arguments.of((byte) 0x00, (byte) 0x00),
 				Arguments.of((byte) 0x01, (byte) 0x01),

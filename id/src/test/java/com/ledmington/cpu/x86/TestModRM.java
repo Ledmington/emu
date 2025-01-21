@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestModRM {
 
-	static Stream<Arguments> mods() {
+	private static Stream<Arguments> mods() {
 		return Stream.of(
 				Arguments.of((byte) 0x00, (byte) 0x00),
 				Arguments.of((byte) 0x40, (byte) 0x01),
@@ -46,7 +46,7 @@ final class TestModRM {
 						"Expected mod of ModR/M byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
 	}
 
-	static Stream<Arguments> regs() {
+	private static Stream<Arguments> regs() {
 		return Stream.of(
 				Arguments.of((byte) 0x00, (byte) 0x00),
 				Arguments.of((byte) 0x08, (byte) 0x01),
@@ -69,7 +69,7 @@ final class TestModRM {
 						"Expected reg of ModR/M byte 0x%02x to be 0x%02x but was 0x%02x", m, expected, actual));
 	}
 
-	static Stream<Arguments> rms() {
+	private static Stream<Arguments> rms() {
 		return Stream.of(
 				Arguments.of((byte) 0x00, (byte) 0x00),
 				Arguments.of((byte) 0x01, (byte) 0x01),

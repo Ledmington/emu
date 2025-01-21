@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.ledmington;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -42,7 +44,7 @@ public final class FormatTestFiles {
 			out.println("Command-line arguments were provided but not needed. Ignoring them.");
 		}
 
-		try (final Stream<Path> s = Files.list(Path.of("src", "test", "resources"))
+		try (Stream<Path> s = Files.list(Path.of("src", "test", "resources"))
 				.filter(p -> p.toFile().isFile() && p.toFile().getName().endsWith(".test.asm"))) {
 			s.forEach(testInputFile -> {
 				out.printf("Formatting '%s'%n", testInputFile.toFile().getName());
@@ -65,7 +67,7 @@ public final class FormatTestFiles {
 		 */
 		final List<Set<String>> lines = new ArrayList<>();
 
-		try (final BufferedReader br = Files.newBufferedReader(Path.of(filepath), StandardCharsets.UTF_8)) {
+		try (BufferedReader br = Files.newBufferedReader(Path.of(filepath), StandardCharsets.UTF_8)) {
 			int lineIndex = 0;
 			boolean isGroupEnded = false;
 			for (String line = br.readLine(); line != null; line = br.readLine(), lineIndex++) {

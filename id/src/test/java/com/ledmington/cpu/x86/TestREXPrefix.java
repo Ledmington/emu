@@ -34,7 +34,7 @@ import com.ledmington.utils.BitUtils;
 
 final class TestREXPrefix {
 
-	static Stream<Arguments> wrongPrefixes() {
+	private static Stream<Arguments> wrongPrefixes() {
 		return IntStream.range(0, 256)
 				.mapToObj(BitUtils::asByte)
 				.filter(x -> BitUtils.and((byte) 0xf0, x) != (byte) 0x40)
@@ -55,9 +55,9 @@ final class TestREXPrefix {
 		assertThrows(IllegalArgumentException.class, () -> new RexPrefix(rex));
 	}
 
-	static Stream<Arguments> correctPrefixes() {
+	private static Stream<Arguments> correctPrefixes() {
 		final List<Arguments> args = new ArrayList<>();
-		final boolean[] v = new boolean[] {false, true};
+		final boolean[] v = {false, true};
 		for (final boolean w : v) {
 			for (final boolean r : v) {
 				for (final boolean x : v) {

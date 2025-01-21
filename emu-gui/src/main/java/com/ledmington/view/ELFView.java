@@ -648,7 +648,7 @@ public final class ELFView extends BorderPane {
 		final int nBytes = Math.min(MAX_ROWS * MAX_BYTES_PER_ROW, ((int) this.file.length()) - startByte);
 
 		final byte[] fileBytes = new byte[nBytes];
-		try (final RandomAccessFile raf = new RandomAccessFile(this.file, "r")) {
+		try (RandomAccessFile raf = new RandomAccessFile(this.file, "r")) {
 			raf.skipBytes(startByte);
 			raf.readFully(fileBytes);
 		} catch (IOException e) {

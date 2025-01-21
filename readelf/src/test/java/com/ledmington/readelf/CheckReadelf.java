@@ -42,7 +42,7 @@ public final class CheckReadelf {
 	private static final String fatJarPath;
 
 	static {
-		try (final Stream<Path> s = Files.find(
+		try (Stream<Path> s = Files.find(
 						Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
 				.filter(p -> p.getFileName().toString().startsWith("emu-readelf")
 						&& p.getFileName().toString().endsWith(".jar"))) {
@@ -57,7 +57,7 @@ public final class CheckReadelf {
 	}
 
 	private static boolean isELF(final Path p) {
-		try (final InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
+		try (InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
 			final int expectedBytes = 4;
 			final byte[] buffer = new byte[expectedBytes];
 			final int bytesRead = is.read(buffer);
@@ -78,7 +78,7 @@ public final class CheckReadelf {
 		final List<String> lines = new ArrayList<>();
 		try {
 			process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-			try (final BufferedReader reader =
+			try (BufferedReader reader =
 					new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 				String line = reader.readLine();
 				while (line != null) {
@@ -185,7 +185,7 @@ public final class CheckReadelf {
 		}
 
 		final List<Path> elfFiles;
-		try (final Stream<Path> s = Files.find(
+		try (Stream<Path> s = Files.find(
 				Path.of("/usr/bin").normalize().toAbsolutePath(),
 				1,
 				(p, bfa) -> bfa.isRegularFile() && p.toFile().length() >= 4L && isELF(p))) {

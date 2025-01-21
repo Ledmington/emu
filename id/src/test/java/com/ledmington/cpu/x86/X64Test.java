@@ -35,7 +35,7 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class X64Test {
+public sealed class X64Test permits TestDecoding, TestIncompleteInstruction {
 
 	private static final String testInputFileName = "x64.test.asm";
 	private static List<Arguments> args;
@@ -46,7 +46,7 @@ public class X64Test {
 
 		args = new ArrayList<>();
 		final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		try (final BufferedReader br =
+		try (BufferedReader br =
 				Files.newBufferedReader(Paths.get(Objects.requireNonNull(classloader.getResource(testInputFileName))
 								.toURI())
 						.toFile()
