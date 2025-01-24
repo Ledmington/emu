@@ -42,16 +42,16 @@ final class TestDecoding extends X64Test {
 
 		final InstructionDecoder id = new InstructionDecoderV1(code);
 		final List<Instruction> instructions = id.decodeAll(code.length);
-		assertNotNull(instructions, "InstructionDecoder returned a null List");
+		assertNotNull(instructions, "InstructionDecoder returned a null List.");
 		final int codeLen = instructions.size();
-		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found", codeLen));
-		final Instruction first = instructions.getFirst();
-		final String decoded = first.toIntelSyntax();
+		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found.", codeLen));
+		final Instruction inst = instructions.getFirst();
+		final String decoded = inst.toIntelSyntax();
 		assertFalse(
-				first.isLegacy(),
+				inst.isLegacy(),
 				() -> String.format(
 						"%s ('%s') is a valid instruction but it is for legacy/compatibility 32-bit mode, not for 64-bit mode.",
-						first, first.toIntelSyntax()));
-		assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded", expected, decoded));
+						inst, inst.toIntelSyntax()));
+		assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded.", expected, decoded));
 	}
 }

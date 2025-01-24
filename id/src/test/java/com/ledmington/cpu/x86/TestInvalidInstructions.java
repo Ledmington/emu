@@ -18,8 +18,8 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,87 +31,99 @@ import com.ledmington.cpu.x86.exc.InvalidInstruction;
 final class TestInvalidInstructions {
 
 	private static Stream<Arguments> invalidInstructions() {
-		return Stream.<Supplier<Instruction>>of(
-						// MOV with 2 indirect operands
-						() -> new Instruction(
-								Opcode.MOV,
-								IndirectOperand.builder().reg2(Register64.RAX).build(),
-								IndirectOperand.builder().reg2(Register64.RBX).build()),
+		return Stream.of(
+				// MOV with 2 indirect operands
+				Arguments.of(Opcode.MOV, new Operand[] {
+					IndirectOperand.builder()
+							.index(Register64.RAX)
+							.pointer(PointerSize.QWORD_PTR)
+							.build(),
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.QWORD_PTR)
+							.build()
+				}),
 
-						// MOV with immediate as destination operand,
-						() -> new Instruction(Opcode.MOV, new Immediate(0L), Register64.RAX),
+				// MOV with immediate as destination operand,
+				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0L), Register64.RAX}),
 
-						// MOV with 2 immediates
-						() -> new Instruction(Opcode.MOV, new Immediate(0L), new Immediate(1L)),
+				// MOV with 2 immediates
+				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0L), new Immediate(1L)}),
 
-						// MOV with three operands
-						() -> new Instruction(Opcode.MOV, Register64.RAX, Register64.RBX, Register64.RCX),
+				// MOV with three operands
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register64.RBX, Register64.RCX}),
 
-						// MOV with registers of different size
-						() -> new Instruction(Opcode.MOV, Register8.AL, Register64.RBX),
-						() -> new Instruction(Opcode.MOV, Register16.AX, Register64.RBX),
-						() -> new Instruction(Opcode.MOV, Register32.EAX, Register64.RBX),
-						() -> new Instruction(Opcode.MOV, Register64.RAX, Register32.EAX),
-						() -> new Instruction(Opcode.MOV, Register64.RAX, Register16.AX),
-						() -> new Instruction(Opcode.MOV, Register64.RAX, Register8.AL),
+				// MOV with registers of different size
+				Arguments.of(Opcode.MOV, new Operand[] {Register8.AL, Register64.RBX}),
+				Arguments.of(Opcode.MOV, new Operand[] {Register16.AX, Register64.RBX}),
+				Arguments.of(Opcode.MOV, new Operand[] {Register32.EAX, Register64.RBX}),
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register32.EAX}),
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register16.AX}),
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register8.AL}),
 
-						// MOV with register and indirect operand of different size
-						() -> new Instruction(
-								Opcode.MOV,
-								Register64.RAX,
-								IndirectOperand.builder()
-										.reg2(Register64.RBX)
-										.pointer(PointerSize.DWORD_PTR)
-										.build()),
-						() -> new Instruction(
-								Opcode.MOV,
-								Register64.RAX,
-								IndirectOperand.builder()
-										.reg2(Register64.RBX)
-										.pointer(PointerSize.WORD_PTR)
-										.build()),
-						() -> new Instruction(
-								Opcode.MOV,
-								Register64.RAX,
-								IndirectOperand.builder()
-										.reg2(Register64.RBX)
-										.pointer(PointerSize.BYTE_PTR)
-										.build()),
-						() -> new Instruction(
-								Opcode.MOV,
-								IndirectOperand.builder()
-										.reg2(Register64.RBX)
-										.pointer(PointerSize.DWORD_PTR)
-										.build(),
-								Register64.RAX),
-						() -> new Instruction(
-								Opcode.MOV,
-								IndirectOperand.builder()
-										.reg2(Register64.RBX)
-										.pointer(PointerSize.WORD_PTR)
-										.build(),
-								Register64.RAX),
-						() -> new Instruction(
-								Opcode.MOV,
-								IndirectOperand.builder()
-										.reg2(Register64.RBX)
-										.pointer(PointerSize.BYTE_PTR)
-										.build(),
-								Register64.RAX),
+				// MOV with register and indirect operand of different size
+				Arguments.of(Opcode.MOV, new Operand[] {
+					Register64.RAX,
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.DWORD_PTR)
+							.build()
+				}),
+				Arguments.of(Opcode.MOV, new Operand[] {
+					Register64.RAX,
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.WORD_PTR)
+							.build()
+				}),
+				Arguments.of(Opcode.MOV, new Operand[] {
+					Register64.RAX,
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.BYTE_PTR)
+							.build()
+				}),
+				Arguments.of(Opcode.MOV, new Operand[] {
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.DWORD_PTR)
+							.build(),
+					Register64.RAX
+				}),
+				Arguments.of(Opcode.MOV, new Operand[] {
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.WORD_PTR)
+							.build(),
+					Register64.RAX
+				}),
+				Arguments.of(Opcode.MOV, new Operand[] {
+					IndirectOperand.builder()
+							.index(Register64.RBX)
+							.pointer(PointerSize.BYTE_PTR)
+							.build(),
+					Register64.RAX
+				}),
 
-						// MOV with register and immediate of different size
-						() -> new Instruction(Opcode.MOV, Register64.RAX, new Immediate(0)),
-						() -> new Instruction(Opcode.MOV, Register64.RAX, new Immediate((short) 0)),
-						() -> new Instruction(Opcode.MOV, Register64.RAX, new Immediate((byte) 0)),
-						() -> new Instruction(Opcode.MOV, new Immediate(0), Register64.RAX),
-						() -> new Instruction(Opcode.MOV, new Immediate((short) 0), Register64.RAX),
-						() -> new Instruction(Opcode.MOV, new Immediate((byte) 0), Register64.RAX))
-				.map(Arguments::of);
+				// MOV with register and immediate of different size
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, new Immediate((short) 0)}),
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, new Immediate((byte) 0)}),
+				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0), Register64.RAX}),
+				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((short) 0), Register64.RAX}),
+				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((byte) 0), Register64.RAX}));
 	}
 
 	@ParameterizedTest
 	@MethodSource("invalidInstructions")
-	void invalid(final Supplier<Instruction> sup) {
-		assertThrows(InvalidInstruction.class, sup::get);
+	void invalid(final Opcode opcode, final Operand... operands) {
+		assertTrue(operands.length <= 3);
+
+		switch (operands.length) {
+			case 0 -> assertThrows(InvalidInstruction.class, () -> new Instruction(opcode));
+			case 1 -> assertThrows(InvalidInstruction.class, () -> new Instruction(opcode, operands[0]));
+			case 2 -> assertThrows(InvalidInstruction.class, () -> new Instruction(opcode, operands[0], operands[1]));
+			case 3 -> assertThrows(
+					InvalidInstruction.class, () -> new Instruction(opcode, operands[0], operands[1], operands[2]));
+		}
 	}
 }

@@ -20,6 +20,8 @@ package com.ledmington.cpu.x86;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -30,59 +32,77 @@ import org.junit.jupiter.params.provider.MethodSource;
 final class TestIndirectOperand {
 
 	private static Stream<Arguments> correctIndirectOperands() {
-		return Stream.of(
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX), "[eax]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp((byte) 0x12), "[eax+0x12]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp((short) 0x1234), "[eax+0x1234]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp(0x12345678), "[eax+0x12345678]"),
-				Arguments.of(
-						IndirectOperand.builder().reg2(Register32.EAX).disp(0x1123456789abcdefL),
-						"[eax+0x1123456789abcdef]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp((byte) 0x82), "[eax-0x7e]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp((short) 0x8234), "[eax-0x7dcc]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EAX).disp(0x82345678), "[eax-0x7dcba988]"),
-				Arguments.of(
-						IndirectOperand.builder().reg2(Register32.EAX).disp(0x8123456789abcdefL),
-						"[eax-0x7edcba9876543211]"),
-				Arguments.of(IndirectOperand.builder().disp((byte) 0x12), "[0x12]"),
-				Arguments.of(IndirectOperand.builder().disp((short) 0x1234), "[0x1234]"),
-				Arguments.of(IndirectOperand.builder().disp(0x12345678), "[0x12345678]"),
-				Arguments.of(IndirectOperand.builder().disp(0x1123456789abcdefL), "[0x1123456789abcdef]"),
-				Arguments.of(IndirectOperand.builder().reg2(Register32.EBX).constant(2), "[ebx*2]"),
-				Arguments.of(
-						IndirectOperand.builder()
-								.reg1(Register32.EAX)
-								.reg2(Register32.EBX)
-								.constant(2),
-						"[eax+ebx*2]"),
-				Arguments.of(
-						IndirectOperand.builder()
-								.reg1(Register32.EAX)
-								.reg2(Register32.EBX)
-								.constant(2)
-								.disp((byte) 0x12),
-						"[eax+ebx*2+0x12]"),
-				Arguments.of(
-						IndirectOperand.builder()
-								.reg1(Register32.EAX)
-								.reg2(Register32.EBX)
-								.constant(2)
-								.disp((short) 0x1234),
-						"[eax+ebx*2+0x1234]"),
-				Arguments.of(
-						IndirectOperand.builder()
-								.reg1(Register32.EAX)
-								.reg2(Register32.EBX)
-								.constant(2)
-								.disp(0x12345678),
-						"[eax+ebx*2+0x12345678]"),
-				Arguments.of(
-						IndirectOperand.builder()
-								.reg1(Register32.EAX)
-								.reg2(Register32.EBX)
-								.constant(2)
-								.disp(0x1123456789abcdefL),
-						"[eax+ebx*2+0x1123456789abcdef]"));
+		final List<Arguments> args = new ArrayList<>();
+		for (final PointerSize ptr : PointerSize.values()) {
+			for (final Register indexRegister : new Register[] {Register32.EAX, Register64.RAX}) {
+				for (final int constant : new int[] {1, 2, 4, 8}) {
+					for (final boolean hasBaseRegister : new boolean[] {false, true}) {
+						for (final Number displacement : new Number[] {
+							0,
+							(byte) 0x12,
+							(byte) 0x82,
+							(short) 0x1234,
+							(short) 0x8234,
+							0x12345678,
+							0x82345678,
+							0x1123456789abcdefL,
+							0x8123456789abcdefL
+						}) {
+							final IndirectOperandBuilder iob = IndirectOperand.builder();
+							final StringBuilder sb = new StringBuilder();
+
+							iob.pointer(ptr);
+							sb.append(ptr.name().replace('_', ' ')).append(" [");
+
+							if (hasBaseRegister) {
+								final Register base = indexRegister.bits() == 32 ? Register32.EBX : Register64.RBX;
+								iob.base(base);
+								sb.append(base.toIntelSyntax()).append('+');
+							}
+
+							iob.index(indexRegister);
+							sb.append(indexRegister.toIntelSyntax());
+
+							iob.constant(constant);
+							if (constant != 1) {
+								sb.append('*').append(constant);
+							}
+
+							if (displacement.intValue() != 0) {
+								switch (displacement) {
+									case Byte b -> {
+										iob.disp(b);
+										sb.append(b < 0 ? '-' : '+');
+										sb.append(String.format("0x%02x", b < 0 ? -b : b));
+									}
+									case Short s -> {
+										iob.disp(s);
+										sb.append(s < 0 ? '-' : '+');
+										sb.append(String.format("0x%04x", s < 0 ? -s : s));
+									}
+									case Integer x -> {
+										iob.disp(x);
+										sb.append(x < 0 ? '-' : '+');
+										sb.append(String.format("0x%08x", x < 0 ? -x : x));
+									}
+									case Long l -> {
+										iob.disp(l);
+										sb.append(l < 0L ? '-' : '+');
+										sb.append(String.format("0x%016x", l < 0L ? -l : l));
+									}
+									default -> throw new IllegalStateException("Unreachable.");
+								}
+							}
+
+							sb.append(']');
+
+							args.add(Arguments.of(iob, sb.toString()));
+						}
+					}
+				}
+			}
+		}
+		return args.stream();
 	}
 
 	@ParameterizedTest
@@ -105,18 +125,18 @@ final class TestIndirectOperand {
 						() -> IndirectOperand.builder().constant(6),
 						() -> IndirectOperand.builder().constant(7),
 						() -> IndirectOperand.builder().constant(9),
-						() -> IndirectOperand.builder().reg1(Register8.AL),
-						() -> IndirectOperand.builder().reg1(Register16.AX),
-						() -> IndirectOperand.builder().reg1(RegisterXMM.XMM0),
-						() -> IndirectOperand.builder().reg1(Register32.EAX).reg1(Register32.EAX),
-						() -> IndirectOperand.builder().reg2(Register8.AL),
-						() -> IndirectOperand.builder().reg2(Register16.AX),
-						() -> IndirectOperand.builder().reg2(RegisterXMM.XMM0),
-						() -> IndirectOperand.builder().reg2(Register32.EAX).reg2(Register32.EAX),
-						() -> IndirectOperand.builder().reg1(Register32.EAX).reg2(Register64.RAX),
-						() -> IndirectOperand.builder().reg2(Register32.EAX).reg1(Register64.RAX),
-						() -> IndirectOperand.builder().reg1(Register64.RAX).reg2(Register32.EAX),
-						() -> IndirectOperand.builder().reg2(Register64.RAX).reg1(Register32.EAX))
+						() -> IndirectOperand.builder().base(Register8.AL),
+						() -> IndirectOperand.builder().base(Register16.AX),
+						() -> IndirectOperand.builder().base(RegisterXMM.XMM0),
+						() -> IndirectOperand.builder().base(Register32.EAX).base(Register32.EAX),
+						() -> IndirectOperand.builder().index(Register8.AL),
+						() -> IndirectOperand.builder().index(Register16.AX),
+						() -> IndirectOperand.builder().index(RegisterXMM.XMM0),
+						() -> IndirectOperand.builder().index(Register32.EAX).index(Register32.EAX),
+						() -> IndirectOperand.builder().base(Register32.EAX).index(Register64.RAX),
+						() -> IndirectOperand.builder().index(Register32.EAX).base(Register64.RAX),
+						() -> IndirectOperand.builder().base(Register64.RAX).index(Register32.EAX),
+						() -> IndirectOperand.builder().index(Register64.RAX).base(Register32.EAX))
 				.map(Arguments::of);
 	}
 

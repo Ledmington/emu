@@ -110,35 +110,21 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public int bits() {
-		if (hasExplicitPtrSize()) {
-			return ptrSize.getSize();
-		}
-		return reg2.bits();
+		return ptrSize.getSize();
 	}
 
 	/**
-	 * Checks whether this indirect operand has been built with an explicit pointer size or it has been inferred from
-	 * its arguments.
+	 * This is used to distinguish instructions like LEA which have an indirect operand but don't have the pointer size.
 	 *
-	 * @return True if the pointer size was made explicit, false otherwise.
+	 * @param addPointerSize If true, adds the pointer size.
+	 * @return The assembly representation of this instruction in Intel syntax.
 	 */
-	public boolean hasExplicitPtrSize() {
-		return this.ptrSize != null;
-	}
-
-	/**
-	 * Returns the explicit pointer size of this indirect operand, in case it has been specified.
-	 *
-	 * @return The pointer size, if it was specified, 0 otherwise.
-	 */
-	public int explicitPtrSize() {
-		return hasExplicitPtrSize() ? ptrSize.getSize() : 0;
-	}
-
-	@Override
-	public String toIntelSyntax() {
+	public String toIntelSyntax(final boolean addPointerSize) {
 		final StringBuilder sb = new StringBuilder();
 		boolean shouldAddSign = false;
+		if (addPointerSize) {
+			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
+		}
 		if (reg2 instanceof SegmentRegister sr) {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
@@ -177,6 +163,11 @@ public final class IndirectOperand implements Operand {
 		}
 		sb.append(']');
 		return sb.toString();
+	}
+
+	@Override
+	public String toIntelSyntax() {
+		return toIntelSyntax(true);
 	}
 
 	@Override

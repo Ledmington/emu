@@ -54,18 +54,25 @@ public final class Instruction {
 
 		if (code == Opcode.MOV) {
 			if (op3 != null) {
-				throw new InvalidInstruction("MOV cannot have 3 operands.");
+				throw new InvalidInstruction(String.format("%s cannot have 3 operands.", code.name()));
 			}
+			Objects.requireNonNull(op1);
+			Objects.requireNonNull(op2);
 			if (op1 instanceof Immediate) {
-				throw new InvalidInstruction("Destination operand of MOV cannot be an immediate value.");
+				throw new InvalidInstruction(
+						String.format("Destination operand of %s cannot be an immediate value.", code.name()));
 			}
 			if (op1 instanceof IndirectOperand && op2 instanceof IndirectOperand) {
-				throw new InvalidInstruction("MOV cannot have two indirect operands.");
+				throw new InvalidInstruction(String.format("%s cannot have two indirect operands.", code.name()));
 			}
-			if (op1.bits() != op2.bits()) {
+			if (op1.bits() != op2.bits()
+					&&
+					// Some instructions allow an implicit sign-extension when the first operand is 64 bits and the
+					// second operand is a 32-bit immediate
+					!(op2 instanceof Immediate imm && imm.bits() == 32 && op1.bits() == 64)) {
 				throw new InvalidInstruction(String.format(
-						"MOV cannot have two operands of different sizes: were %,d (%s) and %,d (%s) bits, respectively.",
-						op1.bits(), op1, op2.bits(), op2));
+						"%s cannot have two operands of different sizes: were %,d (%s) and %,d (%s) bits, respectively.",
+						code.name(), op1.bits(), op1, op2.bits(), op2));
 			}
 		}
 	}
@@ -174,8 +181,6 @@ public final class Instruction {
 	 * @return The bits "used" in this instruction.
 	 */
 	public int bits() {
-		// here it is assumed that all "first-class" registers involved have the same
-		// size
 		if (op1 instanceof Register r) {
 			return r.bits();
 		}
@@ -195,39 +200,22 @@ public final class Instruction {
 			return imm.bits();
 		}
 
-		if (op1 instanceof IndirectOperand io && io.hasExplicitPtrSize()) {
-			return io.explicitPtrSize();
+		if (op1 instanceof IndirectOperand io) {
+			return io.bits();
 		}
 
-		return 0;
-	}
-
-	private String sizeToPointerType(final int size) {
-		return switch (size) {
-			case 8 -> "BYTE";
-			case 16 -> "WORD";
-			case 32 -> "DWORD";
-			case 64 -> "QWORD";
-			case 128 -> "XMMWORD";
-			case 256 -> "YMMWORD";
-			case 512 -> "ZMMWORD";
-			default -> throw new IllegalStateException(String.format("Invalid value of bits: '%,d'", size));
-		};
+		throw new IllegalStateException();
 	}
 
 	private String operandString(final Operand op) {
-		if (op instanceof IndirectOperand io && code != Opcode.LEA) {
-			if (io.hasExplicitPtrSize()) {
-				return sizeToPointerType(io.explicitPtrSize()) + " PTR " + op.toIntelSyntax();
-			}
-
-			return sizeToPointerType(this.bits()) + " PTR " + op.toIntelSyntax();
+		if (op instanceof IndirectOperand io) {
+			return io.toIntelSyntax(code != Opcode.LEA);
 		}
 		return op.toIntelSyntax();
 	}
 
 	/**
-	 * Reference obtainable through 'objdump -Mintel-mnemonic ...'
+	 * Reference obtainable through <code>objdump -Mintel-mnemonic ...</code>
 	 *
 	 * @return A String representation of this instruction with Intel syntax.
 	 */
@@ -237,6 +225,7 @@ public final class Instruction {
 		if (this.prefix != null) {
 			sb.append(this.prefix.name().toLowerCase(Locale.US)).append(' ');
 		}
+
 		sb.append(code.mnemonic());
 
 		if (op1 != null) {

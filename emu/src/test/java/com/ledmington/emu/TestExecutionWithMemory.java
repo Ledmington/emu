@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
+import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.mem.MemoryController;
@@ -84,8 +85,13 @@ final class TestExecutionWithMemory {
 		mem.initialize(oldValue1, 8L, (byte) 0x00);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		mem.setPermissions(oldValue1, oldValue1 + 7L, false, true, false);
-		cpu.executeOne(
-				new Instruction(Opcode.MOV, IndirectOperand.builder().reg2(r1).build(), r2));
+		cpu.executeOne(new Instruction(
+				Opcode.MOV,
+				IndirectOperand.builder()
+						.index(r1)
+						.pointer(PointerSize.QWORD_PTR)
+						.build(),
+				r2));
 		mem.setPermissions(oldValue1, oldValue1 + 7L, true, false, false);
 		final long x = mem.read8(oldValue1);
 		assertEquals(
@@ -118,7 +124,12 @@ final class TestExecutionWithMemory {
 		expected.set(r1, val);
 		mem.setPermissions(oldValue2, oldValue2 + 7L, true, false, false);
 		cpu.executeOne(new Instruction(
-				Opcode.MOV, r1, IndirectOperand.builder().reg2(r2).build()));
+				Opcode.MOV,
+				r1,
+				IndirectOperand.builder()
+						.index(r2)
+						.pointer(PointerSize.QWORD_PTR)
+						.build()));
 		final long x = mem.read8(oldValue2);
 		assertEquals(
 				val,
