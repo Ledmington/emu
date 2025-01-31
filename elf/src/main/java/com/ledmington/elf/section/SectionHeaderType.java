@@ -17,8 +17,8 @@
  */
 package com.ledmington.elf.section;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Type of an ELF Section. */
 public enum SectionHeaderType {
@@ -129,7 +129,11 @@ public enum SectionHeaderType {
 	/** x86_64 specific unwind info. */
 	SHT_X86_64_UNWIND(0x70000001, "X86_64_UNWIND", "x86_64 unwind info");
 
-	private static final Map<Integer, SectionHeaderType> codeToType = new HashMap<>();
+	private static final Map<Integer, SectionHeaderType> codeToType = new ConcurrentHashMap<>();
+
+	private final int code;
+	private final String name;
+	private final String description;
 
 	static {
 		for (final SectionHeaderType type : values()) {
@@ -183,10 +187,6 @@ public enum SectionHeaderType {
 		}
 		return codeToType.get(code);
 	}
-
-	private final int code;
-	private final String name;
-	private final String description;
 
 	SectionHeaderType(final int code, final String name, final String description) {
 		this.code = code;

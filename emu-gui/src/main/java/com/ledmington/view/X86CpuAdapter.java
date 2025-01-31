@@ -38,7 +38,7 @@ public final class X86CpuAdapter extends X86Cpu {
 		try {
 			execute.take();
 		} catch (final InterruptedException e) {
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -46,7 +46,7 @@ public final class X86CpuAdapter extends X86Cpu {
 		try {
 			executionCompleted.put(new Object());
 		} catch (final InterruptedException e) {
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -54,7 +54,7 @@ public final class X86CpuAdapter extends X86Cpu {
 		try {
 			execute.put(new Object());
 		} catch (final InterruptedException e) {
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -62,7 +62,7 @@ public final class X86CpuAdapter extends X86Cpu {
 		try {
 			executionCompleted.take();
 		} catch (final InterruptedException e) {
-			throw new RuntimeException(e);
+			throw new IllegalStateException(e);
 		}
 	}
 

@@ -17,8 +17,8 @@
  */
 package com.ledmington.elf;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The miscellaneous flags of a Program Header Table entry. */
 public enum PHTEntryFlags {
@@ -32,7 +32,7 @@ public enum PHTEntryFlags {
 	/** This segment is readable. */
 	PF_R(0x00000004);
 
-	private static final Map<Integer, PHTEntryFlags> codeToFlags = new HashMap<>();
+	private static final Map<Integer, PHTEntryFlags> codeToFlags = new ConcurrentHashMap<>();
 
 	static {
 		for (final PHTEntryFlags x : values()) {

@@ -17,9 +17,9 @@
  */
 package com.ledmington.elf.section.sym;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.ledmington.utils.BitUtils;
 
@@ -65,7 +65,10 @@ public enum SymbolTableEntryType {
 	/** Symbol is an indirect code object. */
 	STT_GNU_IFUNC((byte) 0x0a, "IFUNC");
 
-	private static final Map<Byte, SymbolTableEntryType> codeToType = new HashMap<>();
+	private static final Map<Byte, SymbolTableEntryType> codeToType = new ConcurrentHashMap<>();
+
+	private final byte code;
+	private final String name;
 
 	static {
 		for (final SymbolTableEntryType type : values()) {
@@ -102,9 +105,6 @@ public enum SymbolTableEntryType {
 		}
 		return codeToType.get(code);
 	}
-
-	private final byte code;
-	private final String name;
 
 	SymbolTableEntryType(final byte code, final String name) {
 		this.code = code;

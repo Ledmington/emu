@@ -84,7 +84,6 @@ public final class Main {
 	private static final short VERSYM_VERSION = (short) 0x7fff;
 	private static final short VERSYM_HIDDEN = (short) 0x8000;
 
-	@SuppressWarnings("PMD.AvoidReassigningLoopVariables")
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
@@ -462,7 +461,6 @@ public final class Main {
 
 		if (s.isEmpty()) {
 			out.printf("readelf: Warning: Section '%s' was not dumped because it does not exist%n%n", sectionName);
-			System.exit(-1);
 			return;
 		}
 
@@ -521,7 +519,6 @@ public final class Main {
 
 		if (s.isEmpty()) {
 			out.printf("readelf: Warning: Section '%s' was not dumped because it does not exist%n%n", sectionName);
-			System.exit(-1);
 			return;
 		}
 
@@ -1237,7 +1234,7 @@ public final class Main {
 			final String symbolName = strtab.getString(ste.nameOffset());
 			final String sectionTableIndex = (ste.sectionTableIndex() == 0)
 					? "UND"
-					: ((ste.sectionTableIndex() < 0) ? "ABS" : String.valueOf(ste.sectionTableIndex()));
+					: (ste.sectionTableIndex() < 0 ? "ABS" : String.valueOf(ste.sectionTableIndex()));
 
 			out.printf(
 					"  %4d: %016x %5d %-6s  %-6s %-7s  %3s ",
@@ -1260,11 +1257,11 @@ public final class Main {
 			}
 
 			if (!wide && (prefix.length() + suffix.length()) > 21) {
-				if (suffix.length() > (21 - SYMBOL_NAME_SUFFIX.length())) {
+				final int remainingLength = 21 - SYMBOL_NAME_SUFFIX.length();
+				if (suffix.length() > remainingLength) {
 					prefix = SYMBOL_NAME_SUFFIX;
 				} else {
-					prefix = prefix.substring(0, (21 - SYMBOL_NAME_SUFFIX.length()) - suffix.length())
-							+ SYMBOL_NAME_SUFFIX;
+					prefix = prefix.substring(0, remainingLength - suffix.length()) + SYMBOL_NAME_SUFFIX;
 				}
 			}
 
@@ -1325,16 +1322,19 @@ public final class Main {
 				"  L (link order), O (extra OS processing required), G (group), T (TLS),",
 				"  C (compressed), x (unknown), o (OS specific), E (exclude),"));
 
-		if (fh.getOSABI() == OSABI.Linux || fh.getOSABI() == OSABI.FreeBSD) {
+		final OSABI osabi = fh.osabi();
+		if (osabi == OSABI.Linux || osabi == OSABI.FreeBSD) {
 			out.print("  R (retain), D (mbind), ");
-		} else if (fh.getOSABI() == OSABI.SYSTEM_V) {
+		} else if (osabi == OSABI.SYSTEM_V) {
 			out.print("  D (mbind), ");
 		}
-		if (fh.getISA() == ISA.AMD_X86_64 || fh.getISA() == ISA.Intel_L10M || fh.getISA() == ISA.Intel_K10M) {
+
+		final ISA isa = fh.isa();
+		if (isa == ISA.AMD_X86_64 || isa == ISA.Intel_L10M || isa == ISA.Intel_K10M) {
 			out.print("l (large), ");
-		} else if (fh.getISA() == ISA.ARM) {
+		} else if (isa == ISA.ARM) {
 			out.print("y (purecode), ");
-		} else if (fh.getISA() == ISA.PPC) {
+		} else if (isa == ISA.PPC) {
 			out.print("v (VLE), ");
 		}
 		out.println("p (processor specific)");
@@ -1356,12 +1356,12 @@ public final class Main {
 
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
-			final String type = phte.getType().getName();
-			final long offset = phte.getSegmentOffset();
-			final long virtualAddress = phte.getSegmentVirtualAddress();
-			final long physicalAddress = phte.getSegmentPhysicalAddress();
-			final long fileSize = phte.getSegmentFileSize();
-			final long memorySize = phte.getSegmentMemorySize();
+			final String type = phte.type().getName();
+			final long offset = phte.segmentOffset();
+			final long virtualAddress = phte.segmentVirtualAddress();
+			final long physicalAddress = phte.segmentPhysicalAddress();
+			final long fileSize = phte.segmentFileSize();
+			final long memorySize = phte.segmentMemorySize();
 
 			if (wide) {
 				out.printf(
@@ -1375,7 +1375,7 @@ public final class Main {
 						phte.isReadable() ? 'R' : ' ',
 						phte.isWriteable() ? 'W' : ' ',
 						phte.isExecutable() ? 'E' : ' ',
-						phte.getAlignment());
+						phte.alignment());
 			} else {
 				out.printf(
 						"  %-14s 0x%016x 0x%016x 0x%016x%n                 0x%016x 0x%016x  %c%c%c    0x%x%n",
@@ -1388,10 +1388,10 @@ public final class Main {
 						phte.isReadable() ? 'R' : ' ',
 						phte.isWriteable() ? 'W' : ' ',
 						phte.isExecutable() ? 'E' : ' ',
-						phte.getAlignment());
+						phte.alignment());
 			}
 
-			if (phte.getType() == PHTEntryType.PT_INTERP) {
+			if (phte.type() == PHTEntryType.PT_INTERP) {
 				out.printf(
 						"      [Requesting program interpreter: %s]%n",
 						((InterpreterPathSection)
@@ -1407,9 +1407,9 @@ public final class Main {
 
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
-			final long segmentStart = phte.getSegmentVirtualAddress();
-			final long segmentEnd = segmentStart + phte.getSegmentMemorySize();
-			final boolean isSegmentTLS = phte.getType() == PHTEntryType.PT_TLS;
+			final long segmentStart = phte.segmentVirtualAddress();
+			final long segmentEnd = segmentStart + phte.segmentMemorySize();
+			final boolean isSegmentTLS = phte.type() == PHTEntryType.PT_TLS;
 
 			out.printf("   %02d     ", i);
 
@@ -1474,24 +1474,23 @@ public final class Main {
 				"  Data:                              %s%n",
 				fh.isLittleEndian() ? "2's complement, little endian" : "2's complement, big endian");
 		out.println("  Version:                           1 (current)");
-		out.printf("  OS/ABI:                            %s%n", fh.getOSABI().getName());
-		out.printf("  ABI Version:                       %s%n", fh.getABIVersion());
+		out.printf("  OS/ABI:                            %s%n", fh.osabi().getName());
+		out.printf("  ABI Version:                       %s%n", fh.ABIVersion());
 		out.printf(
 				"  Type:                              %s (%s)%n",
-				fh.getFileType().name().replaceFirst("^ET_", ""),
-				fh.getFileType().getName());
-		out.printf("  Machine:                           %s%n", fh.getISA().getName());
-		out.printf("  Version:                           0x%x%n", fh.getVersion());
-		out.printf("  Entry point address:               0x%x%n", fh.getEntryPointVirtualAddress());
-		out.printf("  Start of program headers:          %d (bytes into file)%n", fh.getProgramHeaderTableOffset());
-		out.printf("  Start of section headers:          %d (bytes into file)%n", fh.getSectionHeaderTableOffset());
-		out.printf("  Flags:                             0x%x%n", fh.getFlags());
-		out.printf("  Size of this header:               %d (bytes)%n", fh.getHeaderSize());
-		out.printf("  Size of program headers:           %d (bytes)%n", fh.getProgramHeaderTableEntrySize());
-		out.printf("  Number of program headers:         %d%n", fh.getNumProgramHeaderTableEntries());
-		out.printf("  Size of section headers:           %d (bytes)%n", fh.getSectionHeaderTableEntrySize());
-		out.printf("  Number of section headers:         %d%n", fh.getNumSectionHeaderTableEntries());
-		out.printf("  Section header string table index: %d%n", fh.getSectionHeaderStringTableIndex());
+				fh.fileType().name().replaceFirst("^ET_", ""), fh.fileType().getName());
+		out.printf("  Machine:                           %s%n", fh.isa().getName());
+		out.printf("  Version:                           0x%x%n", fh.version());
+		out.printf("  Entry point address:               0x%x%n", fh.entryPointVirtualAddress());
+		out.printf("  Start of program headers:          %d (bytes into file)%n", fh.programHeaderTableOffset());
+		out.printf("  Start of section headers:          %d (bytes into file)%n", fh.sectionHeaderTableOffset());
+		out.printf("  Flags:                             0x%x%n", fh.flags());
+		out.printf("  Size of this header:               %d (bytes)%n", fh.headerSize());
+		out.printf("  Size of program headers:           %d (bytes)%n", fh.programHeaderTableEntrySize());
+		out.printf("  Number of program headers:         %d%n", fh.numProgramHeaderTableEntries());
+		out.printf("  Size of section headers:           %d (bytes)%n", fh.sectionHeaderTableEntrySize());
+		out.printf("  Number of section headers:         %d%n", fh.numSectionHeaderTableEntries());
+		out.printf("  Section header string table index: %d%n", fh.sectionHeaderStringTableIndex());
 		out.flush();
 	}
 

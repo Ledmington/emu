@@ -17,9 +17,9 @@
  */
 package com.ledmington.elf;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The type of an ELF Program Header Table entry. */
 public enum PHTEntryType {
@@ -87,7 +87,11 @@ public enum PHTEntryType {
 	/** The section .note.gnu.property has this type. */
 	PT_GNU_PROPERTY(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections");
 
-	private static final Map<Integer, PHTEntryType> codeToType = new HashMap<>();
+	private static final Map<Integer, PHTEntryType> codeToType = new ConcurrentHashMap<>();
+
+	private final int code;
+	private final String name;
+	private final String description;
 
 	static {
 		for (final PHTEntryType type : values()) {
@@ -141,10 +145,6 @@ public enum PHTEntryType {
 		}
 		return codeToType.get(code);
 	}
-
-	private final int code;
-	private final String name;
-	private final String description;
 
 	PHTEntryType(final int code, final String name, final String description) {
 		this.code = code;

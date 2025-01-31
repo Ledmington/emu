@@ -23,8 +23,6 @@ import javafx.scene.text.Font;
 
 public final class AppConstants {
 
-	private AppConstants() {}
-
 	/**
 	 * Shorthand field which holds the name of the Operating System MiniSim is running on. NOTE: for Linux-based
 	 * distributions, this will be just "Linux".
@@ -55,9 +53,18 @@ public final class AppConstants {
 	/** Shorthand monospace font family. */
 	private static String MONOSPACE_FONT_FAMILY = Font.getFamilies().contains("Consolas")
 			? "Consolas"
-			: (Font.getFamilies().contains("Cousine")
+			: Font.getFamilies().contains("Cousine")
 					? "Cousine"
-					: Font.getDefault().getFamily());
+					: Font.getDefault().getFamily();
+
+	/** Shorthand default font size. */
+	private static int DEFAULT_FONT_SIZE = 12;
+
+	private static int MAX_CODE_INSTRUCTIONS = 50;
+	private static int MAX_MEMORY_LINES = 50;
+	private static int MEMORY_BYTES_PER_LINE = 16;
+
+	private AppConstants() {}
 
 	public static String getDefaultMonospaceFont() {
 		return MONOSPACE_FONT_FAMILY;
@@ -73,9 +80,6 @@ public final class AppConstants {
 		MONOSPACE_FONT_FAMILY = monospaceFontFamily;
 	}
 
-	/** Shorthand default font size. */
-	private static int DEFAULT_FONT_SIZE = 12;
-
 	public static int getDefaultFontSize() {
 		return DEFAULT_FONT_SIZE;
 	}
@@ -87,8 +91,6 @@ public final class AppConstants {
 		}
 		DEFAULT_FONT_SIZE = newFontSize;
 	}
-
-	private static int MAX_CODE_INSTRUCTIONS = 50;
 
 	public static int getMaxCodeInstructions() {
 		return MAX_CODE_INSTRUCTIONS;
@@ -102,8 +104,6 @@ public final class AppConstants {
 		MAX_CODE_INSTRUCTIONS = n;
 	}
 
-	private static int MAX_MEMORY_LINES = 50;
-
 	public static int getMaxMemoryLines() {
 		return MAX_MEMORY_LINES;
 	}
@@ -115,8 +115,6 @@ public final class AppConstants {
 		}
 		MAX_MEMORY_LINES = n;
 	}
-
-	private static int MEMORY_BYTES_PER_LINE = 16;
 
 	public static int getMemoryBytesPerLine() {
 		return MEMORY_BYTES_PER_LINE;

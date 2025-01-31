@@ -17,8 +17,8 @@
  */
 package com.ledmington.elf;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The type of an ELF file. */
 public enum FileType {
@@ -38,7 +38,10 @@ public enum FileType {
 	/** Core file. */
 	ET_CORE((short) 0x0004, "Core file");
 
-	private static final Map<Short, FileType> codeToFileType = new HashMap<>();
+	private static final Map<Short, FileType> codeToFileType = new ConcurrentHashMap<>();
+
+	private final short code;
+	private final String fileTypeName;
 
 	static {
 		for (final FileType x : values()) {
@@ -75,9 +78,6 @@ public enum FileType {
 		}
 		return codeToFileType.get(code);
 	}
-
-	private final short code;
-	private final String fileTypeName;
 
 	FileType(final short code, final String fileTypeName) {
 		this.code = code;

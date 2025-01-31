@@ -17,9 +17,9 @@
  */
 package com.ledmington.elf.section.sym;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.ledmington.utils.BitUtils;
 
@@ -41,7 +41,10 @@ public enum SymbolTableEntryBinding {
 	/** Weak symbols resemble global symbols, but their definitions have lower precedence. */
 	STB_WEAK((byte) 0x02, "WEAK");
 
-	private static final Map<Byte, SymbolTableEntryBinding> codeToBind = new HashMap<>();
+	private static final Map<Byte, SymbolTableEntryBinding> codeToBind = new ConcurrentHashMap<>();
+
+	private final byte code;
+	private final String name;
 
 	static {
 		for (final SymbolTableEntryBinding bind : values()) {
@@ -78,9 +81,6 @@ public enum SymbolTableEntryBinding {
 		}
 		return codeToBind.get(code);
 	}
-
-	private final byte code;
-	private final String name;
 
 	SymbolTableEntryBinding(final byte code, final String name) {
 		this.code = code;

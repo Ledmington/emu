@@ -26,6 +26,7 @@ import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
+import com.ledmington.elf.FileHeader;
 import com.ledmington.elf.FileType;
 import com.ledmington.elf.ISA;
 import com.ledmington.elf.section.Section;
@@ -46,17 +47,18 @@ public final class Emu {
 		final ELF elf = ELFParser.parse(filename);
 		logger.info("ELF file parsed successfully");
 
-		if (elf.getFileHeader().getFileType() != FileType.ET_EXEC
-				&& elf.getFileHeader().getFileType() != FileType.ET_DYN) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s",
-					elf.getFileHeader().getFileType()));
+		final FileHeader fh = elf.getFileHeader();
+
+		final FileType type = fh.fileType();
+		if (type != FileType.ET_EXEC && type != FileType.ET_DYN) {
+			throw new IllegalArgumentException(
+					String.format("Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s", type));
 		}
 
-		if (elf.getFileHeader().getISA() != ISA.AMD_X86_64) {
-			throw new IllegalArgumentException(String.format(
-					"This file requires ISA %s, which is not implemented",
-					elf.getFileHeader().getISA().getName()));
+		final ISA isa = fh.isa();
+		if (isa != ISA.AMD_X86_64) {
+			throw new IllegalArgumentException(
+					String.format("This file requires ISA %s, which is not implemented", isa.getName()));
 		}
 
 		final MemoryController mem =
@@ -74,8 +76,7 @@ public final class Emu {
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,
 				Register64.RIP,
-				new Immediate(
-						EmulatorConstants.getBaseAddress() + elf.getFileHeader().getEntryPointVirtualAddress())));
+				new Immediate(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress())));
 
 		logger.info(" ### Execution start ### ");
 		{
@@ -87,7 +88,7 @@ public final class Emu {
 				final Optional<String> entryPointFunction = IntStream.range(0, symtab.getSymbolTableLength())
 						.mapToObj(symtab::getSymbolTableEntry)
 						.filter(ste -> ste.info().getType() == SymbolTableEntryType.STT_FUNC
-								&& ste.value() == elf.getFileHeader().getEntryPointVirtualAddress())
+								&& ste.value() == fh.entryPointVirtualAddress())
 						.map(ste -> strtab.getString(ste.nameOffset()))
 						.findFirst();
 				if (entryPointFunction.isPresent()) {

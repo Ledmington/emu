@@ -39,6 +39,9 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 
 	private static final String standardName = ".gnu.version_r";
 
+	private final SectionHeader header;
+	private final GnuVersionRequirementEntry[] entries;
+
 	/**
 	 * Returns the standard name of this special section.
 	 *
@@ -47,9 +50,6 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 	public static String getStandardName() {
 		return standardName;
 	}
-
-	private final SectionHeader header;
-	private final GnuVersionRequirementEntry[] entries;
 
 	/**
 	 * Creates the GNU version requirements section with the given header.

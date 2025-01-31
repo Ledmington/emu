@@ -42,9 +42,9 @@ public final class Main {
 			final char c = s.charAt(i);
 			final long y =
 					switch (c) {
-						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> (long) (c - '0');
-						case 'a', 'b', 'c', 'd', 'e', 'f' -> (long) (c - 'a');
-						case 'A', 'B', 'C', 'D', 'E', 'F' -> (long) (c - 'A');
+						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> (c - '0');
+						case 'a', 'b', 'c', 'd', 'e', 'f' -> (c - 'a');
+						case 'A', 'B', 'C', 'D', 'E', 'F' -> (c - 'A');
 						default -> throw new IllegalArgumentException(
 								String.format("'%c' is not a hexadecimal character.", c));
 					};
@@ -124,7 +124,7 @@ public final class Main {
 					int k = 0;
 					long bytes = 0L;
 					while (k < s.length() && Character.isDigit(s.charAt(k))) {
-						final long idx = (long) (s.charAt(k) - '0');
+						final long idx = (s.charAt(k) - '0');
 						bytes = bytes * 10L + idx;
 						k++;
 					}

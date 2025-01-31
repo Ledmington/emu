@@ -21,66 +21,35 @@ import java.util.Objects;
 
 import com.ledmington.utils.HashUtils;
 
-/** An entry of an ELF Program Header Table. */
-public final class PHTEntry {
+/**
+ * An entry of an ELF Program Header Table.
+ *
+ * @param type The type of this entry.
+ * @param flags Miscellaneous flags.
+ * @param segmentOffset The segment's offset in file.
+ * @param segmentVirtualAddress The virtual address where to load this segment in memory.
+ * @param segmentPhysicalAddress The physical address where to load this segment in memory.
+ * @param segmentFileSize The size in bytes of this segment on the file.
+ * @param segmentMemorySize The size in bytes of this segment in memory.
+ * @param alignment Byte alignment.
+ */
+public record PHTEntry(
+		PHTEntryType type,
+		int flags,
+		long segmentOffset,
+		long segmentVirtualAddress,
+		long segmentPhysicalAddress,
+		long segmentFileSize,
+		long segmentMemorySize,
+		long alignment) {
 
-	private final PHTEntryType type;
-	private final boolean readable;
-	private final boolean writeable;
-	private final boolean executable;
-	private final long segmentOffset;
-	private final long segmentVirtualAddress;
-	private final long segmentPhysicalAddress;
-	private final long segmentFileSize;
-	private final long segmentMemorySize;
-	private final long alignment;
-
-	/**
-	 * Creates a Program Header Table entry with the given data.
-	 *
-	 * @param type The type of this entry.
-	 * @param flags Miscellaneous flags.
-	 * @param segmentOffset The segment's offset in file.
-	 * @param segmentVirtualAddress The virtual address where to load this segment in memory.
-	 * @param segmentPhysicalAddress The physical address where to load this segment in memory.
-	 * @param segmentFileSize The size in bytes of this segment on the file.
-	 * @param segmentMemorySize The size in bytes of this segment in memory.
-	 * @param alignment Byte alignment.
-	 */
-	public PHTEntry(
-			final PHTEntryType type,
-			final int flags,
-			final long segmentOffset,
-			final long segmentVirtualAddress,
-			final long segmentPhysicalAddress,
-			final long segmentFileSize,
-			final long segmentMemorySize,
-			final long alignment) {
-		this.type = Objects.requireNonNull(type);
-		this.readable = (flags & PHTEntryFlags.PF_R.getCode()) != 0;
-		this.writeable = (flags & PHTEntryFlags.PF_W.getCode()) != 0;
-		this.executable = (flags & PHTEntryFlags.PF_X.getCode()) != 0;
+	public PHTEntry {
+		Objects.requireNonNull(type);
 
 		if ((flags & ~(PHTEntryFlags.PF_R.getCode() | PHTEntryFlags.PF_W.getCode() | PHTEntryFlags.PF_X.getCode()))
 				!= 0) {
 			throw new IllegalArgumentException(String.format("Invalid PHT Entry flags 0x%08x", flags));
 		}
-
-		this.segmentOffset = segmentOffset;
-		this.segmentVirtualAddress = segmentVirtualAddress;
-		this.segmentPhysicalAddress = segmentPhysicalAddress;
-		this.segmentFileSize = segmentFileSize;
-		this.segmentMemorySize = segmentMemorySize;
-		this.alignment = alignment;
-	}
-
-	/**
-	 * Returns the type of this entry.
-	 *
-	 * @return The type of this entry.
-	 */
-	public PHTEntryType getType() {
-		return type;
 	}
 
 	/**
@@ -89,7 +58,7 @@ public final class PHTEntry {
 	 * @return True if this entry contains the PF_R flag, false otherwise.
 	 */
 	public boolean isReadable() {
-		return readable;
+		return (flags & PHTEntryFlags.PF_R.getCode()) != 0;
 	}
 
 	/**
@@ -98,7 +67,7 @@ public final class PHTEntry {
 	 * @return True if this entry contains the PF_W flag, false otherwise.
 	 */
 	public boolean isWriteable() {
-		return writeable;
+		return (flags & PHTEntryFlags.PF_W.getCode()) != 0;
 	}
 
 	/**
@@ -107,69 +76,15 @@ public final class PHTEntry {
 	 * @return True if this entry contains the PF_X flag, false otherwise.
 	 */
 	public boolean isExecutable() {
-		return executable;
-	}
-
-	/**
-	 * Returns the offset of this segment in the file.
-	 *
-	 * @return The offset of this segment in the file.
-	 */
-	public long getSegmentOffset() {
-		return segmentOffset;
-	}
-
-	/**
-	 * Returns the virtual address where to load this fragment in memory.
-	 *
-	 * @return The virtual address where to load this fragment in memory
-	 */
-	public long getSegmentVirtualAddress() {
-		return segmentVirtualAddress;
-	}
-
-	/**
-	 * Returns the physical address where to load this fragment in memory.
-	 *
-	 * @return The physical address where to load this fragment in memory
-	 */
-	public long getSegmentPhysicalAddress() {
-		return segmentPhysicalAddress;
-	}
-
-	/**
-	 * Returns the size in bytes of this segment in memory.
-	 *
-	 * @return The size in bytes in memory.
-	 */
-	public long getSegmentMemorySize() {
-		return segmentMemorySize;
-	}
-
-	/**
-	 * Returns the size in bytes of this segment in the file.
-	 *
-	 * @return The size in bytes in the file.
-	 */
-	public long getSegmentFileSize() {
-		return segmentFileSize;
-	}
-
-	/**
-	 * Returns the alignment of the bytes.
-	 *
-	 * @return The byte-alignment.
-	 */
-	public long getAlignment() {
-		return alignment;
+		return (flags & PHTEntryFlags.PF_X.getCode()) != 0;
 	}
 
 	@Override
 	public String toString() {
 		return "PHTEntry(type=" + type + ";readable="
-				+ readable + ";writeable="
-				+ writeable + ";executable="
-				+ executable + ";segmentOffset="
+				+ isReadable() + ";writeable="
+				+ isWriteable() + ";executable="
+				+ isExecutable() + ";segmentOffset="
 				+ segmentOffset + ";segmentVirtualAddress="
 				+ segmentVirtualAddress + ";segmentPhysicalAddress="
 				+ segmentPhysicalAddress + ";segmentFileSize="
@@ -182,9 +97,7 @@ public final class PHTEntry {
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + type.hashCode();
-		h = 31 * h + HashUtils.hash(readable);
-		h = 31 * h + HashUtils.hash(writeable);
-		h = 31 * h + HashUtils.hash(executable);
+		h = 31 * h + flags;
 		h = 31 * h + HashUtils.hash(segmentOffset);
 		h = 31 * h + HashUtils.hash(segmentVirtualAddress);
 		h = 31 * h + HashUtils.hash(segmentPhysicalAddress);
@@ -202,14 +115,11 @@ public final class PHTEntry {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof PHTEntry phte)) {
 			return false;
 		}
-		final PHTEntry phte = (PHTEntry) other;
 		return this.type.equals(phte.type)
-				&& this.readable == phte.readable
-				&& this.writeable == phte.writeable
-				&& this.executable == phte.executable
+				&& this.flags == phte.flags
 				&& this.segmentOffset == phte.segmentOffset
 				&& this.segmentVirtualAddress == phte.segmentVirtualAddress
 				&& this.segmentPhysicalAddress == phte.segmentPhysicalAddress

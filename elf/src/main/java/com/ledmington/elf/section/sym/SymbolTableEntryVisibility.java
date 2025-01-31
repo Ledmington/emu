@@ -17,9 +17,9 @@
  */
 package com.ledmington.elf.section.sym;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A symbol's visibility, determined from its st_other field, may be specified in a relocatable object. This visibility
@@ -56,7 +56,7 @@ public enum SymbolTableEntryVisibility {
 	 */
 	STV_PROTECTED((byte) 3, "PROTECTED");
 
-	private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new HashMap<>();
+	private static final Map<Byte, SymbolTableEntryVisibility> codeToVisibility = new ConcurrentHashMap<>();
 
 	static {
 		for (final SymbolTableEntryVisibility visibility : values()) {

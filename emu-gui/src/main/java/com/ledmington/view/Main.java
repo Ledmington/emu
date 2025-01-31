@@ -32,6 +32,10 @@ public final class Main extends Application {
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
 
+	public Main() {
+		super();
+	}
+
 	@Override
 	public void start(final Stage stage) {
 		Platform.setImplicitExit(true);

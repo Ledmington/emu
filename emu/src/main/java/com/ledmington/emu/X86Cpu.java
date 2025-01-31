@@ -246,21 +246,49 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case XOR -> {
-				if (inst.firstOperand() instanceof Register8 r1_8 && inst.secondOperand() instanceof Register8 r2_8) {
-					rf.set(r1_8, BitUtils.xor(rf.get(r1_8), rf.get(r2_8)));
-				} else if (inst.firstOperand() instanceof Register32 r1_32
-						&& inst.secondOperand() instanceof Register32 r2_32) {
-					rf.set(r1_32, rf.get(r1_32) ^ rf.get(r2_32));
-				} else if (inst.firstOperand() instanceof Register64 r1_64
-						&& inst.secondOperand() instanceof Register64 r2_64) {
-					rf.set(r1_64, rf.get(r1_64) ^ rf.get(r2_64));
+				if (inst.firstOperand() instanceof Register8 r1 && inst.secondOperand() instanceof Register8 r2) {
+					final byte result = BitUtils.xor(rf.get(r1), rf.get(r2));
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else if (inst.firstOperand() instanceof Register16 r1
+						&& inst.secondOperand() instanceof Register16 r2) {
+					final short result = BitUtils.xor(rf.get(r1), rf.get(r2));
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else if (inst.firstOperand() instanceof Register32 r1
+						&& inst.secondOperand() instanceof Register32 r2) {
+					final int result = rf.get(r1) ^ rf.get(r2);
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else if (inst.firstOperand() instanceof Register64 r1
+						&& inst.secondOperand() instanceof Register64 r2) {
+					final long result = rf.get(r1) ^ rf.get(r2);
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
 				}
 			}
 			case AND -> {
-				if (inst.firstOperand() instanceof Register64 r1 && inst.secondOperand() instanceof Register64 r2) {
-					rf.set(r1, rf.get(r1) & rf.get(r2));
+				if (inst.firstOperand() instanceof Register8 r1 && inst.secondOperand() instanceof Register8 r2) {
+					final byte result = BitUtils.and(rf.get(r1), rf.get(r2));
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else if (inst.firstOperand() instanceof Register16 r1
+						&& inst.secondOperand() instanceof Register16 r2) {
+					final short result = BitUtils.and(rf.get(r1), rf.get(r2));
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else if (inst.firstOperand() instanceof Register32 r1
+						&& inst.secondOperand() instanceof Register32 r2) {
+					final int result = rf.get(r1) & rf.get(r2);
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0);
+				} else if (inst.firstOperand() instanceof Register64 r1
+						&& inst.secondOperand() instanceof Register64 r2) {
+					final long result = rf.get(r1) & rf.get(r2);
+					rf.set(r1, result);
+					rf.set(RFlags.ZERO, result == 0L);
 				} else if (inst.firstOperand() instanceof Register64 r1
 						&& inst.secondOperand() instanceof Immediate imm) {
 					rf.set(r1, rf.get(r1) & imm.asLong());
@@ -348,8 +376,6 @@ public class X86Cpu implements X86Emulator {
 				final long newRSP = rsp - 8L;
 				rf.set(Register64.RSP, newRSP);
 				mem.write(newRSP, value);
-				logger.debug("RSP = 0x%016x", rf.get(Register64.RSP));
-				logger.debug("RBP = 0x%016x", rf.get(Register64.RBP));
 			}
 			case POP -> {
 				final Register64 dest = (Register64) inst.firstOperand();

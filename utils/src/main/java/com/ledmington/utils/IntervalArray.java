@@ -25,6 +25,8 @@ import java.util.List;
 // TODO: this can be optimized into a segment tree.
 public final class IntervalArray {
 
+	private final List<Block> blocks = new ArrayList<>();
+
 	private record Block(long start, long end) {
 		private Block {
 			if (end < start) {
@@ -33,8 +35,6 @@ public final class IntervalArray {
 			}
 		}
 	}
-
-	private final List<Block> blocks = new ArrayList<>();
 
 	/** Creates an empty IntervalArray. */
 	public IntervalArray() {}

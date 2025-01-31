@@ -21,8 +21,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javafx.geometry.Insets;
@@ -71,11 +71,13 @@ public final class EmulatorView extends Stage {
 	private final Button runBtn = new Button();
 	private final TextArea codeArea = new TextArea();
 	private final TextArea memoryArea = new TextArea();
-	private final Map<Register64, Label> regLabels = new EnumMap<>(Register64.class);
-	private final Map<Register16, Label> segLabels = new EnumMap<>(Register16.class);
+	private final Map<Register64, Label> regLabels = new ConcurrentHashMap<>(Register64.values().length);
+	private final Map<Register16, Label> segLabels = new ConcurrentHashMap<>(Register16.values().length);
 	private final Label rflagsLabel;
 
 	public EmulatorView() {
+		super();
+
 		final BorderPane mainPane = new BorderPane();
 
 		final FlowPane topPane = new FlowPane();
@@ -106,7 +108,7 @@ public final class EmulatorView extends Stage {
 					}
 				} catch (final InterruptedException e) {
 					// Do we really need to re-throw the exception if we are killing the thread?
-					throw new RuntimeException(e);
+					throw new IllegalStateException(e);
 				}
 			}));
 		});
@@ -131,8 +133,8 @@ public final class EmulatorView extends Stage {
 				registerPane.add(LabelFactory.getDefaultLabel(r.name()), 0, row);
 				final Label rl = LabelFactory.getDefaultLabel("0x" + "0".repeat(16));
 				rl.setTooltip(TooltipFactory.getDefaultTooltip("Click to see the memory at [" + r.name() + "]"));
-				rl.setOnMouseClicked(e -> updateMemory(cpu.getRegisters().get(r)
-						- ((long) AppConstants.getMaxMemoryLines() * AppConstants.getMemoryBytesPerLine()) / 2L));
+				final long maxMemoryBytes = AppConstants.getMaxMemoryLines() * AppConstants.getMemoryBytesPerLine();
+				rl.setOnMouseClicked(e -> updateMemory(cpu.getRegisters().get(r) - maxMemoryBytes / 2L));
 				registerPane.add(rl, 1, row);
 				regLabels.put(r, rl);
 				row++;

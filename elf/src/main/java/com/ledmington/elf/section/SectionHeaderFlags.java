@@ -128,6 +128,11 @@ public enum SectionHeaderFlags {
 	private static final long SHF_MASK =
 			Arrays.stream(values()).map(SectionHeaderFlags::getCode).reduce(0L, (a, b) -> a | b);
 
+	private final long code;
+	private final String name;
+	private final String description;
+	private final char id;
+
 	private static boolean isOSSpecific(final long code) {
 		return (code & 0x000000000ff00000L) != 0L;
 	}
@@ -172,11 +177,6 @@ public enum SectionHeaderFlags {
 		}
 		return shf;
 	}
-
-	private final long code;
-	private final String name;
-	private final String description;
-	private final char id;
 
 	SectionHeaderFlags(final long code, final String name, final String description, final char id) {
 		this.code = code;

@@ -217,6 +217,7 @@ public final class ELFLoader {
 		notImplemented();
 	}
 
+	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 	private static void notImplemented() {
 		throw new Error("Not implemented");
 	}
@@ -336,13 +337,13 @@ public final class ELFLoader {
 		logger.debug("Loading ELF segments into memory");
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
-			if (phte.getType() != PHTEntryType.PT_LOAD) {
+			if (phte.type() != PHTEntryType.PT_LOAD) {
 				// This segment is not loadable
 				continue;
 			}
 
-			final long start = baseAddress + phte.getSegmentVirtualAddress();
-			final long end = start + phte.getSegmentMemorySize();
+			final long start = baseAddress + phte.segmentVirtualAddress();
+			final long end = start + phte.segmentMemorySize();
 			logger.debug(
 					"Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
 					start,

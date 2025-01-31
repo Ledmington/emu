@@ -37,6 +37,9 @@ public final class GnuVersionSection implements LoadableSection {
 
 	private static final String standardName = ".gnu.version";
 
+	private final SectionHeader header;
+	private final short[] versions;
+
 	/**
 	 * Returns the standard name of this section.
 	 *
@@ -45,9 +48,6 @@ public final class GnuVersionSection implements LoadableSection {
 	public static String getStandardName() {
 		return standardName;
 	}
-
-	private final SectionHeader header;
-	private final short[] versions;
 
 	/**
 	 * Creates a GNU Version section with the given header and parses the content from the ReadOnlyByteBuffer b.

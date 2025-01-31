@@ -17,15 +17,15 @@
  */
 package com.ledmington.mem;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** A class to mimic the behaviour of a real-world RAM. */
 public final class RandomAccessMemory implements Memory {
 
 	private final MemoryInitializer init;
-	private final Map<Long, Byte> m = new HashMap<>();
+	private final Map<Long, Byte> m = new ConcurrentHashMap<>();
 
 	/**
 	 * Creates a RAM with the given memory initializer.

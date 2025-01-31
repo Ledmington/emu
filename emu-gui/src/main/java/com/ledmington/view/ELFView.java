@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javafx.geometry.Insets;
@@ -72,6 +72,16 @@ public final class ELFView extends BorderPane {
 	private static final int MAX_BYTES_PER_ROW = MAX_GROUPS_PER_ROW * MAX_BYTES_PER_GROUP;
 	private static final int ADDRESS_BYTES = 4;
 
+	private final TextArea addressArea = new TextArea();
+	private final TextArea hexContentArea = new TextArea();
+	private final TextArea asciiContentArea = new TextArea();
+	private final TreeView<String> tree;
+	private final Map<TreeItem<String>, Range> ranges = new ConcurrentHashMap<>();
+
+	// The actual index of the first byte displayed
+	private File file = null;
+	private int startByte = 0;
+
 	private record Range(int offset, int length) {
 
 		private static final int MINIMUM_ALLOWED_LENGTH = 1;
@@ -83,17 +93,8 @@ public final class ELFView extends BorderPane {
 		}
 	}
 
-	private final TextArea addressArea = new TextArea();
-	private final TextArea hexContentArea = new TextArea();
-	private final TextArea asciiContentArea = new TextArea();
-	private final TreeView<String> tree;
-	private final Map<TreeItem<String>, Range> ranges = new HashMap<>();
-
-	// The actual index of the first byte displayed
-	private File file = null;
-	private int startByte = 0;
-
 	public ELFView() {
+		super();
 		final TreeItem<String> root = new TreeItem<>("<no file>");
 		tree = new TreeView<>(root);
 		tree.setEditable(false);
@@ -115,20 +116,22 @@ public final class ELFView extends BorderPane {
 
 			final int startRowIndex = start / MAX_BYTES_PER_ROW;
 			final int endRowIndex = end / MAX_BYTES_PER_ROW;
+			final int startByteIndexInRow = start % MAX_BYTES_PER_ROW;
+			final int endByteIndexInRow = end % MAX_BYTES_PER_ROW;
 
 			addressArea.selectRange(
 					startRowIndex * (2 + 2 * ADDRESS_BYTES + 1), (endRowIndex + 1) * (2 + 2 * ADDRESS_BYTES + 1));
 
 			asciiContentArea.selectRange(
-					startRowIndex * (MAX_BYTES_PER_ROW + 1) + (start % MAX_BYTES_PER_ROW),
-					endRowIndex * (MAX_BYTES_PER_ROW + 1) + (end % MAX_BYTES_PER_ROW));
+					startRowIndex * (MAX_BYTES_PER_ROW + 1) + startByteIndexInRow,
+					endRowIndex * (MAX_BYTES_PER_ROW + 1) + endByteIndexInRow);
 
 			final int rowLength = 2 * MAX_BYTES_PER_ROW + (MAX_GROUPS_PER_ROW - 1) + 1;
 			final int groupLength = 2 * MAX_BYTES_PER_GROUP;
-			final int startGroupIndexInRow = (start % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
-			final int startByteIndexInGroup = (start % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
-			final int endGroupIndexInRow = (end % MAX_BYTES_PER_ROW) / MAX_GROUPS_PER_ROW;
-			final int endByteIndexInGroup = (end % MAX_BYTES_PER_ROW) % MAX_BYTES_PER_GROUP;
+			final int startGroupIndexInRow = startByteIndexInRow / MAX_GROUPS_PER_ROW;
+			final int startByteIndexInGroup = startByteIndexInRow % MAX_BYTES_PER_GROUP;
+			final int endGroupIndexInRow = endByteIndexInRow / MAX_GROUPS_PER_ROW;
+			final int endByteIndexInGroup = endByteIndexInRow % MAX_BYTES_PER_GROUP;
 			final int startActualIndex = startRowIndex * rowLength
 					+ startGroupIndexInRow * groupLength
 					+ startGroupIndexInRow
@@ -223,36 +226,35 @@ public final class ELFView extends BorderPane {
 		i++;
 		fileHeaderElements.add(getTreeItem("Version = 1", i));
 		i++;
-		fileHeaderElements.add(getTreeItem("OS/ABI = " + fh.getOSABI().getName(), i));
+		fileHeaderElements.add(getTreeItem("OS/ABI = " + fh.osabi().getName(), i));
 		i++;
-		fileHeaderElements.add(getTreeItem("ABI version = " + fh.getABIVersion(), i));
+		fileHeaderElements.add(getTreeItem("ABI version = " + fh.ABIVersion(), i));
 		i++;
-		fileHeaderElements.add(
-				getTreeItem("File type = " + fh.getFileType().name().replaceFirst("^ET_", ""), i, 2));
+		fileHeaderElements.add(getTreeItem("File type = " + fh.fileType().name().replaceFirst("^ET_", ""), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("ISA = " + fh.getISA().getName(), i, 2));
+		fileHeaderElements.add(getTreeItem("ISA = " + fh.isa().getName(), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("Version = " + fh.getVersion(), i, 4));
+		fileHeaderElements.add(getTreeItem("Version = " + fh.version(), i, 4));
 		i += 4;
-		fileHeaderElements.add(getTreeItem("Entrypoint = " + fh.getEntryPointVirtualAddress(), i, wordSize));
+		fileHeaderElements.add(getTreeItem("Entrypoint = " + fh.entryPointVirtualAddress(), i, wordSize));
 		i += wordSize;
-		fileHeaderElements.add(getTreeItem("PHT offset = " + fh.getProgramHeaderTableOffset(), i, wordSize));
+		fileHeaderElements.add(getTreeItem("PHT offset = " + fh.programHeaderTableOffset(), i, wordSize));
 		i += wordSize;
-		fileHeaderElements.add(getTreeItem("SHT offset = " + fh.getSectionHeaderTableOffset(), i, wordSize));
+		fileHeaderElements.add(getTreeItem("SHT offset = " + fh.sectionHeaderTableOffset(), i, wordSize));
 		i += wordSize;
-		fileHeaderElements.add(getTreeItem("Flags = " + fh.getFlags(), i, 4));
+		fileHeaderElements.add(getTreeItem("Flags = " + fh.flags(), i, 4));
 		i += 4;
-		fileHeaderElements.add(getTreeItem("Header size = " + fh.getHeaderSize(), i, 2));
+		fileHeaderElements.add(getTreeItem("Header size = " + fh.headerSize(), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("PHT entry size = " + fh.getProgramHeaderTableEntrySize(), i, 2));
+		fileHeaderElements.add(getTreeItem("PHT entry size = " + fh.programHeaderTableEntrySize(), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("PHT entries = " + fh.getNumProgramHeaderTableEntries(), i, 2));
+		fileHeaderElements.add(getTreeItem("PHT entries = " + fh.numProgramHeaderTableEntries(), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("SHT entry size = " + fh.getSectionHeaderTableEntrySize(), i, 2));
+		fileHeaderElements.add(getTreeItem("SHT entry size = " + fh.sectionHeaderTableEntrySize(), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("SHT entries = " + fh.getNumSectionHeaderTableEntries(), i, 2));
+		fileHeaderElements.add(getTreeItem("SHT entries = " + fh.numSectionHeaderTableEntries(), i, 2));
 		i += 2;
-		fileHeaderElements.add(getTreeItem("shstrndx = " + fh.getSectionHeaderStringTableIndex(), i, 2));
+		fileHeaderElements.add(getTreeItem("shstrndx = " + fh.sectionHeaderStringTableIndex(), i, 2));
 
 		return fileHeaderElements;
 	}
@@ -261,8 +263,8 @@ public final class ELFView extends BorderPane {
 		final List<TreeItem<String>> PHTElements = new ArrayList<>();
 		final int wordSize = fh.is32Bit() ? 4 : 8;
 
-		final long PHTOffset = fh.getProgramHeaderTableOffset();
-		final long PHTEntrySize = fh.getProgramHeaderTableEntrySize();
+		final long PHTOffset = fh.programHeaderTableOffset();
+		final long PHTEntrySize = fh.programHeaderTableEntrySize();
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final TreeItem<String> x =
 					getTreeItem(String.valueOf(i), (int) (PHTOffset + i * PHTEntrySize), (int) PHTEntrySize);
@@ -271,7 +273,7 @@ public final class ELFView extends BorderPane {
 			final PHTEntry phte = pht.getProgramHeader(i);
 			final long entryOffset = PHTOffset + i * PHTEntrySize;
 			int k = (int) entryOffset;
-			x.getChildren().add(getTreeItem("Type = " + phte.getType().getName(), k, 4));
+			x.getChildren().add(getTreeItem("Type = " + phte.type().getName(), k, 4));
 			k += 4;
 			x.getChildren()
 					.add(getTreeItem(
@@ -280,17 +282,17 @@ public final class ELFView extends BorderPane {
 							k,
 							4));
 			k += 4;
-			x.getChildren().add(getTreeItem("Segment offset = " + phte.getSegmentOffset(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment offset = " + phte.segmentOffset(), k, wordSize));
 			k += wordSize;
-			x.getChildren().add(getTreeItem("Segment vaddr = " + phte.getSegmentVirtualAddress(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment vaddr = " + phte.segmentVirtualAddress(), k, wordSize));
 			k += wordSize;
-			x.getChildren().add(getTreeItem("Segment paddr = " + phte.getSegmentPhysicalAddress(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment paddr = " + phte.segmentPhysicalAddress(), k, wordSize));
 			k += wordSize;
-			x.getChildren().add(getTreeItem("Segment file size = " + phte.getSegmentFileSize(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment file size = " + phte.segmentFileSize(), k, wordSize));
 			k += wordSize;
-			x.getChildren().add(getTreeItem("Segment memory size = " + phte.getSegmentMemorySize(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment memory size = " + phte.segmentMemorySize(), k, wordSize));
 			k += wordSize;
-			x.getChildren().add(getTreeItem("Segment alignment = " + phte.getAlignment(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment alignment = " + phte.alignment(), k, wordSize));
 		}
 
 		return PHTElements;
@@ -301,10 +303,8 @@ public final class ELFView extends BorderPane {
 
 		for (int i = 0; i < st.getSectionTableLength(); i++) {
 			final Section s = st.getSection(i);
-			final long sectionHeaderOffset =
-					fh.getSectionHeaderTableOffset() + (long) i * fh.getSectionHeaderTableEntrySize();
-			STElements.add(
-					initializeSection(s, sectionHeaderOffset, fh.getSectionHeaderTableEntrySize(), fh.is32Bit()));
+			final long sectionHeaderOffset = fh.sectionHeaderTableOffset() + i * fh.sectionHeaderTableEntrySize();
+			STElements.add(initializeSection(s, sectionHeaderOffset, fh.sectionHeaderTableEntrySize(), fh.is32Bit()));
 		}
 
 		return STElements;
@@ -651,8 +651,8 @@ public final class ELFView extends BorderPane {
 		try (RandomAccessFile raf = new RandomAccessFile(this.file, "r")) {
 			raf.skipBytes(startByte);
 			raf.readFully(fileBytes);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		} catch (final IOException e) {
+			throw new IllegalStateException(e);
 		}
 
 		final StringBuilder sbAddress = new StringBuilder();

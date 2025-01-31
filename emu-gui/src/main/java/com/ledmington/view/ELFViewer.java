@@ -33,6 +33,8 @@ public final class ELFViewer extends Stage {
 	private final ELFView view;
 
 	public ELFViewer(final double width, final double height) {
+		super();
+
 		final BorderPane mainPane = new BorderPane();
 
 		this.view = new ELFView();

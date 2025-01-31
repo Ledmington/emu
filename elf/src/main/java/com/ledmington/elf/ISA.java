@@ -17,8 +17,8 @@
  */
 package com.ledmington.elf;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The ISA which can be specified in an ELF header. */
 public enum ISA {
@@ -47,7 +47,10 @@ public enum ISA {
 	/** Intel K10M. */
 	Intel_K10M((short) 0x00b5, "Intel K10M");
 
-	private static final Map<Short, ISA> codeToISA = new HashMap<>();
+	private static final Map<Short, ISA> codeToISA = new ConcurrentHashMap<>();
+
+	private final short code;
+	private final String name;
 
 	static {
 		for (final ISA x : values()) {
@@ -81,9 +84,6 @@ public enum ISA {
 		}
 		return codeToISA.get(code);
 	}
-
-	private final short code;
-	private final String name;
 
 	ISA(final short code, final String name) {
 		this.code = code;

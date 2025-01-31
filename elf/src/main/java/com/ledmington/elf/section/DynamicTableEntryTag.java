@@ -17,9 +17,9 @@
  */
 package com.ledmington.elf.section;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The tag of an entry of the Dynamic section (.dyn).
@@ -246,7 +246,10 @@ public enum DynamicTableEntryTag {
 	/** The number of entries in the DT_VERNEEDNUM table. */
 	DT_VERNEEDNUM(0x000000006fffffffL, "VERNEEDNUM");
 
-	private static final Map<Long, DynamicTableEntryTag> codeToTag = new HashMap<>();
+	private static final Map<Long, DynamicTableEntryTag> codeToTag = new ConcurrentHashMap<>();
+
+	private final long code;
+	private final String name;
 
 	static {
 		for (final DynamicTableEntryTag dtet : values()) {
@@ -283,9 +286,6 @@ public enum DynamicTableEntryTag {
 		}
 		return codeToTag.get(code);
 	}
-
-	private final long code;
-	private final String name;
 
 	DynamicTableEntryTag(final long code, final String name) {
 		this.code = code;

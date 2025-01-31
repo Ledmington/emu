@@ -19,22 +19,27 @@ package com.ledmington.utils;
 
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Personal implementation of a simple Logger that mimics the behavior of the {@link java.util.logging.Logger} class.
  */
 public final class MiniLogger {
 
-	private static final Map<String, MiniLogger> ALL_LOGGERS = new HashMap<>();
+	private static final Map<String, MiniLogger> ALL_LOGGERS = new ConcurrentHashMap<>();
 	private static final long BEGINNING = System.currentTimeMillis();
 	private static PrintWriter stdout = System.console() == null
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
 	private static LoggingLevel minimumLevel = LoggingLevel.DEBUG;
 	private static final char NEWLINE = '\n';
+	private static final Lock mutex = new ReentrantLock();
+
+	private final String loggerName;
 
 	/** Specifies the level for all MiniLoggers. */
 	public enum LoggingLevel {
@@ -84,8 +89,6 @@ public final class MiniLogger {
 		stdout = new PrintWriter(Objects.requireNonNull(pw));
 	}
 
-	private final String loggerName;
-
 	private MiniLogger(final String name) {
 		Objects.requireNonNull(name);
 		this.loggerName = name;
@@ -130,10 +133,14 @@ public final class MiniLogger {
 	}
 
 	private void outputActual(final String line) {
-		synchronized (this) {
+		try {
+			mutex.lock();
+
 			// printing on console
 			stdout.println(line);
 			stdout.flush();
+		} finally {
+			mutex.unlock();
 		}
 	}
 

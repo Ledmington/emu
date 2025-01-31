@@ -43,6 +43,8 @@ public final class SettingsWindow extends Stage {
 	private final Spinner<Integer> memoryBytesPerLine;
 
 	public SettingsWindow() {
+		super();
+
 		final BorderPane bPane = new BorderPane();
 		final Scene scene = new Scene(bPane);
 

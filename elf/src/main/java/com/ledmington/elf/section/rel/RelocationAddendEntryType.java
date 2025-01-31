@@ -120,6 +120,8 @@ public enum RelocationAddendEntryType {
 	/** Unknown/undefined. */
 	R_X86_64_NUM(43);
 
+	private final int code;
+
 	/**
 	 * Returns the type of relocation entry corresponding to the given ISA and code combination.
 	 *
@@ -139,8 +141,6 @@ public enum RelocationAddendEntryType {
 			throw new IllegalArgumentException(String.format("Unknown ISA: %s", isa));
 		}
 	}
-
-	private final int code;
 
 	RelocationAddendEntryType(final int code) {
 		this.code = code;

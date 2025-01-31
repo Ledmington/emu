@@ -39,6 +39,9 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 
 	private static final String standardName = ".gnu.version_d";
 
+	private final SectionHeader header;
+	private final GnuVersionDefinitionEntry[] entries;
+
 	/**
 	 * Returns the standard name of this special section.
 	 *
@@ -47,9 +50,6 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 	public static String getStandardName() {
 		return standardName;
 	}
-
-	private final SectionHeader header;
-	private final GnuVersionDefinitionEntry[] entries;
 
 	/**
 	 * Creates the GNU version definition section with the given data.

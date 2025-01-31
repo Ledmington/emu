@@ -147,7 +147,11 @@ public final class FormatTestFiles {
 
 	private static void writeAllLines(final List<String> lines, final String filePath) {
 		try {
-			Files.writeString(Path.of(filePath), String.join("\n", lines), StandardOpenOption.WRITE);
+			Files.writeString(
+					Path.of(filePath),
+					String.join("\n", lines),
+					StandardOpenOption.WRITE,
+					StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}

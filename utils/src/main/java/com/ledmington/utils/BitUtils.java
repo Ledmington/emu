@@ -212,6 +212,17 @@ public final class BitUtils {
 	}
 
 	/**
+	 * Computes the bitwise XOR and returns it as a short.
+	 *
+	 * @param a The left-hand side operand.
+	 * @param b The right-hand side operand.
+	 * @return The bitwise XOR as a short.
+	 */
+	public static short xor(final short a, final short b) {
+		return asShort(a ^ b);
+	}
+
+	/**
 	 * Shift (logical) to the right and return as a byte.
 	 *
 	 * @param b The byte to be shifted.

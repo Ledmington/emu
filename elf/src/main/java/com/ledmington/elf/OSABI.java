@@ -17,8 +17,8 @@
  */
 package com.ledmington.elf;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The OS Application Binary Interface used for creating the ELF file. */
 public enum OSABI {
@@ -80,7 +80,10 @@ public enum OSABI {
 	/** Standalone (embedded) application. */
 	STANDALONE((byte) 0xff, "Standalone (embedded) application");
 
-	private static final Map<Byte, OSABI> codeToABI = new HashMap<>();
+	private static final Map<Byte, OSABI> codeToABI = new ConcurrentHashMap<>();
+
+	private final byte code;
+	private final String OSName;
 
 	static {
 		for (final OSABI x : values()) {
@@ -115,9 +118,6 @@ public enum OSABI {
 		}
 		return codeToABI.get(code);
 	}
-
-	private final byte code;
-	private final String OSName;
 
 	OSABI(final byte code, final String OSName) {
 		this.code = code;
