@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.Instruction;
@@ -44,7 +45,6 @@ import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 
-@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.JUnitTestContainsTooManyAsserts"})
 final class TestExecution {
 
 	private static final RandomGenerator rng =
@@ -240,11 +240,61 @@ final class TestExecution {
 
 	@ParameterizedTest
 	@MethodSource("pairs64")
-	void xor(final Register64 r1, final Register64 r2) {
+	void xor64(final Register64 r1, final Register64 r2) {
 		final long oldValue1 = cpu.getRegisters().get(r1);
 		final long oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-		expected.set(r1, oldValue1 ^ oldValue2);
+		final long result = oldValue1 ^ oldValue2;
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs32")
+	void xor32(final Register32 r1, final Register32 r2) {
+		final int oldValue1 = cpu.getRegisters().get(r1);
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 ^ oldValue2;
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs16")
+	void xor16(final Register16 r1, final Register16 r2) {
+		final short oldValue1 = cpu.getRegisters().get(r1);
+		final short oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final short result = BitUtils.xor(oldValue1, oldValue2);
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs8")
+	void xor8(final Register8 r1, final Register8 r2) {
+		final byte oldValue1 = cpu.getRegisters().get(r1);
+		final byte oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final byte result = BitUtils.xor(oldValue1, oldValue2);
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -254,11 +304,61 @@ final class TestExecution {
 
 	@ParameterizedTest
 	@MethodSource("pairs64")
-	void and(final Register64 r1, final Register64 r2) {
+	void and64(final Register64 r1, final Register64 r2) {
 		final long oldValue1 = cpu.getRegisters().get(r1);
 		final long oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-		expected.set(r1, oldValue1 & oldValue2);
+		final long result = oldValue1 & oldValue2;
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0L);
+		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs32")
+	void and32(final Register32 r1, final Register32 r2) {
+		final int oldValue1 = cpu.getRegisters().get(r1);
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 & oldValue2;
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs16")
+	void and16(final Register16 r1, final Register16 r2) {
+		final short oldValue1 = cpu.getRegisters().get(r1);
+		final short oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final short result = BitUtils.and(oldValue1, oldValue2);
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs8")
+	void and8(final Register8 r1, final Register8 r2) {
+		final byte oldValue1 = cpu.getRegisters().get(r1);
+		final byte oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final byte result = BitUtils.and(oldValue1, oldValue2);
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -373,32 +473,93 @@ final class TestExecution {
 						newRSP, cpu.getRegisters().get(Register64.RSP)));
 	}
 
-	@Test
-	void pushAndPop() {
+	@ParameterizedTest
+	@ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9})
+	void pushAndPop(final int n) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
 		final X86Cpu cpu = new X86Cpu(mem);
+
+		// Init random values
+		final long[] values = new long[n];
+		for (int i = 0; i < n; i++) {
+			values[i] = rng.nextLong();
+		}
+
+		// Setup stack at random location
 		final long base = rng.nextLong();
-		mem.setPermissions(base - 8L, base, true, true, false);
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
-		final long val = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(val)));
-		mem.write(base - 8L, 0L);
 
-		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
-		cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+		// Doing n pushes of random values
+		for (int i = 0; i < n; i++) {
+			// Set memory to readable and writable
+			mem.setPermissions(base - 8L * (i + 1), base - 8L * i, true, true, false);
 
+			// mov RAX,val
+			cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(values[i])));
+
+			final int finalI = i;
+
+			// Before each push, RSP must be equal to the old base
+			assertEquals(
+					base - 8L * i,
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"Before %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
+
+			// push RAX
+			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+
+			// After each push, RSP must be equal to the new base
+			assertEquals(
+					base - 8L * (i + 1),
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"After %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
+		}
+
+		// Doing n pops (in reverse) checking the random values
+		for (int i = n - 1; i >= 0; i--) {
+			final int finalI = i;
+
+			// Before each pop, RSP must be equal to the new base
+			assertEquals(
+					base - 8L * (i + 1),
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"Before %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
+
+			// pop RAX
+			cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+
+			System.out.printf("v[%,d] = 0x%016x%n", i, values[i]);
+			System.out.printf("RAX  = 0x%016x%n", cpu.getRegisters().get(Register64.RAX));
+
+			// After each pop, RSP must be equal to the old base
+			assertEquals(
+					base - 8L * i,
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"After %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
+
+			assertEquals(
+					values[i],
+					cpu.getRegisters().get(Register64.RAX),
+					() -> String.format(
+							"After %,d-th POP, expected RAX to be 0x%016x but was 0x%016x.",
+							finalI, values[finalI], cpu.getRegisters().get(Register64.RAX)));
+		}
+
+		// At the end RSP must be equal to the initial base value
 		assertEquals(
 				base,
 				cpu.getRegisters().get(Register64.RSP),
 				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
+						"At the end, expectedRSP to be 0x%016x but was 0x%016x.",
 						base, cpu.getRegisters().get(Register64.RSP)));
-		assertEquals(
-				val,
-				cpu.getRegisters().get(Register64.RAX),
-				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
-						val, cpu.getRegisters().get(Register64.RAX)));
 	}
 }

@@ -50,7 +50,9 @@ final class TestInvalidInstructions {
 				// MOV with 2 immediates
 				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0L), new Immediate(1L)}),
 
-				// MOV with three operands
+				// MOV with 0, 1 or 3 operands
+				Arguments.of(Opcode.MOV, new Operand[0]),
+				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX}),
 				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register64.RBX, Register64.RCX}),
 
 				// MOV with registers of different size
@@ -110,7 +112,36 @@ final class TestInvalidInstructions {
 				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, new Immediate((byte) 0)}),
 				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0), Register64.RAX}),
 				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((short) 0), Register64.RAX}),
-				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((byte) 0), Register64.RAX}));
+				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((byte) 0), Register64.RAX}),
+
+				// NOP with 8-bit operands and immediates
+				Arguments.of(Opcode.NOP, new Operand[] {Register8.AH}),
+				Arguments.of(Opcode.NOP, new Operand[] {
+					IndirectOperand.builder()
+							.index(Register64.RAX)
+							.pointer(PointerSize.BYTE_PTR)
+							.build()
+				}),
+				Arguments.of(Opcode.NOP, new Operand[] {new Immediate((byte) 0)}),
+				Arguments.of(Opcode.NOP, new Operand[] {new Immediate((short) 0)}),
+				Arguments.of(Opcode.NOP, new Operand[] {new Immediate(0)}),
+				Arguments.of(Opcode.NOP, new Operand[] {new Immediate(0L)}),
+				Arguments.of(Opcode.NOP, new Operand[] {Register64.RAX, Register64.RAX}),
+				Arguments.of(Opcode.NOP, new Operand[] {Register64.RAX, Register64.RAX, Register64.RAX}),
+
+				// LEA with 0, 1 or 3 operands
+				Arguments.of(Opcode.LEA, new Operand[0]),
+				Arguments.of(Opcode.LEA, new Operand[] {Register64.RAX}),
+				Arguments.of(Opcode.LEA, new Operand[] {Register64.RAX, Register64.RAX, Register64.RAX}),
+
+				// LEA with 8 bit registers
+				Arguments.of(Opcode.LEA, new Operand[] {
+					Register8.AH,
+					IndirectOperand.builder()
+							.index(Register64.RAX)
+							.pointer(PointerSize.QWORD_PTR)
+							.build()
+				}));
 	}
 
 	@ParameterizedTest
