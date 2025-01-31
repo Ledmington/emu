@@ -71,5 +71,5 @@ tasks.register('formatTestFiles', JavaExec) {
 	group 'utilities'
 	description 'Formats in-place the test asm files inside app/test/resources'
 	classpath sourceSets.test.runtimeClasspath
-	mainClass = "FormatTestFiles"
+	mainClass = "com.ledmington.FormatTestFiles"
 }
