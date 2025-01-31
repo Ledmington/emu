@@ -1,20 +1,13 @@
 <?xml version="1.0"?>
-<ruleset name="emu-ruleset"
+<ruleset name="emu-prod-ruleset"
 		xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
-    <description>Emu ruleset</description>
+    <description>Emu ruleset for production code</description>
 
     <rule ref="category/java/bestpractices.xml">
         <!-- Avoid reporting custom logger calls -->
         <exclude name="GuardLogStatement" />
-    </rule>
-
-    <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables">
-        <!-- Avoid reporting increments/decrements of loop control variable outside of 'for' -->
-        <properties>
-            <property name="forReassign" value="skip" />
-        </properties>
     </rule>
 
     <rule ref="category/java/codestyle.xml">
@@ -30,15 +23,30 @@
         <exclude name="OnlyOneReturn" />
         <!-- Avoid reporting default constructors -->
         <exclude name="UnnecessaryConstructor" />
-        <!-- Avoid reporting fields not declared in camel case -->
+        <!-- Avoid reporting class names not declared in camel case -->
+        <exclude name="ClassNamingConventions" />
+        <!-- Avoid reporting field name not declared in camel case -->
         <exclude name="FieldNamingConventions" />
+        <!-- Avoid reporting method names not declared in camel case -->
+        <exclude name="MethodNamingConventions" />
         <!-- Avoid reporting variables not declared in camel case -->
         <exclude name="LocalVariableNamingConventions" />
+        <!-- Avoid reporting method/lambda parameters not declared in camel case -->
+        <exclude name="FormalParameterNamingConventions" />
     </rule>
 
     <rule ref="category/java/design.xml">
         <!-- Avoid reporting usage of classes from outside the package hierarchy -->
 	    <exclude name="LoosePackageCoupling" />
+        <!-- Avoid reporting classes with too many imports -->
+	    <exclude name="ExcessiveImports" />
+    </rule>
+
+    <!-- Avoid retrieving data from "too far away" -->
+    <rule ref="category/java/design.xml/LawOfDemeter">
+        <properties>
+            <property name="trustRadius" value="3" />
+        </properties>
     </rule>
 
     <rule ref="category/java/documentation.xml">
@@ -55,7 +63,10 @@
         <exclude name="DoNotTerminateVM" />
     </rule>
 
-    <rule ref="category/java/multithreading.xml" />
+    <rule ref="category/java/multithreading.xml">
+        <!-- Avoid reporting anything related to java.lang.Thread or Executors -->
+        <exclude name="DoNotUseThreads" />
+    </rule>
     
     <rule ref="category/java/performance.xml">
         <!-- Avoid reporting redundant field initialization -->

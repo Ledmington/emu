@@ -111,6 +111,7 @@ allprojects {
         logLevel 'lifecycle'
     }
 
+    // Common config for all PMD tasks
     pmd {
         toolVersion = "${pmdVersion}"
         ignoreFailures = false
@@ -118,7 +119,16 @@ allprojects {
         rulesMinimumPriority = 5
         threads = 1 // Each PMD instance for each module runs serially
         incrementalAnalysis = true
-        ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "ruleset.xml"))
+    }
+
+    // Config for production code
+    pmdMain {
+        ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "prod.ruleset.xml"))
+    }
+
+    // Config for testing code
+    pmdTest {
+        ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "test.ruleset.xml"))
     }
 
     spotbugs {
