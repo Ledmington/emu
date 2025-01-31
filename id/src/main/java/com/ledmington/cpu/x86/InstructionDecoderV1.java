@@ -41,7 +41,6 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");
 
-	private static final byte MULTIBYTE_OPCODE_PREFIX = (byte) 0x0f;
 	private static final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
 	private static final byte MODRM_MOD_NO_DISP = (byte) 0b00000011;
@@ -98,31 +97,31 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
 		final byte opcodeFirstByte = b.read1();
 
-		if (isMultibyteOpcode(opcodeFirstByte)) {
-			// more than 1 bytes opcode
-			return parse2BytesOpcode(opcodeFirstByte, pref);
-		} else if (isExtendedOpcode(opcodeFirstByte)) {
-			// extended opcode group 1
-			return parseExtendedOpcodeGroup1(opcodeFirstByte, pref);
-		} else if (opcodeFirstByte == (byte) 0xc0
-				|| opcodeFirstByte == (byte) 0xc1
-				|| opcodeFirstByte == (byte) 0xd0
-				|| opcodeFirstByte == (byte) 0xd1
-				|| opcodeFirstByte == (byte) 0xd2
-				|| opcodeFirstByte == (byte) 0xd3) {
-			return parseExtendedOpcodeGroup2(opcodeFirstByte, pref);
-		} else if (opcodeFirstByte == (byte) 0xc6 || opcodeFirstByte == (byte) 0xc7) {
-			return parseExtendedOpcodeGroup11(opcodeFirstByte, pref);
-		} else if (opcodeFirstByte == (byte) 0xf6 || opcodeFirstByte == (byte) 0xf7) {
-			return parseExtendedOpcodeGroup3(opcodeFirstByte, pref);
-		} else if (opcodeFirstByte == (byte) 0xfe) {
-			return parseExtendedOpcodeGroup4(opcodeFirstByte, pref);
-		} else if (opcodeFirstByte == (byte) 0xff) {
-			return parseExtendedOpcodeGroup5(opcodeFirstByte, pref);
-		} else {
-			// 1 byte opcode
-			return parseSingleByteOpcode(opcodeFirstByte, pref);
-		}
+		return switch (opcodeFirstByte) {
+				// more than 1 bytes opcode
+			case (byte) 0x0f -> parse2BytesOpcode(opcodeFirstByte, pref);
+
+				// extended opcode group 1
+			case (byte) 0x80, (byte) 0x81, (byte) 0x82, (byte) 0x83 -> parseExtendedOpcodeGroup1(opcodeFirstByte, pref);
+
+			case (byte) 0xc0,
+					(byte) 0xc1,
+					(byte) 0xd0,
+					(byte) 0xd1,
+					(byte) 0xd2,
+					(byte) 0xd3 -> parseExtendedOpcodeGroup2(opcodeFirstByte, pref);
+
+			case (byte) 0xc6, (byte) 0xc7 -> parseExtendedOpcodeGroup11(opcodeFirstByte, pref);
+
+			case (byte) 0xf6, (byte) 0xf7 -> parseExtendedOpcodeGroup3(opcodeFirstByte, pref);
+
+			case (byte) 0xfe -> parseExtendedOpcodeGroup4(opcodeFirstByte, pref);
+
+			case (byte) 0xff -> parseExtendedOpcodeGroup5(opcodeFirstByte, pref);
+
+				// 1 byte opcode
+			default -> parseSingleByteOpcode(opcodeFirstByte, pref);
+		};
 	}
 
 	private boolean isIndirectOperandNeeded(final ModRM modrm) {
@@ -308,12 +307,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 					Opcode.MUL,
 					isIndirectOperandNeeded
 							? parseIndirectOperand(pref, modrm)
-									.pointer(
-											(opcodeFirstByte == (byte) 0xf6)
-													? PointerSize.BYTE_PTR
-													: getPointerSize(pref))
+									.pointer(isRegister8Bit ? PointerSize.BYTE_PTR : getPointerSize(pref))
 									.build()
-							: opcodeFirstByte == (byte) 0xf6
+							: isRegister8Bit
 									?
 									// R8
 									Register8.fromByte(
@@ -328,12 +324,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 					Opcode.DIV,
 					isIndirectOperandNeeded
 							? parseIndirectOperand(pref, modrm)
-									.pointer(
-											(opcodeFirstByte == (byte) 0xf6)
-													? PointerSize.BYTE_PTR
-													: getPointerSize(pref))
+									.pointer(isRegister8Bit ? PointerSize.BYTE_PTR : getPointerSize(pref))
 									.build()
-							: opcodeFirstByte == (byte) 0xf6
+							: isRegister8Bit
 									?
 									// R8
 									Register8.fromByte(
@@ -736,9 +729,15 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 				final ModRM modrm = modrm();
 				yield new Instruction(
 						Opcode.NOP,
-						parseIndirectOperand(pref, modrm)
-								.pointer(getPointerSize(pref))
-								.build());
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(pref, modrm)
+										.pointer(getPointerSize(pref))
+										.build()
+								: Registers.fromCode(
+										modrm.rm(),
+										pref.rex().isOperand64Bit(),
+										pref.rex().getModRMRMExtension(),
+										pref.hasOperandSizeOverridePrefix()));
 			}
 
 				// conditional set bytes
@@ -1404,8 +1403,8 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
-			case MOV_R32_INDIRECT32_OPCODE -> parseRM(pref, Opcode.MOV);
-			case MOV_INDIRECT32_R32_OPCODE -> parseMR(pref, Opcode.MOV);
+			case MOV_R32_INDIRECT32_OPCODE -> parseRxMx(pref, Opcode.MOV);
+			case MOV_INDIRECT32_R32_OPCODE -> parseMxRx(pref, Opcode.MOV);
 			case MOV_MEM8_REG8_OPCODE -> {
 				final ModRM modrm = modrm();
 				yield new Instruction(
@@ -1480,26 +1479,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 								Registers.combine(pref.rex().getModRMRegExtension(), modrm.reg()),
 								pref.hasRexPrefix()));
 			}
-			case XCHG_INDIRECT32_R32_OPCODE -> {
-				final ModRM modrm = modrm();
-				final Register r2 = Registers.fromCode(
-						modrm.reg(),
-						pref.rex().isOperand64Bit(),
-						pref.rex().getModRMRegExtension(),
-						pref.hasOperandSizeOverridePrefix());
-				yield new Instruction(
-						Opcode.XCHG,
-						isIndirectOperandNeeded(modrm)
-								? parseIndirectOperand(pref, modrm)
-										.pointer(PointerSize.fromSize(r2.bits()))
-										.build()
-								: Registers.fromCode(
-										modrm.rm(),
-										pref.rex().isOperand64Bit(),
-										pref.rex().getModRMRMExtension(),
-										pref.hasOperandSizeOverridePrefix()),
-						r2);
-			}
+			case XCHG_INDIRECT32_R32_OPCODE -> parseMxRx(pref, Opcode.XCHG);
 
 				// jumps
 			case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of(b.read4LE()));
@@ -1664,7 +1644,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 				final byte m2 = ~m1;
 				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
-				yield parseMR(pref, opcode);
+				yield parseMxRx(pref, opcode);
 			}
 
 				// OP R8,Indirect8
@@ -1715,7 +1695,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 				final byte m2 = ~m1;
 				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
-				yield parseRM(pref, opcode);
+				yield parseRxMx(pref, opcode);
 			}
 
 				// OP AL,Imm8
@@ -1875,7 +1855,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 								regByte, true, pref.rex().opcodeRegExtension(), pref.hasOperandSizeOverridePrefix()));
 			}
 
-			case LEA_OPCODE -> parseRM(pref, Opcode.LEA);
+			case LEA_OPCODE -> parseRxMx(pref, Opcode.LEA);
 
 			case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("operand size override", b.getPosition());
 			case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("address size override", b.getPosition());
@@ -1935,8 +1915,8 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix);
 	}
 
-	// Parses an instruction like OP Indirect,RXX
-	private Instruction parseMR(final Prefixes pref, final Opcode opcode) {
+	/** Parses an instruction like OP IndirectXX,RXX (where XX can be 16, 32 or 64) */
+	private Instruction parseMxRx(final Prefixes pref, final Opcode opcode) {
 		final ModRM modrm = modrm();
 		final Register r2 = Registers.fromCode(
 				modrm.reg(),
@@ -1957,8 +1937,8 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 				r2);
 	}
 
-	// Parses an instruction like OP RXX,Indirect
-	private Instruction parseRM(final Prefixes pref, final Opcode opcode) {
+	/** Parses an instruction like OP RXX,IndirectXX (where XX can be 16, 32 or 64) */
+	private Instruction parseRxMx(final Prefixes pref, final Opcode opcode) {
 		final ModRM modrm = modrm();
 		final boolean isIndirectOperandNeeded = isIndirectOperandNeeded(modrm);
 		final Register r1 = Registers.fromCode(
@@ -2070,16 +2050,6 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		return iob;
 	}
 
-	private boolean isExtendedOpcode(final byte opcode) {
-		/*
-		 * The extended opcodes are 0x80, 0x81, 0x82, 0x83.
-		 * So the mask to be used is 0xfc (11111100).
-		 */
-		final byte extendedOpcodeMask = (byte) 0b11111100;
-		final byte expectedBits = (byte) 0b10000000;
-		return BitUtils.and(opcode, extendedOpcodeMask) == expectedBits;
-	}
-
 	private ModRM modrm() {
 		final byte m = b.read1();
 		return new ModRM(m);
@@ -2144,10 +2114,6 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		return prefix == ADDRESS_SIZE_OVERRIDE_PREFIX;
 	}
 
-	private boolean isMultibyteOpcode(final byte opcode) {
-		return opcode == MULTIBYTE_OPCODE_PREFIX;
-	}
-
 	@Override
 	public String toString() {
 		return "InstructionDecoderV1(b=" + b + ")";
@@ -2168,10 +2134,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof InstructionDecoderV1 id)) {
 			return false;
 		}
-		final InstructionDecoderV1 id = (InstructionDecoderV1) other;
 		return this.b.equals(id.b);
 	}
 }

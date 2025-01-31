@@ -20,6 +20,10 @@
 # No-op
 nop | 90
 #
+nop ax  | 66 0f 1f c0
+nop eax | 0f 1f c0
+nop rax | 48 0f 1f c0
+#
 nop DWORD PTR [eax]                    | 67 0f 1f 00
 nop DWORD PTR [rax]                    | 0f 1f 00
 nop DWORD PTR [rbx+r12*4+0x12345678]   | 42 0f 1f 84 a3 78 56 34 12
@@ -230,20 +234,30 @@ cmp WORD PTR [r13+rcx*2+0x12],0x0077           | 66 41 83 7c 4d 12 77
 cmp WORD PTR [r13+rcx*2+0x12],0x7788           | 66 41 81 7c 4d 12 88 77
 cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef      | 66 41 81 bc 89 78 56 34 12 ef be
 cmp WORD PTR [rdi],0x7788                      | 66 81 3f 88 77
-cmp al,0x99                                    | 3c 99
-cmp al,dh                                      | 38 f0
-cmp cx,0x1234                                  | 66 81 f9 34 12
-cmp dh,0x99                                    | 80 fe 99
-cmp eax,0x12345678                             | 3d 78 56 34 12
-cmp ebp,DWORD PTR [rbx+r9*4+0x12345678]        | 42 3b ac 8b 78 56 34 12
-cmp edi,0x12345678                             | 81 ff 78 56 34 12
-cmp esp,r13d                                   | 44 39 ec
-cmp r8b,0x12                                   | 41 80 f8 12
-cmp r8w,dx                                     | 66 41 39 d0
-cmp rax,0x0000000012345678                     | 48 3d 78 56 34 12
-cmp rdi,0x0000000012345678                     | 48 81 ff 78 56 34 12
-cmp rsp,r8                                     | 4c 39 c4
-cmp sp,r13w                                    | 66 44 39 ec
+#
+cmp dh,BYTE PTR [eax]                   | 67 3a 30
+cmp dh,BYTE PTR [rax]                   | 3a 30
+cmp dx,WORD PTR [eax]                   | 67 66 3b 10
+cmp dx,WORD PTR [rax]                   | 66 3b 10
+cmp ebp,DWORD PTR [rbx+r9*4+0x12345678] | 42 3b ac 8b 78 56 34 12
+cmp edx,DWORD PTR [eax]                 | 67 3b 10
+cmp edx,DWORD PTR [rax]                 | 3b 10
+cmp rdx,QWORD PTR [eax]                 | 67 48 3b 10
+cmp rdx,QWORD PTR [rax]                 | 48 3b 10
+#
+cmp al,0x99                | 3c 99
+cmp al,dh                  | 38 f0
+cmp cx,0x1234              | 66 81 f9 34 12
+cmp dh,0x99                | 80 fe 99
+cmp eax,0x12345678         | 3d 78 56 34 12
+cmp edi,0x12345678         | 81 ff 78 56 34 12
+cmp esp,r13d               | 44 39 ec
+cmp r8b,0x12               | 41 80 f8 12
+cmp r8w,dx                 | 66 41 39 d0
+cmp rax,0x0000000012345678 | 48 3d 78 56 34 12
+cmp rdi,0x0000000012345678 | 48 81 ff 78 56 34 12
+cmp rsp,r8                 | 4c 39 c4
+cmp sp,r13w                | 66 44 39 ec
 
 # Lea
 lea ax,[ebx+ecx*4+0x12345678]   | 67 66 8d 84 8b 78 56 34 12
