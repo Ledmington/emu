@@ -53,7 +53,7 @@ public interface WriteOnlyByteBuffer {
 	 *
 	 * @param bytes The byte array to be written.
 	 */
-	void write(byte[] bytes);
+	void write(byte... bytes);
 
 	/**
 	 * Writes the array of ints, each with the current endianness, at the current position. It is equivalent to call

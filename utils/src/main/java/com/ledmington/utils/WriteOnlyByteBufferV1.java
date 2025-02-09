@@ -195,7 +195,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	}
 
 	@Override
-	public void write(final byte[] arr) {
+	public void write(final byte... arr) {
 		ensureSize(size + arr.length);
 		for (final byte b : arr) {
 			writeDirect(b);

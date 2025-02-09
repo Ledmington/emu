@@ -196,7 +196,7 @@ public final class ELFLoader {
 			}
 		} else {
 			// Can we just execute everything in .init?
-			logger.debug("Ignoring contents of .init (for now)");
+			logger.warning("Ignoring contents of .init (for now)");
 			// runFrom(cpu, sectionStart);
 		}
 	}
@@ -235,7 +235,7 @@ public final class ELFLoader {
 		highestAddress = (highestAddress + 0xf) & (~0xf);
 
 		logger.debug(
-				"Setting stack size to %,d bytes (%.3f MB) at 0x%x-0x%x",
+				"Setting stack size to %,d bytes (%.3f MB) at 0x%016x-0x%016x",
 				stackSize, stackSize / 1_000_000.0, highestAddress, highestAddress + stackSize - 1L);
 		mem.setPermissions(highestAddress, highestAddress + stackSize - 1L, true, true, false);
 		return highestAddress;
