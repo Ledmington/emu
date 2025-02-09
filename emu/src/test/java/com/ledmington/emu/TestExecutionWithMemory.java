@@ -26,16 +26,21 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.RelativeOffset;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
@@ -139,5 +144,165 @@ final class TestExecutionWithMemory {
 				expected,
 				cpu.getRegisters(),
 				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@Test
+	void push() {
+		final long base = rng.nextLong();
+		mem.setPermissions(base - 8L, base, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		mem.write(base - 8L, 0L);
+		final long val = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(val)));
+
+		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+
+		final long newRSP = base - 8L;
+		assertEquals(
+				newRSP,
+				cpu.getRegisters().get(Register64.RSP),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						newRSP, cpu.getRegisters().get(Register64.RSP)));
+		assertEquals(
+				val,
+				mem.read8(newRSP),
+				() -> String.format("Expected 0x%016x but was 0x%016x.", val, mem.read8(newRSP)));
+	}
+
+	@Test
+	void pop() {
+		final long base = rng.nextLong();
+		mem.setPermissions(base, base + 7L, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		final long val = rng.nextLong();
+		mem.write(base, val);
+
+		cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+
+		final long newRSP = base + 8L;
+		assertEquals(
+				val,
+				cpu.getRegisters().get(Register64.RAX),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						val, cpu.getRegisters().get(Register64.RAX)));
+		assertEquals(
+				newRSP,
+				cpu.getRegisters().get(Register64.RSP),
+				() -> String.format(
+						"Expected 0x%016x but was 0x%016x.",
+						newRSP, cpu.getRegisters().get(Register64.RSP)));
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9})
+	void pushAndPop(final int n) {
+
+		// Init random values
+		final long[] values = new long[n];
+		for (int i = 0; i < n; i++) {
+			values[i] = rng.nextLong();
+		}
+
+		// Setup stack at random location
+		final long base = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+
+		// Doing n pushes of random values
+		for (int i = 0; i < n; i++) {
+			// Set memory to readable and writable
+			mem.setPermissions(base - 8L * (i + 1), base - 8L * i, true, true, false);
+
+			// mov RAX,val
+			cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(values[i])));
+
+			final int finalI = i;
+
+			// Before each push, RSP must be equal to the old base
+			assertEquals(
+					base - 8L * i,
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"Before %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
+
+			// push RAX
+			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+
+			// After each push, RSP must be equal to the new base
+			assertEquals(
+					base - 8L * (i + 1),
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"After %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
+		}
+
+		// Doing n pops (in reverse) checking the random values
+		for (int i = n - 1; i >= 0; i--) {
+			final int finalI = i;
+
+			// Before each pop, RSP must be equal to the new base
+			assertEquals(
+					base - 8L * (i + 1),
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"Before %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
+
+			// pop RAX
+			cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+
+			// After each pop, RSP must be equal to the old base
+			assertEquals(
+					base - 8L * i,
+					cpu.getRegisters().get(Register64.RSP),
+					() -> String.format(
+							"After %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
+							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
+
+			assertEquals(
+					values[i],
+					cpu.getRegisters().get(Register64.RAX),
+					() -> String.format(
+							"After %,d-th POP, expected RAX to be 0x%016x but was 0x%016x.",
+							finalI, values[finalI], cpu.getRegisters().get(Register64.RAX)));
+		}
+
+		// At the end RSP must be equal to the initial base value
+		assertEquals(
+				base,
+				cpu.getRegisters().get(Register64.RSP),
+				() -> String.format(
+						"At the end, expectedRSP to be 0x%016x but was 0x%016x.",
+						base, cpu.getRegisters().get(Register64.RSP)));
+	}
+
+	@Test
+	void callAndReturn() {
+		// Write an empty function somewhere in memory (only RET instruction)
+		final long functionAddress = rng.nextLong();
+		mem.setPermissions(functionAddress, functionAddress, false, false, true);
+		mem.initialize(functionAddress, InstructionEncoder.encode(new Instruction(Opcode.RET)));
+
+		// Setup stack at random location
+		final long stackBase = rng.nextLong();
+		mem.setPermissions(stackBase - 8L, stackBase, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackBase)));
+
+		// Setup RIP at random location
+		final long rip = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(rip)));
+
+		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
+		mem.initialize(
+				rip,
+				InstructionEncoder.encode(
+						new Instruction(Opcode.CALL, RelativeOffset.of(BitUtils.asInt(functionAddress - rip))),
+						new Instruction(Opcode.HLT)));
+
+		// Start the CPU
+		cpu.execute();
 	}
 }

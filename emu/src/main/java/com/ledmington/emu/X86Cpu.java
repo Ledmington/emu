@@ -297,8 +297,6 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case CMP -> {
-				logger.debug("RDI   = 0x%016x", rf.get(Register64.RDI));
-				logger.debug("RDI-8 = 0x%016x", rf.get(Register64.RDI) - 8L);
 				final long address = computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand());
 				final long a = mem.read8(address);
 				final long b = ((Immediate) inst.secondOperand()).asLong();
@@ -321,6 +319,11 @@ public class X86Cpu implements X86Emulator {
 			}
 			case JE -> {
 				if (rf.isSet(RFlags.ZERO)) {
+					instFetch.setPosition(instFetch.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
+				}
+			}
+			case JNE -> {
+				if (!rf.isSet(RFlags.ZERO)) {
 					instFetch.setPosition(instFetch.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
 				}
 			}
@@ -359,7 +362,7 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case MOVSXD -> {
-				final long x = rf.get((Register32) inst.secondOperand());
+				final int x = rf.get((Register32) inst.secondOperand());
 				rf.set((Register64) inst.firstOperand(), x);
 			}
 			case PUSH -> {
@@ -385,10 +388,18 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RSP, rsp + 8L);
 			}
 			case LEA -> {
-				final Register64 dest = (Register64) inst.firstOperand();
 				final IndirectOperand src = (IndirectOperand) inst.secondOperand();
-				final long result = computeIndirectOperand(rf, src);
-				rf.set(dest, result);
+				if (inst.firstOperand() instanceof Register64 dest) {
+					final long address = computeIndirectOperand(rf, src);
+					rf.set(dest, address);
+				} else if (inst.firstOperand() instanceof Register32 dest) {
+					final int address = BitUtils.asInt(computeIndirectOperand(rf, src));
+					rf.set(dest, address);
+				} else {
+					final Register16 dest = (Register16) inst.firstOperand();
+					final short address = BitUtils.asShort(computeIndirectOperand(rf, src));
+					rf.set(dest, address);
+				}
 			}
 			case CALL -> {
 				// This points to the instruction right next to 'CALL ...'
@@ -402,14 +413,7 @@ public class X86Cpu implements X86Emulator {
 				mem.write(newStackPointer, rip);
 
 				// TODO: check this (should modify stack pointers)
-				final long relativeAddress =
-						switch (inst.firstOperand()) {
-							case IndirectOperand iop -> computeIndirectOperand(rf, iop);
-							case Register64 r64 -> rf.get(r64);
-							case RelativeOffset ro -> ro.getValue();
-							default -> throw new IllegalArgumentException(
-									String.format("Don't know what to do with '%s'.", inst.firstOperand()));
-						};
+				final long relativeAddress = ((RelativeOffset) inst.firstOperand()).getValue();
 
 				rf.set(Register64.RIP, rip + relativeAddress);
 			}
@@ -434,9 +438,18 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
-	private long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
-		return ((io.base() == null) ? 0L : rf.get((Register64) io.base()))
-				+ ((io.index() == null) ? 0L : rf.get((Register64) io.index())) * io.scale()
+	public static long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
+		return ((io.base() == null)
+						? 0L
+						: (io.base() instanceof Register64
+								? rf.get((Register64) io.base())
+								: rf.get((Register32) io.base())))
+				+ ((io.index() == null)
+								? 0L
+								: (io.index() instanceof Register64
+										? rf.get((Register64) io.index())
+										: rf.get((Register32) io.index())))
+						* io.scale()
 				+ io.getDisplacement();
 	}
 

@@ -20,35 +20,100 @@ package com.ledmington.emu;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
-import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.IndirectOperand;
+import com.ledmington.cpu.x86.IndirectOperandBuilder;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
+import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.MemoryInitializer;
-import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
 
 final class TestExecution {
 
 	private static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+	private static final List<Register8> r8 = Arrays.asList(Register8.values());
+	private static final List<Register16> r16 = Arrays.asList(Register16.values());
+	private static final List<Register32> r32 = Arrays.asList(Register32.values());
+	private static final List<Register64> r64 = Arrays.asList(Register64.values());
+	private static final List<Arguments> r8r8 =
+			r8.stream().flatMap(a -> r8.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<Arguments> r16r16 =
+			r16.stream().flatMap(a -> r16.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<Arguments> r32r32 =
+			r32.stream().flatMap(a -> r32.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<Arguments> r64r64 =
+			r64.stream().flatMap(a -> r64.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<Arguments> r64r32 =
+			r64.stream().flatMap(a -> r32.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<Supplier<IndirectOperandBuilder>> indirectOperands = List.of(
+			() -> IndirectOperand.builder().index(Register32.EAX),
+			() -> IndirectOperand.builder().index(Register64.RAX),
+			() -> IndirectOperand.builder().index(Register32.EAX).constant(2),
+			() -> IndirectOperand.builder().index(Register64.RAX).constant(2),
+			() -> IndirectOperand.builder().index(Register32.EAX).constant(4),
+			() -> IndirectOperand.builder().index(Register64.RAX).constant(4),
+			() -> IndirectOperand.builder().index(Register32.EAX).constant(8),
+			() -> IndirectOperand.builder().index(Register64.RAX).constant(8),
+			//
+			() -> IndirectOperand.builder().base(Register32.EBX).index(Register32.EAX),
+			() -> IndirectOperand.builder().base(Register64.RBX).index(Register64.RAX),
+			() -> IndirectOperand.builder()
+					.base(Register32.EBX)
+					.index(Register32.EAX)
+					.constant(2),
+			() -> IndirectOperand.builder()
+					.base(Register64.RBX)
+					.index(Register64.RAX)
+					.constant(2),
+			() -> IndirectOperand.builder()
+					.base(Register32.EBX)
+					.index(Register32.EAX)
+					.constant(4),
+			() -> IndirectOperand.builder()
+					.base(Register64.RBX)
+					.index(Register64.RAX)
+					.constant(4),
+			() -> IndirectOperand.builder()
+					.base(Register32.EBX)
+					.index(Register32.EAX)
+					.constant(8),
+			() -> IndirectOperand.builder()
+					.base(Register64.RBX)
+					.index(Register64.RAX)
+					.constant(8));
+	private static final List<Arguments> r16m16 = r16.stream()
+			.flatMap(a -> indirectOperands.stream()
+					.map(b -> Arguments.of(
+							a, b.get().pointer(PointerSize.WORD_PTR).build())))
+			.toList();
+	private static final List<Arguments> r32m32 = r32.stream()
+			.flatMap(a -> indirectOperands.stream()
+					.map(b -> Arguments.of(
+							a, b.get().pointer(PointerSize.DWORD_PTR).build())))
+			.toList();
+	private static final List<Arguments> r64m64 = r64.stream()
+			.flatMap(a -> indirectOperands.stream()
+					.map(b -> Arguments.of(
+							a, b.get().pointer(PointerSize.QWORD_PTR).build())))
+			.toList();
 	private X86Cpu cpu = null;
 
 	@BeforeEach
@@ -91,23 +156,35 @@ final class TestExecution {
 	}
 
 	private static Stream<Arguments> pairs64() {
-		return Arrays.stream(Register64.values())
-				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
+		return r64r64.stream();
 	}
 
 	private static Stream<Arguments> pairs32() {
-		return Arrays.stream(Register32.values())
-				.flatMap(r -> Arrays.stream(Register32.values()).map(x -> Arguments.of(r, x)));
+		return r32r32.stream();
 	}
 
 	private static Stream<Arguments> pairs16() {
-		return Arrays.stream(Register16.values())
-				.flatMap(r -> Arrays.stream(Register16.values()).map(x -> Arguments.of(r, x)));
+		return r16r16.stream();
 	}
 
 	private static Stream<Arguments> pairs8() {
-		return Arrays.stream(Register8.values())
-				.flatMap(r -> Arrays.stream(Register8.values()).map(x -> Arguments.of(r, x)));
+		return r8r8.stream();
+	}
+
+	private static Stream<Arguments> r64r32() {
+		return r64r32.stream();
+	}
+
+	private static Stream<Arguments> r16m16() {
+		return r16m16.stream();
+	}
+
+	private static Stream<Arguments> r32m32() {
+		return r32m32.stream();
+	}
+
+	private static Stream<Arguments> r64m64() {
+		return r64m64.stream();
 	}
 
 	@ParameterizedTest
@@ -134,7 +211,7 @@ final class TestExecution {
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		final int result = oldValue1 + oldValue2;
 		expected.set(a, result);
-		expected.set(RFlags.ZERO, result == 0L);
+		expected.set(RFlags.ZERO, result == 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -418,148 +495,55 @@ final class TestExecution {
 				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
-	@Test
-	void push() {
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		final X86Cpu cpu = new X86Cpu(mem);
-		final long base = rng.nextLong();
-		mem.setPermissions(base - 8L, base, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
-		mem.write(base - 8L, 0L);
-		final long val = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(val)));
-
-		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
-
-		final long newRSP = base - 8L;
+	@ParameterizedTest
+	@MethodSource("r64r32")
+	void movsxd(final Register64 r1, final Register32 r2) {
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(r1, oldValue2);
+		cpu.executeOne(new Instruction(Opcode.MOVSXD, r1, r2));
 		assertEquals(
-				newRSP,
-				cpu.getRegisters().get(Register64.RSP),
-				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
-						newRSP, cpu.getRegisters().get(Register64.RSP)));
-		assertEquals(
-				val,
-				mem.read8(newRSP),
-				() -> String.format("Expected 0x%016x but was 0x%016x.", val, mem.read8(newRSP)));
-	}
-
-	@Test
-	void pop() {
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		final X86Cpu cpu = new X86Cpu(mem);
-		final long base = rng.nextLong();
-		mem.setPermissions(base, base + 7L, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
-		final long val = rng.nextLong();
-		mem.write(base, val);
-
-		cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
-
-		final long newRSP = base + 8L;
-		assertEquals(
-				val,
-				cpu.getRegisters().get(Register64.RAX),
-				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
-						val, cpu.getRegisters().get(Register64.RAX)));
-		assertEquals(
-				newRSP,
-				cpu.getRegisters().get(Register64.RSP),
-				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
-						newRSP, cpu.getRegisters().get(Register64.RSP)));
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9})
-	void pushAndPop(final int n) {
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		final X86Cpu cpu = new X86Cpu(mem);
-
-		// Init random values
-		final long[] values = new long[n];
-		for (int i = 0; i < n; i++) {
-			values[i] = rng.nextLong();
-		}
-
-		// Setup stack at random location
-		final long base = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
-
-		// Doing n pushes of random values
-		for (int i = 0; i < n; i++) {
-			// Set memory to readable and writable
-			mem.setPermissions(base - 8L * (i + 1), base - 8L * i, true, true, false);
-
-			// mov RAX,val
-			cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(values[i])));
-
-			final int finalI = i;
-
-			// Before each push, RSP must be equal to the old base
-			assertEquals(
-					base - 8L * i,
-					cpu.getRegisters().get(Register64.RSP),
-					() -> String.format(
-							"Before %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
-
-			// push RAX
-			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
-
-			// After each push, RSP must be equal to the new base
-			assertEquals(
-					base - 8L * (i + 1),
-					cpu.getRegisters().get(Register64.RSP),
-					() -> String.format(
-							"After %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
-		}
-
-		// Doing n pops (in reverse) checking the random values
-		for (int i = n - 1; i >= 0; i--) {
-			final int finalI = i;
-
-			// Before each pop, RSP must be equal to the new base
-			assertEquals(
-					base - 8L * (i + 1),
-					cpu.getRegisters().get(Register64.RSP),
-					() -> String.format(
-							"Before %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
-
-			// pop RAX
-			cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
-
-			System.out.printf("v[%,d] = 0x%016x%n", i, values[i]);
-			System.out.printf("RAX  = 0x%016x%n", cpu.getRegisters().get(Register64.RAX));
-
-			// After each pop, RSP must be equal to the old base
-			assertEquals(
-					base - 8L * i,
-					cpu.getRegisters().get(Register64.RSP),
-					() -> String.format(
-							"After %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
-
-			assertEquals(
-					values[i],
-					cpu.getRegisters().get(Register64.RAX),
-					() -> String.format(
-							"After %,d-th POP, expected RAX to be 0x%016x but was 0x%016x.",
-							finalI, values[finalI], cpu.getRegisters().get(Register64.RAX)));
-		}
-
-		// At the end RSP must be equal to the initial base value
+	@MethodSource("r16m16")
+	void lea16(final Register16 dest, final IndirectOperand src) {
+		final short address = BitUtils.asShort(X86Cpu.computeIndirectOperand((RegisterFile) cpu.getRegisters(), src));
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(dest, address);
+		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
 		assertEquals(
-				base,
-				cpu.getRegisters().get(Register64.RSP),
-				() -> String.format(
-						"At the end, expectedRSP to be 0x%016x but was 0x%016x.",
-						base, cpu.getRegisters().get(Register64.RSP)));
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("r32m32")
+	void lea32(final Register32 dest, final IndirectOperand src) {
+		final int address = BitUtils.asInt(X86Cpu.computeIndirectOperand((RegisterFile) cpu.getRegisters(), src));
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(dest, address);
+		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("r64m64")
+	void lea64(final Register64 dest, final IndirectOperand src) {
+		final long address = X86Cpu.computeIndirectOperand((RegisterFile) cpu.getRegisters(), src);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(dest, address);
+		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 }

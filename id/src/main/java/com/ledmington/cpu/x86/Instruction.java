@@ -52,47 +52,71 @@ public final class Instruction {
 		}
 		this.op3 = thirdOperand;
 
-		if (code == Opcode.MOV) {
-			if (op3 != null) {
-				throw new InvalidInstruction(String.format("%s cannot have 3 operands.", code.name()));
+		switch (code) {
+			case Opcode.MOV -> {
+				if (op3 != null) {
+					throw new InvalidInstruction(String.format("%s cannot have 3 operands.", code.name()));
+				}
+				if (op1 == null || op2 == null) {
+					throw new InvalidInstruction(String.format("%s requires 2 operands.", code.name()));
+				}
+				if (op1 instanceof Immediate) {
+					throw new InvalidInstruction(
+							String.format("Destination operand of %s cannot be an immediate value.", code.name()));
+				}
+				if (op1 instanceof IndirectOperand && op2 instanceof IndirectOperand) {
+					throw new InvalidInstruction(String.format("%s cannot have two indirect operands.", code.name()));
+				}
+				if (op1.bits() != op2.bits()
+						&&
+						// Some instructions allow an implicit sign-extension when the first operand is 64 bits and the
+						// second operand is a 32-bit immediate
+						!(op2 instanceof Immediate imm && imm.bits() == 32 && op1.bits() == 64)) {
+					throw new InvalidInstruction(String.format(
+							"%s cannot have two operands of different sizes: were %,d (%s) and %,d (%s) bits, respectively.",
+							code.name(), op1.bits(), op1, op2.bits(), op2));
+				}
 			}
-			if (op1 == null || op2 == null) {
-				throw new InvalidInstruction(String.format("%s requires 2 operands.", code.name()));
+			case Opcode.MOVSXD -> {
+				if (op3 != null) {
+					throw new InvalidInstruction(String.format("%s cannot have 3 operands.", code.name()));
+				}
+				if (op1 == null || op2 == null) {
+					throw new InvalidInstruction(String.format("%s requires 2 operands.", code.name()));
+				}
+				if (!(op1 instanceof Register64)) {
+					throw new InvalidInstruction(
+							String.format("%s requires destination operand to be a 64-bit register.", code.name()));
+				}
+				if (!(op2 instanceof Register32) && (!(op2 instanceof IndirectOperand io) || io.bits() != 32)) {
+					throw new InvalidInstruction(String.format(
+							"%s requires source operand to be a 32-bit register or a 32-bit indirect operand.",
+							code.name()));
+				}
 			}
-			if (op1 instanceof Immediate) {
-				throw new InvalidInstruction(
-						String.format("Destination operand of %s cannot be an immediate value.", code.name()));
+			case Opcode.NOP -> {
+				if (op2 != null || op3 != null) {
+					throw new InvalidInstruction(String.format("%s cannot have 2 or 3 operands.", code.name()));
+				}
+				if (op1 != null && (op1.bits() == 8 || op1 instanceof Immediate)) {
+					throw new InvalidInstruction(
+							String.format("%s cannot have an 8-bit operand (%s).", code.name(), op1));
+				}
 			}
-			if (op1 instanceof IndirectOperand && op2 instanceof IndirectOperand) {
-				throw new InvalidInstruction(String.format("%s cannot have two indirect operands.", code.name()));
+			case Opcode.LEA -> {
+				if (op1 == null || op2 == null || op3 != null) {
+					throw new InvalidInstruction(String.format("%s requires 2 operands.", code.name()));
+				}
+				if (!(op1 instanceof Register) || op1.bits() == 8) {
+					throw new InvalidInstruction(
+							String.format("%s requires a not 8-bit destination register (%s).", code.name(), op1));
+				}
+				if (!(op2 instanceof IndirectOperand)) {
+					throw new InvalidInstruction(
+							String.format("%s requires an indirect operand (%s).", code.name(), op2));
+				}
 			}
-			if (op1.bits() != op2.bits()
-					&&
-					// Some instructions allow an implicit sign-extension when the first operand is 64 bits and the
-					// second operand is a 32-bit immediate
-					!(op2 instanceof Immediate imm && imm.bits() == 32 && op1.bits() == 64)) {
-				throw new InvalidInstruction(String.format(
-						"%s cannot have two operands of different sizes: were %,d (%s) and %,d (%s) bits, respectively.",
-						code.name(), op1.bits(), op1, op2.bits(), op2));
-			}
-		} else if (code == Opcode.NOP) {
-			if (op2 != null || op3 != null) {
-				throw new InvalidInstruction(String.format("%s cannot have 2 or 3 operands.", code.name()));
-			}
-			if (op1 != null && (op1.bits() == 8 || op1 instanceof Immediate)) {
-				throw new InvalidInstruction(String.format("%s cannot have an 8-bit operand (%s).", code.name(), op1));
-			}
-		} else if (code == Opcode.LEA) {
-			if (op1 == null || op2 == null || op3 != null) {
-				throw new InvalidInstruction(String.format("%s requires 2 operands.", code.name()));
-			}
-			if (!(op1 instanceof Register) || op1.bits() == 8) {
-				throw new InvalidInstruction(
-						String.format("%s requires a not 8-bit destination register (%s).", code.name(), op1));
-			}
-			if (!(op2 instanceof IndirectOperand)) {
-				throw new InvalidInstruction(String.format("%s requires an indirect operand (%s).", code.name(), op2));
-			}
+			default -> {}
 		}
 	}
 
