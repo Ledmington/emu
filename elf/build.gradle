@@ -1,7 +1,7 @@
 plugins {
 	id 'java-library'
 	id 'info.solidsoft.pitest' version '1.15.0'
-	id 'me.champeau.jmh' version '0.7.2'
+	id 'me.champeau.jmh' version '0.7.3'
 }
 
 dependencies {
@@ -11,7 +11,7 @@ dependencies {
 pitest {
 	targetClasses.set(['com.ledmington.elf.*'])
 	targetTests.set(['com.ledmington.elf.*'])
-	pitestVersion = '1.17.4'
+	pitestVersion = '1.18.0'
 	junit5PluginVersion = '1.2.1'
 	threads = 4
 	outputFormats.set(['XML', 'HTML'])
