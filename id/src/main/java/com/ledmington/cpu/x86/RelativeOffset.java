@@ -58,7 +58,8 @@ public final class RelativeOffset implements Operand {
 
 	@Override
 	public int bits() {
-		return 64;
+		throw new Error("TODO: implement size of relative offset.");
+		// return 64;
 	}
 
 	/**

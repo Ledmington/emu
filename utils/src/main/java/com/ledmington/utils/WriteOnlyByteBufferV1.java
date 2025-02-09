@@ -278,10 +278,9 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 		if (this == other) {
 			return false;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof WriteOnlyByteBufferV1 wobb)) {
 			return false;
 		}
-		final WriteOnlyByteBufferV1 wobb = (WriteOnlyByteBufferV1) other;
 		return Arrays.equals(this.v, wobb.v)
 				&& this.isLittleEndian == wobb.isLittleEndian
 				&& this.size == wobb.size

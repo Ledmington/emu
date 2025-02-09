@@ -35,7 +35,7 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public sealed class X64Test permits TestDecoding, TestIncompleteInstruction {
+public sealed class X64Test permits TestDecoding, TestEncoding, TestIncompleteInstruction {
 
 	private static final String testInputFileName = "x64.test.asm";
 	private static List<Arguments> args;
