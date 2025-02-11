@@ -22,48 +22,48 @@ import java.util.Arrays;
 /** A ByteBuffer which allows only write operations. */
 public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 
-	private static final int DEFAULT_SIZE = 16;
+	private static final int DEFAULT_CAPACITY = 16;
 
-	private byte[] v;
 	private final boolean isLittleEndian;
-	private int i;
-	private int size;
+	private byte[] v;
+	private int position = 0;
+	private int size = 0;
 
 	/**
-	 * Creates an empty WriteOnlyByteBuffer with the given length and the given endianness.
+	 * Creates an empty WriteOnlyByteBuffer with the given capacity and the given endianness.
 	 *
-	 * @param length The length of the underlying array.
+	 * @param capacity The initial capacity of the underlying array.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 */
-	public WriteOnlyByteBufferV1(final int length, final boolean isLittleEndian) {
-		this.v = new byte[length];
+	public WriteOnlyByteBufferV1(final int capacity, final boolean isLittleEndian) {
+		this.v = new byte[capacity];
 		this.isLittleEndian = isLittleEndian;
 	}
 
 	/**
-	 * Creates a big-endian WriteOnlyByteBuffer with the given length. It is equivalent to calling {@code new
-	 * WriteOnlyByteBuffer(length, false)}.
+	 * Creates a big-endian WriteOnlyByteBuffer with the given capacity. It is equivalent to calling {@code new
+	 * WriteOnlyByteBuffer(capacity, false)}.
 	 *
-	 * @param length The length of the underlying array.
+	 * @param capacity The initial capacity of the underlying array.
 	 */
-	public WriteOnlyByteBufferV1(final int length) {
-		this(length, false);
+	public WriteOnlyByteBufferV1(final int capacity) {
+		this(capacity, false);
 	}
 
-	/** Creates a big-endian WriteOnlyByteBuffer with a default length. */
+	/** Creates a big-endian WriteOnlyByteBuffer with a default capacity. */
 	public WriteOnlyByteBufferV1() {
-		this(DEFAULT_SIZE, false);
+		this(DEFAULT_CAPACITY, false);
 	}
 
-	private void ensureSize(final int newSize) {
-		if (v.length >= newSize) {
+	private void ensureCapacity(final int newCapacity) {
+		if (v.length >= newCapacity) {
 			return;
 		}
 		byte[] v2;
 		try {
-			v2 = new byte[Integer.highestOneBit(newSize) << 1];
+			v2 = new byte[Integer.highestOneBit(newCapacity) << 1];
 		} catch (final OutOfMemoryError oome) {
-			v2 = new byte[newSize];
+			v2 = new byte[newCapacity];
 		}
 
 		System.arraycopy(v, 0, v2, 0, v.length);
@@ -72,20 +72,29 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 
 	@Override
 	public void setPosition(final int newPosition) {
-		ensureSize(newPosition);
-		if (newPosition > size) {
-			size = newPosition;
-		}
-		i = newPosition;
+		ensureCapacity(newPosition);
+		size = Math.max(size, newPosition);
+		position = newPosition;
 	}
 
 	@Override
 	public int getPosition() {
-		return i;
+		return position;
+	}
+
+	@Override
+	public int getSize() {
+		return size;
+	}
+
+	@Override
+	public int getCapacity() {
+		return v.length;
 	}
 
 	private void writeDirect(final byte x) {
-		v[i++] = x;
+		v[position] = x;
+		setPosition(position + 1);
 	}
 
 	/**
@@ -95,9 +104,8 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	 */
 	@Override
 	public void write(final byte x) {
-		ensureSize(size + 1);
+		ensureCapacity(position + 1);
 		writeDirect(x);
-		size++;
 	}
 
 	/**
@@ -107,13 +115,12 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	 */
 	@Override
 	public void write(final short x) {
-		ensureSize(size + 2);
+		ensureCapacity(position + 2);
 		if (isLittleEndian) {
 			writeLE(x);
 		} else {
 			writeBE(x);
 		}
-		size += 2;
 	}
 
 	private void writeLE(final short x) {
@@ -133,13 +140,12 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	 */
 	@Override
 	public void write(final int x) {
-		ensureSize(size + 4);
+		ensureCapacity(position + 4);
 		if (isLittleEndian) {
 			writeLE(x);
 		} else {
 			writeBE(x);
 		}
-		size += 4;
 	}
 
 	private void writeLE(final int x) {
@@ -163,13 +169,12 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	 */
 	@Override
 	public void write(final long x) {
-		ensureSize(size + 8);
+		ensureCapacity(position + 8);
 		if (isLittleEndian) {
 			writeLE(x);
 		} else {
 			writeBE(x);
 		}
-		size += 8;
 	}
 
 	private void writeLE(final long x) {
@@ -196,11 +201,10 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 
 	@Override
 	public void write(final byte... arr) {
-		ensureSize(size + arr.length);
+		ensureCapacity(size + arr.length);
 		for (final byte b : arr) {
 			writeDirect(b);
 		}
-		size += arr.length;
 	}
 
 	/**
@@ -214,7 +218,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	 */
 	@Override
 	public void write(final int... arr) {
-		ensureSize(size + 4 * arr.length);
+		ensureCapacity(size + 4 * arr.length);
 		if (isLittleEndian) {
 			for (final int x : arr) {
 				writeLE(x);
@@ -224,12 +228,11 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 				writeBE(x);
 			}
 		}
-		size += 4 * arr.length;
 	}
 
 	@Override
 	public void write(final long... arr) {
-		ensureSize(size + 8 * arr.length);
+		ensureCapacity(size + 8 * arr.length);
 		if (isLittleEndian) {
 			for (final long x : arr) {
 				writeLE(x);
@@ -239,7 +242,6 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 				writeBE(x);
 			}
 		}
-		size += 8 * arr.length;
 	}
 
 	/**
@@ -256,8 +258,8 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 
 	@Override
 	public String toString() {
-		return "WriteOnlyByteBufferV1(v=" + Arrays.toString(v) + ";isLE=" + isLittleEndian + ";size=" + size + ";i=" + i
-				+ ")";
+		return "WriteOnlyByteBufferV1(v=" + Arrays.toString(v) + ";isLE=" + isLittleEndian + ";size=" + size + ";i="
+				+ position + ")";
 	}
 
 	@Override
@@ -266,7 +268,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 		h = 31 * h + Arrays.hashCode(v);
 		h = 31 * h + HashUtils.hash(isLittleEndian);
 		h = 31 * h + size;
-		h = 31 * h + i;
+		h = 31 * h + position;
 		return h;
 	}
 
@@ -284,6 +286,6 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 		return Arrays.equals(this.v, wobb.v)
 				&& this.isLittleEndian == wobb.isLittleEndian
 				&& this.size == wobb.size
-				&& this.i == wobb.i;
+				&& this.position == wobb.position;
 	}
 }

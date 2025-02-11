@@ -91,4 +91,8 @@ public interface WriteOnlyByteBuffer {
 	 * @param newPosition The new position in the buffer.
 	 */
 	void setPosition(int newPosition);
+
+	int getSize();
+
+	int getCapacity();
 }
