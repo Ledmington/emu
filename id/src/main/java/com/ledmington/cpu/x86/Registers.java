@@ -55,5 +55,24 @@ public final class Registers {
 						: Register32.fromByte(combine(extension, registerCode));
 	}
 
+	public static byte toByte(final Register r) {
+		return switch (r) {
+			case Register8 r8 -> Register8.toByte(r8);
+			case Register16 r16 -> Register16.toByte(r16);
+			case Register32 r32 -> Register32.toByte(r32);
+			case Register64 r64 -> Register64.toByte(r64);
+			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
+		};
+	}
+
+	public static boolean requiresExtension(final Register r) {
+		return switch (r) {
+			case Register16 r16 -> Register16.requiresExtension(r16);
+			case Register32 r32 -> Register32.requiresExtension(r32);
+			case Register64 r64 -> Register64.requiresExtension(r64);
+			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
+		};
+	}
+
 	private Registers() {}
 }

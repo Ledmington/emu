@@ -201,6 +201,10 @@ public final class Instruction {
 		return op1;
 	}
 
+	public boolean hasFirstOperand() {
+		return op1 != null;
+	}
+
 	/**
 	 * Returns the second operand of this Instruction.
 	 *
@@ -212,6 +216,10 @@ public final class Instruction {
 			throw new IllegalArgumentException("No second operand");
 		}
 		return op2;
+	}
+
+	public boolean hasSecondOperand() {
+		return op2 != null;
 	}
 
 	/**

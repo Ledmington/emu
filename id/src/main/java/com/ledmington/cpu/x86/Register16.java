@@ -118,7 +118,29 @@ public enum Register16 implements Register {
 			case 0x0d -> R13W;
 			case 0x0e -> R14W;
 			case 0x0f -> R15W;
-			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x", b));
+			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
+		};
+	}
+
+	public static byte toByte(final Register16 r) {
+		return switch (r) {
+			case AX, R8W -> (byte) 0x00;
+			case CX, R9W -> (byte) 0x01;
+			case DX, R10W -> (byte) 0x02;
+			case BX, R11W -> (byte) 0x03;
+			case SP, R12W -> (byte) 0x04;
+			case BP, R13W -> (byte) 0x05;
+			case SI, R14W -> (byte) 0x06;
+			case DI, R15W -> (byte) 0x07;
+			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
+		};
+	}
+
+	public static boolean requiresExtension(final Register16 r) {
+		return switch (r) {
+			case AX, BX, CX, DX, SI, DI, SP, BP -> false;
+			case R8W, R9W, R10W, R11W, R12W, R13W, R14W, R15W -> true;
+			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
 		};
 	}
 

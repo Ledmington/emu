@@ -103,7 +103,29 @@ public enum Register32 implements Register {
 			case 0x0d -> R13D;
 			case 0x0e -> R14D;
 			case 0x0f -> R15D;
-			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x", b));
+			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
+		};
+	}
+
+	public static byte toByte(final Register32 r) {
+		return switch (r) {
+			case EAX, R8D -> (byte) 0x00;
+			case ECX, R9D -> (byte) 0x01;
+			case EDX, R10D -> (byte) 0x02;
+			case EBX, R11D -> (byte) 0x03;
+			case ESP, R12D -> (byte) 0x04;
+			case EBP, R13D -> (byte) 0x05;
+			case ESI, R14D -> (byte) 0x06;
+			case EDI, R15D -> (byte) 0x07;
+			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
+		};
+	}
+
+	public static boolean requiresExtension(final Register32 r) {
+		return switch (r) {
+			case EAX, EBX, ECX, EDX, ESI, EDI, ESP, EBP -> false;
+			case R8D, R9D, R10D, R11D, R12D, R13D, R14D, R15D -> true;
+			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
 		};
 	}
 

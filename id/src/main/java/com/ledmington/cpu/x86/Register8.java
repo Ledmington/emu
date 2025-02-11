@@ -114,7 +114,28 @@ public enum Register8 implements Register {
 			case 0x0d -> R13B;
 			case 0x0e -> R14B;
 			case 0x0f -> R15B;
-			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x", b));
+			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
+		};
+	}
+
+	public static byte toByte(final Register8 r) {
+		return switch (r) {
+			case AL -> (byte) 0x00;
+			case CL -> (byte) 0x01;
+			case DL -> (byte) 0x02;
+			case BL -> (byte) 0x03;
+			case AH, SPL -> (byte) 0x04;
+			case CH, BPL -> (byte) 0x05;
+			case DH, SIL -> (byte) 0x06;
+			case BH, DIL -> (byte) 0x07;
+			case R8B -> (byte) 0x08;
+			case R9B -> (byte) 0x09;
+			case R10B -> (byte) 0x0a;
+			case R11B -> (byte) 0x0b;
+			case R12B -> (byte) 0x0c;
+			case R13B -> (byte) 0x0d;
+			case R14B -> (byte) 0x0e;
+			case R15B -> (byte) 0x0f;
 		};
 	}
 
