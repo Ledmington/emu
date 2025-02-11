@@ -18,18 +18,12 @@
 package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 
 /** This class represents an x86 REX prefix byte, used for extending the operands of an x86 instructions. */
-public final class RexPrefix {
+record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 
 	private static final byte REX_PREFIX_MASK = (byte) 0b11110000;
 	private static final byte REX_PREFIX = (byte) 0b01000000;
-
-	private final boolean wBit;
-	private final boolean rBit;
-	private final boolean xBit;
-	private final boolean bBit;
 
 	/**
 	 * Checks whether the given byte is a valid REX prefix byte.
@@ -46,7 +40,7 @@ public final class RexPrefix {
 	 *
 	 * @param b The byte to be parsed.
 	 */
-	public RexPrefix(final byte b) {
+	public static RexPrefix of(final byte b) {
 		if (!isREXPrefix(b)) {
 			throw new IllegalArgumentException(String.format("Input byte 0x%02x is not a valid REX prefix", b));
 		}
@@ -56,37 +50,20 @@ public final class RexPrefix {
 		final byte REX_x_mask = (byte) 0b00000010;
 		final byte REX_b_mask = (byte) 0b00000001;
 
-		this.wBit = BitUtils.and(b, REX_w_mask) != 0;
-		this.rBit = BitUtils.and(b, REX_r_mask) != 0;
-		this.xBit = BitUtils.and(b, REX_x_mask) != 0;
-		this.bBit = BitUtils.and(b, REX_b_mask) != 0;
+		return new RexPrefix(
+				BitUtils.and(b, REX_w_mask) != 0,
+				BitUtils.and(b, REX_r_mask) != 0,
+				BitUtils.and(b, REX_x_mask) != 0,
+				BitUtils.and(b, REX_b_mask) != 0);
 	}
 
 	/**
 	 * Returns the 'W' bit of this REX prefix.
 	 *
-	 * @return True if the 'R' bit is set, false otherwise.
-	 */
-	public boolean w() {
-		return wBit;
-	}
-
-	/**
-	 * Returns the 'W' bit of this REX prefix.
-	 *
-	 * @return True if the 'R' bit is set, false otherwise.
+	 * @return True if the 'W' bit is set, false otherwise.
 	 */
 	public boolean isOperand64Bit() {
-		return wBit;
-	}
-
-	/**
-	 * Returns the 'R' bit of this REX prefix.
-	 *
-	 * @return True if the 'R' bit is set, false otherwise.
-	 */
-	public boolean r() {
-		return rBit;
+		return w;
 	}
 
 	/**
@@ -95,16 +72,7 @@ public final class RexPrefix {
 	 * @return True if the 'R' bit is set, false otherwise.
 	 */
 	public boolean getModRMRegExtension() {
-		return rBit;
-	}
-
-	/**
-	 * Returns the 'X' bit of this REX prefix.
-	 *
-	 * @return True if the 'X' bit is set, false otherwise.
-	 */
-	public boolean x() {
-		return xBit;
+		return r;
 	}
 
 	/**
@@ -113,16 +81,7 @@ public final class RexPrefix {
 	 * @return True if the 'X' bit is set, false otherwise.
 	 */
 	public boolean SIBIndexExtension() {
-		return xBit;
-	}
-
-	/**
-	 * Returns the 'B' bit of this REX prefix.
-	 *
-	 * @return True if the 'B' bit is set, false otherwise.
-	 */
-	public boolean b() {
-		return bBit;
+		return x;
 	}
 
 	/**
@@ -131,7 +90,7 @@ public final class RexPrefix {
 	 * @return True if the 'B' bit is set, false otherwise.
 	 */
 	public boolean SIBBaseExtension() {
-		return bBit;
+		return b;
 	}
 
 	/**
@@ -140,7 +99,7 @@ public final class RexPrefix {
 	 * @return True if the 'B' bit is set, false otherwise.
 	 */
 	public boolean getModRMRMExtension() {
-		return bBit;
+		return b;
 	}
 
 	/**
@@ -149,36 +108,6 @@ public final class RexPrefix {
 	 * @return True if the 'B' bit is set, false otherwise.
 	 */
 	public boolean opcodeRegExtension() {
-		return bBit;
-	}
-
-	@Override
-	public String toString() {
-		return (wBit ? ".W" : "") + (rBit ? ".R" : "") + (xBit ? ".X" : "") + (bBit ? ".B" : "");
-	}
-
-	@Override
-	public int hashCode() {
-		int h = 17;
-		h = 31 + h + HashUtils.hash(wBit);
-		h = 31 + h + HashUtils.hash(rBit);
-		h = 31 + h + HashUtils.hash(xBit);
-		h = 31 + h + HashUtils.hash(bBit);
-		return h;
-	}
-
-	@Override
-	public boolean equals(final Object other) {
-		if (other == null) {
-			return false;
-		}
-		if (this == other) {
-			return true;
-		}
-		if (!this.getClass().equals(other.getClass())) {
-			return false;
-		}
-		final RexPrefix rex = (RexPrefix) other;
-		return this.wBit == rex.wBit && this.rBit == rex.rBit && this.xBit == rex.xBit && this.bBit == rex.bBit;
+		return b;
 	}
 }

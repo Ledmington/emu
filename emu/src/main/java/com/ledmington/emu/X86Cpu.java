@@ -341,13 +341,7 @@ public class X86Cpu implements X86Emulator {
 					rf.set(op1, rf.get(op2));
 				} else if (inst.firstOperand() instanceof Register64 op1
 						&& inst.secondOperand() instanceof Immediate imm) {
-					rf.set(
-							op1,
-							switch (imm.bits()) {
-								case 32 -> BitUtils.asLong(imm.asInt());
-								case 64 -> imm.asLong();
-								default -> throw new Error("Unreachable.");
-							});
+					rf.set(op1, imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong());
 				} else if (inst.firstOperand() instanceof Register64 op1
 						&& inst.secondOperand() instanceof IndirectOperand iop) {
 					final long address = computeIndirectOperand(rf, iop);
@@ -441,14 +435,14 @@ public class X86Cpu implements X86Emulator {
 	public static long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
 		return ((io.base() == null)
 						? 0L
-						: (io.base() instanceof Register64
+						: io.base() instanceof Register64
 								? rf.get((Register64) io.base())
-								: rf.get((Register32) io.base())))
+								: rf.get((Register32) io.base()))
 				+ ((io.index() == null)
 								? 0L
-								: (io.index() instanceof Register64
+								: io.index() instanceof Register64
 										? rf.get((Register64) io.index())
-										: rf.get((Register32) io.index())))
+										: rf.get((Register32) io.index()))
 						* io.scale()
 				+ io.getDisplacement();
 	}

@@ -198,10 +198,9 @@ public final class SectionHeader {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof SectionHeader sh)) {
 			return false;
 		}
-		final SectionHeader sh = (SectionHeader) other;
 		return this.nameOffset == sh.nameOffset
 				&& this.type.equals(sh.type)
 				&& this.flags.equals(sh.flags)

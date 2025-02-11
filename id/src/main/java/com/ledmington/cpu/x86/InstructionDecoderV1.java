@@ -1906,9 +1906,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 		final RexPrefix rexPrefix;
 		final boolean isREX = RexPrefix.isREXPrefix(rexByte);
 		if (isREX) {
-			rexPrefix = new RexPrefix(rexByte);
+			rexPrefix = RexPrefix.of(rexByte);
 		} else {
-			rexPrefix = new RexPrefix((byte) 0x40);
+			rexPrefix = RexPrefix.of((byte) 0x40);
 			b.setPosition(b.getPosition() - 1);
 		}
 

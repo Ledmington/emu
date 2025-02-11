@@ -52,7 +52,7 @@ final class TestREXPrefix {
 	@ParameterizedTest
 	@MethodSource("wrongPrefixes")
 	void errorOnInvalidREXPrefix(final byte rex) {
-		assertThrows(IllegalArgumentException.class, () -> new RexPrefix(rex));
+		assertThrows(IllegalArgumentException.class, () -> RexPrefix.of(rex));
 	}
 
 	private static Stream<Arguments> correctPrefixes() {
@@ -80,7 +80,7 @@ final class TestREXPrefix {
 	@ParameterizedTest
 	@MethodSource("correctPrefixes")
 	void correct(final boolean w, final boolean r, final boolean x, final boolean b, final byte rex) {
-		final RexPrefix rp = new RexPrefix(rex);
+		final RexPrefix rp = RexPrefix.of(rex);
 		final String expected = (w ? "W" : "") + (r ? "R" : "") + (x ? "X" : "") + (b ? "B" : "");
 		final String actual = (rp.w() ? "W" : "") + (rp.r() ? "R" : "") + (rp.x() ? "X" : "") + (rp.b() ? "B" : "");
 		assertEquals(

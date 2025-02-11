@@ -66,11 +66,14 @@ public enum NoteSectionEntryType {
 				default -> throw new IllegalArgumentException(
 						String.format("Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
 			};
-			case "stapsdt" -> switch (type) {
-				case 3 -> NT_STAPSDT;
-				default -> throw new IllegalArgumentException(
-						String.format("Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
-			};
+			case "stapsdt" -> {
+				if (type == 3) {
+					yield NT_STAPSDT;
+				} else {
+					throw new IllegalArgumentException(String.format(
+							"Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
+				}
+			}
 			default -> throw new IllegalArgumentException(
 					String.format("Unknown note section entry owner '%s'", owner));
 		};
