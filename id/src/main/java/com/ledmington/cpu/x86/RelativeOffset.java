@@ -17,6 +17,8 @@
  */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 import com.ledmington.utils.HashUtils;
 
 /**
@@ -26,6 +28,7 @@ import com.ledmington.utils.HashUtils;
 public final class RelativeOffset implements Operand {
 
 	private final long value;
+	private final DisplacementType type;
 
 	/**
 	 * Creates a RelativeOffset by sign-extending the given byte.
@@ -34,7 +37,7 @@ public final class RelativeOffset implements Operand {
 	 * @return A sign-extended RelativeOffset.
 	 */
 	public static RelativeOffset of(final byte x) {
-		return new RelativeOffset(x);
+		return new RelativeOffset(x, DisplacementType.BYTE);
 	}
 
 	/**
@@ -44,11 +47,12 @@ public final class RelativeOffset implements Operand {
 	 * @return A sign-extended RelativeOffset.
 	 */
 	public static RelativeOffset of(final int x) {
-		return new RelativeOffset(x);
+		return new RelativeOffset(x, DisplacementType.INT);
 	}
 
-	private RelativeOffset(final long value) {
+	private RelativeOffset(final long value, final DisplacementType type) {
 		this.value = value;
+		this.type = Objects.requireNonNull(type);
 	}
 
 	@Override
@@ -58,8 +62,12 @@ public final class RelativeOffset implements Operand {
 
 	@Override
 	public int bits() {
-		throw new Error("TODO: implement size of relative offset.");
-		// return 64;
+		return switch (type) {
+			case BYTE -> 8;
+			case SHORT -> 16;
+			case INT -> 32;
+			case LONG -> 64;
+		};
 	}
 
 	/**
@@ -73,13 +81,14 @@ public final class RelativeOffset implements Operand {
 
 	@Override
 	public String toString() {
-		return "RelativeOffset(" + value + ")";
+		return "RelativeOffset(value=" + value + ";type=" + type + ")";
 	}
 
 	@Override
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + HashUtils.hash(value);
+		h = 31 * h + type.hashCode();
 		return h;
 	}
 
@@ -94,6 +103,6 @@ public final class RelativeOffset implements Operand {
 		if (!(other instanceof RelativeOffset ro)) {
 			return false;
 		}
-		return this.value == ro.value;
+		return this.value == ro.value && this.type.equals(ro.type);
 	}
 }
