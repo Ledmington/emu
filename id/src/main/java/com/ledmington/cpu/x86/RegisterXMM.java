@@ -104,6 +104,26 @@ public enum RegisterXMM implements Register {
 		};
 	}
 
+	public static byte toByte(final RegisterXMM r) {
+		return switch (r) {
+			case XMM0, XMM8 -> (byte) 0x00;
+			case XMM1, XMM9 -> (byte) 0x01;
+			case XMM2, XMM10 -> (byte) 0x02;
+			case XMM3, XMM11 -> (byte) 0x03;
+			case XMM4, XMM12 -> (byte) 0x04;
+			case XMM5, XMM13 -> (byte) 0x05;
+			case XMM6, XMM14 -> (byte) 0x06;
+			case XMM7, XMM15 -> (byte) 0x07;
+		};
+	}
+
+	public static boolean requiresExtension(final RegisterXMM r) {
+		return switch (r) {
+			case XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7 -> false;
+			case XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15 -> true;
+		};
+	}
+
 	@Override
 	public int bits() {
 		return 128;

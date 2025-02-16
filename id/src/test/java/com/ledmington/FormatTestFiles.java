@@ -130,6 +130,7 @@ public final class FormatTestFiles {
 				tc.add(new TestCase(sp[0].strip(), sp[1].strip()));
 			}
 
+			// Sorting first by mnemonic, then by hexadecimal representation
 			tc.stream()
 					.sorted((a, b) -> a.mnemonic().equals(b.mnemonic())
 							? a.hex().compareTo(b.hex())
