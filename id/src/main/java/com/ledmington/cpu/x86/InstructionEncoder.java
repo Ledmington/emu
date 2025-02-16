@@ -106,12 +106,13 @@ public final class InstructionEncoder {
 				}
 				if (inst.firstOperand().bits() == 16) {
 					wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
-				} else if (inst.firstOperand().bits() == 64) {
-					wb.write((byte) 0x48);
 				}
+				encodeRexPrefix(wb, inst);
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1f);
 				if (inst.firstOperand() instanceof Register) {
 					wb.write(BitUtils.asByte((byte) 0xc0 + Registers.toByte((Register) inst.firstOperand())));
+				} else if (inst.firstOperand() instanceof IndirectOperand) {
+					encodeModRM(wb, inst);
 				}
 			}
 			case Opcode.CALL -> {
@@ -122,8 +123,29 @@ public final class InstructionEncoder {
 					encodeRexPrefix(wb, inst, false);
 					wb.write((byte) 0xff);
 					encodeSingleRegister(wb, r, (byte) 0xd0);
+				} else if (inst.firstOperand() instanceof IndirectOperand io) {
+					if (io.bits() == 32) {
+						wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+					}
+					if (io.index().bits() == 32) {
+						wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
+					}
+					wb.write((byte) 0xff);
+					encodeModRM(wb, inst);
 				}
 			}
+			case Opcode.INC, Opcode.DEC -> {
+				encodeRexPrefix(wb, inst);
+				if (inst.firstOperand() instanceof Register8) {
+					wb.write((byte) 0xfe);
+				} else {
+					wb.write((byte) 0xff);
+				}
+				encodeSingleRegister(
+						wb, (Register) inst.firstOperand(), inst.opcode() == Opcode.DEC ? (byte) 0xc8 : (byte) 0xc0);
+			}
+			case Opcode.NOT -> {}
+			case Opcode.MUL -> {}
 
 				// Conditional jumps
 			case Opcode.JA,
@@ -194,6 +216,22 @@ public final class InstructionEncoder {
 					encodeModRM(wb, inst);
 				}
 			}
+			case Opcode.MOVSXD -> {
+				if (inst.firstOperand() instanceof Register64 r1 && inst.secondOperand() instanceof Register32 r2) {
+					byte rex = (byte) 0x48;
+					if (Register64.requiresExtension(r1)) {
+						rex = BitUtils.or(rex, (byte) 0x04);
+					}
+					if (Register32.requiresExtension(r2)) {
+						rex = BitUtils.or(rex, (byte) 0x01);
+					}
+					wb.write(rex);
+					wb.write((byte) 0x63);
+					wb.write(BitUtils.or(
+							(byte) 0b11000000,
+							BitUtils.or(BitUtils.shl(Register64.toByte(r1), 3), Register32.toByte(r2))));
+				}
+			}
 			case Opcode.PCMPEQD -> {
 				wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 				encodeRexPrefix(wb, inst);
@@ -225,16 +263,18 @@ public final class InstructionEncoder {
 		}
 		if (inst.firstOperand() instanceof Register r1 && Registers.requiresExtension(r1)) {
 			rex = BitUtils.or(rex, (byte) 0b0001);
+		} else if (inst.firstOperand() instanceof IndirectOperand io && Registers.requiresExtension(io.index())) {
+			rex = BitUtils.or(rex, (byte) 0b0010);
 		}
 		if (inst.hasSecondOperand()) {
 			if (inst.secondOperand() instanceof Register r2 && Registers.requiresExtension(r2)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
-			// if (Registers.requiresExtension((Register) inst.secondOperand())) {
-			// 	rex = BitUtils.or(rex, (byte) 0b0001);
-			// }
 		}
-		if (rex != baseRexPrefix) {
+		if (rex != baseRexPrefix
+				|| (inst.hasFirstOperand()
+						&& inst.firstOperand() instanceof Register8 r8
+						&& Register8.requiresRexPrefix(r8))) {
 			wb.write(rex);
 		}
 	}
@@ -247,13 +287,24 @@ public final class InstructionEncoder {
 			// 0b 00|010|110
 			if (io.base() == null && io.index() != null && io.scale() == 1L && io.getDisplacement() == 0L) {
 				// simple indirect operand
-				encodePairOfRegisters(wb, (byte) 0, io.index(), (Register) inst.secondOperand());
+				if (inst.hasSecondOperand()) {
+					encodePairOfRegisters(wb, (byte) 0, io.index(), (Register) inst.secondOperand());
+				} else {
+					encodeSingleRegister(wb, io.index(), (byte) 0);
+				}
 			} else {
 				// generic indirect operand
-				wb.write(
-						// mod=0b10, R/M=0b100
-						BitUtils.or(
-								(byte) 0b10000100, BitUtils.shl(Registers.toByte((Register) inst.secondOperand()), 3)));
+				if (inst.hasSecondOperand()) {
+					wb.write(
+							// mod=0b10, R/M=0b100
+							BitUtils.or(
+									(byte) 0b10000100,
+									BitUtils.shl(Registers.toByte((Register) inst.secondOperand()), 3)));
+				} else {
+					wb.write(
+							// mod=0b10, R/M=0b100
+							(byte) 0b10000100);
+				}
 				encodeSIB(wb, io);
 				wb.write(BitUtils.asInt(io.getDisplacement()));
 			}
@@ -278,6 +329,9 @@ public final class InstructionEncoder {
 
 	private static void encodePairOfRegisters(
 			final WriteOnlyByteBuffer wb, final byte mod, final Register r1, final Register r2) {
+		if (BitUtils.and(mod, (byte) 0b00111111) != (byte) 0) {
+			throw new AssertionError(String.format("Invalid Mod: 0x%02x.", mod));
+		}
 		byte x = mod;
 		x = BitUtils.or(x, BitUtils.shl(Registers.toByte(r2), 3));
 		x = BitUtils.or(x, Registers.toByte(r1));

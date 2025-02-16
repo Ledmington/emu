@@ -139,6 +139,20 @@ public enum Register8 implements Register {
 		};
 	}
 
+	public static boolean requiresExtension(final Register8 r) {
+		return switch (r) {
+			case AL, CL, DL, BL, CH, BPL, AH, SPL, DH, SIL, BH, DIL -> false;
+			case R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B -> true;
+		};
+	}
+
+	public static boolean requiresRexPrefix(final Register8 r) {
+		return switch (r) {
+			case AL, CL, DL, BL, CH, AH, DH, BH, R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B -> false;
+			case BPL, SPL, SIL, DIL -> true;
+		};
+	}
+
 	@Override
 	public int bits() {
 		return 8;
