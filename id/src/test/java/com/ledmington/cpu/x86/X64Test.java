@@ -31,6 +31,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.provider.Arguments;
 
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
@@ -39,6 +40,18 @@ public sealed class X64Test permits TestDecoding, TestEncoding, TestIncompleteIn
 
 	private static final String testInputFileName = "x64.test.asm";
 	private static List<Arguments> args;
+
+	private static List<Byte> stringToHex(final String hexCode) {
+		if (hexCode.isBlank()) {
+			throw new IllegalArgumentException("Empty/blank string.");
+		}
+		final String[] parsed = hexCode.split(" ");
+		final List<Byte> code = new ArrayList<>(parsed.length);
+		for (final String s : parsed) {
+			code.add(BitUtils.asByte(Integer.parseInt(s, 16)));
+		}
+		return code;
+	}
 
 	@BeforeAll
 	static void setup() {
@@ -66,7 +79,7 @@ public sealed class X64Test permits TestDecoding, TestEncoding, TestIncompleteIn
 				}
 				args.add(Arguments.of(
 						line.substring(0, idx - 1).strip(),
-						line.substring(idx + 1).strip()));
+						stringToHex(line.substring(idx + 1).strip())));
 			}
 		} catch (final IOException | URISyntaxException e) {
 			throw new RuntimeException(e);

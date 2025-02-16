@@ -20,7 +20,6 @@ package com.ledmington.cpu.x86;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,49 +29,59 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.ledmington.utils.BitUtils;
-
 final class TestIncompleteInstruction extends X64Test {
 
+	@SuppressWarnings("unchecked")
 	private static Stream<Arguments> incompleteInstructions() {
-		final Set<String> validInstructions =
-				instructions().map(arg -> ((String) arg.get()[1]).strip()).collect(Collectors.toSet());
+		final Set<List<Byte>> validInstructions =
+				instructions().map(arg -> (List<Byte>) arg.get()[1]).collect(Collectors.toSet());
 		return validInstructions.stream()
-				.flatMap(hexCode -> {
-					final String[] splitted = hexCode.split(" ");
-					if (splitted.length == 1) { // NOPMD
+				.flatMap(splitted -> {
+					if (splitted.size() == 1) { // NOPMD
 						return Stream.of();
 					}
 					// for each instruction, we generate all prefixes that do not represent other
 					// valid instructions
-					final List<String> ll = new ArrayList<>();
-					for (int i = 0; i < splitted.length; i++) {
-						ll.add(String.join(" ", Arrays.copyOfRange(splitted, 0, i + 1)));
+					final List<List<Byte>> ll = new ArrayList<>();
+					for (int i = 1; i < splitted.size(); i++) {
+						final List<Byte> tmp = new ArrayList<>(i);
+						for (int j = 0; j < i; j++) {
+							tmp.add(splitted.get(j));
+						}
+						ll.add(tmp);
 					}
 					return ll.stream();
 				})
 				.distinct()
 				// avoid testing valid instructions assuming they're wrong
 				.filter(s -> !validInstructions.contains(s))
-				.sorted()
+				.sorted((a, b) -> {
+					final String sa =
+							a.stream().map(x -> String.format("%02x", x)).collect(Collectors.joining(" "));
+					final String sb =
+							b.stream().map(x -> String.format("%02x", x)).collect(Collectors.joining(" "));
+					return sa.compareTo(sb);
+				})
 				.map(Arguments::of);
+	}
+
+	private static byte[] toByteArray(final List<Byte> b) {
+		final byte[] v = new byte[b.size()];
+		for (int i = 0; i < b.size(); i++) {
+			v[i] = b.get(i);
+		}
+		return v;
 	}
 
 	@ParameterizedTest
 	@MethodSource("incompleteInstructions")
-	void incorrectDecoding(final String hexCode) {
-		final String[] parsed = hexCode.split(" ");
-		final byte[] code = new byte[parsed.length];
-		for (int i = 0; i < parsed.length; i++) {
-			code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
-		}
-
-		final InstructionDecoder id = new InstructionDecoderV1(code);
+	void incorrectDecoding(final List<Byte> code) {
+		final InstructionDecoder id = new InstructionDecoderV1(toByteArray(code));
 
 		// Here we expect an ArrayIndexOutOfBoundsException to be thrown because,
 		// like CPUs which break when requesting a new byte and not finding it,
 		// the InstructionDecoder will ask for more bytes than are available and
 		// the ReadOnlyByteBufferV1 will throw this exception.
-		assertThrows(ArrayIndexOutOfBoundsException.class, () -> id.decodeAll(code.length));
+		assertThrows(ArrayIndexOutOfBoundsException.class, () -> id.decodeAll(code.size()));
 	}
 }

@@ -26,22 +26,22 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.ledmington.utils.BitUtils;
-
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 final class TestDecoding extends X64Test {
 
+	private static byte[] toByteArray(final List<Byte> b) {
+		final byte[] v = new byte[b.size()];
+		for (int i = 0; i < b.size(); i++) {
+			v[i] = b.get(i);
+		}
+		return v;
+	}
+
 	@ParameterizedTest
 	@MethodSource("instructions")
-	void parsing(final String expected, final String hexCode) {
-		final String[] parsed = hexCode.split(" ");
-		final byte[] code = new byte[parsed.length];
-		for (int i = 0; i < parsed.length; i++) {
-			code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
-		}
-
-		final InstructionDecoder id = new InstructionDecoderV1(code);
-		final List<Instruction> instructions = id.decodeAll(code.length);
+	void parsing(final String expected, final List<Byte> code) {
+		final InstructionDecoder id = new InstructionDecoderV1(toByteArray(code));
+		final List<Instruction> instructions = id.decodeAll(code.size());
 		assertNotNull(instructions, "InstructionDecoder returned a null List.");
 		final int codeLen = instructions.size();
 		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found.", codeLen));

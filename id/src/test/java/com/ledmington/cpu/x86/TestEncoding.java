@@ -24,22 +24,30 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.ledmington.utils.BitUtils;
-
 public final class TestEncoding extends X64Test {
-	@ParameterizedTest
-	@MethodSource("instructions")
-	void parsing(final String expected, final String hexCode) {
-		final String[] parsed = hexCode.split(" ");
-		final byte[] code = new byte[parsed.length];
-		for (int i = 0; i < parsed.length; i++) {
-			code[i] = BitUtils.asByte(Integer.parseInt(parsed[i], 16));
-		}
 
+	private static Stream<Arguments> instructionEncodings() {
+		return instructions().map(arg -> Arguments.of(arg.get()[1]));
+	}
+
+	private static byte[] toByteArray(final List<Byte> b) {
+		final byte[] v = new byte[b.size()];
+		for (int i = 0; i < b.size(); i++) {
+			v[i] = b.get(i);
+		}
+		return v;
+	}
+
+	@ParameterizedTest
+	@MethodSource("instructionEncodings")
+	void parsing(final List<Byte> input) {
+		final byte[] code = toByteArray(input);
 		final InstructionDecoder id = new InstructionDecoderV1(code);
 		final List<Instruction> instructions = id.decodeAll(code.length);
 		assertNotNull(instructions, "InstructionDecoder returned a null List.");
@@ -51,7 +59,8 @@ public final class TestEncoding extends X64Test {
 				code,
 				encoded,
 				() -> String.format(
-						"Expected '%s' but was '%s'.",
+						"Expected '%s' to be encoded as '%s' but was '%s'.",
+						inst.toIntelSyntax(),
 						IntStream.range(0, code.length)
 								.mapToObj(i -> String.format("%02x", code[i]))
 								.collect(Collectors.joining(" ")),
