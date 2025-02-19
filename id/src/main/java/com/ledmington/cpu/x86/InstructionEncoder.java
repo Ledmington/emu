@@ -87,6 +87,10 @@ public final class InstructionEncoder {
 			case Opcode.CDQ -> wb.write((byte) 0x99);
 			case Opcode.SAHF -> wb.write((byte) 0x9e);
 			case Opcode.LAHF -> wb.write((byte) 0x9f);
+			case Opcode.RET -> wb.write((byte) 0xc3);
+			case Opcode.LEAVE -> wb.write((byte) 0xc9);
+			case Opcode.INT3 -> wb.write((byte) 0xcc);
+			case Opcode.HLT -> wb.write((byte) 0xf4);
 			case Opcode.DEC -> wb.write((byte) 0xff);
 			case Opcode.XGETBV -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd0);
 			case Opcode.UD2 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x0b);
@@ -273,7 +277,13 @@ public final class InstructionEncoder {
 			}
 			case Opcode.PCMPEQD -> {
 				wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
-				encodeRexPrefix(wb, inst);
+				byte rex = (byte) 0x40;
+				if (RegisterXMM.requiresExtension((RegisterXMM) inst.secondOperand())) {
+					rex = BitUtils.or(rex, (byte) 0x01);
+				}
+				if (rex != (byte) 0x40) {
+					wb.write(rex);
+				}
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x76);
 				encodeModRM(wb, inst);
 			}
@@ -313,6 +323,9 @@ public final class InstructionEncoder {
 		if (rex != baseRexPrefix
 				|| (inst.hasFirstOperand()
 						&& inst.firstOperand() instanceof Register8 r8
+						&& Register8.requiresRexPrefix(r8))
+				|| (inst.hasSecondOperand()
+						&& inst.secondOperand() instanceof Register8 r8
 						&& Register8.requiresRexPrefix(r8))) {
 			wb.write(rex);
 		}
