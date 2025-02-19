@@ -67,7 +67,7 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 	}
 
 	private void checkAlignment(final long alignment) {
-		if (alignment <= 0 || Long.bitCount(alignment) != 1) {
+		if (alignment <= 0L || Long.bitCount(alignment) != 1) {
 			throw new IllegalArgumentException(
 					String.format("Invalid alignment: expected a power of two >0 but was %,d", alignment));
 		}

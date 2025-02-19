@@ -18,6 +18,7 @@
 package com.ledmington.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -40,6 +41,19 @@ final class TestReadOnlyByteBufferV1 {
 		for (int i = 0; i < arr.length; i++) {
 			this.arr[i] = BitUtils.asByte(rng.nextInt());
 		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {-99, -1, 0, 3, 99})
+	void invalidAlignment(final int alignment) {
+		assertThrows(IllegalArgumentException.class, () -> new ReadOnlyByteBufferV1(new byte[0], false, alignment));
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {-99, -1, 0, 3, 99})
+	void invalidSetAlignment(final int alignment) {
+		final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(new byte[0]);
+		assertThrows(IllegalArgumentException.class, () -> robb.setAlignment(alignment));
 	}
 
 	@ParameterizedTest
