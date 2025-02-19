@@ -87,11 +87,6 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 		return size;
 	}
 
-	@Override
-	public int getCapacity() {
-		return v.length;
-	}
-
 	private void writeDirect(final byte x) {
 		v[position] = x;
 		setPosition(position + 1);

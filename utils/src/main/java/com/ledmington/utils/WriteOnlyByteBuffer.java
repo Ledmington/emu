@@ -93,6 +93,4 @@ public interface WriteOnlyByteBuffer {
 	void setPosition(int newPosition);
 
 	int getSize();
-
-	int getCapacity();
 }
