@@ -296,11 +296,16 @@ final class TestExecutionWithMemory {
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(rip)));
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
-		mem.initialize(
-				rip,
-				InstructionEncoder.encode(
-						new Instruction(Opcode.CALL, RelativeOffset.of(BitUtils.asInt(functionAddress - rip))),
-						new Instruction(Opcode.HLT)));
+		final byte[] code = InstructionEncoder.encode(
+				new Instruction(Opcode.CALL, RelativeOffset.of(BitUtils.asInt(functionAddress - rip))),
+				new Instruction(Opcode.HLT));
+		mem.initialize(rip, code);
+		mem.setPermissions(rip, rip + code.length, false, false, true);
+
+		System.out.printf("0x%016x%n", stackBase);
+		System.out.printf("0x%016x%n", functionAddress);
+		System.out.printf("0x%016x%n", rip);
+		System.out.printf("0x%016x%n", rip + BitUtils.asLong(BitUtils.asInt(functionAddress - rip)));
 
 		// Start the CPU
 		cpu.execute();
