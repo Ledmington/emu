@@ -154,12 +154,19 @@ public final class BitUtils {
 	 * @return A String with the bits of b.
 	 */
 	public static String toBinaryString(final byte b) {
-		String s = Integer.toBinaryString(asInt(b));
-		final int byteLength = 8;
-		if (s.length() < byteLength) {
-			s = "0".repeat(byteLength - s.length()) + s;
+		final String s = Integer.toBinaryString(asInt(b));
+		final char[] v = new char[8];
+		int i = 7;
+		int j = s.length() - 1;
+		while (i >= 0 && j >= 0) {
+			v[i] = s.charAt(j);
+			i--;
+			j--;
 		}
-		return s;
+		for (; i >= 0; i--) {
+			v[i] = '0';
+		}
+		return new String(v);
 	}
 
 	/**
