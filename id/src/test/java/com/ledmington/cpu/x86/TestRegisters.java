@@ -18,12 +18,16 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.ledmington.utils.BitUtils;
 
 final class TestRegisters {
 
@@ -91,11 +95,144 @@ final class TestRegisters {
 			final boolean hasOperandSizeOverridePrefix,
 			final Register expected) {
 		final Register actual = Registers.fromCode(registerCode, is64Bit, extension, hasOperandSizeOverridePrefix);
+		assertEquals(extension, Registers.requiresExtension(expected));
 		assertEquals(
 				expected,
 				actual,
 				() -> String.format(
 						"Decoding 0x%02x, is64Bit=%s, extension=%s, hasOperandSizeOverridePrefix=%s: expected %s but was %s",
 						registerCode, is64Bit, extension, hasOperandSizeOverridePrefix, expected, actual));
+	}
+
+	private static Stream<Arguments> registers8Bits() {
+		return Stream.of(
+				Arguments.of((byte) 0x00, false, false, Register8.AL),
+				Arguments.of((byte) 0x04, false, false, Register8.AH),
+				Arguments.of((byte) 0x01, false, false, Register8.CL),
+				Arguments.of((byte) 0x05, false, false, Register8.CH),
+				Arguments.of((byte) 0x02, false, false, Register8.DL),
+				Arguments.of((byte) 0x06, false, false, Register8.DH),
+				Arguments.of((byte) 0x03, false, false, Register8.BL),
+				Arguments.of((byte) 0x07, false, false, Register8.BH),
+				Arguments.of((byte) 0x04, true, false, Register8.SPL),
+				Arguments.of((byte) 0x05, true, false, Register8.BPL),
+				Arguments.of((byte) 0x06, true, false, Register8.SIL),
+				Arguments.of((byte) 0x07, true, false, Register8.DIL),
+				Arguments.of((byte) 0x00, false, true, Register8.R8B),
+				Arguments.of((byte) 0x01, false, true, Register8.R9B),
+				Arguments.of((byte) 0x02, false, true, Register8.R10B),
+				Arguments.of((byte) 0x03, false, true, Register8.R11B),
+				Arguments.of((byte) 0x04, false, true, Register8.R12B),
+				Arguments.of((byte) 0x05, false, true, Register8.R13B),
+				Arguments.of((byte) 0x06, false, true, Register8.R14B),
+				Arguments.of((byte) 0x07, false, true, Register8.R15B));
+	}
+
+	@ParameterizedTest
+	@MethodSource("registers8Bits")
+	void decodeRegisters8Bits(
+			final byte registerCode,
+			final boolean needsRexPrefix,
+			final boolean needsExtension,
+			final Register8 expected) {
+		assertEquals(needsRexPrefix, Register8.requiresRexPrefix(expected));
+		assertEquals(needsExtension, Register8.requiresExtension(expected));
+		assertEquals(
+				expected,
+				Register8.fromByte(BitUtils.or(registerCode, needsExtension ? (byte) 0x08 : 0), needsRexPrefix));
+		assertEquals(registerCode, Register8.toByte(expected));
+	}
+
+	private static Stream<Arguments> registers128Bits() {
+		return Stream.of(
+				Arguments.of((byte) 0x00, false, RegisterXMM.XMM0),
+				Arguments.of((byte) 0x01, false, RegisterXMM.XMM1),
+				Arguments.of((byte) 0x02, false, RegisterXMM.XMM2),
+				Arguments.of((byte) 0x03, false, RegisterXMM.XMM3),
+				Arguments.of((byte) 0x04, false, RegisterXMM.XMM4),
+				Arguments.of((byte) 0x05, false, RegisterXMM.XMM5),
+				Arguments.of((byte) 0x06, false, RegisterXMM.XMM6),
+				Arguments.of((byte) 0x07, false, RegisterXMM.XMM7),
+				Arguments.of((byte) 0x00, true, RegisterXMM.XMM8),
+				Arguments.of((byte) 0x01, true, RegisterXMM.XMM9),
+				Arguments.of((byte) 0x02, true, RegisterXMM.XMM10),
+				Arguments.of((byte) 0x03, true, RegisterXMM.XMM11),
+				Arguments.of((byte) 0x04, true, RegisterXMM.XMM12),
+				Arguments.of((byte) 0x05, true, RegisterXMM.XMM13),
+				Arguments.of((byte) 0x06, true, RegisterXMM.XMM14),
+				Arguments.of((byte) 0x07, true, RegisterXMM.XMM15));
+	}
+
+	@ParameterizedTest
+	@MethodSource("registers128Bits")
+	void decodeRegisters128Bits(final byte registerCode, final boolean needsExtensions, final RegisterXMM expected) {
+		assertEquals(needsExtensions, RegisterXMM.requiresExtension(expected));
+		assertEquals(expected, RegisterXMM.fromByte(BitUtils.or(registerCode, needsExtensions ? (byte) 0x08 : 0)));
+		assertEquals(registerCode, RegisterXMM.toByte(expected));
+	}
+
+	@Test
+	void nullExtensionRegister8() {
+		assertThrows(NullPointerException.class, () -> Register8.requiresExtension(null));
+	}
+
+	@Test
+	void nullRexPrefixRegister8() {
+		assertThrows(NullPointerException.class, () -> Register8.requiresRexPrefix(null));
+	}
+
+	@Test
+	void nullEncodeRegister8() {
+		assertThrows(NullPointerException.class, () -> Register8.toByte(null));
+	}
+
+	@Test
+	void nullExtensionRegister16() {
+		assertThrows(NullPointerException.class, () -> Register16.requiresExtension(null));
+	}
+
+	@Test
+	void nullEncodeRegister16() {
+		assertThrows(NullPointerException.class, () -> Register16.toByte(null));
+	}
+
+	@Test
+	void nullExtensionRegister32() {
+		assertThrows(NullPointerException.class, () -> Register32.requiresExtension(null));
+	}
+
+	@Test
+	void nullEncodeRegister32() {
+		assertThrows(NullPointerException.class, () -> Register32.toByte(null));
+	}
+
+	@Test
+	void nullExtensionRegister64() {
+		assertThrows(NullPointerException.class, () -> Register64.requiresExtension(null));
+	}
+
+	@Test
+	void nullEncodeRegister64() {
+		assertThrows(NullPointerException.class, () -> Register64.toByte(null));
+	}
+
+	@Test
+	void nullExtensionRegisterXMM() {
+		assertThrows(NullPointerException.class, () -> RegisterXMM.requiresExtension(null));
+	}
+
+	@Test
+	void nullEncodeRegisterXMM() {
+		assertThrows(NullPointerException.class, () -> RegisterXMM.toByte(null));
+	}
+
+	@Test
+	void nullExtensionRegister() {
+		assertThrows(NullPointerException.class, () -> Registers.requiresExtension(null));
+	}
+
+	@Test
+	void nullEncodeRegister() {
+		assertThrows(NullPointerException.class, () -> Registers.toByte(null));
 	}
 }

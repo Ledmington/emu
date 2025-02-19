@@ -91,10 +91,10 @@ public enum Register8 implements Register {
 	/**
 	 * Returns the 8-bit register corresponding to the given byte.
 	 *
-	 * @param b The byte representing a 8-bit register.
+	 * @param b The byte representing an 8-bit register.
 	 * @param hasRexPrefix Allows to select different sets of registers. If true, values in the inclusive range
 	 *     0x04-0x07 map to SPL, BPL, SIL and DIL respectively; otherwise, they map to AH, CH, DH, BH.
-	 * @return A 8-bit register.
+	 * @return An 8-bit register.
 	 */
 	public static Register8 fromByte(final byte b, final boolean hasRexPrefix) {
 		return switch (b) {
@@ -120,22 +120,14 @@ public enum Register8 implements Register {
 
 	public static byte toByte(final Register8 r) {
 		return switch (r) {
-			case AL -> (byte) 0x00;
-			case CL -> (byte) 0x01;
-			case DL -> (byte) 0x02;
-			case BL -> (byte) 0x03;
-			case AH, SPL -> (byte) 0x04;
-			case CH, BPL -> (byte) 0x05;
-			case DH, SIL -> (byte) 0x06;
-			case BH, DIL -> (byte) 0x07;
-			case R8B -> (byte) 0x08;
-			case R9B -> (byte) 0x09;
-			case R10B -> (byte) 0x0a;
-			case R11B -> (byte) 0x0b;
-			case R12B -> (byte) 0x0c;
-			case R13B -> (byte) 0x0d;
-			case R14B -> (byte) 0x0e;
-			case R15B -> (byte) 0x0f;
+			case AL, R8B -> (byte) 0x00;
+			case CL, R9B -> (byte) 0x01;
+			case DL, R10B -> (byte) 0x02;
+			case BL, R11B -> (byte) 0x03;
+			case AH, SPL, R12B -> (byte) 0x04;
+			case CH, BPL, R13B -> (byte) 0x05;
+			case DH, SIL, R14B -> (byte) 0x06;
+			case BH, DIL, R15B -> (byte) 0x07;
 		};
 	}
 
