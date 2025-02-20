@@ -396,6 +396,74 @@ public final class InstructionEncoder {
 					wb.write(((Immediate) inst.secondOperand()).asByte());
 				}
 			}
+			case Opcode.UCOMISS -> {
+				wb.write((byte) 0x44);
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2e);
+				wb.write((byte) 0x2d);
+				wb.write(BitUtils.asInt(((IndirectOperand) inst.secondOperand()).getDisplacement()));
+			}
+			case Opcode.UCOMISD -> {
+				wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+				wb.write((byte) 0x44);
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2e);
+				wb.write((byte) 0x2d);
+				wb.write(BitUtils.asInt(((IndirectOperand) inst.secondOperand()).getDisplacement()));
+			}
+			case Opcode.XORPS -> {
+				encodeRexPrefix(wb, inst);
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x57);
+				wb.write(BitUtils.or(
+						(byte) 0b11000000,
+						BitUtils.shl(Registers.toByte((Register) inst.firstOperand()), 3),
+						Registers.toByte((Register) inst.secondOperand())));
+			}
+			case Opcode.ADDSD -> {
+				wb.write((byte) 0xf2);
+				encodeRexPrefix(wb, inst);
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x58);
+				wb.write(BitUtils.or(
+						(byte) 0b11000000,
+						BitUtils.shl(Registers.toByte((Register) inst.firstOperand()), 3),
+						Registers.toByte((Register) inst.secondOperand())));
+			}
+			case Opcode.DIVSD -> {
+				wb.write((byte) 0xf2);
+				encodeRexPrefix(wb, inst);
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x5e);
+				wb.write(BitUtils.or(
+						(byte) 0b11000000,
+						BitUtils.shl(Registers.toByte((Register) inst.firstOperand()), 3),
+						Registers.toByte((Register) inst.secondOperand())));
+			}
+			case Opcode.CVTSI2SD -> {
+				wb.write((byte) 0xf2);
+				{
+					byte rex = (byte) 0x40;
+					if (inst.secondOperand() instanceof Register64) {
+						rex = BitUtils.or(rex, (byte) 0x08);
+					}
+					if (inst.secondOperand() instanceof Register32) {
+						rex = BitUtils.or(rex, (byte) 0x04);
+					}
+					wb.write(rex);
+				}
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2a);
+				wb.write(BitUtils.or(
+						(byte) 0b11000000,
+						BitUtils.shl(Registers.toByte((Register) inst.firstOperand()), 3),
+						Registers.toByte((Register) inst.secondOperand())));
+			}
+			case Opcode.PSUBQ -> {
+				wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+				if (inst.secondOperand() instanceof RegisterXMM r2 && RegisterXMM.requiresExtension(r2)) {
+					wb.write((byte) 0x41);
+				} else if (inst.secondOperand() instanceof IndirectOperand io
+						&& Registers.requiresExtension(io.index())) {
+					wb.write((byte) 0x42);
+				}
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
+				encodeModRM(wb, inst);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}
