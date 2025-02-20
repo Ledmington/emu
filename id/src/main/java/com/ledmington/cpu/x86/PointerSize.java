@@ -46,7 +46,7 @@ public enum PointerSize {
 	 *
 	 * @return The number of bits represented by this pointer size.
 	 */
-	public int getSize() {
+	public int bits() {
 		return size;
 	}
 
@@ -63,7 +63,7 @@ public enum PointerSize {
 			case 32 -> DWORD_PTR;
 			case 64 -> QWORD_PTR;
 			case 128 -> XMMWORD_PTR;
-			default -> throw new IllegalStateException("Unexpected value: " + size);
+			default -> throw new IllegalStateException(String.format("Unexpected value: %,d.", size));
 		};
 	}
 
