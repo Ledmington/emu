@@ -26,7 +26,7 @@ ext.junitVersion = '5.11.4'
 ext.jacocoVersion = '0.8.12'
 ext.pmdVersion = '7.9.0'
 ext.spotbugsVersion = '4.9.1'
-ext.palantirVersion = '2.50.0'
+ext.palantirVersion = '2.52.0'
 // End tunables
 
 allprojects {
@@ -170,7 +170,7 @@ spotless {
         endWithNewline()
 
         // check https://javadoc.io/doc/com.diffplug.spotless/spotless-plugin-gradle/latest/com/diffplug/gradle/spotless/JavaExtension.html
-        importOrder('java', 'javax', 'javafx', 'org.junit', 'com', 'com.ledmington', 'org', group as String)
+        importOrder('java', 'javax', 'javafx', 'org.junit', 'org.openjdk', 'com', 'com.ledmington', 'org', group as String)
 
         licenseHeader String.join("\n",
                 "/*",
