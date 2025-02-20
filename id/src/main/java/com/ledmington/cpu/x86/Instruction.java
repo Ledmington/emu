@@ -179,6 +179,10 @@ public final class Instruction {
 		this(null, opcode, null, null, null);
 	}
 
+	public boolean hasLockPrefix() {
+		return prefix == InstructionPrefix.LOCK;
+	}
+
 	/**
 	 * Returns the opcode of this Instruction.
 	 *

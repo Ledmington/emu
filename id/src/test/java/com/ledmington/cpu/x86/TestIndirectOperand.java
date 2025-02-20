@@ -71,22 +71,22 @@ final class TestIndirectOperand {
 							if (displacement.intValue() != 0) {
 								switch (displacement) {
 									case Byte b -> {
-										iob.disp(b);
+										iob.displacement(b);
 										sb.append(b < 0 ? '-' : '+');
 										sb.append(String.format("0x%02x", b < 0 ? -b : b));
 									}
 									case Short s -> {
-										iob.disp(s);
+										iob.displacement(s);
 										sb.append(s < 0 ? '-' : '+');
 										sb.append(String.format("0x%04x", s < 0 ? -s : s));
 									}
 									case Integer x -> {
-										iob.disp(x);
+										iob.displacement(x);
 										sb.append(x < 0 ? '-' : '+');
 										sb.append(String.format("0x%08x", x < 0 ? -x : x));
 									}
 									case Long l -> {
-										iob.disp(l);
+										iob.displacement(l);
 										sb.append(l < 0L ? '-' : '+');
 										sb.append(String.format("0x%016x", l < 0L ? -l : l));
 									}

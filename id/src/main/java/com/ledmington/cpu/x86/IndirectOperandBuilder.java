@@ -107,8 +107,8 @@ public final class IndirectOperandBuilder {
 	 * @param disp The new displacement.
 	 * @return This instance of IndirectOperandBuilder.
 	 */
-	public IndirectOperandBuilder disp(final byte disp) {
-		return disp(disp, DisplacementType.BYTE);
+	public IndirectOperandBuilder displacement(final byte disp) {
+		return displacement(disp, DisplacementType.BYTE);
 	}
 
 	/**
@@ -117,8 +117,8 @@ public final class IndirectOperandBuilder {
 	 * @param disp The new displacement.
 	 * @return This instance of IndirectOperandBuilder.
 	 */
-	public IndirectOperandBuilder disp(final short disp) {
-		return disp(disp, DisplacementType.SHORT);
+	public IndirectOperandBuilder displacement(final short disp) {
+		return displacement(disp, DisplacementType.SHORT);
 	}
 
 	/**
@@ -127,8 +127,8 @@ public final class IndirectOperandBuilder {
 	 * @param disp The new displacement.
 	 * @return This instance of IndirectOperandBuilder.
 	 */
-	public IndirectOperandBuilder disp(final int disp) {
-		return disp(disp, DisplacementType.INT);
+	public IndirectOperandBuilder displacement(final int disp) {
+		return displacement(disp, DisplacementType.INT);
 	}
 
 	/**
@@ -137,11 +137,11 @@ public final class IndirectOperandBuilder {
 	 * @param disp The new displacement.
 	 * @return This instance of IndirectOperandBuilder.
 	 */
-	public IndirectOperandBuilder disp(final long disp) {
-		return disp(disp, DisplacementType.LONG);
+	public IndirectOperandBuilder displacement(final long disp) {
+		return displacement(disp, DisplacementType.LONG);
 	}
 
-	private IndirectOperandBuilder disp(final long disp, final DisplacementType displacementType) {
+	private IndirectOperandBuilder displacement(final long disp, final DisplacementType displacementType) {
 		if (this.displacement != null) {
 			throw new IllegalArgumentException("Cannot define displacement twice.");
 		}

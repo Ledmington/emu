@@ -110,7 +110,7 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public int bits() {
-		return ptrSize.getSize();
+		return ptrSize.bits();
 	}
 
 	/**
