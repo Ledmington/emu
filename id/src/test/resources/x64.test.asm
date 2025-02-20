@@ -1796,36 +1796,43 @@ bts rax,r14  | 4c 0f ab f0
 xgetbv | 0f 01 d0
 
 # Xchg
-xchg al,cl   | 86 c8
-xchg bh,cl   | 86 cf
-xchg di,ax   | 66 97
-xchg ebp,eax | 95
-xchg ebx,eax | 93
-xchg ebx,r9d | 44 87 cb
-xchg ecx,eax | 91
-xchg edi,eax | 97
-xchg edx,eax | 92
-xchg esi,eax | 96
-xchg esp,eax | 94
-xchg r10,rax | 49 92
-xchg r11,rax | 49 93
-xchg r12,rax | 49 94
-xchg r13,rax | 49 95
-xchg r14,rax | 49 96
-xchg r15,rax | 49 97
-xchg r8,rax  | 49 90
-xchg r9,rax  | 49 91
-xchg r9d,eax | 41 91
-xchg rbp,rax | 48 95
-xchg rbx,r9  | 4c 87 cb
-xchg rbx,rax | 48 93
-xchg rbx,rcx | 48 87 cb
-xchg rcx,rax | 48 91
-xchg rdi,rax | 48 97
-xchg rdx,rax | 48 92
-xchg rsi,rax | 48 96
-xchg rsp,rax | 48 94
-xchg si,di   | 66 87 fe
+xchg al,cl    | 86 c8
+xchg bh,cl    | 86 cf
+xchg di,ax    | 66 97
+xchg ebp,eax  | 95
+xchg ebx,eax  | 93
+xchg ebx,r9d  | 44 87 cb
+xchg ecx,eax  | 91
+xchg edi,eax  | 97
+xchg edx,eax  | 92
+xchg esi,eax  | 96
+xchg esp,eax  | 94
+xchg r10,rax  | 49 92
+xchg r10d,eax | 41 92
+xchg r11,rax  | 49 93
+xchg r11d,eax | 41 93
+xchg r12,rax  | 49 94
+xchg r12d,eax | 41 94
+xchg r13,rax  | 49 95
+xchg r13d,eax | 41 95
+xchg r14,rax  | 49 96
+xchg r14d,eax | 41 96
+xchg r15,rax  | 49 97
+xchg r15d,eax | 41 97
+xchg r8,rax   | 49 90
+xchg r8d,eax  | 41 90
+xchg r9,rax   | 49 91
+xchg r9d,eax  | 41 91
+xchg rbp,rax  | 48 95
+xchg rbx,r9   | 4c 87 cb
+xchg rbx,rax  | 48 93
+xchg rbx,rcx  | 48 87 cb
+xchg rcx,rax  | 48 91
+xchg rdi,rax  | 48 97
+xchg rdx,rax  | 48 92
+xchg rsi,rax  | 48 96
+xchg rsp,rax  | 48 94
+xchg si,di    | 66 87 fe
 #
 xchg BYTE PTR [rax+rbx*2+0x12345678],ah   | 86 a4 58 78 56 34 12
 xchg BYTE PTR [rax+rbx*2+0x12345678],al   | 86 84 58 78 56 34 12
@@ -1868,18 +1875,38 @@ bswap rsi  | 48 0f ce
 bswap rsp  | 48 0f cc
 
 # Prefetch
-prefetchnta BYTE PTR [eax]                 | 67 0f 18 00
-prefetchnta BYTE PTR [r9+r11*4+0x12345678] | 43 0f 18 84 99 78 56 34 12
-prefetchnta BYTE PTR [rax]                 | 0f 18 00
-prefetcht0 BYTE PTR [eax]                  | 67 0f 18 08
-prefetcht0 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 8c 99 78 56 34 12
-prefetcht0 BYTE PTR [rax]                  | 0f 18 08
-prefetcht1 BYTE PTR [eax]                  | 67 0f 18 10
-prefetcht1 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 94 99 78 56 34 12
-prefetcht1 BYTE PTR [rax]                  | 0f 18 10
-prefetcht2 BYTE PTR [eax]                  | 67 0f 18 18
-prefetcht2 BYTE PTR [r9+r11*4+0x12345678]  | 43 0f 18 9c 99 78 56 34 12
-prefetcht2 BYTE PTR [rax]                  | 0f 18 18
+prefetchnta BYTE PTR [eax]                   | 67 0f 18 00
+prefetchnta BYTE PTR [ebx+r11d*4+0x12345678] | 67 42 0f 18 84 9b 78 56 34 12
+prefetchnta BYTE PTR [r9+r11*4+0x12345678]   | 43 0f 18 84 99 78 56 34 12
+prefetchnta BYTE PTR [r9+rcx*4+0x12345678]   | 41 0f 18 84 89 78 56 34 12
+prefetchnta BYTE PTR [r9d+ecx*4+0x12345678]  | 67 41 0f 18 84 89 78 56 34 12
+prefetchnta BYTE PTR [r9d+r11d*4+0x12345678] | 67 43 0f 18 84 99 78 56 34 12
+prefetchnta BYTE PTR [rax]                   | 0f 18 00
+prefetchnta BYTE PTR [rbx+r11*4+0x12345678]  | 42 0f 18 84 9b 78 56 34 12
+prefetcht0 BYTE PTR [eax]                    | 67 0f 18 08
+prefetcht0 BYTE PTR [ebx+r11d*4+0x12345678]  | 67 42 0f 18 8c 9b 78 56 34 12
+prefetcht0 BYTE PTR [r9+r11*4+0x12345678]    | 43 0f 18 8c 99 78 56 34 12
+prefetcht0 BYTE PTR [r9+rcx*4+0x12345678]    | 41 0f 18 8c 89 78 56 34 12
+prefetcht0 BYTE PTR [r9d+ecx*4+0x12345678]   | 67 41 0f 18 8c 89 78 56 34 12
+prefetcht0 BYTE PTR [r9d+r11d*4+0x12345678]  | 67 43 0f 18 8c 99 78 56 34 12
+prefetcht0 BYTE PTR [rax]                    | 0f 18 08
+prefetcht0 BYTE PTR [rbx+r11*4+0x12345678]   | 42 0f 18 8c 9b 78 56 34 12
+prefetcht1 BYTE PTR [eax]                    | 67 0f 18 10
+prefetcht1 BYTE PTR [ebx+r11d*4+0x12345678]  | 67 42 0f 18 94 9b 78 56 34 12
+prefetcht1 BYTE PTR [r9+r11*4+0x12345678]    | 43 0f 18 94 99 78 56 34 12
+prefetcht1 BYTE PTR [r9+rcx*4+0x12345678]    | 41 0f 18 94 89 78 56 34 12
+prefetcht1 BYTE PTR [r9d+ecx*4+0x12345678]   | 67 41 0f 18 94 89 78 56 34 12
+prefetcht1 BYTE PTR [r9d+r11d*4+0x12345678]  | 67 43 0f 18 94 99 78 56 34 12
+prefetcht1 BYTE PTR [rax]                    | 0f 18 10
+prefetcht1 BYTE PTR [rbx+r11*4+0x12345678]   | 42 0f 18 94 9b 78 56 34 12
+prefetcht2 BYTE PTR [eax]                    | 67 0f 18 18
+prefetcht2 BYTE PTR [ebx+r11d*4+0x12345678]  | 67 42 0f 18 9c 9b 78 56 34 12
+prefetcht2 BYTE PTR [r9+r11*4+0x12345678]    | 43 0f 18 9c 99 78 56 34 12
+prefetcht2 BYTE PTR [r9+rcx*4+0x12345678]    | 41 0f 18 9c 89 78 56 34 12
+prefetcht2 BYTE PTR [r9d+ecx*4+0x12345678]   | 67 41 0f 18 9c 89 78 56 34 12
+prefetcht2 BYTE PTR [r9d+r11d*4+0x12345678]  | 67 43 0f 18 9c 99 78 56 34 12
+prefetcht2 BYTE PTR [rax]                    | 0f 18 18
+prefetcht2 BYTE PTR [rbx+r11*4+0x12345678]   | 42 0f 18 9c 9b 78 56 34 12
 
 # Cmpxchg
 cmpxchg BYTE PTR [rax+rbx*4+0x12345678],dh         | 0f b0 b4 98 78 56 34 12

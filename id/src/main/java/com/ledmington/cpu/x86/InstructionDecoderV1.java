@@ -1392,7 +1392,9 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 
 		return switch (opcodeFirstByte) {
 			case NOP_OPCODE -> pref.hasRexPrefix()
-					? new Instruction(Opcode.XCHG, Register64.R8, Register64.RAX)
+					? (pref.rex().isOperand64Bit()
+							? new Instruction(Opcode.XCHG, Register64.R8, Register64.RAX)
+							: new Instruction(Opcode.XCHG, Register32.R8D, Register32.EAX))
 					: new Instruction(Opcode.NOP);
 			case RET_OPCODE -> new Instruction(Opcode.RET);
 			case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
@@ -1992,7 +1994,7 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 			case 16 -> new Instruction(Opcode.MOV, operand1, imm16());
 			case 32 -> new Instruction(Opcode.MOV, operand1, imm32());
 			default -> throw new IllegalArgumentException(
-					String.format("Invalid value for immediate bytes: %,d", immediateBits));
+					String.format("Invalid value for immediate bits: %,d.", immediateBits));
 		};
 	}
 
@@ -2040,10 +2042,10 @@ public final class InstructionDecoderV1 implements InstructionDecoder {
 					|| (modrm.mod() == (byte) 0x00 && sib.base() == (byte) 0x05)
 					|| modrm.mod() == (byte) 0x02) {
 				final int disp32 = b.read4LE();
-				iob.disp(disp32);
+				iob.displacement(disp32);
 			} else if (modrm.mod() == (byte) 0x01) {
 				final byte disp8 = b.read1();
-				iob.disp(disp8);
+				iob.displacement(disp8);
 			}
 		}
 

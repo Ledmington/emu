@@ -29,6 +29,7 @@ public final class InstructionEncoder {
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
 	private static final byte DOUBLE_BYTE_OPCODE_PREFIX = (byte) 0x0f;
 	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
+	private static final byte LOCK_PREFIX = (byte) 0xf0;
 	private static final Map<Opcode, Byte> CONDITIONAL_JUMPS_OPCODES = Map.ofEntries(
 			Map.entry(Opcode.JB, (byte) 0x02),
 			Map.entry(Opcode.JAE, (byte) 0x03),
@@ -43,6 +44,16 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.JGE, (byte) 0x0d),
 			Map.entry(Opcode.JLE, (byte) 0x0e),
 			Map.entry(Opcode.JG, (byte) 0x0f));
+	private static final Map<Opcode, Byte> PREFETCH_OPCODES = Map.ofEntries(
+			Map.entry(Opcode.PREFETCHNTA, (byte) 0x00),
+			Map.entry(Opcode.PREFETCHT0, (byte) 0x01),
+			Map.entry(Opcode.PREFETCHT1, (byte) 0x02),
+			Map.entry(Opcode.PREFETCHT2, (byte) 0x03));
+	private static final Map<Opcode, Byte> BIT_TEST_OPCODES = Map.ofEntries(
+			Map.entry(Opcode.BT, (byte) 0b100),
+			Map.entry(Opcode.BTS, (byte) 0b101),
+			Map.entry(Opcode.BTR, (byte) 0b110),
+			Map.entry(Opcode.BTC, (byte) 0b111));
 
 	private InstructionEncoder() {}
 
@@ -234,6 +245,30 @@ public final class InstructionEncoder {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc7);
 				encodeSingleRegister(wb, (Register) inst.firstOperand(), (byte) 0xf0);
 			}
+			case Opcode.PREFETCHNTA, Opcode.PREFETCHT0, Opcode.PREFETCHT1, Opcode.PREFETCHT2 -> {
+				final IndirectOperand io = (IndirectOperand) inst.firstOperand();
+				if (io.index().bits() == 32) {
+					wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
+				}
+				byte rex = (byte) 0x40;
+				if (io.base() != null && Registers.requiresExtension(io.base())) {
+					rex = BitUtils.or(rex, (byte) 0x01);
+				}
+				if (Registers.requiresExtension(io.index())) {
+					rex = BitUtils.or(rex, (byte) 0x02);
+				}
+				if (rex != (byte) 0x40) {
+					wb.write(rex);
+				}
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x18);
+				encodeModRMWithOpcode(wb, inst, PREFETCH_OPCODES.get(inst.opcode()));
+			}
+			case Opcode.BSWAP -> {
+				encodeRexPrefix(wb, inst);
+				wb.write(
+						DOUBLE_BYTE_OPCODE_PREFIX,
+						BitUtils.asByte((byte) 0xc8 + Registers.toByte((Register) inst.firstOperand())));
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}
@@ -291,9 +326,75 @@ public final class InstructionEncoder {
 				if (inst.firstOperand().bits() == 16) {
 					wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 				}
+				if (inst.hasLockPrefix()) {
+					wb.write(LOCK_PREFIX);
+				}
 				encodeRexPrefix(wb, inst);
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc1);
+				final boolean hasBytePtr = inst.firstOperand() instanceof IndirectOperand io && io.bits() == 8;
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, hasBytePtr ? (byte) 0xc0 : (byte) 0xc1);
 				encodeModRM(wb, inst);
+			}
+			case Opcode.CMPXCHG -> {
+				if (inst.firstOperand().bits() == 16) {
+					wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+				}
+				if (inst.hasLockPrefix()) {
+					wb.write(LOCK_PREFIX);
+				}
+				encodeRexPrefix(wb, inst);
+				final boolean hasBytePtr = inst.firstOperand() instanceof IndirectOperand io && io.bits() == 8;
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, hasBytePtr ? (byte) 0xb0 : (byte) 0xb1);
+				encodeModRM(wb, inst);
+			}
+			case Opcode.XCHG -> {
+				if (inst.firstOperand().bits() == 16) {
+					wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+				}
+				if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+					{
+						byte rex = (byte) 0x40;
+						if (inst.firstOperand() instanceof Register64) {
+							rex = BitUtils.or(rex, (byte) 0x08);
+						}
+						if (Registers.requiresExtension(r2)) {
+							rex = BitUtils.or(rex, (byte) 0x04);
+						}
+						if (Registers.requiresExtension(r1)) {
+							rex = BitUtils.or(rex, (byte) 0x01);
+						}
+						if (rex != (byte) 0x40) {
+							wb.write(rex);
+						}
+					}
+					if (r2 == Register16.AX || r2 == Register32.EAX || r2 == Register64.RAX) {
+						wb.write(BitUtils.asByte((byte) 0x90 + Registers.toByte(r1)));
+					} else {
+						final boolean hasBytePtr = inst.firstOperand().bits() == 8;
+						wb.write(hasBytePtr ? (byte) 0x86 : (byte) 0x87);
+						encodePairOfRegisters(wb, (byte) 0b11000000, r1, r2);
+					}
+				} else {
+					encodeRexPrefix(wb, inst);
+					final boolean hasBytePtr = inst.firstOperand().bits() == 8;
+					wb.write(hasBytePtr ? (byte) 0x86 : (byte) 0x87);
+					encodeModRM(wb, inst);
+				}
+			}
+			case Opcode.BT, Opcode.BTC, Opcode.BTR, Opcode.BTS -> {
+				encodeRexPrefix(wb, inst);
+				if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+					wb.write(
+							DOUBLE_BYTE_OPCODE_PREFIX,
+							BitUtils.or((byte) 0b10000011, BitUtils.shl(BIT_TEST_OPCODES.get(inst.opcode()), 3)));
+					encodePairOfRegisters(wb, (byte) 0b11000000, r1, r2);
+				} else {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xba);
+					wb.write(BitUtils.or(
+							(byte) 0b11000000,
+							BitUtils.shl(BIT_TEST_OPCODES.get(inst.opcode()), 3),
+							Registers.toByte((Register) inst.firstOperand())));
+					wb.write(((Immediate) inst.secondOperand()).asByte());
+				}
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
@@ -331,14 +432,32 @@ public final class InstructionEncoder {
 		}
 	}
 
+	private static boolean isSimpleIndirectOperand(final IndirectOperand io) {
+		return io.base() == null && io.index() != null && io.scale() == 1L && io.getDisplacement() == 0L;
+	}
+
+	private static void encodeModRMWithOpcode(
+			final WriteOnlyByteBuffer wb, final Instruction inst, final byte regOpcode) {
+		if (BitUtils.and(regOpcode, (byte) 0xf8) != 0) {
+			throw new IllegalStateException(String.format("Invalid REG opcode: 0x%02x.", regOpcode));
+		}
+		final IndirectOperand io = (IndirectOperand) inst.firstOperand();
+		if (isSimpleIndirectOperand(io)) {
+			encodeSingleRegister(wb, io.index(), BitUtils.shl(regOpcode, 3));
+		} else {
+			wb.write(BitUtils.or(
+					// mod=0b10, R/M=0b100
+					(byte) 0b10000100, BitUtils.shl(regOpcode, 3)));
+			encodeSIB(wb, io);
+			wb.write(BitUtils.asInt(io.getDisplacement()));
+		}
+	}
+
 	private static void encodeModRM(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
 			encodePairOfRegisters(wb, (byte) 0b11000000, r1, r2);
 		} else if (inst.firstOperand() instanceof IndirectOperand io) {
-			// 0x 16
-			// 0b 00|010|110
-			if (io.base() == null && io.index() != null && io.scale() == 1L && io.getDisplacement() == 0L) {
-				// simple indirect operand
+			if (isSimpleIndirectOperand(io)) {
 				if (inst.hasSecondOperand()) {
 					encodePairOfRegisters(wb, (byte) 0, io.index(), (Register) inst.secondOperand());
 				} else {
@@ -361,8 +480,7 @@ public final class InstructionEncoder {
 				wb.write(BitUtils.asInt(io.getDisplacement()));
 			}
 		} else if (inst.secondOperand() instanceof IndirectOperand io) {
-			if (io.base() == null && io.index() != null && io.scale() == 1L && io.getDisplacement() == 0L) {
-				// simple indirect operand
+			if (isSimpleIndirectOperand(io)) {
 				encodePairOfRegisters(wb, (byte) 0, io.index(), (Register) inst.firstOperand());
 			} else {
 				// generic indirect operand
@@ -373,6 +491,9 @@ public final class InstructionEncoder {
 				encodeSIB(wb, io);
 				wb.write(BitUtils.asInt(io.getDisplacement()));
 			}
+		} else if (inst.secondOperand() instanceof Immediate imm) {
+			wb.write(BitUtils.asByte((byte) 0xe8 + Registers.toByte((Register) inst.firstOperand())));
+			wb.write(imm.asByte());
 		}
 	}
 
@@ -392,7 +513,9 @@ public final class InstructionEncoder {
 		} else {
 			x = BitUtils.or(x, BitUtils.shl(Registers.toByte(io.index()), 3));
 		}
-		x = BitUtils.or(x, Registers.toByte(io.base()));
+		if (io.base() != null) {
+			x = BitUtils.or(x, Registers.toByte(io.base()));
+		}
 		wb.write(x);
 	}
 
