@@ -1718,7 +1718,9 @@ dec DWORD PTR [rsp]                  | ff 0c 24
 dec QWORD PTR [r8+rdi*2+0x12345678]  | 49 ff 8c 78 78 56 34 12
 dec QWORD PTR [rax]                  | 48 ff 08
 dec QWORD PTR [rcx+0x12345678]       | 48 ff 89 78 56 34 12
+dec WORD PTR [rax*2+0x0]             | 66 ff 0c 45 00 00 00 00
 dec WORD PTR [rax+0x12345678]        | 66 ff 88 78 56 34 12
+dec WORD PTR [rax+rbx*1]             | 66 ff 0c 18
 dec WORD PTR [rax]                   | 66 ff 08
 dec WORD PTR [rdx+rdi*2+0x12345678]  | 66 ff 8c 7a 78 56 34 12
 

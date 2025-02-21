@@ -68,27 +68,27 @@ final class TestIndirectOperand {
 								sb.append('*').append(constant);
 							}
 
-							if (displacement.intValue() != 0) {
+							if (displacement.intValue() != 0 || (hasBaseRegister || constant != 1)) {
 								switch (displacement) {
 									case Byte b -> {
 										iob.displacement(b);
 										sb.append(b < 0 ? '-' : '+');
-										sb.append(String.format("0x%02x", b < 0 ? -b : b));
+										sb.append(String.format("0x%x", b < 0 ? -b : b));
 									}
 									case Short s -> {
 										iob.displacement(s);
 										sb.append(s < 0 ? '-' : '+');
-										sb.append(String.format("0x%04x", s < 0 ? -s : s));
+										sb.append(String.format("0x%x", s < 0 ? -s : s));
 									}
 									case Integer x -> {
 										iob.displacement(x);
 										sb.append(x < 0 ? '-' : '+');
-										sb.append(String.format("0x%08x", x < 0 ? -x : x));
+										sb.append(String.format("0x%x", x < 0 ? -x : x));
 									}
 									case Long l -> {
 										iob.displacement(l);
 										sb.append(l < 0L ? '-' : '+');
-										sb.append(String.format("0x%016x", l < 0L ? -l : l));
+										sb.append(String.format("0x%x", l < 0L ? -l : l));
 									}
 									default -> throw new IllegalStateException("Unreachable.");
 								}

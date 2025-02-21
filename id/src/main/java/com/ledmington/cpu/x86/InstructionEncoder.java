@@ -165,7 +165,8 @@ public final class InstructionEncoder {
 				encodeRexPrefix(wb, inst);
 				wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xfe : (byte) 0xff);
 				if (inst.firstOperand() instanceof Register r1) {
-					wb.write(BitUtils.asByte((byte) 0xc8 + Registers.toByte(r1)));
+					wb.write(BitUtils.asByte(
+							(inst.opcode() == Opcode.DEC ? (byte) 0xc8 : (byte) 0xc0) + Registers.toByte(r1)));
 				} else {
 					encodeIndirectOperandWithRegOpcode(wb, (IndirectOperand) inst.firstOperand(), (byte) 0b001, null);
 				}

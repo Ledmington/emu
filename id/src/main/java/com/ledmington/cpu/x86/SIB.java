@@ -124,10 +124,9 @@ public final class SIB {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof SIB s)) {
 			return false;
 		}
-		final SIB s = (SIB) other;
 		return this.scaleByte == s.scaleByte && this.indexByte == s.indexByte && this.baseByte == s.baseByte;
 	}
 }

@@ -41,9 +41,9 @@ import com.ledmington.utils.HashUtils;
  */
 public final class IndirectOperand implements Operand {
 
-	private final Register reg1;
-	private final int constant;
-	private final Register reg2;
+	private final Register base;
+	private final int scale;
+	private final Register index;
 	private final long displacement;
 	private final DisplacementType displacementType;
 	private final PointerSize ptrSize;
@@ -58,15 +58,15 @@ public final class IndirectOperand implements Operand {
 	}
 
 	/* default */ IndirectOperand(
-			final Register reg1,
-			final Register reg2,
-			final int constant,
+			final Register base,
+			final Register index,
+			final int scale,
 			final long displacement,
 			final DisplacementType displacementType,
 			final PointerSize ptrSize) {
-		this.reg1 = reg1;
-		this.constant = constant;
-		this.reg2 = reg2;
+		this.base = base;
+		this.scale = scale;
+		this.index = index;
 		this.displacement = displacement;
 		this.displacementType = Objects.requireNonNull(displacementType);
 		this.ptrSize = ptrSize;
@@ -78,7 +78,7 @@ public final class IndirectOperand implements Operand {
 	 * @return The base register.
 	 */
 	public Register base() {
-		return reg1;
+		return base;
 	}
 
 	/**
@@ -87,7 +87,7 @@ public final class IndirectOperand implements Operand {
 	 * @return The index register.
 	 */
 	public Register index() {
-		return reg2;
+		return index;
 	}
 
 	/**
@@ -96,7 +96,7 @@ public final class IndirectOperand implements Operand {
 	 * @return The constant of this indirect operand.
 	 */
 	public long scale() {
-		return constant;
+		return scale;
 	}
 
 	/**
@@ -134,28 +134,28 @@ public final class IndirectOperand implements Operand {
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
 		}
-		if (reg2 instanceof SegmentRegister sr) {
+		if (index instanceof SegmentRegister sr) {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');
-		if (reg1 != null) {
-			sb.append(reg1.toIntelSyntax());
-			if (reg2 != null) {
+		if (base != null) {
+			sb.append(base.toIntelSyntax());
+			if (index != null) {
 				sb.append('+');
 			}
 			shouldAddSign = true;
 		}
-		if (reg2 != null) {
-			sb.append(reg2.toIntelSyntax());
+		if (index != null) {
+			sb.append(index.toIntelSyntax());
 			shouldAddSign = true;
 		}
 		final int uselessConstant = 1;
-		if (constant != uselessConstant) {
-			sb.append('*').append(constant);
+		if (scale != uselessConstant) {
+			sb.append('*').append(scale);
 			shouldAddSign = true;
 		}
 		final long defaultDisplacement = 0L;
-		if (displacement != defaultDisplacement) {
+		if (displacement != defaultDisplacement || (base != null || scale != uselessConstant)) {
 			long d = displacement;
 			if (displacement < 0) {
 				d = switch (displacementType) {
@@ -182,10 +182,10 @@ public final class IndirectOperand implements Operand {
 	@Override
 	public String toString() {
 		return "IndirectOperand(reg1="
-				+ (reg1 == null ? "null" : reg1.toString())
+				+ (base == null ? "null" : base.toString())
 				+ ";reg2="
-				+ reg2.toString() + ";constant="
-				+ constant + ";displacement="
+				+ index.toString() + ";constant="
+				+ scale + ";displacement="
 				+ displacement + ";displacementType=" + displacementType
 				+ ";ptrSize=" + ptrSize
 				+ ")";
@@ -194,9 +194,9 @@ public final class IndirectOperand implements Operand {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + reg1.hashCode();
-		h = 31 * h + constant;
-		h = 31 * h + reg2.hashCode();
+		h = 31 * h + base.hashCode();
+		h = 31 * h + scale;
+		h = 31 * h + index.hashCode();
 		h = 31 * h + HashUtils.hash(displacement);
 		h = 31 * h + displacementType.hashCode();
 		h = 31 * h + ptrSize.hashCode();
@@ -215,9 +215,9 @@ public final class IndirectOperand implements Operand {
 			return false;
 		}
 		final IndirectOperand io = (IndirectOperand) other;
-		return this.reg1.equals(io.reg1)
-				&& this.constant == io.constant
-				&& this.reg2.equals(io.reg2)
+		return this.base.equals(io.base)
+				&& this.scale == io.scale
+				&& this.index.equals(io.index)
 				&& this.displacement == io.displacement
 				&& this.displacementType.equals(io.displacementType)
 				&& this.ptrSize.equals(io.ptrSize);
