@@ -108,6 +108,15 @@ public final class IndirectOperand implements Operand {
 		return displacement;
 	}
 
+	public int getDisplacementBits() {
+		return switch (displacementType) {
+			case BYTE -> 8;
+			case SHORT -> 16;
+			case INT -> 32;
+			case LONG -> 64;
+		};
+	}
+
 	@Override
 	public int bits() {
 		return ptrSize.bits();

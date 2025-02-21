@@ -1635,21 +1635,25 @@ inc rsp  | 48 ff c4
 inc sil  | 40 fe c6
 inc spl  | 40 fe c4
 #
-inc BYTE PTR [rax+0x12345678]  | fe 80 78 56 34 12
-inc BYTE PTR [rax]             | fe 00
-inc DWORD PTR [rax+0x12345678] | ff 80 78 56 34 12
-inc DWORD PTR [rax]            | ff 00
-inc DWORD PTR [rbp+0x12345678] | ff 85 78 56 34 12
-inc DWORD PTR [rbx+0x12345678] | ff 83 78 56 34 12
-inc DWORD PTR [rcx+0x12345678] | ff 81 78 56 34 12
-inc DWORD PTR [rdi+0x12345678] | ff 87 78 56 34 12
-inc DWORD PTR [rdx+0x12345678] | ff 82 78 56 34 12
-inc DWORD PTR [rsi+0x12345678] | ff 86 78 56 34 12
-inc DWORD PTR [rsp+0x12345678] | ff 84 24 78 56 34 12
-inc QWORD PTR [rax]            | 48 ff 00
-inc QWORD PTR [rcx+0x12345678] | 48 ff 81 78 56 34 12
-inc WORD PTR [rax+0x12345678]  | 66 ff 80 78 56 34 12
-inc WORD PTR [rax]             | 66 ff 00
+inc BYTE PTR [rax+0x12345678]        | fe 80 78 56 34 12
+inc BYTE PTR [rax]                   | fe 00
+inc BYTE PTR [rbx+rcx*2+0x12345678]  | fe 84 4b 78 56 34 12
+inc DWORD PTR [rax+0x12345678]       | ff 80 78 56 34 12
+inc DWORD PTR [rax]                  | ff 00
+inc DWORD PTR [rbp+0x12345678]       | ff 85 78 56 34 12
+inc DWORD PTR [rbp+rsi*2+0x12345678] | ff 84 75 78 56 34 12
+inc DWORD PTR [rbx+0x12345678]       | ff 83 78 56 34 12
+inc DWORD PTR [rcx+0x12345678]       | ff 81 78 56 34 12
+inc DWORD PTR [rdi+0x12345678]       | ff 87 78 56 34 12
+inc DWORD PTR [rdx+0x12345678]       | ff 82 78 56 34 12
+inc DWORD PTR [rsi+0x12345678]       | ff 86 78 56 34 12
+inc DWORD PTR [rsp+0x12345678]       | ff 84 24 78 56 34 12
+inc QWORD PTR [r8+rdi*2+0x12345678]  | 49 ff 84 78 78 56 34 12
+inc QWORD PTR [rax]                  | 48 ff 00
+inc QWORD PTR [rcx+0x12345678]       | 48 ff 81 78 56 34 12
+inc WORD PTR [rax+0x12345678]        | 66 ff 80 78 56 34 12
+inc WORD PTR [rax]                   | 66 ff 00
+inc WORD PTR [rdx+rdi*2+0x12345678]  | 66 ff 84 7a 78 56 34 12
 
 # Dec
 dec ah   | fe cc
@@ -1705,13 +1709,18 @@ dec rsp  | 48 ff cc
 dec sil  | 40 fe ce
 dec spl  | 40 fe cc
 #
-dec BYTE PTR [rax+0x12345678]  | fe 88 78 56 34 12
-dec BYTE PTR [rax]             | fe 08
-dec DWORD PTR [rsp+0x12345678] | ff 8c 24 78 56 34 12
-dec QWORD PTR [rax]            | 48 ff 08
-dec QWORD PTR [rcx+0x12345678] | 48 ff 89 78 56 34 12
-dec WORD PTR [rax+0x12345678]  | 66 ff 88 78 56 34 12
-dec WORD PTR [rax]             | 66 ff 08
+dec BYTE PTR [rax+0x12345678]        | fe 88 78 56 34 12
+dec BYTE PTR [rax]                   | fe 08
+dec BYTE PTR [rbx+rcx*2+0x12345678]  | fe 8c 4b 78 56 34 12
+dec DWORD PTR [rbp+rsi*2+0x12345678] | ff 8c 75 78 56 34 12
+dec DWORD PTR [rsp+0x12345678]       | ff 8c 24 78 56 34 12
+dec DWORD PTR [rsp]                  | ff 0c 24
+dec QWORD PTR [r8+rdi*2+0x12345678]  | 49 ff 8c 78 78 56 34 12
+dec QWORD PTR [rax]                  | 48 ff 08
+dec QWORD PTR [rcx+0x12345678]       | 48 ff 89 78 56 34 12
+dec WORD PTR [rax+0x12345678]        | 66 ff 88 78 56 34 12
+dec WORD PTR [rax]                   | 66 ff 08
+dec WORD PTR [rdx+rdi*2+0x12345678]  | 66 ff 8c 7a 78 56 34 12
 
 # Pshufd
 pshufd xmm0,xmm1,0x12 | 66 0f 70 c1 12

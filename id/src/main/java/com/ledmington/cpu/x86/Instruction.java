@@ -192,6 +192,10 @@ public final class Instruction {
 		return code;
 	}
 
+	public boolean hasFirstOperand() {
+		return op1 != null;
+	}
+
 	/**
 	 * Returns the first operand of this Instruction.
 	 *
@@ -199,14 +203,14 @@ public final class Instruction {
 	 * @throws IllegalArgumentException If this instruction has no operands.
 	 */
 	public Operand firstOperand() {
-		if (op1 == null) {
-			throw new IllegalArgumentException("No first operand");
+		if (!hasFirstOperand()) {
+			throw new IllegalArgumentException("No first operand.");
 		}
 		return op1;
 	}
 
-	public boolean hasFirstOperand() {
-		return op1 != null;
+	public boolean hasSecondOperand() {
+		return op2 != null;
 	}
 
 	/**
@@ -216,14 +220,21 @@ public final class Instruction {
 	 * @throws IllegalArgumentException If this instruction has less than two operands.
 	 */
 	public Operand secondOperand() {
-		if (op2 == null) {
-			throw new IllegalArgumentException("No second operand");
+		if (!hasSecondOperand()) {
+			throw new IllegalArgumentException("No second operand.");
 		}
 		return op2;
 	}
 
-	public boolean hasSecondOperand() {
-		return op2 != null;
+	public boolean hasThirdOperand() {
+		return op3 != null;
+	}
+
+	public Operand thirdOperand() {
+		if (!hasThirdOperand()) {
+			throw new IllegalArgumentException("No third operand.");
+		}
+		return op3;
 	}
 
 	/**
