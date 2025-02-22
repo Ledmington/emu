@@ -680,10 +680,12 @@ public final class InstructionEncoder {
 			wb.write(modrm);
 		}
 		encodeSIB(wb, io);
-		if (io.getDisplacementBits() == 8) {
-			wb.write(BitUtils.asByte(io.getDisplacement()));
-		} else {
-			wb.write(BitUtils.asInt(io.getDisplacement()));
+		if (io.getDisplacement() != 0L) {
+			if (io.getDisplacementBits() == 8) {
+				wb.write(BitUtils.asByte(io.getDisplacement()));
+			} else {
+				wb.write(BitUtils.asInt(io.getDisplacement()));
+			}
 		}
 	}
 
