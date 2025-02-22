@@ -64,9 +64,7 @@ public final class RelativeOffset implements Operand {
 	public int bits() {
 		return switch (type) {
 			case BYTE -> 8;
-			case SHORT -> 16;
 			case INT -> 32;
-			case LONG -> 64;
 		};
 	}
 

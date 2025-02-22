@@ -258,17 +258,17 @@ lea ax,[ebx+ecx*4+0x12345678]   | 67 66 8d 84 8b 78 56 34 12
 lea cx,[rbx+rcx*4+0x12345678]   | 66 8d 8c 8b 78 56 34 12
 lea eax,[ebx]                   | 67 8d 03
 lea eax,[rbx]                   | 8d 03
-lea ecx,[rdx+rbp*2]             | 8d 0c 6a
+lea ecx,[rdx+rbp*2+0x0]         | 8d 0c 6a
 lea esi,[edi+r12d*2+0x12345678] | 67 42 8d b4 67 78 56 34 12
 lea r10w,[ebx+ecx*4+0x12345678] | 66 67 44 8d 94 8b 78 56 34 12
 lea r10w,[ebx+ecx*4+0x12345678] | 67 66 44 8d 94 8b 78 56 34 12
 lea r13d,[rdi+r8*4+0x12345678]  | 46 8d ac 87 78 56 34 12
 lea r14w,[rbx+rcx*4+0x12345678] | 66 44 8d b4 8b 78 56 34 12
-lea r9d,[edx+ebp*2]             | 67 44 8d 0c 6a
+lea r9d,[edx+ebp*2+0x0]         | 67 44 8d 0c 6a
 lea rax,[ebx]                   | 67 48 8d 03
 lea rax,[rbx]                   | 48 8d 03
-lea rcx,[edx+ebp*2]             | 67 48 8d 0c 6a
-lea rcx,[rdx+rbp*2]             | 48 8d 0c 6a
+lea rcx,[edx+ebp*2+0x0]         | 67 48 8d 0c 6a
+lea rcx,[rdx+rbp*2+0x0]         | 48 8d 0c 6a
 lea rsi,[edi+r9d*2+0x12345678]  | 67 4a 8d b4 4f 78 56 34 12
 lea rsi,[rdi+r8*4+0x12345678]   | 4a 8d b4 87 78 56 34 12
 
@@ -1720,7 +1720,7 @@ dec QWORD PTR [rax]                  | 48 ff 08
 dec QWORD PTR [rcx+0x12345678]       | 48 ff 89 78 56 34 12
 dec WORD PTR [rax*2+0x0]             | 66 ff 0c 45 00 00 00 00
 dec WORD PTR [rax+0x12345678]        | 66 ff 88 78 56 34 12
-dec WORD PTR [rax+rbx*1]             | 66 ff 0c 18
+dec WORD PTR [rax+rbx*1+0x0]         | 66 ff 0c 18
 dec WORD PTR [rax]                   | 66 ff 08
 dec WORD PTR [rdx+rdi*2+0x12345678]  | 66 ff 8c 7a 78 56 34 12
 

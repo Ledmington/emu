@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.random.RandomGenerator;
+import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,72 +33,199 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 final class TestIndirectOperand {
 
+	private static final RandomGenerator rng =
+			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+	private static final Register64[] r64 = Register64.values();
+	private static final Register32[] r32 = Register32.values();
+
+	private static Register32 getRandomRegister32() {
+		return r32[rng.nextInt(0, r32.length)];
+	}
+
+	private static Register64 getRandomRegister64() {
+		return r64[rng.nextInt(0, r64.length)];
+	}
+
+	// This code generates all relevant possible combinations of indirect operands, for testing.
 	private static Stream<Arguments> correctIndirectOperands() {
+		final PointerSize[] ptr = PointerSize.values();
+		final int[] constant = new int[] {1, 2, 4, 8};
+		final Number[] displacements =
+				new Number[] {0, (byte) 0x02, (byte) 0x12, (byte) 0x82, 0x123, 0x12345678, 0x82345678};
+
 		final List<Arguments> args = new ArrayList<>();
-		for (final PointerSize ptr : PointerSize.values()) {
-			for (final Register indexRegister : new Register[] {Register32.EAX, Register64.RAX}) {
-				for (final int constant : new int[] {1, 2, 4, 8}) {
-					for (final boolean hasBaseRegister : new boolean[] {false, true}) {
-						for (final Number displacement : new Number[] {
-							0,
-							(byte) 0x12,
-							(byte) 0x82,
-							(short) 0x1234,
-							(short) 0x8234,
-							0x12345678,
-							0x82345678,
-							0x1123456789abcdefL,
-							0x8123456789abcdefL
-						}) {
-							final IndirectOperandBuilder iob = IndirectOperand.builder();
+
+		// [index]
+		for (final PointerSize ps : ptr) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+				args.add(Arguments.of(
+						IndirectOperand.builder().index(r).pointer(ps).build(),
+						ps.name().replace('_', ' ') + " [" + r.toIntelSyntax() + "]"));
+			}
+		}
+
+		// [index + displacement]
+		for (final PointerSize ps : ptr) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+				for (final Number disp : displacements) {
+					final IndirectOperandBuilder iob =
+							IndirectOperand.builder().index(r).pointer(ps);
+					final StringBuilder sb = new StringBuilder();
+					sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
+
+					if (disp.intValue() != 0) {
+						if (disp instanceof Byte b) {
+							iob.displacement(b);
+							if (b < (byte) 0) {
+								sb.append(String.format("-0x%x", -b));
+							} else {
+								sb.append(String.format("+0x%x", b));
+							}
+						} else {
+							iob.displacement(disp.intValue());
+							if (disp.intValue() < 0) {
+								sb.append(String.format("-0x%x", -disp.intValue()));
+							} else {
+								sb.append(String.format("+0x%x", disp.intValue()));
+							}
+						}
+					}
+					sb.append(']');
+					args.add(Arguments.of(iob.build(), sb.toString()));
+				}
+			}
+		}
+
+		// [index*scale]
+		for (final PointerSize ps : ptr) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+				for (final int c : constant) {
+					final StringBuilder sb = new StringBuilder();
+					sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
+					if (c != 1) {
+						sb.append('*').append(c).append("+0x0");
+					}
+					sb.append(']');
+					args.add(Arguments.of(
+							IndirectOperand.builder()
+									.index(r)
+									.constant(c)
+									.pointer(ps)
+									.build(),
+							sb.toString()));
+				}
+			}
+		}
+
+		// [index*scale + displacement]
+		for (final PointerSize ps : ptr) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+				for (final int c : constant) {
+					for (final Number disp : displacements) {
+						final IndirectOperandBuilder iob =
+								IndirectOperand.builder().index(r).pointer(ps).constant(c);
+						final StringBuilder sb = new StringBuilder();
+						sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
+
+						if (c != 1) {
+							sb.append('*').append(c);
+						}
+
+						if (disp.intValue() != 0 || c != 1) {
+							if (disp instanceof Byte b) {
+								iob.displacement(b);
+								if (b < (byte) 0) {
+									sb.append(String.format("-0x%x", -b));
+								} else {
+									sb.append(String.format("+0x%x", b));
+								}
+							} else {
+								iob.displacement(disp.intValue());
+								if (disp.intValue() < 0) {
+									sb.append(String.format("-0x%x", -disp.intValue()));
+								} else {
+									sb.append(String.format("+0x%x", disp.intValue()));
+								}
+							}
+						}
+						sb.append(']');
+						args.add(Arguments.of(iob.build(), sb.toString()));
+					}
+				}
+			}
+		}
+
+		// [displacement]
+		for (final PointerSize ps : ptr) {
+			for (final Number disp : displacements) {
+				final IndirectOperandBuilder iob = IndirectOperand.builder().pointer(ps);
+				final StringBuilder sb = new StringBuilder();
+				sb.append(ps.name().replace('_', ' ')).append(" [");
+				if (disp instanceof Byte b) {
+					iob.displacement(b);
+					if (b < (byte) 0) {
+						sb.append(String.format("0x%x", -b));
+					} else {
+						sb.append(String.format("0x%x", b));
+					}
+				} else {
+					iob.displacement(disp.intValue());
+					if (disp.intValue() < 0) {
+						sb.append(String.format("0x%x", -disp.intValue()));
+					} else {
+						sb.append(String.format("0x%x", disp.intValue()));
+					}
+				}
+				sb.append(']');
+				args.add(Arguments.of(iob.build(), sb.toString()));
+			}
+		}
+
+		// [base + index*scale + displacement]
+		for (final PointerSize ps : ptr) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+				for (final int c : constant) {
+					for (final Register base : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+						if (r.bits() != base.bits()) {
+							continue;
+						}
+
+						for (final Number disp : displacements) {
+							final IndirectOperandBuilder iob = IndirectOperand.builder()
+									.base(base)
+									.index(r)
+									.constant(c)
+									.pointer(ps);
+
 							final StringBuilder sb = new StringBuilder();
 
-							iob.pointer(ptr);
-							sb.append(ptr.name().replace('_', ' ')).append(" [");
+							sb.append(ps.name().replace('_', ' '))
+									.append(" [")
+									.append(base.toIntelSyntax())
+									.append('+')
+									.append(r.toIntelSyntax())
+									.append('*')
+									.append(c);
 
-							if (hasBaseRegister) {
-								final Register base = indexRegister.bits() == 32 ? Register32.EBX : Register64.RBX;
-								iob.base(base);
-								sb.append(base.toIntelSyntax()).append('+');
-							}
-
-							iob.index(indexRegister);
-							sb.append(indexRegister.toIntelSyntax());
-
-							iob.constant(constant);
-							if (constant != 1) {
-								sb.append('*').append(constant);
-							}
-
-							if (displacement.intValue() != 0 || (hasBaseRegister || constant != 1)) {
-								switch (displacement) {
-									case Byte b -> {
-										iob.displacement(b);
-										sb.append(b < 0 ? '-' : '+');
-										sb.append(String.format("0x%x", b < 0 ? -b : b));
-									}
-									case Short s -> {
-										iob.displacement(s);
-										sb.append(s < 0 ? '-' : '+');
-										sb.append(String.format("0x%x", s < 0 ? -s : s));
-									}
-									case Integer x -> {
-										iob.displacement(x);
-										sb.append(x < 0 ? '-' : '+');
-										sb.append(String.format("0x%x", x < 0 ? -x : x));
-									}
-									case Long l -> {
-										iob.displacement(l);
-										sb.append(l < 0L ? '-' : '+');
-										sb.append(String.format("0x%x", l < 0L ? -l : l));
-									}
-									default -> throw new IllegalStateException("Unreachable.");
+							if (disp instanceof Byte b) {
+								iob.displacement(b);
+								if (b < (byte) 0) {
+									sb.append(String.format("-0x%x", -b));
+								} else {
+									sb.append(String.format("+0x%x", b));
+								}
+							} else {
+								iob.displacement(disp.intValue());
+								if (disp.intValue() < 0) {
+									sb.append(String.format("-0x%x", -disp.intValue()));
+								} else {
+									sb.append(String.format("+0x%x", disp.intValue()));
 								}
 							}
 
 							sb.append(']');
 
-							args.add(Arguments.of(iob, sb.toString()));
+							args.add(Arguments.of(iob.build(), sb.toString()));
 						}
 					}
 				}
@@ -107,13 +236,9 @@ final class TestIndirectOperand {
 
 	@ParameterizedTest
 	@MethodSource("correctIndirectOperands")
-	void correct(final IndirectOperandBuilder iob, final String expected) {
-		final IndirectOperand io = iob.build();
-		assertEquals(
-				expected,
-				io.toIntelSyntax(),
-				() -> String.format(
-						"Expected indirect operand '%s' to be '%s' but wasn't", io.toIntelSyntax(), expected));
+	void correct(final IndirectOperand io, final String expected) {
+		final String actual = io.toIntelSyntax();
+		assertEquals(expected, actual, () -> String.format("Expected '%s' but was '%s'.", expected, actual));
 	}
 
 	private static Stream<Arguments> wrongIndirectOperands() {

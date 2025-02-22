@@ -69,7 +69,7 @@ public final class IndirectOperand implements Operand {
 		this.index = index;
 		this.displacement = displacement;
 		this.displacementType = Objects.requireNonNull(displacementType);
-		this.ptrSize = ptrSize;
+		this.ptrSize = Objects.requireNonNull(ptrSize);
 	}
 
 	/**
@@ -111,15 +111,37 @@ public final class IndirectOperand implements Operand {
 	public int getDisplacementBits() {
 		return switch (displacementType) {
 			case BYTE -> 8;
-			case SHORT -> 16;
 			case INT -> 32;
-			case LONG -> 64;
 		};
 	}
 
 	@Override
 	public int bits() {
 		return ptrSize.bits();
+	}
+
+	private boolean isDisplacementNegative() {
+		return switch (displacementType) {
+			case DisplacementType.BYTE -> BitUtils.asByte(displacement) < (byte) 0;
+			case DisplacementType.INT -> BitUtils.asInt(displacement) < 0;
+		};
+	}
+
+	private void addDisplacementSign(final StringBuilder sb) {
+		sb.append(isDisplacementNegative() ? '-' : '+');
+	}
+
+	private void addDisplacement(final StringBuilder sb) {
+		switch (displacementType) {
+			case DisplacementType.BYTE -> {
+				final byte x = BitUtils.asByte(displacement);
+				sb.append(String.format("0x%x", isDisplacementNegative() ? -x : x));
+			}
+			case DisplacementType.INT -> {
+				final int x = BitUtils.asInt(displacement);
+				sb.append(String.format("0x%x", isDisplacementNegative() ? -x : x));
+			}
+		}
 	}
 
 	/**
@@ -130,7 +152,6 @@ public final class IndirectOperand implements Operand {
 	 */
 	public String toIntelSyntax(final boolean addPointerSize) {
 		final StringBuilder sb = new StringBuilder();
-		boolean shouldAddSign = false;
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
 		}
@@ -138,37 +159,31 @@ public final class IndirectOperand implements Operand {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');
-		if (base != null) {
-			sb.append(base.toIntelSyntax());
-			if (index != null) {
-				sb.append('+');
-			}
-			shouldAddSign = true;
-		}
-		if (index != null) {
+		final boolean hasBase = base != null;
+		final boolean hasIndex = index != null;
+		final boolean hasScale = scale != 1;
+		final boolean hasDisplacement = displacement != 0L;
+		if (!hasBase && !hasIndex) {
+			addDisplacement(sb);
+		} else if (!hasBase) {
 			sb.append(index.toIntelSyntax());
-			shouldAddSign = true;
-		}
-		final int uselessConstant = 1;
-		if (scale != uselessConstant) {
-			sb.append('*').append(scale);
-			shouldAddSign = true;
-		}
-		final long defaultDisplacement = 0L;
-		if (displacement != defaultDisplacement || (base != null || scale != uselessConstant)) {
-			long d = displacement;
-			if (displacement < 0) {
-				d = switch (displacementType) {
-					case BYTE -> (~BitUtils.asByte(d)) + 1;
-					case SHORT -> (~BitUtils.asShort(d)) + 1;
-					case INT -> (~BitUtils.asInt(d)) + 1;
-					case LONG -> (~d) + 1;
-				};
+			if (hasScale) {
+				sb.append('*').append(scale);
 			}
-			if (shouldAddSign) {
-				sb.append((displacement < 0) ? '-' : '+');
+			if (hasDisplacement || hasScale) {
+				addDisplacementSign(sb);
+				addDisplacement(sb);
 			}
-			sb.append(String.format("0x%x", d));
+		} else if (hasIndex) {
+			sb.append(base.toIntelSyntax())
+					.append('+')
+					.append(index.toIntelSyntax())
+					.append('*')
+					.append(scale);
+			addDisplacementSign(sb);
+			addDisplacement(sb);
+		} else {
+			throw new IllegalStateException("Unreachable.");
 		}
 		sb.append(']');
 		return sb.toString();

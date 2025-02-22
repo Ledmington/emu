@@ -28,7 +28,7 @@ public final class IndirectOperandBuilder {
 	private int c = DEFAULT_CONSTANT;
 	private Register indexRegister;
 	private Long displacement;
-	private DisplacementType displacementType = DisplacementType.LONG;
+	private DisplacementType displacementType = DisplacementType.INT;
 	private PointerSize ptrSize;
 	private boolean alreadyBuilt;
 
@@ -112,16 +112,6 @@ public final class IndirectOperandBuilder {
 	}
 
 	/**
-	 * Sets a 16-bit displacement for the IndirectOperand.
-	 *
-	 * @param disp The new displacement.
-	 * @return This instance of IndirectOperandBuilder.
-	 */
-	public IndirectOperandBuilder displacement(final short disp) {
-		return displacement(disp, DisplacementType.SHORT);
-	}
-
-	/**
 	 * Sets a 32-bit displacement for the IndirectOperand.
 	 *
 	 * @param disp The new displacement.
@@ -131,22 +121,12 @@ public final class IndirectOperandBuilder {
 		return displacement(disp, DisplacementType.INT);
 	}
 
-	/**
-	 * Sets a 64-bit displacement for the IndirectOperand.
-	 *
-	 * @param disp The new displacement.
-	 * @return This instance of IndirectOperandBuilder.
-	 */
-	public IndirectOperandBuilder displacement(final long disp) {
-		return displacement(disp, DisplacementType.LONG);
-	}
-
 	private IndirectOperandBuilder displacement(final long disp, final DisplacementType displacementType) {
 		if (this.displacement != null) {
 			throw new IllegalArgumentException("Cannot define displacement twice.");
 		}
 		this.displacement = disp;
-		this.displacementType = displacementType;
+		this.displacementType = Objects.requireNonNull(displacementType);
 		return this;
 	}
 

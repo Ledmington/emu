@@ -23,12 +23,6 @@ public enum DisplacementType {
 	/** 8 bits. */
 	BYTE,
 
-	/** 16 bits. */
-	SHORT,
-
 	/** 32 bits. */
-	INT,
-
-	/** 64 bits. */
-	LONG
+	INT
 }
