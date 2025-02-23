@@ -22,10 +22,10 @@ import java.util.Objects;
 /** This class allows an easier construction of an IndirectOperand object. */
 public final class IndirectOperandBuilder {
 
-	private static final int DEFAULT_CONSTANT = 1;
+	private static final int DEFAULT_SCALE = 1;
 
 	private Register baseRegister;
-	private int c = DEFAULT_CONSTANT;
+	private int scale = DEFAULT_SCALE;
 	private Register indexRegister;
 	private Long displacement;
 	private DisplacementType displacementType = DisplacementType.INT;
@@ -68,13 +68,13 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder constant(final int c) {
-		if (this.c != DEFAULT_CONSTANT) {
+		if (this.scale != DEFAULT_SCALE) {
 			throw new IllegalArgumentException("Cannot define constant twice.");
 		}
 		if (c != 1 && c != 2 && c != 4 && c != 8) {
 			throw new IllegalArgumentException(String.format("Invalid indirect operand index constant %,d.", c));
 		}
-		this.c = c;
+		this.scale = c;
 		return this;
 	}
 
@@ -155,28 +155,29 @@ public final class IndirectOperandBuilder {
 		if (alreadyBuilt) {
 			throw new IllegalArgumentException("Cannot build the same IndirectOperandBuilder twice.");
 		}
-		alreadyBuilt = true;
 
 		if (ptrSize == null) {
 			throw new IllegalArgumentException("Cannot build without explicit pointer size.");
 		}
 
+		alreadyBuilt = true;
+
 		if (baseRegister != null) {
 			if (indexRegister == null) {
-				throw new IllegalArgumentException(
-						"Cannot build an IndirectOperand with reg1=" + baseRegister + ", no reg2, constant=" + c + ", "
-								+ (displacement == null ? "no displacement" : "displacement=" + displacement) + ".");
+				throw new IllegalArgumentException("Cannot build an IndirectOperand with reg1=" + baseRegister
+						+ ", no reg2, constant=" + scale + ", "
+						+ (displacement == null ? "no displacement" : "displacement=" + displacement) + ".");
 			}
 
 			return new IndirectOperand(
 					baseRegister,
 					indexRegister,
-					c,
+					scale,
 					displacement == null ? 0L : displacement,
 					displacementType,
 					ptrSize);
 		} else {
-			if (c == DEFAULT_CONSTANT) {
+			if (scale == DEFAULT_SCALE) {
 				if (indexRegister == null && displacement == null) {
 					throw new IllegalArgumentException(
 							"Cannot build an IndirectOperand with no reg1, no reg2, no constant, no displacement.");
@@ -186,31 +187,46 @@ public final class IndirectOperandBuilder {
 					return new IndirectOperand(
 							null,
 							indexRegister,
-							DEFAULT_CONSTANT,
+							DEFAULT_SCALE,
 							displacement == null ? 0L : displacement,
 							displacementType,
 							ptrSize);
 				} else {
 					// [displacement]
-					return new IndirectOperand(null, null, DEFAULT_CONSTANT, displacement, displacementType, ptrSize);
+					return new IndirectOperand(null, null, DEFAULT_SCALE, displacement, displacementType, ptrSize);
 				}
 			} else {
 				if (indexRegister == null) {
 					throw new IllegalArgumentException(
-							"Cannot build an IndirectOperand with no reg1, no reg2, constant=" + c + ", "
+							"Cannot build an IndirectOperand with no reg1, no reg2, constant=" + scale + ", "
 									+ (displacement == null ? "no displacement" : "displacement=" + displacement)
 									+ ".");
 				}
 
 				return new IndirectOperand(
-						null, indexRegister, c, displacement == null ? 0L : displacement, displacementType, ptrSize);
+						null,
+						indexRegister,
+						scale,
+						displacement == null ? 0L : displacement,
+						displacementType,
+						ptrSize);
 			}
 		}
 	}
 
 	@Override
+	public int hashCode() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean equals(final Object other) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public String toString() {
-		return "IndirectOperandBuilder(reg1=" + baseRegister + ";reg2=" + indexRegister + ";constant=" + c
+		return "IndirectOperandBuilder(reg1=" + baseRegister + ";reg2=" + indexRegister + ";constant=" + scale
 				+ ";displacement="
 				+ displacement + ";displacementType="
 				+ displacementType + ";ptrSize=" + ptrSize + ";alreadyBuilt=" + alreadyBuilt + ")";
