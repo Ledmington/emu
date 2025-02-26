@@ -38,7 +38,7 @@ import com.ledmington.utils.BitUtils;
 final class TestPermissions {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 
 	private MemoryController mem;
 

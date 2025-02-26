@@ -39,7 +39,7 @@ import com.ledmington.utils.BitUtils;
 final class TestX86RegisterFile {
 
 	private static final RandomGenerator RNG =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 	private static final Register8[] ALL_8_BIT_REGISTERS = {
 		Register8.AL,
 		Register8.AH,

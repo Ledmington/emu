@@ -48,7 +48,7 @@ import com.ledmington.utils.BitUtils;
 final class TestExecution {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 	private static final List<Register8> r8 = Arrays.asList(Register8.values());
 	private static final List<Register16> r16 = Arrays.asList(Register16.values());
 	private static final List<Register32> r32 = Arrays.asList(Register32.values());

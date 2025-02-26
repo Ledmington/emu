@@ -32,7 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 final class TestBitUtils {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 
 	@Test
 	void shortToByte() {

@@ -60,7 +60,7 @@ final class TestHashUtils {
 	@Test
 	void hashLongs() {
 		// Here we check that we can generate at least 1e6 unique hashes from 64-bit values.
-		final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(System.nanoTime());
+		final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(42);
 		final int limit = 1_000_000;
 		final Set<Integer> v = new HashSet<>();
 		for (int i = 0; i < 1_000_000_000 && v.size() < limit; i++) {

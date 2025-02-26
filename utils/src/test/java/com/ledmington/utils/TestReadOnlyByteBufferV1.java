@@ -32,7 +32,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 final class TestReadOnlyByteBufferV1 {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 	private byte[] arr;
 
 	@BeforeEach

@@ -34,7 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 final class TestIndirectOperand {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 	private static final Register64[] r64 = Register64.values();
 	private static final Register32[] r32 = Register32.values();
 

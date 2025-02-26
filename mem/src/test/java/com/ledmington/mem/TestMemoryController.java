@@ -35,7 +35,7 @@ import com.ledmington.mem.exc.IllegalWriteException;
 final class TestMemoryController {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 
 	private static Stream<Arguments> randomMemoryLocations() {
 		return Stream.generate(rng::nextLong).distinct().limit(100).map(Arguments::of);

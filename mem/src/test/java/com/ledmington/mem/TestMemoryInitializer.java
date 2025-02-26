@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 final class TestMemoryInitializer {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 
 	@Test
 	void zero() {

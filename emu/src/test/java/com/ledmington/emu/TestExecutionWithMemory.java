@@ -49,7 +49,7 @@ import com.ledmington.utils.BitUtils;
 final class TestExecutionWithMemory {
 
 	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(System.nanoTime());
+			RandomGeneratorFactory.getDefault().create(42);
 	private MemoryController mem = null;
 	private X86Cpu cpu = null;
 
