@@ -25,19 +25,19 @@ import com.ledmington.utils.HashUtils;
 /**
  * This class maps the following cases:
  *
- * <p>[reg2]
+ * <p>[index]
  *
- * <p>[reg2 + displacement]
+ * <p>[index + displacement]
  *
- * <p>[reg2 * constant]
+ * <p>[index * scale]
  *
- * <p>[reg2 * constant + displacement]
+ * <p>[index * scale + displacement]
  *
  * <p>[displacement]
  *
- * <p>[reg1 + reg2 * constant]
+ * <p>[base + index * scale]
  *
- * <p>[reg1 + reg2 * constant + displacement]
+ * <p>[base + index * scale + displacement]
  */
 public final class IndirectOperand implements Operand {
 
@@ -78,7 +78,14 @@ public final class IndirectOperand implements Operand {
 	 * @return The base register.
 	 */
 	public Register base() {
+		if (!hasBase()) {
+			throw new NullPointerException("No base register.");
+		}
 		return base;
+	}
+
+	public boolean hasBase() {
+		return base != null;
 	}
 
 	/**
@@ -87,16 +94,27 @@ public final class IndirectOperand implements Operand {
 	 * @return The index register.
 	 */
 	public Register index() {
+		if (!hasIndex()) {
+			throw new NullPointerException("No index register.");
+		}
 		return index;
 	}
 
+	public boolean hasIndex() {
+		return index != null;
+	}
+
 	/**
-	 * Returns the constant to multiply the index register.
+	 * Returns the scale to multiply the index register.
 	 *
-	 * @return The constant of this indirect operand.
+	 * @return The scale of this indirect operand.
 	 */
-	public long scale() {
+	public int scale() {
 		return scale;
+	}
+
+	public boolean hasScale() {
+		return scale != 1;
 	}
 
 	/**
@@ -113,6 +131,10 @@ public final class IndirectOperand implements Operand {
 			case BYTE -> 8;
 			case INT -> 32;
 		};
+	}
+
+	public boolean hasDisplacement() {
+		return displacement != 0L;
 	}
 
 	@Override
@@ -159,22 +181,18 @@ public final class IndirectOperand implements Operand {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');
-		final boolean hasBase = base != null;
-		final boolean hasIndex = index != null;
-		final boolean hasScale = scale != 1;
-		final boolean hasDisplacement = displacement != 0L;
-		if (!hasBase && !hasIndex) {
+		if (!hasBase() && !hasIndex()) {
 			addDisplacement(sb);
-		} else if (!hasBase) {
+		} else if (!hasBase()) {
 			sb.append(index.toIntelSyntax());
-			if (hasScale) {
+			if (hasScale()) {
 				sb.append('*').append(scale);
 			}
-			if (hasDisplacement || hasScale) {
+			if (hasDisplacement() || hasScale()) {
 				addDisplacementSign(sb);
 				addDisplacement(sb);
 			}
-		} else if (hasIndex) {
+		} else if (hasIndex()) {
 			sb.append(base.toIntelSyntax())
 					.append('+')
 					.append(index.toIntelSyntax())
@@ -196,10 +214,10 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public String toString() {
-		return "IndirectOperand(reg1="
+		return "IndirectOperand(base="
 				+ (base == null ? "null" : base.toString())
-				+ ";reg2="
-				+ index.toString() + ";constant="
+				+ ";index="
+				+ index.toString() + ";scale="
 				+ scale + ";displacement="
 				+ displacement + ";displacementType=" + displacementType
 				+ ";ptrSize=" + ptrSize

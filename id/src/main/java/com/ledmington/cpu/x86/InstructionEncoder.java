@@ -168,7 +168,8 @@ public final class InstructionEncoder {
 					wb.write(BitUtils.asByte(
 							(inst.opcode() == Opcode.DEC ? (byte) 0xc8 : (byte) 0xc0) + Registers.toByte(r1)));
 				} else {
-					encodeIndirectOperandWithRegOpcode(wb, (IndirectOperand) inst.firstOperand(), (byte) 0b001, null);
+					final IndirectOperand io = (IndirectOperand) inst.firstOperand();
+					encodeIndirectOperandWithRegOpcode(wb, io, (byte) 0b001, null);
 				}
 			}
 			case Opcode.NOT -> {
@@ -254,7 +255,7 @@ public final class InstructionEncoder {
 					wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 				}
 				byte rex = (byte) 0x40;
-				if (io.base() != null && Registers.requiresExtension(io.base())) {
+				if (io.hasBase() && Registers.requiresExtension(io.base())) {
 					rex = BitUtils.or(rex, (byte) 0x01);
 				}
 				if (Registers.requiresExtension(io.index())) {
@@ -605,7 +606,7 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean isSimpleIndirectOperand(final IndirectOperand io) {
-		return io.base() == null && io.index() != null && io.scale() == 1L && io.getDisplacement() == 0L;
+		return !io.hasBase() && io.hasIndex() && !io.hasScale() && !io.hasDisplacement();
 	}
 
 	private static void encodeModRMWithOpcode(
@@ -657,30 +658,32 @@ public final class InstructionEncoder {
 		if (isSimpleIndirectOperand(io)) {
 			encodeSimpleIndirectOperand(wb, io, shiftedRegOpcode, otherRegister);
 		} else {
+			// default: mod = 00
 			byte modrm = shiftedRegOpcode;
-			if (io.getDisplacementBits() == 8) {
-				modrm = BitUtils.or(modrm, (byte) 0b01000000);
-			} else if (io.getDisplacementBits() == 32) {
-				modrm = BitUtils.or(modrm, (byte) 0b10000000);
+			if (io.hasDisplacement()) {
+				if (io.getDisplacementBits() == 8) {
+					// mod = 01
+					modrm = BitUtils.or(modrm, (byte) 0b01000000);
+				} else if (io.getDisplacementBits() == 32) {
+					// mod = 10
+					modrm = BitUtils.or(modrm, (byte) 0b10000000);
+				}
 			}
-			if (io.base() == null && io.index() == null) {
-				modrm = BitUtils.or(modrm, (byte) 0b00000101);
-			} else {
+			if (!io.hasIndex() || (io.hasBase() && (io.base() == Register32.ESP || io.base() == Register64.RSP))) {
+				// r/m = 100
 				modrm = BitUtils.or(modrm, (byte) 0b00000100);
+				wb.write(modrm);
+				encodeSIB(wb, io);
+				encodeDisplacement(wb, io);
+			} else {
+				modrm = BitUtils.or(modrm, Registers.toByte(io.base()));
+				wb.write(modrm);
 			}
-			encodeGenericIndirectOperand(wb, io, modrm, otherRegister);
 		}
 	}
 
-	private static void encodeGenericIndirectOperand(
-			final WriteOnlyByteBuffer wb, final IndirectOperand io, final byte modrm, final Register otherRegister) {
-		if (otherRegister != null) {
-			wb.write(BitUtils.or(modrm, BitUtils.shl(Registers.toByte(otherRegister), 3)));
-		} else {
-			wb.write(modrm);
-		}
-		encodeSIB(wb, io);
-		if (io.getDisplacement() != 0L) {
+	private static void encodeDisplacement(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
+		if (io.hasDisplacement()) {
 			if (io.getDisplacementBits() == 8) {
 				wb.write(BitUtils.asByte(io.getDisplacement()));
 			} else {
@@ -714,7 +717,7 @@ public final class InstructionEncoder {
 		} else {
 			x = BitUtils.or(x, BitUtils.shl(Registers.toByte(io.index()), 3));
 		}
-		if (io.base() != null) {
+		if (io.hasBase()) {
 			x = BitUtils.or(x, Registers.toByte(io.base()));
 		}
 		wb.write(x);
