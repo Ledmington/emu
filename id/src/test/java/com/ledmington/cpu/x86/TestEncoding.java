@@ -48,8 +48,7 @@ public final class TestEncoding extends X64Test {
 	@MethodSource("instructionEncodings")
 	void parsing(final List<Byte> input) {
 		final byte[] code = toByteArray(input);
-		final InstructionDecoder id = new InstructionDecoderV1(code);
-		final List<Instruction> instructions = id.decodeAll(code.length);
+		final List<Instruction> instructions = InstructionDecoder.fromHex(code, code.length);
 		assertNotNull(instructions, "InstructionDecoder returned a null List.");
 		final int codeLen = instructions.size();
 		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found.", codeLen));

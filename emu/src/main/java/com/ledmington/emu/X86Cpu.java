@@ -23,7 +23,6 @@ import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
@@ -53,7 +52,6 @@ public class X86Cpu implements X86Emulator {
 	private final RegisterFile rf = new X86RegisterFile();
 	private final MemoryController mem;
 	private final InstructionFetcher instFetch;
-	private final InstructionDecoder dec;
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -70,7 +68,6 @@ public class X86Cpu implements X86Emulator {
 	public X86Cpu(final MemoryController mem) {
 		this.mem = Objects.requireNonNull(mem);
 		this.instFetch = new InstructionFetcher(mem, rf);
-		this.dec = new InstructionDecoderV1(instFetch);
 	}
 
 	@Override
@@ -90,7 +87,7 @@ public class X86Cpu implements X86Emulator {
 	@Override
 	public void executeOne() {
 		assertIsRunning();
-		executeOne(dec.decode());
+		executeOne(InstructionDecoder.fromHex(this.instFetch));
 	}
 
 	@Override

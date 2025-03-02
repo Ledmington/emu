@@ -76,12 +76,11 @@ final class TestIncompleteInstruction extends X64Test {
 	@ParameterizedTest
 	@MethodSource("incompleteInstructions")
 	void incorrectDecoding(final List<Byte> code) {
-		final InstructionDecoder id = new InstructionDecoderV1(toByteArray(code));
-
 		// Here we expect an ArrayIndexOutOfBoundsException to be thrown because,
 		// like CPUs which break when requesting a new byte and not finding it,
 		// the InstructionDecoder will ask for more bytes than are available and
 		// the ReadOnlyByteBufferV1 will throw this exception.
-		assertThrows(ArrayIndexOutOfBoundsException.class, () -> id.decodeAll(code.size()));
+		assertThrows(
+				ArrayIndexOutOfBoundsException.class, () -> InstructionDecoder.fromHex(toByteArray(code), code.size()));
 	}
 }

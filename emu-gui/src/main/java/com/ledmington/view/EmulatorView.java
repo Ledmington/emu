@@ -41,7 +41,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
@@ -271,7 +270,6 @@ public final class EmulatorView extends Stage {
 
 	private void updateCode() {
 		final RegisterFile regFile = (RegisterFile) cpu.getRegisters();
-		final InstructionDecoder decoder = new InstructionDecoderV1(new InstructionFetcher(this.mem, regFile));
 		final StringBuilder sb = new StringBuilder();
 		final int n = AppConstants.getMaxCodeInstructions();
 		final long originalRIP = regFile.get(Register64.RIP);
@@ -283,7 +281,8 @@ public final class EmulatorView extends Stage {
 
 			String inst;
 			try {
-				inst = decoder.decode().toIntelSyntax();
+				inst = InstructionDecoder.fromHex(new InstructionFetcher(this.mem, regFile))
+						.toIntelSyntax();
 				rip = regFile.get(Register64.RIP);
 			} catch (final UnknownOpcode | ReservedOpcode | UnrecognizedPrefix e) {
 				inst = String.format(".byte 0x%02x", this.mem.readCode(rip));

@@ -32,7 +32,6 @@ import org.openjdk.jmh.annotations.Timeout;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
-import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionDecoderV1;
 import com.ledmington.utils.MiniLogger;
 

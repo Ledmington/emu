@@ -40,8 +40,7 @@ final class TestDecoding extends X64Test {
 	@ParameterizedTest
 	@MethodSource("instructions")
 	void parsing(final String expected, final List<Byte> code) {
-		final InstructionDecoder id = new InstructionDecoderV1(toByteArray(code));
-		final List<Instruction> instructions = id.decodeAll(code.size());
+		final List<Instruction> instructions = InstructionDecoder.fromHex(toByteArray(code), code.size());
 		assertNotNull(instructions, "InstructionDecoder returned a null List.");
 		final int codeLen = instructions.size();
 		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found.", codeLen));
