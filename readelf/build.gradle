@@ -28,8 +28,8 @@ run {
 }
 
 tasks.register('fatJar', Jar) {
-    group 'distribution'
-    description 'Builds the fat jar of the application'
+    group = 'distribution'
+    description = 'Builds the fat jar of the application'
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
     from {

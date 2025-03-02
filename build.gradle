@@ -87,28 +87,28 @@ allprojects {
     }
 
     testlogger {
-        theme 'standard-parallel'
+        theme = 'standard-parallel'
 
-        showExceptions true
-        showStackTraces true
-        showFullStackTraces false
-        showCauses true
+        showExceptions = true
+        showStackTraces = true
+        showFullStackTraces = false
+        showCauses = true
 
-        slowThreshold 2000
+        slowThreshold = 2000
 
-        showSummary true
-        showSimpleNames false
-        showPassed false // enable for verbose tests
-        showSkipped true
-        showFailed true
-        showOnlySlow false
+        showSummary = true
+        showSimpleNames = false
+        showPassed = false // enable for verbose tests
+        showSkipped = true
+        showFailed = true
+        showOnlySlow = false
 
-        showStandardStreams true
-        showPassedStandardStreams false
-        showSkippedStandardStreams true
-        showFailedStandardStreams true
+        showStandardStreams = true
+        showPassedStandardStreams = false
+        showSkippedStandardStreams = true
+        showFailedStandardStreams = true
 
-        logLevel 'lifecycle'
+        logLevel = 'lifecycle'
     }
 
     // Common config for all PMD tasks
