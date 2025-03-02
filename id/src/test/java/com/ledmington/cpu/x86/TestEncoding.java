@@ -53,13 +53,13 @@ public final class TestEncoding extends X64Test {
 		final int codeLen = instructions.size();
 		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found.", codeLen));
 		final Instruction inst = instructions.getFirst();
-		final byte[] encoded = InstructionEncoder.encode(inst);
+		final byte[] encoded = InstructionEncoder.toHex(inst);
 		assertArrayEquals(
 				code,
 				encoded,
 				() -> String.format(
 						"Expected '%s' to be encoded as '%s' but was '%s'.",
-						inst.toIntelSyntax(),
+						InstructionEncoder.toIntelSyntax(inst),
 						IntStream.range(0, code.length)
 								.mapToObj(i -> String.format("%02x", code[i]))
 								.collect(Collectors.joining(" ")),

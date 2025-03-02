@@ -17,7 +17,9 @@
  */
 package com.ledmington.cpu.x86;
 
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.WriteOnlyByteBuffer;
@@ -57,17 +59,52 @@ public final class InstructionEncoder {
 
 	private InstructionEncoder() {}
 
-	public static byte[] encode(final Instruction... code) {
+	private static String operandString(final Opcode code, final Operand op) {
+		if (op instanceof IndirectOperand io) {
+			return io.toIntelSyntax(code != Opcode.LEA);
+		}
+		return op.toIntelSyntax();
+	}
+
+	/**
+	 * Reference obtainable through <code>objdump -Mintel-mnemonic ...</code>
+	 *
+	 * @return A String representation of this instruction with Intel syntax.
+	 */
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
+	public static String toIntelSyntax(final Instruction inst) {
+		Objects.requireNonNull(inst);
+		final StringBuilder sb = new StringBuilder();
+		if (inst.hasPrefix()) {
+			sb.append(inst.prefix().name().toLowerCase(Locale.US)).append(' ');
+		}
+
+		sb.append(inst.opcode().mnemonic());
+
+		if (inst.hasFirstOperand()) {
+			sb.append(' ').append(operandString(inst.opcode(), inst.firstOperand()));
+			if (inst.hasSecondOperand()) {
+				sb.append(',').append(operandString(inst.opcode(), inst.secondOperand()));
+				if (inst.hasThirdOperand()) {
+					sb.append(',').append(operandString(inst.opcode(), inst.thirdOperand()));
+				}
+			}
+		}
+
+		return sb.toString();
+	}
+
+	public static byte[] toHex(final Instruction... code) {
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
 		for (final Instruction inst : code) {
-			encode(wb, inst);
+			toHex(wb, inst);
 		}
 		return wb.array();
 	}
 
-	public static byte[] encode(final Instruction inst) {
+	public static byte[] toHex(final Instruction inst) {
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
-		encode(wb, inst);
+		toHex(wb, inst);
 		return wb.array();
 	}
 
@@ -83,14 +120,15 @@ public final class InstructionEncoder {
 		}
 	}
 
-	private static void encode(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void toHex(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		switch (countOperands(inst)) {
 			case 0 -> encodeZeroOperandsInstruction(wb, inst);
 			case 1 -> encodeSingleOperandInstruction(wb, inst);
 			case 2 -> encodeTwoOperandsInstruction(wb, inst);
 			case 3 -> encodeThreeOperandsInstruction(wb, inst);
 			default -> throw new IllegalArgumentException(String.format(
-					"Unknown instruction with %,d operands ('%s').", countOperands(inst), inst.toIntelSyntax()));
+					"Unknown instruction with %,d operands ('%s').",
+					countOperands(inst), InstructionEncoder.toIntelSyntax(inst)));
 		}
 	}
 

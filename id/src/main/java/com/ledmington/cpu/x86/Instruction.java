@@ -17,7 +17,6 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Locale;
 import java.util.Objects;
 
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
@@ -179,8 +178,19 @@ public final class Instruction {
 		this(null, opcode, null, null, null);
 	}
 
+	public boolean hasPrefix() {
+		return prefix != null;
+	}
+
 	public boolean hasLockPrefix() {
 		return prefix == InstructionPrefix.LOCK;
+	}
+
+	public InstructionPrefix prefix() {
+		if (!hasPrefix()) {
+			throw new IllegalArgumentException("No prefix.");
+		}
+		return prefix;
 	}
 
 	/**
@@ -271,40 +281,6 @@ public final class Instruction {
 		}
 
 		throw new IllegalStateException();
-	}
-
-	private String operandString(final Operand op) {
-		if (op instanceof IndirectOperand io) {
-			return io.toIntelSyntax(code != Opcode.LEA);
-		}
-		return op.toIntelSyntax();
-	}
-
-	/**
-	 * Reference obtainable through <code>objdump -Mintel-mnemonic ...</code>
-	 *
-	 * @return A String representation of this instruction with Intel syntax.
-	 */
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
-	public String toIntelSyntax() {
-		final StringBuilder sb = new StringBuilder();
-		if (this.prefix != null) {
-			sb.append(this.prefix.name().toLowerCase(Locale.US)).append(' ');
-		}
-
-		sb.append(code.mnemonic());
-
-		if (op1 != null) {
-			sb.append(' ').append(operandString(op1));
-			if (op2 != null) {
-				sb.append(',').append(operandString(op2));
-				if (op3 != null) {
-					sb.append(',').append(operandString(op3));
-				}
-			}
-		}
-
-		return sb.toString();
 	}
 
 	/**

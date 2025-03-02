@@ -40,9 +40,7 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.Register16;
-import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.*;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
@@ -279,16 +277,16 @@ public final class EmulatorView extends Stage {
 			regFile.set(Register64.RIP, rip);
 			sb.append("0x").append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", rip));
 
-			String inst;
+			String instString;
 			try {
-				inst = InstructionDecoder.fromHex(new InstructionFetcher(this.mem, regFile))
-						.toIntelSyntax();
+				final Instruction inst = InstructionDecoder.fromHex(new InstructionFetcher(this.mem, regFile));
+				instString = InstructionEncoder.toIntelSyntax(inst);
 				rip = regFile.get(Register64.RIP);
 			} catch (final UnknownOpcode | ReservedOpcode | UnrecognizedPrefix e) {
-				inst = String.format(".byte 0x%02x", this.mem.readCode(rip));
+				instString = String.format(".byte 0x%02x", this.mem.readCode(rip));
 				rip = startRIP + 1L;
 			}
-			sb.append(" : ").append(inst).append('\n');
+			sb.append(" : ").append(instString).append('\n');
 		}
 		this.codeArea.setText(sb.toString());
 		regFile.set(Register64.RIP, originalRIP);

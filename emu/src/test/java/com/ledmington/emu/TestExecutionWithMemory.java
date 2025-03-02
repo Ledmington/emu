@@ -284,7 +284,7 @@ final class TestExecutionWithMemory {
 		// Write an empty function somewhere in memory (only RET instruction)
 		final long functionAddress = rng.nextLong();
 		mem.setPermissions(functionAddress, functionAddress, false, false, true);
-		mem.initialize(functionAddress, InstructionEncoder.encode(new Instruction(Opcode.RET)));
+		mem.initialize(functionAddress, InstructionEncoder.toHex(new Instruction(Opcode.RET)));
 
 		// Setup stack at random location
 		final long stackBase = rng.nextLong();
@@ -296,7 +296,7 @@ final class TestExecutionWithMemory {
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(rip)));
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
-		final byte[] code = InstructionEncoder.encode(
+		final byte[] code = InstructionEncoder.toHex(
 				new Instruction(Opcode.CALL, RelativeOffset.of(BitUtils.asInt(functionAddress - rip))),
 				new Instruction(Opcode.HLT));
 		mem.initialize(rip, code);

@@ -64,6 +64,6 @@ public class Encoding {
 
 	@Benchmark
 	public void encode(final Blackhole bh) {
-		bh.consume(InstructionEncoder.encode(inst));
+		bh.consume(InstructionEncoder.toHex(inst));
 	}
 }

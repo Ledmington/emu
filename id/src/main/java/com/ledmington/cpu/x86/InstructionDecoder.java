@@ -70,7 +70,7 @@ public final class InstructionDecoder {
 						IntStream.range(0, (int) codeLen)
 								.mapToObj(i -> String.format("%02x", b.read1()))
 								.collect(Collectors.joining(" ")),
-						inst.toIntelSyntax());
+						InstructionEncoder.toIntelSyntax(inst));
 			}
 			instructions.add(inst);
 		}

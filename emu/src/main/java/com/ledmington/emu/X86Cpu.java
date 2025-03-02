@@ -19,16 +19,7 @@ package com.ledmington.emu;
 
 import java.util.Objects;
 
-import com.ledmington.cpu.x86.Immediate;
-import com.ledmington.cpu.x86.IndirectOperand;
-import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.Register;
-import com.ledmington.cpu.x86.Register16;
-import com.ledmington.cpu.x86.Register32;
-import com.ledmington.cpu.x86.Register64;
-import com.ledmington.cpu.x86.Register8;
-import com.ledmington.cpu.x86.RelativeOffset;
+import com.ledmington.cpu.x86.*;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -93,7 +84,7 @@ public class X86Cpu implements X86Emulator {
 	@Override
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
-		logger.debug(inst.toIntelSyntax());
+		logger.debug(InstructionEncoder.toIntelSyntax(inst));
 		switch (inst.opcode()) {
 			case SUB -> {
 				switch (inst.firstOperand()) {
@@ -425,7 +416,7 @@ public class X86Cpu implements X86Emulator {
 			case HLT -> state = State.HALTED;
 			case NOP -> {}
 			default -> throw new IllegalArgumentException(
-					String.format("Unknown instruction %s", inst.toIntelSyntax()));
+					String.format("Unknown instruction %s", InstructionEncoder.toIntelSyntax(inst)));
 		}
 	}
 
