@@ -17,12 +17,12 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
@@ -43,8 +43,124 @@ public final class InstructionDecoder {
 	private static final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
 	private static final byte MODRM_MOD_NO_DISP = (byte) 0b00000011;
+	private static final Map<String, Opcode> fromStringToOpcode =
+			Arrays.stream(Opcode.values()).collect(Collectors.toUnmodifiableMap(Opcode::mnemonic, x -> x));
+	private static final Map<String, Register> fromStringToRegister = Stream.of(
+					Arrays.stream(Register8.values()),
+					Arrays.stream(Register16.values()),
+					Arrays.stream(Register32.values()),
+					Arrays.stream(Register64.values()))
+			.flatMap(x -> x)
+			.collect(Collectors.toUnmodifiableMap(Operand::toIntelSyntax, x -> x));
 
 	private InstructionDecoder() {}
+
+	public static Instruction fromIntelSyntax(final String input) {
+		final CharacterIterator it = new StringCharacterIterator(input);
+
+		// Parsing opcode
+		final Opcode opcode;
+		{
+			final StringBuilder sb = new StringBuilder();
+			for (; it.current() != CharacterIterator.DONE && it.current() != ' '; it.next()) {
+				sb.append(it.current());
+			}
+			final String opcodeString = sb.toString();
+			if (!fromStringToOpcode.containsKey(opcodeString)) {
+				throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", opcodeString));
+			}
+			opcode = fromStringToOpcode.get(opcodeString);
+		}
+
+		skipWhitespaces(it);
+
+		if (it.current() == CharacterIterator.DONE) {
+			return new Instruction(opcode);
+		}
+
+		// Parsing first operand
+		final Operand firstOperand = parseOperand(it);
+
+		skipWhitespaces(it);
+		// skip comma
+		if (it.current() != CharacterIterator.DONE && it.current() == ',') {
+			it.next();
+		}
+		skipWhitespaces(it);
+
+		if (it.current() == CharacterIterator.DONE) {
+			return new Instruction(opcode, firstOperand);
+		}
+
+		// Parsing second operand
+		final Operand secondOperand = parseOperand(it);
+
+		skipWhitespaces(it);
+		// skip comma
+		if (it.current() != CharacterIterator.DONE && it.current() == ',') {
+			it.next();
+		}
+		skipWhitespaces(it);
+
+		if (it.current() == CharacterIterator.DONE) {
+			return new Instruction(opcode, firstOperand, secondOperand);
+		}
+
+		// Parsing third operand
+		final Operand thirdOperand = parseOperand(it);
+
+		skipWhitespaces(it);
+		// skip comma
+		if (it.current() != CharacterIterator.DONE && it.current() == ',') {
+			it.next();
+		}
+		skipWhitespaces(it);
+
+		if (it.current() == CharacterIterator.DONE) {
+			return new Instruction(opcode, firstOperand, secondOperand, thirdOperand);
+		}
+
+		throw new IllegalArgumentException(
+				String.format("The string '%s' does not correspond to a valid instruction.", input));
+	}
+
+	private static void skipWhitespaces(final CharacterIterator it) {
+		while (it.current() != CharacterIterator.DONE && it.current() == ' ') {
+			it.next();
+		}
+	}
+
+	private static Operand parseOperand(final CharacterIterator it) {
+		final StringBuilder sb = new StringBuilder();
+		for (; it.current() != CharacterIterator.DONE && it.current() != ' ' && it.current() != ','; it.next()) {
+			sb.append(it.current());
+		}
+		final String operandString = sb.toString();
+		if (!fromStringToRegister.containsKey(operandString)) {
+			// not a register
+			if (operandString.startsWith("0x")
+					&& operandString.length() >= 3
+					&& operandString.length() <= 10
+					&& operandString.substring(2).chars().allMatch(x -> isHexDigit((char) x))) {
+				// it's an immediate
+				if (operandString.length() == 3 || operandString.length() == 4) {
+					// 8-bit immediate
+					return new Immediate(BitUtils.asByte(Integer.parseInt(operandString.substring(2), 16)));
+				} else {
+					// 32-bit immediate
+					return new Immediate(Integer.parseInt(operandString.substring(2), 16));
+				}
+			} else {
+				// it's an indirect operand
+				throw new IllegalArgumentException("Don't know.");
+			}
+		}
+		return fromStringToRegister.get(operandString);
+	}
+
+	private static boolean isHexDigit(final char c) {
+		return Character.isDigit(c) || c == 'a' || c == 'b' || c == 'c' || c == 'd' || c == 'e' || c == 'f';
+	}
 
 	public static List<Instruction> fromHex(final byte[] bytes, final int nBytesToDecode) {
 		return fromHex(new ReadOnlyByteBufferV1(bytes, true, 1), nBytesToDecode);

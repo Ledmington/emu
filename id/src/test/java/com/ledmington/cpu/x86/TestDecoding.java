@@ -22,8 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
@@ -52,5 +54,16 @@ final class TestDecoding extends X64Test {
 				() -> String.format(
 						"%s ('%s') is a valid instruction but it is for legacy/compatibility 32-bit mode, not for 64-bit mode.",
 						inst, decoded));
+	}
+
+	private static Stream<Arguments> onlyIntelSyntax() {
+		return instructions().map(arg -> Arguments.of(arg.get()[0]));
+	}
+
+	@ParameterizedTest
+	@MethodSource("onlyIntelSyntax")
+	void stringToString(final String expected) {
+		final String actual = InstructionEncoder.toIntelSyntax(InstructionDecoder.fromIntelSyntax(expected));
+		assertEquals(expected, actual, () -> String.format("Expected '%s' but was '%s'.", expected, actual));
 	}
 }
