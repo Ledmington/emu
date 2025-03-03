@@ -19,7 +19,17 @@ package com.ledmington.emu;
 
 import java.util.Objects;
 
-import com.ledmington.cpu.x86.*;
+import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.IndirectOperand;
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.x86.InstructionEncoder;
+import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.Register16;
+import com.ledmington.cpu.x86.Register32;
+import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RelativeOffset;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;

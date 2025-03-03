@@ -17,14 +17,24 @@
  */
 package com.ledmington.view;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.x86.InstructionEncoder;
+import com.ledmington.cpu.x86.Register16;
+import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.exc.ReservedOpcode;
+import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
+import com.ledmington.elf.ELFParser;
+import com.ledmington.emu.ELFLoader;
+import com.ledmington.emu.EmulatorConstants;
+import com.ledmington.emu.ImmutableRegisterFile;
+import com.ledmington.emu.InstructionFetcher;
+import com.ledmington.emu.RFlags;
+import com.ledmington.emu.RegisterFile;
+import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.utils.MiniLogger;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -40,20 +50,13 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import com.ledmington.cpu.x86.*;
-import com.ledmington.cpu.x86.exc.ReservedOpcode;
-import com.ledmington.cpu.x86.exc.UnknownOpcode;
-import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.elf.ELFParser;
-import com.ledmington.emu.ELFLoader;
-import com.ledmington.emu.EmulatorConstants;
-import com.ledmington.emu.ImmutableRegisterFile;
-import com.ledmington.emu.InstructionFetcher;
-import com.ledmington.emu.RFlags;
-import com.ledmington.emu.RegisterFile;
-import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.RandomAccessMemory;
-import com.ledmington.utils.MiniLogger;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public final class EmulatorView extends Stage {
 
