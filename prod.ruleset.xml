@@ -35,15 +35,85 @@
         <exclude name="FormalParameterNamingConventions" />
     </rule>
 
+    <!-- Avoid reporting if-else with a != condition -->
+    <rule ref="category/java/codestyle.xml/ConfusingTernary">
+        <properties>
+            <property name="ignoreElseIf" value="true" />
+        </properties>
+    </rule>
+
     <rule ref="category/java/design.xml">
         <!-- Avoid reporting classes with too many imports -->
 	    <exclude name="ExcessiveImports" />
+        <!-- Avoid reporting classes with too many methods -->
+        <exclude name="GodClass" />
+
+        <!-- Rules excluded to be configured later in this file -->
+        <exclude name="LoosePackageCoupling" />
+        <exclude name="TooManyFields" />
+        <exclude name="TooManyMethods" />
+        <exclude name="CyclomaticComplexity" />
+        <exclude name="NPathComplexity" />
+        <exclude name="NcssCount" />
+        <exclude name="ExcessivePublicCount" />
     </rule>
 
+    <rule ref="category/java/design.xml/LoosePackageCoupling">
+        <properties>
+            <property name="packages" value="" />
+            <property name="classes" value="" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting classes with too many fields -->
+    <rule ref="category/java/design.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="15" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting classes with too many methods -->
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="10" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting methods that are "too complex" -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="classReportLevel" value="80" />
+            <property name="methodReportLevel" value="30" />
+            <property name="cycloOptions" value="" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting methods that are "too complex" -->
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties>
+            <property name="reportLevel" value="20" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting methods that are "too complex" -->
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="70" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting classes with "too many lines" -->
+    <rule ref="category/java/design.xml/NcssCount">
+        <properties>
+            <property name="methodReportLevel" value="60" />
+            <property name="classReportLevel" value="1500" />
+            <property name="ncssOptions" value="" />
+        </properties>
+    </rule>
     <!-- Avoid retrieving data from "too far away" -->
     <rule ref="category/java/design.xml/LawOfDemeter">
         <properties>
             <property name="trustRadius" value="3" />
+        </properties>
+    </rule>
+    <!-- Avoid reporting classes with too many public fields and methods -->
+    <rule ref="category/java/design.xml/ExcessivePublicCount">
+        <properties>
+            <property name="minimum" value="5" />
         </properties>
     </rule>
 

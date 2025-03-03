@@ -12,11 +12,23 @@
         <exclude name="ShortVariable" />
         <!-- Avoid reporting test classes without constructors -->
         <exclude name="AtLeastOneConstructor" />
+        <!-- Avoid reporting class names not declared in camel case -->
+        <exclude name="ClassNamingConventions" />
+        <!-- Avoid reporting field name not declared in camel case -->
+        <exclude name="FieldNamingConventions" />
+        <!-- Avoid reporting method names not declared in camel case -->
+        <exclude name="MethodNamingConventions" />
+        <!-- Avoid reporting variables not declared in camel case -->
+        <exclude name="LocalVariableNamingConventions" />
+        <!-- Avoid reporting method/lambda parameters not declared in camel case -->
+        <exclude name="FormalParameterNamingConventions" />
     </rule>
 
     <rule ref="category/java/design.xml">
         <!-- Avoid reporting usage of classes from outside the package hierarchy -->
         <exclude name="LoosePackageCoupling" />
+        <!-- Avoid reporting usage of data coming from "too far away" -->
+        <exclude name="LawOfDemeter" />
     </rule>
 
     <rule ref="category/java/documentation.xml">
