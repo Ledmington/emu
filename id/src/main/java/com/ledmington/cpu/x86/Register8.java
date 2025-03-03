@@ -118,6 +118,8 @@ public enum Register8 implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final Register8 r) {
 		return switch (r) {
 			case AL, R8B -> (byte) 0x00;

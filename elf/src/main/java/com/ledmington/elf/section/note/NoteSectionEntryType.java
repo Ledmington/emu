@@ -67,7 +67,7 @@ public enum NoteSectionEntryType {
 						String.format("Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
 			};
 			case "stapsdt" -> {
-				if (type == 3) {
+				if (type == NT_STAPSDT.getCode()) {
 					yield NT_STAPSDT;
 				} else {
 					throw new IllegalArgumentException(String.format(

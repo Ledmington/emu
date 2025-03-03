@@ -724,8 +724,10 @@ public final class InstructionEncoder {
 		if (io.hasDisplacement()) {
 			if (io.getDisplacementBits() == 8) {
 				wb.write(BitUtils.asByte(io.getDisplacement()));
-			} else {
+			} else if (io.getDisplacementBits() == 32) {
 				wb.write(BitUtils.asInt(io.getDisplacement()));
+			}else{
+				throw new IllegalArgumentException(String.format("Unknown displacement size: %,d bits.",io.getDisplacementBits()));
 			}
 		}
 	}

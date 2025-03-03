@@ -71,7 +71,7 @@ record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 *
 	 * @return True if the 'R' bit is set, false otherwise.
 	 */
-	public boolean getModRMRegExtension() {
+	public boolean hasModRMRegExtension() {
 		return r;
 	}
 
@@ -80,7 +80,7 @@ record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 *
 	 * @return True if the 'X' bit is set, false otherwise.
 	 */
-	public boolean SIBIndexExtension() {
+	public boolean hasSIBIndexExtension() {
 		return x;
 	}
 
@@ -89,7 +89,7 @@ record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 *
 	 * @return True if the 'B' bit is set, false otherwise.
 	 */
-	public boolean SIBBaseExtension() {
+	public boolean hasSIBBaseExtension() {
 		return b;
 	}
 
@@ -98,7 +98,7 @@ record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 *
 	 * @return True if the 'B' bit is set, false otherwise.
 	 */
-	public boolean getModRMRMExtension() {
+	public boolean hasModRMRMExtension() {
 		return b;
 	}
 
@@ -107,7 +107,7 @@ record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 *
 	 * @return True if the 'B' bit is set, false otherwise.
 	 */
-	public boolean opcodeRegExtension() {
+	public boolean hasOpcodeRegExtension() {
 		return b;
 	}
 }

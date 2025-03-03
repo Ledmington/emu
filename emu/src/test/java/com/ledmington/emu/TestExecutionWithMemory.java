@@ -302,11 +302,6 @@ final class TestExecutionWithMemory {
 		mem.initialize(rip, code);
 		mem.setPermissions(rip, rip + code.length, false, false, true);
 
-		System.out.printf("0x%016x%n", stackBase);
-		System.out.printf("0x%016x%n", functionAddress);
-		System.out.printf("0x%016x%n", rip);
-		System.out.printf("0x%016x%n", rip + BitUtils.asLong(BitUtils.asInt(functionAddress - rip)));
-
 		// Start the CPU
 		cpu.execute();
 	}
