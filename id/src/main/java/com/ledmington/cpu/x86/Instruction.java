@@ -186,7 +186,7 @@ public final class Instruction {
 		return prefix == InstructionPrefix.LOCK;
 	}
 
-	public InstructionPrefix prefix() {
+	public InstructionPrefix getPrefix() {
 		if (!hasPrefix()) {
 			throw new IllegalArgumentException("No prefix.");
 		}

@@ -432,16 +432,16 @@ public class X86Cpu implements X86Emulator {
 
 	public static long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
 		return (io.hasBase()
-						? io.base() instanceof Register64
-								? rf.get((Register64) io.base())
-								: rf.get((Register32) io.base())
+						? io.getBase() instanceof Register64
+								? rf.get((Register64) io.getBase())
+								: rf.get((Register32) io.getBase())
 						: 0L)
 				+ (io.hasIndex()
-								? io.index() instanceof Register64
-										? rf.get((Register64) io.index())
-										: rf.get((Register32) io.index())
+								? io.getIndex() instanceof Register64
+										? rf.get((Register64) io.getIndex())
+										: rf.get((Register32) io.getIndex())
 								: 0L)
-						* io.scale()
+						* io.getScale()
 				+ io.getDisplacement();
 	}
 

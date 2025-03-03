@@ -104,6 +104,8 @@ public enum RegisterXMM implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final RegisterXMM r) {
 		return switch (r) {
 			case XMM0, XMM8 -> (byte) 0x00;
@@ -117,6 +119,8 @@ public enum RegisterXMM implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final RegisterXMM r) {
 		return switch (r) {
 			case XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7 -> false;

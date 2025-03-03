@@ -20,6 +20,7 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 /** X86 opcode mnemonics. */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public enum Opcode {
 
 	/** Add with carry. */

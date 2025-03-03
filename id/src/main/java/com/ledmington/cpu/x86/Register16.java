@@ -122,6 +122,8 @@ public enum Register16 implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final Register16 r) {
 		return switch (r) {
 			case AX, R8W -> (byte) 0x00;
@@ -136,6 +138,8 @@ public enum Register16 implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final Register16 r) {
 		return switch (r) {
 			case AX, BX, CX, DX, SI, DI, SP, BP -> false;

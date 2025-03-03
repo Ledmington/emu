@@ -113,7 +113,7 @@
     <!-- Avoid reporting classes with too many public fields and methods -->
     <rule ref="category/java/design.xml/ExcessivePublicCount">
         <properties>
-            <property name="minimum" value="5" />
+            <property name="minimum" value="45" />
         </properties>
     </rule>
 

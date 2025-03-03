@@ -17,10 +17,10 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
+
+import java.util.Objects;
 
 /**
  * This class maps the following cases:
@@ -77,10 +77,8 @@ public final class IndirectOperand implements Operand {
 	 *
 	 * @return The base register.
 	 */
-	public Register base() {
-		if (!hasBase()) {
-			throw new NullPointerException("No base register.");
-		}
+	public Register getBase() {
+		Objects.requireNonNull(this.base, "No base register.");
 		return base;
 	}
 
@@ -93,10 +91,8 @@ public final class IndirectOperand implements Operand {
 	 *
 	 * @return The index register.
 	 */
-	public Register index() {
-		if (!hasIndex()) {
-			throw new NullPointerException("No index register.");
-		}
+	public Register getIndex() {
+		Objects.requireNonNull(this.index, "No index register.");
 		return index;
 	}
 
@@ -109,7 +105,7 @@ public final class IndirectOperand implements Operand {
 	 *
 	 * @return The scale of this indirect operand.
 	 */
-	public int scale() {
+	public int getScale() {
 		return scale;
 	}
 

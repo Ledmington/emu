@@ -104,10 +104,9 @@ public final class ModRM {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof ModRM m)) {
 			return false;
 		}
-		final ModRM m = (ModRM) other;
 		return this.modByte == m.modByte && this.regByte == m.regByte && this.rmByte == m.rmByte;
 	}
 }

@@ -133,6 +133,8 @@ public enum Register8 implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final Register8 r) {
 		return switch (r) {
 			case AL, CL, DL, BL, CH, BPL, AH, SPL, DH, SIL, BH, DIL -> false;
@@ -140,6 +142,8 @@ public enum Register8 implements Register {
 		};
 	}
 
+	// Check https://github.com/pmd/pmd/issues/5568
+	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresRexPrefix(final Register8 r) {
 		return switch (r) {
 			case AL, CL, DL, BL, CH, AH, DH, BH, R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B -> false;

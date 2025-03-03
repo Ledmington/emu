@@ -76,7 +76,7 @@ public final class InstructionEncoder {
 		Objects.requireNonNull(inst);
 		final StringBuilder sb = new StringBuilder();
 		if (inst.hasPrefix()) {
-			sb.append(inst.prefix().name().toLowerCase(Locale.US)).append(' ');
+			sb.append(inst.getPrefix().name().toLowerCase(Locale.US)).append(' ');
 		}
 
 		sb.append(inst.opcode().mnemonic());
@@ -127,8 +127,7 @@ public final class InstructionEncoder {
 			case 2 -> encodeTwoOperandsInstruction(wb, inst);
 			case 3 -> encodeThreeOperandsInstruction(wb, inst);
 			default -> throw new IllegalArgumentException(String.format(
-					"Unknown instruction with %,d operands ('%s').",
-					countOperands(inst), InstructionEncoder.toIntelSyntax(inst)));
+					"Unknown instruction with %,d operands ('%s').", countOperands(inst), toIntelSyntax(inst)));
 		}
 	}
 
@@ -157,11 +156,11 @@ public final class InstructionEncoder {
 	private static void encodeSingleOperandInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		switch (inst.opcode()) {
 			case Opcode.NOP -> {
-				if (inst.firstOperand() instanceof IndirectOperand io && io.index() instanceof SegmentRegister) {
+				if (inst.firstOperand() instanceof IndirectOperand io && io.getIndex() instanceof SegmentRegister) {
 					wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
 				}
 				if (inst.firstOperand() instanceof IndirectOperand io
-						&& io.index().bits() == 32) {
+						&& io.getIndex().bits() == 32) {
 					wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 				}
 				if (inst.firstOperand().bits() == 16) {
@@ -188,7 +187,7 @@ public final class InstructionEncoder {
 					if (io.bits() == 32) {
 						wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 					}
-					if (io.index().bits() == 32) {
+					if (io.getIndex().bits() == 32) {
 						wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 					}
 					encodeRexPrefix(wb, inst);
@@ -289,14 +288,14 @@ public final class InstructionEncoder {
 			}
 			case Opcode.PREFETCHNTA, Opcode.PREFETCHT0, Opcode.PREFETCHT1, Opcode.PREFETCHT2 -> {
 				final IndirectOperand io = (IndirectOperand) inst.firstOperand();
-				if (io.index().bits() == 32) {
+				if (io.getIndex().bits() == 32) {
 					wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 				}
 				byte rex = (byte) 0x40;
-				if (io.hasBase() && Registers.requiresExtension(io.base())) {
+				if (io.hasBase() && Registers.requiresExtension(io.getBase())) {
 					rex = BitUtils.or(rex, (byte) 0x01);
 				}
-				if (Registers.requiresExtension(io.index())) {
+				if (Registers.requiresExtension(io.getIndex())) {
 					rex = BitUtils.or(rex, (byte) 0x02);
 				}
 				if (rex != (byte) 0x40) {
@@ -344,7 +343,7 @@ public final class InstructionEncoder {
 					if (Register64.requiresExtension(r1)) {
 						rex = BitUtils.or(rex, (byte) 0x04);
 					}
-					if (Registers.requiresExtension(io.index())) {
+					if (Registers.requiresExtension(io.getIndex())) {
 						rex = BitUtils.or(rex, (byte) 0x01);
 					}
 					wb.write(rex);
@@ -500,7 +499,7 @@ public final class InstructionEncoder {
 				if (inst.secondOperand() instanceof RegisterXMM r2 && RegisterXMM.requiresExtension(r2)) {
 					wb.write((byte) 0x41);
 				} else if (inst.secondOperand() instanceof IndirectOperand io
-						&& Registers.requiresExtension(io.index())) {
+						&& Registers.requiresExtension(io.getIndex())) {
 					wb.write((byte) 0x42);
 				}
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
@@ -518,7 +517,7 @@ public final class InstructionEncoder {
 				if (inst.secondOperand() instanceof RegisterXMM r2 && RegisterXMM.requiresExtension(r2)) {
 					wb.write((byte) 0x41);
 				} else if (inst.secondOperand() instanceof IndirectOperand io
-						&& Registers.requiresExtension(io.index())) {
+						&& Registers.requiresExtension(io.getIndex())) {
 					wb.write((byte) 0x42);
 				}
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd4);
@@ -536,7 +535,7 @@ public final class InstructionEncoder {
 				if (inst.secondOperand() instanceof RegisterXMM r2 && RegisterXMM.requiresExtension(r2)) {
 					wb.write((byte) 0x41);
 				} else if (inst.secondOperand() instanceof IndirectOperand io
-						&& Registers.requiresExtension(io.index())) {
+						&& Registers.requiresExtension(io.getIndex())) {
 					wb.write((byte) 0x42);
 				}
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xdb);
@@ -554,7 +553,7 @@ public final class InstructionEncoder {
 				if (inst.secondOperand() instanceof RegisterXMM r2 && RegisterXMM.requiresExtension(r2)) {
 					wb.write((byte) 0x41);
 				} else if (inst.secondOperand() instanceof IndirectOperand io
-						&& Registers.requiresExtension(io.index())) {
+						&& Registers.requiresExtension(io.getIndex())) {
 					wb.write((byte) 0x42);
 				}
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xeb);
@@ -572,7 +571,7 @@ public final class InstructionEncoder {
 				if (inst.secondOperand() instanceof RegisterXMM r2 && RegisterXMM.requiresExtension(r2)) {
 					wb.write((byte) 0x41);
 				} else if (inst.secondOperand() instanceof IndirectOperand io
-						&& Registers.requiresExtension(io.index())) {
+						&& Registers.requiresExtension(io.getIndex())) {
 					wb.write((byte) 0x42);
 				}
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xef);
@@ -624,13 +623,11 @@ public final class InstructionEncoder {
 		}
 		if (inst.firstOperand() instanceof Register r1 && Registers.requiresExtension(r1)) {
 			rex = BitUtils.or(rex, (byte) 0b0001);
-		} else if (inst.firstOperand() instanceof IndirectOperand io && Registers.requiresExtension(io.index())) {
+		} else if (inst.firstOperand() instanceof IndirectOperand io && Registers.requiresExtension(io.getIndex())) {
 			rex = BitUtils.or(rex, (byte) 0b0010);
 		}
-		if (inst.hasSecondOperand()) {
-			if (inst.secondOperand() instanceof Register r2 && Registers.requiresExtension(r2)) {
-				rex = BitUtils.or(rex, (byte) 0b0100);
-			}
+		if (inst.hasSecondOperand() && inst.secondOperand() instanceof Register r2 && Registers.requiresExtension(r2)) {
+			rex = BitUtils.or(rex, (byte) 0b0100);
 		}
 		if (rex != baseRexPrefix
 				|| (inst.hasFirstOperand()
@@ -654,7 +651,7 @@ public final class InstructionEncoder {
 		}
 		final IndirectOperand io = (IndirectOperand) inst.firstOperand();
 		if (isSimpleIndirectOperand(io)) {
-			encodeSingleRegister(wb, io.index(), BitUtils.shl(regOpcode, 3));
+			encodeSingleRegister(wb, io.getIndex(), BitUtils.shl(regOpcode, 3));
 		} else {
 			wb.write(BitUtils.or(
 					// mod=0b10, R/M=0b100
@@ -707,14 +704,15 @@ public final class InstructionEncoder {
 					modrm = BitUtils.or(modrm, (byte) 0b10000000);
 				}
 			}
-			if (!io.hasIndex() || (io.hasBase() && (io.base() == Register32.ESP || io.base() == Register64.RSP))) {
+			if (!io.hasIndex()
+					|| (io.hasBase() && (io.getBase() == Register32.ESP || io.getBase() == Register64.RSP))) {
 				// r/m = 100
 				modrm = BitUtils.or(modrm, (byte) 0b00000100);
 				wb.write(modrm);
 				encodeSIB(wb, io);
 				encodeDisplacement(wb, io);
 			} else {
-				modrm = BitUtils.or(modrm, Registers.toByte(io.base()));
+				modrm = BitUtils.or(modrm, Registers.toByte(io.getBase()));
 				wb.write(modrm);
 			}
 		}
@@ -726,8 +724,9 @@ public final class InstructionEncoder {
 				wb.write(BitUtils.asByte(io.getDisplacement()));
 			} else if (io.getDisplacementBits() == 32) {
 				wb.write(BitUtils.asInt(io.getDisplacement()));
-			}else{
-				throw new IllegalArgumentException(String.format("Unknown displacement size: %,d bits.",io.getDisplacementBits()));
+			} else {
+				throw new IllegalArgumentException(
+						String.format("Unknown displacement size: %,d bits.", io.getDisplacementBits()));
 			}
 		}
 	}
@@ -735,30 +734,30 @@ public final class InstructionEncoder {
 	private static void encodeSimpleIndirectOperand(
 			final WriteOnlyByteBuffer wb, final IndirectOperand io, final byte mod, final Register otherRegister) {
 		if (otherRegister != null) {
-			encodePairOfRegisters(wb, mod, io.index(), otherRegister);
+			encodePairOfRegisters(wb, mod, io.getIndex(), otherRegister);
 		} else {
-			encodeSingleRegister(wb, io.index(), mod);
+			encodeSingleRegister(wb, io.getIndex(), mod);
 		}
 	}
 
 	private static void encodeSIB(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
 		final byte scale =
-				switch (BitUtils.asInt(io.scale())) {
+				switch (BitUtils.asInt(io.getScale())) {
 					case 1 -> (byte) 0b00;
 					case 2 -> (byte) 0b01;
 					case 4 -> (byte) 0b10;
 					case 8 -> (byte) 0b11;
 					default -> throw new IllegalArgumentException(
-							String.format("Invalid scale value: %,d.", io.scale()));
+							String.format("Invalid scale value: %,d.", io.getScale()));
 				};
 		byte x = BitUtils.shl(scale, 6);
-		if (io.index() instanceof SegmentRegister sr) {
+		if (io.getIndex() instanceof SegmentRegister sr) {
 			x = BitUtils.or(x, BitUtils.shl(Registers.toByte(sr.register()), 3));
 		} else {
-			x = BitUtils.or(x, BitUtils.shl(Registers.toByte(io.index()), 3));
+			x = BitUtils.or(x, BitUtils.shl(Registers.toByte(io.getIndex()), 3));
 		}
 		if (io.hasBase()) {
-			x = BitUtils.or(x, Registers.toByte(io.base()));
+			x = BitUtils.or(x, Registers.toByte(io.getBase()));
 		}
 		wb.write(x);
 	}
