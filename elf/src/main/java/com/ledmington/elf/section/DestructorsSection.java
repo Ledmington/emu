@@ -150,10 +150,9 @@ public final class DestructorsSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof DestructorsSection ds)) {
 			return false;
 		}
-		final DestructorsSection ds = (DestructorsSection) other;
 		return this.name.equals(ds.name)
 				&& this.header.equals(ds.header)
 				&& Arrays.equals(this.destructors, ds.destructors);

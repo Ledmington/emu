@@ -136,7 +136,7 @@ final class TestWriteOnlyByteBufferV1 {
 		bb.write((byte) 99);
 		final byte[] actual = bb.array();
 
-		final byte[] expected = new byte[] {(byte) 99, (byte) 1, (byte) 2, (byte) 3};
+		final byte[] expected = {(byte) 99, (byte) 1, (byte) 2, (byte) 3};
 
 		assertArrayEquals(
 				expected,

@@ -102,10 +102,9 @@ public final class NoteABITagSection implements NoteSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof NoteABITagSection nats)) {
 			return false;
 		}
-		final NoteABITagSection nats = (NoteABITagSection) other;
 		return this.header.equals(nats.header) && Arrays.equals(this.entries, nats.entries);
 	}
 }

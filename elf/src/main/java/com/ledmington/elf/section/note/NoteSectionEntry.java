@@ -126,10 +126,9 @@ public final class NoteSectionEntry {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof NoteSectionEntry nse)) {
 			return false;
 		}
-		final NoteSectionEntry nse = (NoteSectionEntry) other;
 		return this.name.equals(nse.name)
 				&& Arrays.equals(this.description, nse.description)
 				&& this.type.equals(nse.type);

@@ -94,10 +94,9 @@ public final class SymbolTableEntryInfo {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof SymbolTableEntryInfo stei)) {
 			return false;
 		}
-		final SymbolTableEntryInfo stei = (SymbolTableEntryInfo) other;
 		return this.bind.equals(stei.bind) && this.type.equals(stei.type);
 	}
 }

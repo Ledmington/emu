@@ -175,10 +175,9 @@ public final class GnuVersionRequirementEntry {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof GnuVersionRequirementEntry gvre)) {
 			return false;
 		}
-		final GnuVersionRequirementEntry gvre = (GnuVersionRequirementEntry) other;
 		return this.version == gvre.version
 				&& this.fileOffset == gvre.fileOffset
 				&& this.auxOffset == gvre.auxOffset

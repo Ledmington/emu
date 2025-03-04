@@ -92,5 +92,11 @@ public interface WriteOnlyByteBuffer {
 	 */
 	void setPosition(int newPosition);
 
+	/**
+	 * Returns the number of bytes of the underlying array. NOTE: it may not correspond to the number of bytes actually
+	 * written.
+	 *
+	 * @return The size of the underlying array.
+	 */
 	int getSize();
 }

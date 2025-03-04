@@ -144,10 +144,9 @@ public final class RelocationAddendSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof RelocationAddendSection ras)) {
 			return false;
 		}
-		final RelocationAddendSection ras = (RelocationAddendSection) other;
 		return this.name.equals(ras.name)
 				&& this.header.equals(ras.header)
 				&& this.is32Bit == ras.is32Bit

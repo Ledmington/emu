@@ -17,10 +17,10 @@
  */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
-
-import java.util.Objects;
 
 /**
  * This class maps the following cases:
@@ -240,10 +240,9 @@ public final class IndirectOperand implements Operand {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof IndirectOperand io)) {
 			return false;
 		}
-		final IndirectOperand io = (IndirectOperand) other;
 		return this.base.equals(io.base)
 				&& this.scale == io.scale
 				&& this.index.equals(io.index)

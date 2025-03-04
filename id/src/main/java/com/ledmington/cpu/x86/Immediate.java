@@ -163,10 +163,9 @@ public final class Immediate implements Operand {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof Immediate imm)) {
 			return false;
 		}
-		final Immediate imm = (Immediate) other;
 		return this.value == imm.value && this.type == imm.type;
 	}
 }

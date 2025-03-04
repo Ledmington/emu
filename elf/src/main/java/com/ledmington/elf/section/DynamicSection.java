@@ -136,10 +136,9 @@ public final class DynamicSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof DynamicSection ds)) {
 			return false;
 		}
-		final DynamicSection ds = (DynamicSection) other;
 		return this.name.equals(ds.name)
 				&& this.header.equals(ds.header)
 				&& this.is32Bit == ds.is32Bit

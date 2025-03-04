@@ -318,14 +318,13 @@ public final class Instruction {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof Instruction inst)) {
 			return false;
 		}
-		final Instruction o = (Instruction) other;
-		return this.prefix.equals(o.prefix)
-				&& this.code.equals(o.code)
-				&& this.op1.equals(o.op1)
-				&& this.op2.equals(o.op2)
-				&& this.op3.equals(o.op3);
+		return this.prefix.equals(inst.prefix)
+				&& this.code.equals(inst.code)
+				&& this.op1.equals(inst.op1)
+				&& this.op2.equals(inst.op2)
+				&& this.op3.equals(inst.op3);
 	}
 }

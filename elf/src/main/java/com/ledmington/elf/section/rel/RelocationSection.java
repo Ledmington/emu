@@ -107,10 +107,9 @@ public final class RelocationSection implements Section {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof RelocationSection rs)) {
 			return false;
 		}
-		final RelocationSection rs = (RelocationSection) other;
 		return this.name.equals(rs.name)
 				&& this.header.equals(rs.header)
 				&& Arrays.equals(this.relocationTable, rs.relocationTable);

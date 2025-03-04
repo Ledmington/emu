@@ -138,6 +138,7 @@ public final class IntervalArray {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.SimplifyBooleanReturns")
 	public boolean equals(final Object other) {
 		if (other == null) {
 			return false;

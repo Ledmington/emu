@@ -91,10 +91,9 @@ public final class BasicProgBitsSection implements ProgBitsSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof BasicProgBitsSection bpbs)) {
 			return false;
 		}
-		final BasicProgBitsSection bpbs = (BasicProgBitsSection) other;
 		return this.name.equals(bpbs.name)
 				&& this.header.equals(bpbs.header)
 				&& Arrays.equals(this.content, bpbs.content);

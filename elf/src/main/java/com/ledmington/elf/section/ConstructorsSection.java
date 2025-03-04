@@ -150,10 +150,9 @@ public final class ConstructorsSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof ConstructorsSection cs)) {
 			return false;
 		}
-		final ConstructorsSection cs = (ConstructorsSection) other;
 		return this.name.equals(cs.name)
 				&& this.header.equals(cs.header)
 				&& Arrays.equals(this.constructors, cs.constructors);

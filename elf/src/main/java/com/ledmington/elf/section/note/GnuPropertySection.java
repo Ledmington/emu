@@ -102,10 +102,9 @@ public final class GnuPropertySection implements NoteSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof GnuPropertySection gps)) {
 			return false;
 		}
-		final GnuPropertySection gps = (GnuPropertySection) other;
 		return this.header.equals(gps.header) && Arrays.equals(this.entries, gps.entries);
 	}
 }

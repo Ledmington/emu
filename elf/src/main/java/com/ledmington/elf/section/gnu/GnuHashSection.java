@@ -246,10 +246,9 @@ public final class GnuHashSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof GnuHashSection ghs)) {
 			return false;
 		}
-		final GnuHashSection ghs = (GnuHashSection) other;
 		return this.name.equals(ghs.name)
 				&& this.header.equals(ghs.header)
 				&& this.is32Bit == ghs.is32Bit

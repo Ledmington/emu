@@ -121,10 +121,9 @@ public final class ELF implements ProgramHeaderTable, SectionTable {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof ELF elf)) {
 			return false;
 		}
-		final ELF elf = (ELF) other;
 		return this.fileHeader.equals(elf.fileHeader)
 				&& Arrays.equals(this.programHeaderTable, elf.programHeaderTable)
 				&& Arrays.equals(this.sectionTable, elf.sectionTable);

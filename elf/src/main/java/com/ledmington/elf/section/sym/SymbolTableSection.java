@@ -104,10 +104,9 @@ public final class SymbolTableSection implements SymbolTable {
 		if (this == other) {
 			return true;
 		}
-		if (!this.getClass().equals(other.getClass())) {
+		if (!(other instanceof SymbolTableSection sts)) {
 			return false;
 		}
-		final SymbolTableSection sts = (SymbolTableSection) other;
 		return this.name.equals(sts.name)
 				&& this.header.equals(sts.header)
 				&& Arrays.equals(this.symbolTable, sts.symbolTable);

@@ -34,7 +34,7 @@ import com.ledmington.mem.exc.IllegalReadException;
 import com.ledmington.mem.exc.IllegalWriteException;
 import com.ledmington.utils.BitUtils;
 
-@SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
+@SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
 final class TestPermissions {
 
 	private static final RandomGenerator rng =
