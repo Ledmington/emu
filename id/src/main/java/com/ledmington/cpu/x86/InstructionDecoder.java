@@ -114,8 +114,6 @@ public final class InstructionDecoder {
 		if (input.startsWith("0x")) {
 			// It's an immediate
 			final String imm = input.substring(2);
-			System.out.println(Character.MIN_RADIX);
-			System.out.println(Character.MAX_RADIX);
 			if (imm.length() <= 2) {
 				return new Immediate(Byte.parseByte(imm, 16));
 			} else if (imm.length() <= 4) {
@@ -177,6 +175,25 @@ public final class InstructionDecoder {
 
 		if (fromStringToRegister.containsKey(indirectOperandString)) {
 			iob.index(fromStringToRegister.get(indirectOperandString));
+		} else {
+			final String[] splitted = indirectOperandString.split("\\+");
+			iob.base(fromStringToRegister.get(splitted[0].strip()));
+			iob.index(fromStringToRegister.get(splitted[1].strip().split("\\*")[0]));
+			iob.constant(
+					switch (splitted[1].strip().split("\\*")[1]) {
+						case "1" -> 1;
+						case "2" -> 2;
+						case "4" -> 4;
+						case "8" -> 8;
+						default -> throw new IllegalArgumentException(
+								String.format("Invalid indirect operand: '%s'.", input));
+					});
+			splitted[2] = splitted[2].strip().substring(2);
+			if (splitted[2].length() <= 2) {
+				iob.displacement(Byte.parseByte(splitted[2], 16));
+			} else {
+				iob.displacement(Integer.parseInt(splitted[2], 16));
+			}
 		}
 
 		return iob.build();
