@@ -36,12 +36,12 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.MiniLogger.LoggingLevel;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public sealed class X64Test permits TestDecoding, TestEncoding, TestIncompleteInstruction {
+public sealed class X64Test permits TestDecoding, TestIncompleteInstruction {
 
 	private static final String testInputFileName = "x64.test.asm";
 	private static List<Arguments> args;
 
-	private static List<Byte> stringToHex(final String hexCode) {
+	private static List<Byte> stringToHexList(final String hexCode) {
 		if (hexCode.isBlank()) {
 			throw new IllegalArgumentException("Empty/blank string.");
 		}
@@ -79,7 +79,7 @@ public sealed class X64Test permits TestDecoding, TestEncoding, TestIncompleteIn
 				}
 				args.add(Arguments.of(
 						line.substring(0, idx - 1).strip(),
-						stringToHex(line.substring(idx + 1).strip())));
+						stringToHexList(line.substring(idx + 1).strip())));
 			}
 		} catch (final IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
