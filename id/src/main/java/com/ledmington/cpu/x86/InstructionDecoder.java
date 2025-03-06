@@ -17,14 +17,6 @@
  */
 package com.ledmington.cpu.x86;
 
-import com.ledmington.cpu.x86.exc.ReservedOpcode;
-import com.ledmington.cpu.x86.exc.UnknownOpcode;
-import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
-
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -36,6 +28,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import com.ledmington.cpu.x86.exc.ReservedOpcode;
+import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
+import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
@@ -55,6 +55,7 @@ public final class InstructionDecoder {
 					Arrays.stream(Register16.values()),
 					Arrays.stream(Register32.values()),
 					Arrays.stream(Register64.values()),
+					Arrays.stream(RegisterMMX.values()),
 					Arrays.stream(RegisterXMM.values()))
 			.flatMap(x -> x)
 			.collect(Collectors.toUnmodifiableMap(Operand::toIntelSyntax, x -> x));
@@ -64,22 +65,33 @@ public final class InstructionDecoder {
 	public static Instruction fromIntelSyntax(final String input) {
 		final CharacterIterator it = new StringCharacterIterator(input);
 
-		// Parsing opcode
+		InstructionPrefix prefix = null;
 		final Opcode opcode;
-		{
-			final StringBuilder sb = new StringBuilder();
-			readUntilWhitespace(it, sb);
-			final String opcodeString = sb.toString();
-			if (!fromStringToOpcode.containsKey(opcodeString)) {
-				throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", opcodeString));
-			}
-			opcode = fromStringToOpcode.get(opcodeString);
+
+		String opcodeString = readUntilWhitespace(it);
+		if (opcodeString.equals("lock")) {
+			prefix = InstructionPrefix.LOCK;
+			skipWhitespaces(it);
+			opcodeString = readUntilWhitespace(it);
+		} else if (opcodeString.equals("rep")) {
+			prefix = InstructionPrefix.REP;
+			skipWhitespaces(it);
+			opcodeString = readUntilWhitespace(it);
+		} else if (opcodeString.equals("repnz")) {
+			prefix = InstructionPrefix.REPNZ;
+			skipWhitespaces(it);
+			opcodeString = readUntilWhitespace(it);
 		}
+
+		if (!fromStringToOpcode.containsKey(opcodeString)) {
+			throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", opcodeString));
+		}
+		opcode = fromStringToOpcode.get(opcodeString);
 
 		skipWhitespaces(it);
 
 		if (it.current() == CharacterIterator.DONE) {
-			return new Instruction(opcode);
+			return new Instruction(prefix, opcode, null, null, null);
 		}
 
 		final String[] args = input.substring(it.getIndex()).split(",");
@@ -91,7 +103,7 @@ public final class InstructionDecoder {
 		final Operand secondOperand = args.length < 2 ? null : parseOperand(args[1].strip());
 		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip());
 
-		return new Instruction(opcode, firstOperand, secondOperand, thirdOperand);
+		return new Instruction(prefix, opcode, firstOperand, secondOperand, thirdOperand);
 	}
 
 	private static void skipWhitespaces(final CharacterIterator it) {
@@ -100,10 +112,16 @@ public final class InstructionDecoder {
 		}
 	}
 
-	private static void readUntilWhitespace(final CharacterIterator it, final StringBuilder sb) {
-		for (; it.current() != CharacterIterator.DONE && it.current() != ' '; it.next()) {
+	private static String readUntilWhitespace(final CharacterIterator it) {
+		return readUntil(it, ' ');
+	}
+
+	private static String readUntil(final CharacterIterator it, final char ch) {
+		final StringBuilder sb = new StringBuilder();
+		for (; it.current() != CharacterIterator.DONE && it.current() != ch; it.next()) {
 			sb.append(it.current());
 		}
+		return sb.toString();
 	}
 
 	private static Operand parseOperand(final String input) {
@@ -115,13 +133,13 @@ public final class InstructionDecoder {
 			// It's an immediate
 			final String imm = input.substring(2);
 			if (imm.length() <= 2) {
-				return new Immediate(Byte.parseByte(imm, 16));
+				return new Immediate(BitUtils.asByte(Integer.parseUnsignedInt(imm, 16)));
 			} else if (imm.length() <= 4) {
-				return new Immediate(Short.parseShort(imm, 16));
+				return new Immediate(BitUtils.asShort(Integer.parseUnsignedInt(imm, 16)));
 			} else if (imm.length() <= 8) {
-				return new Immediate(Integer.parseInt(imm, 16));
+				return new Immediate(Integer.parseUnsignedInt(imm, 16));
 			} else if (imm.length() <= 16) {
-				return new Immediate(Long.parseLong(imm, 16));
+				return new Immediate(Long.parseUnsignedLong(imm, 16));
 			} else {
 				throw new IllegalArgumentException(String.format("Immediate too long: '%s'.", input));
 			}
@@ -130,41 +148,46 @@ public final class InstructionDecoder {
 		// It's an indirect operand
 		final IndirectOperandBuilder iob = IndirectOperand.builder();
 		final CharacterIterator it = new StringCharacterIterator(input);
-		final String pointer;
-		{
-			final StringBuilder sb = new StringBuilder();
-			readUntilWhitespace(it, sb);
-			skipWhitespaces(it);
-			sb.append(' ');
-			readUntilWhitespace(it, sb);
-			pointer = sb.toString();
-		}
+		String pointer;
+		pointer = readUntilWhitespace(it);
+		skipWhitespaces(it);
+		pointer = pointer + ' ';
+		pointer = pointer + readUntilWhitespace(it);
+
 		switch (pointer) {
 			case "BYTE PTR" -> iob.pointer(PointerSize.BYTE_PTR);
 			case "WORD PTR" -> iob.pointer(PointerSize.WORD_PTR);
 			case "DWORD PTR" -> iob.pointer(PointerSize.DWORD_PTR);
 			case "QWORD PTR" -> iob.pointer(PointerSize.QWORD_PTR);
 			case "XMMWORD PTR" -> iob.pointer(PointerSize.XMMWORD_PTR);
-			default -> throw new IllegalArgumentException(String.format("Unknown pointer size: '%s'.", pointer));
+			default -> {
+				// This might be a LEA instruction, meaning that the displacement has no explicit pointer size in front
+				// of it, so we just rewind the iterator.
+				iob.pointer(PointerSize.QWORD_PTR);
+				it.setIndex(0);
+			}
 		}
 
 		skipWhitespaces(it);
 
+		Register16 segReg = null;
+
 		// Must begin with '['
 		if (it.current() != '[') {
-			throw new IllegalArgumentException(String.format("Invalid indirect operand: '%s'.", input));
+			// try reading segment register
+			final String seg = readUntil(it, ':').strip();
+			if (fromStringToRegister.containsKey(seg)) {
+				segReg = (Register16) fromStringToRegister.get(seg);
+				skipWhitespaces(it);
+				it.next();
+			} else {
+				throw new IllegalArgumentException(String.format("Invalid indirect operand: '%s'.", input));
+			}
 		}
 		it.next();
 
 		// Read until ']'
-		String indirectOperandString;
-		{
-			final StringBuilder sb = new StringBuilder();
-			for (; it.current() != CharacterIterator.DONE && it.current() != ']'; it.next()) {
-				sb.append(it.current());
-			}
-			indirectOperandString = sb.toString();
-		}
+		final String indirectOperandString = readUntil(it, ']');
 
 		// check that there is nothing else after the ']'
 		it.next();
@@ -174,25 +197,56 @@ public final class InstructionDecoder {
 		}
 
 		if (fromStringToRegister.containsKey(indirectOperandString)) {
-			iob.index(fromStringToRegister.get(indirectOperandString));
-		} else {
-			final String[] splitted = indirectOperandString.split("\\+");
-			iob.base(fromStringToRegister.get(splitted[0].strip()));
-			iob.index(fromStringToRegister.get(splitted[1].strip().split("\\*")[0]));
-			iob.constant(
-					switch (splitted[1].strip().split("\\*")[1]) {
-						case "1" -> 1;
-						case "2" -> 2;
-						case "4" -> 4;
-						case "8" -> 8;
-						default -> throw new IllegalArgumentException(
-								String.format("Invalid indirect operand: '%s'.", input));
-					});
-			splitted[2] = splitted[2].strip().substring(2);
-			if (splitted[2].length() <= 2) {
-				iob.displacement(Byte.parseByte(splitted[2], 16));
+			if (segReg != null) {
+				iob.index(new SegmentRegister(segReg, fromStringToRegister.get(indirectOperandString)));
 			} else {
-				iob.displacement(Integer.parseInt(splitted[2], 16));
+				iob.index(fromStringToRegister.get(indirectOperandString));
+			}
+		} else {
+			final boolean hasScale = indirectOperandString.contains("*");
+			final String[] splitted = indirectOperandString.split("\\+|\\-");
+			if (hasScale) {
+				if (splitted[1].contains("*")) {
+					iob.base(fromStringToRegister.get(splitted[0].strip()));
+					if (segReg != null) {
+						iob.index(new SegmentRegister(
+								segReg,
+								fromStringToRegister.get(splitted[1].strip().split("\\*")[0])));
+					} else {
+						iob.index(fromStringToRegister.get(splitted[1].strip().split("\\*")[0]));
+					}
+					iob.scale(
+							switch (splitted[1].strip().split("\\*")[1]) {
+								case "1" -> 1;
+								case "2" -> 2;
+								case "4" -> 4;
+								case "8" -> 8;
+								default -> throw new IllegalArgumentException(
+										String.format("Invalid indirect operand: '%s'.", input));
+							});
+				} else {
+					iob.index(fromStringToRegister.get(splitted[0].strip().split("\\*")[0]));
+					iob.scale(
+							switch (splitted[0].strip().split("\\*")[1]) {
+								case "1" -> 1;
+								case "2" -> 2;
+								case "4" -> 4;
+								case "8" -> 8;
+								default -> throw new IllegalArgumentException(
+										String.format("Invalid indirect operand: '%s'.", input));
+							});
+				}
+			} else {
+				iob.index(fromStringToRegister.get(splitted[0].strip()));
+			}
+
+			// Parse displacement
+			final String displacementString = (indirectOperandString.contains("-") ? "-" : "+")
+					+ splitted[splitted.length - 1].strip().substring(2);
+			if (displacementString.length() <= 2) {
+				iob.displacement(Byte.parseByte(displacementString, 16));
+			} else {
+				iob.displacement(Integer.parseInt(displacementString, 16));
 			}
 		}
 
@@ -2190,7 +2244,7 @@ public final class InstructionDecoder {
 					iob.base(base);
 				}
 				operand2 = index;
-				iob.constant(1 << BitUtils.asInt(sib.scale()));
+				iob.scale(1 << BitUtils.asInt(sib.scale()));
 			}
 		} else {
 			// SIB not needed
