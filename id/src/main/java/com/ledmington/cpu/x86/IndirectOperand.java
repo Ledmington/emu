@@ -213,7 +213,7 @@ public final class IndirectOperand implements Operand {
 		return "IndirectOperand(base="
 				+ (base == null ? "null" : base.toString())
 				+ ";index="
-				+ index.toString() + ";scale="
+				+ (index == null ? null : index.toString()) + ";scale="
 				+ scale + ";displacement="
 				+ displacement + ";displacementType=" + displacementType
 				+ ";ptrSize=" + ptrSize

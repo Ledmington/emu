@@ -30,7 +30,7 @@ public final class Instruction {
 	private final Operand op2;
 	private final Operand op3;
 
-	private Instruction(
+	Instruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
 			final Operand firstOperand,

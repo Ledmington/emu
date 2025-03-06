@@ -109,7 +109,7 @@ final class TestIndirectOperand {
 					args.add(Arguments.of(
 							IndirectOperand.builder()
 									.index(r)
-									.constant(c)
+									.scale(c)
 									.pointer(ps)
 									.build(),
 							sb.toString()));
@@ -123,7 +123,7 @@ final class TestIndirectOperand {
 				for (final int c : constant) {
 					for (final Number disp : displacements) {
 						final IndirectOperandBuilder iob =
-								IndirectOperand.builder().index(r).pointer(ps).constant(c);
+								IndirectOperand.builder().index(r).pointer(ps).scale(c);
 						final StringBuilder sb = new StringBuilder();
 						sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
 
@@ -194,7 +194,7 @@ final class TestIndirectOperand {
 							final IndirectOperandBuilder iob = IndirectOperand.builder()
 									.base(base)
 									.index(r)
-									.constant(c)
+									.scale(c)
 									.pointer(ps);
 
 							final StringBuilder sb = new StringBuilder();
@@ -243,13 +243,13 @@ final class TestIndirectOperand {
 
 	private static Stream<Arguments> wrongIndirectOperands() {
 		return Stream.<Supplier<IndirectOperandBuilder>>of(
-						() -> IndirectOperand.builder().constant(-1),
-						() -> IndirectOperand.builder().constant(0),
-						() -> IndirectOperand.builder().constant(3),
-						() -> IndirectOperand.builder().constant(5),
-						() -> IndirectOperand.builder().constant(6),
-						() -> IndirectOperand.builder().constant(7),
-						() -> IndirectOperand.builder().constant(9),
+						() -> IndirectOperand.builder().scale(-1),
+						() -> IndirectOperand.builder().scale(0),
+						() -> IndirectOperand.builder().scale(3),
+						() -> IndirectOperand.builder().scale(5),
+						() -> IndirectOperand.builder().scale(6),
+						() -> IndirectOperand.builder().scale(7),
+						() -> IndirectOperand.builder().scale(9),
 						() -> IndirectOperand.builder().base(Register8.AL),
 						() -> IndirectOperand.builder().base(Register16.AX),
 						() -> IndirectOperand.builder().base(RegisterXMM.XMM0),

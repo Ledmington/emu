@@ -62,17 +62,17 @@ public final class IndirectOperandBuilder {
 	}
 
 	/**
-	 * Sets the constant for the IndirectOperand.
+	 * Sets the scale for the IndirectOperand.
 	 *
-	 * @param c The new constant.
+	 * @param c The new scale.
 	 * @return This instance of IndirectOperandBuilder.
 	 */
-	public IndirectOperandBuilder constant(final int c) {
+	public IndirectOperandBuilder scale(final int c) {
 		if (this.scale != DEFAULT_SCALE) {
-			throw new IllegalArgumentException("Cannot define constant twice.");
+			throw new IllegalArgumentException("Cannot define scale twice.");
 		}
 		if (c != 1 && c != 2 && c != 4 && c != 8) {
-			throw new IllegalArgumentException(String.format("Invalid indirect operand index constant %,d.", c));
+			throw new IllegalArgumentException(String.format("Invalid indirect operand scale %,d.", c));
 		}
 		this.scale = c;
 		return this;
@@ -164,8 +164,8 @@ public final class IndirectOperandBuilder {
 
 		if (baseRegister != null) {
 			if (indexRegister == null) {
-				throw new IllegalArgumentException("Cannot build an IndirectOperand with reg1=" + baseRegister
-						+ ", no reg2, constant=" + scale + ", "
+				throw new IllegalArgumentException("Cannot build an IndirectOperand with base=" + baseRegister
+						+ ", no index, scale=" + scale + ", "
 						+ (displacement == null ? "no displacement" : "displacement=" + displacement) + ".");
 			}
 
@@ -180,7 +180,7 @@ public final class IndirectOperandBuilder {
 			if (scale == DEFAULT_SCALE) {
 				if (indexRegister == null && displacement == null) {
 					throw new IllegalArgumentException(
-							"Cannot build an IndirectOperand with no reg1, no reg2, no constant, no displacement.");
+							"Cannot build an IndirectOperand with no base, no index, no scale, no displacement.");
 				}
 
 				if (indexRegister != null) {
@@ -198,7 +198,7 @@ public final class IndirectOperandBuilder {
 			} else {
 				if (indexRegister == null) {
 					throw new IllegalArgumentException(
-							"Cannot build an IndirectOperand with no reg1, no reg2, constant=" + scale + ", "
+							"Cannot build an IndirectOperand with no base, no index, scale=" + scale + ", "
 									+ (displacement == null ? "no displacement" : "displacement=" + displacement)
 									+ ".");
 				}
@@ -226,7 +226,7 @@ public final class IndirectOperandBuilder {
 
 	@Override
 	public String toString() {
-		return "IndirectOperandBuilder(reg1=" + baseRegister + ";reg2=" + indexRegister + ";constant=" + scale
+		return "IndirectOperandBuilder(base=" + baseRegister + ";index=" + indexRegister + ";scale=" + scale
 				+ ";displacement="
 				+ displacement + ";displacementType="
 				+ displacementType + ";ptrSize=" + ptrSize + ";alreadyBuilt=" + alreadyBuilt + ")";

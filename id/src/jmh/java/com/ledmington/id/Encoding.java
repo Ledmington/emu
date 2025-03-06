@@ -56,7 +56,7 @@ public class Encoding {
 			IndirectOperand.builder()
 					.base(Register64.R9)
 					.index(Register64.RCX)
-					.constant(4)
+					.scale(4)
 					.displacement(0x12345678)
 					.pointer(PointerSize.WORD_PTR)
 					.build(),

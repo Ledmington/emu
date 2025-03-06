@@ -66,39 +66,39 @@ final class TestExecution {
 	private static final List<Supplier<IndirectOperandBuilder>> indirectOperands = List.of(
 			() -> IndirectOperand.builder().index(Register32.EAX),
 			() -> IndirectOperand.builder().index(Register64.RAX),
-			() -> IndirectOperand.builder().index(Register32.EAX).constant(2),
-			() -> IndirectOperand.builder().index(Register64.RAX).constant(2),
-			() -> IndirectOperand.builder().index(Register32.EAX).constant(4),
-			() -> IndirectOperand.builder().index(Register64.RAX).constant(4),
-			() -> IndirectOperand.builder().index(Register32.EAX).constant(8),
-			() -> IndirectOperand.builder().index(Register64.RAX).constant(8),
+			() -> IndirectOperand.builder().index(Register32.EAX).scale(2),
+			() -> IndirectOperand.builder().index(Register64.RAX).scale(2),
+			() -> IndirectOperand.builder().index(Register32.EAX).scale(4),
+			() -> IndirectOperand.builder().index(Register64.RAX).scale(4),
+			() -> IndirectOperand.builder().index(Register32.EAX).scale(8),
+			() -> IndirectOperand.builder().index(Register64.RAX).scale(8),
 			//
 			() -> IndirectOperand.builder().base(Register32.EBX).index(Register32.EAX),
 			() -> IndirectOperand.builder().base(Register64.RBX).index(Register64.RAX),
 			() -> IndirectOperand.builder()
 					.base(Register32.EBX)
 					.index(Register32.EAX)
-					.constant(2),
+					.scale(2),
 			() -> IndirectOperand.builder()
 					.base(Register64.RBX)
 					.index(Register64.RAX)
-					.constant(2),
+					.scale(2),
 			() -> IndirectOperand.builder()
 					.base(Register32.EBX)
 					.index(Register32.EAX)
-					.constant(4),
+					.scale(4),
 			() -> IndirectOperand.builder()
 					.base(Register64.RBX)
 					.index(Register64.RAX)
-					.constant(4),
+					.scale(4),
 			() -> IndirectOperand.builder()
 					.base(Register32.EBX)
 					.index(Register32.EAX)
-					.constant(8),
+					.scale(8),
 			() -> IndirectOperand.builder()
 					.base(Register64.RBX)
 					.index(Register64.RAX)
-					.constant(8));
+					.scale(8));
 	private static final List<Arguments> r16m16 = r16.stream()
 			.flatMap(a -> indirectOperands.stream()
 					.map(b -> Arguments.of(
