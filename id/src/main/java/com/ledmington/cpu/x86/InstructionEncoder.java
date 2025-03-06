@@ -688,13 +688,12 @@ public final class InstructionEncoder {
 			throw new IllegalStateException(String.format("Invalid REG opcode: 0x%02x.", regOpcode));
 		}
 
-		final byte shiftedRegOpcode = BitUtils.shl(regOpcode, 3);
-
 		if (isSimpleIndirectOperand(io)) {
+			final byte shiftedRegOpcode = BitUtils.shl(regOpcode, 3);
 			encodeSimpleIndirectOperand(wb, io, shiftedRegOpcode, otherRegister);
 		} else {
 			// default: mod = 00
-			byte modrm = shiftedRegOpcode;
+			byte modrm = otherRegister != null ? BitUtils.shl(Registers.toByte(otherRegister), 3) : 0;
 			if (io.hasDisplacement()) {
 				if (io.getDisplacementBits() == 8) {
 					// mod = 01
@@ -704,17 +703,18 @@ public final class InstructionEncoder {
 					modrm = BitUtils.or(modrm, (byte) 0b10000000);
 				}
 			}
+
 			if (!io.hasIndex()
-					|| (io.hasBase() && (io.getBase() == Register32.ESP || io.getBase() == Register64.RSP))) {
+					|| !(io.hasBase() && (io.getBase() == Register32.ESP || io.getBase() == Register64.RSP))) {
 				// r/m = 100
 				modrm = BitUtils.or(modrm, (byte) 0b00000100);
 				wb.write(modrm);
-				encodeSIB(wb, io);
-				encodeDisplacement(wb, io);
 			} else {
 				modrm = BitUtils.or(modrm, Registers.toByte(io.getBase()));
 				wb.write(modrm);
 			}
+			encodeSIB(wb, io);
+			encodeDisplacement(wb, io);
 		}
 	}
 

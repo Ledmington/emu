@@ -17,9 +17,9 @@
  */
 package com.ledmington.cpu.x86;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -39,21 +39,43 @@ final class TestDecoding extends X64Test {
 		return v;
 	}
 
+	private static String toString(final byte[] v) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append('[');
+		if (v.length > 0) {
+			sb.append(String.format("%02x", v[0]));
+			for (int i = 1; i < v.length; i++) {
+				sb.append(String.format(", %02x", v[i]));
+			}
+		}
+		return sb.append(']').toString();
+	}
+
+	private static Stream<Arguments> onlyHex() {
+		return instructions().map(arg -> Arguments.of(arg.get()[1]));
+	}
+
 	@ParameterizedTest
-	@MethodSource("instructions")
-	void parsing(final String expected, final List<Byte> code) {
-		final List<Instruction> instructions = InstructionDecoder.fromHex(toByteArray(code), code.size());
-		assertNotNull(instructions, "InstructionDecoder returned a null List.");
-		final int codeLen = instructions.size();
-		assertEquals(1, codeLen, () -> String.format("Expected 1 instruction but %,d were found.", codeLen));
+	@MethodSource("onlyHex")
+	void hexToHex(final List<Byte> code) {
+		final byte[] expected = toByteArray(code);
+		final List<Instruction> instructions = InstructionDecoder.fromHex(expected, expected.length);
+		assertEquals(
+				1,
+				instructions.size(),
+				() -> String.format("Expected 1 instruction but %,d were found.", instructions.size()));
 		final Instruction inst = instructions.getFirst();
-		final String decoded = InstructionEncoder.toIntelSyntax(inst);
-		assertEquals(expected, decoded, () -> String.format("Expected '%s' but '%s' was decoded.", expected, decoded));
+		System.out.println(InstructionEncoder.toIntelSyntax(inst));
+		final byte[] actual = InstructionEncoder.toHex(inst);
+		assertArrayEquals(
+				expected,
+				actual,
+				() -> String.format("Expected '%s' but was '%s'", toString(expected), toString(actual)));
 		assertFalse(
 				inst.isLegacy(),
 				() -> String.format(
-						"%s ('%s') is a valid instruction but it is for legacy/compatibility 32-bit mode, not for 64-bit mode.",
-						inst, decoded));
+						"%s is a valid instruction but it is for legacy/compatibility 32-bit mode, not for 64-bit mode.",
+						InstructionEncoder.toIntelSyntax(inst)));
 	}
 
 	private static Stream<Arguments> onlyIntelSyntax() {
@@ -65,5 +87,27 @@ final class TestDecoding extends X64Test {
 	void stringToString(final String expected) {
 		final String actual = InstructionEncoder.toIntelSyntax(InstructionDecoder.fromIntelSyntax(expected));
 		assertEquals(expected, actual, () -> String.format("Expected '%s' but was '%s'.", expected, actual));
+	}
+
+	@ParameterizedTest
+	@MethodSource("instructions")
+	void hexToString(final String expected, final List<Byte> code) {
+		final List<Instruction> decoded = InstructionDecoder.fromHex(toByteArray(code), code.size());
+		assertEquals(
+				1, decoded.size(), () -> String.format("Expected 1 instruction but %,d were found.", decoded.size()));
+		final String actual = InstructionEncoder.toIntelSyntax(decoded.getFirst());
+		assertEquals(expected, actual, () -> String.format("Expected '%s' but was '%s'.", expected, actual));
+	}
+
+	@ParameterizedTest
+	@MethodSource("instructions")
+	void stringToHex(final String asm, final List<Byte> code) {
+		final Instruction inst = InstructionDecoder.fromIntelSyntax(asm);
+		final byte[] expected = toByteArray(code);
+		final byte[] actual = InstructionEncoder.toHex(inst);
+		assertArrayEquals(
+				expected,
+				actual,
+				() -> String.format("Expected '%s' but was '%s'.", toString(expected), toString(actual)));
 	}
 }
