@@ -897,19 +897,19 @@ public final class InstructionDecoder {
 			case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(b, opcodeFirstByte, opcodeSecondByte, pref);
 
 				// conditional jumps
-			case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of(b.read4LE()));
-			case JAE_DISP32_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of(b.read4LE()));
-			case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of(b.read4LE()));
-			case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of(b.read4LE()));
-			case JBE_DISP32_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of(b.read4LE()));
-			case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of(b.read4LE()));
-			case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of(b.read4LE()));
-			case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of(b.read4LE()));
-			case JP_DISP32_OPCODE -> new Instruction(Opcode.JP, RelativeOffset.of(b.read4LE()));
-			case JL_DISP32_OPCODE -> new Instruction(Opcode.JL, RelativeOffset.of(b.read4LE()));
-			case JGE_DISP32_OPCODE -> new Instruction(Opcode.JGE, RelativeOffset.of(b.read4LE()));
-			case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of(b.read4LE()));
-			case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of(b.read4LE()));
+			case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, imm32(b));
+			case JAE_DISP32_OPCODE -> new Instruction(Opcode.JAE, imm32(b));
+			case JE_DISP32_OPCODE -> new Instruction(Opcode.JE, imm32(b));
+			case JNE_DISP32_OPCODE -> new Instruction(Opcode.JNE, imm32(b));
+			case JBE_DISP32_OPCODE -> new Instruction(Opcode.JBE, imm32(b));
+			case JG_DISP32_OPCODE -> new Instruction(Opcode.JG, imm32(b));
+			case JS_DISP32_OPCODE -> new Instruction(Opcode.JS, imm32(b));
+			case JNS_DISP32_OPCODE -> new Instruction(Opcode.JNS, imm32(b));
+			case JP_DISP32_OPCODE -> new Instruction(Opcode.JP, imm32(b));
+			case JL_DISP32_OPCODE -> new Instruction(Opcode.JL, imm32(b));
+			case JGE_DISP32_OPCODE -> new Instruction(Opcode.JGE, imm32(b));
+			case JLE_DISP32_OPCODE -> new Instruction(Opcode.JLE, imm32(b));
+			case JB_DISP32_OPCODE -> new Instruction(Opcode.JB, imm32(b));
 
 			case ENDBR_OPCODE -> {
 				final byte x = b.read1();
@@ -1696,23 +1696,23 @@ public final class InstructionDecoder {
 			case XCHG_INDIRECT32_R32_OPCODE -> parseMxRx(b, pref, Opcode.XCHG);
 
 				// jumps
-			case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of(b.read4LE()));
-			case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, RelativeOffset.of(b.read1()));
-			case JB_DISP8_OPCODE -> new Instruction(Opcode.JB, RelativeOffset.of(b.read1()));
-			case JAE_DISP8_OPCODE -> new Instruction(Opcode.JAE, RelativeOffset.of(b.read1()));
-			case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, RelativeOffset.of(b.read1()));
-			case JA_DISP8_OPCODE -> new Instruction(Opcode.JA, RelativeOffset.of(b.read1()));
-			case JNE_DISP8_OPCODE -> new Instruction(Opcode.JNE, RelativeOffset.of(b.read1()));
-			case JBE_DISP8_OPCODE -> new Instruction(Opcode.JBE, RelativeOffset.of(b.read1()));
-			case JS_DISP8_OPCODE -> new Instruction(Opcode.JS, RelativeOffset.of(b.read1()));
-			case JNS_DISP8_OPCODE -> new Instruction(Opcode.JNS, RelativeOffset.of(b.read1()));
-			case JP_DISP8_OPCODE -> new Instruction(Opcode.JP, RelativeOffset.of(b.read1()));
-			case JL_DISP8_OPCODE -> new Instruction(Opcode.JL, RelativeOffset.of(b.read1()));
-			case JGE_DISP8_OPCODE -> new Instruction(Opcode.JGE, RelativeOffset.of(b.read1()));
-			case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, RelativeOffset.of(b.read1()));
-			case JG_DISP8_OPCODE -> new Instruction(Opcode.JG, RelativeOffset.of(b.read1()));
+			case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, imm32(b));
+			case JMP_DISP8_OPCODE -> new Instruction(Opcode.JMP, imm8(b));
+			case JB_DISP8_OPCODE -> new Instruction(Opcode.JB, imm8(b));
+			case JAE_DISP8_OPCODE -> new Instruction(Opcode.JAE, imm8(b));
+			case JE_DISP8_OPCODE -> new Instruction(Opcode.JE, imm8(b));
+			case JA_DISP8_OPCODE -> new Instruction(Opcode.JA, imm8(b));
+			case JNE_DISP8_OPCODE -> new Instruction(Opcode.JNE, imm8(b));
+			case JBE_DISP8_OPCODE -> new Instruction(Opcode.JBE, imm8(b));
+			case JS_DISP8_OPCODE -> new Instruction(Opcode.JS, imm8(b));
+			case JNS_DISP8_OPCODE -> new Instruction(Opcode.JNS, imm8(b));
+			case JP_DISP8_OPCODE -> new Instruction(Opcode.JP, imm8(b));
+			case JL_DISP8_OPCODE -> new Instruction(Opcode.JL, imm8(b));
+			case JGE_DISP8_OPCODE -> new Instruction(Opcode.JGE, imm8(b));
+			case JLE_DISP8_OPCODE -> new Instruction(Opcode.JLE, imm8(b));
+			case JG_DISP8_OPCODE -> new Instruction(Opcode.JG, imm8(b));
 
-			case CALL_OPCODE -> new Instruction(Opcode.CALL, RelativeOffset.of(b.read4LE()));
+			case CALL_OPCODE -> new Instruction(Opcode.CALL, imm32(b));
 
 			case IMUL_REG_REG_IMM8_OPCODE -> {
 				final ModRM modrm = modrm(b);

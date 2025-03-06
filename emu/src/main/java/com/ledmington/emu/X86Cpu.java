@@ -24,12 +24,10 @@ import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
-import com.ledmington.cpu.x86.Register;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
-import com.ledmington.cpu.x86.RelativeOffset;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -214,7 +212,8 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SHR has %,d bits", ((Register) inst.firstOperand()).bits()));
+							"Don't know what to do when SHR has %,d bits",
+							inst.firstOperand().bits()));
 				}
 			}
 			case SAR -> {
@@ -227,7 +226,8 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SAR has %,d bits", ((Register) inst.firstOperand()).bits()));
+							"Don't know what to do when SAR has %,d bits",
+							inst.firstOperand().bits()));
 				}
 			}
 			case SHL -> {
@@ -240,7 +240,8 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SHL has %,d bits", ((Register) inst.firstOperand()).bits()));
+							"Don't know what to do when SHL has %,d bits",
+							inst.firstOperand().bits()));
 				}
 			}
 			case XOR -> {
@@ -312,17 +313,17 @@ public class X86Cpu implements X86Emulator {
 			case JMP -> {
 				final long offset = (inst.firstOperand() instanceof Register64)
 						? rf.get((Register64) inst.firstOperand())
-						: ((RelativeOffset) inst.firstOperand()).getValue();
+						: ((Immediate) inst.firstOperand()).asLong();
 				instFetch.setPosition(instFetch.getPosition() + offset);
 			}
 			case JE -> {
 				if (rf.isSet(RFlags.ZERO)) {
-					instFetch.setPosition(instFetch.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
+					instFetch.setPosition(instFetch.getPosition() + ((Immediate) inst.firstOperand()).asLong());
 				}
 			}
 			case JNE -> {
 				if (!rf.isSet(RFlags.ZERO)) {
-					instFetch.setPosition(instFetch.getPosition() + ((RelativeOffset) inst.firstOperand()).getValue());
+					instFetch.setPosition(instFetch.getPosition() + ((Immediate) inst.firstOperand()).asLong());
 				}
 			}
 			case MOV -> {
@@ -405,7 +406,7 @@ public class X86Cpu implements X86Emulator {
 				mem.write(newStackPointer, rip);
 
 				// TODO: check this (should modify stack pointers)
-				final long relativeAddress = ((RelativeOffset) inst.firstOperand()).getValue();
+				final long relativeAddress = ((Immediate) inst.firstOperand()).asLong();
 
 				rf.set(Register64.RIP, rip + relativeAddress);
 			}

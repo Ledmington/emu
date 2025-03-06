@@ -176,9 +176,9 @@ public final class InstructionEncoder {
 			}
 			case Opcode.POP -> wb.write(BitUtils.or((byte) 0x58, Registers.toByte((Register) inst.firstOperand())));
 			case Opcode.CALL -> {
-				if (inst.firstOperand() instanceof RelativeOffset ro) {
+				if (inst.firstOperand() instanceof Immediate imm) {
 					wb.write((byte) 0xe8);
-					wb.write(BitUtils.asInt(ro.getValue()));
+					wb.write(imm.asInt());
 				} else if (inst.firstOperand() instanceof Register r) {
 					encodeRexPrefix(wb, inst, false);
 					wb.write((byte) 0xff);
@@ -239,23 +239,21 @@ public final class InstructionEncoder {
 					Opcode.JS,
 					Opcode.JNS,
 					Opcode.JP -> {
-				final RelativeOffset ro = (RelativeOffset) inst.firstOperand();
-				if (ro.bits() == 8) {
-					wb.write(
-							BitUtils.asByte(0x70 + CONDITIONAL_JUMPS_OPCODES.get(inst.opcode())),
-							BitUtils.asByte(ro.getValue()));
+				final Immediate imm = (Immediate) inst.firstOperand();
+				if (imm.bits() == 8) {
+					wb.write(BitUtils.asByte(0x70 + CONDITIONAL_JUMPS_OPCODES.get(inst.opcode())), imm.asByte());
 				} else {
 					wb.write(
 							DOUBLE_BYTE_OPCODE_PREFIX,
 							BitUtils.asByte(0x80 + CONDITIONAL_JUMPS_OPCODES.get(inst.opcode())));
 
-					wb.write(BitUtils.asInt(ro.getValue()));
+					wb.write(imm.asInt());
 				}
 			}
 			case Opcode.JMP -> {
-				final RelativeOffset ro = (RelativeOffset) inst.firstOperand();
+				final Immediate imm = (Immediate) inst.firstOperand();
 				wb.write((byte) 0xeb);
-				wb.write(BitUtils.asInt(ro.getValue()));
+				wb.write(imm.asInt());
 			}
 
 			case Opcode.INCSSPQ -> {

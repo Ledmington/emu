@@ -17,21 +17,6 @@
  */
 package com.ledmington.emu;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.Arrays;
-import java.util.random.RandomGenerator;
-import java.util.random.RandomGeneratorFactory;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
@@ -40,11 +25,24 @@ import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
-import com.ledmington.cpu.x86.RelativeOffset;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.BitUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.Arrays;
+import java.util.random.RandomGenerator;
+import java.util.random.RandomGeneratorFactory;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class TestExecutionWithMemory {
 
@@ -297,7 +295,7 @@ final class TestExecutionWithMemory {
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final byte[] code = InstructionEncoder.toHex(
-				new Instruction(Opcode.CALL, RelativeOffset.of(BitUtils.asInt(functionAddress - rip))),
+				new Instruction(Opcode.CALL, new Immediate(BitUtils.asInt(functionAddress - rip))),
 				new Instruction(Opcode.HLT));
 		mem.initialize(rip, code);
 		mem.setPermissions(rip, rip + code.length, false, false, true);
