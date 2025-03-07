@@ -61,7 +61,6 @@ call rdx | ff d2
 call rsi | ff d6
 call rsp | ff d4
 #
-call DWORD PTR [ebx]                    | 66 67 ff 1b
 call DWORD PTR [ebx]                    | 67 66 ff 1b
 call DWORD PTR [r11+r12*4+0x12345678]   | 66 43 ff 9c a3 78 56 34 12
 call DWORD PTR [r11d+r12d*4+0x12345678] | 67 66 43 ff 9c a3 78 56 34 12
@@ -240,7 +239,6 @@ lea eax,[ebx]                   | 67 8d 03
 lea eax,[rbx]                   | 8d 03
 lea ecx,[rdx+rbp*2]             | 8d 0c 6a
 lea esi,[edi+r12d*2+0x12345678] | 67 42 8d b4 67 78 56 34 12
-lea r10w,[ebx+ecx*4+0x12345678] | 66 67 44 8d 94 8b 78 56 34 12
 lea r10w,[ebx+ecx*4+0x12345678] | 67 66 44 8d 94 8b 78 56 34 12
 lea r13d,[rdi+r8*4+0x12345678]  | 46 8d ac 87 78 56 34 12
 lea r14w,[rbx+rcx*4+0x12345678] | 66 44 8d b4 8b 78 56 34 12
