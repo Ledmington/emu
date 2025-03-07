@@ -93,11 +93,15 @@ public final class IndirectOperand implements Operand {
 	 */
 	public Register getIndex() {
 		Objects.requireNonNull(this.index, "No index register.");
-		return index;
+		return (index instanceof SegmentRegister sr) ? sr.register() : index;
 	}
 
 	public boolean hasIndex() {
 		return index != null;
+	}
+
+	public boolean hasSegment() {
+		return index instanceof SegmentRegister;
 	}
 
 	/**
