@@ -28,6 +28,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.ledmington.utils.BitUtils;
+
 @SuppressWarnings("PMD.JUnitTestContainsTooManyAsserts")
 final class TestDecoding extends X64Test {
 
@@ -43,9 +45,9 @@ final class TestDecoding extends X64Test {
 		final StringBuilder sb = new StringBuilder();
 		sb.append('[');
 		if (v.length > 0) {
-			sb.append(String.format("%02x", v[0]));
+			sb.append(String.format("0x%02x", v[0]));
 			for (int i = 1; i < v.length; i++) {
-				sb.append(String.format(", %02x", v[i]));
+				sb.append(String.format(", 0x%02x", v[i]));
 			}
 		}
 		return sb.append(']').toString();
@@ -105,9 +107,18 @@ final class TestDecoding extends X64Test {
 		final Instruction inst = InstructionDecoder.fromIntelSyntax(asm);
 		final byte[] expected = toByteArray(code);
 		final byte[] actual = InstructionEncoder.toHex(inst);
-		assertArrayEquals(
-				expected,
-				actual,
-				() -> String.format("Expected '%s' but was '%s'.", toString(expected), toString(actual)));
+		assertArrayEquals(expected, actual, () -> {
+			String s = String.format("Expected '%s' but was '%s'.", toString(expected), toString(actual));
+			for (int i = 0; i < Math.min(expected.length, actual.length); i++) {
+				if (expected[i] != actual[i]) {
+					s = s
+							+ String.format(
+									" Elements at index %,d were 0b%s and 0b%s, respectively.",
+									i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
+					break;
+				}
+			}
+			return s;
+		});
 	}
 }
