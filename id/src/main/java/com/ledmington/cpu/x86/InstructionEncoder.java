@@ -142,7 +142,7 @@ public final class InstructionEncoder {
 		switch (countOperands(inst)) {
 			case 0 -> encodeZeroOperandsInstruction(wb, inst);
 			case 1 -> encodeSingleOperandInstruction(wb, inst);
-				// case 2 -> encodeTwoOperandsInstruction(wb, inst);
+			case 2 -> encodeTwoOperandsInstruction(wb, inst);
 				// case 3 -> encodeThreeOperandsInstruction(wb, inst);
 			default -> throw new IllegalArgumentException(String.format(
 					"Unknown instruction with %,d operands: '%s'.", countOperands(inst), toIntelSyntax(inst)));
@@ -246,8 +246,7 @@ public final class InstructionEncoder {
 							: (byte) 0b100;
 				}
 			}
-				// TODO: add the default branch later
-				// default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
+			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
 		{
@@ -277,32 +276,7 @@ public final class InstructionEncoder {
 
 				wb.write(modrm);
 
-				// SIB
-				final boolean isWeirdIndirectOperand = isSimpleIndirectOperand(io)
-						&& (io.getIndex() == Register32.ESP || io.getIndex() == Register64.RSP);
-				if (!isSimpleIndirectOperand(io) || isWeirdIndirectOperand) {
-					final byte base = isWeirdIndirectOperand ? (byte) 0b100 : Registers.toByte(io.getBase());
-					wb.write(BitUtils.or(
-							BitUtils.shl(
-									switch (io.getScale()) {
-										case 1 -> (byte) 0b00;
-										case 2 -> (byte) 0b01;
-										case 4 -> (byte) 0b10;
-										case 8 -> (byte) 0b11;
-										default -> throw new IllegalArgumentException(
-												String.format("Invalid scale: %,d.", io.getScale()));
-									},
-									6),
-							BitUtils.or(BitUtils.shl(Registers.toByte(io.getIndex()), 3), base)));
-				}
-
-				if (io.hasDisplacement()) {
-					if (io.getDisplacementBits() == 8) {
-						wb.write(BitUtils.asByte(io.getDisplacement()));
-					} else if (io.getDisplacementBits() == 32) {
-						wb.write(BitUtils.asInt(io.getDisplacement()));
-					}
-				}
+				encodeIndirectOperand(wb, io);
 			} else if (inst.firstOperand() instanceof Immediate imm) {
 				if (imm.bits() == 8) {
 					wb.write(imm.asByte());
@@ -313,6 +287,82 @@ public final class InstructionEncoder {
 				}
 			} else {
 				throw new IllegalArgumentException(String.format("Unknown operand: '%s'.", inst.firstOperand()));
+			}
+		}
+	}
+
+	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		// rex
+		{
+			byte rex = DEFAULT_REX_PREFIX;
+			if (inst.firstOperand().bits() == 64) {
+				rex = BitUtils.or(rex, (byte) 0b1000);
+			}
+			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
+				rex = BitUtils.or(rex, (byte) 0b0100);
+			}
+			if (inst.firstOperand().bits() == 32
+					|| (inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))) {
+				rex = BitUtils.or(rex, (byte) 0b0001);
+			}
+			if (rex != DEFAULT_REX_PREFIX) {
+				wb.write(rex);
+			}
+		}
+
+		byte reg = 0;
+		switch (inst.opcode()) {
+			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE -> {
+				wb.write(
+						DOUBLE_BYTE_OPCODE_PREFIX,
+						BitUtils.asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
+			}
+			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
+		}
+
+		// modrm
+		{
+			byte modrm = 0;
+			if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b11, 6));
+				modrm = BitUtils.or(modrm, BitUtils.shl(Registers.toByte(r1), 3));
+				modrm = BitUtils.or(modrm, Registers.toByte(r2));
+				wb.write(modrm);
+			} else if (inst.firstOperand() instanceof Register r
+					&& inst.secondOperand() instanceof IndirectOperand io) {
+				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b10, 6));
+				modrm = BitUtils.or(modrm, BitUtils.shl(Registers.toByte(r), 3));
+				modrm = BitUtils.or(modrm, (byte) 0b100);
+				wb.write(modrm);
+				encodeIndirectOperand(wb, io);
+			}
+		}
+	}
+
+	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
+		final boolean isWeirdIndirectOperand =
+				isSimpleIndirectOperand(io) && (io.getIndex() == Register32.ESP || io.getIndex() == Register64.RSP);
+		if (!isSimpleIndirectOperand(io) || isWeirdIndirectOperand) {
+			final byte base = isWeirdIndirectOperand ? (byte) 0b100 : Registers.toByte(io.getBase());
+			wb.write(BitUtils.or(
+					BitUtils.shl(
+							switch (io.getScale()) {
+								case 1 -> (byte) 0b00;
+								case 2 -> (byte) 0b01;
+								case 4 -> (byte) 0b10;
+								case 8 -> (byte) 0b11;
+								default -> throw new IllegalArgumentException(
+										String.format("Invalid scale: %,d.", io.getScale()));
+							},
+							6),
+					BitUtils.or(BitUtils.shl(Registers.toByte(io.getIndex()), 3), base)));
+		}
+
+		if (io.hasDisplacement()) {
+			if (io.getDisplacementBits() == 8) {
+				wb.write(BitUtils.asByte(io.getDisplacement()));
+			} else if (io.getDisplacementBits() == 32) {
+				wb.write(BitUtils.asInt(io.getDisplacement()));
 			}
 		}
 	}
