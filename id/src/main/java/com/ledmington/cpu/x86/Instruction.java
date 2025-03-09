@@ -17,9 +17,9 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
+
+import java.util.Objects;
 
 /** High-level representation of an x86 instruction. */
 public final class Instruction {
@@ -302,11 +302,11 @@ public final class Instruction {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + prefix.hashCode();
+		h = 31 * h + (prefix == null ? 0 : prefix.hashCode());
 		h = 31 * h + code.hashCode();
-		h = 31 * h + op1.hashCode();
-		h = 31 * h + op2.hashCode();
-		h = 31 * h + op3.hashCode();
+		h = 31 * h + (op1 == null ? 0 : op1.hashCode());
+		h = 31 * h + (op2 == null ? 0 : op2.hashCode());
+		h = 31 * h + (op3 == null ? 0 : op3.hashCode());
 		return h;
 	}
 
@@ -321,10 +321,10 @@ public final class Instruction {
 		if (!(other instanceof Instruction inst)) {
 			return false;
 		}
-		return this.prefix.equals(inst.prefix)
+		return Objects.equals(this.prefix, inst.prefix)
 				&& this.code.equals(inst.code)
-				&& this.op1.equals(inst.op1)
-				&& this.op2.equals(inst.op2)
-				&& this.op3.equals(inst.op3);
+				&& Objects.equals(this.op1, inst.op1)
+				&& Objects.equals(this.op2, inst.op2)
+				&& Objects.equals(this.op3, inst.op3);
 	}
 }
