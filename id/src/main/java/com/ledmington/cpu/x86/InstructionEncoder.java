@@ -292,6 +292,10 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		if (inst.firstOperand() instanceof IndirectOperand io && io.getIndex() instanceof Register32) {
+			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
+		}
+
 		// rex
 		{
 			byte rex = DEFAULT_REX_PREFIX;
@@ -301,8 +305,15 @@ public final class InstructionEncoder {
 			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
-			if (inst.firstOperand().bits() == 32
-					|| (inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))) {
+			if (inst.opcode() == Opcode.CMP
+					&& inst.secondOperand() instanceof Register r
+					&& Registers.requiresExtension(r)) {
+				rex = BitUtils.or(rex, (byte) 0b0010);
+			}
+			if ((inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))
+					|| (inst.secondOperand() instanceof IndirectOperand io
+							&& io.hasBase()
+							&& Registers.requiresExtension(io.getBase()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX) {
@@ -312,10 +323,19 @@ public final class InstructionEncoder {
 
 		byte reg = 0;
 		switch (inst.opcode()) {
-			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE -> {
-				wb.write(
-						DOUBLE_BYTE_OPCODE_PREFIX,
-						BitUtils.asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
+			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE -> wb.write(
+					DOUBLE_BYTE_OPCODE_PREFIX,
+					BitUtils.asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
+			case CMP -> {
+				if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register) {
+					wb.write(io.bits() == 8 ? (byte) 0x38 : (byte) 0x39);
+				} else if (inst.firstOperand() instanceof IndirectOperand
+						&& inst.secondOperand() instanceof Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x81 : (byte) 0x80);
+				}
+			}
+			case MOV -> {
+				wb.write((byte) 0x89);
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
@@ -335,6 +355,29 @@ public final class InstructionEncoder {
 				modrm = BitUtils.or(modrm, (byte) 0b100);
 				wb.write(modrm);
 				encodeIndirectOperand(wb, io);
+			} else if (inst.firstOperand() instanceof IndirectOperand io
+					&& inst.secondOperand() instanceof Register r) {
+				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b00, 6));
+				modrm = BitUtils.or(modrm, BitUtils.shl(Registers.toByte(r), 3));
+				modrm = BitUtils.or(
+						modrm, isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
+				wb.write(modrm);
+				encodeIndirectOperand(wb, io);
+			} else if (inst.firstOperand() instanceof IndirectOperand io
+					&& inst.secondOperand() instanceof Immediate imm) {
+				modrm = BitUtils.or(
+						modrm,
+						BitUtils.shl(
+								isSimpleIndirectOperand(io)
+										? (byte) 0b00
+										: (io.getDisplacementBits() == 8 ? (byte) 0b01 : (byte) 0b10),
+								6));
+				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b111, 3));
+				modrm = BitUtils.or(
+						modrm, isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
+				wb.write(modrm);
+				encodeIndirectOperand(wb, io);
+				encodeImmediate(wb, imm);
 			}
 		}
 	}
@@ -363,11 +406,26 @@ public final class InstructionEncoder {
 				wb.write(BitUtils.asByte(io.getDisplacement()));
 			} else if (io.getDisplacementBits() == 32) {
 				wb.write(BitUtils.asInt(io.getDisplacement()));
+			} else {
+				throw new IllegalArgumentException(
+						String.format("Unknown displacement in indirect operand: '%s'.", io));
 			}
 		}
 	}
 
 	private static boolean isSimpleIndirectOperand(final IndirectOperand io) {
 		return !io.hasBase() && io.hasIndex() && !io.hasScale() && !io.hasDisplacement();
+	}
+
+	private static void encodeImmediate(final WriteOnlyByteBuffer wb, final Immediate imm) {
+		if (imm.bits() == 8) {
+			wb.write(imm.asByte());
+		} else if (imm.bits() == 16) {
+			wb.write(imm.asShort());
+		} else if (imm.bits() == 32) {
+			wb.write(imm.asInt());
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown immediate: '%s'.", imm));
+		}
 	}
 }

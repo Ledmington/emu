@@ -17,6 +17,14 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.cpu.x86.exc.ReservedOpcode;
+import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
+import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBufferV1;
+
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -28,14 +36,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import com.ledmington.cpu.x86.exc.ReservedOpcode;
-import com.ledmington.cpu.x86.exc.UnknownOpcode;
-import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
@@ -69,18 +69,22 @@ public final class InstructionDecoder {
 		final Opcode opcode;
 
 		String opcodeString = readUntilWhitespace(it);
-		if (opcodeString.equals("lock")) {
-			prefix = InstructionPrefix.LOCK;
-			skipWhitespaces(it);
-			opcodeString = readUntilWhitespace(it);
-		} else if (opcodeString.equals("rep")) {
-			prefix = InstructionPrefix.REP;
-			skipWhitespaces(it);
-			opcodeString = readUntilWhitespace(it);
-		} else if (opcodeString.equals("repnz")) {
-			prefix = InstructionPrefix.REPNZ;
-			skipWhitespaces(it);
-			opcodeString = readUntilWhitespace(it);
+		switch (opcodeString) {
+			case "lock" -> {
+				prefix = InstructionPrefix.LOCK;
+				skipWhitespaces(it);
+				opcodeString = readUntilWhitespace(it);
+			}
+			case "rep" -> {
+				prefix = InstructionPrefix.REP;
+				skipWhitespaces(it);
+				opcodeString = readUntilWhitespace(it);
+			}
+			case "repnz" -> {
+				prefix = InstructionPrefix.REPNZ;
+				skipWhitespaces(it);
+				opcodeString = readUntilWhitespace(it);
+			}
 		}
 
 		if (!fromStringToOpcode.containsKey(opcodeString)) {
@@ -204,7 +208,7 @@ public final class InstructionDecoder {
 			}
 		} else {
 			final boolean hasScale = indirectOperandString.contains("*");
-			final String[] splitted = indirectOperandString.split("\\+|\\-");
+			final String[] splitted = indirectOperandString.split("[+-]");
 			if (hasScale) {
 				if (splitted[1].contains("*")) {
 					iob.base(fromStringToRegister.get(splitted[0].strip()));
@@ -243,8 +247,8 @@ public final class InstructionDecoder {
 			// Parse displacement
 			final String displacementString = (indirectOperandString.contains("-") ? "-" : "+")
 					+ splitted[splitted.length - 1].strip().substring(2);
-			if (displacementString.length() <= 2) {
-				iob.displacement(Byte.parseByte(displacementString, 16));
+			if (displacementString.length() <= 3) {
+				iob.displacement(BitUtils.asByte(Integer.parseInt(displacementString, 16)));
 			} else {
 				iob.displacement(Integer.parseInt(displacementString, 16));
 			}

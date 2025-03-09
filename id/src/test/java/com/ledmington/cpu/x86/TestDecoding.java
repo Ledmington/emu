@@ -67,7 +67,6 @@ final class TestDecoding extends X64Test {
 				instructions.size(),
 				() -> String.format("Expected 1 instruction but %,d were found.", instructions.size()));
 		final Instruction inst = instructions.getFirst();
-		System.out.println(InstructionEncoder.toIntelSyntax(inst));
 		final byte[] actual = InstructionEncoder.toHex(inst);
 		assertArrayEquals(
 				expected,
@@ -109,13 +108,15 @@ final class TestDecoding extends X64Test {
 		final byte[] actual = InstructionEncoder.toHex(inst);
 		assertArrayEquals(expected, actual, () -> {
 			String s = String.format("Expected '%s' but was '%s'.", toString(expected), toString(actual));
-			for (int i = 0; i < Math.min(expected.length, actual.length); i++) {
-				if (expected[i] != actual[i]) {
-					s = s
-							+ String.format(
-									" Elements at index %,d were 0b%s and 0b%s, respectively.",
-									i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
-					break;
+			if (expected.length == actual.length) {
+				for (int i = 0; i < expected.length; i++) {
+					if (expected[i] != actual[i]) {
+						s = s
+								+ String.format(
+										" Elements at index %,d were 0b%s and 0b%s, respectively.",
+										i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
+						break;
+					}
 				}
 			}
 			return s;
