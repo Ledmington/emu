@@ -17,27 +17,30 @@
  */
 package com.ledmington.cpu.x86;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-final class TestIncompleteInstruction extends X64Test {
+final class TestDecodeIncompleteInstruction extends X64Encodings {
 
-	@SuppressWarnings("unchecked")
 	private static Stream<Arguments> incompleteInstructions() {
-		final Set<List<Byte>> validInstructions =
-				instructions().map(arg -> (List<Byte>) arg.get()[1]).collect(Collectors.toSet());
+		final Set<List<Byte>> validInstructions = X64_ENCODINGS.stream()
+				.map(x -> IntStream.range(0, x.hex().length)
+						.mapToObj(i -> x.hex()[i])
+						.toList())
+				.collect(Collectors.toSet());
 		return validInstructions.stream()
 				.flatMap(splitted -> {
-					if (splitted.size() == 1) { // NOPMD
+					if (splitted.size() == 1) {
 						return Stream.of();
 					}
 					// for each instruction, we generate all prefixes that do not represent other
