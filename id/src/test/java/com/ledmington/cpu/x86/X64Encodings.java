@@ -17,9 +17,36 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.utils.BitUtils;
+
 import java.util.List;
 
-import com.ledmington.utils.BitUtils;
+import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
+import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
+import static com.ledmington.cpu.x86.PointerSize.WORD_PTR;
+import static com.ledmington.cpu.x86.Register16.AX;
+import static com.ledmington.cpu.x86.Register16.CS;
+import static com.ledmington.cpu.x86.Register32.EAX;
+import static com.ledmington.cpu.x86.Register32.EBX;
+import static com.ledmington.cpu.x86.Register32.ECX;
+import static com.ledmington.cpu.x86.Register32.R11D;
+import static com.ledmington.cpu.x86.Register32.R12D;
+import static com.ledmington.cpu.x86.Register64.R10;
+import static com.ledmington.cpu.x86.Register64.R11;
+import static com.ledmington.cpu.x86.Register64.R12;
+import static com.ledmington.cpu.x86.Register64.R13;
+import static com.ledmington.cpu.x86.Register64.R14;
+import static com.ledmington.cpu.x86.Register64.R15;
+import static com.ledmington.cpu.x86.Register64.R8;
+import static com.ledmington.cpu.x86.Register64.R9;
+import static com.ledmington.cpu.x86.Register64.RAX;
+import static com.ledmington.cpu.x86.Register64.RBP;
+import static com.ledmington.cpu.x86.Register64.RBX;
+import static com.ledmington.cpu.x86.Register64.RCX;
+import static com.ledmington.cpu.x86.Register64.RDI;
+import static com.ledmington.cpu.x86.Register64.RDX;
+import static com.ledmington.cpu.x86.Register64.RSI;
+import static com.ledmington.cpu.x86.Register64.RSP;
 
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 
@@ -41,111 +68,306 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			//  https://defuse.ca/online-x86-assembler.htm
 			//
 			//  No-op
-			test(null, "nop", "90"),
+			test(new Instruction(Opcode.NOP), "nop", "90"),
 			//
-			test(null, "nop ax", "66 0f 1f c0"),
-			test(null, "nop eax", "0f 1f c0"),
-			test(null, "nop rax", "48 0f 1f c0"),
+			test(new Instruction(Opcode.NOP, AX), "nop ax", "66 0f 1f c0"),
+			test(new Instruction(Opcode.NOP, EAX), "nop eax", "0f 1f c0"),
+			test(new Instruction(Opcode.NOP, RAX), "nop rax", "48 0f 1f c0"),
 			//
-			test(null, "nop DWORD PTR [eax]", "67 0f 1f 00"),
-			test(null, "nop DWORD PTR [rax]", "0f 1f 00"),
-			test(null, "nop DWORD PTR [rbx+r12*4+0x12345678]", "42 0f 1f 84 a3 78 56 34 12"),
-			test(null, "nop QWORD PTR [eax]", "67 48 0f 1f 00"),
-			test(null, "nop QWORD PTR [rax]", "48 0f 1f 00"),
-			test(null, "nop QWORD PTR [rbx+r12*4+0x12345678]", "4a 0f 1f 84 a3 78 56 34 12"),
-			test(null, "nop WORD PTR [eax]", "67 66 0f 1f 00"),
-			test(null, "nop WORD PTR [rax]", "66 0f 1f 00"),
-			test(null, "nop WORD PTR [rbx+r12*4+0x12345678]", "66 42 0f 1f 84 a3 78 56 34 12"),
-			test(null, "nop WORD PTR cs:[rbx+r12*4+0x12345678]", "2e 66 42 0f 1f 84 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(EAX)
+									.build()),
+					"nop DWORD PTR [eax]",
+					"67 0f 1f 00"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RAX)
+									.build()),
+					"nop DWORD PTR [rax]",
+					"0f 1f 00"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(RBX)
+									.index(R12)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"nop DWORD PTR [rbx+r12*4+0x12345678]",
+					"42 0f 1f 84 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(EAX)
+									.build()),
+					"nop QWORD PTR [eax]",
+					"67 48 0f 1f 00"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RAX)
+									.build()),
+					"nop QWORD PTR [rax]",
+					"48 0f 1f 00"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RBX)
+									.index(R12)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"nop QWORD PTR [rbx+r12*4+0x12345678]",
+					"4a 0f 1f 84 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(EAX)
+									.build()),
+					"nop WORD PTR [eax]",
+					"67 66 0f 1f 00"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(RAX)
+									.build()),
+					"nop WORD PTR [rax]",
+					"66 0f 1f 00"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(RBX)
+									.index(R12)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"nop WORD PTR [rbx+r12*4+0x12345678]",
+					"66 42 0f 1f 84 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.NOP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(RBX)
+									.index(new SegmentRegister(CS, R12))
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"nop WORD PTR cs:[rbx+r12*4+0x12345678]",
+					"2e 66 42 0f 1f 84 a3 78 56 34 12"),
 			//  Call
 			//  The output of these instructions is different from what you can see from other tools such as objdump
 			//  because here we keep the addition to the instruction pointer implicit.
 			//  In reality, it would look like 'call rip+0x....'
-			test(null, "call 0x12345678", "e8 78 56 34 12"),
-			test(null, "call 0xf8563412", "e8 12 34 56 f8"),
-			test(null, "call 0xffffff18", "e8 18 ff ff ff"),
+			test(new Instruction(Opcode.CALL, new Immediate(0x12345678)), "call 0x12345678", "e8 78 56 34 12"),
+			test(new Instruction(Opcode.CALL, new Immediate(0xf8563412)), "call 0xf8563412", "e8 12 34 56 f8"),
+			test(new Instruction(Opcode.CALL, new Immediate(0xffffff18)), "call 0xffffff18", "e8 18 ff ff ff"),
 			//  the following ones are calls with registers (as offsets?)
-			test(null, "call r10", "41 ff d2"),
-			test(null, "call r11", "41 ff d3"),
-			test(null, "call r12", "41 ff d4"),
-			test(null, "call r13", "41 ff d5"),
-			test(null, "call r14", "41 ff d6"),
-			test(null, "call r15", "41 ff d7"),
-			test(null, "call r8", "41 ff d0"),
-			test(null, "call r9", "41 ff d1"),
-			test(null, "call rax", "ff d0"),
-			test(null, "call rbp", "ff d5"),
-			test(null, "call rbx", "ff d3"),
-			test(null, "call rcx", "ff d1"),
-			test(null, "call rdi", "ff d7"),
-			test(null, "call rdx", "ff d2"),
-			test(null, "call rsi", "ff d6"),
-			test(null, "call rsp", "ff d4"),
+			test(new Instruction(Opcode.CALL, R10), "call r10", "41 ff d2"),
+			test(new Instruction(Opcode.CALL, R11), "call r11", "41 ff d3"),
+			test(new Instruction(Opcode.CALL, R12), "call r12", "41 ff d4"),
+			test(new Instruction(Opcode.CALL, R13), "call r13", "41 ff d5"),
+			test(new Instruction(Opcode.CALL, R14), "call r14", "41 ff d6"),
+			test(new Instruction(Opcode.CALL, R15), "call r15", "41 ff d7"),
+			test(new Instruction(Opcode.CALL, R8), "call r8", "41 ff d0"),
+			test(new Instruction(Opcode.CALL, R9), "call r9", "41 ff d1"),
+			test(new Instruction(Opcode.CALL, RAX), "call rax", "ff d0"),
+			test(new Instruction(Opcode.CALL, RBP), "call rbp", "ff d5"),
+			test(new Instruction(Opcode.CALL, RBX), "call rbx", "ff d3"),
+			test(new Instruction(Opcode.CALL, RCX), "call rcx", "ff d1"),
+			test(new Instruction(Opcode.CALL, RDI), "call rdi", "ff d7"),
+			test(new Instruction(Opcode.CALL, RDX), "call rdx", "ff d2"),
+			test(new Instruction(Opcode.CALL, RSI), "call rsi", "ff d6"),
+			test(new Instruction(Opcode.CALL, RSP), "call rsp", "ff d4"),
 			//
-			test(null, "call DWORD PTR [ebx]", "67 66 ff 1b"),
-			test(null, "call DWORD PTR [r11+r12*4+0x12345678]", "66 43 ff 9c a3 78 56 34 12"),
-			test(null, "call DWORD PTR [r11d+r12d*4+0x12345678]", "67 66 43 ff 9c a3 78 56 34 12"),
-			test(null, "call DWORD PTR [rsp]", "66 ff 1c 24"),
-			test(null, "call QWORD PTR [eax]", "67 ff 10"),
-			test(null, "call QWORD PTR [r11+r12*4+0x12345678]", "43 ff 94 a3 78 56 34 12"),
-			test(null, "call QWORD PTR [rdx]", "ff 12"),
-			test(null, "call WORD PTR [ecx]", "67 66 ff 11"),
-			test(null, "call WORD PTR [r11+r12*4+0x12345678]", "66 43 ff 94 a3 78 56 34 12"),
-			test(null, "call WORD PTR [r11d+r12d*4+0x12345678]", "67 66 43 ff 94 a3 78 56 34 12"),
-			test(null, "call WORD PTR [rsi]", "66 ff 16"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(EBX)
+									.build()),
+					"call DWORD PTR [ebx]",
+					"67 66 ff 1b"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R11)
+									.index(R12)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"call DWORD PTR [r11+r12*4+0x12345678]",
+					"66 43 ff 9c a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R11D)
+									.index(R12D)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"call DWORD PTR [r11d+r12d*4+0x12345678]",
+					"67 66 43 ff 9c a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(RSP)
+									.build()),
+					"call DWORD PTR [rsp]",
+					"66 ff 1c 24"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(EAX)
+									.build()),
+					"call QWORD PTR [eax]",
+					"67 ff 10"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(R11)
+									.index(R12)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"call QWORD PTR [r11+r12*4+0x12345678]",
+					"43 ff 94 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RDX)
+									.build()),
+					"call QWORD PTR [rdx]",
+					"ff 12"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(ECX)
+									.build()),
+					"call WORD PTR [ecx]",
+					"67 66 ff 11"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(R11)
+									.index(R12)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"call WORD PTR [r11+r12*4+0x12345678]",
+					"66 43 ff 94 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(R11D)
+									.index(R12D)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"call WORD PTR [r11d+r12d*4+0x12345678]",
+					"67 66 43 ff 94 a3 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CALL,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(RSI)
+									.build()),
+					"call WORD PTR [rsi]",
+					"66 ff 16"),
 			//  Cdq
-			test(null, "cdq", "99"),
+			test(new Instruction(Opcode.CDQ), "cdq", "99"),
 			//  Cwde
-			test(null, "cwde", "98"),
+			test(new Instruction(Opcode.CWDE), "cwde", "98"),
 			//  Cdqe
-			test(null, "cdqe", "48 98"),
+			test(new Instruction(Opcode.CDQE), "cdqe", "48 98"),
 			//
 			// ## Jumps
 			//  The output of these instructions is different from what you can see from other tools such as objdump
 			//  because here we keep the addition to the instruction pointer implicit.
 			//  In reality, it would look like 'jXX rip+0x....'
 			//  Ja
-			test(null, "ja 0x12", "77 12"),
-			test(null, "ja 0x12345678", "0f 87 78 56 34 12"),
+			test(new Instruction(Opcode.JA, new Immediate((byte) 0x12)), "ja 0x12", "77 12"),
+			test(new Instruction(Opcode.JA, new Immediate(0x12345678)), "ja 0x12345678", "0f 87 78 56 34 12"),
 			//  Jae
-			test(null, "jae 0x12", "73 12"),
-			test(null, "jae 0x12345678", "0f 83 78 56 34 12"),
+			test(new Instruction(Opcode.JAE, new Immediate((byte) 0x12)), "jae 0x12", "73 12"),
+			test(new Instruction(Opcode.JAE, new Immediate(0x12345678)), "jae 0x12345678", "0f 83 78 56 34 12"),
 			//  Jb
-			test(null, "jb 0x12", "72 12"),
-			test(null, "jb 0x12345678", "0f 82 78 56 34 12"),
+			test(new Instruction(Opcode.JB, new Immediate((byte) 0x12)), "jb 0x12", "72 12"),
+			test(new Instruction(Opcode.JB, new Immediate(0x12345678)), "jb 0x12345678", "0f 82 78 56 34 12"),
 			//  Jbe
-			test(null, "jbe 0x12", "76 12"),
-			test(null, "jbe 0x12345678", "0f 86 78 56 34 12"),
+			test(new Instruction(Opcode.JBE, new Immediate((byte) 0x12)), "jbe 0x12", "76 12"),
+			test(new Instruction(Opcode.JBE, new Immediate(0x12345678)), "jbe 0x12345678", "0f 86 78 56 34 12"),
 			//  Jg
-			test(null, "jg 0x12", "7f 12"),
-			test(null, "jg 0x12345678", "0f 8f 78 56 34 12"),
+			test(new Instruction(Opcode.JG, new Immediate((byte) 0x12)), "jg 0x12", "7f 12"),
+			test(new Instruction(Opcode.JG, new Immediate(0x12345678)), "jg 0x12345678", "0f 8f 78 56 34 12"),
 			//  Je
-			test(null, "je 0x12", "74 12"),
-			test(null, "je 0x12345678", "0f 84 78 56 34 12"),
+			test(new Instruction(Opcode.JE, new Immediate((byte) 0x12)), "je 0x12", "74 12"),
+			test(new Instruction(Opcode.JE, new Immediate(0x12345678)), "je 0x12345678", "0f 84 78 56 34 12"),
 			//  Jl
-			test(null, "jl 0x12", "7c 12"),
-			test(null, "jl 0x12345678", "0f 8c 78 56 34 12"),
+			test(new Instruction(Opcode.JL, new Immediate((byte) 0x12)), "jl 0x12", "7c 12"),
+			test(new Instruction(Opcode.JL, new Immediate(0x12345678)), "jl 0x12345678", "0f 8c 78 56 34 12"),
 			//  Jle
-			test(null, "jle 0x12", "7e 12"),
-			test(null, "jle 0x12345678", "0f 8e 78 56 34 12"),
+			test(new Instruction(Opcode.JLE, new Immediate((byte) 0x12)), "jle 0x12", "7e 12"),
+			test(new Instruction(Opcode.JLE, new Immediate(0x12345678)), "jle 0x12345678", "0f 8e 78 56 34 12"),
 			//  Jge
-			test(null, "jge 0x12", "7d 12"),
-			test(null, "jge 0x12345678", "0f 8d 78 56 34 12"),
+			test(new Instruction(Opcode.JGE, new Immediate((byte) 0x12)), "jge 0x12", "7d 12"),
+			test(new Instruction(Opcode.JGE, new Immediate(0x12345678)), "jge 0x12345678", "0f 8d 78 56 34 12"),
 			//  Jne
-			test(null, "jne 0x12", "75 12"),
-			test(null, "jne 0x12345678", "0f 85 78 56 34 12"),
+			test(new Instruction(Opcode.JNE, new Immediate((byte) 0x12)), "jne 0x12", "75 12"),
+			test(new Instruction(Opcode.JNE, new Immediate(0x12345678)), "jne 0x12345678", "0f 85 78 56 34 12"),
 			//  Jns
-			test(null, "jns 0x12", "79 12"),
-			test(null, "jns 0x12345678", "0f 89 78 56 34 12"),
+			test(new Instruction(Opcode.JNS, new Immediate((byte) 0x12)), "jns 0x12", "79 12"),
+			test(new Instruction(Opcode.JNS, new Immediate(0x12345678)), "jns 0x12345678", "0f 89 78 56 34 12"),
 			//  Js
-			test(null, "js 0x12", "78 12"),
-			test(null, "js 0x12345678", "0f 88 78 56 34 12"),
+			test(new Instruction(Opcode.JS, new Immediate((byte) 0x12)), "js 0x12", "78 12"),
+			test(new Instruction(Opcode.JS, new Immediate(0x12345678)), "js 0x12345678", "0f 88 78 56 34 12"),
 			//  Jp
-			test(null, "jp 0x12", "7a 12"),
-			test(null, "jp 0x12345678", "0f 8a 78 56 34 12"),
+			test(new Instruction(Opcode.JP, new Immediate((byte) 0x12)), "jp 0x12", "7a 12"),
+			test(new Instruction(Opcode.JP, new Immediate(0x12345678)), "jp 0x12345678", "0f 8a 78 56 34 12"),
 			//  Jmp
-			test(null, "jmp 0x12", "eb 12"),
-			test(null, "jmp 0x12345678", "e9 78 56 34 12"),
+			test(new Instruction(Opcode.JMP, new Immediate((byte) 0x12)), "jmp 0x12", "eb 12"),
+			test(new Instruction(Opcode.JMP, new Immediate(0x12345678)), "jmp 0x12345678", "e9 78 56 34 12"),
 			//
 			test(null, "jmp ax", "66 ff e0"),
 			test(null, "jmp r11", "41 ff e3"),
@@ -277,70 +499,70 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			test(null, "lea rsi,[edi+r9d*2+0x12345678]", "67 4a 8d b4 4f 78 56 34 12"),
 			test(null, "lea rsi,[rdi+r8*4+0x12345678]", "4a 8d b4 87 78 56 34 12"),
 			//  Mov
-			test(null, "mov r10d,r10d", "45 89 d2"),
-			test(null, "mov r10d,r11d", "45 89 da"),
-			test(null, "mov r10d,r12d", "45 89 e2"),
-			test(null, "mov r10d,r13d", "45 89 ea"),
-			test(null, "mov r10d,r14d", "45 89 f2"),
-			test(null, "mov r10d,r15d", "45 89 fa"),
-			test(null, "mov r10d,r8d", "45 89 c2"),
-			test(null, "mov r10d,r9d", "45 89 ca"),
-			test(null, "mov r11d,r10d", "45 89 d3"),
-			test(null, "mov r11d,r11d", "45 89 db"),
-			test(null, "mov r11d,r12d", "45 89 e3"),
-			test(null, "mov r11d,r13d", "45 89 eb"),
-			test(null, "mov r11d,r14d", "45 89 f3"),
-			test(null, "mov r11d,r15d", "45 89 fb"),
-			test(null, "mov r11d,r8d", "45 89 c3"),
-			test(null, "mov r11d,r9d", "45 89 cb"),
-			test(null, "mov r12d,r10d", "45 89 d4"),
-			test(null, "mov r12d,r11d", "45 89 dc"),
-			test(null, "mov r12d,r12d", "45 89 e4"),
-			test(null, "mov r12d,r13d", "45 89 ec"),
-			test(null, "mov r12d,r14d", "45 89 f4"),
-			test(null, "mov r12d,r15d", "45 89 fc"),
-			test(null, "mov r12d,r8d", "45 89 c4"),
-			test(null, "mov r12d,r9d", "45 89 cc"),
-			test(null, "mov r13d,r10d", "45 89 d5"),
-			test(null, "mov r13d,r11d", "45 89 dd"),
-			test(null, "mov r13d,r12d", "45 89 e5"),
-			test(null, "mov r13d,r13d", "45 89 ed"),
-			test(null, "mov r13d,r14d", "45 89 f5"),
-			test(null, "mov r13d,r15d", "45 89 fd"),
-			test(null, "mov r13d,r8d", "45 89 c5"),
-			test(null, "mov r13d,r9d", "45 89 cd"),
-			test(null, "mov r14d,r10d", "45 89 d6"),
-			test(null, "mov r14d,r11d", "45 89 de"),
-			test(null, "mov r14d,r12d", "45 89 e6"),
-			test(null, "mov r14d,r13d", "45 89 ee"),
-			test(null, "mov r14d,r14d", "45 89 f6"),
-			test(null, "mov r14d,r15d", "45 89 fe"),
-			test(null, "mov r14d,r8d", "45 89 c6"),
-			test(null, "mov r14d,r9d", "45 89 ce"),
-			test(null, "mov r15d,r10d", "45 89 d7"),
-			test(null, "mov r15d,r11d", "45 89 df"),
-			test(null, "mov r15d,r12d", "45 89 e7"),
-			test(null, "mov r15d,r13d", "45 89 ef"),
-			test(null, "mov r15d,r14d", "45 89 f7"),
-			test(null, "mov r15d,r15d", "45 89 ff"),
-			test(null, "mov r15d,r8d", "45 89 c7"),
-			test(null, "mov r15d,r9d", "45 89 cf"),
-			test(null, "mov r8d,r10d", "45 89 d0"),
-			test(null, "mov r8d,r11d", "45 89 d8"),
-			test(null, "mov r8d,r12d", "45 89 e0"),
-			test(null, "mov r8d,r13d", "45 89 e8"),
-			test(null, "mov r8d,r14d", "45 89 f0"),
-			test(null, "mov r8d,r15d", "45 89 f8"),
-			test(null, "mov r8d,r8d", "45 89 c0"),
-			test(null, "mov r8d,r9d", "45 89 c8"),
-			test(null, "mov r9d,r10d", "45 89 d1"),
-			test(null, "mov r9d,r11d", "45 89 d9"),
-			test(null, "mov r9d,r12d", "45 89 e1"),
-			test(null, "mov r9d,r13d", "45 89 e9"),
-			test(null, "mov r9d,r14d", "45 89 f1"),
-			test(null, "mov r9d,r15d", "45 89 f9"),
-			test(null, "mov r9d,r8d", "45 89 c1"),
-			test(null, "mov r9d,r9d", "45 89 c9"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R10D), "mov r10d,r10d", "45 89 d2"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, R11D), "mov r10d,r11d", "45 89 da"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, R12D), "mov r10d,r12d", "45 89 e2"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R13D), "mov r10d,r13d", "45 89 ea"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R14D), "mov r10d,r14d", "45 89 f2"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R15D), "mov r10d,r15d", "45 89 fa"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R8D), "mov r10d,r8d", "45 89 c2"),
+			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R9D), "mov r10d,r9d", "45 89 ca"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r10d", "45 89 d3"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r11d", "45 89 db"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r12d", "45 89 e3"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r13d", "45 89 eb"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r14d", "45 89 f3"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r15d", "45 89 fb"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r8d", "45 89 c3"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r9d", "45 89 cb"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r10d", "45 89 d4"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r11d", "45 89 dc"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r12d", "45 89 e4"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r13d", "45 89 ec"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r14d", "45 89 f4"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r15d", "45 89 fc"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r8d", "45 89 c4"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r9d", "45 89 cc"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r10d", "45 89 d5"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r11d", "45 89 dd"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r12d", "45 89 e5"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r13d", "45 89 ed"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r14d", "45 89 f5"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r15d", "45 89 fd"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r8d", "45 89 c5"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r9d", "45 89 cd"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r10d", "45 89 d6"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r11d", "45 89 de"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r12d", "45 89 e6"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r13d", "45 89 ee"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r14d", "45 89 f6"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r15d", "45 89 fe"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r8d", "45 89 c6"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r9d", "45 89 ce"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r10d", "45 89 d7"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r11d", "45 89 df"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r12d", "45 89 e7"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r13d", "45 89 ef"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r14d", "45 89 f7"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r15d", "45 89 ff"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r8d", "45 89 c7"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r9d", "45 89 cf"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r10d", "45 89 d0"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r11d", "45 89 d8"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r12d", "45 89 e0"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r13d", "45 89 e8"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r14d", "45 89 f0"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r15d", "45 89 f8"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r8d", "45 89 c0"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r9d", "45 89 c8"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r10d", "45 89 d1"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r11d", "45 89 d9"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r12d", "45 89 e1"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r13d", "45 89 e9"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r14d", "45 89 f1"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r15d", "45 89 f9"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r8d", "45 89 c1"),
+			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r9d", "45 89 c9"),
 			//
 			test(null, "mov eax,eax", "89 c0"),
 			test(null, "mov eax,ebp", "89 e8"),
