@@ -295,6 +295,9 @@ public final class InstructionEncoder {
 		if (inst.firstOperand() instanceof IndirectOperand io && io.getIndex() instanceof Register32) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
+		if (inst.firstOperand().bits() == 16) {
+			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+		}
 
 		// rex
 		{
@@ -302,7 +305,10 @@ public final class InstructionEncoder {
 			if (inst.firstOperand().bits() == 64) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
-			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
+			if ((inst.firstOperand() instanceof Register r && Registers.requiresExtension(r))
+					|| (inst.firstOperand() instanceof IndirectOperand
+							&& inst.secondOperand() instanceof Register r2
+							&& Registers.requiresExtension(r2))) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if (inst.opcode() == Opcode.CMP
@@ -321,7 +327,6 @@ public final class InstructionEncoder {
 			}
 		}
 
-		byte reg = 0;
 		switch (inst.opcode()) {
 			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE -> wb.write(
 					DOUBLE_BYTE_OPCODE_PREFIX,
@@ -329,9 +334,9 @@ public final class InstructionEncoder {
 			case CMP -> {
 				if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register) {
 					wb.write(io.bits() == 8 ? (byte) 0x38 : (byte) 0x39);
-				} else if (inst.firstOperand() instanceof IndirectOperand
+				} else if (inst.firstOperand() instanceof IndirectOperand io
 						&& inst.secondOperand() instanceof Immediate imm) {
-					wb.write(imm.bits() == 8 ? (byte) 0x81 : (byte) 0x80);
+					wb.write(io.bits() == 16 ? (imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81) : (byte) 0x80);
 				}
 			}
 			case MOV -> {
@@ -386,7 +391,8 @@ public final class InstructionEncoder {
 		final boolean isWeirdIndirectOperand =
 				isSimpleIndirectOperand(io) && (io.getIndex() == Register32.ESP || io.getIndex() == Register64.RSP);
 		if (!isSimpleIndirectOperand(io) || isWeirdIndirectOperand) {
-			final byte base = isWeirdIndirectOperand ? (byte) 0b100 : Registers.toByte(io.getBase());
+			final byte base =
+					isWeirdIndirectOperand ? (byte) 0b100 : (io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0);
 			wb.write(BitUtils.or(
 					BitUtils.shl(
 							switch (io.getScale()) {
@@ -424,6 +430,8 @@ public final class InstructionEncoder {
 			wb.write(imm.asShort());
 		} else if (imm.bits() == 32) {
 			wb.write(imm.asInt());
+		} else if (imm.bits() == 64) {
+			wb.write(imm.asLong());
 		} else {
 			throw new IllegalArgumentException(String.format("Unknown immediate: '%s'.", imm));
 		}
