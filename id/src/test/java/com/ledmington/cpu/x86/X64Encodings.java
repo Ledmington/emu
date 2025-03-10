@@ -23,17 +23,27 @@ import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.WORD_PTR;
 import static com.ledmington.cpu.x86.Register16.AX;
 import static com.ledmington.cpu.x86.Register16.CS;
+import static com.ledmington.cpu.x86.Register16.CX;
 import static com.ledmington.cpu.x86.Register16.DX;
 import static com.ledmington.cpu.x86.Register16.R11W;
+import static com.ledmington.cpu.x86.Register16.R13W;
+import static com.ledmington.cpu.x86.Register16.R8W;
+import static com.ledmington.cpu.x86.Register16.SP;
 import static com.ledmington.cpu.x86.Register32.EAX;
 import static com.ledmington.cpu.x86.Register32.EBP;
 import static com.ledmington.cpu.x86.Register32.EBX;
 import static com.ledmington.cpu.x86.Register32.ECX;
 import static com.ledmington.cpu.x86.Register32.EDI;
 import static com.ledmington.cpu.x86.Register32.EDX;
+import static com.ledmington.cpu.x86.Register32.ESP;
+import static com.ledmington.cpu.x86.Register32.R10D;
 import static com.ledmington.cpu.x86.Register32.R11D;
 import static com.ledmington.cpu.x86.Register32.R12D;
+import static com.ledmington.cpu.x86.Register32.R13D;
+import static com.ledmington.cpu.x86.Register32.R14D;
 import static com.ledmington.cpu.x86.Register32.R15D;
+import static com.ledmington.cpu.x86.Register32.R8D;
+import static com.ledmington.cpu.x86.Register32.R9D;
 import static com.ledmington.cpu.x86.Register64.R10;
 import static com.ledmington.cpu.x86.Register64.R11;
 import static com.ledmington.cpu.x86.Register64.R12;
@@ -50,7 +60,9 @@ import static com.ledmington.cpu.x86.Register64.RDI;
 import static com.ledmington.cpu.x86.Register64.RDX;
 import static com.ledmington.cpu.x86.Register64.RSI;
 import static com.ledmington.cpu.x86.Register64.RSP;
+import static com.ledmington.cpu.x86.Register8.AL;
 import static com.ledmington.cpu.x86.Register8.DH;
+import static com.ledmington.cpu.x86.Register8.R8B;
 import static com.ledmington.cpu.x86.Register8.R9B;
 
 import java.util.List;
@@ -1040,19 +1052,28 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 					"cmp rdx,QWORD PTR [rax]",
 					"48 3b 10"),
 			//
-			test(null, "cmp al,0x99", "3c 99"),
-			test(null, "cmp al,dh", "38 f0"),
-			test(null, "cmp cx,0x1234", "66 81 f9 34 12"),
-			test(null, "cmp dh,0x99", "80 fe 99"),
-			test(null, "cmp eax,0x12345678", "3d 78 56 34 12"),
-			test(null, "cmp edi,0x12345678", "81 ff 78 56 34 12"),
-			test(null, "cmp esp,r13d", "44 39 ec"),
-			test(null, "cmp r8b,0x12", "41 80 f8 12"),
-			test(null, "cmp r8w,dx", "66 41 39 d0"),
-			test(null, "cmp rax,0x0000000012345678", "48 3d 78 56 34 12"),
-			test(null, "cmp rdi,0x0000000012345678", "48 81 ff 78 56 34 12"),
-			test(null, "cmp rsp,r8", "4c 39 c4"),
-			test(null, "cmp sp,r13w", "66 44 39 ec"),
+			test(new Instruction(Opcode.CMP, AL, new Immediate((byte) 0x99)), "cmp al,0x99", "3c 99"),
+			test(new Instruction(Opcode.CMP, AL, DH), "cmp al,dh", "38 f0"),
+			test(new Instruction(Opcode.CMP, CX, new Immediate((short) 0x1234)), "cmp cx,0x1234", "66 81 f9 34 12"),
+			test(new Instruction(Opcode.CMP, DH, new Immediate((byte) 0x99)), "cmp dh,0x99", "80 fe 99"),
+			test(new Instruction(Opcode.CMP, EAX, new Immediate(0x12345678)), "cmp eax,0x12345678", "3d 78 56 34 12"),
+			test(
+					new Instruction(Opcode.CMP, EDI, new Immediate(0x12345678)),
+					"cmp edi,0x12345678",
+					"81 ff 78 56 34 12"),
+			test(new Instruction(Opcode.CMP, ESP, R13D), "cmp esp,r13d", "44 39 ec"),
+			test(new Instruction(Opcode.CMP, R8B, new Immediate((byte) 0x12)), "cmp r8b,0x12", "41 80 f8 12"),
+			test(new Instruction(Opcode.CMP, R8W, DX), "cmp r8w,dx", "66 41 39 d0"),
+			test(
+					new Instruction(Opcode.CMP, RAX, new Immediate(0x12345678L)),
+					"cmp rax,0x0000000012345678",
+					"48 3d 78 56 34 12"),
+			test(
+					new Instruction(Opcode.CMP, RDI, new Immediate(0x12345678L)),
+					"cmp rdi,0x0000000012345678",
+					"48 81 ff 78 56 34 12"),
+			test(new Instruction(Opcode.CMP, RSP, R8), "cmp rsp,r8", "4c 39 c4"),
+			test(new Instruction(Opcode.CMP, SP, R13W), "cmp sp,r13w", "66 44 39 ec"),
 			//  Lea
 			test(null, "lea ax,[ebx+ecx*4+0x12345678]", "67 66 8d 84 8b 78 56 34 12"),
 			test(null, "lea cx,[rbx+rcx*4+0x12345678]", "66 8d 8c 8b 78 56 34 12"),
@@ -1071,70 +1092,70 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			test(null, "lea rsi,[edi+r9d*2+0x12345678]", "67 4a 8d b4 4f 78 56 34 12"),
 			test(null, "lea rsi,[rdi+r8*4+0x12345678]", "4a 8d b4 87 78 56 34 12"),
 			//  Mov
-			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R10D), "mov r10d,r10d", "45 89 d2"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, R11D), "mov r10d,r11d", "45 89 da"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, R12D), "mov r10d,r12d", "45 89 e2"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R13D), "mov r10d,r13d", "45 89 ea"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R14D), "mov r10d,r14d", "45 89 f2"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R15D), "mov r10d,r15d", "45 89 fa"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R8D), "mov r10d,r8d", "45 89 c2"),
-			test(new Instruction(Opcode.MOV, Register32.R10D, Register32.R9D), "mov r10d,r9d", "45 89 ca"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r10d", "45 89 d3"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r11d", "45 89 db"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r12d", "45 89 e3"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r13d", "45 89 eb"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r14d", "45 89 f3"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r15d", "45 89 fb"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r8d", "45 89 c3"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r11d,r9d", "45 89 cb"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r10d", "45 89 d4"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r11d", "45 89 dc"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r12d", "45 89 e4"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r13d", "45 89 ec"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r14d", "45 89 f4"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r15d", "45 89 fc"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r8d", "45 89 c4"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r12d,r9d", "45 89 cc"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r10d", "45 89 d5"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r11d", "45 89 dd"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r12d", "45 89 e5"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r13d", "45 89 ed"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r14d", "45 89 f5"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r15d", "45 89 fd"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r8d", "45 89 c5"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r13d,r9d", "45 89 cd"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r10d", "45 89 d6"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r11d", "45 89 de"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r12d", "45 89 e6"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r13d", "45 89 ee"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r14d", "45 89 f6"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r15d", "45 89 fe"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r8d", "45 89 c6"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r14d,r9d", "45 89 ce"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r10d", "45 89 d7"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r11d", "45 89 df"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r12d", "45 89 e7"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r13d", "45 89 ef"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r14d", "45 89 f7"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r15d", "45 89 ff"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r8d", "45 89 c7"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r15d,r9d", "45 89 cf"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r10d", "45 89 d0"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r11d", "45 89 d8"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r12d", "45 89 e0"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r13d", "45 89 e8"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r14d", "45 89 f0"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r15d", "45 89 f8"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r8d", "45 89 c0"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r8d,r9d", "45 89 c8"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r10d", "45 89 d1"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r11d", "45 89 d9"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r12d", "45 89 e1"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r13d", "45 89 e9"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r14d", "45 89 f1"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r15d", "45 89 f9"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r8d", "45 89 c1"),
-			test(new Instruction(Opcode.MOV, Register32.R8D, Register32.R9D), "mov r9d,r9d", "45 89 c9"),
+			test(new Instruction(Opcode.MOV, R10D, R10D), "mov r10d,r10d", "45 89 d2"),
+			test(new Instruction(Opcode.MOV, R10D, R11D), "mov r10d,r11d", "45 89 da"),
+			test(new Instruction(Opcode.MOV, R10D, R12D), "mov r10d,r12d", "45 89 e2"),
+			test(new Instruction(Opcode.MOV, R10D, R13D), "mov r10d,r13d", "45 89 ea"),
+			test(new Instruction(Opcode.MOV, R10D, R14D), "mov r10d,r14d", "45 89 f2"),
+			test(new Instruction(Opcode.MOV, R10D, R15D), "mov r10d,r15d", "45 89 fa"),
+			test(new Instruction(Opcode.MOV, R10D, R8D), "mov r10d,r8d", "45 89 c2"),
+			test(new Instruction(Opcode.MOV, R10D, R9D), "mov r10d,r9d", "45 89 ca"),
+			test(new Instruction(Opcode.MOV, R11D, R10D), "mov r11d,r10d", "45 89 d3"),
+			test(new Instruction(Opcode.MOV, R11D, R11D), "mov r11d,r11d", "45 89 db"),
+			test(new Instruction(Opcode.MOV, R11D, R12D), "mov r11d,r12d", "45 89 e3"),
+			test(new Instruction(Opcode.MOV, R11D, R13D), "mov r11d,r13d", "45 89 eb"),
+			test(new Instruction(Opcode.MOV, R11D, R14D), "mov r11d,r14d", "45 89 f3"),
+			test(new Instruction(Opcode.MOV, R11D, R15D), "mov r11d,r15d", "45 89 fb"),
+			test(new Instruction(Opcode.MOV, R11D, R8D), "mov r11d,r8d", "45 89 c3"),
+			test(new Instruction(Opcode.MOV, R11D, R9D), "mov r11d,r9d", "45 89 cb"),
+			test(new Instruction(Opcode.MOV, R12D, R10D), "mov r12d,r10d", "45 89 d4"),
+			test(new Instruction(Opcode.MOV, R12D, R11D), "mov r12d,r11d", "45 89 dc"),
+			test(new Instruction(Opcode.MOV, R12D, R12D), "mov r12d,r12d", "45 89 e4"),
+			test(new Instruction(Opcode.MOV, R12D, R13D), "mov r12d,r13d", "45 89 ec"),
+			test(new Instruction(Opcode.MOV, R12D, R14D), "mov r12d,r14d", "45 89 f4"),
+			test(new Instruction(Opcode.MOV, R12D, R15D), "mov r12d,r15d", "45 89 fc"),
+			test(new Instruction(Opcode.MOV, R12D, R8D), "mov r12d,r8d", "45 89 c4"),
+			test(new Instruction(Opcode.MOV, R12D, R9D), "mov r12d,r9d", "45 89 cc"),
+			test(new Instruction(Opcode.MOV, R13D, R10D), "mov r13d,r10d", "45 89 d5"),
+			test(new Instruction(Opcode.MOV, R13D, R11D), "mov r13d,r11d", "45 89 dd"),
+			test(new Instruction(Opcode.MOV, R13D, R12D), "mov r13d,r12d", "45 89 e5"),
+			test(new Instruction(Opcode.MOV, R13D, R13D), "mov r13d,r13d", "45 89 ed"),
+			test(new Instruction(Opcode.MOV, R13D, R14D), "mov r13d,r14d", "45 89 f5"),
+			test(new Instruction(Opcode.MOV, R13D, R15D), "mov r13d,r15d", "45 89 fd"),
+			test(new Instruction(Opcode.MOV, R13D, R8D), "mov r13d,r8d", "45 89 c5"),
+			test(new Instruction(Opcode.MOV, R13D, R9D), "mov r13d,r9d", "45 89 cd"),
+			test(new Instruction(Opcode.MOV, R14D, R10D), "mov r14d,r10d", "45 89 d6"),
+			test(new Instruction(Opcode.MOV, R14D, R11D), "mov r14d,r11d", "45 89 de"),
+			test(new Instruction(Opcode.MOV, R14D, R12D), "mov r14d,r12d", "45 89 e6"),
+			test(new Instruction(Opcode.MOV, R14D, R13D), "mov r14d,r13d", "45 89 ee"),
+			test(new Instruction(Opcode.MOV, R14D, R14D), "mov r14d,r14d", "45 89 f6"),
+			test(new Instruction(Opcode.MOV, R14D, R15D), "mov r14d,r15d", "45 89 fe"),
+			test(new Instruction(Opcode.MOV, R14D, R8D), "mov r14d,r8d", "45 89 c6"),
+			test(new Instruction(Opcode.MOV, R14D, R9D), "mov r14d,r9d", "45 89 ce"),
+			test(new Instruction(Opcode.MOV, R15D, R10D), "mov r15d,r10d", "45 89 d7"),
+			test(new Instruction(Opcode.MOV, R15D, R11D), "mov r15d,r11d", "45 89 df"),
+			test(new Instruction(Opcode.MOV, R15D, R12D), "mov r15d,r12d", "45 89 e7"),
+			test(new Instruction(Opcode.MOV, R15D, R13D), "mov r15d,r13d", "45 89 ef"),
+			test(new Instruction(Opcode.MOV, R15D, R14D), "mov r15d,r14d", "45 89 f7"),
+			test(new Instruction(Opcode.MOV, R15D, R15D), "mov r15d,r15d", "45 89 ff"),
+			test(new Instruction(Opcode.MOV, R15D, R8D), "mov r15d,r8d", "45 89 c7"),
+			test(new Instruction(Opcode.MOV, R15D, R9D), "mov r15d,r9d", "45 89 cf"),
+			test(new Instruction(Opcode.MOV, R8D, R10D), "mov r8d,r10d", "45 89 d0"),
+			test(new Instruction(Opcode.MOV, R8D, R11D), "mov r8d,r11d", "45 89 d8"),
+			test(new Instruction(Opcode.MOV, R8D, R12D), "mov r8d,r12d", "45 89 e0"),
+			test(new Instruction(Opcode.MOV, R8D, R13D), "mov r8d,r13d", "45 89 e8"),
+			test(new Instruction(Opcode.MOV, R8D, R14D), "mov r8d,r14d", "45 89 f0"),
+			test(new Instruction(Opcode.MOV, R8D, R15D), "mov r8d,r15d", "45 89 f8"),
+			test(new Instruction(Opcode.MOV, R8D, R8D), "mov r8d,r8d", "45 89 c0"),
+			test(new Instruction(Opcode.MOV, R8D, R9D), "mov r8d,r9d", "45 89 c8"),
+			test(new Instruction(Opcode.MOV, R9D, R10D), "mov r9d,r10d", "45 89 d1"),
+			test(new Instruction(Opcode.MOV, R9D, R11D), "mov r9d,r11d", "45 89 d9"),
+			test(new Instruction(Opcode.MOV, R9D, R12D), "mov r9d,r12d", "45 89 e1"),
+			test(new Instruction(Opcode.MOV, R9D, R13D), "mov r9d,r13d", "45 89 e9"),
+			test(new Instruction(Opcode.MOV, R9D, R14D), "mov r9d,r14d", "45 89 f1"),
+			test(new Instruction(Opcode.MOV, R9D, R15D), "mov r9d,r15d", "45 89 f9"),
+			test(new Instruction(Opcode.MOV, R9D, R8D), "mov r9d,r8d", "45 89 c1"),
+			test(new Instruction(Opcode.MOV, R9D, R9D), "mov r9d,r9d", "45 89 c9"),
 			//
 			test(null, "mov eax,eax", "89 c0"),
 			test(null, "mov eax,ebp", "89 e8"),

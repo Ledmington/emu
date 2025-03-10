@@ -217,7 +217,7 @@ public final class IndirectOperand implements Operand {
 		return "IndirectOperand(base="
 				+ (base == null ? "null" : base.toString())
 				+ ";index="
-				+ (index == null ? null : index.toString()) + ";scale="
+				+ (index == null ? "null" : index.toString()) + ";scale="
 				+ scale + ";displacement="
 				+ displacement + ";displacementType=" + displacementType
 				+ ";ptrSize=" + ptrSize
@@ -227,9 +227,9 @@ public final class IndirectOperand implements Operand {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + base.hashCode();
+		h = 31 * h + (base == null ? 0 : base.hashCode());
 		h = 31 * h + scale;
-		h = 31 * h + index.hashCode();
+		h = 31 * h + (index == null ? 0 : index.hashCode());
 		h = 31 * h + HashUtils.hash(displacement);
 		h = 31 * h + displacementType.hashCode();
 		h = 31 * h + ptrSize.hashCode();
@@ -247,9 +247,9 @@ public final class IndirectOperand implements Operand {
 		if (!(other instanceof IndirectOperand io)) {
 			return false;
 		}
-		return this.base.equals(io.base)
+		return Objects.equals(this.base, io.base)
 				&& this.scale == io.scale
-				&& this.index.equals(io.index)
+				&& Objects.equals(this.index, io.index)
 				&& this.displacement == io.displacement
 				&& this.displacementType.equals(io.displacementType)
 				&& this.ptrSize.equals(io.ptrSize);
