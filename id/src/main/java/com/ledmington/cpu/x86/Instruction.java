@@ -17,9 +17,9 @@
  */
 package com.ledmington.cpu.x86;
 
-import com.ledmington.cpu.x86.exc.InvalidInstruction;
-
 import java.util.Objects;
+
+import com.ledmington.cpu.x86.exc.InvalidInstruction;
 
 /** High-level representation of an x86 instruction. */
 public final class Instruction {

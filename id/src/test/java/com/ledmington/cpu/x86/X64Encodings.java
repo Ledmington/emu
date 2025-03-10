@@ -17,20 +17,23 @@
  */
 package com.ledmington.cpu.x86;
 
-import com.ledmington.utils.BitUtils;
-
-import java.util.List;
-
+import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.WORD_PTR;
 import static com.ledmington.cpu.x86.Register16.AX;
 import static com.ledmington.cpu.x86.Register16.CS;
+import static com.ledmington.cpu.x86.Register16.DX;
+import static com.ledmington.cpu.x86.Register16.R11W;
 import static com.ledmington.cpu.x86.Register32.EAX;
+import static com.ledmington.cpu.x86.Register32.EBP;
 import static com.ledmington.cpu.x86.Register32.EBX;
 import static com.ledmington.cpu.x86.Register32.ECX;
+import static com.ledmington.cpu.x86.Register32.EDI;
+import static com.ledmington.cpu.x86.Register32.EDX;
 import static com.ledmington.cpu.x86.Register32.R11D;
 import static com.ledmington.cpu.x86.Register32.R12D;
+import static com.ledmington.cpu.x86.Register32.R15D;
 import static com.ledmington.cpu.x86.Register64.R10;
 import static com.ledmington.cpu.x86.Register64.R11;
 import static com.ledmington.cpu.x86.Register64.R12;
@@ -47,6 +50,12 @@ import static com.ledmington.cpu.x86.Register64.RDI;
 import static com.ledmington.cpu.x86.Register64.RDX;
 import static com.ledmington.cpu.x86.Register64.RSI;
 import static com.ledmington.cpu.x86.Register64.RSP;
+import static com.ledmington.cpu.x86.Register8.DH;
+import static com.ledmington.cpu.x86.Register8.R9B;
+
+import java.util.List;
+
+import com.ledmington.utils.BitUtils;
 
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 
@@ -369,104 +378,667 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			test(new Instruction(Opcode.JMP, new Immediate((byte) 0x12)), "jmp 0x12", "eb 12"),
 			test(new Instruction(Opcode.JMP, new Immediate(0x12345678)), "jmp 0x12345678", "e9 78 56 34 12"),
 			//
-			test(null, "jmp ax", "66 ff e0"),
-			test(null, "jmp r11", "41 ff e3"),
-			test(null, "jmp r11w", "66 41 ff e3"),
-			test(null, "jmp rax", "ff e0"),
+			test(new Instruction(Opcode.JMP, AX), "jmp ax", "66 ff e0"),
+			test(new Instruction(Opcode.JMP, R11), "jmp r11", "41 ff e3"),
+			test(new Instruction(Opcode.JMP, R11W), "jmp r11w", "66 41 ff e3"),
+			test(new Instruction(Opcode.JMP, RAX), "jmp rax", "ff e0"),
 			//
-			test(null, "jmp DWORD PTR [r11]", "66 41 ff 2b"),
-			test(null, "jmp DWORD PTR [r11d]", "67 66 41 ff 2b"),
-			test(null, "jmp QWORD PTR [r11]", "41 ff 23"),
-			test(null, "jmp QWORD PTR [r11d]", "67 41 ff 23"),
-			test(null, "jmp WORD PTR [r11]", "66 41 ff 23"),
-			test(null, "jmp WORD PTR [r11d]", "67 66 41 ff 23"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(R11)
+									.build()),
+					"jmp DWORD PTR [r11]",
+					"66 41 ff 2b"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(R11D)
+									.build()),
+					"jmp DWORD PTR [r11d]",
+					"67 66 41 ff 2b"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(R11)
+									.build()),
+					"jmp QWORD PTR [r11]",
+					"41 ff 23"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(R11D)
+									.build()),
+					"jmp QWORD PTR [r11d]",
+					"67 41 ff 23"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(R11)
+									.build()),
+					"jmp WORD PTR [r11]",
+					"66 41 ff 23"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(R11D)
+									.build()),
+					"jmp WORD PTR [r11d]",
+					"67 66 41 ff 23"),
 			//
-			test(null, "jmp DWORD PTR [eax+ecx*4+0x12345678]", "67 66 ff ac 88 78 56 34 12"),
-			test(null, "jmp DWORD PTR [rax+rcx*4+0x12345678]", "66 ff ac 88 78 56 34 12"),
-			test(null, "jmp QWORD PTR [eax+ecx*4+0x12345678]", "67 ff a4 88 78 56 34 12"),
-			test(null, "jmp QWORD PTR [rax+rcx*4+0x12345678]", "ff a4 88 78 56 34 12"),
-			test(null, "jmp WORD PTR [eax+ecx*4+0x12345678]", "67 66 ff a4 88 78 56 34 12"),
-			test(null, "jmp WORD PTR [rax+rcx*4+0x12345678]", "66 ff a4 88 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(EAX)
+									.index(ECX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"jmp DWORD PTR [eax+ecx*4+0x12345678]",
+					"67 66 ff ac 88 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(RAX)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"jmp DWORD PTR [rax+rcx*4+0x12345678]",
+					"66 ff ac 88 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EAX)
+									.index(ECX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"jmp QWORD PTR [eax+ecx*4+0x12345678]",
+					"67 ff a4 88 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RAX)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"jmp QWORD PTR [rax+rcx*4+0x12345678]",
+					"ff a4 88 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(EAX)
+									.index(ECX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"jmp WORD PTR [eax+ecx*4+0x12345678]",
+					"67 66 ff a4 88 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.JMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(RAX)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"jmp WORD PTR [rax+rcx*4+0x12345678]",
+					"66 ff a4 88 78 56 34 12"),
 			//  Cmove
-			test(null, "cmove ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 44 8c 80 78 56 34 12"),
-			test(null, "cmove r15,rcx", "4c 0f 44 f9"),
-			test(null, "cmove rcx,r15", "49 0f 44 cf"),
+			test(
+					new Instruction(
+							Opcode.CMOVE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmove ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 44 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVE, R15, RCX), "cmove r15,rcx", "4c 0f 44 f9"),
+			test(new Instruction(Opcode.CMOVE, RCX, R15), "cmove rcx,r15", "49 0f 44 cf"),
 			//  Cmovns
-			test(null, "cmovns ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 49 8c 80 78 56 34 12"),
-			test(null, "cmovns r15,rcx", "4c 0f 49 f9"),
-			test(null, "cmovns rcx,r15", "49 0f 49 cf"),
+			test(
+					new Instruction(
+							Opcode.CMOVNS,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovns ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 49 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVNS, R15, RCX), "cmovns r15,rcx", "4c 0f 49 f9"),
+			test(new Instruction(Opcode.CMOVNS, RCX, R15), "cmovns rcx,r15", "49 0f 49 cf"),
 			//  Cmovae
-			test(null, "cmovae ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 43 8c 80 78 56 34 12"),
-			test(null, "cmovae r15,rcx", "4c 0f 43 f9"),
-			test(null, "cmovae rcx,r15", "49 0f 43 cf"),
+			test(
+					new Instruction(
+							Opcode.CMOVAE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovae ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 43 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVAE, R15, RCX), "cmovae r15,rcx", "4c 0f 43 f9"),
+			test(new Instruction(Opcode.CMOVAE, RCX, R15), "cmovae rcx,r15", "49 0f 43 cf"),
 			//  Cmovb
-			test(null, "cmovb ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 42 8c 80 78 56 34 12"),
-			test(null, "cmovb r15,rcx", "4c 0f 42 f9"),
-			test(null, "cmovb rcx,r15", "49 0f 42 cf"),
+			test(
+					new Instruction(
+							Opcode.CMOVB,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovb ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 42 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVB, R15, RCX), "cmovb r15,rcx", "4c 0f 42 f9"),
+			test(new Instruction(Opcode.CMOVB, RCX, R15), "cmovb rcx,r15", "49 0f 42 cf"),
 			//  Cmovbe
-			test(null, "cmovbe ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 46 8c 80 78 56 34 12"),
-			test(null, "cmovbe r15,rcx", "4c 0f 46 f9"),
-			test(null, "cmovbe rcx,r15", "49 0f 46 cf"),
+			test(
+					new Instruction(
+							Opcode.CMOVBE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovbe ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 46 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVBE, R15, RCX), "cmovbe r15,rcx", "4c 0f 46 f9"),
+			test(new Instruction(Opcode.CMOVBE, RCX, R15), "cmovbe rcx,r15", "49 0f 46 cf"),
 			//  Cmovne
-			test(null, "cmovne ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 45 8c 80 78 56 34 12"),
-			test(null, "cmovne r15,rdx", "4c 0f 45 fa"),
-			test(null, "cmovne rdx,r15", "49 0f 45 d7"),
+			test(
+					new Instruction(
+							Opcode.CMOVNE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovne ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 45 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVNE, R15, RCX), "cmovne r15,rdx", "4c 0f 45 fa"),
+			test(new Instruction(Opcode.CMOVNE, RCX, R15), "cmovne rdx,r15", "49 0f 45 d7"),
 			//  Cmovg
-			test(null, "cmovg ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 4f 8c 80 78 56 34 12"),
-			test(null, "cmovg r15,rdx", "4c 0f 4f fa"),
-			test(null, "cmovg rdx,r15", "49 0f 4f d7"),
+			test(
+					new Instruction(
+							Opcode.CMOVG,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovg ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 4f 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVG, R15, RCX), "cmovg r15,rdx", "4c 0f 4f fa"),
+			test(new Instruction(Opcode.CMOVG, RCX, R15), "cmovg rdx,r15", "49 0f 4f d7"),
 			//  Cmovge
-			test(null, "cmovge ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 4d 8c 80 78 56 34 12"),
-			test(null, "cmovge r15,rdx", "4c 0f 4d fa"),
-			test(null, "cmovge rdx,r15", "49 0f 4d d7"),
+			test(
+					new Instruction(
+							Opcode.CMOVGE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovge ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 4d 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVGE, R15, RCX), "cmovge r15,rdx", "4c 0f 4d fa"),
+			test(new Instruction(Opcode.CMOVGE, RCX, R15), "cmovge rdx,r15", "49 0f 4d d7"),
 			//  Cmovs
-			test(null, "cmovs ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 48 8c 80 78 56 34 12"),
-			test(null, "cmovs ecx,eax", "0f 48 c8"),
-			test(null, "cmovs edx,r9d", "41 0f 48 d1"),
+			test(
+					new Instruction(
+							Opcode.CMOVS,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovs ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 48 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVS, R15, RCX), "cmovs ecx,eax", "0f 48 c8"),
+			test(new Instruction(Opcode.CMOVS, RCX, R15), "cmovs edx,r9d", "41 0f 48 d1"),
 			//  Cmova
-			test(null, "cmova ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 47 8c 80 78 56 34 12"),
-			test(null, "cmova ecx,eax", "0f 47 c8"),
-			test(null, "cmova edx,r9d", "41 0f 47 d1"),
+			test(
+					new Instruction(
+							Opcode.CMOVA,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmova ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 47 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVA, R15, RCX), "cmova ecx,eax", "0f 47 c8"),
+			test(new Instruction(Opcode.CMOVA, RCX, R15), "cmova edx,r9d", "41 0f 47 d1"),
 			//  Cmovl
-			test(null, "cmovl ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 4c 8c 80 78 56 34 12"),
-			test(null, "cmovl r15,rdx", "4c 0f 4c fa"),
-			test(null, "cmovl rdx,r15", "49 0f 4c d7"),
+			test(
+					new Instruction(
+							Opcode.CMOVLE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovl ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 4c 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVL, R15, RCX), "cmovl r15,rdx", "4c 0f 4c fa"),
+			test(new Instruction(Opcode.CMOVL, RCX, R15), "cmovl rdx,r15", "49 0f 4c d7"),
 			//  Cmovle
-			test(null, "cmovle ecx,DWORD PTR [r8+rax*4+0x12345678]", "41 0f 4e 8c 80 78 56 34 12"),
-			test(null, "cmovle r15,rdx", "4c 0f 4e fa"),
-			test(null, "cmovle rdx,r15", "49 0f 4e d7"),
+			test(
+					new Instruction(
+							Opcode.CMOVLE,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R8)
+									.index(RAX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmovle ecx,DWORD PTR [r8+rax*4+0x12345678]",
+					"41 0f 4e 8c 80 78 56 34 12"),
+			test(new Instruction(Opcode.CMOVLE, R15, RCX), "cmovle r15,rdx", "4c 0f 4e fa"),
+			test(new Instruction(Opcode.CMOVLE, RCX, R15), "cmovle rdx,r15", "49 0f 4e d7"),
 			//  Cmp
-			test(null, "cmp BYTE PTR [eax],dh", "67 38 30"),
-			test(null, "cmp BYTE PTR [edi],0x77", "67 80 3f 77"),
-			test(null, "cmp BYTE PTR [r13+r12*2+0x12],0x77", "43 80 7c 65 12 77"),
-			test(null, "cmp BYTE PTR [r13+rcx*2+0x12],0x77", "41 80 7c 4d 12 77"),
-			test(null, "cmp BYTE PTR [r9+rcx*4+0x12345678],0x99", "41 80 bc 89 78 56 34 12 99"),
-			test(null, "cmp BYTE PTR [rbx+r9*4+0x12345678],r9b", "46 38 8c 8b 78 56 34 12"),
-			test(null, "cmp BYTE PTR [rbx+rcx*4+0x12345678],r9b", "44 38 8c 8b 78 56 34 12"),
-			test(null, "cmp BYTE PTR [rdi],0x77", "80 3f 77"),
-			test(null, "cmp DWORD PTR [ebp-0xe8],r15d", "67 44 39 bd 18 ff ff ff"),
-			test(null, "cmp DWORD PTR [edi],0x12345678", "67 81 3f 78 56 34 12"),
-			test(null, "cmp DWORD PTR [r13+rcx*2+0x12],0x66778899", "41 81 7c 4d 12 99 88 77 66"),
-			test(null, "cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef", "41 81 bc 89 78 56 34 12 ef be ad de"),
-			test(null, "cmp DWORD PTR [rbp-0xe8],r15d", "44 39 bd 18 ff ff ff"),
-			test(null, "cmp DWORD PTR [rdi],0x12345678", "81 3f 78 56 34 12"),
-			test(null, "cmp QWORD PTR [edi],0x0000000012345678", "67 48 81 3f 78 56 34 12"),
-			test(null, "cmp QWORD PTR [rdi],0x0000000012345678", "48 81 3f 78 56 34 12"),
-			test(null, "cmp WORD PTR [edi],0x7788", "67 66 81 3f 88 77"),
-			test(null, "cmp WORD PTR [r13+rcx*2+0x12],0x0077", "66 41 83 7c 4d 12 77"),
-			test(null, "cmp WORD PTR [r13+rcx*2+0x12],0x7788", "66 41 81 7c 4d 12 88 77"),
-			test(null, "cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef", "66 41 81 bc 89 78 56 34 12 ef be"),
-			test(null, "cmp WORD PTR [rdi],0x7788", "66 81 3f 88 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.index(EAX)
+									.build(),
+							DH),
+					"cmp BYTE PTR [eax],dh",
+					"67 38 30"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.index(EDI)
+									.build(),
+							new Immediate((byte) 0x77)),
+					"cmp BYTE PTR [edi],0x77",
+					"67 80 3f 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.base(R13)
+									.index(R12)
+									.scale(2)
+									.displacement((byte) 0x12)
+									.build(),
+							new Immediate((byte) 0x77)),
+					"cmp BYTE PTR [r13+r12*2+0x12],0x77",
+					"43 80 7c 65 12 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.base(R13)
+									.index(RCX)
+									.scale(2)
+									.displacement((byte) 0x12)
+									.build(),
+							new Immediate((byte) 0x77)),
+					"cmp BYTE PTR [r13+rcx*2+0x12],0x77",
+					"41 80 7c 4d 12 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.base(R9)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build(),
+							new Immediate((byte) 0x99)),
+					"cmp BYTE PTR [r9+rcx*4+0x12345678],0x99",
+					"41 80 bc 89 78 56 34 12 99"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.base(RBX)
+									.index(R9)
+									.scale(4)
+									.displacement(0x12345678)
+									.build(),
+							R9B),
+					"cmp BYTE PTR [rbx+r9*4+0x12345678],r9b",
+					"46 38 8c 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.base(RBX)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build(),
+							R9B),
+					"cmp BYTE PTR [rbx+rcx*4+0x12345678],r9b",
+					"44 38 8c 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.index(RDI)
+									.build(),
+							new Immediate((byte) 0x77)),
+					"cmp BYTE PTR [rdi],0x77",
+					"80 3f 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(EBP)
+									.displacement(-0xe8)
+									.build(),
+							R15D),
+					"cmp DWORD PTR [ebp-0xe8],r15d",
+					"67 44 39 bd 18 ff ff ff"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(EDI)
+									.build(),
+							new Immediate(0x12345678)),
+					"cmp DWORD PTR [edi],0x12345678",
+					"67 81 3f 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R13)
+									.index(RCX)
+									.scale(2)
+									.displacement((byte) 0x12)
+									.build(),
+							new Immediate(0x66778899)),
+					"cmp DWORD PTR [r13+rcx*2+0x12],0x66778899",
+					"41 81 7c 4d 12 99 88 77 66"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(R9)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build(),
+							new Immediate(0xdeadbeef)),
+					"cmp DWORD PTR [r9+rcx*4+0x12345678],0xdeadbeef",
+					"41 81 bc 89 78 56 34 12 ef be ad de"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(RBP)
+									.displacement(-0xe8)
+									.build(),
+							R15D),
+					"cmp DWORD PTR [rbp-0xe8],r15d",
+					"44 39 bd 18 ff ff ff"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(RDI)
+									.build(),
+							new Immediate(0x12345678)),
+					"cmp DWORD PTR [rdi],0x12345678",
+					"81 3f 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(EDI)
+									.build(),
+							new Immediate(0x12345678L)),
+					"cmp QWORD PTR [edi],0x0000000012345678",
+					"67 48 81 3f 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RDI)
+									.build(),
+							new Immediate(0x12345678L)),
+					"cmp QWORD PTR [rdi],0x0000000012345678",
+					"48 81 3f 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(EDI)
+									.build(),
+							new Immediate((short) 0x7788)),
+					"cmp WORD PTR [edi],0x7788",
+					"67 66 81 3f 88 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(R13)
+									.index(RCX)
+									.scale(2)
+									.displacement((byte) 0x12)
+									.build(),
+							new Immediate((byte) 0x77)),
+					"cmp WORD PTR [r13+rcx*2+0x12],0x0077",
+					"66 41 83 7c 4d 12 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(R13)
+									.index(RCX)
+									.scale(2)
+									.displacement((byte) 0x12)
+									.build(),
+							new Immediate((short) 0x778)),
+					"cmp WORD PTR [r13+rcx*2+0x12],0x7788",
+					"66 41 81 7c 4d 12 88 77"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.base(R9)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build(),
+							new Immediate((short) 0xbeef)),
+					"cmp WORD PTR [r9+rcx*4+0x12345678],0xbeef",
+					"66 41 81 bc 89 78 56 34 12 ef be"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(RDI)
+									.build(),
+							new Immediate((short) 0x7788)),
+					"cmp WORD PTR [rdi],0x7788",
+					"66 81 3f 88 77"),
 			//
-			test(null, "cmp dh,BYTE PTR [eax]", "67 3a 30"),
-			test(null, "cmp dh,BYTE PTR [rax]", "3a 30"),
-			test(null, "cmp dx,WORD PTR [eax]", "67 66 3b 10"),
-			test(null, "cmp dx,WORD PTR [rax]", "66 3b 10"),
-			test(null, "cmp ebp,DWORD PTR [rbx+r9*4+0x12345678]", "42 3b ac 8b 78 56 34 12"),
-			test(null, "cmp edx,DWORD PTR [eax]", "67 3b 10"),
-			test(null, "cmp edx,DWORD PTR [rax]", "3b 10"),
-			test(null, "cmp rdx,QWORD PTR [eax]", "67 48 3b 10"),
-			test(null, "cmp rdx,QWORD PTR [rax]", "48 3b 10"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							DH,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.index(EAX)
+									.build()),
+					"cmp dh,BYTE PTR [eax]",
+					"67 3a 30"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							DH,
+							IndirectOperand.builder()
+									.pointer(BYTE_PTR)
+									.index(RAX)
+									.build()),
+					"cmp dh,BYTE PTR [rax]",
+					"3a 30"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							DX,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(EAX)
+									.build()),
+					"cmp dx,WORD PTR [eax]",
+					"67 66 3b 10"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							DX,
+							IndirectOperand.builder()
+									.pointer(WORD_PTR)
+									.index(RAX)
+									.build()),
+					"cmp dx,WORD PTR [rax]",
+					"66 3b 10"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							EBP,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.base(RBX)
+									.index(R9)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"cmp ebp,DWORD PTR [rbx+r9*4+0x12345678]",
+					"42 3b ac 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							EDX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(EAX)
+									.build()),
+					"cmp edx,DWORD PTR [eax]",
+					"67 3b 10"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							EDX,
+							IndirectOperand.builder()
+									.pointer(DWORD_PTR)
+									.index(RAX)
+									.build()),
+					"cmp edx,DWORD PTR [rax]",
+					"3b 10"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							RDX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(EAX)
+									.build()),
+					"cmp rdx,QWORD PTR [eax]",
+					"67 48 3b 10"),
+			test(
+					new Instruction(
+							Opcode.CMP,
+							RDX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RAX)
+									.build()),
+					"cmp rdx,QWORD PTR [rax]",
+					"48 3b 10"),
 			//
 			test(null, "cmp al,0x99", "3c 99"),
 			test(null, "cmp al,dh", "38 f0"),
