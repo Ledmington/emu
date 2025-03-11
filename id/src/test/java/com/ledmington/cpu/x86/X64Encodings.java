@@ -3499,7 +3499,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.index(EBP)
-										.displacement(-0xe8)
+										.displacement(0xffffff18)
 										.build(),
 								R15D),
 						"cmp DWORD PTR [ebp-0xe8],r15d",
@@ -3546,7 +3546,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.index(RBP)
-										.displacement(-0xe8)
+										.displacement(0xffffff18)
 										.build(),
 								R15D),
 						"cmp DWORD PTR [rbp-0xe8],r15d",
@@ -3569,7 +3569,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.index(EDI)
 										.build(),
 								new Immediate(0x12345678L)),
-						"cmp QWORD PTR [edi],0x0000000012345678",
+						"cmp QWORD PTR [edi],0x12345678",
 						"67 48 81 3f 78 56 34 12"),
 				test(
 						new Instruction(
@@ -3579,7 +3579,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.index(RDI)
 										.build(),
 								new Immediate(0x12345678L)),
-						"cmp QWORD PTR [rdi],0x0000000012345678",
+						"cmp QWORD PTR [rdi],0x12345678",
 						"48 81 3f 78 56 34 12"),
 				test(
 						new Instruction(
@@ -3746,11 +3746,11 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.CMP, R8W, DX), "cmp r8w,dx", "66 41 39 d0"),
 				test(
 						new Instruction(Opcode.CMP, RAX, new Immediate(0x12345678L)),
-						"cmp rax,0x0000000012345678",
+						"cmp rax,0x12345678",
 						"48 3d 78 56 34 12"),
 				test(
 						new Instruction(Opcode.CMP, RDI, new Immediate(0x12345678L)),
-						"cmp rdi,0x0000000012345678",
+						"cmp rdi,0x12345678",
 						"48 81 ff 78 56 34 12"),
 				test(new Instruction(Opcode.CMP, RSP, R8), "cmp rsp,r8", "4c 39 c4"),
 				test(new Instruction(Opcode.CMP, SP, R13W), "cmp sp,r13w", "66 44 39 ec"));
@@ -4331,6 +4331,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RDX)
 										.index(RBP)
 										.scale(2)
+										.displacement((byte) 0)
 										.build()),
 						"lea ecx,[rdx+rbp*2+0x0]",
 						"8d 0c 6a"),
@@ -4395,6 +4396,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(EDX)
 										.index(EBP)
 										.scale(2)
+										.displacement((byte) 0)
 										.build()),
 						"lea r9d,[edx+ebp*2+0x0]",
 						"67 44 8d 0c 6a"),
@@ -4427,6 +4429,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(EDX)
 										.index(EBP)
 										.scale(2)
+										.displacement((byte) 0)
 										.build()),
 						"lea rcx,[edx+ebp*2+0x0]",
 						"67 48 8d 0c 6a"),
@@ -4439,6 +4442,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RDX)
 										.index(RBP)
 										.scale(2)
+										.displacement((byte) 0)
 										.build()),
 						"lea rcx,[rdx+rbp*2+0x0]",
 						"48 8d 0c 6a"),
@@ -4757,7 +4761,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement(0x7eadbeef)
 										.build(),
 								bimm),
-						"add QWORD PTR [rsp+rbp*4+0x7eadbeef],0x0000000000000012",
+						"add QWORD PTR [rsp+rbp*4+0x7eadbeef],0x12",
 						"48 83 84 ac ef be ad 7e 12"),
 				test(
 						new Instruction(
@@ -4775,7 +4779,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.ADD, AL, new Immediate((byte) 0x99)), "add al,0x99", "04 99"),
 				test(new Instruction(Opcode.ADD, AX, simm), "add ax,0x1234", "66 05 34 12"),
 				test(new Instruction(Opcode.ADD, CX, simm), "add cx,0x1234", "66 81 c1 34 12"),
-				test(new Instruction(Opcode.ADD, EAX, new Immediate((byte) 0x18)), "add eax,0x00000018", "83 c0 18"),
+				test(new Instruction(Opcode.ADD, EAX, new Immediate((byte) 0x18)), "add eax,0x18", "83 c0 18"),
 				test(new Instruction(Opcode.ADD, EAX, iimm), "add eax,0x12345678", "05 78 56 34 12"),
 				test(
 						new Instruction(
@@ -4803,12 +4807,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"add r11d,DWORD PTR [rax+rbx*4+0x12345678]",
 						"44 03 9c 98 78 56 34 12"),
-				test(
-						new Instruction(Opcode.ADD, R8, new Immediate((byte) 1)),
-						"add r8,0x0000000000000001",
-						"49 83 c0 01"),
+				test(new Instruction(Opcode.ADD, R8, new Immediate((byte) 1)), "add r8,0x01", "49 83 c0 01"),
 				test(new Instruction(Opcode.ADD, R8, R9), "add r8,r9", "4d 01 c8"),
-				test(new Instruction(Opcode.ADD, R9, bimm), "add r9,0x0000000000000012", "49 83 c1 12"),
+				test(new Instruction(Opcode.ADD, R9, bimm), "add r9,0x12", "49 83 c1 12"),
 				test(
 						new Instruction(
 								Opcode.ADD,
@@ -4822,13 +4823,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"add r9,QWORD PTR [rax+rbx*4+0x12345678]",
 						"4c 03 8c 98 78 56 34 12"),
-				test(
-						new Instruction(Opcode.ADD, RAX, new Immediate((byte) 1)),
-						"add rax,0x0000000000000001",
-						"48 83 c0 01"),
-				test(new Instruction(Opcode.ADD, RAX, bimm), "add rax,0x0000000000000012", "48 83 c0 12"),
-				test(new Instruction(Opcode.ADD, RAX, iimm), "add rax,0x0000000012345678", "48 05 78 56 34 12"),
-				test(new Instruction(Opcode.ADD, RSP, iimm), "add rsp,0x0000000012345678", "48 81 c4 78 56 34 12"),
+				test(new Instruction(Opcode.ADD, RAX, new Immediate((byte) 1)), "add rax,0x01", "48 83 c0 01"),
+				test(new Instruction(Opcode.ADD, RAX, bimm), "add rax,0x12", "48 83 c0 12"),
+				test(new Instruction(Opcode.ADD, RAX, iimm), "add rax,0x12345678", "48 05 78 56 34 12"),
+				test(new Instruction(Opcode.ADD, RSP, iimm), "add rsp,0x12345678", "48 81 c4 78 56 34 12"),
 				test(
 						new Instruction(
 								Opcode.ADD,
@@ -4885,7 +4883,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"and dx,WORD PTR [r10]",
 						"66 41 23 12"),
-				test(new Instruction(Opcode.AND, EAX, bimm), "and eax,0x00000012", "83 e0 12"),
+				test(new Instruction(Opcode.AND, EAX, bimm), "and eax,0x12", "83 e0 12"),
 				test(new Instruction(Opcode.AND, EAX, iimm), "and eax,0x12345678", "25 78 56 34 12"),
 				test(
 						new Instruction(
@@ -4910,16 +4908,13 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"and ecx,DWORD PTR [r10]",
 						"41 23 0a"),
-				test(new Instruction(Opcode.AND, EDI, bimm), "and edi,0x00000012", "83 e7 12"),
+				test(new Instruction(Opcode.AND, EDI, bimm), "and edi,0x12", "83 e7 12"),
 				test(new Instruction(Opcode.AND, EDI, iimm), "and edi,0x12345678", "81 e7 78 56 34 12"),
 				test(new Instruction(Opcode.AND, EDI, new Immediate((byte) 0xf0)), "and edi,0xfffffff0", "83 e7 f0"),
 				test(new Instruction(Opcode.AND, R12, R13), "and r12,r13", "4d 21 ec"),
-				test(
-						new Instruction(Opcode.AND, R15D, new Immediate((byte) 0x1f)),
-						"and r15d,0x0000001f",
-						"41 83 e7 1f"),
-				test(new Instruction(Opcode.AND, RAX, bimm), "and rax,0x0000000000000012", "48 83 e0 12"),
-				test(new Instruction(Opcode.AND, RAX, iimm), "and rax,0x0000000012345678", "48 25 78 56 34 12"),
+				test(new Instruction(Opcode.AND, R15D, new Immediate((byte) 0x1f)), "and r15d,0x1f", "41 83 e7 1f"),
+				test(new Instruction(Opcode.AND, RAX, bimm), "and rax,0x12", "48 83 e0 12"),
+				test(new Instruction(Opcode.AND, RAX, iimm), "and rax,0x12345678", "48 25 78 56 34 12"),
 				test(
 						new Instruction(
 								Opcode.AND,
@@ -4943,8 +4938,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"and rcx,QWORD PTR [r10]",
 						"49 23 0a"),
-				test(new Instruction(Opcode.AND, RDI, bimm), "and rdi,0x0000000000000012", "48 83 e7 12"),
-				test(new Instruction(Opcode.AND, RDI, iimm), "and rdi,0x0000000012345678", "48 81 e7 78 56 34 12"),
+				test(new Instruction(Opcode.AND, RDI, bimm), "and rdi,0x12", "48 83 e7 12"),
+				test(new Instruction(Opcode.AND, RDI, iimm), "and rdi,0x12345678", "48 81 e7 78 56 34 12"),
 				test(
 						new Instruction(Opcode.AND, RDI, new Immediate(0xfedcba98)),
 						"and rdi,0xfffffffffedcba98",
@@ -5034,7 +5029,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"sub WORD PTR [rax+rbx*4+0x12345678],r8w",
 						"66 44 29 84 98 78 56 34 12"),
 				test(new Instruction(Opcode.SUB, CX, simm), "sub cx,0x1234", "66 81 e9 34 12"),
-				test(new Instruction(Opcode.SUB, ESI, bimm), "sub esi,0x00000012", "83 ee 12"),
+				test(new Instruction(Opcode.SUB, ESI, bimm), "sub esi,0x12", "83 ee 12"),
 				test(
 						new Instruction(
 								Opcode.SUB,
@@ -5075,8 +5070,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"sub r9,QWORD PTR [rax+rbx*4+0x12345678]",
 						"4c 2b 8c 98 78 56 34 12"),
-				test(new Instruction(Opcode.SUB, RDI, bimm), "sub rdi,0x0000000000000012", "48 83 ef 12"),
-				test(new Instruction(Opcode.SUB, RSP, iimm), "sub rsp,0x0000000012345678", "48 81 ec 78 56 34 12"),
+				test(new Instruction(Opcode.SUB, RDI, bimm), "sub rdi,0x12", "48 83 ef 12"),
+				test(new Instruction(Opcode.SUB, RSP, iimm), "sub rsp,0x12345678", "48 81 ec 78 56 34 12"),
 				test(
 						new Instruction(
 								Opcode.SUB,
@@ -5492,7 +5487,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.OR, AL, bimm), "or al,0x12", "0c 12"),
 				test(new Instruction(Opcode.OR, CL, bimm), "or cl,0x12", "80 c9 12"),
 				test(new Instruction(Opcode.OR, CX, simm), "or cx,0x1234", "66 81 c9 34 12"),
-				test(new Instruction(Opcode.OR, EAX, bimm), "or eax,0x00000012", "83 c8 12"),
+				test(new Instruction(Opcode.OR, EAX, bimm), "or eax,0x12", "83 c8 12"),
 				test(new Instruction(Opcode.OR, EAX, iimm), "or eax,0x12345678", "0d 78 56 34 12"),
 				test(
 						new Instruction(
@@ -5517,9 +5512,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"or ecx,DWORD PTR [r10]",
 						"41 0b 0a"),
-				test(new Instruction(Opcode.OR, EDI, bimm), "or edi,0x00000012", "83 cf 12"),
-				test(new Instruction(Opcode.OR, RAX, bimm), "or rax,0x0000000000000012", "48 83 c8 12"),
-				test(new Instruction(Opcode.OR, RAX, iimm), "or rax,0x0000000012345678", "48 0d 78 56 34 12"),
+				test(new Instruction(Opcode.OR, EDI, bimm), "or edi,0x12", "83 cf 12"),
+				test(new Instruction(Opcode.OR, RAX, bimm), "or rax,0x12", "48 83 c8 12"),
+				test(new Instruction(Opcode.OR, RAX, iimm), "or rax,0x12345678", "48 0d 78 56 34 12"),
 				test(
 						new Instruction(Opcode.OR, RAX, new Immediate((byte) 0xfe)),
 						"or rax,0xfffffffffffffffe",
@@ -5547,14 +5542,14 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"or rcx,QWORD PTR [r10]",
 						"49 0b 0a"),
-				test(new Instruction(Opcode.OR, RDI, bimm), "or rdi,0x0000000000000012", "48 83 cf 12"),
+				test(new Instruction(Opcode.OR, RDI, bimm), "or rdi,0x12", "48 83 cf 12"),
 				//  Xor
 				test(new Instruction(Opcode.XOR, CX, simm), "xor cx,0x1234", "66 81 f1 34 12"),
-				test(new Instruction(Opcode.XOR, EAX, bimm), "xor eax,0x00000012", "83 f0 12"),
+				test(new Instruction(Opcode.XOR, EAX, bimm), "xor eax,0x12", "83 f0 12"),
 				test(new Instruction(Opcode.XOR, EAX, iimm), "xor eax,0x12345678", "35 78 56 34 12"),
 				test(new Instruction(Opcode.XOR, EBX, iimm), "xor ebx,0x12345678", "81 f3 78 56 34 12"),
-				test(new Instruction(Opcode.XOR, R8, bimm), "xor r8,0x0000000000000012", "49 83 f0 12"),
-				test(new Instruction(Opcode.XOR, R8, iimm), "xor r8,0x0000000012345678", "49 81 f0 78 56 34 12"),
+				test(new Instruction(Opcode.XOR, R8, bimm), "xor r8,0x12", "49 83 f0 12"),
+				test(new Instruction(Opcode.XOR, R8, iimm), "xor r8,0x12345678", "49 81 f0 78 56 34 12"),
 				//  Not
 				test(new Instruction(Opcode.NOT, EAX), "not eax", "f7 d0"),
 				test(new Instruction(Opcode.NOT, EBP), "not ebp", "f7 d5"),
@@ -6360,7 +6355,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SETGE, R8B), "setge r8b", "41 0f 9d c0"),
 				//  Movabs
 				test(
-						new Instruction(Opcode.MOVABS, RCX, new Immediate(0xdeadbeefL)),
+						new Instruction(Opcode.MOVABS, RCX, new Immediate(0xdeadbeef00000000L)),
 						"movabs rcx,0xdeadbeef00000000",
 						"48 b9 00 00 00 00 ef be ad de"),
 				test(
@@ -6865,7 +6860,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.pointer(WORD_PTR)
 										.index(RAX)
 										.scale(2)
-										.displacement(0)
+										.displacement((byte) 0)
 										.build()),
 						"dec WORD PTR [rax*2+0x0]",
 						"66 ff 0c 45 00 00 00 00"),
@@ -6887,7 +6882,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RAX)
 										.index(RBX)
 										.scale(1)
-										.displacement(0)
+										.displacement((byte) 0)
 										.build()),
 						"dec WORD PTR [rax+rbx*1+0x0]",
 						"66 ff 0c 18"),
