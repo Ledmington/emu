@@ -126,8 +126,9 @@ public class X86Cpu implements X86Emulator {
 								switch (inst.secondOperand()) {
 									case Register64 op2 -> rf.get(op2);
 									case Immediate imm -> imm.asLong();
-									default -> throw new IllegalArgumentException(
-											String.format("Unknown second argument type %s", inst.secondOperand()));
+									default ->
+										throw new IllegalArgumentException(
+												String.format("Unknown second argument type %s", inst.secondOperand()));
 								};
 						final long result = r1 - r2;
 						rf.set(op1, result);
@@ -144,8 +145,9 @@ public class X86Cpu implements X86Emulator {
 						rf.resetFlags();
 						rf.set(RFlags.ZERO, result == 0);
 					}
-					default -> throw new IllegalArgumentException(
-							String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
+					default ->
+						throw new IllegalArgumentException(
+								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
 				}
 			}
 			case ADD -> {
@@ -180,8 +182,9 @@ public class X86Cpu implements X86Emulator {
 								switch (inst.secondOperand()) {
 									case Register64 op2 -> rf.get(op2);
 									case Immediate imm -> imm.asLong();
-									default -> throw new IllegalArgumentException(
-											String.format("Unknown second argument type %s", inst.secondOperand()));
+									default ->
+										throw new IllegalArgumentException(
+												String.format("Unknown second argument type %s", inst.secondOperand()));
 								};
 						final long result = r1 + r2;
 						rf.set(op1, result);
@@ -198,8 +201,9 @@ public class X86Cpu implements X86Emulator {
 						rf.resetFlags();
 						rf.set(RFlags.ZERO, result == 0);
 					}
-					default -> throw new IllegalArgumentException(
-							String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
+					default ->
+						throw new IllegalArgumentException(
+								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
 				}
 			}
 			case SHR -> {
@@ -363,8 +367,9 @@ public class X86Cpu implements X86Emulator {
 						switch (inst.firstOperand()) {
 							case Register64 r64 -> rf.get(r64);
 							case Immediate imm -> imm.asLong();
-							default -> throw new IllegalArgumentException(
-									String.format("Unexpected argument %s", inst.firstOperand()));
+							default ->
+								throw new IllegalArgumentException(
+										String.format("Unexpected argument %s", inst.firstOperand()));
 						};
 
 				final long rsp = rf.get(Register64.RSP);
@@ -410,24 +415,25 @@ public class X86Cpu implements X86Emulator {
 
 				rf.set(Register64.RIP, rip + relativeAddress);
 			}
-				/*case RET -> {
-					// TODO: check this
-					final long prev = rf.get(Register64.RSP) + 8L;
+			/*case RET -> {
+				// TODO: check this
+				final long prev = rf.get(Register64.RSP) + 8L;
 
-					// If we read 0x0, we have exhausted the stack
-					final long zero = 0L;
-					if (mem.read8(prev) == zero) {
-						state = State.HALTED;
-					} else {
-						rf.set(Register64.RSP, prev);
-						rf.set(Register64.RIP, mem.read8(prev));
-					}
-				}*/
+				// If we read 0x0, we have exhausted the stack
+				final long zero = 0L;
+				if (mem.read8(prev) == zero) {
+					state = State.HALTED;
+				} else {
+					rf.set(Register64.RSP, prev);
+					rf.set(Register64.RIP, mem.read8(prev));
+				}
+			}*/
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented");
 			case HLT -> state = State.HALTED;
 			case NOP -> {}
-			default -> throw new IllegalArgumentException(
-					String.format("Unknown instruction %s", InstructionEncoder.toIntelSyntax(inst)));
+			default ->
+				throw new IllegalArgumentException(
+						String.format("Unknown instruction %s", InstructionEncoder.toIntelSyntax(inst)));
 		}
 	}
 

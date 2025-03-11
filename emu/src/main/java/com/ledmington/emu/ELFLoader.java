@@ -387,13 +387,14 @@ public final class ELFLoader {
 						sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
 				mem.initialize(startVirtualAddress, content);
 			}
-			default -> throw new IllegalArgumentException(String.format(
-					"Don't know what to do with section '%s' of type %s and flags '%s'",
-					sec.getName(),
-					sec.getHeader().getType().getName(),
-					sec.getHeader().getFlags().stream()
-							.map(SectionHeaderFlags::getName)
-							.collect(Collectors.joining(", "))));
+			default ->
+				throw new IllegalArgumentException(String.format(
+						"Don't know what to do with section '%s' of type %s and flags '%s'",
+						sec.getName(),
+						sec.getHeader().getType().getName(),
+						sec.getHeader().getFlags().stream()
+								.map(SectionHeaderFlags::getName)
+								.collect(Collectors.joining(", "))));
 		}
 	}
 }

@@ -27,7 +27,7 @@ ext.junitLauncherVersion = '1.12.0'
 ext.jacocoVersion = '0.8.12'
 ext.pmdVersion = '7.11.0'
 ext.spotbugsVersion = '4.9.2'
-ext.palantirVersion = '2.55.0'
+ext.palantirVersion = '2.57.0'
 // End tunables
 
 allprojects {

@@ -57,15 +57,17 @@ public enum NoteSectionEntryType {
 	 */
 	public static NoteSectionEntryType fromCode(final String owner, final int type) {
 		return switch (owner) {
-			case "GNU" -> switch (type) {
-				case 1 -> NT_GNU_ABI_TAG;
-				case 2 -> NT_GNU_HWCAP;
-				case 3 -> NT_GNU_BUILD_ID;
-				case 4 -> NT_GNU_GOLD_VERSION;
-				case 5 -> NT_GNU_PROPERTY_TYPE_0;
-				default -> throw new IllegalArgumentException(
-						String.format("Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
-			};
+			case "GNU" ->
+				switch (type) {
+					case 1 -> NT_GNU_ABI_TAG;
+					case 2 -> NT_GNU_HWCAP;
+					case 3 -> NT_GNU_BUILD_ID;
+					case 4 -> NT_GNU_GOLD_VERSION;
+					case 5 -> NT_GNU_PROPERTY_TYPE_0;
+					default ->
+						throw new IllegalArgumentException(String.format(
+								"Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
+				};
 			case "stapsdt" -> {
 				if (type == NT_STAPSDT.getCode()) {
 					yield NT_STAPSDT;
@@ -74,8 +76,8 @@ public enum NoteSectionEntryType {
 							"Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
 				}
 			}
-			default -> throw new IllegalArgumentException(
-					String.format("Unknown note section entry owner '%s'", owner));
+			default ->
+				throw new IllegalArgumentException(String.format("Unknown note section entry owner '%s'", owner));
 		};
 	}
 

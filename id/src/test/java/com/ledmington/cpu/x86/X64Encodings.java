@@ -17,10 +17,6 @@
  */
 package com.ledmington.cpu.x86;
 
-import com.ledmington.utils.BitUtils;
-
-import java.util.List;
-
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
@@ -71,6 +67,10 @@ import static com.ledmington.cpu.x86.Register8.AL;
 import static com.ledmington.cpu.x86.Register8.DH;
 import static com.ledmington.cpu.x86.Register8.R8B;
 import static com.ledmington.cpu.x86.Register8.R9B;
+
+import java.util.List;
+
+import com.ledmington.utils.BitUtils;
 
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 

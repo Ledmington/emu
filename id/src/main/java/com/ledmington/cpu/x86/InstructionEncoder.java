@@ -143,9 +143,10 @@ public final class InstructionEncoder {
 			case 0 -> encodeZeroOperandsInstruction(wb, inst);
 			case 1 -> encodeSingleOperandInstruction(wb, inst);
 			case 2 -> encodeTwoOperandsInstruction(wb, inst);
-				// case 3 -> encodeThreeOperandsInstruction(wb, inst);
-			default -> throw new IllegalArgumentException(String.format(
-					"Unknown instruction with %,d operands: '%s'.", countOperands(inst), toIntelSyntax(inst)));
+			// case 3 -> encodeThreeOperandsInstruction(wb, inst);
+			default ->
+				throw new IllegalArgumentException(String.format(
+						"Unknown instruction with %,d operands: '%s'.", countOperands(inst), toIntelSyntax(inst)));
 		}
 	}
 
@@ -328,9 +329,10 @@ public final class InstructionEncoder {
 		}
 
 		switch (inst.opcode()) {
-			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE -> wb.write(
-					DOUBLE_BYTE_OPCODE_PREFIX,
-					BitUtils.asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
+			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE ->
+				wb.write(
+						DOUBLE_BYTE_OPCODE_PREFIX,
+						BitUtils.asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
 			case CMP -> {
 				if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register) {
 					wb.write(io.bits() == 8 ? (byte) 0x38 : (byte) 0x39);
@@ -400,8 +402,9 @@ public final class InstructionEncoder {
 								case 2 -> (byte) 0b01;
 								case 4 -> (byte) 0b10;
 								case 8 -> (byte) 0b11;
-								default -> throw new IllegalArgumentException(
-										String.format("Invalid scale: %,d.", io.getScale()));
+								default ->
+									throw new IllegalArgumentException(
+											String.format("Invalid scale: %,d.", io.getScale()));
 							},
 							6),
 					BitUtils.or(BitUtils.shl(Registers.toByte(io.getIndex()), 3), base)));

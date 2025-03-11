@@ -375,9 +375,10 @@ public final class ELFView extends BorderPane {
 				case GnuVersionSection gvs -> initializeGnuVersionSection(root, gvs);
 				case GnuVersionRequirementsSection gvrs -> initializeGnuVersionRequirementsSection(root, gvrs);
 				case GnuHashSection ghs -> initializeGnuHashSection(root, ghs, wordSize);
-				default -> throw new IllegalArgumentException(String.format(
-						"Unknown section with type '%s' and name '%s'",
-						sh.getType().getName(), s.getName()));
+				default ->
+					throw new IllegalArgumentException(String.format(
+							"Unknown section with type '%s' and name '%s'",
+							sh.getType().getName(), s.getName()));
 			}
 
 			x.getChildren().add(root);

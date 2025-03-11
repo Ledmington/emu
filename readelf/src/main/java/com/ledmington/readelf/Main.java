@@ -965,17 +965,19 @@ public final class Main {
 
 			switch (nse.getType()) {
 				case NT_GNU_ABI_TAG -> printGNUABITag(nse);
-				case NT_GNU_BUILD_ID -> out.printf(
-						"    Build ID: %s%n",
-						IntStream.range(0, nse.getDescriptionLength())
-								.mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
-								.collect(Collectors.joining()));
+				case NT_GNU_BUILD_ID ->
+					out.printf(
+							"    Build ID: %s%n",
+							IntStream.range(0, nse.getDescriptionLength())
+									.mapToObj(j -> String.format("%02x", nse.getDescriptionByte(j)))
+									.collect(Collectors.joining()));
 				case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
 				case NT_GNU_GOLD_VERSION -> printGNUGoldVersion(nse);
 				case NT_STAPSDT -> printSystemtapProperties(nse);
 
-				default -> throw new IllegalArgumentException(
-						String.format("Unknown note section entry type '%s'", nse.getType()));
+				default ->
+					throw new IllegalArgumentException(
+							String.format("Unknown note section entry type '%s'", nse.getType()));
 			}
 		}
 	}
@@ -1183,8 +1185,9 @@ public final class Main {
 					case 1 -> "GNU";
 					case 2 -> "Solaris2";
 					case 3 -> "FreeBSD";
-					default -> throw new IllegalArgumentException(
-							String.format("Unknown ABI tag %d (0x%08x)", osCode, osCode));
+					default ->
+						throw new IllegalArgumentException(
+								String.format("Unknown ABI tag %d (0x%08x)", osCode, osCode));
 				},
 				robb.read4(),
 				robb.read4(),
