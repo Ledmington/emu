@@ -17,6 +17,10 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.utils.BitUtils;
+
+import java.util.List;
+
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
@@ -25,8 +29,10 @@ import static com.ledmington.cpu.x86.Register16.AX;
 import static com.ledmington.cpu.x86.Register16.CS;
 import static com.ledmington.cpu.x86.Register16.CX;
 import static com.ledmington.cpu.x86.Register16.DX;
+import static com.ledmington.cpu.x86.Register16.R10W;
 import static com.ledmington.cpu.x86.Register16.R11W;
 import static com.ledmington.cpu.x86.Register16.R13W;
+import static com.ledmington.cpu.x86.Register16.R14W;
 import static com.ledmington.cpu.x86.Register16.R8W;
 import static com.ledmington.cpu.x86.Register16.SP;
 import static com.ledmington.cpu.x86.Register32.EAX;
@@ -35,6 +41,7 @@ import static com.ledmington.cpu.x86.Register32.EBX;
 import static com.ledmington.cpu.x86.Register32.ECX;
 import static com.ledmington.cpu.x86.Register32.EDI;
 import static com.ledmington.cpu.x86.Register32.EDX;
+import static com.ledmington.cpu.x86.Register32.ESI;
 import static com.ledmington.cpu.x86.Register32.ESP;
 import static com.ledmington.cpu.x86.Register32.R10D;
 import static com.ledmington.cpu.x86.Register32.R11D;
@@ -64,10 +71,6 @@ import static com.ledmington.cpu.x86.Register8.AL;
 import static com.ledmington.cpu.x86.Register8.DH;
 import static com.ledmington.cpu.x86.Register8.R8B;
 import static com.ledmington.cpu.x86.Register8.R9B;
-
-import java.util.List;
-
-import com.ledmington.utils.BitUtils;
 
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 
@@ -108,7 +111,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 					new Instruction(
 							Opcode.NOP,
 							IndirectOperand.builder()
-									.pointer(QWORD_PTR)
+									.pointer(DWORD_PTR)
 									.index(RAX)
 									.build()),
 					"nop DWORD PTR [rax]",
@@ -616,8 +619,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmovne ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 45 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVNE, R15, RCX), "cmovne r15,rdx", "4c 0f 45 fa"),
-			test(new Instruction(Opcode.CMOVNE, RCX, R15), "cmovne rdx,r15", "49 0f 45 d7"),
+			test(new Instruction(Opcode.CMOVNE, R15, RDX), "cmovne r15,rdx", "4c 0f 45 fa"),
+			test(new Instruction(Opcode.CMOVNE, RDX, R15), "cmovne rdx,r15", "49 0f 45 d7"),
 			//  Cmovg
 			test(
 					new Instruction(
@@ -632,8 +635,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmovg ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 4f 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVG, R15, RCX), "cmovg r15,rdx", "4c 0f 4f fa"),
-			test(new Instruction(Opcode.CMOVG, RCX, R15), "cmovg rdx,r15", "49 0f 4f d7"),
+			test(new Instruction(Opcode.CMOVG, R15, RDX), "cmovg r15,rdx", "4c 0f 4f fa"),
+			test(new Instruction(Opcode.CMOVG, RDX, R15), "cmovg rdx,r15", "49 0f 4f d7"),
 			//  Cmovge
 			test(
 					new Instruction(
@@ -648,8 +651,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmovge ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 4d 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVGE, R15, RCX), "cmovge r15,rdx", "4c 0f 4d fa"),
-			test(new Instruction(Opcode.CMOVGE, RCX, R15), "cmovge rdx,r15", "49 0f 4d d7"),
+			test(new Instruction(Opcode.CMOVGE, R15, RDX), "cmovge r15,rdx", "4c 0f 4d fa"),
+			test(new Instruction(Opcode.CMOVGE, RDX, R15), "cmovge rdx,r15", "49 0f 4d d7"),
 			//  Cmovs
 			test(
 					new Instruction(
@@ -664,8 +667,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmovs ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 48 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVS, R15, RCX), "cmovs ecx,eax", "0f 48 c8"),
-			test(new Instruction(Opcode.CMOVS, RCX, R15), "cmovs edx,r9d", "41 0f 48 d1"),
+			test(new Instruction(Opcode.CMOVS, ECX, EAX), "cmovs ecx,eax", "0f 48 c8"),
+			test(new Instruction(Opcode.CMOVS, EDX, R9D), "cmovs edx,r9d", "41 0f 48 d1"),
 			//  Cmova
 			test(
 					new Instruction(
@@ -680,12 +683,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmova ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 47 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVA, R15, RCX), "cmova ecx,eax", "0f 47 c8"),
-			test(new Instruction(Opcode.CMOVA, RCX, R15), "cmova edx,r9d", "41 0f 47 d1"),
+			test(new Instruction(Opcode.CMOVA, ECX, EAX), "cmova ecx,eax", "0f 47 c8"),
+			test(new Instruction(Opcode.CMOVA, EDX, R9D), "cmova edx,r9d", "41 0f 47 d1"),
 			//  Cmovl
 			test(
 					new Instruction(
-							Opcode.CMOVLE,
+							Opcode.CMOVL,
 							ECX,
 							IndirectOperand.builder()
 									.pointer(DWORD_PTR)
@@ -696,8 +699,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmovl ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 4c 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVL, R15, RCX), "cmovl r15,rdx", "4c 0f 4c fa"),
-			test(new Instruction(Opcode.CMOVL, RCX, R15), "cmovl rdx,r15", "49 0f 4c d7"),
+			test(new Instruction(Opcode.CMOVL, R15, RDX), "cmovl r15,rdx", "4c 0f 4c fa"),
+			test(new Instruction(Opcode.CMOVL, RDX, R15), "cmovl rdx,r15", "49 0f 4c d7"),
 			//  Cmovle
 			test(
 					new Instruction(
@@ -712,8 +715,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.build()),
 					"cmovle ecx,DWORD PTR [r8+rax*4+0x12345678]",
 					"41 0f 4e 8c 80 78 56 34 12"),
-			test(new Instruction(Opcode.CMOVLE, R15, RCX), "cmovle r15,rdx", "4c 0f 4e fa"),
-			test(new Instruction(Opcode.CMOVLE, RCX, R15), "cmovle rdx,r15", "49 0f 4e d7"),
+			test(new Instruction(Opcode.CMOVLE, R15, RDX), "cmovle r15,rdx", "4c 0f 4e fa"),
+			test(new Instruction(Opcode.CMOVLE, RDX, R15), "cmovle rdx,r15", "49 0f 4e d7"),
 			//  Cmp
 			test(
 					new Instruction(
@@ -918,7 +921,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.scale(2)
 									.displacement((byte) 0x12)
 									.build(),
-							new Immediate((byte) 0x77)),
+							new Immediate((short) 0x0077)),
 					"cmp WORD PTR [r13+rcx*2+0x12],0x0077",
 					"66 41 83 7c 4d 12 77"),
 			test(
@@ -931,7 +934,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 									.scale(2)
 									.displacement((byte) 0x12)
 									.build(),
-							new Immediate((short) 0x778)),
+							new Immediate((short) 0x7788)),
 					"cmp WORD PTR [r13+rcx*2+0x12],0x7788",
 					"66 41 81 7c 4d 12 88 77"),
 			test(
@@ -1075,22 +1078,198 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			test(new Instruction(Opcode.CMP, RSP, R8), "cmp rsp,r8", "4c 39 c4"),
 			test(new Instruction(Opcode.CMP, SP, R13W), "cmp sp,r13w", "66 44 39 ec"),
 			//  Lea
-			test(null, "lea ax,[ebx+ecx*4+0x12345678]", "67 66 8d 84 8b 78 56 34 12"),
-			test(null, "lea cx,[rbx+rcx*4+0x12345678]", "66 8d 8c 8b 78 56 34 12"),
-			test(null, "lea eax,[ebx]", "67 8d 03"),
-			test(null, "lea eax,[rbx]", "8d 03"),
-			test(null, "lea ecx,[rdx+rbp*2+0x0]", "8d 0c 6a"),
-			test(null, "lea esi,[edi+r12d*2+0x12345678]", "67 42 8d b4 67 78 56 34 12"),
-			test(null, "lea r10w,[ebx+ecx*4+0x12345678]", "67 66 44 8d 94 8b 78 56 34 12"),
-			test(null, "lea r13d,[rdi+r8*4+0x12345678]", "46 8d ac 87 78 56 34 12"),
-			test(null, "lea r14w,[rbx+rcx*4+0x12345678]", "66 44 8d b4 8b 78 56 34 12"),
-			test(null, "lea r9d,[edx+ebp*2+0x0]", "67 44 8d 0c 6a"),
-			test(null, "lea rax,[ebx]", "67 48 8d 03"),
-			test(null, "lea rax,[rbx]", "48 8d 03"),
-			test(null, "lea rcx,[edx+ebp*2+0x0]", "67 48 8d 0c 6a"),
-			test(null, "lea rcx,[rdx+rbp*2+0x0]", "48 8d 0c 6a"),
-			test(null, "lea rsi,[edi+r9d*2+0x12345678]", "67 4a 8d b4 4f 78 56 34 12"),
-			test(null, "lea rsi,[rdi+r8*4+0x12345678]", "4a 8d b4 87 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							AX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EBX)
+									.index(ECX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"lea ax,[ebx+ecx*4+0x12345678]",
+					"67 66 8d 84 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							CX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RBX)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"lea cx,[rbx+rcx*4+0x12345678]",
+					"66 8d 8c 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							EAX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(EBX)
+									.build()),
+					"lea eax,[ebx]",
+					"67 8d 03"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							EAX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RBX)
+									.build()),
+					"lea eax,[rbx]",
+					"8d 03"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							ECX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RDX)
+									.index(RBP)
+									.scale(2)
+									.build()),
+					"lea ecx,[rdx+rbp*2+0x0]",
+					"8d 0c 6a"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							ESI,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EDI)
+									.index(R12D)
+									.scale(2)
+									.displacement(0x12345678)
+									.build()),
+					"lea esi,[edi+r12d*2+0x12345678]",
+					"67 42 8d b4 67 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							R10W,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EBX)
+									.index(ECX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"lea r10w,[ebx+ecx*4+0x12345678]",
+					"67 66 44 8d 94 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							R13D,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RDI)
+									.index(R8)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"lea r13d,[rdi+r8*4+0x12345678]",
+					"46 8d ac 87 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							R14W,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RBX)
+									.index(RCX)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"lea r14w,[rbx+rcx*4+0x12345678]",
+					"66 44 8d b4 8b 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							R9D,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EDX)
+									.index(EBP)
+									.scale(2)
+									.build()),
+					"lea r9d,[edx+ebp*2+0x0]",
+					"67 44 8d 0c 6a"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							RAX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(EBX)
+									.build()),
+					"lea rax,[ebx]",
+					"67 48 8d 03"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							RAX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.index(RBX)
+									.build()),
+					"lea rax,[rbx]",
+					"48 8d 03"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							RCX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EDX)
+									.index(EBP)
+									.scale(2)
+									.build()),
+					"lea rcx,[edx+ebp*2+0x0]",
+					"67 48 8d 0c 6a"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							RCX,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RDX)
+									.index(RBP)
+									.scale(2)
+									.build()),
+					"lea rcx,[rdx+rbp*2+0x0]",
+					"48 8d 0c 6a"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							RSI,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(EDI)
+									.index(R9D)
+									.scale(2)
+									.displacement(0x12345678)
+									.build()),
+					"lea rsi,[edi+r9d*2+0x12345678]",
+					"67 4a 8d b4 4f 78 56 34 12"),
+			test(
+					new Instruction(
+							Opcode.LEA,
+							RSI,
+							IndirectOperand.builder()
+									.pointer(QWORD_PTR)
+									.base(RDI)
+									.index(R8)
+									.scale(4)
+									.displacement(0x12345678)
+									.build()),
+					"lea rsi,[rdi+r8*4+0x12345678]",
+					"4a 8d b4 87 78 56 34 12"),
 			//  Mov
 			test(new Instruction(Opcode.MOV, R10D, R10D), "mov r10d,r10d", "45 89 d2"),
 			test(new Instruction(Opcode.MOV, R10D, R11D), "mov r10d,r11d", "45 89 da"),
@@ -1157,82 +1336,82 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			test(new Instruction(Opcode.MOV, R9D, R8D), "mov r9d,r8d", "45 89 c1"),
 			test(new Instruction(Opcode.MOV, R9D, R9D), "mov r9d,r9d", "45 89 c9"),
 			//
-			test(null, "mov eax,eax", "89 c0"),
-			test(null, "mov eax,ebp", "89 e8"),
-			test(null, "mov eax,ebx", "89 d8"),
-			test(null, "mov eax,ecx", "89 c8"),
-			test(null, "mov eax,edi", "89 f8"),
-			test(null, "mov eax,edx", "89 d0"),
-			test(null, "mov eax,esi", "89 f0"),
-			test(null, "mov eax,esp", "89 e0"),
-			test(null, "mov ebp,eax", "89 c5"),
-			test(null, "mov ebp,ebp", "89 ed"),
-			test(null, "mov ebp,ebx", "89 dd"),
-			test(null, "mov ebp,ecx", "89 cd"),
-			test(null, "mov ebp,edi", "89 fd"),
-			test(null, "mov ebp,edx", "89 d5"),
-			test(null, "mov ebp,esi", "89 f5"),
-			test(null, "mov ebp,esp", "89 e5"),
-			test(null, "mov ebx,eax", "89 c3"),
-			test(null, "mov ebx,ebp", "89 eb"),
-			test(null, "mov ebx,ebx", "89 db"),
-			test(null, "mov ebx,ecx", "89 cb"),
-			test(null, "mov ebx,edi", "89 fb"),
-			test(null, "mov ebx,edx", "89 d3"),
-			test(null, "mov ebx,esi", "89 f3"),
-			test(null, "mov ebx,esp", "89 e3"),
-			test(null, "mov ecx,eax", "89 c1"),
-			test(null, "mov ecx,ebp", "89 e9"),
-			test(null, "mov ecx,ebx", "89 d9"),
-			test(null, "mov ecx,ecx", "89 c9"),
-			test(null, "mov ecx,edi", "89 f9"),
-			test(null, "mov ecx,edx", "89 d1"),
-			test(null, "mov ecx,esi", "89 f1"),
-			test(null, "mov ecx,esp", "89 e1"),
-			test(null, "mov edi,eax", "89 c7"),
-			test(null, "mov edi,ebp", "89 ef"),
-			test(null, "mov edi,ebx", "89 df"),
-			test(null, "mov edi,ecx", "89 cf"),
-			test(null, "mov edi,edi", "89 ff"),
-			test(null, "mov edi,edx", "89 d7"),
-			test(null, "mov edi,esi", "89 f7"),
-			test(null, "mov edi,esp", "89 e7"),
-			test(null, "mov edx,eax", "89 c2"),
-			test(null, "mov edx,ebp", "89 ea"),
-			test(null, "mov edx,ebx", "89 da"),
-			test(null, "mov edx,ecx", "89 ca"),
-			test(null, "mov edx,edi", "89 fa"),
-			test(null, "mov edx,edx", "89 d2"),
-			test(null, "mov edx,esi", "89 f2"),
-			test(null, "mov edx,esp", "89 e2"),
-			test(null, "mov esi,eax", "89 c6"),
-			test(null, "mov esi,ebp", "89 ee"),
-			test(null, "mov esi,ebx", "89 de"),
-			test(null, "mov esi,ecx", "89 ce"),
-			test(null, "mov esi,edi", "89 fe"),
-			test(null, "mov esi,edx", "89 d6"),
-			test(null, "mov esi,esi", "89 f6"),
-			test(null, "mov esi,esp", "89 e6"),
-			test(null, "mov esp,eax", "89 c4"),
-			test(null, "mov esp,ebp", "89 ec"),
-			test(null, "mov esp,ebx", "89 dc"),
-			test(null, "mov esp,ecx", "89 cc"),
-			test(null, "mov esp,edi", "89 fc"),
-			test(null, "mov esp,edx", "89 d4"),
-			test(null, "mov esp,esi", "89 f4"),
-			test(null, "mov esp,esp", "89 e4"),
+			test(new Instruction(Opcode.MOV, EAX, EAX), "mov eax,eax", "89 c0"),
+			test(new Instruction(Opcode.MOV, EAX, EBP), "mov eax,ebp", "89 e8"),
+			test(new Instruction(Opcode.MOV, EAX, EBX), "mov eax,ebx", "89 d8"),
+			test(new Instruction(Opcode.MOV, EAX, ECX), "mov eax,ecx", "89 c8"),
+			test(new Instruction(Opcode.MOV, EAX, EDI), "mov eax,edi", "89 f8"),
+			test(new Instruction(Opcode.MOV, EAX, EDX), "mov eax,edx", "89 d0"),
+			test(new Instruction(Opcode.MOV, EAX, ESI), "mov eax,esi", "89 f0"),
+			test(new Instruction(Opcode.MOV, EAX, ESP), "mov eax,esp", "89 e0"),
+			test(new Instruction(Opcode.MOV, EBP, EAX), "mov ebp,eax", "89 c5"),
+			test(new Instruction(Opcode.MOV, EBP, EBP), "mov ebp,ebp", "89 ed"),
+			test(new Instruction(Opcode.MOV, EBP, EBX), "mov ebp,ebx", "89 dd"),
+			test(new Instruction(Opcode.MOV, EBP, ECX), "mov ebp,ecx", "89 cd"),
+			test(new Instruction(Opcode.MOV, EBP, EDI), "mov ebp,edi", "89 fd"),
+			test(new Instruction(Opcode.MOV, EBP, EDX), "mov ebp,edx", "89 d5"),
+			test(new Instruction(Opcode.MOV, EBP, ESI), "mov ebp,esi", "89 f5"),
+			test(new Instruction(Opcode.MOV, EBP, ESP), "mov ebp,esp", "89 e5"),
+			test(new Instruction(Opcode.MOV, EBX, EAX), "mov ebx,eax", "89 c3"),
+			test(new Instruction(Opcode.MOV, EBX, EBP), "mov ebx,ebp", "89 eb"),
+			test(new Instruction(Opcode.MOV, EBX, EBX), "mov ebx,ebx", "89 db"),
+			test(new Instruction(Opcode.MOV, EBX, ECX), "mov ebx,ecx", "89 cb"),
+			test(new Instruction(Opcode.MOV, EBX, EDI), "mov ebx,edi", "89 fb"),
+			test(new Instruction(Opcode.MOV, EBX, EDX), "mov ebx,edx", "89 d3"),
+			test(new Instruction(Opcode.MOV, EBX, ESI), "mov ebx,esi", "89 f3"),
+			test(new Instruction(Opcode.MOV, EBX, ESP), "mov ebx,esp", "89 e3"),
+			test(new Instruction(Opcode.MOV, ECX, EAX), "mov ecx,eax", "89 c1"),
+			test(new Instruction(Opcode.MOV, ECX, EBP), "mov ecx,ebp", "89 e9"),
+			test(new Instruction(Opcode.MOV, ECX, EBX), "mov ecx,ebx", "89 d9"),
+			test(new Instruction(Opcode.MOV, ECX, ECX), "mov ecx,ecx", "89 c9"),
+			test(new Instruction(Opcode.MOV, ECX, EDI), "mov ecx,edi", "89 f9"),
+			test(new Instruction(Opcode.MOV, ECX, EDX), "mov ecx,edx", "89 d1"),
+			test(new Instruction(Opcode.MOV, ECX, ESI), "mov ecx,esi", "89 f1"),
+			test(new Instruction(Opcode.MOV, ECX, ESP), "mov ecx,esp", "89 e1"),
+			test(new Instruction(Opcode.MOV, EDI, EAX), "mov edi,eax", "89 c7"),
+			test(new Instruction(Opcode.MOV, EDI, EBP), "mov edi,ebp", "89 ef"),
+			test(new Instruction(Opcode.MOV, EDI, EBX), "mov edi,ebx", "89 df"),
+			test(new Instruction(Opcode.MOV, EDI, ECX), "mov edi,ecx", "89 cf"),
+			test(new Instruction(Opcode.MOV, EDI, EDI), "mov edi,edi", "89 ff"),
+			test(new Instruction(Opcode.MOV, EDI, EDX), "mov edi,edx", "89 d7"),
+			test(new Instruction(Opcode.MOV, EDI, ESI), "mov edi,esi", "89 f7"),
+			test(new Instruction(Opcode.MOV, EDI, ESP), "mov edi,esp", "89 e7"),
+			test(new Instruction(Opcode.MOV, EDX, EAX), "mov edx,eax", "89 c2"),
+			test(new Instruction(Opcode.MOV, EDX, EBP), "mov edx,ebp", "89 ea"),
+			test(new Instruction(Opcode.MOV, EDX, EBX), "mov edx,ebx", "89 da"),
+			test(new Instruction(Opcode.MOV, EDX, ECX), "mov edx,ecx", "89 ca"),
+			test(new Instruction(Opcode.MOV, EDX, EDI), "mov edx,edi", "89 fa"),
+			test(new Instruction(Opcode.MOV, EDX, EDX), "mov edx,edx", "89 d2"),
+			test(new Instruction(Opcode.MOV, EDX, ESI), "mov edx,esi", "89 f2"),
+			test(new Instruction(Opcode.MOV, EDX, ESP), "mov edx,esp", "89 e2"),
+			test(new Instruction(Opcode.MOV, ESI, EAX), "mov esi,eax", "89 c6"),
+			test(new Instruction(Opcode.MOV, ESI, EBP), "mov esi,ebp", "89 ee"),
+			test(new Instruction(Opcode.MOV, ESI, EBX), "mov esi,ebx", "89 de"),
+			test(new Instruction(Opcode.MOV, ESI, ECX), "mov esi,ecx", "89 ce"),
+			test(new Instruction(Opcode.MOV, ESI, EDI), "mov esi,edi", "89 fe"),
+			test(new Instruction(Opcode.MOV, ESI, EDX), "mov esi,edx", "89 d6"),
+			test(new Instruction(Opcode.MOV, ESI, ESI), "mov esi,esi", "89 f6"),
+			test(new Instruction(Opcode.MOV, ESI, ESP), "mov esi,esp", "89 e6"),
+			test(new Instruction(Opcode.MOV, ESP, EAX), "mov esp,eax", "89 c4"),
+			test(new Instruction(Opcode.MOV, ESP, EBP), "mov esp,ebp", "89 ec"),
+			test(new Instruction(Opcode.MOV, ESP, EBX), "mov esp,ebx", "89 dc"),
+			test(new Instruction(Opcode.MOV, ESP, ECX), "mov esp,ecx", "89 cc"),
+			test(new Instruction(Opcode.MOV, ESP, EDI), "mov esp,edi", "89 fc"),
+			test(new Instruction(Opcode.MOV, ESP, EDX), "mov esp,edx", "89 d4"),
+			test(new Instruction(Opcode.MOV, ESP, ESI), "mov esp,esi", "89 f4"),
+			test(new Instruction(Opcode.MOV, ESP, ESP), "mov esp,esp", "89 e4"),
 			//
-			test(null, "mov rax,rbx", "48 89 d8"),
-			test(null, "mov rcx,rdx", "48 89 d1"),
-			test(null, "mov rsi,rdi", "48 89 fe"),
-			test(null, "mov rsp,rax", "48 89 c4"),
-			test(null, "mov rsp,rbp", "48 89 ec"),
-			test(null, "mov rsp,rbx", "48 89 dc"),
-			test(null, "mov rsp,rcx", "48 89 cc"),
-			test(null, "mov rsp,rdi", "48 89 fc"),
-			test(null, "mov rsp,rdx", "48 89 d4"),
-			test(null, "mov rsp,rsi", "48 89 f4"),
-			test(null, "mov rsp,rsp", "48 89 e4"),
+			test(new Instruction(Opcode.MOV, RAX, RBX), "mov rax,rbx", "48 89 d8"),
+			test(new Instruction(Opcode.MOV, RCX, RDX), "mov rcx,rdx", "48 89 d1"),
+			test(new Instruction(Opcode.MOV, RSI, RDI), "mov rsi,rdi", "48 89 fe"),
+			test(new Instruction(Opcode.MOV, RSP, RAX), "mov rsp,rax", "48 89 c4"),
+			test(new Instruction(Opcode.MOV, RSP, RBP), "mov rsp,rbp", "48 89 ec"),
+			test(new Instruction(Opcode.MOV, RSP, RBX), "mov rsp,rbx", "48 89 dc"),
+			test(new Instruction(Opcode.MOV, RSP, RCX), "mov rsp,rcx", "48 89 cc"),
+			test(new Instruction(Opcode.MOV, RSP, RDI), "mov rsp,rdi", "48 89 fc"),
+			test(new Instruction(Opcode.MOV, RSP, RDX), "mov rsp,rdx", "48 89 d4"),
+			test(new Instruction(Opcode.MOV, RSP, RSI), "mov rsp,rsi", "48 89 f4"),
+			test(new Instruction(Opcode.MOV, RSP, RSP), "mov rsp,rsp", "48 89 e4"),
 			//
 			test(null, "mov BYTE PTR [r11+r8*4+0x12345678],0x99", "43 c6 84 83 78 56 34 12 99"),
 			test(null, "mov BYTE PTR [rdi],bl", "88 1f"),
