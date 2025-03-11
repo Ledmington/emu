@@ -159,6 +159,10 @@ public final class Instruction {
 		this(null, opcode, firstOperand, secondOperand, null);
 	}
 
+	public Instruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
+		this(prefix, opcode, firstOperand, null, null);
+	}
+
 	/**
 	 * Creates an Instruction with one operand (like PUSH R9).
 	 *

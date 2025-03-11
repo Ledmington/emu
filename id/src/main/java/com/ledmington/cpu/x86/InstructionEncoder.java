@@ -121,6 +121,7 @@ public final class InstructionEncoder {
 	}
 
 	public static byte[] toHex(final Instruction inst) {
+		Objects.requireNonNull(inst);
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
 		toHex(wb, inst);
 		return wb.array();
