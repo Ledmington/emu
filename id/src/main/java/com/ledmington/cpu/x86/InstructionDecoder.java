@@ -249,10 +249,10 @@ public final class InstructionDecoder {
 			// Parse displacement
 			final String displacementString = (indirectOperandString.contains("-") ? "-" : "+")
 					+ splitted[splitted.length - 1].strip().substring(2);
-			if (displacementString.length() <= 3) {
-				iob.displacement(BitUtils.asByte(Integer.parseInt(displacementString, 16)));
-			} else {
+			if (displacementString.length() > 3 || indirectOperandString.contains("-")) {
 				iob.displacement(Integer.parseInt(displacementString, 16));
+			} else {
+				iob.displacement(BitUtils.asByte(Integer.parseInt(displacementString, 16)));
 			}
 		}
 
