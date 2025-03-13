@@ -277,7 +277,7 @@ public final class InstructionDecoder {
 			{ // Debugging info
 				final long codeLen = b.getPosition() - pos;
 				b.setPosition(pos);
-				logger.info(
+				logger.debug(
 						"%08x: %-24s %s",
 						pos,
 						IntStream.range(0, (int) codeLen)

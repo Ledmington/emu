@@ -21,11 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.ledmington.utils.BitUtils;
 
 final class TestDecoding extends X64Encodings {
 
@@ -33,18 +37,54 @@ final class TestDecoding extends X64Encodings {
 		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.hex()));
 	}
 
+	private static String asString(final byte[] v) {
+		return IntStream.range(0, v.length)
+				.mapToObj(i -> String.format("0x%02x", v[i]))
+				.collect(Collectors.joining(" "));
+	}
+
 	@ParameterizedTest
 	@MethodSource("instAndHex")
 	void toHex(final Instruction inst, final byte[] expected) {
-		assertArrayEquals(expected, InstructionEncoder.toHex(inst));
+		final byte[] actual = InstructionEncoder.toHex(inst);
+		assertArrayEquals(expected, actual, () -> {
+			String s = String.format(
+					"Expected '%s' to be encoded as '%s' but was '%s'.",
+					inst.toString(), asString(expected), asString(actual));
+			if (expected.length != actual.length) {
+				s = s
+						+ String.format(
+								" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
+			} else {
+				for (int i = 0; i < expected.length; i++) {
+					if (expected[i] != actual[i]) {
+						s = s
+								+ String.format(
+										" First different byte is at index %,d: expected 0b%s but was 0b%s.",
+										i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
+						break;
+					}
+				}
+			}
+			return s;
+		});
 	}
 
 	@ParameterizedTest
 	@MethodSource("instAndHex")
 	void fromHex(final Instruction expected, final byte[] hex) {
 		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length);
-		assertEquals(1, inst.size());
-		assertEquals(expected, inst.getFirst());
+		assertEquals(
+				1,
+				inst.size(),
+				() -> String.format(
+						"Expected only one instruction to be decoded but there were %,d: %s.", inst.size(), inst));
+		assertEquals(
+				expected,
+				inst.getFirst(),
+				() -> String.format(
+						"Expected '%s' to be decoded into '%s' but was '%s'.",
+						asString(hex), expected, inst.getFirst()));
 	}
 
 	private static Stream<Arguments> instAndIntelSyntax() {
@@ -54,12 +94,22 @@ final class TestDecoding extends X64Encodings {
 	@ParameterizedTest
 	@MethodSource("instAndIntelSyntax")
 	void toIntelSyntax(final Instruction inst, final String expected) {
-		assertEquals(expected, InstructionEncoder.toIntelSyntax(inst));
+		final String actual = InstructionEncoder.toIntelSyntax(inst);
+		assertEquals(
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '%s' to be encoded as '%s' but was '%s'.", inst.toString(), expected, actual));
 	}
 
 	@ParameterizedTest
 	@MethodSource("instAndIntelSyntax")
 	void fromIntelSyntax(final Instruction expected, final String intelSyntax) {
-		assertEquals(expected, InstructionDecoder.fromIntelSyntax(intelSyntax));
+		final Instruction actual = InstructionDecoder.fromIntelSyntax(intelSyntax);
+		assertEquals(
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '%s' to be decoded into '%s' but was '%s'.", intelSyntax, expected, actual));
 	}
 }

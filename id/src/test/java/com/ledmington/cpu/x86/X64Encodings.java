@@ -5051,6 +5051,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"sub r11d,DWORD PTR [rax+rbx*4+0x12345678]",
 						"44 2b 9c 98 78 56 34 12"),
 				test(new Instruction(Opcode.SUB, R8, R9), "sub r8,r9", "4d 29 c8"),
+				test(new Instruction(Opcode.SUB, R9, R8), "sub r9,r8", "4d 29 c1"),
 				test(
 						new Instruction(
 								Opcode.SUB,
