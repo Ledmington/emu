@@ -75,6 +75,11 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.CMOVLE, (byte) 0x0e),
 			Map.entry(Opcode.CMOVG, (byte) 0x0f));
 
+	// The value for the Reg field for the shift instructions
+	private static final Map<Opcode, Byte> SHIFT_REG_BYTES = Map.ofEntries(
+			Map.entry(Opcode.SHR, (byte) 0b101), Map.entry(Opcode.SAR, (byte) 0b111), Map.entry(Opcode.SHL, (byte)
+					0b100));
+
 	private InstructionEncoder() {}
 
 	private static String operandString(final Opcode code, final Operand op) {
@@ -144,7 +149,7 @@ public final class InstructionEncoder {
 			case 0 -> encodeZeroOperandsInstruction(wb, inst);
 			case 1 -> encodeSingleOperandInstruction(wb, inst);
 			case 2 -> encodeTwoOperandsInstruction(wb, inst);
-			// case 3 -> encodeThreeOperandsInstruction(wb, inst);
+			case 3 -> encodeThreeOperandsInstruction(wb, inst);
 			default ->
 				throw new IllegalArgumentException(String.format(
 						"Unknown instruction with %,d operands: '%s'.", countOperands(inst), toIntelSyntax(inst)));
@@ -252,32 +257,16 @@ public final class InstructionEncoder {
 		}
 
 		{
-			byte modrm = (byte) 0;
 			if (inst.firstOperand() instanceof Register r) {
-				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b11, 6));
-				modrm = BitUtils.or(modrm, BitUtils.shl(reg, 3));
-				modrm = BitUtils.or(modrm, Registers.toByte(r));
-				wb.write(modrm);
+				encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
 			} else if (inst.firstOperand() instanceof IndirectOperand io) {
-				// Setting mod
-				if (io.hasDisplacement() && io.getDisplacementBits() == 8) {
-					modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b01, 6));
-				} else if (io.hasDisplacement() && io.getDisplacementBits() == 32) {
-					modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b10, 6));
-				}
-
-				// Setting reg
-				modrm = BitUtils.or(modrm, BitUtils.shl(reg, 3));
-
-				// Setting r/m
-				if (isSimpleIndirectOperand(io)) {
-					modrm = BitUtils.or(modrm, Registers.toByte(io.getIndex()));
-				} else {
-					modrm = BitUtils.or(modrm, (byte) 0b100);
-				}
-
-				wb.write(modrm);
-
+				final boolean hasShortDisplacement = io.hasDisplacement() && io.getDisplacementBits() == 8;
+				final boolean hasLongDisplacement = io.hasDisplacement() && io.getDisplacementBits() == 32;
+				encodeModRM(
+						wb,
+						hasShortDisplacement ? (byte) 0b01 : (hasLongDisplacement ? (byte) 0b10 : (byte) 0b00),
+						reg,
+						isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
 				encodeIndirectOperand(wb, io);
 			} else if (inst.firstOperand() instanceof Immediate imm) {
 				if (imm.bits() == 8) {
@@ -301,34 +290,45 @@ public final class InstructionEncoder {
 			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 		}
 
+		final boolean hasExtendedFirstRegister =
+				inst.firstOperand() instanceof Register r && Registers.requiresExtension(r);
+		final boolean hasExtendedSecondRegister =
+				inst.secondOperand() instanceof Register r && Registers.requiresExtension(r);
+		final boolean isShift =
+				inst.opcode() == Opcode.SHR || inst.opcode() == Opcode.SAR || inst.opcode() == Opcode.SHL;
+
 		// rex
 		{
 			byte rex = DEFAULT_REX_PREFIX;
 			if (inst.firstOperand().bits() == 64) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
-			if ((inst.firstOperand() instanceof Register r && Registers.requiresExtension(r))
-					|| (inst.firstOperand() instanceof IndirectOperand
-							&& inst.secondOperand() instanceof Register r2
-							&& Registers.requiresExtension(r2))) {
+			if ((hasExtendedFirstRegister
+							|| (inst.firstOperand() instanceof IndirectOperand && hasExtendedSecondRegister))
+					&& !(isShift && hasExtendedFirstRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
-			if (inst.opcode() == Opcode.CMP
-					&& inst.secondOperand() instanceof Register r
-					&& Registers.requiresExtension(r)) {
+			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.IMUL
+							&& inst.secondOperand() instanceof IndirectOperand io
+							&& io.hasIndex()
+							&& Registers.requiresExtension(io.getIndex()))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
-			if ((inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))
+			if (hasExtendedSecondRegister
+					|| (isShift && hasExtendedFirstRegister)
 					|| (inst.secondOperand() instanceof IndirectOperand io
 							&& io.hasBase()
 							&& Registers.requiresExtension(io.getBase()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
-			if (rex != DEFAULT_REX_PREFIX) {
+			if (rex != DEFAULT_REX_PREFIX
+					|| (inst.firstOperand() instanceof Register8 r && Register8.requiresRexPrefix(r))) {
 				wb.write(rex);
 			}
 		}
 
+		byte reg = 0;
 		switch (inst.opcode()) {
 			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE ->
 				wb.write(
@@ -345,49 +345,149 @@ public final class InstructionEncoder {
 			case MOV -> {
 				wb.write((byte) 0x89);
 			}
+			case MOVSXD -> {
+				wb.write((byte) 0x63);
+			}
+			case SUB -> {
+				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x29);
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
+					reg = (byte) 0b101;
+				} else {
+					wb.write((byte) 0x2b);
+				}
+			}
+			case SBB -> {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+					wb.write((byte) 0x1c);
+					encodeImmediate(wb, imm);
+					return;
+				} else if (inst.firstOperand().equals(Register16.AX) && inst.secondOperand() instanceof Immediate imm) {
+					wb.write((byte) 0x1d);
+					encodeImmediate(wb, imm);
+					return;
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate) {
+					wb.write((byte) 0x81);
+					reg = (byte) 0b011;
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x19);
+				}
+			}
+			case SHR, SAR, SHL -> {
+				reg = SHIFT_REG_BYTES.get(inst.opcode());
+				if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
+					final boolean isImmediateOne = imm.bits() == 8 && imm.asByte() == (byte) 1;
+					wb.write(BitUtils.or(
+							isImmediateOne ? (byte) 0xd0 : (byte) 0xc0,
+							(r instanceof Register8) ? (byte) 0 : (byte) 1));
+					if (isImmediateOne) {
+						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
+						return;
+					}
+				} else if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+					wb.write(r1 instanceof Register8 ? (byte) 0xd2 : (byte) 0xd3);
+					if (r2.equals(Register8.CL)) {
+						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r1));
+					}
+					return;
+				}
+			}
+			case IMUL -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xaf);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
-		// modrm
+		if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+			// Most ALU operations encode the destination operand (the first one) in the r/m portion, while some
+			// instructions like MOV encode the destination as Reg
+			// FIXME: actually, it seems to be the opposite... why?
+			if (inst.opcode() == Opcode.MOV) {
+				encodeModRM(wb, (byte) 0b11, Registers.toByte(r2), Registers.toByte(r1));
+			} else {
+				encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
+			}
+		} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof IndirectOperand io) {
+			encodeModRM(wb, (byte) 0b10, Registers.toByte(r), (byte) 0b100);
+			encodeIndirectOperand(wb, io);
+		} else if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register r) {
+			encodeModRM(
+					wb,
+					(byte) 0b00,
+					Registers.toByte(r),
+					isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
+			encodeIndirectOperand(wb, io);
+		} else if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Immediate imm) {
+			encodeModRM(
+					wb,
+					isSimpleIndirectOperand(io)
+							? (byte) 0b00
+							: (io.getDisplacementBits() == 8 ? (byte) 0b01 : (byte) 0b10),
+					(byte) 0b111,
+					isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
+			encodeIndirectOperand(wb, io);
+			encodeImmediate(wb, imm);
+		} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
+			encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
+			encodeImmediate(wb, imm);
+		}
+	}
+
+	private static void encodeThreeOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		// rex
 		{
-			byte modrm = 0;
-			if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
-				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b11, 6));
-				modrm = BitUtils.or(modrm, BitUtils.shl(Registers.toByte(r1), 3));
-				modrm = BitUtils.or(modrm, Registers.toByte(r2));
-				wb.write(modrm);
-			} else if (inst.firstOperand() instanceof Register r
-					&& inst.secondOperand() instanceof IndirectOperand io) {
-				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b10, 6));
-				modrm = BitUtils.or(modrm, BitUtils.shl(Registers.toByte(r), 3));
-				modrm = BitUtils.or(modrm, (byte) 0b100);
-				wb.write(modrm);
-				encodeIndirectOperand(wb, io);
-			} else if (inst.firstOperand() instanceof IndirectOperand io
-					&& inst.secondOperand() instanceof Register r) {
-				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b00, 6));
-				modrm = BitUtils.or(modrm, BitUtils.shl(Registers.toByte(r), 3));
-				modrm = BitUtils.or(
-						modrm, isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
-				wb.write(modrm);
-				encodeIndirectOperand(wb, io);
-			} else if (inst.firstOperand() instanceof IndirectOperand io
-					&& inst.secondOperand() instanceof Immediate imm) {
-				modrm = BitUtils.or(
-						modrm,
-						BitUtils.shl(
-								isSimpleIndirectOperand(io)
-										? (byte) 0b00
-										: (io.getDisplacementBits() == 8 ? (byte) 0b01 : (byte) 0b10),
-								6));
-				modrm = BitUtils.or(modrm, BitUtils.shl((byte) 0b111, 3));
-				modrm = BitUtils.or(
-						modrm, isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
-				wb.write(modrm);
-				encodeIndirectOperand(wb, io);
-				encodeImmediate(wb, imm);
+			byte rex = DEFAULT_REX_PREFIX;
+			if (inst.firstOperand().bits() == 64) {
+				rex = BitUtils.or(rex, (byte) 0b1000);
+			}
+			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
+				rex = BitUtils.or(rex, (byte) 0b0100);
+			}
+			if (inst.secondOperand() instanceof IndirectOperand io
+					&& io.hasBase()
+					&& Registers.requiresExtension(io.getBase())) {
+				rex = BitUtils.or(rex, (byte) 0b0010);
+			}
+			if (inst.secondOperand() instanceof IndirectOperand io
+					&& io.hasIndex()
+					&& Registers.requiresExtension(io.getIndex())) {
+				rex = BitUtils.or(rex, (byte) 0b0001);
+			}
+			if (rex != DEFAULT_REX_PREFIX) {
+				wb.write(rex);
 			}
 		}
+
+		switch (inst.opcode()) {
+			case IMUL -> {
+				wb.write((inst.secondOperand() instanceof IndirectOperand) ? (byte) 0x69 : (byte) 0x6b);
+			}
+			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
+		}
+
+		if (inst.firstOperand() instanceof Register r1
+				&& inst.secondOperand() instanceof Register r2
+				&& inst.thirdOperand() instanceof Immediate imm) {
+			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
+			encodeImmediate(wb, imm);
+		} else if (inst.firstOperand() instanceof Register r1
+				&& inst.secondOperand() instanceof IndirectOperand io
+				&& inst.thirdOperand() instanceof Immediate imm) {
+			encodeModRM(
+					wb,
+					isSimpleIndirectOperand(io)
+							? (byte) 0b00
+							: (io.getDisplacementBits() == 8 ? (byte) 0b01 : (byte) 0b10),
+					Registers.toByte(r1),
+					isSimpleIndirectOperand(io) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
+			encodeIndirectOperand(wb, io);
+			encodeImmediate(wb, imm);
+		}
+	}
+
+	private static void encodeModRM(final WriteOnlyByteBuffer wb, final byte mod, final byte reg, final byte rm) {
+		wb.write(BitUtils.or(BitUtils.shl(mod, 6), BitUtils.shl(reg, 3), rm));
 	}
 
 	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
