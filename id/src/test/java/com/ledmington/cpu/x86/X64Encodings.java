@@ -411,6 +411,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.MOV,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
+										.base(RBX)
+										.index(R8)
+										.scale(4)
+										.displacement(0x12345678)
+										.build(),
+								new Immediate((byte) 0x99)),
+						"mov BYTE PTR [rbx+r8*4+0x12345678],0x99",
+						"42 c6 84 83 78 56 34 12 99"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
 										.index(RDI)
 										.build(),
 								BL),
@@ -492,6 +505,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								iimm),
 						"mov DWORD PTR [rbp+0x7eadbeef],0x12345678",
 						"c7 85 ef be ad 7e 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.index(RBP)
+										.build(),
+								iimm),
+						"mov DWORD PTR [rbp],0x12345678",
+						"c7 45 00 78 56 34 12"),
 				test(
 						new Instruction(
 								Opcode.MOV,
@@ -5170,10 +5193,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"imul r9,QWORD PTR [rax],0x7eadbeef",
 						"4c 69 08 ef be ad 7e"),
 				test(new Instruction(Opcode.IMUL, RBX, RBP), "imul rbx,rbp", "48 0f af dd"),
-				test(
-						new Instruction(Opcode.IMUL, RDX, R9, new Immediate((byte) 0x58)),
-						"imul rdx,r9,0x58",
-						"49 6b d1 58"),
+				test(new Instruction(Opcode.IMUL, RDX, R9, bimm), "imul rdx,r9,0x12", "49 6b d1 12"),
+				test(new Instruction(Opcode.IMUL, R9, RDX, bimm), "imul r9,rdx,0x12", "4c 6b ca 12"),
 				//  Idiv
 				test(new Instruction(Opcode.IDIV, EAX), "idiv eax", "f7 f8"),
 				test(new Instruction(Opcode.IDIV, ESI), "idiv esi", "f7 fe"),
