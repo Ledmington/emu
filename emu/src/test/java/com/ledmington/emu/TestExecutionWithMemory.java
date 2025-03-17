@@ -92,7 +92,7 @@ final class TestExecutionWithMemory {
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,
 				IndirectOperand.builder()
-						.index(r1)
+						.base(r1)
 						.pointer(PointerSize.QWORD_PTR)
 						.build(),
 				r2));
@@ -131,7 +131,7 @@ final class TestExecutionWithMemory {
 				Opcode.MOV,
 				r1,
 				IndirectOperand.builder()
-						.index(r2)
+						.base(r2)
 						.pointer(PointerSize.QWORD_PTR)
 						.build()));
 		final long x = mem.read8(oldValue2);

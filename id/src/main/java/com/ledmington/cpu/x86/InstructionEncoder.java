@@ -79,6 +79,10 @@ public final class InstructionEncoder {
 	private static final Map<Opcode, Byte> SHIFT_REG_BYTES = Map.ofEntries(
 			Map.entry(Opcode.SHR, (byte) 0b101), Map.entry(Opcode.SAR, (byte) 0b111), Map.entry(Opcode.SHL, (byte)
 					0b100));
+	// The value for the Reg field for the IDIV/DIV/MUL instructions
+	private static final Map<Opcode, Byte> DIV_MUL_REG_BYTES = Map.ofEntries(
+			Map.entry(Opcode.IDIV, (byte) 0b111), Map.entry(Opcode.DIV, (byte) 0b110), Map.entry(Opcode.MUL, (byte)
+					0b100));
 
 	private InstructionEncoder() {}
 
@@ -211,7 +215,8 @@ public final class InstructionEncoder {
 							&& Registers.requiresExtension(io.getIndex()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
-			if (rex != DEFAULT_REX_PREFIX) {
+			if (rex != DEFAULT_REX_PREFIX
+					|| (inst.firstOperand() instanceof Register8 r && Register8.requiresRexPrefix(r))) {
 				wb.write(rex);
 			}
 		}
@@ -252,6 +257,10 @@ public final class InstructionEncoder {
 							? (byte) 0b101
 							: (byte) 0b100;
 				}
+			}
+			case IDIV, DIV, MUL -> {
+				wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xf6 : (byte) 0xf7);
+				reg = DIV_MUL_REG_BYTES.get(inst.opcode());
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
@@ -309,14 +318,19 @@ public final class InstructionEncoder {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
-					|| (inst.opcode() == Opcode.IMUL
+					|| ((inst.opcode() == Opcode.IMUL)
 							&& inst.secondOperand() instanceof IndirectOperand io
 							&& io.hasIndex()
 							&& Registers.requiresExtension(io.getIndex()))
 					|| (inst.opcode() == Opcode.MOV
 							&& inst.firstOperand() instanceof IndirectOperand io
 							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex()))) {
+							&& Registers.requiresExtension(io.getIndex()))
+					|| (inst.opcode() == Opcode.OR
+							&& inst.firstOperand() instanceof IndirectOperand io
+							&& io.hasIndex()
+							&& Registers.requiresExtension(io.getIndex())
+							&& !(inst.secondOperand() instanceof Register64))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if ((hasExtendedSecondRegister && !(inst.secondOperand() instanceof Register8))
@@ -327,7 +341,12 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.MOV
 							&& inst.firstOperand() instanceof IndirectOperand io
 							&& io.hasBase()
-							&& Registers.requiresExtension(io.getBase()))) {
+							&& Registers.requiresExtension(io.getBase()))
+					|| (inst.opcode() == Opcode.OR
+							&& inst.firstOperand() instanceof IndirectOperand io
+							&& io.hasBase()
+							&& Registers.requiresExtension(io.getBase())
+							&& !(inst.secondOperand() instanceof Register8))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
@@ -411,6 +430,13 @@ public final class InstructionEncoder {
 				}
 			}
 			case IMUL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xaf);
+			case OR -> {
+				if (inst.firstOperand() instanceof IndirectOperand) {
+					wb.write(BitUtils.asByte(((inst.secondOperand() instanceof Immediate) ? (byte) 0x80 : (byte) 0x08)
+							+ ((inst.secondOperand().bits() == 8) ? (byte) 0 : (byte) 1)));
+				}
+				reg = (byte) 001;
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -468,9 +494,10 @@ public final class InstructionEncoder {
 					&& Registers.requiresExtension(io.getBase())) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
-			if (inst.secondOperand() instanceof IndirectOperand io
-					&& io.hasIndex()
-					&& Registers.requiresExtension(io.getIndex())) {
+			if ((inst.secondOperand() instanceof IndirectOperand io
+							&& io.hasIndex()
+							&& Registers.requiresExtension(io.getIndex()))
+					|| (inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX) {

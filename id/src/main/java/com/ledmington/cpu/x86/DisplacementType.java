@@ -18,7 +18,7 @@
 package com.ledmington.cpu.x86;
 
 /** Type of displacement inside an IndirectOperand. Used for display and string serialization. */
-public enum DisplacementType {
+/* default */ enum DisplacementType {
 
 	/** 8 bits. */
 	BYTE,

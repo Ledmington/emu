@@ -22,15 +22,13 @@ import java.util.Objects;
 /** This class allows an easier construction of an IndirectOperand object. */
 public final class IndirectOperandBuilder {
 
-	private static final int DEFAULT_SCALE = 1;
-
-	private Register baseRegister;
-	private int scale = DEFAULT_SCALE;
-	private Register indexRegister;
-	private Long displacement;
-	private DisplacementType displacementType = DisplacementType.INT;
-	private PointerSize ptrSize;
-	private boolean alreadyBuilt;
+	private PointerSize ptrSize = null;
+	private Register baseRegister = null;
+	private Register indexRegister = null;
+	private Integer scale = null;
+	private Long displacement = null;
+	private DisplacementType displacementType = null;
+	private boolean alreadyBuilt = false;
 
 	/**
 	 * Creates an IndirectOperandBuilder with the default values. It is important to note that the default set of values
@@ -68,7 +66,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder scale(final int c) {
-		if (this.scale != DEFAULT_SCALE) {
+		if (this.scale != null) {
 			throw new IllegalArgumentException("Cannot define scale twice.");
 		}
 		if (c != 1 && c != 2 && c != 4 && c != 8) {
@@ -156,62 +154,9 @@ public final class IndirectOperandBuilder {
 			throw new IllegalArgumentException("Cannot build the same IndirectOperandBuilder twice.");
 		}
 
-		if (ptrSize == null) {
-			throw new IllegalArgumentException("Cannot build without explicit pointer size.");
-		}
-
 		alreadyBuilt = true;
 
-		if (baseRegister != null) {
-			if (indexRegister == null) {
-				throw new IllegalArgumentException("Cannot build an IndirectOperand with base=" + baseRegister
-						+ ", no index, scale=" + scale + ", "
-						+ (displacement == null ? "no displacement" : "displacement=" + displacement) + ".");
-			}
-
-			return new IndirectOperand(
-					baseRegister,
-					indexRegister,
-					scale,
-					displacement == null ? 0L : displacement,
-					displacementType,
-					ptrSize);
-		} else {
-			if (scale == DEFAULT_SCALE) {
-				if (indexRegister == null && displacement == null) {
-					throw new IllegalArgumentException(
-							"Cannot build an IndirectOperand with no base, no index, no scale, no displacement.");
-				}
-
-				if (indexRegister != null) {
-					return new IndirectOperand(
-							null,
-							indexRegister,
-							DEFAULT_SCALE,
-							displacement == null ? 0L : displacement,
-							displacementType,
-							ptrSize);
-				} else {
-					// [displacement]
-					return new IndirectOperand(null, null, DEFAULT_SCALE, displacement, displacementType, ptrSize);
-				}
-			} else {
-				if (indexRegister == null) {
-					throw new IllegalArgumentException(
-							"Cannot build an IndirectOperand with no base, no index, scale=" + scale + ", "
-									+ (displacement == null ? "no displacement" : "displacement=" + displacement)
-									+ ".");
-				}
-
-				return new IndirectOperand(
-						null,
-						indexRegister,
-						scale,
-						displacement == null ? 0L : displacement,
-						displacementType,
-						ptrSize);
-			}
-		}
+		return new IndirectOperand(ptrSize, baseRegister, indexRegister, scale, displacement, displacementType);
 	}
 
 	@Override

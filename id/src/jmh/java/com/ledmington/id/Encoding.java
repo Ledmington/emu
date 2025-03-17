@@ -54,11 +54,11 @@ public class Encoding {
 	private final Instruction inst = new Instruction(
 			Opcode.CMP,
 			IndirectOperand.builder()
+					.pointer(PointerSize.WORD_PTR)
 					.base(Register64.R9)
 					.index(Register64.RCX)
 					.scale(4)
 					.displacement(0x12345678)
-					.pointer(PointerSize.WORD_PTR)
 					.build(),
 			new Immediate((short) 0xbeef));
 

@@ -64,17 +64,23 @@ final class TestExecution {
 	private static final List<Arguments> r64r32 =
 			r64.stream().flatMap(a -> r32.stream().map(b -> Arguments.of(a, b))).toList();
 	private static final List<Supplier<IndirectOperandBuilder>> indirectOperands = List.of(
-			() -> IndirectOperand.builder().index(Register32.EAX),
-			() -> IndirectOperand.builder().index(Register64.RAX),
-			() -> IndirectOperand.builder().index(Register32.EAX).scale(2),
-			() -> IndirectOperand.builder().index(Register64.RAX).scale(2),
-			() -> IndirectOperand.builder().index(Register32.EAX).scale(4),
-			() -> IndirectOperand.builder().index(Register64.RAX).scale(4),
-			() -> IndirectOperand.builder().index(Register32.EAX).scale(8),
-			() -> IndirectOperand.builder().index(Register64.RAX).scale(8),
+			() -> IndirectOperand.builder().base(Register32.EAX),
+			() -> IndirectOperand.builder().base(Register64.RAX),
+			() -> IndirectOperand.builder().index(Register32.EAX).scale(2).displacement((byte) 0),
+			() -> IndirectOperand.builder().index(Register64.RAX).scale(2).displacement((byte) 0),
+			() -> IndirectOperand.builder().index(Register32.EAX).scale(4).displacement((byte) 0),
+			() -> IndirectOperand.builder().index(Register64.RAX).scale(4).displacement((byte) 0),
+			() -> IndirectOperand.builder().index(Register32.EAX).scale(8).displacement((byte) 0),
+			() -> IndirectOperand.builder().index(Register64.RAX).scale(8).displacement((byte) 0),
 			//
-			() -> IndirectOperand.builder().base(Register32.EBX).index(Register32.EAX),
-			() -> IndirectOperand.builder().base(Register64.RBX).index(Register64.RAX),
+			() -> IndirectOperand.builder()
+					.base(Register32.EBX)
+					.index(Register32.EAX)
+					.scale(1),
+			() -> IndirectOperand.builder()
+					.base(Register64.RBX)
+					.index(Register64.RAX)
+					.scale(1),
 			() -> IndirectOperand.builder()
 					.base(Register32.EBX)
 					.index(Register32.EAX)

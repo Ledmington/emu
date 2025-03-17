@@ -25,28 +25,26 @@ import com.ledmington.utils.HashUtils;
 /**
  * This class maps the following cases:
  *
- * <p>[index]
+ * <p>[base]
  *
- * <p>[index + displacement]
- *
- * <p>[index * scale]
- *
- * <p>[index * scale + displacement]
+ * <p>[base + displacement]
  *
  * <p>[displacement]
  *
  * <p>[base + index * scale]
  *
  * <p>[base + index * scale + displacement]
+ *
+ * <p>[index * scale + displacement]
  */
 public final class IndirectOperand implements Operand {
 
-	private final Register base;
-	private final int scale;
-	private final Register index;
-	private final long displacement;
-	private final DisplacementType displacementType;
 	private final PointerSize ptrSize;
+	private final Register base;
+	private final Register index;
+	private final Integer scale;
+	private final Long displacement;
+	private final DisplacementType displacementType;
 
 	/**
 	 * Returns a fresh instance of IndirectOperandBuilder.
@@ -57,19 +55,103 @@ public final class IndirectOperand implements Operand {
 		return new IndirectOperandBuilder();
 	}
 
+	private static boolean isValidRegister(final Register r) {
+		return switch (r) {
+			case Register32.EAX,
+					Register32.EBX,
+					Register32.ECX,
+					Register32.EDX,
+					Register32.ESI,
+					Register32.EDI,
+					Register32.EBP,
+					Register32.ESP,
+					Register32.R8D,
+					Register32.R9D,
+					Register32.R10D,
+					Register32.R11D,
+					Register32.R12D,
+					Register32.R13D,
+					Register32.R14D,
+					Register32.R15D,
+					// no EIP
+					Register64.RAX,
+					Register64.RBX,
+					Register64.RCX,
+					Register64.RDX,
+					Register64.RSI,
+					Register64.RDI,
+					Register64.RBP,
+					Register64.RSP,
+					Register64.R8,
+					Register64.R9,
+					Register64.R10,
+					Register64.R11,
+					Register64.R12,
+					Register64.R13,
+					Register64.R14,
+					Register64.R15,
+					Register64.RIP -> true;
+			default -> false;
+		};
+	}
+
 	/* default */ IndirectOperand(
+			final PointerSize ptrSize,
 			final Register base,
 			final Register index,
-			final int scale,
-			final long displacement,
-			final DisplacementType displacementType,
-			final PointerSize ptrSize) {
+			final Integer scale,
+			final Long displacement,
+			final DisplacementType displacementType) {
+		Objects.requireNonNull(ptrSize, "Cannot build an IndirectOperand without an explicit pointer size.");
+
+		final boolean hasBase = base != null;
+		final boolean hasIndex = index != null;
+		final boolean hasScale = scale != null;
+		final boolean hasDisplacement = displacement != null && displacementType != null;
+
+		// [base]
+		final boolean isB = hasBase && !hasIndex && !hasScale && !hasDisplacement;
+		// [base+displacement]
+		final boolean isBD = hasBase && !hasIndex && !hasScale && hasDisplacement;
+		// [displacement]
+		final boolean isD = !hasBase && !hasIndex && !hasScale && hasDisplacement;
+		// [base+index*scale]
+		final boolean isBIS = hasBase && hasIndex && hasScale && !hasDisplacement;
+		// [base+index*scale+displacement]
+		final boolean isBISD = hasBase && hasIndex && hasScale && hasDisplacement;
+		// [index*scale+displacement]
+		final boolean isISD = !hasBase && hasIndex && hasScale && hasDisplacement;
+
+		if (!isB && !isBD && !isD && !isBIS && !isBISD && !isISD) {
+			throw new IllegalArgumentException(String.format(
+					"Invalid argument combination: cannot build an IndirectOperand with %s, %s, %s and %s.",
+					(base == null) ? "no base" : "base=" + base,
+					(index == null) ? "no index" : "index=" + index,
+					(scale == null) ? "no scale" : "scale=" + scale,
+					(displacement == null) ? "no displacement" : "displacement=" + displacement));
+		}
+
+		if (!(base == null
+				|| isValidRegister(base)
+				|| (base instanceof SegmentRegister sr && isValidRegister(sr.register())))) {
+			throw new IllegalArgumentException(String.format("%s is not a valid base register.", base));
+		}
+		if (index != null && (!isValidRegister(index) || index == Register32.ESP || index == Register64.RSP)) {
+			throw new IllegalArgumentException(String.format("%s is not a valid index register.", index));
+		}
+		if (hasScale && scale != 1 && scale != 2 && scale != 4 && scale != 8) {
+			throw new IllegalArgumentException(String.format("%d is not a valid scale value.", scale));
+		}
+		if (!isB && !isBD && base == Register64.RIP) {
+			throw new IllegalArgumentException("rip can only be used as base register.");
+		}
+
+		this.ptrSize = ptrSize;
 		this.base = base;
-		this.scale = scale;
 		this.index = index;
+		this.scale = scale;
 		this.displacement = displacement;
-		this.displacementType = Objects.requireNonNull(displacementType);
-		this.ptrSize = Objects.requireNonNull(ptrSize);
+		this.displacementType = displacementType;
 	}
 
 	/**
@@ -104,6 +186,10 @@ public final class IndirectOperand implements Operand {
 		return index instanceof SegmentRegister;
 	}
 
+	public boolean hasScale() {
+		return scale != null;
+	}
+
 	/**
 	 * Returns the scale to multiply the index register.
 	 *
@@ -113,8 +199,8 @@ public final class IndirectOperand implements Operand {
 		return scale;
 	}
 
-	public boolean hasScale() {
-		return scale != 1;
+	public boolean hasDisplacement() {
+		return displacement != null;
 	}
 
 	/**
@@ -131,10 +217,6 @@ public final class IndirectOperand implements Operand {
 			case BYTE -> 8;
 			case INT -> 32;
 		};
-	}
-
-	public boolean hasDisplacement() {
-		return displacement != 0L;
 	}
 
 	@Override
@@ -181,27 +263,21 @@ public final class IndirectOperand implements Operand {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');
-		if (!hasBase() && !hasIndex()) {
-			addDisplacement(sb);
-		} else if (!hasBase()) {
+		if (hasBase()) {
+			sb.append(base.toIntelSyntax());
+		}
+		if (hasIndex()) {
+			if (hasBase()) {
+				sb.append('+');
+			}
 			sb.append(index.toIntelSyntax());
 			if (hasScale()) {
 				sb.append('*').append(scale);
 			}
-			if (hasDisplacement() || hasScale()) {
-				addDisplacementSign(sb);
-				addDisplacement(sb);
-			}
-		} else if (hasIndex()) {
-			sb.append(base.toIntelSyntax())
-					.append('+')
-					.append(index.toIntelSyntax())
-					.append('*')
-					.append(scale);
+		}
+		if (hasDisplacement()) {
 			addDisplacementSign(sb);
 			addDisplacement(sb);
-		} else {
-			throw new IllegalStateException("Unreachable.");
 		}
 		sb.append(']');
 		return sb.toString();
@@ -227,12 +303,12 @@ public final class IndirectOperand implements Operand {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + (base == null ? 0 : base.hashCode());
-		h = 31 * h + scale;
-		h = 31 * h + (index == null ? 0 : index.hashCode());
-		h = 31 * h + HashUtils.hash(displacement);
-		h = 31 * h + displacementType.hashCode();
 		h = 31 * h + ptrSize.hashCode();
+		h = 31 * h + (base == null ? 0 : base.hashCode());
+		h = 31 * h + (index == null ? 0 : index.hashCode());
+		h = 31 * h + (scale == null ? 0 : scale.hashCode());
+		h = 31 * h + (displacement == null ? 0 : HashUtils.hash(displacement));
+		h = 31 * h + (displacementType == null ? 0 : displacementType.hashCode());
 		return h;
 	}
 
@@ -248,9 +324,9 @@ public final class IndirectOperand implements Operand {
 			return false;
 		}
 		return Objects.equals(this.base, io.base)
-				&& this.scale == io.scale
+				&& Objects.equals(this.scale, io.scale)
 				&& Objects.equals(this.index, io.index)
-				&& this.displacement == io.displacement
+				&& Objects.equals(this.displacement, io.displacement)
 				&& this.displacementType.equals(io.displacementType)
 				&& this.ptrSize.equals(io.ptrSize);
 	}

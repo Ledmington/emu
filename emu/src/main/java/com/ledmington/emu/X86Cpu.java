@@ -448,8 +448,8 @@ public class X86Cpu implements X86Emulator {
 										? rf.get((Register64) io.getIndex())
 										: rf.get((Register32) io.getIndex())
 								: 0L)
-						* io.getScale()
-				+ io.getDisplacement();
+						* (io.hasScale() ? io.getScale() : 1)
+				+ (io.hasDisplacement() ? io.getDisplacement() : 0L);
 	}
 
 	@Override
