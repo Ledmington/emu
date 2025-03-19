@@ -202,16 +202,16 @@ public final class InstructionDecoder {
 
 		if (fromStringToRegister.containsKey(indirectOperandString)) {
 			if (segReg != null) {
-				iob.index(new SegmentRegister(segReg, fromStringToRegister.get(indirectOperandString)));
+				iob.base(new SegmentRegister(segReg, fromStringToRegister.get(indirectOperandString)));
 			} else {
-				iob.index(fromStringToRegister.get(indirectOperandString));
+				iob.base(fromStringToRegister.get(indirectOperandString));
 			}
 		} else {
 			final boolean hasScale = indirectOperandString.contains("*");
 			final String[] splitted = indirectOperandString.split("[+-]");
 			if (hasScale) {
 				if (splitted[1].contains("*")) {
-					iob.base(fromStringToRegister.get(splitted[0].strip()));
+					iob.index(fromStringToRegister.get(splitted[0].strip()));
 					if (segReg != null) {
 						iob.index(new SegmentRegister(
 								segReg,
@@ -1772,14 +1772,14 @@ public final class InstructionDecoder {
 			}
 			case MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE -> {
 				final Operand op1 = IndirectOperand.builder()
-						.index(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.pointer(PointerSize.BYTE_PTR)
+						.base(new SegmentRegister(
+								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.build();
 				final Operand op2 = IndirectOperand.builder()
-						.index(new SegmentRegister(
-								Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
 						.pointer(PointerSize.BYTE_PTR)
+						.base(new SegmentRegister(
+								Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.MOVS, op1, op2);
 			}
@@ -1787,31 +1787,31 @@ public final class InstructionDecoder {
 				final PointerSize size =
 						pref.hasOperandSizeOverridePrefix() ? PointerSize.WORD_PTR : PointerSize.DWORD_PTR;
 				final Operand op1 = IndirectOperand.builder()
-						.index(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.pointer(size)
+						.base(new SegmentRegister(
+								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.build();
 				final Operand op2 = IndirectOperand.builder()
-						.index(new SegmentRegister(
-								Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
 						.pointer(size)
+						.base(new SegmentRegister(
+								Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.MOVS, op1, op2);
 			}
 			case STOS_R8_OPCODE -> {
 				final Operand op1 = IndirectOperand.builder()
-						.index(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.pointer(PointerSize.BYTE_PTR)
+						.base(new SegmentRegister(
+								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.STOS, op1, Register8.AL);
 			}
 			case STOS_R32_OPCODE -> {
 				final Operand op2 = pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX;
 				final Operand op1 = IndirectOperand.builder()
-						.index(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.pointer(PointerSize.fromSize(op2.bits()))
+						.base(new SegmentRegister(
+								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.STOS, op1, op2);
 			}
@@ -2129,7 +2129,7 @@ public final class InstructionDecoder {
 		boolean hasAddressSizeOverridePrefix = false;
 
 		// FIXME: is there a better way to do this?
-		// (technically there is no limit to the number of prefixes an instruction can have)
+		// (technically there is no limit to the number of prefixes an x86 instruction can have)
 		while (true) {
 			final byte x = b.read1();
 
@@ -2142,6 +2142,7 @@ public final class InstructionDecoder {
 			} else if (isAddressSizeOverridePrefix(x)) {
 				hasAddressSizeOverridePrefix = true;
 			} else {
+				// This byte is not a prefix, go back 1 byte and start parsing
 				b.setPosition(b.getPosition() - 1);
 				break;
 			}
@@ -2246,6 +2247,14 @@ public final class InstructionDecoder {
 		};
 	}
 
+	private static boolean isBP(final Register r) {
+		return r == Register32.EBP || r == Register64.RBP;
+	}
+
+	private static boolean isSP(final Register r) {
+		return r == Register32.ESP || r == Register64.RSP;
+	}
+
 	private static IndirectOperandBuilder parseIndirectOperand(
 			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
 		Operand operand2 = Registers.fromCode(
@@ -2263,11 +2272,11 @@ public final class InstructionDecoder {
 			final Register index = Registers.fromCode(
 					sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.hasSIBIndexExtension(), false);
 			// an indirect operand of [xxx+rsp+...] is not allowed
-			if (index.toIntelSyntax().endsWith("sp")) {
-				operand2 = base;
+			if (isSP(index)) {
+				operand2 = index;
 			} else {
-				if (!(modrm.mod() == (byte) 0x00 && base.toIntelSyntax().endsWith("bp"))) {
-					iob.base(base);
+				if (!(modrm.mod() == (byte) 0x00 && isBP(base))) {
+					iob.index(index);
 				}
 				operand2 = index;
 				iob.scale(1 << BitUtils.asInt(sib.scale()));
@@ -2275,7 +2284,7 @@ public final class InstructionDecoder {
 		} else {
 			// SIB not needed
 			sib = new SIB((byte) 0x00);
-			if (modrm.mod() == (byte) 0x00 && operand2.toIntelSyntax().endsWith("bp")) {
+			if (modrm.mod() == (byte) 0x00 && isBP((Register) operand2)) {
 				operand2 = hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP;
 			}
 		}
@@ -2283,7 +2292,7 @@ public final class InstructionDecoder {
 		if (pref.p2().isPresent() && pref.p2().orElseThrow() == (byte) 0x2e) {
 			operand2 = new SegmentRegister(Register16.CS, (Register) operand2);
 		}
-		iob.index((Register) operand2);
+		iob.base((Register) operand2);
 
 		if (isIndirectOperandNeeded(modrm)) {
 			// indirect operand needed

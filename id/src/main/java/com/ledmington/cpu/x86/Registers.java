@@ -30,7 +30,7 @@ public final class Registers {
 	 * @return xxxxxxxx OR 0000b000.
 	 */
 	public static byte combine(final boolean b, final byte x) {
-		return BitUtils.asByte(x | (b ? ((byte) 0b00001000) : 0));
+		return b ? BitUtils.or(x, (byte) 0b00001000) : x;
 	}
 
 	/**

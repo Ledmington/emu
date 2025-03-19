@@ -35,8 +35,16 @@ public final class SegmentRegister implements Register {
 	 * @param register The general-purpose register.
 	 */
 	public SegmentRegister(final Register16 segment, final Register register) {
-		this.seg = Objects.requireNonNull(segment);
-		this.reg = Objects.requireNonNull(register);
+		Objects.requireNonNull(segment, "Segment cannot be null.");
+		Objects.requireNonNull(register, "Register cannot be null.");
+
+		if (!(register instanceof Register32) && !(register instanceof Register64)) {
+			throw new IllegalArgumentException(
+					String.format("'%s' is not a valid register: must be 32-bit or 64-bit.", register));
+		}
+
+		this.seg = segment;
+		this.reg = register;
 	}
 
 	/**

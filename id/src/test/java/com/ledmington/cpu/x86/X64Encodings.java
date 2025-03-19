@@ -6884,7 +6884,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.pointer(WORD_PTR)
 										.index(RAX)
 										.scale(2)
-										.displacement((byte) 0)
+										.displacement(0)
 										.build()),
 						"dec WORD PTR [rax*2+0x0]",
 						"66 ff 0c 45 00 00 00 00"),

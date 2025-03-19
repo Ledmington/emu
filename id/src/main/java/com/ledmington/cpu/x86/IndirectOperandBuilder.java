@@ -47,8 +47,9 @@ public final class IndirectOperandBuilder {
 			throw new IllegalArgumentException("Cannot define base register twice.");
 		}
 		Objects.requireNonNull(r);
-		if (r.bits() != 32 && r.bits() != 64) {
-			throw new IllegalArgumentException(r + " is an invalid base register.");
+		if (!(r instanceof Register32) && !(r instanceof Register64) && !(r instanceof SegmentRegister)) {
+			throw new IllegalArgumentException(
+					String.format("'%s' is not a valid base register: must be 32-bit, 64-bit or a segment."));
 		}
 		if (indexRegister != null && r.bits() != indexRegister.bits()) {
 			throw new IllegalArgumentException(String.format(
@@ -87,8 +88,9 @@ public final class IndirectOperandBuilder {
 			throw new IllegalArgumentException("Cannot define index register twice.");
 		}
 		Objects.requireNonNull(r);
-		if (r.bits() != 32 && r.bits() != 64) {
-			throw new IllegalArgumentException(r + " is an invalid index register.");
+		if (!(r instanceof Register32) && !(r instanceof Register64)) {
+			throw new IllegalArgumentException(
+					String.format("'%s' is not a valid index register: must be 32-bit or 64-bit."));
 		}
 		if (baseRegister != null && r.bits() != baseRegister.bits()) {
 			throw new IllegalArgumentException(String.format(

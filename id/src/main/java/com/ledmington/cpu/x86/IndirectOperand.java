@@ -109,6 +109,10 @@ public final class IndirectOperand implements Operand {
 		final boolean hasScale = scale != null;
 		final boolean hasDisplacement = displacement != null && displacementType != null;
 
+		if (displacement != null && displacementType == null) {
+			throw new IllegalArgumentException("Cannot have displacement with no type.");
+		}
+
 		// [base]
 		final boolean isB = hasBase && !hasIndex && !hasScale && !hasDisplacement;
 		// [base+displacement]
@@ -175,7 +179,8 @@ public final class IndirectOperand implements Operand {
 	 */
 	public Register getIndex() {
 		Objects.requireNonNull(this.index, "No index register.");
-		return (index instanceof SegmentRegister sr) ? sr.register() : index;
+		// return (index instanceof SegmentRegister sr) ? sr.register() : index;
+		return index;
 	}
 
 	public boolean hasIndex() {
@@ -323,11 +328,11 @@ public final class IndirectOperand implements Operand {
 		if (!(other instanceof IndirectOperand io)) {
 			return false;
 		}
-		return Objects.equals(this.base, io.base)
+		return this.ptrSize.equals(io.ptrSize)
+				&& Objects.equals(this.base, io.base)
 				&& Objects.equals(this.scale, io.scale)
 				&& Objects.equals(this.index, io.index)
 				&& Objects.equals(this.displacement, io.displacement)
-				&& this.displacementType.equals(io.displacementType)
-				&& this.ptrSize.equals(io.ptrSize);
+				&& Objects.equals(this.displacementType, io.displacementType);
 	}
 }

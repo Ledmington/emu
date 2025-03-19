@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
@@ -35,15 +36,70 @@ final class TestIndirectOperand {
 
 	private static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(42);
-	private static final Register64[] r64 = Register64.values();
-	private static final Register32[] r32 = Register32.values();
+	private static final Register64[] r64WithoutRIP = Arrays.stream(Register64.values())
+			.filter(x -> x != Register64.RIP)
+			.toList()
+			.toArray(new Register64[0]);
+	private static final Register64[] r64WithoutRSP = Arrays.stream(Register64.values())
+			.filter(x -> x != Register64.RSP)
+			.toList()
+			.toArray(new Register64[0]);
+	private static final Register64[] r64WithoutRSPAndRIP = Arrays.stream(Register64.values())
+			.filter(x -> x != Register64.RSP && x != Register64.RIP)
+			.toList()
+			.toArray(new Register64[0]);
+	private static final Register32[] r32 = Arrays.stream(Register32.values())
+			// EIP is never valid
+			.filter(x -> x != Register32.EIP)
+			.toList()
+			.toArray(new Register32[0]);
+	private static final Register32[] r32WithoutESP = Arrays.stream(Register32.values())
+			// EIP is never valid
+			.filter(x -> x != Register32.EIP && x != Register32.ESP)
+			.toList()
+			.toArray(new Register32[0]);
+
+	private static <X> X getRandomFrom(final X[] v) {
+		return v[rng.nextInt(0, v.length)];
+	}
 
 	private static Register32 getRandomRegister32() {
-		return r32[rng.nextInt(0, r32.length)];
+		return getRandomFrom(r32);
 	}
 
 	private static Register64 getRandomRegister64() {
-		return r64[rng.nextInt(0, r64.length)];
+		return getRandomFrom(r64WithoutRIP);
+	}
+
+	private static Register64 getRandomBaseOnlyRegister64() {
+		// RIP can be used only in [base] and [base+displacement] cases
+		return getRandomFrom(r64WithoutRSP);
+	}
+
+	private static Register32 getRandomIndexRegister32() {
+		return getRandomFrom(r32WithoutESP);
+	}
+
+	private static Register64 getRandomIndexRegister64() {
+		return getRandomFrom(r64WithoutRSPAndRIP);
+	}
+
+	private static void addDisplacement(final Number disp, final IndirectOperandBuilder iob, final StringBuilder sb) {
+		if (disp instanceof Byte b) {
+			iob.displacement(b);
+			if (b < (byte) 0) {
+				sb.append(String.format("-0x%x", -b));
+			} else {
+				sb.append(String.format("+0x%x", b));
+			}
+		} else {
+			iob.displacement(disp.intValue());
+			if (disp.intValue() < 0) {
+				sb.append(String.format("-0x%x", -disp.intValue()));
+			} else {
+				sb.append(String.format("+0x%x", disp.intValue()));
+			}
+		}
 	}
 
 	// This code generates all relevant possible combinations of indirect operands, for testing.
@@ -51,103 +107,48 @@ final class TestIndirectOperand {
 		final PointerSize[] ptr = PointerSize.values();
 		final int[] constant = new int[] {1, 2, 4, 8};
 		final Number[] displacements =
-				new Number[] {0, (byte) 0x02, (byte) 0x12, (byte) 0x82, 0x123, 0x12345678, 0x82345678};
+				new Number[] {0, (byte) 0, (byte) 0x02, (byte) 0x12, (byte) 0x82, 0x123, 0x12345678, 0x82345678};
 
 		final List<Arguments> args = new ArrayList<>();
 
-		// [index]
+		// [base]
 		for (final PointerSize ps : ptr) {
-			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomBaseOnlyRegister64()}) {
 				args.add(Arguments.of(
-						IndirectOperand.builder().index(r).pointer(ps).build(),
+						IndirectOperand.builder().pointer(ps).base(r).build(),
 						ps.name().replace('_', ' ') + " [" + r.toIntelSyntax() + "]"));
 			}
 		}
 
-		// [index + displacement]
+		// [base + displacement]
 		for (final PointerSize ps : ptr) {
-			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+			for (final Register r : new Register[] {getRandomRegister32(), getRandomBaseOnlyRegister64()}) {
 				for (final Number disp : displacements) {
 					final IndirectOperandBuilder iob =
-							IndirectOperand.builder().index(r).pointer(ps);
+							IndirectOperand.builder().pointer(ps).base(r);
 					final StringBuilder sb = new StringBuilder();
 					sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
-
-					if (disp.intValue() != 0) {
-						if (disp instanceof Byte b) {
-							iob.displacement(b);
-							if (b < (byte) 0) {
-								sb.append(String.format("-0x%x", -b));
-							} else {
-								sb.append(String.format("+0x%x", b));
-							}
-						} else {
-							iob.displacement(disp.intValue());
-							if (disp.intValue() < 0) {
-								sb.append(String.format("-0x%x", -disp.intValue()));
-							} else {
-								sb.append(String.format("+0x%x", disp.intValue()));
-							}
-						}
-					}
+					addDisplacement(disp, iob, sb);
 					sb.append(']');
 					args.add(Arguments.of(iob.build(), sb.toString()));
 				}
 			}
 		}
 
-		// [index*scale]
-		for (final PointerSize ps : ptr) {
-			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
-				for (final int c : constant) {
-					final StringBuilder sb = new StringBuilder();
-					sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
-					if (c != 1) {
-						sb.append('*').append(c).append("+0x0");
-					}
-					sb.append(']');
-					args.add(Arguments.of(
-							IndirectOperand.builder()
-									.index(r)
-									.scale(c)
-									.pointer(ps)
-									.build(),
-							sb.toString()));
-				}
-			}
-		}
-
 		// [index*scale + displacement]
 		for (final PointerSize ps : ptr) {
-			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+			for (final Register r : new Register[] {getRandomIndexRegister32(), getRandomIndexRegister64()}) {
 				for (final int c : constant) {
 					for (final Number disp : displacements) {
 						final IndirectOperandBuilder iob =
-								IndirectOperand.builder().index(r).pointer(ps).scale(c);
+								IndirectOperand.builder().pointer(ps).index(r).scale(c);
 						final StringBuilder sb = new StringBuilder();
-						sb.append(ps.name().replace('_', ' ')).append(" [").append(r.toIntelSyntax());
-
-						if (c != 1) {
-							sb.append('*').append(c);
-						}
-
-						if (disp.intValue() != 0 || c != 1) {
-							if (disp instanceof Byte b) {
-								iob.displacement(b);
-								if (b < (byte) 0) {
-									sb.append(String.format("-0x%x", -b));
-								} else {
-									sb.append(String.format("+0x%x", b));
-								}
-							} else {
-								iob.displacement(disp.intValue());
-								if (disp.intValue() < 0) {
-									sb.append(String.format("-0x%x", -disp.intValue()));
-								} else {
-									sb.append(String.format("+0x%x", disp.intValue()));
-								}
-							}
-						}
+						sb.append(ps.name().replace('_', ' '))
+								.append(" [")
+								.append(r.toIntelSyntax())
+								.append('*')
+								.append(c);
+						addDisplacement(disp, iob, sb);
 						sb.append(']');
 						args.add(Arguments.of(iob.build(), sb.toString()));
 					}
@@ -161,29 +162,50 @@ final class TestIndirectOperand {
 				final IndirectOperandBuilder iob = IndirectOperand.builder().pointer(ps);
 				final StringBuilder sb = new StringBuilder();
 				sb.append(ps.name().replace('_', ' ')).append(" [");
-				if (disp instanceof Byte b) {
-					iob.displacement(b);
-					if (b < (byte) 0) {
-						sb.append(String.format("0x%x", -b));
-					} else {
-						sb.append(String.format("0x%x", b));
-					}
-				} else {
-					iob.displacement(disp.intValue());
-					if (disp.intValue() < 0) {
-						sb.append(String.format("0x%x", -disp.intValue()));
-					} else {
-						sb.append(String.format("0x%x", disp.intValue()));
-					}
-				}
+				addDisplacement(disp, iob, sb);
 				sb.append(']');
 				args.add(Arguments.of(iob.build(), sb.toString()));
+			}
+		}
+		System.out.println("here");
+
+		// [base + index*scale]
+		for (final PointerSize ps : ptr) {
+			for (final Register r : new Register[] {getRandomIndexRegister32(), getRandomIndexRegister64()}) {
+				for (final int c : constant) {
+					for (final Register base : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+						if (r.bits() != base.bits()) {
+							continue;
+						}
+
+						final IndirectOperandBuilder iob = IndirectOperand.builder()
+								.pointer(ps)
+								.base(base)
+								.index(r)
+								.scale(c);
+						System.out.println(iob);
+
+						final StringBuilder sb = new StringBuilder();
+
+						sb.append(ps.name().replace('_', ' '))
+								.append(" [")
+								.append(base.toIntelSyntax())
+								.append('+')
+								.append(r.toIntelSyntax())
+								.append('*')
+								.append(c);
+
+						sb.append(']');
+
+						args.add(Arguments.of(iob.build(), sb.toString()));
+					}
+				}
 			}
 		}
 
 		// [base + index*scale + displacement]
 		for (final PointerSize ps : ptr) {
-			for (final Register r : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
+			for (final Register r : new Register[] {getRandomIndexRegister32(), getRandomIndexRegister64()}) {
 				for (final int c : constant) {
 					for (final Register base : new Register[] {getRandomRegister32(), getRandomRegister64()}) {
 						if (r.bits() != base.bits()) {
@@ -192,10 +214,10 @@ final class TestIndirectOperand {
 
 						for (final Number disp : displacements) {
 							final IndirectOperandBuilder iob = IndirectOperand.builder()
+									.pointer(ps)
 									.base(base)
 									.index(r)
-									.scale(c)
-									.pointer(ps);
+									.scale(c);
 
 							final StringBuilder sb = new StringBuilder();
 
@@ -207,21 +229,7 @@ final class TestIndirectOperand {
 									.append('*')
 									.append(c);
 
-							if (disp instanceof Byte b) {
-								iob.displacement(b);
-								if (b < (byte) 0) {
-									sb.append(String.format("-0x%x", -b));
-								} else {
-									sb.append(String.format("+0x%x", b));
-								}
-							} else {
-								iob.displacement(disp.intValue());
-								if (disp.intValue() < 0) {
-									sb.append(String.format("-0x%x", -disp.intValue()));
-								} else {
-									sb.append(String.format("+0x%x", disp.intValue()));
-								}
-							}
+							addDisplacement(disp, iob, sb);
 
 							sb.append(']');
 
@@ -231,6 +239,7 @@ final class TestIndirectOperand {
 				}
 			}
 		}
+
 		return args.stream();
 	}
 

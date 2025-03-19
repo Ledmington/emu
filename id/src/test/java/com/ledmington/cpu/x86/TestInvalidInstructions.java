@@ -35,11 +35,11 @@ final class TestInvalidInstructions {
 				// MOV with 2 indirect operands
 				Arguments.of(Opcode.MOV, new Operand[] {
 					IndirectOperand.builder()
-							.index(Register64.RAX)
+							.base(Register64.RAX)
 							.pointer(PointerSize.QWORD_PTR)
 							.build(),
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.QWORD_PTR)
 							.build()
 				}),
@@ -67,41 +67,41 @@ final class TestInvalidInstructions {
 				Arguments.of(Opcode.MOV, new Operand[] {
 					Register64.RAX,
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.DWORD_PTR)
 							.build()
 				}),
 				Arguments.of(Opcode.MOV, new Operand[] {
 					Register64.RAX,
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.WORD_PTR)
 							.build()
 				}),
 				Arguments.of(Opcode.MOV, new Operand[] {
 					Register64.RAX,
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.BYTE_PTR)
 							.build()
 				}),
 				Arguments.of(Opcode.MOV, new Operand[] {
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.DWORD_PTR)
 							.build(),
 					Register64.RAX
 				}),
 				Arguments.of(Opcode.MOV, new Operand[] {
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.WORD_PTR)
 							.build(),
 					Register64.RAX
 				}),
 				Arguments.of(Opcode.MOV, new Operand[] {
 					IndirectOperand.builder()
-							.index(Register64.RBX)
+							.base(Register64.RBX)
 							.pointer(PointerSize.BYTE_PTR)
 							.build(),
 					Register64.RAX
@@ -129,7 +129,7 @@ final class TestInvalidInstructions {
 				Arguments.of(Opcode.MOVSXD, new Operand[] {new Immediate(0L), Register32.EAX}),
 				Arguments.of(Opcode.MOVSXD, new Operand[] {
 					IndirectOperand.builder()
-							.index(Register64.RAX)
+							.base(Register64.RAX)
 							.pointer(PointerSize.QWORD_PTR)
 							.build(),
 					Register32.EAX
@@ -146,7 +146,7 @@ final class TestInvalidInstructions {
 				Arguments.of(Opcode.MOVSXD, new Operand[] {
 					Register64.RAX,
 					IndirectOperand.builder()
-							.index(Register64.RAX)
+							.base(Register64.RAX)
 							.pointer(PointerSize.QWORD_PTR)
 							.build()
 				}),
@@ -155,7 +155,7 @@ final class TestInvalidInstructions {
 				Arguments.of(Opcode.NOP, new Operand[] {Register8.AH}),
 				Arguments.of(Opcode.NOP, new Operand[] {
 					IndirectOperand.builder()
-							.index(Register64.RAX)
+							.base(Register64.RAX)
 							.pointer(PointerSize.BYTE_PTR)
 							.build()
 				}),
@@ -175,7 +175,7 @@ final class TestInvalidInstructions {
 				Arguments.of(Opcode.LEA, new Operand[] {
 					Register8.AH,
 					IndirectOperand.builder()
-							.index(Register64.RAX)
+							.base(Register64.RAX)
 							.pointer(PointerSize.QWORD_PTR)
 							.build()
 				}));
