@@ -17,6 +17,12 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.utils.BitUtils;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
@@ -112,12 +118,6 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM7;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM8;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM9;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
-
-import com.ledmington.utils.BitUtils;
-
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 
 	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {}
@@ -136,7 +136,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 		return new X64EncodingTestCase(instruction, intelSyntax, code);
 	}
 
-	private static List<X64EncodingTestCase> nopTestCases() {
+	private static List<X64EncodingTestCase> nop() {
 		return List.of(
 				test(new Instruction(Opcode.NOP), "nop", "90"),
 				//
@@ -248,7 +248,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"2e 66 42 0f 1f 84 a3 78 56 34 12"));
 	}
 
-	private static List<X64EncodingTestCase> movTestCases() {
+	private static List<X64EncodingTestCase> mov() {
 		return List.of(
 				//  Mov
 				test(new Instruction(Opcode.MOV, R10D, R10D), "mov r10d,r10d", "45 89 d2"),
@@ -584,7 +584,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"4a 8b b4 8d 78 56 34 12"));
 	}
 
-	private static List<X64EncodingTestCase> movsxdTestCases() {
+	private static List<X64EncodingTestCase> movsxd() {
 		return List.of(
 				test(new Instruction(Opcode.MOVSXD, R10, EAX), "movsxd r10,eax", "4c 63 d0"),
 				test(new Instruction(Opcode.MOVSXD, R10, EBP), "movsxd r10,ebp", "4c 63 d5"),
@@ -3419,7 +3419,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"4b 63 94 bb 78 56 34 12"));
 	}
 
-	private static List<X64EncodingTestCase> cmpTestCases() {
+	private static List<X64EncodingTestCase> cmp() {
 		return List.of(
 				test(
 						new Instruction(
@@ -3779,7 +3779,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.CMP, SP, R13W), "cmp sp,r13w", "66 44 39 ec"));
 	}
 
-	private static List<X64EncodingTestCase> callTestCases() {
+	private static List<X64EncodingTestCase> call() {
 		return List.of(
 				//  The output of these instructions is different from what you can see from other tools such as objdump
 				//  because here we keep the addition to the instruction pointer implicit.
@@ -3921,7 +3921,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 ff 16"));
 	}
 
-	private static List<X64EncodingTestCase> jumpTestCases() {
+	private static List<X64EncodingTestCase> jump() {
 		return List.of(
 				//  The output of these instructions is different from what you can see from other tools such as objdump
 				//  because here we keep the addition to the instruction pointer implicit.
@@ -4103,7 +4103,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 ff a4 88 78 56 34 12"));
 	}
 
-	private static List<X64EncodingTestCase> cmoveTestCases() {
+	private static List<X64EncodingTestCase> cmove() {
 		return List.of(
 				//  Cmove
 				test(
@@ -4299,7 +4299,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.CMOVLE, RDX, R15), "cmovle rdx,r15", "49 0f 4e d7"));
 	}
 
-	private static List<X64EncodingTestCase> leaTestCases() {
+	private static List<X64EncodingTestCase> lea() {
 		return List.of(
 				test(
 						new Instruction(
@@ -4499,7 +4499,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"4a 8d b4 87 78 56 34 12"));
 	}
 
-	private static List<X64EncodingTestCase> movzxTestCases() {
+	private static List<X64EncodingTestCase> movzx() {
 		return List.of(
 				test(new Instruction(Opcode.MOVZX, ESI, BL), "movzx esi,bl", "0f b6 f3"),
 				test(
@@ -4552,7 +4552,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.MOVZX, RSI, DI), "movzx rsi,di", "48 0f b7 f7"));
 	}
 
-	private static List<X64EncodingTestCase> movsxTestCases() {
+	private static List<X64EncodingTestCase> movsx() {
 		return List.of(
 				test(
 						new Instruction(
@@ -4611,7 +4611,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.MOVSX, RSI, DI), "movsx rsi,di", "48 0f bf f7"));
 	}
 
-	private static List<X64EncodingTestCase> pushTestCases() {
+	private static List<X64EncodingTestCase> push() {
 		return List.of(
 				test(new Instruction(Opcode.PUSH, iimm), "push 0x12345678", "68 78 56 34 12"),
 				test(new Instruction(Opcode.PUSH, AX), "push ax", "66 50"),
@@ -4692,7 +4692,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"ff 32"));
 	}
 
-	private static List<X64EncodingTestCase> popTestCases() {
+	private static List<X64EncodingTestCase> pop() {
 		return List.of(
 				test(new Instruction(Opcode.POP, AX), "pop ax", "66 58"),
 				test(new Instruction(Opcode.POP, BP), "pop bp", "66 5d"),
@@ -8038,18 +8038,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					// TODO: uncomment one at a time
-					nopTestCases()
-					// movTestCases()
-					// movsxdTestCases(),
-					// cmpTestCases(),
-					// callTestCases(),
-					// jumpTestCases(),
-					// cmoveTestCases(),
-					// leaTestCases(),
-					// movzxTestCases(),
-					// movsxTestCases(),
-					// pushTestCases(),
-					// popTestCases()
+					nop(), mov()
+					// movsxd(),
+					// cmp(),
+					// call(),
+					// jump(),
+					// cmove(),
+					// lea(),
+					// movzx(),
+					// movsx(),
+					// push(),
+					// pop(),
 					// others()
 					)
 			.flatMap(Collection::stream)
