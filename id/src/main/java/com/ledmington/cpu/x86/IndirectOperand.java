@@ -165,11 +165,15 @@ public final class IndirectOperand implements Operand {
 	 */
 	public Register getBase() {
 		Objects.requireNonNull(this.base, "No base register.");
-		return base;
+		return (base instanceof SegmentRegister sr) ? sr.register() : base;
 	}
 
 	public boolean hasBase() {
 		return base != null;
+	}
+
+	public boolean hasSegment() {
+		return hasBase() && base instanceof SegmentRegister;
 	}
 
 	/**
@@ -179,16 +183,11 @@ public final class IndirectOperand implements Operand {
 	 */
 	public Register getIndex() {
 		Objects.requireNonNull(this.index, "No index register.");
-		// return (index instanceof SegmentRegister sr) ? sr.register() : index;
 		return index;
 	}
 
 	public boolean hasIndex() {
 		return index != null;
-	}
-
-	public boolean hasSegment() {
-		return index instanceof SegmentRegister;
 	}
 
 	public boolean hasScale() {
@@ -264,7 +263,7 @@ public final class IndirectOperand implements Operand {
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
 		}
-		if (index instanceof SegmentRegister sr) {
+		if (base instanceof SegmentRegister sr) {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');

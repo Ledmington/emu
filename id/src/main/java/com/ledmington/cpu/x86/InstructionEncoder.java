@@ -186,7 +186,7 @@ public final class InstructionEncoder {
 		if (inst.firstOperand() instanceof IndirectOperand io && io.hasSegment()) {
 			wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
 		}
-		if (inst.firstOperand() instanceof IndirectOperand io && io.hasIndex() && io.getIndex() instanceof Register32) {
+		if (inst.firstOperand() instanceof IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.firstOperand().bits() == 16
@@ -434,7 +434,7 @@ public final class InstructionEncoder {
 					wb.write(BitUtils.asByte(((inst.secondOperand() instanceof Immediate) ? (byte) 0x80 : (byte) 0x08)
 							+ ((inst.secondOperand().bits() == 8) ? (byte) 0 : (byte) 1)));
 				}
-				reg = (byte) 001;
+				reg = (byte) 0b001;
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}

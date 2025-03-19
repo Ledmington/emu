@@ -47,7 +47,8 @@ public final class InstructionDecoder {
 
 	private static final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
-	private static final byte MODRM_MOD_NO_DISP = (byte) 0b00000011;
+	private static final byte MODRM_MOD_NO_DISP = (byte) 0b11;
+	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
 	private static final Map<String, Opcode> fromStringToOpcode =
 			Arrays.stream(Opcode.values()).collect(Collectors.toUnmodifiableMap(Opcode::mnemonic, x -> x));
 	private static final Map<String, Register> fromStringToRegister = Stream.of(
@@ -211,13 +212,11 @@ public final class InstructionDecoder {
 			final String[] splitted = indirectOperandString.split("[+-]");
 			if (hasScale) {
 				if (splitted[1].contains("*")) {
-					iob.index(fromStringToRegister.get(splitted[0].strip()));
+					iob.index(fromStringToRegister.get(splitted[1].strip().split("\\*")[0]));
 					if (segReg != null) {
-						iob.index(new SegmentRegister(
-								segReg,
-								fromStringToRegister.get(splitted[1].strip().split("\\*")[0])));
+						iob.base(new SegmentRegister(segReg, fromStringToRegister.get(splitted[0].strip())));
 					} else {
-						iob.index(fromStringToRegister.get(splitted[1].strip().split("\\*")[0]));
+						iob.base(fromStringToRegister.get(splitted[0].strip()));
 					}
 					iob.scale(
 							switch (splitted[1].strip().split("\\*")[1]) {
@@ -1491,7 +1490,7 @@ public final class InstructionDecoder {
 		final byte ADD_INDIRECT8_R8_OPCODE = (byte) 0x00;
 		final byte ADD_INDIRECT32_R32_OPCODE = (byte) 0x01;
 		final byte ADD_R8_INDIRECT8_OPCODE = (byte) 0x02;
-		final byte ADD_R32_INDIRECT32_OPCODE = 0b00000011;
+		final byte ADD_R32_INDIRECT32_OPCODE = (byte) 0x03;
 		final byte ADD_AL_IMM8_OPCODE = (byte) 0x04;
 		final byte ADD_EAX_IMM32_OPCODE = (byte) 0x05;
 		final byte OR_INDIRECT8_R8_OPCODE = (byte) 0x08;
@@ -2154,7 +2153,7 @@ public final class InstructionDecoder {
 		if (isREX) {
 			rexPrefix = RexPrefix.of(rexByte);
 		} else {
-			rexPrefix = RexPrefix.of((byte) 0x40);
+			rexPrefix = RexPrefix.of((byte) 0b01000000);
 			b.setPosition(b.getPosition() - 1);
 		}
 
@@ -2218,7 +2217,7 @@ public final class InstructionDecoder {
 
 		// Table at page 530
 		final byte mod = modrm.mod();
-		if (mod < (byte) 0x00 || mod > 0b00000011) {
+		if (mod < (byte) 0b00 || mod > 0b11) {
 			throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
 		}
 
@@ -2263,7 +2262,7 @@ public final class InstructionDecoder {
 		final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
 		final IndirectOperandBuilder iob = IndirectOperand.builder();
 		final SIB sib;
-		if (isIndirectOperandNeeded(modrm) && modrm.rm() == 0b00000100) {
+		if (isIndirectOperandNeeded(modrm) && modrm.rm() == 0b100) {
 			// SIB needed
 			sib = sib(b);
 
@@ -2275,33 +2274,33 @@ public final class InstructionDecoder {
 			if (isSP(index)) {
 				operand2 = index;
 			} else {
-				if (!(modrm.mod() == (byte) 0x00 && isBP(base))) {
+				if (!(modrm.mod() == (byte) 0b00 && isBP(base))) {
 					iob.index(index);
 				}
-				operand2 = index;
+				operand2 = base;
 				iob.scale(1 << BitUtils.asInt(sib.scale()));
 			}
 		} else {
 			// SIB not needed
 			sib = new SIB((byte) 0x00);
-			if (modrm.mod() == (byte) 0x00 && isBP((Register) operand2)) {
+			if (modrm.mod() == (byte) 0b00 && isBP((Register) operand2)) {
 				operand2 = hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP;
 			}
 		}
 
-		if (pref.p2().isPresent() && pref.p2().orElseThrow() == (byte) 0x2e) {
+		if (pref.p2().isPresent() && pref.p2().orElseThrow() == CS_SEGMENT_OVERRIDE_PREFIX) {
 			operand2 = new SegmentRegister(Register16.CS, (Register) operand2);
 		}
 		iob.base((Register) operand2);
 
 		if (isIndirectOperandNeeded(modrm)) {
 			// indirect operand needed
-			if ((modrm.mod() == (byte) 0x00 && modrm.rm() == (byte) 0x05)
-					|| (modrm.mod() == (byte) 0x00 && sib.base() == (byte) 0x05)
-					|| modrm.mod() == (byte) 0x02) {
+			if ((modrm.mod() == (byte) 0b00 && modrm.rm() == (byte) 0b101)
+					|| (modrm.mod() == (byte) 0b00 && sib.base() == (byte) 0b101)
+					|| modrm.mod() == (byte) 0b10) {
 				final int disp32 = b.read4LE();
 				iob.displacement(disp32);
-			} else if (modrm.mod() == (byte) 0x01) {
+			} else if (modrm.mod() == (byte) 0b01) {
 				final byte disp8 = b.read1();
 				iob.displacement(disp8);
 			}
@@ -2348,7 +2347,6 @@ public final class InstructionDecoder {
 	}
 
 	private static boolean isLegacyPrefixGroup2(final byte prefix) {
-		final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
 		final byte SS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x36;
 		final byte DS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x3e;
 		final byte ES_SEGMENT_OVERRIDE_PREFIX = (byte) 0x26;

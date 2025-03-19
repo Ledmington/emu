@@ -49,7 +49,7 @@ public final class IndirectOperandBuilder {
 		Objects.requireNonNull(r);
 		if (!(r instanceof Register32) && !(r instanceof Register64) && !(r instanceof SegmentRegister)) {
 			throw new IllegalArgumentException(
-					String.format("'%s' is not a valid base register: must be 32-bit, 64-bit or a segment."));
+					String.format("'%s' is not a valid base register: must be 32-bit, 64-bit or a segment.", r));
 		}
 		if (indexRegister != null && r.bits() != indexRegister.bits()) {
 			throw new IllegalArgumentException(String.format(
@@ -90,7 +90,7 @@ public final class IndirectOperandBuilder {
 		Objects.requireNonNull(r);
 		if (!(r instanceof Register32) && !(r instanceof Register64)) {
 			throw new IllegalArgumentException(
-					String.format("'%s' is not a valid index register: must be 32-bit or 64-bit."));
+					String.format("'%s' is not a valid index register: must be 32-bit or 64-bit.", r));
 		}
 		if (baseRegister != null && r.bits() != baseRegister.bits()) {
 			throw new IllegalArgumentException(String.format(
