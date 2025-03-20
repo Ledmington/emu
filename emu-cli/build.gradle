@@ -14,7 +14,7 @@ String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "l
 String mainClassName = "${basePackage}.emu.Main"
 
 dependencies {
-    implementation project(':emu')
+    implementation project(':core')
     implementation project(':elf')
     implementation project(':id')
     implementation project(':mem')
