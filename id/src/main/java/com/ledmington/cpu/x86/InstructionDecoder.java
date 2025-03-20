@@ -156,8 +156,7 @@ public final class InstructionDecoder {
 		String pointer;
 		pointer = readUntilWhitespace(it);
 		skipWhitespaces(it);
-		pointer = pointer + ' ';
-		pointer = pointer + readUntilWhitespace(it);
+		pointer = pointer + ' ' + readUntilWhitespace(it);
 
 		switch (pointer) {
 			case "BYTE PTR" -> iob.pointer(PointerSize.BYTE_PTR);
@@ -242,7 +241,7 @@ public final class InstructionDecoder {
 							});
 				}
 			} else {
-				iob.index(fromStringToRegister.get(splitted[0].strip()));
+				iob.base(fromStringToRegister.get(splitted[0].strip()));
 			}
 
 			// Parse displacement

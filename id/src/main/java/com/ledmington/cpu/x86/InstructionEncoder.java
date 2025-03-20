@@ -375,11 +375,15 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x89);
 				} else if (inst.firstOperand() instanceof IndirectOperand io
 						&& inst.secondOperand() instanceof Immediate) {
-					wb.write(io.bits() == 32 ? (byte) 0xc7 : (byte) 0xc6);
+					wb.write(io.bits() == 8 ? (byte) 0xc6 : (byte) 0xc7);
 					reg = (byte) 0b000;
 				} else if (inst.firstOperand() instanceof IndirectOperand
-						&& inst.secondOperand() instanceof Register8) {
-					wb.write((byte) 0x88);
+						&& inst.secondOperand() instanceof Register r2) {
+					wb.write(r2 instanceof Register8 ? (byte) 0x88 : (byte) 0x89);
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
+					wb.write((byte) 0x8a);
+				} else if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Immediate) {
+					wb.write(BitUtils.asByte((byte) 0xb8 + Registers.toByte(r1)));
 				}
 			}
 			case MOVSXD -> wb.write((byte) 0x63);
@@ -459,17 +463,20 @@ public final class InstructionEncoder {
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
 		} else if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Immediate imm) {
-			final boolean hasRBP =
-					io.hasIndex() && (io.getIndex() == Register32.EBP || io.getIndex() == Register64.RBP);
+			final boolean hasRBP = io.hasBase() && (io.getBase() == Register32.EBP || io.getBase() == Register64.RBP);
+			// encodeModRM(
+			// 		wb,
+			// 		getMod(io),
+			// 		reg,
+			// 		(isSimpleIndirectOperand(io) && !hasRBP) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeModRM(
-					wb,
-					getMod(io),
-					reg,
-					(isSimpleIndirectOperand(io) && !hasRBP) ? Registers.toByte(io.getIndex()) : (byte) 0b100);
+					wb, getMod(io), reg, (isSimpleIndirectOperand(io)) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
 		} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
-			encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
+			if (inst.opcode() != Opcode.MOV) {
+				encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
+			}
 			encodeImmediate(wb, imm);
 		}
 	}
@@ -547,9 +554,18 @@ public final class InstructionEncoder {
 
 	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
 		final boolean hasRBP = io.hasBase() && (io.getBase() == Register32.EBP || io.getBase() == Register64.RBP);
-		if (!isSimpleIndirectOperand(io) || hasRBP) {
-			final byte base = hasRBP ? (byte) 0b100 : (io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0);
+		if (isSimpleIndirectOperand(io)) {
+			// nothing
+		} else {
+			// TODO: check this
+			// if (!isSimpleIndirectOperand(io) || hasRBP) {
+			final byte base =
+					// hasRBP ? (byte) 0b100 : (
+					io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0
+					// )
+					;
 			encodeSIB(wb, getScale(io), Registers.toByte(io.getIndex()), base);
+			// }
 		}
 
 		if (io.hasDisplacement() || hasRBP) {
@@ -569,7 +585,8 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean isSimpleIndirectOperand(final IndirectOperand io) {
-		return io.hasBase() && !io.hasIndex() && !io.hasScale() && !io.hasDisplacement();
+		return io.hasBase() && !io.hasIndex() && !io.hasScale() // && !io.hasDisplacement()
+		;
 	}
 
 	private static void encodeImmediate(final WriteOnlyByteBuffer wb, final Immediate imm) {

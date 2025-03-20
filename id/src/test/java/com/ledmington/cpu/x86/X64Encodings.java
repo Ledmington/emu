@@ -511,9 +511,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build(),
 								iimm),
-						"mov DWORD PTR [rbp],0x12345678",
+						"mov DWORD PTR [rbp+0x0],0x12345678",
 						"c7 45 00 78 56 34 12"),
 				test(
 						new Instruction(
