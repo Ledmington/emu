@@ -294,13 +294,12 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public String toString() {
-		return "IndirectOperand(base="
+		return "IndirectOperand(ptrSize=" + ptrSize + ";base="
 				+ (base == null ? "null" : base.toString())
 				+ ";index="
 				+ (index == null ? "null" : index.toString()) + ";scale="
 				+ scale + ";displacement="
 				+ displacement + ";displacementType=" + displacementType
-				+ ";ptrSize=" + ptrSize
 				+ ")";
 	}
 

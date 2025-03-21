@@ -568,6 +568,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"8a 84 d8 78 56 34 12"),
 				test(new Instruction(Opcode.MOV, ESI, iimm), "mov esi,0x12345678", "be 78 56 34 12"),
 				test(new Instruction(Opcode.MOV, R11B, bimm), "mov r11b,0x12", "41 b3 12"),
+				test(new Instruction(Opcode.MOV, BL, bimm), "mov bl,0x12", "b3 12"),
+				test(new Instruction(Opcode.MOV, DH, bimm), "mov dh,0x12", "b6 12"),
 				test(new Instruction(Opcode.MOV, R8W, simm), "mov r8w,0x1234", "66 41 b8 34 12"),
 				test(new Instruction(Opcode.MOV, R9, iimm), "mov r9,0x12345678", "49 c7 c1 78 56 34 12"),
 				test(
