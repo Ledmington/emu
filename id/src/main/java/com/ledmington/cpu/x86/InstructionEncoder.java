@@ -548,9 +548,12 @@ public final class InstructionEncoder {
 	}
 
 	private static byte getMod(final IndirectOperand io) {
-		final boolean hasShortDisplacement = io.hasDisplacement() && io.getDisplacementBits() == 8;
-		final boolean hasLongDisplacement = io.hasDisplacement() && io.getDisplacementBits() == 32;
-		return hasShortDisplacement ? (byte) 0b01 : (hasLongDisplacement ? (byte) 0b10 : 0b00);
+		return !io.hasDisplacement()
+				? (byte) 0b00
+				: switch (io.getDisplacementType()) {
+					case DisplacementType.SHORT -> (byte) 0b01;
+					case DisplacementType.LONG -> (byte) 0b10;
+				};
 	}
 
 	private static void encodeModRM(final WriteOnlyByteBuffer wb, final byte mod, final byte reg, final byte rm) {
@@ -586,13 +589,9 @@ public final class InstructionEncoder {
 		}
 
 		if (io.hasDisplacement() || hasRBP) {
-			if (io.getDisplacementBits() == 8) {
-				wb.write(BitUtils.asByte(io.getDisplacement()));
-			} else if (io.getDisplacementBits() == 32) {
-				wb.write(BitUtils.asInt(io.getDisplacement()));
-			} else {
-				throw new IllegalArgumentException(
-						String.format("Unknown displacement in indirect operand: '%s'.", io));
+			switch (io.getDisplacementType()) {
+				case DisplacementType.SHORT -> wb.write(BitUtils.asByte(io.getDisplacement()));
+				case DisplacementType.LONG -> wb.write(BitUtils.asInt(io.getDisplacement()));
 			}
 		}
 	}

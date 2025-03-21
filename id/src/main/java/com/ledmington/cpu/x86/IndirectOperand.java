@@ -17,10 +17,10 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
+
+import java.util.Objects;
 
 /**
  * This class maps the following cases:
@@ -216,11 +216,9 @@ public final class IndirectOperand implements Operand {
 		return displacement;
 	}
 
-	public int getDisplacementBits() {
-		return switch (displacementType) {
-			case BYTE -> 8;
-			case INT -> 32;
-		};
+	public DisplacementType getDisplacementType() {
+		Objects.requireNonNull(displacementType, "No displacement.");
+		return displacementType;
 	}
 
 	@Override
@@ -230,8 +228,8 @@ public final class IndirectOperand implements Operand {
 
 	private boolean isDisplacementNegative() {
 		return switch (displacementType) {
-			case DisplacementType.BYTE -> BitUtils.asByte(displacement) < (byte) 0;
-			case DisplacementType.INT -> BitUtils.asInt(displacement) < 0;
+			case DisplacementType.SHORT -> BitUtils.asByte(displacement) < (byte) 0;
+			case DisplacementType.LONG -> BitUtils.asInt(displacement) < 0;
 		};
 	}
 
@@ -241,11 +239,11 @@ public final class IndirectOperand implements Operand {
 
 	private void addDisplacement(final StringBuilder sb) {
 		switch (displacementType) {
-			case DisplacementType.BYTE -> {
+			case DisplacementType.SHORT -> {
 				final byte x = BitUtils.asByte(displacement);
 				sb.append(String.format("0x%x", isDisplacementNegative() ? -x : x));
 			}
-			case DisplacementType.INT -> {
+			case DisplacementType.LONG -> {
 				final int x = BitUtils.asInt(displacement);
 				sb.append(String.format("0x%x", isDisplacementNegative() ? -x : x));
 			}

@@ -108,7 +108,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder displacement(final byte disp) {
-		return displacement(disp, DisplacementType.BYTE);
+		return displacement(disp, DisplacementType.SHORT);
 	}
 
 	/**
@@ -118,7 +118,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder displacement(final int disp) {
-		return displacement(disp, DisplacementType.INT);
+		return displacement(disp, DisplacementType.LONG);
 	}
 
 	private IndirectOperandBuilder displacement(final long disp, final DisplacementType displacementType) {

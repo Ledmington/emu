@@ -17,12 +17,12 @@
  */
 package com.ledmington.cpu.x86;
 
-/** Type of displacement inside an IndirectOperand. Used for display and string serialization. */
-/* default */ enum DisplacementType {
+/** Type of displacement inside an IndirectOperand. */
+public enum DisplacementType {
 
 	/** 8 bits. */
-	BYTE,
+	SHORT,
 
 	/** 32 bits. */
-	INT
+	LONG
 }
