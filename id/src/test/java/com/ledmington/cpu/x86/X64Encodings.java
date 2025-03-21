@@ -17,6 +17,12 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.utils.BitUtils;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
@@ -111,12 +117,6 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM6;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM7;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM8;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM9;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
-
-import com.ledmington.utils.BitUtils;
 
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 
@@ -883,8 +883,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r10,DWORD PTR [r13]",
+						"movsxd r10,DWORD PTR [r13+0x0]",
 						"4d 63 55 00"),
 				test(
 						new Instruction(
@@ -943,8 +944,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r10,DWORD PTR [rbp]",
+						"movsxd r10,DWORD PTR [rbp+0x0]",
 						"4c 63 55 00"),
 				test(
 						new Instruction(
@@ -1043,8 +1045,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r11,DWORD PTR [r13]",
+						"movsxd r11,DWORD PTR [r13+0x0]",
 						"4d 63 5d 00"),
 				test(
 						new Instruction(
@@ -1103,8 +1106,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r11,DWORD PTR [rbp]",
+						"movsxd r11,DWORD PTR [rbp+0x0]",
 						"4c 63 5d 00"),
 				test(
 						new Instruction(
@@ -1203,8 +1207,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r12,DWORD PTR [r13]",
+						"movsxd r12,DWORD PTR [r13+0x0]",
 						"4d 63 65 00"),
 				test(
 						new Instruction(
@@ -1263,8 +1268,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r12,DWORD PTR [rbp]",
+						"movsxd r12,DWORD PTR [rbp+0x0]",
 						"4c 63 65 00"),
 				test(
 						new Instruction(
@@ -1363,8 +1369,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r13,DWORD PTR [r13]",
+						"movsxd r13,DWORD PTR [r13+0x0]",
 						"4d 63 6d 00"),
 				test(
 						new Instruction(
@@ -1423,8 +1430,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r13,DWORD PTR [rbp]",
+						"movsxd r13,DWORD PTR [rbp+0x0]",
 						"4c 63 6d 00"),
 				test(
 						new Instruction(
@@ -1523,8 +1531,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r14,DWORD PTR [r13]",
+						"movsxd r14,DWORD PTR [r13+0x0]",
 						"4d 63 75 00"),
 				test(
 						new Instruction(
@@ -1583,8 +1592,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r14,DWORD PTR [rbp]",
+						"movsxd r14,DWORD PTR [rbp+0x0]",
 						"4c 63 75 00"),
 				test(
 						new Instruction(
@@ -1683,8 +1693,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r15,DWORD PTR [r13]",
+						"movsxd r15,DWORD PTR [r13+0x0]",
 						"4d 63 7d 00"),
 				test(
 						new Instruction(
@@ -1743,8 +1754,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r15,DWORD PTR [rbp]",
+						"movsxd r15,DWORD PTR [rbp+0x0]",
 						"4c 63 7d 00"),
 				test(
 						new Instruction(
@@ -1843,8 +1855,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r8,DWORD PTR [r13]",
+						"movsxd r8,DWORD PTR [r13+0x0]",
 						"4d 63 45 00"),
 				test(
 						new Instruction(
@@ -1882,6 +1895,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								R8,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(R8)
+										.displacement((byte) 0x12)
+										.build()),
+						"movsxd r8,DWORD PTR [r8+0x12]",
+						"4d 63 40 12"),
+				test(
+						new Instruction(
+								Opcode.MOVSXD,
+								R8,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(R9)
 										.build()),
 						"movsxd r8,DWORD PTR [r9]",
@@ -1902,9 +1926,21 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								R8,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
-										.base(RBP)
+										.base(RAX)
+										.displacement((byte) 0x12)
 										.build()),
-						"movsxd r8,DWORD PTR [rbp]",
+						"movsxd r8,DWORD PTR [rax+0x12]",
+						"4c 63 40 12"),
+				test(
+						new Instruction(
+								Opcode.MOVSXD,
+								R8,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RBP)
+										.displacement((byte) 0)
+										.build()),
+						"movsxd r8,DWORD PTR [rbp+0x0]",
 						"4c 63 45 00"),
 				test(
 						new Instruction(
@@ -2003,8 +2039,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r9,DWORD PTR [r13]",
+						"movsxd r9,DWORD PTR [r13+0x0]",
 						"4d 63 4d 00"),
 				test(
 						new Instruction(
@@ -2063,8 +2100,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd r9,DWORD PTR [rbp]",
+						"movsxd r9,DWORD PTR [rbp+0x0]",
 						"4c 63 4d 00"),
 				test(
 						new Instruction(
@@ -2163,8 +2201,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rax,DWORD PTR [r13]",
+						"movsxd rax,DWORD PTR [r13+0x0]",
 						"49 63 45 00"),
 				test(
 						new Instruction(
@@ -2202,6 +2241,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								RAX,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(R8)
+										.displacement((byte) 0x12)
+										.build()),
+						"movsxd rax,DWORD PTR [r8+0x12]",
+						"49 63 40 12"),
+				test(
+						new Instruction(
+								Opcode.MOVSXD,
+								RAX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(R9)
 										.build()),
 						"movsxd rax,DWORD PTR [r9]",
@@ -2223,8 +2273,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rax,DWORD PTR [rbp]",
+						"movsxd rax,DWORD PTR [rbp+0x0]",
 						"48 63 45 00"),
 				test(
 						new Instruction(
@@ -2323,8 +2374,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rbp,DWORD PTR [r13]",
+						"movsxd rbp,DWORD PTR [r13+0x0]",
 						"49 63 6d 00"),
 				test(
 						new Instruction(
@@ -2383,8 +2435,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rbp,DWORD PTR [rbp]",
+						"movsxd rbp,DWORD PTR [rbp+0x0]",
 						"48 63 6d 00"),
 				test(
 						new Instruction(
@@ -2483,8 +2536,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rbx,DWORD PTR [r13]",
+						"movsxd rbx,DWORD PTR [r13+0x0]",
 						"49 63 5d 00"),
 				test(
 						new Instruction(
@@ -2543,8 +2597,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rbx,DWORD PTR [rbp]",
+						"movsxd rbx,DWORD PTR [rbp+0x0]",
 						"48 63 5d 00"),
 				test(
 						new Instruction(
@@ -2643,8 +2698,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rcx,DWORD PTR [r13]",
+						"movsxd rcx,DWORD PTR [r13+0x0]",
 						"49 63 4d 00"),
 				test(
 						new Instruction(
@@ -2703,8 +2759,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rcx,DWORD PTR [rbp]",
+						"movsxd rcx,DWORD PTR [rbp+0x0]",
 						"48 63 4d 00"),
 				test(
 						new Instruction(
@@ -2803,8 +2860,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rdi,DWORD PTR [r13]",
+						"movsxd rdi,DWORD PTR [r13+0x0]",
 						"49 63 7d 00"),
 				test(
 						new Instruction(
@@ -2863,8 +2921,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rdi,DWORD PTR [rbp]",
+						"movsxd rdi,DWORD PTR [rbp+0x0]",
 						"48 63 7d 00"),
 				test(
 						new Instruction(
@@ -2963,8 +3022,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rdx,DWORD PTR [r13]",
+						"movsxd rdx,DWORD PTR [r13+0x0]",
 						"49 63 55 00"),
 				test(
 						new Instruction(
@@ -3023,8 +3083,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rdx,DWORD PTR [rbp]",
+						"movsxd rdx,DWORD PTR [rbp+0x0]",
 						"48 63 55 00"),
 				test(
 						new Instruction(
@@ -3123,8 +3184,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rsi,DWORD PTR [r13]",
+						"movsxd rsi,DWORD PTR [r13+0x0]",
 						"49 63 75 00"),
 				test(
 						new Instruction(
@@ -3183,8 +3245,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rsi,DWORD PTR [rbp]",
+						"movsxd rsi,DWORD PTR [rbp+0x0]",
 						"48 63 75 00"),
 				test(
 						new Instruction(
@@ -3283,8 +3346,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(R13)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rsp,DWORD PTR [r13]",
+						"movsxd rsp,DWORD PTR [r13+0x0]",
 						"49 63 65 00"),
 				test(
 						new Instruction(
@@ -3343,8 +3407,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
+										.displacement((byte) 0)
 										.build()),
-						"movsxd rsp,DWORD PTR [rbp]",
+						"movsxd rsp,DWORD PTR [rbp+0x0]",
 						"48 63 65 00"),
 				test(
 						new Instruction(
@@ -8041,7 +8106,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					// TODO: uncomment one at a time
-					nop(), mov() // , movsxd()
+					nop(), mov(), movsxd()
 					// cmp(),
 					// call(),
 					// jump(),

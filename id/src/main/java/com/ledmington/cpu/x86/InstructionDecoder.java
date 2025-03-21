@@ -17,6 +17,14 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.cpu.x86.exc.ReservedOpcode;
+import com.ledmington.cpu.x86.exc.UnknownOpcode;
+import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
+import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.ReadOnlyByteBufferV1;
+
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -28,14 +36,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import com.ledmington.cpu.x86.exc.ReservedOpcode;
-import com.ledmington.cpu.x86.exc.UnknownOpcode;
-import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
@@ -2255,7 +2255,7 @@ public final class InstructionDecoder {
 
 	private static IndirectOperandBuilder parseIndirectOperand(
 			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
-		Operand operand2 = Registers.fromCode(
+		Register baseRegister = Registers.fromCode(
 				modrm.rm(), !pref.hasAddressSizeOverridePrefix(), pref.rex().hasModRMRMExtension(), false);
 		final RexPrefix rexPrefix = pref.rex();
 		final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
@@ -2265,32 +2265,33 @@ public final class InstructionDecoder {
 			// SIB needed
 			sib = sib(b);
 
-			final Register base = Registers.fromCode(
+			final Register decodedBase = Registers.fromCode(
 					sib.base(), !hasAddressSizeOverridePrefix, rexPrefix.hasSIBBaseExtension(), false);
-			final Register index = Registers.fromCode(
+			final Register decodedIndex = Registers.fromCode(
 					sib.index(), !hasAddressSizeOverridePrefix, rexPrefix.hasSIBIndexExtension(), false);
-			// an indirect operand of [xxx+rsp+...] is not allowed
-			if (isSP(index)) {
-				operand2 = index;
+
+			// ESP or RSP cannot be index registers of an indirect operand
+			if (isSP(decodedIndex)) {
+				baseRegister = decodedBase;
 			} else {
-				if (!(modrm.mod() == (byte) 0b00 && isBP(base))) {
-					iob.index(index);
+				if (!(modrm.mod() == (byte) 0b00 && isBP(decodedBase))) {
+					iob.index(decodedIndex);
 				}
-				operand2 = base;
+				baseRegister = decodedBase;
 				iob.scale(1 << BitUtils.asInt(sib.scale()));
 			}
 		} else {
 			// SIB not needed
 			sib = new SIB((byte) 0x00);
-			if (modrm.mod() == (byte) 0b00 && isBP((Register) operand2)) {
-				operand2 = hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP;
+			if (modrm.mod() == (byte) 0b00 && isBP(baseRegister)) {
+				baseRegister = hasAddressSizeOverridePrefix ? Register32.EIP : Register64.RIP;
 			}
 		}
 
 		if (pref.p2().isPresent() && pref.p2().orElseThrow() == CS_SEGMENT_OVERRIDE_PREFIX) {
-			operand2 = new SegmentRegister(Register16.CS, (Register) operand2);
+			baseRegister = new SegmentRegister(Register16.CS, baseRegister);
 		}
-		iob.base((Register) operand2);
+		iob.base(baseRegister);
 
 		if (isIndirectOperandNeeded(modrm)) {
 			// indirect operand needed

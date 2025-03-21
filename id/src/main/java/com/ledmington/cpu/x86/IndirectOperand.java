@@ -17,10 +17,10 @@
  */
 package com.ledmington.cpu.x86;
 
+import java.util.Objects;
+
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
-
-import java.util.Objects;
 
 /**
  * This class maps the following cases:
