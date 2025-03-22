@@ -886,6 +886,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								R10,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(R12)
+										.displacement((byte) 0)
+										.build()),
+						"movsxd r10,DWORD PTR [r12+0x0]",
+						"4d 63 54 24 00"),
+				test(
+						new Instruction(
+								Opcode.MOVSXD,
+								R10,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(R13)
 										.displacement((byte) 0)
 										.build()),
@@ -3475,7 +3486,6 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movsxd rsp,DWORD PTR [rsp]",
 						"48 63 24 24"),
-				//
 				test(
 						new Instruction(
 								Opcode.MOVSXD,
@@ -3488,7 +3498,20 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement(0x12345678)
 										.build()),
 						"movsxd rdx,DWORD PTR [r11+r15*4+0x12345678]",
-						"4b 63 94 bb 78 56 34 12"));
+						"4b 63 94 bb 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOVSXD,
+								RDX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(R11)
+										.index(RDI)
+										.scale(4)
+										.displacement(0x12345678)
+										.build()),
+						"movsxd rdx,DWORD PTR [r11+rdi*4+0x12345678]",
+						"49 63 94 bb 78 56 34 12"));
 	}
 
 	private static List<X64EncodingTestCase> cmp() {

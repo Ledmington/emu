@@ -332,6 +332,10 @@ public final class InstructionEncoder {
 							&& inst.secondOperand() instanceof IndirectOperand io
 							&& io.hasIndex()
 							&& Registers.requiresExtension(io.getIndex()))
+					|| (inst.opcode() == Opcode.MOVSXD
+							&& inst.secondOperand() instanceof IndirectOperand io
+							&& io.hasIndex()
+							&& Registers.requiresExtension(io.getIndex()))
 					|| (inst.opcode() == Opcode.OR
 							&& inst.firstOperand() instanceof IndirectOperand io
 							&& io.hasIndex()
@@ -470,7 +474,18 @@ public final class InstructionEncoder {
 				encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 			}
 		} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof IndirectOperand io) {
-			encodeModRM(wb, (byte) 0b10, Registers.toByte(r), (byte) 0b100);
+			encodeModRM(
+					wb,
+					getMod(io),
+					Registers.toByte(r),
+					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
+			if (inst.opcode() == Opcode.MOVSXD
+					&& (io.getBase() == Register32.ESP
+							|| io.getBase() == Register64.RSP
+							|| io.getBase() == Register32.R12D
+							|| io.getBase() == Register64.R12)) {
+				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
+			}
 			encodeIndirectOperand(wb, io);
 		} else if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register r) {
 			encodeModRM(
@@ -561,34 +576,25 @@ public final class InstructionEncoder {
 	}
 
 	private static byte getScale(final IndirectOperand io) {
-		return io.hasScale()
-				? switch (io.getScale()) {
-					case 1 -> (byte) 0b00;
-					case 2 -> (byte) 0b01;
-					case 4 -> (byte) 0b10;
-					case 8 -> (byte) 0b11;
-					default -> throw new IllegalArgumentException(String.format("Invalid scale: %,d.", io.getScale()));
-				}
-				: (byte) 0b00;
+		return switch (io.getScale()) {
+			case 1 -> (byte) 0b00;
+			case 2 -> (byte) 0b01;
+			case 4 -> (byte) 0b10;
+			case 8 -> (byte) 0b11;
+			default -> throw new IllegalArgumentException(String.format("Invalid scale: %,d.", io.getScale()));
+		};
 	}
 
 	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
-		final boolean hasRBP = io.hasBase() && (io.getBase() == Register32.EBP || io.getBase() == Register64.RBP);
-		if (isSimpleIndirectOperand(io)) {
-			// nothing
-		} else {
+		// final boolean isBaseRBP = io.hasBase() && (io.getBase() == Register32.EBP || io.getBase() == Register64.RBP);
+		if (!isSimpleIndirectOperand(io)) {
 			// TODO: check this
-			// if (!isSimpleIndirectOperand(io) || hasRBP) {
-			final byte base =
-					// hasRBP ? (byte) 0b100 : (
-					io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0
-					// )
-					;
+			final byte base = io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0;
 			encodeSIB(wb, getScale(io), Registers.toByte(io.getIndex()), base);
-			// }
 		}
 
-		if (io.hasDisplacement() || hasRBP) {
+		if (io.hasDisplacement() // || isBaseRBP
+		) {
 			switch (io.getDisplacementType()) {
 				case DisplacementType.SHORT -> wb.write(BitUtils.asByte(io.getDisplacement()));
 				case DisplacementType.LONG -> wb.write(BitUtils.asInt(io.getDisplacement()));
