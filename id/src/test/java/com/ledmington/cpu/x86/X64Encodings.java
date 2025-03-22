@@ -113,7 +113,11 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM8;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM9;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.ledmington.utils.BitUtils;
@@ -8120,4 +8124,38 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 					)
 			.flatMap(Collection::stream)
 			.toList();
+
+	private static String asString(final byte[] v) {
+		return IntStream.range(0, v.length)
+				.mapToObj(i -> String.format("0x%02x", v[i]))
+				.collect(Collectors.joining(" "));
+	}
+
+	static {
+		// Check that there are no duplicates
+		final Set<Instruction> inst = new HashSet<>();
+		final Set<String> is = new HashSet<>();
+		final Set<List<Byte>> hex = new HashSet<>();
+		for (final X64EncodingTestCase t : X64_ENCODINGS) {
+			if (inst.contains(t.instruction())) {
+				throw new IllegalArgumentException(
+						String.format("Duplicate instruction in test cases: '%s'.", t.instruction()));
+			}
+			inst.add(t.instruction());
+
+			if (is.contains(t.intelSyntax())) {
+				throw new IllegalArgumentException(
+						String.format("Duplicate intel syntax in test cases: '%s'.", t.intelSyntax()));
+			}
+			is.add(t.intelSyntax());
+
+			final int n = t.hex().length;
+			final List<Byte> b = IntStream.range(0, n).mapToObj(i -> t.hex()[i]).toList();
+			if (hex.contains(b)) {
+				throw new IllegalArgumentException(
+						String.format("Duplicate hex representation in test cases: '%s'.", asString(t.hex())));
+			}
+			hex.add(b);
+		}
+	}
 }
