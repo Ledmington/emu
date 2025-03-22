@@ -182,6 +182,10 @@ public final class InstructionEncoder {
 		}
 	}
 
+	private static boolean requiresAddressSizeOverride(final Operand op) {
+		return op instanceof IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32;
+	}
+
 	private static boolean hasExtendedIndex(final Operand op) {
 		return op instanceof IndirectOperand io && io.hasIndex() && Registers.requiresExtension(io.getIndex());
 	}
@@ -194,7 +198,7 @@ public final class InstructionEncoder {
 		if (inst.firstOperand() instanceof IndirectOperand io && io.hasSegment()) {
 			wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
 		}
-		if (inst.firstOperand() instanceof IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32) {
+		if (requiresAddressSizeOverride(inst.firstOperand())) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.firstOperand().bits() == 16
@@ -292,7 +296,7 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
-		if (inst.firstOperand() instanceof IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32) {
+		if (requiresAddressSizeOverride(inst.firstOperand()) || requiresAddressSizeOverride(inst.secondOperand())) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.firstOperand().bits() == 16) {
@@ -312,40 +316,30 @@ public final class InstructionEncoder {
 			if (inst.firstOperand().bits() == 64) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
-			if ((hasExtendedFirstRegister
-							|| (inst.firstOperand() instanceof IndirectOperand && hasExtendedSecondRegister))
-					&& !(isShift && hasExtendedFirstRegister)
-					&& !(inst.opcode() == Opcode.MOV
-							&& inst.firstOperand() instanceof Register
-							&& inst.secondOperand() instanceof Immediate)
-					&& !(inst.opcode() == Opcode.CMP
-							&& inst.firstOperand() instanceof IndirectOperand
-							&& inst.secondOperand() instanceof Register8)) {
+			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOV && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedFirstRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
-			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
-					|| ((inst.opcode() == Opcode.IMUL) && hasExtendedIndex(inst.secondOperand()))
+			if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.MOV && hasExtendedIndex(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.MOV && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.CMP && hasExtendedIndex(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.CMP && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.OR
 							&& hasExtendedIndex(inst.firstOperand())
 							&& !(inst.secondOperand() instanceof Register64))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
-			if ((hasExtendedSecondRegister && !(inst.secondOperand() instanceof Register8))
-					|| (isShift && hasExtendedFirstRegister)
-					|| (hasExtendedBase(inst.secondOperand()))
+			if ((isShift && hasExtendedFirstRegister)
 					|| (inst.opcode() == Opcode.MOV && hasExtendedBase(inst.firstOperand()))
-					|| (inst.opcode() == Opcode.MOV
-							&& inst.firstOperand() instanceof Register r1
-							&& inst.secondOperand() instanceof Immediate
-							&& Registers.requiresExtension(r1))
+					|| (inst.opcode() == Opcode.MOV && hasExtendedFirstRegister)
+					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedBase(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.CMP && hasExtendedBase(inst.firstOperand()))
-					|| (inst.opcode() == Opcode.OR
-							&& hasExtendedBase(inst.firstOperand())
-							&& !(inst.secondOperand() instanceof Register8))) {
+					|| (inst.opcode() == Opcode.CMP && hasExtendedFirstRegister)
+					|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.firstOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
@@ -366,8 +360,32 @@ public final class InstructionEncoder {
 					wb.write(io.bits() == 8 ? (byte) 0x38 : (byte) 0x39);
 				} else if (inst.firstOperand() instanceof IndirectOperand io
 						&& inst.secondOperand() instanceof Immediate imm) {
-					wb.write(io.bits() == 16 ? (imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81) : (byte) 0x80);
+					wb.write(imm.bits() == 8 ? (io.bits() == 8 ? (byte) 0x80 : (byte) 0x83) : (byte) 0x81);
 					reg = (byte) 0b111;
+				} else if (inst.firstOperand() instanceof Register r
+						&& inst.secondOperand() instanceof IndirectOperand) {
+					wb.write(r instanceof Register8 ? (byte) 0x3a : (byte) 0x3b);
+				} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
+					if (r instanceof Register8) {
+						if (r == Register8.AL) {
+							wb.write((byte) 0x3c);
+							encodeImmediate(wb, imm);
+							return;
+						} else {
+							wb.write((byte) 0x80);
+							reg = (byte) 0b111;
+						}
+					} else {
+						if (r == Register32.EAX || r == Register64.RAX) {
+							wb.write((byte) 0x3d);
+							encodeImmediate(wb, imm);
+							return;
+						}
+						wb.write((byte) 0x81);
+						reg = (byte) 0b111;
+					}
+				} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Register) {
+					wb.write(r instanceof Register8 ? (byte) 0x38 : (byte) 0x39);
 				}
 			}
 			case MOV -> {
@@ -453,7 +471,7 @@ public final class InstructionEncoder {
 			// Most ALU operations encode the destination operand (the first one) in the r/m portion, while some
 			// instructions like MOV encode the destination as Reg
 			// FIXME: actually, it seems to be the opposite... why?
-			if (inst.opcode() == Opcode.MOV || inst.opcode() == Opcode.SUB) {
+			if (inst.opcode() == Opcode.MOV || inst.opcode() == Opcode.SUB || inst.opcode() == Opcode.CMP) {
 				encodeModRM(wb, (byte) 0b11, Registers.toByte(r2), Registers.toByte(r1));
 			} else {
 				encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));

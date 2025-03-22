@@ -672,8 +672,7 @@ public final class InstructionDecoder {
 					switch (immediateBits) {
 						case 8 ->
 							switch (operandBits) {
-								case 8 -> imm8(b);
-								case 16 -> new Immediate((short) b.read1());
+								case 8, 16 -> imm8(b);
 								case 32 -> new Immediate((int) b.read1());
 								case 64 -> new Immediate((long) b.read1());
 								default ->
@@ -693,8 +692,7 @@ public final class InstructionDecoder {
 							};
 						default ->
 							switch (operandBits) {
-								case 32 -> imm32(b);
-								case 64 -> new Immediate((long) b.read4LE());
+								case 32, 64 -> imm32(b);
 								default ->
 									throw new IllegalArgumentException(String.format(
 											"Immediate bits were %,d and operand bits were %,d",
@@ -1981,7 +1979,7 @@ public final class InstructionDecoder {
 						default -> new Immediate((long) b.read2LE());
 					};
 				} else {
-					imm = r.bits() == 32 ? imm32(b) : new Immediate((long) b.read4LE());
+					imm = imm32(b);
 				}
 				yield new Instruction(opcode, r, imm);
 			}

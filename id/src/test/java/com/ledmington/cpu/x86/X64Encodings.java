@@ -3627,6 +3627,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.CMP,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(R13D)
+										.displacement(0xffffff18)
+										.build(),
+								R15D),
+						"cmp DWORD PTR [r13d-0xe8],r15d",
+						"67 45 39 bd 18 ff ff ff"),
+				test(
+						new Instruction(
+								Opcode.CMP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(EDI)
 										.build(),
 								iimm),
@@ -3719,8 +3730,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.scale(2)
 										.displacement((byte) 0x12)
 										.build(),
-								new Immediate((short) 0x0077)),
-						"cmp WORD PTR [r13+rcx*2+0x12],0x0077",
+								new Immediate((byte) 0x77)),
+						"cmp WORD PTR [r13+rcx*2+0x12],0x77",
 						"66 41 83 7c 4d 12 77"),
 				test(
 						new Instruction(
@@ -8133,8 +8144,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					// TODO: uncomment one at a time
-					nop(), mov(), movsxd()
-					// cmp(),
+					nop(), mov(), movsxd(), cmp()
 					// call(),
 					// jump(),
 					// cmove(),
