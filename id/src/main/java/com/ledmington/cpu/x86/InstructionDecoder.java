@@ -104,9 +104,9 @@ public final class InstructionDecoder {
 			throw new IllegalArgumentException(String.format("Too many arguments: '%s'.", input));
 		}
 
-		final Operand firstOperand = args.length < 1 ? null : parseOperand(args[0].strip());
-		final Operand secondOperand = args.length < 2 ? null : parseOperand(args[1].strip());
-		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip());
+		final Operand firstOperand = args.length < 1 ? null : parseOperand(args[0].strip(), null);
+		final Operand secondOperand = args.length < 2 ? null : parseOperand(args[1].strip(), firstOperand);
+		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip(), null);
 
 		return new Instruction(prefix, opcode, firstOperand, secondOperand, thirdOperand);
 	}
@@ -129,7 +129,7 @@ public final class InstructionDecoder {
 		return sb.toString();
 	}
 
-	private static Operand parseOperand(final String input) {
+	private static Operand parseOperand(final String input, final Operand previousOperand) {
 		if (fromStringToRegister.containsKey(input)) {
 			// It's a register
 			return fromStringToRegister.get(input);
@@ -167,7 +167,14 @@ public final class InstructionDecoder {
 			default -> {
 				// This might be a LEA instruction, meaning that the displacement has no explicit pointer size in front
 				// of it, so we just rewind the iterator.
-				iob.pointer(PointerSize.QWORD_PTR);
+				iob.pointer(
+						switch (previousOperand.bits()) {
+							case 8 -> PointerSize.BYTE_PTR;
+							case 16 -> PointerSize.WORD_PTR;
+							case 32 -> PointerSize.DWORD_PTR;
+							case 64 -> PointerSize.QWORD_PTR;
+							default -> throw new IllegalArgumentException("Cannot determine pointer size.");
+						});
 				it.setIndex(0);
 			}
 		}
@@ -191,7 +198,7 @@ public final class InstructionDecoder {
 		it.next();
 
 		// Read until ']'
-		final String indirectOperandString = readUntil(it, ']');
+		String indirectOperandString = readUntil(it, ']').strip();
 
 		// check that there is nothing else after the ']'
 		it.next();
@@ -200,54 +207,56 @@ public final class InstructionDecoder {
 			throw new IllegalArgumentException(String.format("Invalid indirect operand: '%s'.", input));
 		}
 
-		if (fromStringToRegister.containsKey(indirectOperandString)) {
-			if (segReg != null) {
-				iob.base(new SegmentRegister(segReg, fromStringToRegister.get(indirectOperandString)));
-			} else {
-				iob.base(fromStringToRegister.get(indirectOperandString));
-			}
-		} else {
-			final boolean hasScale = indirectOperandString.contains("*");
-			final String[] splitted = indirectOperandString.split("[+-]");
-			if (hasScale) {
-				if (splitted[1].contains("*")) {
-					iob.index(fromStringToRegister.get(splitted[1].strip().split("\\*")[0]));
-					if (segReg != null) {
-						iob.base(new SegmentRegister(segReg, fromStringToRegister.get(splitted[0].strip())));
-					} else {
-						iob.base(fromStringToRegister.get(splitted[0].strip()));
-					}
-					iob.scale(
-							switch (splitted[1].strip().split("\\*")[1]) {
-								case "1" -> 1;
-								case "2" -> 2;
-								case "4" -> 4;
-								case "8" -> 8;
-								default ->
-									throw new IllegalArgumentException(
-											String.format("Invalid indirect operand: '%s'.", input));
-							});
-				} else {
-					iob.index(fromStringToRegister.get(splitted[0].strip().split("\\*")[0]));
-					iob.scale(
-							switch (splitted[0].strip().split("\\*")[1]) {
-								case "1" -> 1;
-								case "2" -> 2;
-								case "4" -> 4;
-								case "8" -> 8;
-								default ->
-									throw new IllegalArgumentException(
-											String.format("Invalid indirect operand: '%s'.", input));
-							});
-				}
-			} else {
-				iob.base(fromStringToRegister.get(splitted[0].strip()));
-			}
+		String baseString = null;
+		String indexString = null;
+		String scaleString = null;
+		String displacementString = null;
 
-			// Parse displacement
-			final String displacementString = (indirectOperandString.contains("-") ? "-" : "+")
-					+ splitted[splitted.length - 1].strip().substring(2);
-			if (displacementString.length() > 3 || indirectOperandString.contains("-")) {
+		if (indirectOperandString.contains("0x")) {
+			final int idx = indirectOperandString.indexOf("0x");
+			// add back the sign of the displacement
+			displacementString = (indirectOperandString.charAt(idx - 1))
+					+ indirectOperandString.substring(idx + 2).strip();
+			indirectOperandString = indirectOperandString.substring(0, idx - 1).strip();
+		}
+		if (indirectOperandString.contains("*")) {
+			final int idx = indirectOperandString.indexOf('*');
+			scaleString = indirectOperandString.substring(idx + 1).strip();
+			indirectOperandString = indirectOperandString.substring(0, idx).strip();
+		}
+		if (indirectOperandString.contains("+")) {
+			final int idx = indirectOperandString.indexOf('+');
+			indexString = indirectOperandString.substring(idx + 1).strip();
+			indirectOperandString = indirectOperandString.substring(0, idx).strip();
+		}
+		if (!indirectOperandString.isBlank()) {
+			baseString = indirectOperandString.strip();
+		}
+
+		if (baseString != null) {
+			Register reg = fromStringToRegister.get(baseString);
+			if (segReg != null) {
+				reg = new SegmentRegister(segReg, reg);
+			}
+			iob.base(reg);
+		}
+		if (indexString != null) {
+			iob.index(fromStringToRegister.get(indexString));
+		}
+		if (scaleString != null) {
+			iob.scale(
+					switch (scaleString) {
+						case "1" -> 1;
+						case "2" -> 2;
+						case "4" -> 4;
+						case "8" -> 8;
+						default ->
+							throw new IllegalArgumentException(
+									String.format("Invalid scale in indirect operand: '%s'.", scaleString));
+					});
+		}
+		if (displacementString != null) {
+			if (displacementString.length() > 3 || displacementString.charAt(0) == '-') {
 				iob.displacement(Integer.parseInt(displacementString, 16));
 			} else {
 				iob.displacement(BitUtils.asByte(Integer.parseInt(displacementString, 16)));

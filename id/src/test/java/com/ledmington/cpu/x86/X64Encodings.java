@@ -4449,7 +4449,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								AX,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(WORD_PTR)
 										.base(EBX)
 										.index(ECX)
 										.scale(4)
@@ -4462,7 +4462,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								CX,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(WORD_PTR)
 										.base(RBX)
 										.index(RCX)
 										.scale(4)
@@ -4475,7 +4475,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								EAX,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(DWORD_PTR)
 										.base(EBX)
 										.build()),
 						"lea eax,[ebx]",
@@ -4485,7 +4485,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								EAX,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(DWORD_PTR)
 										.base(RBX)
 										.build()),
 						"lea eax,[rbx]",
@@ -4495,20 +4495,32 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								ECX,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(DWORD_PTR)
 										.base(RDX)
 										.index(RBP)
 										.scale(2)
 										.displacement((byte) 0)
 										.build()),
 						"lea ecx,[rdx+rbp*2+0x0]",
+						"8d 4c 6a 00"),
+				test(
+						new Instruction(
+								Opcode.LEA,
+								ECX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDX)
+										.index(RBP)
+										.scale(2)
+										.build()),
+						"lea ecx,[rdx+rbp*2]",
 						"8d 0c 6a"),
 				test(
 						new Instruction(
 								Opcode.LEA,
 								ESI,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(DWORD_PTR)
 										.base(EDI)
 										.index(R12D)
 										.scale(2)
@@ -4521,7 +4533,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								R10W,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(WORD_PTR)
 										.base(EBX)
 										.index(ECX)
 										.scale(4)
@@ -4534,7 +4546,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								R13D,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(DWORD_PTR)
 										.base(RDI)
 										.index(R8)
 										.scale(4)
@@ -4547,7 +4559,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								R14W,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(WORD_PTR)
 										.base(RBX)
 										.index(RCX)
 										.scale(4)
@@ -4560,14 +4572,26 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.LEA,
 								R9D,
 								IndirectOperand.builder()
-										.pointer(QWORD_PTR)
+										.pointer(DWORD_PTR)
+										.base(EDX)
+										.index(EBP)
+										.scale(2)
+										.build()),
+						"lea r9d,[edx+ebp*2]",
+						"67 44 8d 0c 6a"),
+				test(
+						new Instruction(
+								Opcode.LEA,
+								R9D,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(EDX)
 										.index(EBP)
 										.scale(2)
 										.displacement((byte) 0)
 										.build()),
 						"lea r9d,[edx+ebp*2+0x0]",
-						"67 44 8d 0c 6a"),
+						"67 44 8d 4c 6a 00"),
 				test(
 						new Instruction(
 								Opcode.LEA,
@@ -4597,10 +4621,34 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(EDX)
 										.index(EBP)
 										.scale(2)
+										.build()),
+						"lea rcx,[edx+ebp*2]",
+						"67 48 8d 0c 6a"),
+				test(
+						new Instruction(
+								Opcode.LEA,
+								RCX,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(EDX)
+										.index(EBP)
+										.scale(2)
 										.displacement((byte) 0)
 										.build()),
 						"lea rcx,[edx+ebp*2+0x0]",
-						"67 48 8d 0c 6a"),
+						"67 48 8d 4c 6a 00"),
+				test(
+						new Instruction(
+								Opcode.LEA,
+								RCX,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDX)
+										.index(RBP)
+										.scale(2)
+										.build()),
+						"lea rcx,[rdx+rbp*2]",
+						"48 8d 0c 6a"),
 				test(
 						new Instruction(
 								Opcode.LEA,
@@ -4613,7 +4661,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement((byte) 0)
 										.build()),
 						"lea rcx,[rdx+rbp*2+0x0]",
-						"48 8d 0c 6a"),
+						"48 8d 4c 6a 00"),
 				test(
 						new Instruction(
 								Opcode.LEA,
@@ -8181,8 +8229,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					// TODO: uncomment one at a time
-					nop(), mov(), movsxd(), cmp(), call(), jump(), cmove()
-					// lea(),
+					nop(), mov(), movsxd(), cmp(), call(), jump(), cmove(), lea()
 					// movzx(),
 					// movsx(),
 					// push(),

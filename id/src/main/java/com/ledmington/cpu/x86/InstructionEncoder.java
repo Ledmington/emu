@@ -334,7 +334,8 @@ public final class InstructionEncoder {
 			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.MOV && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedFirstRegister)
-					|| (isConditionalMove && hasExtendedFirstRegister)) {
+					|| (isConditionalMove && hasExtendedFirstRegister)
+					|| (inst.opcode() == Opcode.LEA && hasExtendedFirstRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
@@ -345,7 +346,8 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.CMP && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.OR
 							&& hasExtendedIndex(inst.firstOperand())
-							&& !(inst.secondOperand() instanceof Register64))) {
+							&& !(inst.secondOperand() instanceof Register64))
+					|| (inst.opcode() == Opcode.LEA && hasExtendedIndex(inst.secondOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if ((isShift && hasExtendedFirstRegister)
@@ -482,6 +484,7 @@ public final class InstructionEncoder {
 				}
 				reg = (byte) 0b001;
 			}
+			case LEA -> wb.write((byte) 0x8d);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
