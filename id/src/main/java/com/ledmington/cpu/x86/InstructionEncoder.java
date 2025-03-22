@@ -312,6 +312,18 @@ public final class InstructionEncoder {
 				inst.secondOperand() instanceof Register r && Registers.requiresExtension(r);
 		final boolean isShift =
 				inst.opcode() == Opcode.SHR || inst.opcode() == Opcode.SAR || inst.opcode() == Opcode.SHL;
+		final boolean isConditionalMove = inst.opcode() == Opcode.CMOVE
+				|| inst.opcode() == Opcode.CMOVNE
+				|| inst.opcode() == Opcode.CMOVA
+				|| inst.opcode() == Opcode.CMOVAE
+				|| inst.opcode() == Opcode.CMOVB
+				|| inst.opcode() == Opcode.CMOVBE
+				|| inst.opcode() == Opcode.CMOVG
+				|| inst.opcode() == Opcode.CMOVGE
+				|| inst.opcode() == Opcode.CMOVL
+				|| inst.opcode() == Opcode.CMOVLE
+				|| inst.opcode() == Opcode.CMOVS
+				|| inst.opcode() == Opcode.CMOVNS;
 
 		// rex
 		{
@@ -321,7 +333,8 @@ public final class InstructionEncoder {
 			}
 			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.MOV && hasExtendedSecondRegister)
-					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedFirstRegister)) {
+					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedFirstRegister)
+					|| (isConditionalMove && hasExtendedFirstRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
@@ -342,7 +355,9 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedBase(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.CMP && hasExtendedBase(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.CMP && hasExtendedFirstRegister)
-					|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.firstOperand()))) {
+					|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.firstOperand()))
+					|| (isConditionalMove && hasExtendedSecondRegister)
+					|| (isConditionalMove && hasExtendedBase(inst.secondOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
