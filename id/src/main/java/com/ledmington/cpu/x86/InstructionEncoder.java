@@ -271,27 +271,30 @@ public final class InstructionEncoder {
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
-		{
-			if (inst.firstOperand() instanceof Register r) {
-				encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
-			} else if (inst.firstOperand() instanceof IndirectOperand io) {
-				encodeModRM(
-						wb,
-						getMod(io),
-						reg,
-						isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-				encodeIndirectOperand(wb, io);
-			} else if (inst.firstOperand() instanceof Immediate imm) {
-				if (imm.bits() == 8) {
-					wb.write(imm.asByte());
-				} else if (imm.bits() == 32) {
-					wb.write(imm.asInt());
-				} else {
-					throw new IllegalArgumentException(String.format("Invalid immediate: '%s'.", imm));
-				}
-			} else {
-				throw new IllegalArgumentException(String.format("Unknown operand: '%s'.", inst.firstOperand()));
+		if (inst.firstOperand() instanceof Register r) {
+			encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
+		} else if (inst.firstOperand() instanceof IndirectOperand io) {
+			encodeModRM(
+					wb, getMod(io), reg, isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
+			if (inst.opcode() == Opcode.CALL
+					&& io.hasBase()
+					&& (io.getBase() == Register32.ESP
+							|| io.getBase() == Register64.RSP
+							|| io.getBase() == Register32.R12D
+							|| io.getBase() == Register64.R12)) {
+				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
 			}
+			encodeIndirectOperand(wb, io);
+		} else if (inst.firstOperand() instanceof Immediate imm) {
+			if (imm.bits() == 8) {
+				wb.write(imm.asByte());
+			} else if (imm.bits() == 32) {
+				wb.write(imm.asInt());
+			} else {
+				throw new IllegalArgumentException(String.format("Invalid immediate: '%s'.", imm));
+			}
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown operand: '%s'.", inst.firstOperand()));
 		}
 	}
 

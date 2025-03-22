@@ -3957,6 +3957,43 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(
 								Opcode.CALL,
 								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(ESP)
+										.build()),
+						"call DWORD PTR [esp]",
+						"67 66 ff 1c 24"),
+				test(
+						new Instruction(
+								Opcode.CALL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(R12)
+										.build()),
+						"call DWORD PTR [r12]",
+						"66 41 ff 1c 24"),
+				test(
+						new Instruction(
+								Opcode.CALL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(R12D)
+										.build()),
+						"call DWORD PTR [r12d]",
+						"67 66 41 ff 1c 24"),
+				test(
+						new Instruction(
+								Opcode.CALL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RBP)
+										.displacement((byte) 0)
+										.build()),
+						"call DWORD PTR [rbp+0x0]",
+						"66 ff 5d 00"),
+				test(
+						new Instruction(
+								Opcode.CALL,
+								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
 										.base(EAX)
 										.build()),
@@ -8144,8 +8181,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					// TODO: uncomment one at a time
-					nop(), mov(), movsxd(), cmp()
-					// call(),
+					nop(), mov(), movsxd(), cmp(), call()
 					// jump(),
 					// cmove(),
 					// lea(),
