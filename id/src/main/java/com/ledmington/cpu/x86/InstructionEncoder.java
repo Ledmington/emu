@@ -182,6 +182,14 @@ public final class InstructionEncoder {
 		}
 	}
 
+	private static boolean hasExtendedIndex(final Operand op) {
+		return op instanceof IndirectOperand io && io.hasIndex() && Registers.requiresExtension(io.getIndex());
+	}
+
+	private static boolean hasExtendedBase(final Operand op) {
+		return op instanceof IndirectOperand io && io.hasBase() && Registers.requiresExtension(io.getBase());
+	}
+
 	private static void encodeSingleOperandInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		if (inst.firstOperand() instanceof IndirectOperand io && io.hasSegment()) {
 			wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
@@ -201,19 +209,12 @@ public final class InstructionEncoder {
 			if (inst.firstOperand().bits() == 64 && !(inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.JMP)) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
-			if (inst.firstOperand() instanceof IndirectOperand io
-					&& io.hasIndex()
-					&& Registers.requiresExtension(io.getIndex())
-					&& inst.opcode() != Opcode.JMP) {
+			if (hasExtendedIndex(inst.firstOperand()) && inst.opcode() != Opcode.JMP) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if ((inst.firstOperand() instanceof Register r && Registers.requiresExtension(r))
-					|| (inst.firstOperand() instanceof IndirectOperand io
-							&& io.hasBase()
-							&& Registers.requiresExtension(io.getBase()))
-					|| (inst.opcode() == Opcode.JMP
-							&& inst.firstOperand() instanceof IndirectOperand io
-							&& Registers.requiresExtension(io.getIndex()))) {
+					|| (hasExtendedBase(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.JMP && hasExtendedIndex(inst.firstOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
@@ -291,7 +292,7 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
-		if (inst.firstOperand() instanceof IndirectOperand io && io.hasIndex() && io.getIndex() instanceof Register32) {
+		if (inst.firstOperand() instanceof IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.firstOperand().bits() == 16) {
@@ -316,50 +317,34 @@ public final class InstructionEncoder {
 					&& !(isShift && hasExtendedFirstRegister)
 					&& !(inst.opcode() == Opcode.MOV
 							&& inst.firstOperand() instanceof Register
-							&& inst.secondOperand() instanceof Immediate)) {
+							&& inst.secondOperand() instanceof Immediate)
+					&& !(inst.opcode() == Opcode.CMP
+							&& inst.firstOperand() instanceof IndirectOperand
+							&& inst.secondOperand() instanceof Register8)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
-					|| ((inst.opcode() == Opcode.IMUL)
-							&& inst.secondOperand() instanceof IndirectOperand io
-							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex()))
-					|| (inst.opcode() == Opcode.MOV
-							&& inst.firstOperand() instanceof IndirectOperand io
-							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex()))
-					|| (inst.opcode() == Opcode.MOV
-							&& inst.secondOperand() instanceof IndirectOperand io
-							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex()))
-					|| (inst.opcode() == Opcode.MOVSXD
-							&& inst.secondOperand() instanceof IndirectOperand io
-							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex()))
+					|| ((inst.opcode() == Opcode.IMUL) && hasExtendedIndex(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.MOV && hasExtendedIndex(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.MOV && hasExtendedIndex(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.MOVSXD && hasExtendedIndex(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.CMP && hasExtendedIndex(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.OR
-							&& inst.firstOperand() instanceof IndirectOperand io
-							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex())
+							&& hasExtendedIndex(inst.firstOperand())
 							&& !(inst.secondOperand() instanceof Register64))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if ((hasExtendedSecondRegister && !(inst.secondOperand() instanceof Register8))
 					|| (isShift && hasExtendedFirstRegister)
-					|| (inst.secondOperand() instanceof IndirectOperand io
-							&& io.hasBase()
-							&& Registers.requiresExtension(io.getBase()))
-					|| (inst.opcode() == Opcode.MOV
-							&& inst.firstOperand() instanceof IndirectOperand io
-							&& io.hasBase()
-							&& Registers.requiresExtension(io.getBase()))
+					|| (hasExtendedBase(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.MOV && hasExtendedBase(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.MOV
 							&& inst.firstOperand() instanceof Register r1
 							&& inst.secondOperand() instanceof Immediate
 							&& Registers.requiresExtension(r1))
+					|| (inst.opcode() == Opcode.CMP && hasExtendedBase(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.OR
-							&& inst.firstOperand() instanceof IndirectOperand io
-							&& io.hasBase()
-							&& Registers.requiresExtension(io.getBase())
+							&& hasExtendedBase(inst.firstOperand())
 							&& !(inst.secondOperand() instanceof Register8))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
@@ -523,14 +508,10 @@ public final class InstructionEncoder {
 			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
-			if (inst.secondOperand() instanceof IndirectOperand io
-					&& io.hasBase()
-					&& Registers.requiresExtension(io.getBase())) {
+			if (hasExtendedBase(inst.secondOperand())) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
-			if ((inst.secondOperand() instanceof IndirectOperand io
-							&& io.hasIndex()
-							&& Registers.requiresExtension(io.getIndex()))
+			if (hasExtendedIndex(inst.secondOperand())
 					|| (inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
