@@ -210,7 +210,8 @@ public final class InstructionEncoder {
 
 		{
 			byte rex = DEFAULT_REX_PREFIX;
-			if (inst.firstOperand().bits() == 64 && !(inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.JMP)) {
+			if (inst.firstOperand().bits() == 64
+					&& !(inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.JMP || inst.opcode() == Opcode.PUSH)) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
 			if (hasExtendedIndex(inst.firstOperand()) && inst.opcode() != Opcode.JMP) {
@@ -267,6 +268,17 @@ public final class InstructionEncoder {
 			case IDIV, DIV, MUL -> {
 				wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xf6 : (byte) 0xf7);
 				reg = DIV_MUL_REG_BYTES.get(inst.opcode());
+			}
+			case PUSH -> {
+				if (inst.firstOperand() instanceof Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x6a : (byte) 0x68);
+				} else if (inst.firstOperand() instanceof Register r) {
+					wb.write(BitUtils.asByte((byte) 0x50 + Registers.toByte(r)));
+					return;
+				} else if (inst.firstOperand() instanceof IndirectOperand) {
+					wb.write((byte) 0xff);
+					reg = (byte) 0b110;
+				}
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
