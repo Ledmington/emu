@@ -8229,8 +8229,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					// TODO: uncomment one at a time
-					nop(), mov(), movsxd(), cmp(), call(), jump(), cmove(), lea(), movzx(), movsx(), push()
-					// pop(),
+					nop(), mov(), movsxd(), cmp(), call(), jump(), cmove(), lea(), movzx(), movsx(), push(), pop()
 					// others()
 					)
 			.flatMap(Collection::stream)
