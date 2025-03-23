@@ -1481,7 +1481,14 @@ public final class Main {
 		out.printf("  ABI Version:                       %s%n", fh.ABIVersion());
 		out.printf(
 				"  Type:                              %s (%s)%n",
-				fh.fileType().name().replaceFirst("^ET_", ""), fh.fileType().getName());
+				switch (fh.fileType()) {
+					case ET_EXEC -> "EXEC";
+					case ET_CORE -> "CORE";
+					case ET_DYN -> "DYN";
+					case ET_REL -> "REL";
+					default -> "Unknown";
+				},
+				fh.fileType().getName());
 		out.printf("  Machine:                           %s%n", fh.isa().getName());
 		out.printf("  Version:                           0x%x%n", fh.version());
 		out.printf("  Entry point address:               0x%x%n", fh.entryPointVirtualAddress());
