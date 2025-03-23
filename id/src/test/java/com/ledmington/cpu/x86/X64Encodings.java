@@ -5005,6 +5005,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(
 								Opcode.ADD,
 								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.index(RBP)
+										.scale(4)
+										.displacement(0x7eadbeef)
+										.build(),
+								iimm),
+						"add QWORD PTR [rsp+rbp*4+0x7eadbeef],0x12345678",
+						"48 81 84 ac ef be ad 7e 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.ADD,
+								IndirectOperand.builder()
 										.pointer(WORD_PTR)
 										.base(RAX)
 										.index(RBX)
@@ -5016,8 +5029,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 44 01 84 98 78 56 34 12"),
 				test(new Instruction(Opcode.ADD, AL, new Immediate((byte) 0x99)), "add al,0x99", "04 99"),
 				test(new Instruction(Opcode.ADD, AX, simm), "add ax,0x1234", "66 05 34 12"),
+				test(new Instruction(Opcode.ADD, AX, bimm), "add ax,0x12", "66 83 c0 12"),
 				test(new Instruction(Opcode.ADD, CX, simm), "add cx,0x1234", "66 81 c1 34 12"),
-				test(new Instruction(Opcode.ADD, EAX, new Immediate((byte) 0x18)), "add eax,0x18", "83 c0 18"),
+				test(new Instruction(Opcode.ADD, EAX, bimm), "add eax,0x12", "83 c0 12"),
 				test(new Instruction(Opcode.ADD, EAX, iimm), "add eax,0x12345678", "05 78 56 34 12"),
 				test(
 						new Instruction(
@@ -5045,6 +5059,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"add r11d,DWORD PTR [rax+rbx*4+0x12345678]",
 						"44 03 9c 98 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.ADD,
+								EBX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(R8)
+										.index(RBX)
+										.scale(4)
+										.displacement(0x12345678)
+										.build()),
+						"add ebx,DWORD PTR [r8+rbx*4+0x12345678]",
+						"41 03 9c 98 78 56 34 12"),
 				test(new Instruction(Opcode.ADD, R8, new Immediate((byte) 1)), "add r8,0x01", "49 83 c0 01"),
 				test(new Instruction(Opcode.ADD, R8, R9), "add r8,r9", "4d 01 c8"),
 				test(new Instruction(Opcode.ADD, R9, bimm), "add r9,0x12", "49 83 c1 12"),
@@ -7099,10 +7126,33 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.pointer(WORD_PTR)
 										.index(RAX)
 										.scale(2)
-										.displacement(0)
+										.displacement(0x12345678)
 										.build()),
-						"dec WORD PTR [rax*2+0x0]",
-						"66 ff 0c 45 00 00 00 00"),
+						"dec WORD PTR [rax*2+0x12345678]",
+						"66 ff 0c 45 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.DEC,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RBP)
+										.index(RAX)
+										.scale(2)
+										.displacement(0x12345678)
+										.build()),
+						"dec WORD PTR [rbp+rax*2+0x12345678]",
+						"66 ff 8c 45 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.DEC,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.index(RBP)
+										.scale(2)
+										.displacement(0x12345678)
+										.build()),
+						"dec WORD PTR [rbp*2+0x12345678]",
+						"66 ff 0c 6d 78 56 34 12"),
 				test(
 						new Instruction(
 								Opcode.DEC,
@@ -8228,10 +8278,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//  https://defuse.ca/online-x86-assembler.htm
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
-					// TODO: uncomment one at a time
-					nop(), mov(), movsxd(), cmp(), call(), jump(), cmove(), lea(), movzx(), movsx(), push(), pop()
-					// others()
-					)
+					nop(), mov(), movsxd(), cmp(), call(), jump(), cmove(), lea(), movzx(), movsx(), push(), pop(),
+					others())
 			.flatMap(Collection::stream)
 			.toList();
 

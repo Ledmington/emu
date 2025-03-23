@@ -228,6 +228,9 @@ public final class InstructionDecoder {
 			final int idx = indirectOperandString.indexOf('+');
 			indexString = indirectOperandString.substring(idx + 1).strip();
 			indirectOperandString = indirectOperandString.substring(0, idx).strip();
+		} else if (scaleString != null) {
+			indexString = indirectOperandString;
+			indirectOperandString = "";
 		}
 		if (!indirectOperandString.isBlank()) {
 			baseString = indirectOperandString.strip();
@@ -681,12 +684,10 @@ public final class InstructionDecoder {
 					switch (immediateBits) {
 						case 8 ->
 							switch (operandBits) {
-								case 8, 16 -> imm8(b);
-								case 32 -> new Immediate((int) b.read1());
-								case 64 -> new Immediate((long) b.read1());
+								case 8, 16, 32, 64 -> imm8(b);
 								default ->
 									throw new IllegalArgumentException(String.format(
-											"Immediate bits were %,d and operand bits were %,d",
+											"Immediate bits were %,d and operand bits were %,d.",
 											immediateBits, operandBits));
 							};
 						case 16 ->
@@ -696,7 +697,7 @@ public final class InstructionDecoder {
 								case 64 -> new Immediate((long) b.read2LE());
 								default ->
 									throw new IllegalArgumentException(String.format(
-											"Immediate bits were %,d and operand bits were %,d",
+											"Immediate bits were %,d and operand bits were %,d.",
 											immediateBits, operandBits));
 							};
 						default ->
@@ -704,7 +705,7 @@ public final class InstructionDecoder {
 								case 32, 64 -> imm32(b);
 								default ->
 									throw new IllegalArgumentException(String.format(
-											"Immediate bits were %,d and operand bits were %,d",
+											"Immediate bits were %,d and operand bits were %,d.",
 											immediateBits, operandBits));
 							};
 					};
@@ -2281,11 +2282,12 @@ public final class InstructionDecoder {
 			if (isSP(decodedIndex)) {
 				baseRegister = decodedBase;
 			} else {
-				if (!(modrm.mod() == (byte) 0b00 && isBP(decodedBase))) {
-					iob.index(decodedIndex);
-				}
-				baseRegister = decodedBase;
+				// if (modrm.mod() != (byte) 0b00 || !isBP(decodedBase)) {
+				iob.index(decodedIndex);
 				iob.scale(1 << BitUtils.asInt(sib.scale()));
+				// }
+
+				baseRegister = decodedBase;
 			}
 		} else {
 			// SIB not needed
