@@ -616,6 +616,11 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x21);
 				}
 			}
+			case XOR -> {
+				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
+				}
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
