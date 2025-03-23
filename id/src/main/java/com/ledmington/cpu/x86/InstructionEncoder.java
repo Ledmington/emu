@@ -368,7 +368,11 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.ADD
 							&& inst.firstOperand() instanceof Register
 							&& hasExtendedSecondRegister)
-					|| (inst.opcode() == Opcode.AND && hasExtendedSecondRegister)) {
+					|| (inst.opcode() == Opcode.AND && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.SUB && hasExtendedFirstRegister)
+					|| (inst.opcode() == Opcode.SUB && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.SBB && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.OR && hasExtendedSecondRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
@@ -391,6 +395,7 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.CMP && hasExtendedBase(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.CMP && hasExtendedFirstRegister)
 					|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.secondOperand()))
 					|| (isConditionalMove && hasExtendedSecondRegister)
 					|| (isConditionalMove && hasExtendedBase(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.ADD && hasExtendedBase(inst.secondOperand()))
@@ -401,7 +406,13 @@ public final class InstructionEncoder {
 							&& hasExtendedFirstRegister
 							&& inst.secondOperand() instanceof Register)
 					|| (inst.opcode() == Opcode.AND && hasExtendedBase(inst.secondOperand()))
-					|| (inst.opcode() == Opcode.AND && hasExtendedFirstRegister)) {
+					|| (inst.opcode() == Opcode.AND && hasExtendedFirstRegister)
+					|| (inst.opcode() == Opcode.SUB
+							&& hasExtendedFirstRegister
+							&& inst.secondOperand() instanceof Register)
+					|| (inst.opcode() == Opcode.SBB
+							&& hasExtendedFirstRegister
+							&& inst.secondOperand() instanceof Register)) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
@@ -476,6 +487,8 @@ public final class InstructionEncoder {
 			case SUB -> {
 				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x29);
+				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x29);
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b101;
@@ -520,11 +533,30 @@ public final class InstructionEncoder {
 			}
 			case IMUL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xaf);
 			case OR -> {
-				if (inst.firstOperand() instanceof IndirectOperand) {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+					wb.write((byte) 0x0c);
+					encodeImmediate(wb, imm);
+					return;
+				} else if (inst.secondOperand() instanceof Immediate imm
+						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
+								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
+								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
+					wb.write((byte) 0x0d);
+					encodeImmediate(wb, imm);
+					return;
+				} else if (inst.firstOperand() instanceof Register8) {
+					wb.write((byte) 0x80);
+					reg = (byte) 0b001;
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
+					wb.write((byte) 0x0b);
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
+					reg = (byte) 0b001;
+				} else if (inst.firstOperand() instanceof IndirectOperand) {
 					wb.write(BitUtils.asByte(((inst.secondOperand() instanceof Immediate) ? (byte) 0x80 : (byte) 0x08)
 							+ ((inst.secondOperand().bits() == 8) ? (byte) 0 : (byte) 1)));
+					reg = (byte) 0b001;
 				}
-				reg = (byte) 0b001;
 			}
 			case LEA -> wb.write((byte) 0x8d);
 			case MOVZX ->
