@@ -190,6 +190,14 @@ public final class Instruction {
 		return prefix == InstructionPrefix.LOCK;
 	}
 
+	public boolean hasRepPrefix() {
+		return prefix == InstructionPrefix.REP;
+	}
+
+	public boolean hasRepnzPrefix() {
+		return prefix == InstructionPrefix.REPNZ;
+	}
+
 	public InstructionPrefix getPrefix() {
 		if (!hasPrefix()) {
 			throw new IllegalArgumentException("No prefix.");

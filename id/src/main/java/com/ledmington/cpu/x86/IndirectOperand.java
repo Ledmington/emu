@@ -176,6 +176,14 @@ public final class IndirectOperand implements Operand {
 		return hasBase() && base instanceof SegmentRegister;
 	}
 
+	public Register16 getSegment() {
+		Objects.requireNonNull(this.base, "No base register.");
+		if (!hasSegment()) {
+			throw new IllegalStateException("No segment register.");
+		}
+		return ((SegmentRegister) base).segment();
+	}
+
 	/**
 	 * Returns the index register of this indirect operand.
 	 *

@@ -96,6 +96,7 @@ import static com.ledmington.cpu.x86.Register8.SIL;
 import static com.ledmington.cpu.x86.Register8.SPL;
 import static com.ledmington.cpu.x86.RegisterMMX.MM0;
 import static com.ledmington.cpu.x86.RegisterMMX.MM1;
+import static com.ledmington.cpu.x86.RegisterMMX.MM2;
 import static com.ledmington.cpu.x86.RegisterMMX.MM3;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM0;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM1;
@@ -6289,6 +6290,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.MOVAPS,
 								IndirectOperand.builder()
 										.pointer(XMMWORD_PTR)
+										.base(RAX)
+										.displacement(0x12345678)
+										.build(),
+								XMM6),
+						"movaps XMMWORD PTR [rax+0x12345678],xmm6",
+						"0f 29 b0 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOVAPS,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
 										.base(RSP)
 										.index(R11)
 										.scale(4)
@@ -6369,6 +6381,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.MOVQ,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
+										.index(RSI)
+										.scale(4)
+										.displacement(0x12345678)
+										.build(),
+								XMM3),
+						"movq QWORD PTR [rsi*4+0x12345678],xmm3",
+						"66 0f d6 1c b5 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOVQ,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
 										.base(RSI)
 										.displacement(0x12345678)
 										.build(),
@@ -6423,6 +6447,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movq xmm6,QWORD PTR [rsi]",
 						"f3 0f 7e 36"),
+				test(
+						new Instruction(
+								Opcode.MOVQ,
+								MM2,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.index(R9)
+										.scale(4)
+										.displacement(0x12345678)
+										.build()),
+						"movq mm2,QWORD PTR [rsp+r9*4+0x12345678]",
+						"42 0f 6f 94 8c 78 56 34 12"),
 				//  Movhps
 				test(
 						new Instruction(
@@ -7171,10 +7208,21 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RAX)
 										.index(RBX)
 										.scale(1)
+										.build()),
+						"dec WORD PTR [rax+rbx*1]",
+						"66 ff 0c 18"),
+				test(
+						new Instruction(
+								Opcode.DEC,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.index(RBX)
+										.scale(1)
 										.displacement((byte) 0)
 										.build()),
 						"dec WORD PTR [rax+rbx*1+0x0]",
-						"66 ff 0c 18"),
+						"66 ff 4c 18 00"),
 				test(
 						new Instruction(
 								Opcode.DEC,
