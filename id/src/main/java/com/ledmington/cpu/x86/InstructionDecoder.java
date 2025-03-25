@@ -1280,7 +1280,20 @@ public final class InstructionDecoder {
 				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
 				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
 				yield new Instruction(
-						Opcode.PXOR, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
+						Opcode.PXOR,
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r1Byte)
+								: RegisterMMX.fromByte(r1Byte),
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(
+												pref.hasOperandSizeOverridePrefix()
+														? PointerSize.XMMWORD_PTR
+														: PointerSize.QWORD_PTR)
+										.build()
+								: (pref.hasOperandSizeOverridePrefix()
+										? RegisterXMM.fromByte(r2Byte)
+										: RegisterMMX.fromByte(r2Byte)));
 			}
 			case PCMPEQD_OPCODE -> {
 				final ModRM modrm = modrm(b);

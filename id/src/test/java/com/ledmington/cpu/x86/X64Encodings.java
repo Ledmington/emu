@@ -99,6 +99,7 @@ import static com.ledmington.cpu.x86.RegisterMMX.MM0;
 import static com.ledmington.cpu.x86.RegisterMMX.MM1;
 import static com.ledmington.cpu.x86.RegisterMMX.MM2;
 import static com.ledmington.cpu.x86.RegisterMMX.MM3;
+import static com.ledmington.cpu.x86.RegisterMMX.MM7;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM0;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM1;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM11;
@@ -7277,6 +7278,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SHUFPS, XMM0, XMM1, bimm), "shufps xmm0,xmm1,0x12", "0f c6 c1 12"),
 				//  Pxor
 				test(new Instruction(Opcode.PXOR, XMM1, XMM15), "pxor xmm1,xmm15", "66 41 0f ef cf"),
+				test(new Instruction(Opcode.PXOR, MM1, MM7), "pxor mm1,mm7", "0f ef cf"),
 				test(
 						new Instruction(
 								Opcode.PXOR,
