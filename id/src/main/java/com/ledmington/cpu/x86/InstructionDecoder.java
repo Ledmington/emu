@@ -104,9 +104,10 @@ public final class InstructionDecoder {
 			throw new IllegalArgumentException(String.format("Too many arguments: '%s'.", input));
 		}
 
-		final Operand firstOperand = args.length < 1 ? null : parseOperand(args[0].strip(), null);
-		final Operand secondOperand = args.length < 2 ? null : parseOperand(args[1].strip(), firstOperand);
-		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip(), null);
+		final Operand firstOperand = args.length < 1 ? null : parseOperand(args[0].strip(), null, null);
+		final Operand secondOperand =
+				args.length < 2 ? null : parseOperand(args[1].strip(), firstOperand, opcodeString);
+		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip(), null, null);
 
 		return new Instruction(prefix, opcode, firstOperand, secondOperand, thirdOperand);
 	}
@@ -129,7 +130,7 @@ public final class InstructionDecoder {
 		return sb.toString();
 	}
 
-	private static Operand parseOperand(final String input, final Operand previousOperand) {
+	private static Operand parseOperand(final String input, final Operand previousOperand, final String opcodeString) {
 		if (fromStringToRegister.containsKey(input)) {
 			// It's a register
 			return fromStringToRegister.get(input);
@@ -137,6 +138,9 @@ public final class InstructionDecoder {
 		if (input.startsWith("0x")) {
 			// It's an immediate
 			final String imm = input.substring(2);
+			if ("movabs".equals(opcodeString)) {
+				return new Immediate(Long.parseUnsignedLong(imm, 16));
+			}
 			if (imm.length() <= 2) {
 				return new Immediate(BitUtils.asByte(Integer.parseUnsignedInt(imm, 16)));
 			} else if (imm.length() <= 4) {

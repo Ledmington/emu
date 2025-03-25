@@ -61,6 +61,7 @@ public final class Registers {
 			case Register16 r16 -> Register16.toByte(r16);
 			case Register32 r32 -> Register32.toByte(r32);
 			case Register64 r64 -> Register64.toByte(r64);
+			case RegisterMMX rmm -> RegisterMMX.toByte(rmm);
 			case RegisterXMM rxmm -> RegisterXMM.toByte(rxmm);
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
@@ -72,6 +73,7 @@ public final class Registers {
 			case Register16 r16 -> Register16.requiresExtension(r16);
 			case Register32 r32 -> Register32.requiresExtension(r32);
 			case Register64 r64 -> Register64.requiresExtension(r64);
+			case RegisterMMX ignored -> false;
 			case RegisterXMM rxmm -> RegisterXMM.requiresExtension(rxmm);
 			case SegmentRegister ignored -> false;
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));

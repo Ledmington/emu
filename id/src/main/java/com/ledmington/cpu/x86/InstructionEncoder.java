@@ -73,6 +73,17 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.CMOVGE, (byte) 0x0d),
 			Map.entry(Opcode.CMOVLE, (byte) 0x0e),
 			Map.entry(Opcode.CMOVG, (byte) 0x0f));
+	private static final Map<Opcode, Byte> SET_OPCODES = Map.ofEntries(
+			Map.entry(Opcode.SETB, (byte) 0x02),
+			Map.entry(Opcode.SETAE, (byte) 0x03),
+			Map.entry(Opcode.SETE, (byte) 0x04),
+			Map.entry(Opcode.SETNE, (byte) 0x05),
+			Map.entry(Opcode.SETBE, (byte) 0x06),
+			Map.entry(Opcode.SETA, (byte) 0x07),
+			Map.entry(Opcode.SETL, (byte) 0x0c),
+			Map.entry(Opcode.SETGE, (byte) 0x0d),
+			Map.entry(Opcode.SETLE, (byte) 0x0e),
+			Map.entry(Opcode.SETG, (byte) 0x0f));
 
 	// The value for the Reg field for the shift instructions
 	private static final Map<Opcode, Byte> SHIFT_REG_BYTES = Map.ofEntries(
@@ -300,6 +311,17 @@ public final class InstructionEncoder {
 				wb.write((byte) 0xf7);
 				reg = (byte) 0b011;
 			}
+			case SETB, SETAE, SETE, SETNE, SETBE, SETA, SETL, SETGE, SETLE, SETG -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, BitUtils.or((byte) 0x90, SET_OPCODES.get(inst.opcode())));
+			}
+			case INC, DEC -> {
+				if (inst.firstOperand().bits() == 8) {
+					wb.write((byte) 0xfe);
+				} else {
+					wb.write((byte) 0xff);
+				}
+				reg = (inst.opcode() == Opcode.INC) ? (byte) 0b000 : (byte) 0b001;
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -308,7 +330,10 @@ public final class InstructionEncoder {
 		} else if (inst.firstOperand() instanceof IndirectOperand io) {
 			encodeModRM(
 					wb, getMod(io), reg, isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-			if (inst.opcode() == Opcode.CALL && io.hasBase() && isSP(io.getBase())) {
+			if ((inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.INC || inst.opcode() == Opcode.DEC)
+					&& io.hasBase()
+					&& isSP(io.getBase())) {
+				// FIXME: this can be replaced with wb.write((byte) 0x24);
 				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
 			}
 			encodeIndirectOperand(wb, io);
@@ -347,11 +372,30 @@ public final class InstructionEncoder {
 				&& !io.hasDisplacement();
 	}
 
+	// Checks that the given IndirectOperand is [*ip + offset]
+	private static boolean isIpAndOffset(final IndirectOperand io) {
+		return io.hasBase()
+				&& (io.getBase() == Register32.EIP || io.getBase() == Register64.RIP)
+				&& !io.hasIndex()
+				&& !io.hasScale()
+				&& io.hasDisplacement()
+				&& io.getDisplacementType() == DisplacementType.LONG;
+	}
+
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		if (requiresAddressSizeOverride(inst.firstOperand()) || requiresAddressSizeOverride(inst.secondOperand())) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
-		if (inst.firstOperand().bits() == 16 || (inst.opcode() == Opcode.MOVDQA && inst.bits() == 128)) {
+		if (inst.firstOperand().bits() == 16
+				|| (inst.opcode() == Opcode.MOVDQA && inst.bits() == 128)
+				|| (inst.opcode() == Opcode.MOVAPD)
+				|| (inst.opcode() == Opcode.MOVQ
+						&& inst.firstOperand() instanceof RegisterXMM
+						&& !(inst.secondOperand() instanceof IndirectOperand))
+				|| (inst.opcode() == Opcode.MOVQ && inst.secondOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PUNPCKLQDQ)
+				|| (inst.opcode() == Opcode.PUNPCKLDQ)
+				|| (inst.opcode() == Opcode.PUNPCKHQDQ)) {
 			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.hasRepPrefix()) {
@@ -359,6 +403,17 @@ public final class InstructionEncoder {
 		}
 		if (inst.hasRepnzPrefix()) {
 			wb.write(InstructionPrefix.REPNZ.getCode());
+		}
+
+		if (inst.opcode() == Opcode.MOVQ
+				&& inst.firstOperand() instanceof RegisterXMM
+				&& inst.secondOperand() instanceof IndirectOperand) {
+			wb.write((byte) 0xf3);
+		}
+		if (inst.opcode() == Opcode.MOVSD
+				&& inst.firstOperand() instanceof RegisterXMM
+				&& inst.secondOperand() instanceof IndirectOperand) {
+			wb.write((byte) 0xf2);
 		}
 
 		final boolean hasExtendedFirstRegister =
@@ -383,7 +438,12 @@ public final class InstructionEncoder {
 		// rex
 		{
 			byte rex = DEFAULT_REX_PREFIX;
-			if (inst.firstOperand().bits() == 64) {
+			if ((inst.firstOperand() instanceof Register64
+							|| inst.firstOperand() instanceof RegisterMMX
+							|| (inst.opcode() == Opcode.MOVQ && inst.firstOperand() instanceof RegisterXMM)
+							|| (inst.firstOperand() instanceof IndirectOperand io && io.bits() == 64))
+					&& !(inst.opcode() == Opcode.MOVQ && inst.firstOperand() instanceof IndirectOperand)
+					&& !(inst.opcode() == Opcode.MOVQ && inst.secondOperand() instanceof IndirectOperand)) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
 			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
@@ -406,7 +466,9 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.SUB && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.SBB && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.OR && hasExtendedSecondRegister)
-					|| (inst.opcode() == Opcode.TEST && hasExtendedSecondRegister)) {
+					|| (inst.opcode() == Opcode.TEST && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOVUPS && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOVSD && hasExtendedFirstRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
@@ -419,7 +481,11 @@ public final class InstructionEncoder {
 							&& hasExtendedIndex(inst.firstOperand())
 							&& !(inst.secondOperand() instanceof Register64))
 					|| (inst.opcode() == Opcode.LEA && hasExtendedIndex(inst.secondOperand()))
-					|| (inst.opcode() == Opcode.MOVDQA && hasExtendedIndex(inst.secondOperand()))) {
+					|| (inst.opcode() == Opcode.MOVDQA && hasExtendedIndex(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.MOVAPS && hasExtendedIndex(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.MOVAPS && hasExtendedIndex(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.MOVAPD && hasExtendedIndex(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.MOVQ && hasExtendedIndex(inst.secondOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if ((isShift && hasExtendedFirstRegister)
@@ -450,7 +516,14 @@ public final class InstructionEncoder {
 							&& inst.secondOperand() instanceof Register)
 					|| (inst.opcode() == Opcode.XOR && hasExtendedFirstRegister)
 					|| (inst.opcode() == Opcode.TEST && hasExtendedBase(inst.firstOperand()))
-					|| (inst.opcode() == Opcode.TEST && hasExtendedFirstRegister)) {
+					|| (inst.opcode() == Opcode.TEST && hasExtendedFirstRegister)
+					|| (inst.opcode() == Opcode.MOVQ && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOVQ && hasExtendedBase(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.PUNPCKLQDQ && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.PUNPCKLDQ && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.PUNPCKHQDQ && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.MOVUPS && hasExtendedBase(inst.firstOperand()))
+					|| (inst.opcode() == Opcode.MOVSD && hasExtendedBase(inst.secondOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
@@ -702,13 +775,79 @@ public final class InstructionEncoder {
 			case MOVDQA -> {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6f);
 			}
-			case MOVAPS -> {
+			case MOVAPS, MOVAPD -> {
 				if (inst.firstOperand() instanceof RegisterXMM && inst.secondOperand() instanceof RegisterXMM) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x28);
-				} else if (inst.firstOperand() instanceof IndirectOperand
+				} else if (inst.firstOperand() instanceof IndirectOperand io
 						&& inst.secondOperand() instanceof RegisterXMM) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x29);
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x35);
+						wb.write(BitUtils.asInt(io.getDisplacement()));
+						return;
+					}
+				} else if (inst.firstOperand() instanceof RegisterXMM
+						&& inst.secondOperand() instanceof IndirectOperand io) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x28);
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x35);
+						wb.write(BitUtils.asInt(io.getDisplacement()));
+						return;
+					}
 				}
+			}
+			case MOVQ -> {
+				if ((inst.firstOperand() instanceof RegisterXMM || inst.firstOperand() instanceof RegisterMMX)
+						&& inst.secondOperand() instanceof Register64) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6e);
+				} else if (inst.firstOperand() instanceof IndirectOperand
+						&& inst.secondOperand() instanceof RegisterXMM) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd6);
+				} else if (inst.firstOperand() instanceof RegisterXMM
+						&& inst.secondOperand() instanceof IndirectOperand) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x7e);
+				} else if (inst.firstOperand() instanceof RegisterMMX
+						&& inst.secondOperand() instanceof IndirectOperand) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6f);
+				}
+			}
+			case MOVHPS -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x16);
+			}
+			case MOVHLPS -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x12);
+			}
+			case PUNPCKLQDQ -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6c);
+			}
+			case PUNPCKHQDQ -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6d);
+			}
+			case PUNPCKLDQ -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x62);
+			}
+			case MOVABS -> {
+				if (inst.firstOperand() instanceof Register64 r && inst.secondOperand() instanceof Immediate imm) {
+					wb.write(BitUtils.or((byte) 0xb8, Registers.toByte(r)));
+					encodeImmediate(wb, imm);
+					return;
+				}
+			}
+			case MOVUPS -> {
+				if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof RegisterXMM) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x11);
+				} else if (inst.firstOperand() instanceof RegisterXMM
+						&& inst.secondOperand() instanceof IndirectOperand) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
+				}
+			}
+			case MOVSD -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
+			}
+			case PXOR -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xef);
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
@@ -757,10 +896,14 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeThreeOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		if (inst.opcode() == Opcode.PSHUFD || inst.opcode() == Opcode.SHUFPD) {
+			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
+		}
+
 		// rex
 		{
 			byte rex = DEFAULT_REX_PREFIX;
-			if (inst.firstOperand().bits() == 64) {
+			if (inst.firstOperand() instanceof Register64) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
 			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
@@ -780,6 +923,12 @@ public final class InstructionEncoder {
 
 		switch (inst.opcode()) {
 			case IMUL -> wb.write((inst.secondOperand() instanceof IndirectOperand) ? (byte) 0x69 : (byte) 0x6b);
+			case PSHUFD, PSHUFW -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x70);
+			}
+			case SHUFPS, SHUFPD -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -802,12 +951,14 @@ public final class InstructionEncoder {
 	}
 
 	private static byte getMod(final IndirectOperand io) {
-		return !io.hasDisplacement()
-				? (byte) 0b00
-				: switch (io.getDisplacementType()) {
-					case DisplacementType.SHORT -> (byte) 0b01;
-					case DisplacementType.LONG -> (byte) 0b10;
-				};
+		if (!io.hasDisplacement() || !io.hasBase()) {
+			return (byte) 0b00;
+		}
+
+		return switch (io.getDisplacementType()) {
+			case DisplacementType.SHORT -> (byte) 0b01;
+			case DisplacementType.LONG -> (byte) 0b10;
+		};
 	}
 
 	private static void encodeModRM(final WriteOnlyByteBuffer wb, final byte mod, final byte reg, final byte rm) {
@@ -825,10 +976,15 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
+		// 0xb5 = 0b10|110|101
 		// final boolean isBaseRBP = io.hasBase() && (io.getBase() == Register32.EBP || io.getBase() == Register64.RBP);
 		if (!isSimpleIndirectOperand(io)) {
 			// TODO: check this
-			final byte base = io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0;
+			final byte base = io.hasBase()
+					? Registers.toByte(io.getBase())
+					:
+					// (byte) 0
+					(byte) 0b101;
 			encodeSIB(wb, getScale(io), Registers.toByte(io.getIndex()), base);
 		}
 
@@ -851,16 +1007,12 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeImmediate(final WriteOnlyByteBuffer wb, final Immediate imm) {
-		if (imm.bits() == 8) {
-			wb.write(imm.asByte());
-		} else if (imm.bits() == 16) {
-			wb.write(imm.asShort());
-		} else if (imm.bits() == 32) {
-			wb.write(imm.asInt());
-		} else if (imm.bits() == 64) {
-			wb.write(imm.asLong());
-		} else {
-			throw new IllegalArgumentException(String.format("Unknown immediate: '%s'.", imm));
+		switch (imm.bits()) {
+			case 8 -> wb.write(imm.asByte());
+			case 16 -> wb.write(imm.asShort());
+			case 32 -> wb.write(imm.asInt());
+			case 64 -> wb.write(imm.asLong());
+			default -> throw new IllegalArgumentException(String.format("Unknown immediate: '%s'.", imm));
 		}
 	}
 }

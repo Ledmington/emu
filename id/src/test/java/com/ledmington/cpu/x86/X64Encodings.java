@@ -47,6 +47,7 @@ import static com.ledmington.cpu.x86.Register32.EBX;
 import static com.ledmington.cpu.x86.Register32.ECX;
 import static com.ledmington.cpu.x86.Register32.EDI;
 import static com.ledmington.cpu.x86.Register32.EDX;
+import static com.ledmington.cpu.x86.Register32.EIP;
 import static com.ledmington.cpu.x86.Register32.ESI;
 import static com.ledmington.cpu.x86.Register32.ESP;
 import static com.ledmington.cpu.x86.Register32.R10D;
@@ -6290,6 +6291,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.MOVAPS,
 								IndirectOperand.builder()
 										.pointer(XMMWORD_PTR)
+										.base(EIP)
+										.displacement(0x12345678)
+										.build(),
+								XMM6),
+						"movaps XMMWORD PTR [eip+0x12345678],xmm6",
+						"67 0f 29 35 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOVAPS,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
 										.base(RAX)
 										.displacement(0x12345678)
 										.build(),
@@ -6410,6 +6422,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"movq QWORD PTR [rsi],xmm3",
 						"66 0f d6 1e"),
 				test(new Instruction(Opcode.MOVQ, MM0, R9), "movq mm0,r9", "49 0f 6e c1"),
+				test(new Instruction(Opcode.MOVQ, MM0, RCX), "movq mm0,rcx", "48 0f 6e c1"),
 				test(new Instruction(Opcode.MOVQ, MM3, RSI), "movq mm3,rsi", "48 0f 6e de"),
 				test(new Instruction(Opcode.MOVQ, XMM0, R9), "movq xmm0,r9", "66 49 0f 6e c1"),
 				test(new Instruction(Opcode.MOVQ, XMM2, RAX), "movq xmm2,rax", "66 48 0f 6e d0"),
@@ -6447,6 +6460,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movq xmm6,QWORD PTR [rsi]",
 						"f3 0f 7e 36"),
+				test(
+						new Instruction(
+								Opcode.MOVQ,
+								XMM6,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(R14)
+										.build()),
+						"movq xmm6,QWORD PTR [r14]",
+						"f3 41 0f 7e 36"),
 				test(
 						new Instruction(
 								Opcode.MOVQ,
@@ -6658,13 +6681,13 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SETGE, R8B), "setge r8b", "41 0f 9d c0"),
 				//  Movabs
 				test(
-						new Instruction(Opcode.MOVABS, RCX, new Immediate(0xdeadbeef00000000L)),
-						"movabs rcx,0xdeadbeef00000000",
-						"48 b9 00 00 00 00 ef be ad de"),
+						new Instruction(Opcode.MOVABS, RCX, new Immediate(0x1234567812345678L)),
+						"movabs rcx,0x1234567812345678",
+						"48 b9 78 56 34 12 78 56 34 12"),
 				test(
-						new Instruction(Opcode.MOVABS, RDX, new Immediate(0xdeadbeefcafebabeL)),
-						"movabs rdx,0xdeadbeefcafebabe",
-						"48 ba be ba fe ca ef be ad de"),
+						new Instruction(Opcode.MOVABS, RDX, new Immediate(0x12345678L)),
+						"movabs rdx,0x12345678",
+						"48 ba 78 56 34 12 00 00 00 00"),
 				//  Movups
 				test(
 						new Instruction(

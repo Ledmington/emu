@@ -72,6 +72,19 @@ public enum RegisterMMX implements Register {
 		};
 	}
 
+	public static byte toByte(final RegisterMMX r) {
+		return switch (r) {
+			case MM0 -> (byte) 0x00;
+			case MM1 -> (byte) 0x01;
+			case MM2 -> (byte) 0x02;
+			case MM3 -> (byte) 0x03;
+			case MM4 -> (byte) 0x04;
+			case MM5 -> (byte) 0x05;
+			case MM6 -> (byte) 0x06;
+			case MM7 -> (byte) 0x07;
+		};
+	}
+
 	@Override
 	public int bits() {
 		return 64;

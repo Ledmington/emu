@@ -73,7 +73,7 @@ public final class IndirectOperand implements Operand {
 					Register32.R13D,
 					Register32.R14D,
 					Register32.R15D,
-					// no EIP
+					Register32.EIP,
 					Register64.RAX,
 					Register64.RBX,
 					Register64.RCX,
