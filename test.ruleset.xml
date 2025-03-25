@@ -24,6 +24,13 @@
         <exclude name="FormalParameterNamingConventions" />
     </rule>
 
+    <!-- Avoid reporting variables with a long name -->
+    <rule ref="category/java/codestyle.xml/LongVariable">
+        <properties>
+            <property name="minimum" value="30" />
+        </properties>
+    </rule>
+
     <rule ref="category/java/design.xml">
         <!-- Avoid reporting usage of classes from outside the package hierarchy -->
         <exclude name="LoosePackageCoupling" />
