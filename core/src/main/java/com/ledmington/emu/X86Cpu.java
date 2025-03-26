@@ -102,7 +102,7 @@ public class X86Cpu implements X86Emulator {
 						final byte result = BitUtils.asByte(r1 - r2);
 						rf.set(op1, result);
 						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
+						rf.set(RFlags.ZERO, result == (byte) 0);
 					}
 					case Register16 op1 -> {
 						final short r1 = rf.get(op1);
@@ -110,7 +110,7 @@ public class X86Cpu implements X86Emulator {
 						final short result = BitUtils.asShort(r1 - r2);
 						rf.set(op1, result);
 						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
+						rf.set(RFlags.ZERO, result == (short) 0);
 					}
 					case Register32 op1 -> {
 						final int r1 = rf.get(op1);
@@ -125,10 +125,10 @@ public class X86Cpu implements X86Emulator {
 						final long r2 =
 								switch (inst.secondOperand()) {
 									case Register64 op2 -> rf.get(op2);
-									case Immediate imm -> imm.asLong();
+									case Immediate imm -> getAsLongSX(imm);
 									default ->
-										throw new IllegalArgumentException(
-												String.format("Unknown second argument type %s", inst.secondOperand()));
+										throw new IllegalArgumentException(String.format(
+												"Unknown second argument type %s.", inst.secondOperand()));
 								};
 						final long result = r1 - r2;
 						rf.set(op1, result);
@@ -143,11 +143,11 @@ public class X86Cpu implements X86Emulator {
 						final byte result = BitUtils.asByte(r1 + r2);
 						mem.write(address, result);
 						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
+						rf.set(RFlags.ZERO, result == (byte) 0);
 					}
 					default ->
 						throw new IllegalArgumentException(
-								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
+								String.format("Don't know what to do with SUB and %s.", inst.firstOperand()));
 				}
 			}
 			case ADD -> {
@@ -181,10 +181,10 @@ public class X86Cpu implements X86Emulator {
 						final long r2 =
 								switch (inst.secondOperand()) {
 									case Register64 op2 -> rf.get(op2);
-									case Immediate imm -> imm.asLong();
+									case Immediate imm -> getAsLongSX(imm);
 									default ->
-										throw new IllegalArgumentException(
-												String.format("Unknown second argument type %s", inst.secondOperand()));
+										throw new IllegalArgumentException(String.format(
+												"Unknown second argument type %s.", inst.secondOperand()));
 								};
 						final long result = r1 + r2;
 						rf.set(op1, result);
@@ -216,7 +216,7 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SHR has %,d bits",
+							"Don't know what to do when SHR has %,d bits.",
 							inst.firstOperand().bits()));
 				}
 			}
@@ -230,7 +230,7 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SAR has %,d bits",
+							"Don't know what to do when SAR has %,d bits.",
 							inst.firstOperand().bits()));
 				}
 			}
@@ -244,7 +244,7 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SHL has %,d bits",
+							"Don't know what to do when SHL has %,d bits.",
 							inst.firstOperand().bits()));
 				}
 			}
@@ -252,12 +252,12 @@ public class X86Cpu implements X86Emulator {
 				if (inst.firstOperand() instanceof Register8 r1 && inst.secondOperand() instanceof Register8 r2) {
 					final byte result = BitUtils.xor(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0);
+					rf.set(RFlags.ZERO, result == (byte) 0);
 				} else if (inst.firstOperand() instanceof Register16 r1
 						&& inst.secondOperand() instanceof Register16 r2) {
 					final short result = BitUtils.xor(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0);
+					rf.set(RFlags.ZERO, result == (short) 0);
 				} else if (inst.firstOperand() instanceof Register32 r1
 						&& inst.secondOperand() instanceof Register32 r2) {
 					final int result = rf.get(r1) ^ rf.get(r2);
@@ -294,9 +294,9 @@ public class X86Cpu implements X86Emulator {
 					rf.set(RFlags.ZERO, result == 0L);
 				} else if (inst.firstOperand() instanceof Register64 r1
 						&& inst.secondOperand() instanceof Immediate imm) {
-					rf.set(r1, rf.get(r1) & imm.asLong());
+					rf.set(r1, rf.get(r1) & getAsLongSX(imm));
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
 			}
 			case CMP -> {
@@ -355,7 +355,7 @@ public class X86Cpu implements X86Emulator {
 					mem.write(address, rf.get(op2));
 				} else {
 					throw new IllegalArgumentException(
-							String.format("Unknown argument type '%s'", inst.secondOperand()));
+							String.format("Unknown argument type '%s'.", inst.secondOperand()));
 				}
 			}
 			case MOVSXD -> {
@@ -369,7 +369,7 @@ public class X86Cpu implements X86Emulator {
 							case Immediate imm -> imm.asLong();
 							default ->
 								throw new IllegalArgumentException(
-										String.format("Unexpected argument %s", inst.firstOperand()));
+										String.format("Unexpected argument '%s'.", inst.firstOperand()));
 						};
 
 				final long rsp = rf.get(Register64.RSP);
@@ -410,46 +410,64 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RSP, newStackPointer);
 				mem.write(newStackPointer, rip);
 
-				// TODO: check this (should modify stack pointers)
-				final long relativeAddress = ((Immediate) inst.firstOperand()).asLong();
+				final Immediate imm = (Immediate) inst.firstOperand();
 
-				rf.set(Register64.RIP, rip + relativeAddress);
+				// TODO: check this (should modify stack pointers)
+				final long relativeAddress = imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong();
+
+				final long jumpAddress = rip + relativeAddress;
+				rf.set(Register64.RIP, jumpAddress);
 			}
-			/*case RET -> {
+			case RET -> {
 				// TODO: check this
-				final long prev = rf.get(Register64.RSP) + 8L;
+				final long prev = rf.get(Register64.RSP); // + 8L;
+
+				final long newRIP = mem.read8(prev);
 
 				// If we read 0x0, we have exhausted the stack
+				// FIXME: extract this zero into an EmulatorConstant like 'baseStackvalue'
 				final long zero = 0L;
-				if (mem.read8(prev) == zero) {
+				if (newRIP == zero) {
 					state = State.HALTED;
 				} else {
 					rf.set(Register64.RSP, prev);
-					rf.set(Register64.RIP, mem.read8(prev));
+					rf.set(Register64.RIP, newRIP);
 				}
-			}*/
-			case ENDBR64 -> logger.warning("ENDBR64 not implemented");
+			}
+			case ENDBR64 -> logger.warning("ENDBR64 not implemented.");
 			case HLT -> state = State.HALTED;
 			case NOP -> {}
 			default ->
 				throw new IllegalArgumentException(
-						String.format("Unknown instruction %s", InstructionEncoder.toIntelSyntax(inst)));
+						String.format("Unknown instruction '%s'.", InstructionEncoder.toIntelSyntax(inst)));
 		}
 	}
 
+	/** Returns a sign-extended long */
+	private long getAsLongSX(final Immediate imm) {
+		return switch (imm.bits()) {
+			case 8 -> (long) imm.asByte();
+			case 16 -> (long) imm.asShort();
+			case 32 -> (long) imm.asInt();
+			case 64 -> imm.asLong();
+			default -> throw new IllegalArgumentException("Invalid immediate.");
+		};
+	}
+
 	public static long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
-		return (io.hasBase()
-						? io.getBase() instanceof Register64
-								? rf.get((Register64) io.getBase())
-								: rf.get((Register32) io.getBase())
-						: 0L)
-				+ (io.hasIndex()
-								? io.getIndex() instanceof Register64
-										? rf.get((Register64) io.getIndex())
-										: rf.get((Register32) io.getIndex())
-								: 0L)
-						* (io.hasScale() ? io.getScale() : 1)
-				+ (io.hasDisplacement() ? io.getDisplacement() : 0L);
+		final long base = io.hasBase()
+				? (io.getBase() instanceof Register64
+						? rf.get((Register64) io.getBase())
+						: BitUtils.asLong(rf.get((Register32) io.getBase())))
+				: 0L;
+		final long index = io.hasIndex()
+				? (io.getIndex() instanceof Register64
+						? rf.get((Register64) io.getIndex())
+						: BitUtils.asLong(rf.get((Register32) io.getIndex())))
+				: 0L;
+		final long scale = io.hasScale() ? io.getScale() : 1L;
+		final long displacement = io.hasDisplacement() ? io.getDisplacement() : 0L;
+		return base + index * scale + displacement;
 	}
 
 	@Override

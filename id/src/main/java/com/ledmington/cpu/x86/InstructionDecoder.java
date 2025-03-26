@@ -1299,7 +1299,14 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
 				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
-				yield new Instruction(Opcode.PCMPEQD, RegisterXMM.fromByte(r1Byte), RegisterXMM.fromByte(r2Byte));
+				yield new Instruction(
+						Opcode.PCMPEQD,
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r1Byte)
+								: RegisterMMX.fromByte(r1Byte),
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r2Byte)
+								: RegisterMMX.fromByte(r2Byte));
 			}
 			case XORPS_OPCODE -> {
 				final ModRM modrm = modrm(b);

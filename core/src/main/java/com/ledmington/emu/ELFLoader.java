@@ -45,6 +45,7 @@ import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.Pair;
 
 /**
  * Loads an ELF into memory and sets it up for execution.
@@ -86,10 +87,21 @@ public final class ELFLoader {
 		// These are fake instructions to set up the stack
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackPointer)));
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RBP, new Immediate(stackPointer)));
+
+		// TODO: extract the zero into an EmulatorConstant value like 'baseStackValue'
 		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0L)));
 
-		loadCommandLineArgumentsAndEnvironmentVariables(
+		// Set RDI to argc
+		cpu.executeOne(new Instruction(
+				Opcode.MOV, Register64.RDI, new Immediate(BitUtils.asLong(commandLineArguments.length))));
+
+		final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
 				mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
+
+		// set RSI to 'argv'
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSI, new Immediate(p.first())));
+		// set RDX to 'envp'
+		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RDX, new Immediate(p.second())));
 
 		if (elf.getSectionByName(".preinit_array").isPresent()) {
 			runPreInitArray();
@@ -241,28 +253,38 @@ public final class ELFLoader {
 		return highestAddress;
 	}
 
-	private static void loadCommandLineArgumentsAndEnvironmentVariables(
+	private static long getNumEnvBytes() {
+		long count = 0L;
+		for (final Entry<String, String> env : System.getenv().entrySet()) {
+			count += env.getKey().length() + 1L + env.getValue().length() + 1L;
+		}
+		return count;
+	}
+
+	private static long align(final long value, final long alignment) {
+		return ((value % alignment) == 0L) ? value : ((value & (alignment - 1L)) + alignment);
+	}
+
+	private static long getNumCliBytes(final String... args) {
+		long count = 0L;
+		for (final String arg : args) {
+			count += arg.length() + 1L;
+		}
+		return count;
+	}
+
+	private static Pair<Long, Long> loadCommandLineArgumentsAndEnvironmentVariables(
 			final MemoryController mem,
 			final long stackBase,
 			final boolean is32Bit,
 			final String... commandLineArguments) {
 		final long wordSize = is32Bit ? 4L : 8L;
 
-		long totalEnvBytes = 0L;
-		for (final Entry<String, String> env : System.getenv().entrySet()) {
-			totalEnvBytes += env.getKey().length() + 1L + env.getValue().length() + 1L;
-		}
-		// align size
-		final long totalEnvBytesAligned =
-				(totalEnvBytes % wordSize == 0) ? totalEnvBytes : ((totalEnvBytes & (wordSize - 1L)) + wordSize);
+		final long totalEnvBytes = getNumEnvBytes();
+		final long totalEnvBytesAligned = align(totalEnvBytes, wordSize);
 
-		long totalCliBytes = 0L;
-		for (final String arg : commandLineArguments) {
-			totalCliBytes += arg.length() + 1L;
-		}
-		// align size to 4-bytes
-		final long totalCliBytesAligned =
-				(totalCliBytes % wordSize == 0) ? totalCliBytes : ((totalCliBytes & (wordSize - 1L)) + wordSize);
+		final long totalCliBytes = getNumCliBytes(commandLineArguments);
+		final long totalCliBytesAligned = align(totalCliBytes, wordSize);
 
 		// TODO: implement this
 		final long numAuxvEntries = 0L;
@@ -300,6 +322,7 @@ public final class ELFLoader {
 
 		// write argv pointers and contents
 		long currentArgPointer = stackBase - totalEnvBytesAligned - totalCliBytesAligned;
+		final long argv = currentArgPointer;
 		for (final String arg : commandLineArguments) {
 			mem.initialize(
 					p,
@@ -318,6 +341,7 @@ public final class ELFLoader {
 
 		// write envp pointers and contents
 		long currentEnvPointer = stackBase - totalEnvBytesAligned;
+		final long envp = currentEnvPointer;
 		for (final Entry<String, String> env : System.getenv().entrySet()) {
 			final String envString = env.getKey() + "=" + env.getValue();
 			final byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
@@ -331,6 +355,8 @@ public final class ELFLoader {
 			currentEnvPointer += BitUtils.asLong(envBytes.length) + 1L;
 			p += wordSize;
 		}
+
+		return new Pair<>(argv, envp);
 	}
 
 	private static void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {

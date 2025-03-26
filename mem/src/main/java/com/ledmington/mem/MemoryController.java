@@ -82,8 +82,8 @@ public final class MemoryController implements Memory {
 	}
 
 	private String reportIllegalAccess(final String message, final long address, final int length) {
-		final String reset = "\u001B[0m";
-		final String bold = "\u001B[1m";
+		final String reset = "\u001b[0m";
+		final String bold = "\u001b[1m";
 		final String red = "\u001b[31m";
 		final String green = "\u001b[32m";
 		final String yellow = "\u001b[33m";
@@ -166,6 +166,9 @@ public final class MemoryController implements Memory {
 			}
 			sb.append(s).append(reset).append(x == (address + length - 1) ? ']' : ' ');
 		};
+
+		// print column headers
+		sb.append("                      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f\n");
 
 		// print lines before
 		for (long r = 0L; r < linesAround; r++) {

@@ -280,26 +280,30 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void callAndReturn() {
-		// Write an empty function somewhere in memory (only RET instruction)
-		final long functionAddress = rng.nextLong();
-		mem.setPermissions(functionAddress, functionAddress, false, false, true);
-		mem.initialize(functionAddress, InstructionEncoder.toHex(new Instruction(Opcode.RET)));
-
 		// Setup stack at random location
 		final long stackBase = rng.nextLong();
-		mem.setPermissions(stackBase - 8L, stackBase, true, true, false);
+		mem.setPermissions(stackBase - 6L, stackBase, true, true, false);
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
 		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(rip)));
 
+		// Write an empty function somewhere in memory (only RET instruction)
+		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
+		final int offset = rng.nextInt();
+		final long functionAddress = rip + BitUtils.asLong(offset);
+		final byte[] functionCode = InstructionEncoder.toHex(new Instruction(Opcode.RET));
+		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
+		mem.initialize(functionAddress, functionCode);
+
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
-		final byte[] code = InstructionEncoder.toHex(
-				new Instruction(Opcode.CALL, new Immediate(BitUtils.asInt(functionAddress - rip))),
-				new Instruction(Opcode.HLT));
-		mem.initialize(rip, code);
-		mem.setPermissions(rip, rip + code.length, false, false, true);
+		final int callInstructionLength =
+				InstructionEncoder.toHex(new Instruction(Opcode.CALL, new Immediate(0))).length;
+		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
+		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
+		mem.initialize(rip, mainCode);
+		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
 		// Start the CPU
 		cpu.execute();
