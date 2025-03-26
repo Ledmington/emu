@@ -380,7 +380,7 @@ public final class Main {
 				out.println();
 			}
 			final Optional<Section> symtab = elf.getSectionByName(".symtab");
-			if (symtab.isPresent()) {
+			if (symtab.isPresent() && gv.isPresent()) {
 				printSymbolTable(
 						(SymbolTableSection) symtab.orElseThrow(),
 						(GnuVersionSection) gv.orElseThrow(),
