@@ -6687,7 +6687,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"48 b9 78 56 34 12 78 56 34 12"),
 				test(
 						new Instruction(Opcode.MOVABS, RDX, new Immediate(0x12345678L)),
-						"movabs rdx,0x12345678",
+						"movabs rdx,0x0000000012345678",
 						"48 ba 78 56 34 12 00 00 00 00"),
 				//  Movups
 				test(
@@ -8319,6 +8319,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Pcmpeqd
 				test(new Instruction(Opcode.PCMPEQD, XMM0, XMM0), "pcmpeqd xmm0,xmm0", "66 0f 76 c0"),
 				test(new Instruction(Opcode.PCMPEQD, XMM3, XMM11), "pcmpeqd xmm3,xmm11", "66 41 0f 76 db"),
+				test(new Instruction(Opcode.PCMPEQD, MM1, MM2), "pcmpeqd mm1,mm2", "0f 76 ca"),
 				//  Rdrand
 				test(new Instruction(Opcode.RDRAND, AX), "rdrand ax", "66 0f c7 f0"),
 				test(new Instruction(Opcode.RDRAND, EAX), "rdrand eax", "0f c7 f0"),
