@@ -104,7 +104,7 @@ public final class ModRM {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof ModRM m)) {
+		if (!(other instanceof final ModRM m)) {
 			return false;
 		}
 		return this.modByte == m.modByte && this.regByte == m.regByte && this.rmByte == m.rmByte;

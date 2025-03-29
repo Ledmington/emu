@@ -120,7 +120,7 @@ public record FileHeader(
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof FileHeader fh)) {
+		if (!(other instanceof final FileHeader fh)) {
 			return false;
 		}
 		return this.is32Bit == fh.is32Bit

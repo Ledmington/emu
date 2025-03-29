@@ -107,7 +107,7 @@ public final class RelocationSection implements Section {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof RelocationSection rs)) {
+		if (!(other instanceof final RelocationSection rs)) {
 			return false;
 		}
 		return this.name.equals(rs.name)

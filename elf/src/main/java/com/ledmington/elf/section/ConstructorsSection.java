@@ -150,7 +150,7 @@ public final class ConstructorsSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof ConstructorsSection cs)) {
+		if (!(other instanceof final ConstructorsSection cs)) {
 			return false;
 		}
 		return this.name.equals(cs.name)

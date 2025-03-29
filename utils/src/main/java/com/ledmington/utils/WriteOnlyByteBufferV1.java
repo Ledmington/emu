@@ -275,7 +275,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 		if (this == other) {
 			return false;
 		}
-		if (!(other instanceof WriteOnlyByteBufferV1 wobb)) {
+		if (!(other instanceof final WriteOnlyByteBufferV1 wobb)) {
 			return false;
 		}
 		return Arrays.equals(this.v, wobb.v)

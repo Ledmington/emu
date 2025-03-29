@@ -246,7 +246,7 @@ public final class GnuHashSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuHashSection ghs)) {
+		if (!(other instanceof final GnuHashSection ghs)) {
 			return false;
 		}
 		return this.name.equals(ghs.name)

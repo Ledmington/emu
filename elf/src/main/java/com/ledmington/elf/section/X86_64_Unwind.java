@@ -67,7 +67,7 @@ public final class X86_64_Unwind implements Section {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof X86_64_Unwind nbs)) {
+		if (!(other instanceof final X86_64_Unwind nbs)) {
 			return false;
 		}
 		return this.name.equals(nbs.name) && this.header.equals(nbs.header);

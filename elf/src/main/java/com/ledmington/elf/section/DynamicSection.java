@@ -136,7 +136,7 @@ public final class DynamicSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof DynamicSection ds)) {
+		if (!(other instanceof final DynamicSection ds)) {
 			return false;
 		}
 		return this.name.equals(ds.name)

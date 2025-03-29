@@ -121,7 +121,7 @@ public final class ELF implements ProgramHeaderTable, SectionTable {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof ELF elf)) {
+		if (!(other instanceof final ELF elf)) {
 			return false;
 		}
 		return this.fileHeader.equals(elf.fileHeader)

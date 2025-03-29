@@ -124,7 +124,7 @@ public final class SIB {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof SIB s)) {
+		if (!(other instanceof final SIB s)) {
 			return false;
 		}
 		return this.scaleByte == s.scaleByte && this.indexByte == s.indexByte && this.baseByte == s.baseByte;

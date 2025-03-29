@@ -198,7 +198,7 @@ public final class SectionHeader {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof SectionHeader sh)) {
+		if (!(other instanceof final SectionHeader sh)) {
 			return false;
 		}
 		return this.nameOffset == sh.nameOffset

@@ -126,7 +126,7 @@ public final class NoteSectionEntry {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof NoteSectionEntry nse)) {
+		if (!(other instanceof final NoteSectionEntry nse)) {
 			return false;
 		}
 		return this.name.equals(nse.name)

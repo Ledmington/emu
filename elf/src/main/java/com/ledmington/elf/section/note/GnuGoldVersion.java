@@ -103,7 +103,7 @@ public final class GnuGoldVersion implements NoteSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuGoldVersion ggv)) {
+		if (!(other instanceof final GnuGoldVersion ggv)) {
 			return false;
 		}
 		return this.header.equals(ggv.header) && Arrays.equals(this.entries, ggv.entries);

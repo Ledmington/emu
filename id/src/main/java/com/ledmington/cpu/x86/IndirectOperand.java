@@ -137,7 +137,7 @@ public final class IndirectOperand implements Operand {
 
 		if (!(base == null
 				|| isValidRegister(base)
-				|| (base instanceof SegmentRegister sr && isValidRegister(sr.register())))) {
+				|| (base instanceof final SegmentRegister sr && isValidRegister(sr.register())))) {
 			throw new IllegalArgumentException(String.format("%s is not a valid base register.", base));
 		}
 		if (index != null && (!isValidRegister(index) || index == Register32.ESP || index == Register64.RSP)) {
@@ -165,7 +165,7 @@ public final class IndirectOperand implements Operand {
 	 */
 	public Register getBase() {
 		Objects.requireNonNull(this.base, "No base register.");
-		return (base instanceof SegmentRegister sr) ? sr.register() : base;
+		return (base instanceof final SegmentRegister sr) ? sr.register() : base;
 	}
 
 	public boolean hasBase() {
@@ -269,7 +269,7 @@ public final class IndirectOperand implements Operand {
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
 		}
-		if (base instanceof SegmentRegister sr) {
+		if (base instanceof final SegmentRegister sr) {
 			sb.append(sr.segment().toIntelSyntax()).append(':');
 		}
 		sb.append('[');
@@ -329,7 +329,7 @@ public final class IndirectOperand implements Operand {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof IndirectOperand io)) {
+		if (!(other instanceof final IndirectOperand io)) {
 			return false;
 		}
 		return this.ptrSize.equals(io.ptrSize)

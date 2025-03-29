@@ -325,7 +325,7 @@ public final class X86RegisterFile implements RegisterFile {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof X86RegisterFile regs)) {
+		if (!(other instanceof final X86RegisterFile regs)) {
 			return false;
 		}
 		return Arrays.equals(this.gpr, regs.gpr)

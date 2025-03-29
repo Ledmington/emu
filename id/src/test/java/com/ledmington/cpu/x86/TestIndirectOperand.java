@@ -85,7 +85,7 @@ final class TestIndirectOperand {
 	}
 
 	private static void addDisplacement(final Number disp, final IndirectOperandBuilder iob, final StringBuilder sb) {
-		if (disp instanceof Byte b) {
+		if (disp instanceof final Byte b) {
 			iob.displacement(b);
 			if (b < (byte) 0) {
 				sb.append(String.format("-0x%x", -b));

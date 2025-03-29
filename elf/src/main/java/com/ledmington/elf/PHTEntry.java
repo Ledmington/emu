@@ -115,7 +115,7 @@ public record PHTEntry(
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof PHTEntry phte)) {
+		if (!(other instanceof final PHTEntry phte)) {
 			return false;
 		}
 		return this.type.equals(phte.type)

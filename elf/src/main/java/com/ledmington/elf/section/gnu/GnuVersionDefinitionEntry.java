@@ -182,7 +182,7 @@ public final class GnuVersionDefinitionEntry {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuVersionDefinitionEntry gvde)) {
+		if (!(other instanceof final GnuVersionDefinitionEntry gvde)) {
 			return false;
 		}
 		return this.version == gvde.version

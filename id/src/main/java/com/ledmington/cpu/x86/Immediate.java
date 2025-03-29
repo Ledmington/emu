@@ -163,7 +163,7 @@ public final class Immediate implements Operand {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof Immediate imm)) {
+		if (!(other instanceof final Immediate imm)) {
 			return false;
 		}
 		return this.value == imm.value && this.type == imm.type;

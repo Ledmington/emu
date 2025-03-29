@@ -199,7 +199,7 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuVersionRequirementsSection gvrs)) {
+		if (!(other instanceof final GnuVersionRequirementsSection gvrs)) {
 			return false;
 		}
 		return this.header.equals(gvrs.header) && Arrays.equals(this.entries, gvrs.entries);

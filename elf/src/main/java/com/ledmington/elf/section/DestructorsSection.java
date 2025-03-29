@@ -150,7 +150,7 @@ public final class DestructorsSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof DestructorsSection ds)) {
+		if (!(other instanceof final DestructorsSection ds)) {
 			return false;
 		}
 		return this.name.equals(ds.name)

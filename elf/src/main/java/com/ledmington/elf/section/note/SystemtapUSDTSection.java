@@ -92,7 +92,7 @@ public final class SystemtapUSDTSection implements NoteSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof SystemtapUSDTSection ss)) {
+		if (!(other instanceof final SystemtapUSDTSection ss)) {
 			return false;
 		}
 		return this.header.equals(ss.header) && Arrays.equals(this.entries, ss.entries);

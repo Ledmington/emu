@@ -178,7 +178,7 @@ public final class HashTableSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof HashTableSection hts)) {
+		if (!(other instanceof final HashTableSection hts)) {
 			return false;
 		}
 		return this.name.equals(hts.name)

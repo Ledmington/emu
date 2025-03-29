@@ -102,7 +102,7 @@ public final class GnuBuildIDSection implements NoteSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuBuildIDSection gbis)) {
+		if (!(other instanceof final GnuBuildIDSection gbis)) {
 			return false;
 		}
 		return this.header.equals(gbis.header) && Arrays.equals(this.entries, gbis.entries);

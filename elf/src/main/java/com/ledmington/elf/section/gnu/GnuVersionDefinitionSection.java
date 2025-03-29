@@ -145,7 +145,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuVersionDefinitionSection gvds)) {
+		if (!(other instanceof final GnuVersionDefinitionSection gvds)) {
 			return false;
 		}
 		return this.header.equals(gvds.header) && Arrays.equals(this.entries, gvds.entries);

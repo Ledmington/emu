@@ -207,11 +207,11 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SHR -> {
-				if (inst.firstOperand() instanceof Register64) {
-					final long r1 = rf.get((Register64) inst.firstOperand());
+				if (inst.firstOperand() instanceof final Register64 r1) {
+					final long v = rf.get(r1);
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
-					final long result = r1 >>> imm;
-					rf.set((Register64) inst.firstOperand(), result);
+					final long result = v >>> imm;
+					rf.set(r1, result);
 					rf.resetFlags();
 					rf.set(RFlags.ZERO, result == 0L);
 				} else {
@@ -221,7 +221,7 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SAR -> {
-				if (inst.firstOperand() instanceof Register64 op1) {
+				if (inst.firstOperand() instanceof final Register64 op1) {
 					final long r1 = rf.get(op1);
 					final byte imm = ((Immediate) inst.secondOperand()).asByte();
 					final long result = r1 >> imm;
@@ -235,7 +235,7 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SHL -> {
-				if (inst.firstOperand() instanceof Register64 op1) {
+				if (inst.firstOperand() instanceof final Register64 op1) {
 					final long r1 = rf.get(op1);
 					final byte imm = rf.get((Register8) inst.secondOperand());
 					final long result = r1 << imm;
@@ -249,22 +249,23 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case XOR -> {
-				if (inst.firstOperand() instanceof Register8 r1 && inst.secondOperand() instanceof Register8 r2) {
+				if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
 					final byte result = BitUtils.xor(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == (byte) 0);
-				} else if (inst.firstOperand() instanceof Register16 r1
-						&& inst.secondOperand() instanceof Register16 r2) {
+				} else if (inst.firstOperand() instanceof final Register16 r1
+						&& inst.secondOperand() instanceof final Register16 r2) {
 					final short result = BitUtils.xor(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == (short) 0);
-				} else if (inst.firstOperand() instanceof Register32 r1
-						&& inst.secondOperand() instanceof Register32 r2) {
+				} else if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
 					final int result = rf.get(r1) ^ rf.get(r2);
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == 0);
-				} else if (inst.firstOperand() instanceof Register64 r1
-						&& inst.secondOperand() instanceof Register64 r2) {
+				} else if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
 					final long result = rf.get(r1) ^ rf.get(r2);
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == 0L);
@@ -273,27 +274,28 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case AND -> {
-				if (inst.firstOperand() instanceof Register8 r1 && inst.secondOperand() instanceof Register8 r2) {
+				if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
 					final byte result = BitUtils.and(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == 0);
-				} else if (inst.firstOperand() instanceof Register16 r1
-						&& inst.secondOperand() instanceof Register16 r2) {
+				} else if (inst.firstOperand() instanceof final Register16 r1
+						&& inst.secondOperand() instanceof final Register16 r2) {
 					final short result = BitUtils.and(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == 0);
-				} else if (inst.firstOperand() instanceof Register32 r1
-						&& inst.secondOperand() instanceof Register32 r2) {
+				} else if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
 					final int result = rf.get(r1) & rf.get(r2);
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == 0);
-				} else if (inst.firstOperand() instanceof Register64 r1
-						&& inst.secondOperand() instanceof Register64 r2) {
+				} else if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
 					final long result = rf.get(r1) & rf.get(r2);
 					rf.set(r1, result);
 					rf.set(RFlags.ZERO, result == 0L);
-				} else if (inst.firstOperand() instanceof Register64 r1
-						&& inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					rf.set(r1, rf.get(r1) & getAsLongSX(imm));
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
@@ -331,26 +333,27 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case MOV -> {
-				if (inst.firstOperand() instanceof Register64 op1 && inst.secondOperand() instanceof Register64 op2) {
+				if (inst.firstOperand() instanceof final Register64 op1
+						&& inst.secondOperand() instanceof final Register64 op2) {
 					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof Register32 op1
-						&& inst.secondOperand() instanceof Register32 op2) {
+				} else if (inst.firstOperand() instanceof final Register32 op1
+						&& inst.secondOperand() instanceof final Register32 op2) {
 					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof Register16 op1
-						&& inst.secondOperand() instanceof Register16 op2) {
+				} else if (inst.firstOperand() instanceof final Register16 op1
+						&& inst.secondOperand() instanceof final Register16 op2) {
 					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof Register8 op1
-						&& inst.secondOperand() instanceof Register8 op2) {
+				} else if (inst.firstOperand() instanceof final Register8 op1
+						&& inst.secondOperand() instanceof final Register8 op2) {
 					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof Register64 op1
-						&& inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof final Register64 op1
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					rf.set(op1, imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong());
-				} else if (inst.firstOperand() instanceof Register64 op1
-						&& inst.secondOperand() instanceof IndirectOperand iop) {
+				} else if (inst.firstOperand() instanceof final Register64 op1
+						&& inst.secondOperand() instanceof final IndirectOperand iop) {
 					final long address = computeIndirectOperand(rf, iop);
 					rf.set(op1, mem.read8(address));
-				} else if (inst.firstOperand() instanceof IndirectOperand iop
-						&& inst.secondOperand() instanceof Register64 op2) {
+				} else if (inst.firstOperand() instanceof final IndirectOperand iop
+						&& inst.secondOperand() instanceof final Register64 op2) {
 					final long address = computeIndirectOperand(rf, iop);
 					mem.write(address, rf.get(op2));
 				} else {
@@ -387,10 +390,10 @@ public class X86Cpu implements X86Emulator {
 			}
 			case LEA -> {
 				final IndirectOperand src = (IndirectOperand) inst.secondOperand();
-				if (inst.firstOperand() instanceof Register64 dest) {
+				if (inst.firstOperand() instanceof final Register64 dest) {
 					final long address = computeIndirectOperand(rf, src);
 					rf.set(dest, address);
-				} else if (inst.firstOperand() instanceof Register32 dest) {
+				} else if (inst.firstOperand() instanceof final Register32 dest) {
 					final int address = BitUtils.asInt(computeIndirectOperand(rf, src));
 					rf.set(dest, address);
 				} else {

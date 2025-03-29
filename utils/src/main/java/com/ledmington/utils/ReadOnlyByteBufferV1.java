@@ -133,7 +133,7 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof ReadOnlyByteBufferV1 bb)) {
+		if (!(other instanceof final ReadOnlyByteBufferV1 bb)) {
 			return false;
 		}
 		return Arrays.equals(this.b, bb.b)

@@ -124,7 +124,7 @@ public final class StringTableSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof StringTableSection sts)) {
+		if (!(other instanceof final StringTableSection sts)) {
 			return false;
 		}
 		return this.name.equals(sts.name) && this.header.equals(sts.header) && Arrays.equals(this.table, sts.table);

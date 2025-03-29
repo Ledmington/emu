@@ -144,7 +144,7 @@ public final class RelocationAddendSection implements LoadableSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof RelocationAddendSection ras)) {
+		if (!(other instanceof final RelocationAddendSection ras)) {
 			return false;
 		}
 		return this.name.equals(ras.name)

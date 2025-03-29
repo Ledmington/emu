@@ -70,7 +70,7 @@ public final class Instruction {
 						&&
 						// Some instructions allow an implicit sign-extension when the first operand is 64 bits and the
 						// second operand is a 32-bit immediate
-						!(op2 instanceof Immediate imm && imm.bits() == 32 && op1.bits() == 64)) {
+						!(op2 instanceof final Immediate imm && imm.bits() == 32 && op1.bits() == 64)) {
 					throw new InvalidInstruction(String.format(
 							"%s cannot have two operands of different sizes: were %,d (%s) and %,d (%s) bits, respectively.",
 							code.name(), op1.bits(), op1, op2.bits(), op2));
@@ -294,7 +294,7 @@ public final class Instruction {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof Instruction inst)) {
+		if (!(other instanceof final Instruction inst)) {
 			return false;
 		}
 		return Objects.equals(this.prefix, inst.prefix)

@@ -175,7 +175,7 @@ public final class GnuVersionRequirementEntry {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof GnuVersionRequirementEntry gvre)) {
+		if (!(other instanceof final GnuVersionRequirementEntry gvre)) {
 			return false;
 		}
 		return this.version == gvre.version

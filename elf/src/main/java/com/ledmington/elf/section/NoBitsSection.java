@@ -67,7 +67,7 @@ public final class NoBitsSection implements Section {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof NoBitsSection nbs)) {
+		if (!(other instanceof final NoBitsSection nbs)) {
 			return false;
 		}
 		return this.name.equals(nbs.name) && this.header.equals(nbs.header);

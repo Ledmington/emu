@@ -97,7 +97,7 @@ public final class SegmentRegister implements Register {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof SegmentRegister sr)) {
+		if (!(other instanceof final SegmentRegister sr)) {
 			return false;
 		}
 		return this.seg.equals(sr.seg) && this.reg.equals(sr.reg);

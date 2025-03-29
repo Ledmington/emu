@@ -96,7 +96,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof InterpreterPathSection ips)) {
+		if (!(other instanceof final InterpreterPathSection ips)) {
 			return false;
 		}
 		return this.header.equals(ips.header) && this.interpreterFilePath.equals(ips.interpreterFilePath);

@@ -97,7 +97,7 @@ public final class InstructionEncoder {
 	private InstructionEncoder() {}
 
 	private static String operandString(final Opcode code, final Operand op) {
-		if (op instanceof IndirectOperand io) {
+		if (op instanceof final IndirectOperand io) {
 			return io.toIntelSyntax(code != Opcode.LEA);
 		}
 		return op.toIntelSyntax();
@@ -194,15 +194,15 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean requiresAddressSizeOverride(final Operand op) {
-		return op instanceof IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32;
+		return op instanceof final IndirectOperand io && io.hasBase() && io.getBase() instanceof Register32;
 	}
 
 	private static boolean hasExtendedIndex(final Operand op) {
-		return op instanceof IndirectOperand io && io.hasIndex() && Registers.requiresExtension(io.getIndex());
+		return op instanceof final IndirectOperand io && io.hasIndex() && Registers.requiresExtension(io.getIndex());
 	}
 
 	private static boolean hasExtendedBase(final Operand op) {
-		return op instanceof IndirectOperand io && io.hasBase() && Registers.requiresExtension(io.getBase());
+		return op instanceof final IndirectOperand io && io.hasBase() && Registers.requiresExtension(io.getBase());
 	}
 
 	private static boolean isSP(final Register r) {
@@ -210,7 +210,7 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeSingleOperandInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
-		if (inst.firstOperand() instanceof IndirectOperand io && io.hasSegment()) {
+		if (inst.firstOperand() instanceof final IndirectOperand io && io.hasSegment()) {
 			wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
 		}
 		if (requiresAddressSizeOverride(inst.firstOperand())) {
@@ -239,13 +239,13 @@ public final class InstructionEncoder {
 			if (hasExtendedIndex(inst.firstOperand()) && inst.opcode() != Opcode.JMP) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
-			if ((inst.firstOperand() instanceof Register r && Registers.requiresExtension(r))
+			if ((inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r))
 					|| (hasExtendedBase(inst.firstOperand()))
 					|| (inst.opcode() == Opcode.JMP && hasExtendedIndex(inst.firstOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
-					|| (inst.firstOperand() instanceof Register8 r && Register8.requiresRexPrefix(r))) {
+					|| (inst.firstOperand() instanceof final Register8 r && Register8.requiresRexPrefix(r))) {
 				wb.write(rex);
 			}
 		}
@@ -259,7 +259,7 @@ public final class InstructionEncoder {
 					wb.write((byte) 0xe8);
 				} else {
 					wb.write((byte) 0xff);
-					reg = (inst.firstOperand() instanceof IndirectOperand io && io.bits() == 32)
+					reg = (inst.firstOperand() instanceof final IndirectOperand io && io.bits() == 32)
 							? (byte) 0b011
 							: (byte) 0b010;
 				}
@@ -273,7 +273,7 @@ public final class InstructionEncoder {
 				}
 			}
 			case JMP -> {
-				if (inst.firstOperand() instanceof Immediate imm) {
+				if (inst.firstOperand() instanceof final Immediate imm) {
 					if (imm.bits() == 8) {
 						wb.write((byte) 0xeb);
 					} else if (imm.bits() == 32) {
@@ -281,7 +281,7 @@ public final class InstructionEncoder {
 					}
 				} else {
 					wb.write((byte) 0xff);
-					reg = (inst.firstOperand() instanceof IndirectOperand io && io.bits() == 32)
+					reg = (inst.firstOperand() instanceof final IndirectOperand io && io.bits() == 32)
 							? (byte) 0b101
 							: (byte) 0b100;
 				}
@@ -291,9 +291,9 @@ public final class InstructionEncoder {
 				reg = DIV_MUL_REG_BYTES.get(inst.opcode());
 			}
 			case PUSH -> {
-				if (inst.firstOperand() instanceof Immediate imm) {
+				if (inst.firstOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x6a : (byte) 0x68);
-				} else if (inst.firstOperand() instanceof Register r) {
+				} else if (inst.firstOperand() instanceof final Register r) {
 					wb.write(BitUtils.asByte((byte) 0x50 + Registers.toByte(r)));
 					return;
 				} else if (inst.firstOperand() instanceof IndirectOperand) {
@@ -302,7 +302,7 @@ public final class InstructionEncoder {
 				}
 			}
 			case POP -> {
-				if (inst.firstOperand() instanceof Register r) {
+				if (inst.firstOperand() instanceof final Register r) {
 					wb.write(BitUtils.asByte((byte) 0x58 + Registers.toByte(r)));
 					return;
 				}
@@ -349,9 +349,9 @@ public final class InstructionEncoder {
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
-		if (inst.firstOperand() instanceof Register r) {
+		if (inst.firstOperand() instanceof final Register r) {
 			encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
-		} else if (inst.firstOperand() instanceof IndirectOperand io) {
+		} else if (inst.firstOperand() instanceof final IndirectOperand io) {
 			encodeModRM(
 					wb, getMod(io), reg, isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			if ((inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.INC || inst.opcode() == Opcode.DEC)
@@ -361,7 +361,7 @@ public final class InstructionEncoder {
 				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
 			}
 			encodeIndirectOperand(wb, io);
-		} else if (inst.firstOperand() instanceof Immediate imm) {
+		} else if (inst.firstOperand() instanceof final Immediate imm) {
 			if (imm.bits() == 8) {
 				wb.write(imm.asByte());
 			} else if (imm.bits() == 32) {
@@ -375,7 +375,7 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean isDefaultMovsSource(final Operand op) {
-		return op instanceof IndirectOperand io
+		return op instanceof final IndirectOperand io
 				&& io.hasBase()
 				&& (io.getBase() == Register64.RSI || io.getBase() == Register32.ESI)
 				&& io.hasSegment()
@@ -386,7 +386,7 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean isDefaultMovsDestination(final Operand op) {
-		return op instanceof IndirectOperand io
+		return op instanceof final IndirectOperand io
 				&& io.hasBase()
 				&& (io.getBase() == Register64.RDI || io.getBase() == Register32.EDI)
 				&& io.hasSegment()
@@ -454,9 +454,9 @@ public final class InstructionEncoder {
 		}
 
 		final boolean hasExtendedFirstRegister =
-				inst.firstOperand() instanceof Register r && Registers.requiresExtension(r);
+				inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r);
 		final boolean hasExtendedSecondRegister =
-				inst.secondOperand() instanceof Register r && Registers.requiresExtension(r);
+				inst.secondOperand() instanceof final Register r && Registers.requiresExtension(r);
 		final boolean isShift =
 				inst.opcode() == Opcode.SHR || inst.opcode() == Opcode.SAR || inst.opcode() == Opcode.SHL;
 		final boolean isConditionalMove = inst.opcode() == Opcode.CMOVE
@@ -478,7 +478,7 @@ public final class InstructionEncoder {
 			if ((inst.firstOperand() instanceof Register64
 							|| inst.firstOperand() instanceof RegisterMMX
 							|| (inst.opcode() == Opcode.MOVQ && inst.firstOperand() instanceof RegisterXMM)
-							|| (inst.firstOperand() instanceof IndirectOperand io && io.bits() == 64)
+							|| (inst.firstOperand() instanceof final IndirectOperand io && io.bits() == 64)
 							|| (inst.opcode() == Opcode.CVTSI2SD && inst.secondOperand() instanceof Register64))
 					&& !(inst.opcode() == Opcode.MOVQ && inst.firstOperand() instanceof IndirectOperand)
 					&& !(inst.opcode() == Opcode.MOVQ && inst.secondOperand() instanceof IndirectOperand)
@@ -594,8 +594,8 @@ public final class InstructionEncoder {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX
-					|| (inst.firstOperand() instanceof Register8 r && Register8.requiresRexPrefix(r))
-					|| (inst.secondOperand() instanceof Register8 r && Register8.requiresRexPrefix(r))) {
+					|| (inst.firstOperand() instanceof final Register8 r && Register8.requiresRexPrefix(r))
+					|| (inst.secondOperand() instanceof final Register8 r && Register8.requiresRexPrefix(r))) {
 				wb.write(rex);
 			}
 		}
@@ -607,16 +607,18 @@ public final class InstructionEncoder {
 						DOUBLE_BYTE_OPCODE_PREFIX,
 						BitUtils.asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
 			case CMP -> {
-				if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register) {
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof Register) {
 					wb.write(io.bits() == 8 ? (byte) 0x38 : (byte) 0x39);
-				} else if (inst.firstOperand() instanceof IndirectOperand io
-						&& inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (io.bits() == 8 ? (byte) 0x80 : (byte) 0x83) : (byte) 0x81);
 					reg = (byte) 0b111;
-				} else if (inst.firstOperand() instanceof Register r
+				} else if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof IndirectOperand) {
 					wb.write(r instanceof Register8 ? (byte) 0x3a : (byte) 0x3b);
-				} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					if (r instanceof Register8) {
 						if (r == Register8.AL) {
 							wb.write((byte) 0x3c);
@@ -635,24 +637,26 @@ public final class InstructionEncoder {
 						wb.write((byte) 0x81);
 						reg = (byte) 0b111;
 					}
-				} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Register) {
+				} else if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof Register) {
 					wb.write(r instanceof Register8 ? (byte) 0x38 : (byte) 0x39);
 				}
 			}
 			case MOV -> {
 				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x89);
-				} else if (inst.firstOperand() instanceof IndirectOperand io
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof Immediate) {
 					wb.write(io.bits() == 8 ? (byte) 0xc6 : (byte) 0xc7);
 					reg = (byte) 0b000;
 				} else if (inst.firstOperand() instanceof IndirectOperand
-						&& inst.secondOperand() instanceof Register r2) {
+						&& inst.secondOperand() instanceof final Register r2) {
 					wb.write(r2 instanceof Register8 ? (byte) 0x88 : (byte) 0x89);
-				} else if (inst.firstOperand() instanceof Register r
+				} else if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof IndirectOperand) {
 					wb.write((r instanceof Register8) ? (byte) 0x8a : (byte) 0x8b);
-				} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate) {
+				} else if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof Immediate) {
 					if (r instanceof Register64) {
 						wb.write((byte) 0xc7);
 					} else {
@@ -667,7 +671,8 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x29);
 				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x29);
-				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof Register
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b101;
 				} else {
@@ -675,11 +680,12 @@ public final class InstructionEncoder {
 				}
 			}
 			case SBB -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x1c);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.firstOperand().equals(Register16.AX) && inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand().equals(Register16.AX)
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x1d);
 					encodeImmediate(wb, imm);
 					return;
@@ -692,7 +698,8 @@ public final class InstructionEncoder {
 			}
 			case SHR, SAR, SHL -> {
 				reg = SHIFT_REG_BYTES.get(inst.opcode());
-				if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					final boolean isImmediateOne = imm.bits() == 8 && imm.asByte() == (byte) 1;
 					wb.write(BitUtils.or(
 							isImmediateOne ? (byte) 0xd0 : (byte) 0xc0,
@@ -701,7 +708,8 @@ public final class InstructionEncoder {
 						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
 						return;
 					}
-				} else if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+				} else if (inst.firstOperand() instanceof final Register r1
+						&& inst.secondOperand() instanceof final Register r2) {
 					wb.write(r1 instanceof Register8 ? (byte) 0xd2 : (byte) 0xd3);
 					if (r2.equals(Register8.CL)) {
 						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r1));
@@ -711,11 +719,11 @@ public final class InstructionEncoder {
 			}
 			case IMUL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xaf);
 			case OR -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x0c);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.secondOperand() instanceof Immediate imm
+				} else if (inst.secondOperand() instanceof final Immediate imm
 						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
 								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
 								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
@@ -727,7 +735,8 @@ public final class InstructionEncoder {
 					reg = (byte) 0b001;
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
 					wb.write((byte) 0x0b);
-				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof Register
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b001;
 				} else if (inst.firstOperand() instanceof IndirectOperand) {
@@ -742,11 +751,11 @@ public final class InstructionEncoder {
 			case MOVSX ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, inst.secondOperand().bits() == 8 ? (byte) 0xbe : (byte) 0xbf);
 			case ADD -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x04);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.secondOperand() instanceof Immediate imm
+				} else if (inst.secondOperand() instanceof final Immediate imm
 						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
 								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
 								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
@@ -754,7 +763,7 @@ public final class InstructionEncoder {
 					encodeImmediate(wb, imm);
 					return;
 				} else if ((inst.firstOperand() instanceof IndirectOperand || inst.firstOperand() instanceof Register)
-						&& inst.secondOperand() instanceof Immediate imm) {
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b000;
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
@@ -771,18 +780,19 @@ public final class InstructionEncoder {
 			}
 			case DEC -> wb.write((byte) 0xfe);
 			case AND -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x24);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.secondOperand() instanceof Immediate imm
+				} else if (inst.secondOperand() instanceof final Immediate imm
 						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
 								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
 								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
 					wb.write((byte) 0x25);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof Register
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b100;
 				} else if (inst.firstOperand() instanceof Register8
@@ -795,24 +805,25 @@ public final class InstructionEncoder {
 				}
 			}
 			case XOR -> {
-				if (inst.secondOperand() instanceof Immediate imm
+				if (inst.secondOperand() instanceof final Immediate imm
 						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
 								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
 								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
 					wb.write((byte) 0x35);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate imm) {
+				} else if (inst.firstOperand() instanceof Register
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b110;
 				}
 			}
 			case TEST -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0xa8);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.secondOperand() instanceof Immediate imm
+				} else if (inst.secondOperand() instanceof final Immediate imm
 						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
 								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
 								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
@@ -820,10 +831,10 @@ public final class InstructionEncoder {
 					encodeImmediate(wb, imm);
 					return;
 				} else if ((inst.firstOperand() instanceof IndirectOperand || inst.firstOperand() instanceof Register)
-						&& inst.secondOperand() instanceof Register r) {
+						&& inst.secondOperand() instanceof final Register r) {
 					wb.write(r.bits() == 8 ? (byte) 0x84 : (byte) 0x85);
 				} else if ((inst.firstOperand() instanceof IndirectOperand || inst.firstOperand() instanceof Register)
-						&& inst.secondOperand() instanceof Immediate imm) {
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0xf6 : (byte) 0xf7);
 				}
 			}
@@ -843,7 +854,7 @@ public final class InstructionEncoder {
 			case MOVAPS, MOVAPD -> {
 				if (inst.firstOperand() instanceof RegisterXMM && inst.secondOperand() instanceof RegisterXMM) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x28);
-				} else if (inst.firstOperand() instanceof IndirectOperand io
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof RegisterXMM) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x29);
 
@@ -853,7 +864,7 @@ public final class InstructionEncoder {
 						return;
 					}
 				} else if (inst.firstOperand() instanceof RegisterXMM
-						&& inst.secondOperand() instanceof IndirectOperand io) {
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x28);
 
 					if (isIpAndOffset(io)) {
@@ -884,7 +895,8 @@ public final class InstructionEncoder {
 			case PUNPCKHQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6d);
 			case PUNPCKLDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x62);
 			case MOVABS -> {
-				if (inst.firstOperand() instanceof Register64 r && inst.secondOperand() instanceof Immediate imm) {
+				if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(BitUtils.or((byte) 0xb8, Registers.toByte(r)));
 					encodeImmediate(wb, imm);
 					return;
@@ -905,7 +917,7 @@ public final class InstructionEncoder {
 			case PADDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd4);
 			case PSUBQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
 			case XCHG -> {
-				if (inst.firstOperand() instanceof Register r
+				if (inst.firstOperand() instanceof final Register r
 						&& (inst.secondOperand() == Register16.AX
 								|| inst.secondOperand() == Register32.EAX
 								|| inst.secondOperand() == Register64.RAX)) {
@@ -933,7 +945,7 @@ public final class InstructionEncoder {
 			case XORPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x57);
 			case UCOMISD, UCOMISS -> {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2e);
-				if (inst.secondOperand() instanceof IndirectOperand io) {
+				if (inst.secondOperand() instanceof final IndirectOperand io) {
 					if (isIpAndOffset(io)) {
 						wb.write((byte) 0x2d);
 						wb.write(BitUtils.asInt(io.getDisplacement()));
@@ -947,7 +959,7 @@ public final class InstructionEncoder {
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
-		if (inst.firstOperand() instanceof Register r1 && inst.secondOperand() instanceof Register r2) {
+		if (inst.firstOperand() instanceof final Register r1 && inst.secondOperand() instanceof final Register r2) {
 			// Most ALU operations encode the destination operand (the first one) in the r/m portion, while some
 			// instructions like MOV encode the destination as Reg
 			// FIXME: actually, it seems to be the opposite... why?
@@ -965,7 +977,8 @@ public final class InstructionEncoder {
 			} else {
 				encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 			}
-		} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof IndirectOperand io) {
+		} else if (inst.firstOperand() instanceof final Register r
+				&& inst.secondOperand() instanceof final IndirectOperand io) {
 			encodeModRM(
 					wb,
 					getMod(io),
@@ -975,19 +988,22 @@ public final class InstructionEncoder {
 				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
 			}
 			encodeIndirectOperand(wb, io);
-		} else if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Register r) {
+		} else if (inst.firstOperand() instanceof final IndirectOperand io
+				&& inst.secondOperand() instanceof final Register r) {
 			encodeModRM(
 					wb,
 					getMod(io),
 					Registers.toByte(r),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
-		} else if (inst.firstOperand() instanceof IndirectOperand io && inst.secondOperand() instanceof Immediate imm) {
+		} else if (inst.firstOperand() instanceof final IndirectOperand io
+				&& inst.secondOperand() instanceof final Immediate imm) {
 			encodeModRM(
 					wb, getMod(io), reg, (isSimpleIndirectOperand(io)) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
-		} else if (inst.firstOperand() instanceof Register r && inst.secondOperand() instanceof Immediate imm) {
+		} else if (inst.firstOperand() instanceof final Register r
+				&& inst.secondOperand() instanceof final Immediate imm) {
 			if (inst.opcode() != Opcode.MOV || r instanceof Register64) {
 				encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
 			}
@@ -1006,14 +1022,14 @@ public final class InstructionEncoder {
 			if (inst.firstOperand() instanceof Register64) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
-			if (inst.firstOperand() instanceof Register r && Registers.requiresExtension(r)) {
+			if (inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
 			if (hasExtendedBase(inst.secondOperand())) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if (hasExtendedIndex(inst.secondOperand())
-					|| (inst.secondOperand() instanceof Register r && Registers.requiresExtension(r))) {
+					|| (inst.secondOperand() instanceof final Register r && Registers.requiresExtension(r))) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX) {
@@ -1028,14 +1044,14 @@ public final class InstructionEncoder {
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
-		if (inst.firstOperand() instanceof Register r1
-				&& inst.secondOperand() instanceof Register r2
-				&& inst.thirdOperand() instanceof Immediate imm) {
+		if (inst.firstOperand() instanceof final Register r1
+				&& inst.secondOperand() instanceof final Register r2
+				&& inst.thirdOperand() instanceof final Immediate imm) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 			encodeImmediate(wb, imm);
-		} else if (inst.firstOperand() instanceof Register r1
-				&& inst.secondOperand() instanceof IndirectOperand io
-				&& inst.thirdOperand() instanceof Immediate imm) {
+		} else if (inst.firstOperand() instanceof final Register r1
+				&& inst.secondOperand() instanceof final IndirectOperand io
+				&& inst.thirdOperand() instanceof final Immediate imm) {
 			encodeModRM(
 					wb,
 					getMod(io),

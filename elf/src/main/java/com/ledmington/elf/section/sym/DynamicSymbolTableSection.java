@@ -135,7 +135,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof DynamicSymbolTableSection dsts)) {
+		if (!(other instanceof final DynamicSymbolTableSection dsts)) {
 			return false;
 		}
 		return this.name.equals(dsts.name)

@@ -104,7 +104,7 @@ public final class SymbolTableSection implements SymbolTable {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof SymbolTableSection sts)) {
+		if (!(other instanceof final SymbolTableSection sts)) {
 			return false;
 		}
 		return this.name.equals(sts.name)
