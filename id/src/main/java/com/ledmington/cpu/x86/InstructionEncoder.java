@@ -315,9 +315,8 @@ public final class InstructionEncoder {
 				wb.write((byte) 0xf7);
 				reg = (byte) 0b011;
 			}
-			case SETB, SETAE, SETE, SETNE, SETBE, SETA, SETL, SETGE, SETLE, SETG -> {
+			case SETB, SETAE, SETE, SETNE, SETBE, SETA, SETL, SETGE, SETLE, SETG ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, BitUtils.or((byte) 0x90, SET_OPCODES.get(inst.opcode())));
-			}
 			case INC, DEC -> {
 				if (inst.firstOperand().bits() == 8) {
 					wb.write((byte) 0xfe);
@@ -840,9 +839,7 @@ public final class InstructionEncoder {
 					return;
 				}
 			}
-			case MOVDQA -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6f);
-			}
+			case MOVDQA -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6f);
 			case MOVAPS, MOVAPD -> {
 				if (inst.firstOperand() instanceof RegisterXMM && inst.secondOperand() instanceof RegisterXMM) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x28);
@@ -881,21 +878,11 @@ public final class InstructionEncoder {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6f);
 				}
 			}
-			case MOVHPS -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x16);
-			}
-			case MOVHLPS -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x12);
-			}
-			case PUNPCKLQDQ -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6c);
-			}
-			case PUNPCKHQDQ -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6d);
-			}
-			case PUNPCKLDQ -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x62);
-			}
+			case MOVHPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x16);
+			case MOVHLPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x12);
+			case PUNPCKLQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6c);
+			case PUNPCKHQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6d);
+			case PUNPCKLDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x62);
 			case MOVABS -> {
 				if (inst.firstOperand() instanceof Register64 r && inst.secondOperand() instanceof Immediate imm) {
 					wb.write(BitUtils.or((byte) 0xb8, Registers.toByte(r)));
@@ -911,24 +898,12 @@ public final class InstructionEncoder {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
 				}
 			}
-			case MOVSD -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
-			}
-			case PXOR -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xef);
-			}
-			case POR -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xeb);
-			}
-			case PAND -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xdb);
-			}
-			case PADDQ -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd4);
-			}
-			case PSUBQ -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
-			}
+			case MOVSD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
+			case PXOR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xef);
+			case POR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xeb);
+			case PAND -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xdb);
+			case PADDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd4);
+			case PSUBQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
 			case XCHG -> {
 				if (inst.firstOperand() instanceof Register r
 						&& (inst.secondOperand() == Register16.AX
@@ -940,9 +915,8 @@ public final class InstructionEncoder {
 					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0x86 : (byte) 0x87);
 				}
 			}
-			case CMPXCHG -> {
+			case CMPXCHG ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (inst.firstOperand().bits() == 8) ? (byte) 0xb0 : (byte) 0xb1);
-			}
 			case BT, BTC, BTR, BTS -> {
 				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xba);
@@ -953,18 +927,10 @@ public final class InstructionEncoder {
 							BitUtils.or((byte) 0b10000011, BitUtils.shl(BIT_TEST_OPCODES.get(inst.opcode()), 3)));
 				}
 			}
-			case CVTSI2SD -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2a);
-			}
-			case DIVSD -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x5e);
-			}
-			case ADDSD -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x58);
-			}
-			case XORPS -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x57);
-			}
+			case CVTSI2SD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2a);
+			case DIVSD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x5e);
+			case ADDSD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x58);
+			case XORPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x57);
 			case UCOMISD, UCOMISS -> {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2e);
 				if (inst.secondOperand() instanceof IndirectOperand io) {
@@ -975,12 +941,9 @@ public final class InstructionEncoder {
 					}
 				}
 			}
-			case XADD -> {
+			case XADD ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
-			}
-			case PCMPEQD -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x76);
-			}
+			case PCMPEQD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x76);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1060,12 +1023,8 @@ public final class InstructionEncoder {
 
 		switch (inst.opcode()) {
 			case IMUL -> wb.write((inst.secondOperand() instanceof IndirectOperand) ? (byte) 0x69 : (byte) 0x6b);
-			case PSHUFD, PSHUFW -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x70);
-			}
-			case SHUFPS, SHUFPD -> {
-				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
-			}
+			case PSHUFD, PSHUFW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x70);
+			case SHUFPS, SHUFPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
