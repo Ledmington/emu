@@ -411,7 +411,7 @@ public final class InstructionEncoder {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.firstOperand().bits() == 16
-				|| (inst.opcode() == Opcode.MOVDQA && inst.bits() == 128)
+				|| (inst.opcode() == Opcode.MOVDQA && inst.firstOperand().bits() == 128)
 				|| (inst.opcode() == Opcode.MOVAPD)
 				|| (inst.opcode() == Opcode.MOVQ
 						&& inst.firstOperand() instanceof RegisterXMM

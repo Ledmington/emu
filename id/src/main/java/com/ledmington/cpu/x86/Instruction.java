@@ -260,42 +260,6 @@ public final class Instruction {
 	}
 
 	/**
-	 * The number of bits "used" by this instruction, which not necessarily corresponds to the size of the operands.
-	 *
-	 * <p>For example: {@code lea eax,[rbx]} "uses" 32 bits {@code vaddsd xmm9, xmm10, xmm9} "uses" 64 bits
-	 *
-	 * <p>Instructions which do not "use" anything like NOP, RET, LEAVE etc. return 0.
-	 *
-	 * @return The bits "used" in this instruction.
-	 */
-	public int bits() {
-		if (op1 instanceof Register r) {
-			return r.bits();
-		}
-		if (op1 instanceof Immediate imm) {
-			return imm.bits();
-		}
-		if (op2 instanceof Register r) {
-			return r.bits();
-		}
-		if (op2 instanceof Immediate imm) {
-			return imm.bits();
-		}
-		if (op3 instanceof Register r) {
-			return r.bits();
-		}
-		if (op3 instanceof Immediate imm) {
-			return imm.bits();
-		}
-
-		if (op1 instanceof IndirectOperand io) {
-			return io.bits();
-		}
-
-		throw new IllegalStateException();
-	}
-
-	/**
 	 * Checks whether this instruction is part of the legacy/compatibility x86 set.
 	 *
 	 * @return True if it is legacy, false otherwise.
