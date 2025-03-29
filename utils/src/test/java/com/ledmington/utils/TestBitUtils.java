@@ -23,12 +23,12 @@ import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("PMD.UnnecessaryCast")
 final class TestBitUtils {
 
 	private static final RandomGenerator rng =
@@ -37,73 +37,97 @@ final class TestBitUtils {
 	@Test
 	void shortToByte() {
 		final short s = (short) rng.nextInt();
-		assertEquals((byte) (s & 0x00ff), BitUtils.asByte(s));
+		final byte expected = (byte) (s & 0x00ff);
+		final byte actual = BitUtils.asByte(s);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%02x but was 0x%02x.", expected, actual));
 	}
 
 	@Test
 	void intToByte() {
 		final int x = rng.nextInt();
-		assertEquals((byte) (x & 0x000000ff), BitUtils.asByte(x));
+		final byte expected = (byte) (x & 0x000000ff);
+		final byte actual = BitUtils.asByte(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%02x but was 0x%02x.", expected, actual));
 	}
 
 	@Test
 	void longToByte() {
 		final long x = rng.nextLong();
-		assertEquals((byte) (x & 0x00000000000000ffL), BitUtils.asByte(x));
+		final byte expected = (byte) (x & 0x00000000000000ffL);
+		final byte actual = BitUtils.asByte(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%02x but was 0x%02x.", expected, actual));
 	}
 
 	@Test
 	void byteToShort() {
 		final byte x = BitUtils.asByte(rng.nextInt());
-		assertEquals(((short) x) & 0x00ff, BitUtils.asShort(x));
+		final short expected = (short) (((short) x) & 0x00ff);
+		final short actual = BitUtils.asShort(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%04x but was 0x%04x.", expected, actual));
 	}
 
 	@Test
 	void intToShort() {
 		final int x = rng.nextInt();
-		assertEquals((short) x, BitUtils.asShort(x));
+		final short expected = (short) x;
+		final short actual = BitUtils.asShort(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%04x but was 0x%04x.", expected, actual));
 	}
 
 	@Test
 	void longToShort() {
 		final long x = rng.nextLong();
-		assertEquals((short) x, BitUtils.asShort(x));
+		final short expected = (short) x;
+		final short actual = BitUtils.asShort(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%04x but was 0x%04x.", expected, actual));
 	}
 
 	@Test
 	void byteToInt() {
 		final byte x = BitUtils.asByte(rng.nextInt());
-		assertEquals(((int) x) & 0x000000ff, BitUtils.asInt(x));
+		final int expected = ((int) x) & 0x000000ff;
+		final int actual = BitUtils.asInt(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%08x but was 0x%08x.", expected, actual));
 	}
 
 	@Test
 	void shortToInt() {
 		final short x = BitUtils.asShort(rng.nextInt());
-		assertEquals(((int) x) & 0x0000ffff, BitUtils.asInt(x));
+		final int expected = ((int) x) & 0x0000ffff;
+		final int actual = BitUtils.asInt(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%08x but was 0x%08x.", expected, actual));
 	}
 
 	@Test
 	void longToInt() {
 		final long x = rng.nextLong();
-		assertEquals((int) x, BitUtils.asInt(x));
+		final int expected = (int) x;
+		final int actual = BitUtils.asInt(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%08x but was 0x%08x.", expected, actual));
 	}
 
 	@Test
 	void byteToLong() {
 		final byte x = BitUtils.asByte(rng.nextInt());
-		assertEquals(((long) x) & 0x00000000000000ffL, BitUtils.asLong(x));
+		final long expected = ((long) x) & 0x00000000000000ffL;
+		final long actual = BitUtils.asLong(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%016x but was 0x%016x.", expected, actual));
 	}
 
 	@Test
 	void shortToLong() {
 		final short x = BitUtils.asShort(rng.nextInt());
-		assertEquals(((long) x) & 0x000000000000ffffL, BitUtils.asLong(x));
+		final long expected = ((long) x) & 0x000000000000ffffL;
+		final long actual = BitUtils.asLong(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%016x but was 0x%016x.", expected, actual));
 	}
 
 	@Test
 	void intToLong() {
 		final int x = rng.nextInt();
-		assertEquals(((long) x) & 0x00000000ffffffffL, BitUtils.asLong(x));
+		final long expected = ((long) x) & 0x00000000ffffffffL;
+		final long actual = BitUtils.asLong(x);
+		assertEquals(expected, actual, () -> String.format("Expected 0x%016x but was 0x%016x.", expected, actual));
 	}
 
 	private static Stream<Arguments> SHRbytes() {
@@ -133,7 +157,7 @@ final class TestBitUtils {
 	@MethodSource("SHRbytes")
 	void shiftRight(final byte expected, final byte input, final int shift) {
 		final byte result = BitUtils.shr(input, shift);
-		Assertions.assertEquals(
+		assertEquals(
 				expected,
 				result,
 				() -> String.format(
@@ -157,7 +181,7 @@ final class TestBitUtils {
 	@MethodSource("ANDbytes")
 	void bitwiseAnd(final byte expected, final byte input1, final byte input2) {
 		final byte result = BitUtils.and(input1, input2);
-		Assertions.assertEquals(
+		assertEquals(
 				expected,
 				result,
 				() -> String.format(
@@ -181,7 +205,7 @@ final class TestBitUtils {
 	@MethodSource("ORbytes")
 	void bitwiseOr(final byte expected, final byte input1, final byte input2) {
 		final byte result = BitUtils.or(input1, input2);
-		Assertions.assertEquals(
+		assertEquals(
 				expected,
 				result,
 				() -> String.format(
@@ -203,7 +227,7 @@ final class TestBitUtils {
 	@MethodSource("XORbytes")
 	void bitwiseXor(final byte expected, final byte input1, final byte input2) {
 		final byte result = BitUtils.xor(input1, input2);
-		Assertions.assertEquals(
+		assertEquals(
 				expected,
 				result,
 				() -> String.format(
@@ -212,16 +236,16 @@ final class TestBitUtils {
 
 	@Test
 	void binaryStrings() {
+		final int bits = 8;
 		for (int i = 0; i < 256; i++) {
 			final byte x = BitUtils.asByte(i);
 			String tmp = Integer.toBinaryString(x);
-			if (tmp.length() > 8) {
-				tmp = tmp.substring(tmp.length() - 8);
+			if (tmp.length() > bits) {
+				tmp = tmp.substring(tmp.length() - bits);
 			}
-			final String expected = "0".repeat(8 - tmp.length()) + tmp;
+			final String expected = "0".repeat(bits - tmp.length()) + tmp;
 			final String actual = BitUtils.toBinaryString(x);
 			assertEquals(expected, actual, () -> String.format("Expected '%s' but was '%s'.", expected, actual));
-			assertEquals(8, actual.length());
 		}
 	}
 }

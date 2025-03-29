@@ -17,4 +17,12 @@
  */
 package com.ledmington.utils;
 
-public final record Pair<X, Y>(X first, Y second) {}
+/**
+ * Utility immutable class which holds two values of different types.
+ *
+ * @param first The first value.
+ * @param second The second value.
+ * @param <X> The type of the first value.
+ * @param <Y> The type of the second value.
+ */
+public record Pair<X, Y>(X first, Y second) {}

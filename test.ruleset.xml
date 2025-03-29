@@ -22,6 +22,8 @@
         <exclude name="LocalVariableNamingConventions" />
         <!-- Avoid reporting method/lambda parameters not declared in camel case -->
         <exclude name="FormalParameterNamingConventions" />
+        <!-- Avoid reporting methods and fields with "confusing" names -->
+        <exclude name="LinguisticNaming" />
     </rule>
 
     <!-- Avoid reporting variables with a long name -->
@@ -36,6 +38,8 @@
         <exclude name="LoosePackageCoupling" />
         <!-- Avoid reporting usage of data coming from "too far away" -->
         <exclude name="LawOfDemeter" />
+        <!-- Avoid reporting big test files -->
+        <exclude name="TooManyMethods" />
     </rule>
 
     <rule ref="category/java/documentation.xml">

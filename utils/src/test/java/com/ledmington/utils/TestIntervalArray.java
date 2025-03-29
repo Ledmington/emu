@@ -49,7 +49,10 @@ final class TestIntervalArray {
 		final Set<Long> positions =
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 		for (final long x : positions) {
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", x));
+			assertFalse(
+					ia.get(x),
+					() -> String.format(
+							"Expected all values to be initially false but value at address 0x%016x was true.", x));
 		}
 	}
 
@@ -64,7 +67,10 @@ final class TestIntervalArray {
 		ia.set(start, end);
 		for (long x = start; x <= end; x++) {
 			final long finalX = x;
-			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
+			assertTrue(
+					ia.get(x),
+					() -> String.format(
+							"Expected value at address 0x%016x to be true after one set but it was false.", finalX));
 		}
 	}
 
@@ -76,7 +82,10 @@ final class TestIntervalArray {
 		for (final long x : positions) {
 			ia.set(x, x);
 			ia.set(x, x);
-			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", x));
+			assertTrue(
+					ia.get(x),
+					() -> String.format(
+							"Expected value at address 0x%016x to be true after two sets but it was false.", x));
 		}
 	}
 
@@ -87,7 +96,10 @@ final class TestIntervalArray {
 		ia.reset(start, end);
 		for (long x = start; x <= end; x++) {
 			final long finalX = x;
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
+			assertFalse(
+					ia.get(x),
+					() -> String.format(
+							"Expected value at address 0x%016x to be false after one reset but it was true.", finalX));
 		}
 	}
 
@@ -99,7 +111,10 @@ final class TestIntervalArray {
 		for (final long x : addresses) {
 			ia.reset(x, x);
 			ia.reset(x, x);
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", x));
+			assertFalse(
+					ia.get(x),
+					() -> String.format(
+							"Expected value at address 0x%016x to be false after two resets but it was true.", x));
 		}
 	}
 
@@ -110,7 +125,9 @@ final class TestIntervalArray {
 		ia.set(5L, 15L);
 		for (long x = 0L; x <= 15L; x++) {
 			final long finalX = x;
-			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
+			assertTrue(
+					ia.get(x),
+					() -> String.format("Expected value at address 0x%016x to be true but it was false.", finalX));
 		}
 	}
 
@@ -122,11 +139,16 @@ final class TestIntervalArray {
 		ia.reset(5L, 15L);
 		for (long x = 0L; x < 5L; x++) {
 			final long finalX = x;
-			assertTrue(ia.get(x), () -> String.format("Value at address 0x%016x was false.", finalX));
+			assertTrue(
+					ia.get(x),
+					() -> String.format("Expected value at address 0x%016x to be true but it was false.", finalX));
 		}
 		for (long x = 5L; x <= 15L; x++) {
 			final long finalX = x;
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
+			assertFalse(
+					ia.get(x),
+					() -> String.format(
+							"Expected value at address 0x%016x to be reset to false but it was true.", finalX));
 		}
 	}
 
@@ -137,7 +159,10 @@ final class TestIntervalArray {
 		ia.reset(0L, 10L);
 		for (long x = 0L; x <= 10L; x++) {
 			final long finalX = x;
-			assertFalse(ia.get(x), () -> String.format("Value at address 0x%016x was true.", finalX));
+			assertFalse(
+					ia.get(x),
+					() -> String.format(
+							"Expected value at address 0x%016x to be reset to false but it was true.", finalX));
 		}
 	}
 }

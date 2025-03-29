@@ -80,6 +80,7 @@ public final class IntervalArray {
 	 * @param startAddress The start (inclusive) of the range.
 	 * @param endAddress The end (inclusive) of the range.
 	 */
+	// TODO: change the end of the range to be exclusive
 	public void set(final long startAddress, final long endAddress) {
 		blocks.add(new Block(startAddress, endAddress));
 		sortAndMerge();
@@ -91,6 +92,7 @@ public final class IntervalArray {
 	 * @param startAddress The start (inclusive) of the range.
 	 * @param endAddress The end (inclusive) of the range.
 	 */
+	// TODO: change the end of the range to be exclusive
 	public void reset(final long startAddress, final long endAddress) {
 		int i = 0;
 		while (i < blocks.size()) {

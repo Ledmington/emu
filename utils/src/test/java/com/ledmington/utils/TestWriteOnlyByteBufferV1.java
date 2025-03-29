@@ -121,7 +121,12 @@ final class TestWriteOnlyByteBufferV1 {
 		for (int i = 0; i < length; i++) {
 			bb.write(BitUtils.asByte(i));
 		}
-		assertEquals(length, bb.getPosition());
+		final int pos = bb.getPosition();
+		assertEquals(
+				length,
+				pos,
+				() -> String.format(
+						"Expected position after writing %,d bytes to be %,d but was %,d.", length, length, pos));
 	}
 
 	@ParameterizedTest
