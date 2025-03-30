@@ -783,8 +783,12 @@ public final class InstructionEncoder {
 				}
 			}
 			case ADC -> {
-				wb.write((byte) 0x81);
-				reg = (byte) 0b010;
+				if (inst.firstOperand() instanceof Register16 && inst.secondOperand() instanceof Immediate) {
+					wb.write((byte) 0x81);
+					reg = (byte) 0b010;
+				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x11);
+				}
 			}
 			case DEC -> wb.write((byte) 0xfe);
 			case AND -> {

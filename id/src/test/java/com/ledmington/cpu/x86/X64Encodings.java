@@ -5132,6 +5132,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"48 03 a4 98 78 56 34 12"),
 				//  Adc
 				test(new Instruction(Opcode.ADC, CX, simm), "adc cx,0x1234", "66 81 d1 34 12"),
+				test(
+						new Instruction(
+								Opcode.ADC,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RBP)
+										.displacement(0x2FF0E4B1)
+										.build(),
+								ESI),
+						"adc DWORD PTR [rbp+0x2ff0e4b1],esi",
+						"11 b5 b1 e4 f0 2f"),
 				//  And
 				test(new Instruction(Opcode.AND, AL, bimm), "and al,0x12", "24 12"),
 				test(

@@ -274,7 +274,7 @@ public final class InstructionChecker {
 							op(OperandType.M64, OperandType.R64),
 							op(OperandType.M64, OperandType.I8),
 							op(OperandType.M64, OperandType.I32))),
-			Map.entry(Opcode.ADC, List.of(op(OperandType.R16, OperandType.I16))),
+			Map.entry(Opcode.ADC, List.of(op(OperandType.R16, OperandType.I16), op(OperandType.M32, OperandType.R32))),
 			Map.entry(
 					Opcode.AND,
 					List.of(
