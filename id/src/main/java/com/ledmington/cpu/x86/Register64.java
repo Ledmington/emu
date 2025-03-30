@@ -127,9 +127,8 @@ public enum Register64 implements Register {
 	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final Register64 r) {
 		return switch (r) {
-			case RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP -> false;
+			case RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, RIP -> false;
 			case R8, R9, R10, R11, R12, R13, R14, R15 -> true;
-			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
 		};
 	}
 

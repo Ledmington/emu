@@ -265,6 +265,12 @@ public final class InstructionEncoder {
 									&& io.getPointerSize() == PointerSize.DWORD_PTR)
 							? (byte) 0b011
 							: (byte) 0b010;
+
+					if (inst.firstOperand() instanceof final IndirectOperand io && isIpAndOffset(io)) {
+						wb.write((byte) 0x15);
+						wb.write(BitUtils.asInt(io.getDisplacement()));
+						return;
+					}
 				}
 			}
 			case JA, JAE, JB, JBE, JG, JE, JL, JLE, JGE, JNE, JNS, JS, JP -> {

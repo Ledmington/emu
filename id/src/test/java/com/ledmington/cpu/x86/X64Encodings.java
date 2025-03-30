@@ -4041,6 +4041,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.CALL,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
+										.base(RIP)
+										.displacement(0x23393)
+										.build()),
+						"call QWORD PTR [rip+0x23393]",
+						"ff 15 93 33 02 00"),
+				test(
+						new Instruction(
+								Opcode.CALL,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
 										.base(RDX)
 										.build()),
 						"call QWORD PTR [rdx]",

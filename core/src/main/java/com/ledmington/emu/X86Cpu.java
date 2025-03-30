@@ -428,12 +428,17 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RSP, newStackPointer);
 				mem.write(newStackPointer, rip);
 
-				final Immediate imm = (Immediate) inst.firstOperand();
+				final long jumpAddress;
+				if (inst.firstOperand() instanceof final Immediate imm) {
+					// TODO: check this (should modify stack pointers)
+					final long relativeAddress = imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong();
+					jumpAddress = rip + relativeAddress;
+				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
+					jumpAddress = computeIndirectOperand(rf, io);
+				} else {
+					throw new Error();
+				}
 
-				// TODO: check this (should modify stack pointers)
-				final long relativeAddress = imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong();
-
-				final long jumpAddress = rip + relativeAddress;
 				rf.set(Register64.RIP, jumpAddress);
 			}
 			case RET -> {
