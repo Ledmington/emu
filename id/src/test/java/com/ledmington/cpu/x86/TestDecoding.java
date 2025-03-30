@@ -47,7 +47,11 @@ final class TestDecoding extends X64Encodings {
 	@ParameterizedTest
 	@MethodSource("onlyInstructions")
 	void checkReference(final Instruction inst) {
-		assertDoesNotThrow(() -> InstructionChecker.check(inst));
+		assertDoesNotThrow(
+				() -> InstructionChecker.check(inst),
+				() -> String.format(
+						"Expected reference instruction '%s' to be correct but it wasn't.",
+						InstructionEncoder.toIntelSyntax(inst)));
 	}
 
 	private static Stream<Arguments> instAndHex() {
@@ -98,6 +102,26 @@ final class TestDecoding extends X64Encodings {
 						asString(hex), expected, inst.getFirst()));
 	}
 
+	private static Stream<Arguments> onlyHex() {
+		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.hex()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("onlyHex")
+	void checkFromHex(final byte[] hex) {
+		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length);
+		assertEquals(
+				1,
+				inst.size(),
+				() -> String.format(
+						"Expected only one instruction to be decoded but there were %,d: %s.", inst.size(), inst));
+		assertDoesNotThrow(
+				() -> InstructionChecker.check(inst.getFirst()),
+				() -> String.format(
+						"Expected instruction '%s' to be valid but it wasn't.",
+						inst.getFirst().toString()));
+	}
+
 	private static Stream<Arguments> instAndIntelSyntax() {
 		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.intelSyntax()));
 	}
@@ -122,5 +146,18 @@ final class TestDecoding extends X64Encodings {
 				actual,
 				() -> String.format(
 						"Expected '%s' to be decoded into '%s' but was '%s'.", intelSyntax, expected, actual));
+	}
+
+	private static Stream<Arguments> onlyIntelSyntax() {
+		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.intelSyntax()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("onlyIntelSyntax")
+	void checkFromIntelSyntax(final String intelSyntax) {
+		final Instruction inst = InstructionDecoder.fromIntelSyntax(intelSyntax);
+		assertDoesNotThrow(
+				() -> InstructionChecker.check(inst),
+				() -> String.format("Expected '%s' to be valid but it wasn't.", intelSyntax));
 	}
 }
