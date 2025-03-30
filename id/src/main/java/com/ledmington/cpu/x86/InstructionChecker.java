@@ -147,6 +147,7 @@ public final class InstructionChecker {
 							op(OperandType.M16, OperandType.I8),
 							op(OperandType.M16, OperandType.I16),
 							op(OperandType.M32, OperandType.I32),
+							op(OperandType.M64, OperandType.I8),
 							op(OperandType.M64, OperandType.I32))),
 			Map.entry(
 					Opcode.CALL,

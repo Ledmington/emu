@@ -263,10 +263,20 @@ public final class InstructionDecoder {
 					});
 		}
 		if (displacementString != null) {
-			if (displacementString.length() > 3 || displacementString.charAt(0) == '-') {
-				iob.displacement(Integer.parseInt(displacementString, 16));
+			// save the sign for later
+			final boolean isNegative = displacementString.charAt(0) == '-';
+			// remove the sign
+			if (displacementString.charAt(0) == '+' || displacementString.charAt(0) == '-') {
+				displacementString = displacementString.substring(1);
+			}
+			final char sign = isNegative ? '-' : '+';
+			final boolean isFirstBitSet = displacementString.length() >= 2
+					&& Integer.parseInt(String.valueOf(displacementString.charAt(0)), 16) >= 8;
+			final int disp = Integer.parseInt(sign + displacementString, 16);
+			if (displacementString.length() > 2 || isFirstBitSet) {
+				iob.displacement(disp);
 			} else {
-				iob.displacement(BitUtils.asByte(Integer.parseInt(displacementString, 16)));
+				iob.displacement(BitUtils.asByte(disp));
 			}
 		}
 

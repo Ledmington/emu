@@ -3620,7 +3620,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(EBP)
-										.displacement(0xffffff18)
+										.displacement(-0xe8)
 										.build(),
 								R15D),
 						"cmp DWORD PTR [ebp-0xe8],r15d",
@@ -3630,8 +3630,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.CMP,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(EBP)
+										.displacement((byte) -0x78)
+										.build(),
+								R15D),
+						"cmp DWORD PTR [ebp-0x78],r15d",
+						"67 44 39 7d 88"),
+				test(
+						new Instruction(
+								Opcode.CMP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(R13D)
-										.displacement(0xffffff18)
+										.displacement(-0xe8)
 										.build(),
 								R15D),
 						"cmp DWORD PTR [r13d-0xe8],r15d",
@@ -3866,6 +3877,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"cmp rdx,QWORD PTR [rax]",
 						"48 3b 10"),
+				test(
+						new Instruction(
+								Opcode.CMP,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.displacement((byte) -8)
+										.build(),
+								new Immediate((byte) 0)),
+						"cmp QWORD PTR [rdi-0x8],0x00",
+						"48 83 7f f8 00"),
 				//
 				test(new Instruction(Opcode.CMP, AL, new Immediate((byte) 0x99)), "cmp al,0x99", "3c 99"),
 				test(new Instruction(Opcode.CMP, AL, DH), "cmp al,dh", "38 f0"),
