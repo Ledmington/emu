@@ -73,6 +73,7 @@ public final class Emu {
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getStackSize());
 
+		cpu.turnOn();
 		cpu.executeOne(new Instruction(
 				Opcode.MOVABS,
 				Register64.RIP,

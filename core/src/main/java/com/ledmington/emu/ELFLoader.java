@@ -204,6 +204,7 @@ public final class ELFLoader {
 					} else {
 						logger.debug("Running constructor from .init");
 					}
+					cpu.turnOn();
 					runFrom(cpu, start);
 				}
 			}
