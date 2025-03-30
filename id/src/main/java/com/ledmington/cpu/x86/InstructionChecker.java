@@ -78,7 +78,8 @@ public final class InstructionChecker {
 					error("%s requires destination operand to be a 64-bit register.", code.name());
 				}
 				if (!(inst.secondOperand() instanceof Register32)
-						&& (!(inst.secondOperand() instanceof IndirectOperand io) || io.bits() != 32)) {
+						&& (!(inst.secondOperand() instanceof IndirectOperand io)
+								|| io.getPointerSize() != PointerSize.DWORD_PTR)) {
 					error(
 							"%s requires source operand to be a 32-bit register or a 32-bit indirect operand.",
 							code.name());

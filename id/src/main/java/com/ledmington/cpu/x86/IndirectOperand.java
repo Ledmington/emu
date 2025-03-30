@@ -158,6 +158,10 @@ public final class IndirectOperand implements Operand {
 		this.displacementType = displacementType;
 	}
 
+	public PointerSize getPointerSize() {
+		return ptrSize;
+	}
+
 	/**
 	 * Returns the base register of this indirect operand.
 	 *

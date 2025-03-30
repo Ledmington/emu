@@ -259,7 +259,8 @@ public final class InstructionEncoder {
 					wb.write((byte) 0xe8);
 				} else {
 					wb.write((byte) 0xff);
-					reg = (inst.firstOperand() instanceof final IndirectOperand io && io.bits() == 32)
+					reg = (inst.firstOperand() instanceof final IndirectOperand io
+									&& io.getPointerSize() == PointerSize.DWORD_PTR)
 							? (byte) 0b011
 							: (byte) 0b010;
 				}
@@ -281,7 +282,8 @@ public final class InstructionEncoder {
 					}
 				} else {
 					wb.write((byte) 0xff);
-					reg = (inst.firstOperand() instanceof final IndirectOperand io && io.bits() == 32)
+					reg = (inst.firstOperand() instanceof final IndirectOperand io
+									&& io.getPointerSize() == PointerSize.DWORD_PTR)
 							? (byte) 0b101
 							: (byte) 0b100;
 				}
@@ -478,7 +480,8 @@ public final class InstructionEncoder {
 			if ((inst.firstOperand() instanceof Register64
 							|| inst.firstOperand() instanceof RegisterMMX
 							|| (inst.opcode() == Opcode.MOVQ && inst.firstOperand() instanceof RegisterXMM)
-							|| (inst.firstOperand() instanceof final IndirectOperand io && io.bits() == 64)
+							|| (inst.firstOperand() instanceof final IndirectOperand io
+									&& io.getPointerSize() == PointerSize.QWORD_PTR)
 							|| (inst.opcode() == Opcode.CVTSI2SD && inst.secondOperand() instanceof Register64))
 					&& !(inst.opcode() == Opcode.MOVQ && inst.firstOperand() instanceof IndirectOperand)
 					&& !(inst.opcode() == Opcode.MOVQ && inst.secondOperand() instanceof IndirectOperand)
@@ -609,10 +612,13 @@ public final class InstructionEncoder {
 			case CMP -> {
 				if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof Register) {
-					wb.write(io.bits() == 8 ? (byte) 0x38 : (byte) 0x39);
+					wb.write(io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x38 : (byte) 0x39);
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					wb.write(imm.bits() == 8 ? (io.bits() == 8 ? (byte) 0x80 : (byte) 0x83) : (byte) 0x81);
+					wb.write(
+							imm.bits() == 8
+									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x80 : (byte) 0x83)
+									: (byte) 0x81);
 					reg = (byte) 0b111;
 				} else if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof IndirectOperand) {
@@ -647,7 +653,7 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x89);
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof Immediate) {
-					wb.write(io.bits() == 8 ? (byte) 0xc6 : (byte) 0xc7);
+					wb.write(io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0xc6 : (byte) 0xc7);
 					reg = (byte) 0b000;
 				} else if (inst.firstOperand() instanceof IndirectOperand
 						&& inst.secondOperand() instanceof final Register r2) {
