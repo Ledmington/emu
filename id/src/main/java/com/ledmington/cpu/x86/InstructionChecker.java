@@ -29,9 +29,15 @@ public final class InstructionChecker {
 
 	public static void check(final Instruction inst) {
 		final Opcode code = inst.opcode();
+
 		final boolean hasFirstOperand = inst.hasFirstOperand();
 		final boolean hasSecondOperand = inst.hasSecondOperand();
 		final boolean hasThirdOperand = inst.hasThirdOperand();
+
+		final boolean isFirstRegister = hasFirstOperand && inst.firstOperand() instanceof Register;
+		final boolean isFirstImmediate = hasFirstOperand && inst.firstOperand() instanceof Immediate;
+		final boolean isFirstIndirect = hasFirstOperand && inst.firstOperand() instanceof IndirectOperand;
+		final boolean isSecondIndirect = hasSecondOperand && inst.secondOperand() instanceof IndirectOperand;
 
 		switch (code) {
 			case Opcode.MOV -> {
@@ -41,10 +47,10 @@ public final class InstructionChecker {
 				if (!hasFirstOperand || !hasSecondOperand) {
 					error("%s requires 2 operands.", code.name());
 				}
-				if (inst.firstOperand() instanceof Immediate) {
+				if (isFirstImmediate) {
 					error("Destination operand of %s cannot be an immediate value.", code.name());
 				}
-				if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof IndirectOperand) {
+				if (isFirstIndirect && inst.secondOperand() instanceof IndirectOperand) {
 					error("%s cannot have two indirect operands.", code.name());
 				}
 				if (inst.firstOperand().bits() != inst.secondOperand().bits()
@@ -84,7 +90,7 @@ public final class InstructionChecker {
 				if (hasSecondOperand || hasThirdOperand) {
 					error("%s cannot have 2 or 3 operands.", code.name());
 				}
-				if (hasFirstOperand && (inst.firstOperand().bits() == 8 || inst.firstOperand() instanceof Immediate)) {
+				if (hasFirstOperand && (inst.firstOperand().bits() == 8 || isFirstImmediate)) {
 					error("%s cannot have an 8-bit operand (%s).", code.name(), inst.firstOperand());
 				}
 			}
@@ -92,11 +98,10 @@ public final class InstructionChecker {
 				if (!hasFirstOperand || !hasSecondOperand || hasThirdOperand) {
 					error("%s requires 2 operands.", code.name());
 				}
-				if (!(inst.firstOperand() instanceof Register)
-						|| inst.firstOperand().bits() == 8) {
+				if (!isFirstRegister || inst.firstOperand().bits() == 8) {
 					error("%s requires a not 8-bit destination register (%s).", code.name(), inst.firstOperand());
 				}
-				if (!(inst.secondOperand() instanceof IndirectOperand)) {
+				if (!isSecondIndirect) {
 					error("%s requires an indirect operand (%s).", code.name(), inst.secondOperand());
 				}
 			}
