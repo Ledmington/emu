@@ -363,6 +363,7 @@ public class X86Cpu implements X86Emulator {
 							String.format("Unknown argument type '%s'.", inst.secondOperand()));
 				}
 			}
+			case MOVABS -> rf.set((Register64) inst.firstOperand(), ((Immediate) inst.secondOperand()).asLong());
 			case MOVSXD -> {
 				final int x = rf.get((Register32) inst.secondOperand());
 				rf.set((Register64) inst.firstOperand(), x);
@@ -371,7 +372,7 @@ public class X86Cpu implements X86Emulator {
 				final long value =
 						switch (inst.firstOperand()) {
 							case Register64 r64 -> rf.get(r64);
-							case Immediate imm -> imm.asLong();
+							case Immediate imm -> getAsLongSX(imm);
 							default ->
 								throw new IllegalArgumentException(
 										String.format("Unexpected argument '%s'.", inst.firstOperand()));

@@ -111,6 +111,7 @@ public final class InstructionEncoder {
 	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public static String toIntelSyntax(final Instruction inst) {
 		Objects.requireNonNull(inst);
+		InstructionChecker.check(inst);
 		final StringBuilder sb = new StringBuilder();
 		if (inst.hasPrefix()) {
 			sb.append(inst.getPrefix().name().toLowerCase(Locale.US)).append(' ');
@@ -159,6 +160,7 @@ public final class InstructionEncoder {
 	}
 
 	private static void toHex(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		InstructionChecker.check(inst);
 		switch (countOperands(inst)) {
 			case 0 -> encodeZeroOperandsInstruction(wb, inst);
 			case 1 -> encodeSingleOperandInstruction(wb, inst);

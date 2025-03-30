@@ -85,23 +85,23 @@ public final class ELFLoader {
 		final long stackPointer = highestAddress + stackSize - 8L;
 
 		// These are fake instructions to set up the stack
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackPointer)));
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RBP, new Immediate(stackPointer)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackPointer)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackPointer)));
 
 		// TODO: extract the zero into an EmulatorConstant value like 'baseStackValue'
-		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0L)));
+		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0)));
 
 		// Set RDI to argc
 		cpu.executeOne(new Instruction(
-				Opcode.MOV, Register64.RDI, new Immediate(BitUtils.asLong(commandLineArguments.length))));
+				Opcode.MOVABS, Register64.RDI, new Immediate(BitUtils.asLong(commandLineArguments.length))));
 
 		final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
 				mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
 
 		// set RSI to 'argv'
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSI, new Immediate(p.first())));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSI, new Immediate(p.first())));
 		// set RDX to 'envp'
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RDX, new Immediate(p.second())));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RDX, new Immediate(p.second())));
 
 		if (elf.getSectionByName(".preinit_array").isPresent()) {
 			runPreInitArray();
