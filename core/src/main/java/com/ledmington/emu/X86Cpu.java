@@ -71,6 +71,11 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	@Override
+	public void turnOn() {
+		state = State.RUNNING;
+	}
+
+	@Override
 	public void execute() {
 		state = State.RUNNING;
 		while (state != State.HALTED) {
@@ -321,12 +326,12 @@ public class X86Cpu implements X86Emulator {
 			case JMP -> {
 				final long offset = (inst.firstOperand() instanceof Register64)
 						? rf.get((Register64) inst.firstOperand())
-						: ((Immediate) inst.firstOperand()).asLong();
+						: getAsLongSX((Immediate) inst.firstOperand());
 				instFetch.setPosition(instFetch.getPosition() + offset);
 			}
 			case JE -> {
 				if (rf.isSet(RFlags.ZERO)) {
-					instFetch.setPosition(instFetch.getPosition() + ((Immediate) inst.firstOperand()).asLong());
+					instFetch.setPosition(instFetch.getPosition() + getAsLongSX((Immediate) inst.firstOperand()));
 				}
 			}
 			case JNE -> {
@@ -350,14 +355,21 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 op1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					rf.set(op1, imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong());
+				} else if (inst.firstOperand() instanceof final Register32 op1
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					rf.set(op1, imm.asInt());
 				} else if (inst.firstOperand() instanceof final Register64 op1
-						&& inst.secondOperand() instanceof final IndirectOperand iop) {
-					final long address = computeIndirectOperand(rf, iop);
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					final long address = computeIndirectOperand(rf, io);
 					rf.set(op1, mem.read8(address));
-				} else if (inst.firstOperand() instanceof final IndirectOperand iop
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register64 op2) {
-					final long address = computeIndirectOperand(rf, iop);
+					final long address = computeIndirectOperand(rf, io);
 					mem.write(address, rf.get(op2));
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					final long address = computeIndirectOperand(rf, io);
+					mem.write(address, imm.asInt());
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'.", inst.secondOperand()));
@@ -435,6 +447,7 @@ public class X86Cpu implements X86Emulator {
 				final long zero = 0L;
 				if (newRIP == zero) {
 					state = State.HALTED;
+					logger.debug("Found the base of the stack, halting execution");
 				} else {
 					rf.set(Register64.RSP, prev);
 					rf.set(Register64.RIP, newRIP);

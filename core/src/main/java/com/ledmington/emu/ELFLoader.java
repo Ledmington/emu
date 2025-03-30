@@ -153,7 +153,7 @@ public final class ELFLoader {
 	}
 
 	private static void runFrom(final X86Emulator cpu, final long startAddress) {
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(startAddress)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RIP, new Immediate(startAddress)));
 		cpu.execute();
 	}
 
@@ -177,6 +177,7 @@ public final class ELFLoader {
 			} else {
 				logger.debug("Running .init_array[%d] = %,d (0x%016x)", i, c, c);
 			}
+			cpu.turnOn();
 			runFrom(cpu, entryPointVirtualAddress + c);
 		}
 	}

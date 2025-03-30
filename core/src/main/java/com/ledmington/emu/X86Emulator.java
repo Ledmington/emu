@@ -23,6 +23,8 @@ import com.ledmington.cpu.x86.Opcode;
 /** Common interface to represent an x86 Emulator. */
 public interface X86Emulator {
 
+	void turnOn();
+
 	/**
 	 * Automatically fetches instruction from the emulated memory and executes them. Continues indefinitely until it
 	 * encounters a {@link Opcode#HLT} instruction.
