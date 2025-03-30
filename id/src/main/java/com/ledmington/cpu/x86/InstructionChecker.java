@@ -34,6 +34,13 @@ public final class InstructionChecker {
 		final boolean hasSecondOperand = inst.hasSecondOperand();
 		final boolean hasThirdOperand = inst.hasThirdOperand();
 
+		final int numOperands = hasThirdOperand ? 3 : (hasSecondOperand ? 2 : (hasFirstOperand ? 1 : 0));
+
+		if (numOperands >= 2) {
+			checkNoMoreThanOneImmediate(inst);
+			checkNoMoreThanOneIndirect(inst);
+		}
+
 		final boolean isFirstRegister = hasFirstOperand && inst.firstOperand() instanceof Register;
 		final boolean isFirstImmediate = hasFirstOperand && inst.firstOperand() instanceof Immediate;
 		final boolean isFirstIndirect = hasFirstOperand && inst.firstOperand() instanceof IndirectOperand;
@@ -41,17 +48,11 @@ public final class InstructionChecker {
 
 		switch (code) {
 			case Opcode.MOV -> {
-				if (hasThirdOperand) {
-					error("%s cannot have 3 operands.", code.name());
-				}
-				if (!hasFirstOperand || !hasSecondOperand) {
+				if (numOperands != 2) {
 					error("%s requires 2 operands.", code.name());
 				}
 				if (isFirstImmediate) {
 					error("Destination operand of %s cannot be an immediate value.", code.name());
-				}
-				if (isFirstIndirect && inst.secondOperand() instanceof IndirectOperand) {
-					error("%s cannot have two indirect operands.", code.name());
 				}
 				if (inst.firstOperand().bits() != inst.secondOperand().bits()
 						&&
@@ -70,10 +71,7 @@ public final class InstructionChecker {
 				}
 			}
 			case Opcode.MOVSXD -> {
-				if (hasThirdOperand) {
-					error("%s cannot have 3 operands.", code.name());
-				}
-				if (!hasFirstOperand || !hasSecondOperand) {
+				if (numOperands != 2) {
 					error("%s requires 2 operands.", code.name());
 				}
 				if (!(inst.firstOperand() instanceof Register64)) {
@@ -87,7 +85,7 @@ public final class InstructionChecker {
 				}
 			}
 			case Opcode.NOP -> {
-				if (hasSecondOperand || hasThirdOperand) {
+				if (numOperands > 1) {
 					error("%s cannot have 2 or 3 operands.", code.name());
 				}
 				if (hasFirstOperand && (inst.firstOperand().bits() == 8 || isFirstImmediate)) {
@@ -95,7 +93,7 @@ public final class InstructionChecker {
 				}
 			}
 			case Opcode.LEA -> {
-				if (!hasFirstOperand || !hasSecondOperand || hasThirdOperand) {
+				if (numOperands != 2) {
 					error("%s requires 2 operands.", code.name());
 				}
 				if (!isFirstRegister || inst.firstOperand().bits() == 8) {
@@ -105,7 +103,56 @@ public final class InstructionChecker {
 					error("%s requires an indirect operand (%s).", code.name(), inst.secondOperand());
 				}
 			}
+			case Opcode.CMP -> {
+				if (numOperands != 2) {
+					error("%s requires 2 operands.", code.name());
+				}
+			}
 			default -> {}
+		}
+	}
+
+	/**
+	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
+	 * more than one immediate value.
+	 */
+	private static void checkNoMoreThanOneImmediate(final Instruction inst) {
+		int count = 0;
+		if (inst.hasFirstOperand() && inst.firstOperand() instanceof Immediate) {
+			count++;
+		}
+		if (inst.hasSecondOperand() && inst.secondOperand() instanceof Immediate) {
+			count++;
+		}
+		if (inst.hasThirdOperand() && inst.thirdOperand() instanceof Immediate) {
+			count++;
+		}
+		if (count > 1) {
+			error("No instruction can have more than 1 immediate value.");
+		}
+	}
+
+	/**
+	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
+	 * more than one indirect operand (except MOVS).
+	 */
+	private static void checkNoMoreThanOneIndirect(final Instruction inst) {
+		if (inst.opcode() == Opcode.MOVS) {
+			return;
+		}
+
+		int count = 0;
+		if (inst.hasFirstOperand() && inst.firstOperand() instanceof IndirectOperand) {
+			count++;
+		}
+		if (inst.hasSecondOperand() && inst.secondOperand() instanceof IndirectOperand) {
+			count++;
+		}
+		if (inst.hasThirdOperand() && inst.thirdOperand() instanceof IndirectOperand) {
+			count++;
+		}
+		if (count > 1) {
+			error("No instruction can have more than 1 indirect operand.");
 		}
 	}
 }
