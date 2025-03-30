@@ -72,9 +72,7 @@ public final class AppConstants {
 
 	public static void setDefaultMonospaceFont(final String monospaceFontFamily) {
 		Objects.requireNonNull(monospaceFontFamily);
-		if (monospaceFontFamily.isEmpty()
-				|| monospaceFontFamily.isBlank()
-				|| !Font.getFamilies().contains(monospaceFontFamily)) {
+		if (monospaceFontFamily.isBlank() || !Font.getFamilies().contains(monospaceFontFamily)) {
 			throw new IllegalArgumentException(String.format("Illegal font family name '%s'", monospaceFontFamily));
 		}
 		MONOSPACE_FONT_FAMILY = monospaceFontFamily;
