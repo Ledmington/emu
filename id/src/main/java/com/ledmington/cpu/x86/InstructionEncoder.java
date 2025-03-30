@@ -824,6 +824,8 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b110;
+				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x31);
 				}
 			}
 			case TEST -> {

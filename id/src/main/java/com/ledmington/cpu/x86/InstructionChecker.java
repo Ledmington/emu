@@ -400,7 +400,8 @@ public final class InstructionChecker {
 							op(OperandType.R32, OperandType.I8),
 							op(OperandType.R32, OperandType.I32),
 							op(OperandType.R64, OperandType.I8),
-							op(OperandType.R64, OperandType.I32))),
+							op(OperandType.R64, OperandType.I32),
+							op(OperandType.M32, OperandType.R32))),
 			Map.entry(Opcode.NOT, List.of(op(OperandType.R32), op(OperandType.R64))),
 			Map.entry(
 					Opcode.NEG,
