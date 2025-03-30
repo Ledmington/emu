@@ -974,6 +974,7 @@ public final class Main {
 				case NT_GNU_PROPERTY_TYPE_0 -> printGNUProperties(nse);
 				case NT_GNU_GOLD_VERSION -> printGNUGoldVersion(nse);
 				case NT_STAPSDT -> printSystemtapProperties(nse);
+				case NT_FDO_PACKAGING_METADATA -> printFDOPackagingMetadata(nse);
 
 				default ->
 					throw new IllegalArgumentException(
@@ -988,6 +989,14 @@ public final class Main {
 			sb.append((char) nse.getDescriptionByte(i));
 		}
 		out.printf("    Version: %s%n", sb);
+	}
+
+	private static void printFDOPackagingMetadata(final NoteSectionEntry nse) {
+		final StringBuilder sb = new StringBuilder(nse.getDescriptionLength());
+		for (int i = 0; i < nse.getDescriptionLength(); i++) {
+			sb.append((char) nse.getDescriptionByte(i));
+		}
+		out.printf("    Packaging Metadata: %s%n", sb);
 	}
 
 	private static void printSystemtapProperties(final NoteSectionEntry nse) {

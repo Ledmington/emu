@@ -38,7 +38,10 @@ public enum NoteSectionEntryType {
 	NT_GNU_PROPERTY_TYPE_0(5, "NT_GNU_PROPERTY_TYPE_0"),
 
 	/** SystemTap USDT probe descriptors. */
-	NT_STAPSDT(3, "NT_STAPSDT (SystemTap probe descriptors)");
+	NT_STAPSDT(3, "NT_STAPSDT (SystemTap probe descriptors)"),
+
+	/** Packaging metadata as defined <a href="https://systemd.io/ELF_PACKAGE_METADATA">here</a>. */
+	NT_FDO_PACKAGING_METADATA(0xcafe1a7e, "FDO_PACKAGING_METADATA");
 
 	private final int code;
 	private final String description;
@@ -66,18 +69,26 @@ public enum NoteSectionEntryType {
 					case 5 -> NT_GNU_PROPERTY_TYPE_0;
 					default ->
 						throw new IllegalArgumentException(String.format(
-								"Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
+								"Unknown note section entry type %d (0x%08x) for owner '%s'.", type, type, owner));
 				};
 			case "stapsdt" -> {
 				if (type == NT_STAPSDT.getCode()) {
 					yield NT_STAPSDT;
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Unknown note section entry type %d (0x%08x) for owner '%s'", type, type, owner));
+							"Unknown note section entry type %d (0x%08x) for owner '%s'.", type, type, owner));
+				}
+			}
+			case "FDO" -> {
+				if (type == NT_FDO_PACKAGING_METADATA.getCode()) {
+					yield NT_FDO_PACKAGING_METADATA;
+				} else {
+					throw new IllegalArgumentException(String.format(
+							"Unknown note section entry type %d (0x%08x) for owner '%s'.", type, type, owner));
 				}
 			}
 			default ->
-				throw new IllegalArgumentException(String.format("Unknown note section entry owner '%s'", owner));
+				throw new IllegalArgumentException(String.format("Unknown note section entry owner '%s'.", owner));
 		};
 	}
 
