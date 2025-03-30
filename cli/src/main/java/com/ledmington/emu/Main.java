@@ -71,6 +71,7 @@ public final class Main {
 		final String memoryInitializerZeroFlag = "--mem-init-zero";
 		final String stackSizeFlag = "--stack-size";
 		final String baseAddressFlag = "--base-address";
+		final String baseStackValueFlag = "--base-stack-value";
 		final String shortVersionFlag = "-V";
 		final String longVersionFlag = "--version";
 
@@ -94,12 +95,13 @@ public final class Main {
 							" -v           Errors, warnings and info messages are reported.",
 							" -vv          All messages are reported.",
 							"",
-							" --mem-init-random  Uninitialized memory has random values (default).",
-							" --mem-init-zero    Uninitialized memory contains binary zero.",
-							" --stack-size N     Number of bytes to allocate for the stack. Accepts only integers.",
-							"                    Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
-							" --base-address X   Memory location where to load the executable file (hexadecimal 64-bits).",
-							" FILE               The ELF executable file to emulate.",
+							" --mem-init-random     Uninitialized memory has random values (default).",
+							" --mem-init-zero       Uninitialized memory contains binary zero.",
+							" --stack-size N        Number of bytes to allocate for the stack. Accepts only integers.",
+							"                       Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
+							" --base-address X      Memory location where to load the executable file (hexadecimal 64-bits).",
+							" --base-stack-value X  The value to put at the base of the stack.",
+							" FILE                  The ELF executable file to emulate.",
 							""));
 					out.flush();
 					System.exit(0);
@@ -165,6 +167,16 @@ public final class Main {
 					}
 
 					EmulatorConstants.setBaseAddress(
+							args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
+				}
+				case baseStackValueFlag -> {
+					i++;
+					if (i >= args.length) {
+						throw new IllegalArgumentException(
+								String.format("Expected an argument after '%s'", baseStackValueFlag));
+					}
+
+					EmulatorConstants.setBaseStackValue(
 							args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
 				}
 				case shortVersionFlag, longVersionFlag -> {

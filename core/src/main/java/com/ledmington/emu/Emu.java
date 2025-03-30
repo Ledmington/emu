@@ -71,7 +71,8 @@ public final class Emu {
 				mem,
 				commandLineArguments,
 				EmulatorConstants.getBaseAddress(),
-				EmulatorConstants.getStackSize());
+				EmulatorConstants.getStackSize(),
+				EmulatorConstants.getBaseStackValue());
 
 		cpu.turnOn();
 		cpu.executeOne(new Instruction(

@@ -76,7 +76,8 @@ public final class ELFLoader {
 			final MemoryController mem,
 			final String[] commandLineArguments,
 			final long baseAddress,
-			final long stackSize) {
+			final long stackSize,
+			final long baseStackValue) {
 		loadSegments(elf, mem, baseAddress);
 		loadSections(elf, mem, baseAddress);
 		final long highestAddress = setupStack(elf, stackSize, mem);
@@ -88,8 +89,13 @@ public final class ELFLoader {
 		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackPointer)));
 		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackPointer)));
 
-		// TODO: extract the zero into an EmulatorConstant value like 'baseStackValue'
-		cpu.executeOne(new Instruction(Opcode.PUSH, new Immediate(0)));
+		// Since it is not possible to push a 64-bit immediate value, we need to use a register temporarily
+		{
+			final long oldValue = cpu.getRegisters().get(Register64.R15);
+			cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.R15, new Immediate(baseStackValue)));
+			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
+			cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.R15, new Immediate(oldValue)));
+		}
 
 		// Set RDI to argc
 		cpu.executeOne(new Instruction(

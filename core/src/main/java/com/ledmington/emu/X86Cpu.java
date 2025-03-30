@@ -447,10 +447,8 @@ public class X86Cpu implements X86Emulator {
 
 				final long newRIP = mem.read8(prev);
 
-				// If we read 0x0, we have exhausted the stack
-				// FIXME: extract this zero into an EmulatorConstant like 'baseStackvalue'
-				final long zero = 0L;
-				if (newRIP == zero) {
+				// If we read the baseStackValue, we have exhausted the stack
+				if (newRIP == EmulatorConstants.getBaseStackValue()) {
 					state = State.HALTED;
 					logger.debug("Found the base of the stack, halting execution");
 				} else {

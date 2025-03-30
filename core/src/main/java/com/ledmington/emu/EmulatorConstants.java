@@ -34,6 +34,9 @@ public final class EmulatorConstants {
 	/** The default stack size. */
 	private static long stackSize = 8192L * 1024L;
 
+	/** The value at the base of the stack. */
+	private static long baseStackValue = 0xdeadbeefdeadbeefL;
+
 	private EmulatorConstants() {}
 
 	/**
@@ -92,5 +95,13 @@ public final class EmulatorConstants {
 	 */
 	public static long getBaseAddress() {
 		return baseAddress;
+	}
+
+	public static void setBaseStackValue(final long newBaseStackValue) {
+		baseStackValue = newBaseStackValue;
+	}
+
+	public static long getBaseStackValue() {
+		return baseStackValue;
 	}
 }
