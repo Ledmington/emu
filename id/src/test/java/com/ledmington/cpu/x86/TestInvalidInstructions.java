@@ -17,8 +17,19 @@
  */
 package com.ledmington.cpu.x86;
 
+import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
+import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
+import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
+import static com.ledmington.cpu.x86.PointerSize.WORD_PTR;
+import static com.ledmington.cpu.x86.Register16.AX;
+import static com.ledmington.cpu.x86.Register32.EAX;
+import static com.ledmington.cpu.x86.Register64.RAX;
+import static com.ledmington.cpu.x86.Register64.RBX;
+import static com.ledmington.cpu.x86.Register64.RCX;
+import static com.ledmington.cpu.x86.Register8.AH;
+import static com.ledmington.cpu.x86.Register8.AL;
+import static com.ledmington.cpu.x86.RegisterXMM.XMM0;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
@@ -30,171 +41,132 @@ import com.ledmington.cpu.x86.exc.InvalidInstruction;
 
 final class TestInvalidInstructions {
 
+	private static final Immediate bimm = new Immediate((byte) 0);
+	private static final Immediate simm = new Immediate((short) 0);
+	private static final Immediate iimm = new Immediate(0);
+	private static final Immediate limm = new Immediate(0L);
+
 	private static Stream<Arguments> invalidInstructions() {
 		return Stream.of(
 				// MOV with 2 indirect operands
-				Arguments.of(Opcode.MOV, new Operand[] {
-					IndirectOperand.builder()
-							.base(Register64.RAX)
-							.pointer(PointerSize.QWORD_PTR)
-							.build(),
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.QWORD_PTR)
-							.build()
-				}),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						IndirectOperand.builder().base(RAX).pointer(QWORD_PTR).build(),
+						IndirectOperand.builder().base(RBX).pointer(QWORD_PTR).build())),
 
 				// MOV with immediate as destination operand,
-				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0L), Register64.RAX}),
+				Arguments.of(new Instruction(Opcode.MOV, limm, RAX)),
 
 				// MOV with 2 immediates
-				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0L), new Immediate(1L)}),
+				Arguments.of(new Instruction(Opcode.MOV, limm, new Immediate(1L))),
 
 				// MOV with 0, 1 or 3 operands
-				Arguments.of(Opcode.MOV, new Operand[0]),
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register64.RBX, Register64.RCX}),
+				Arguments.of(new Instruction(Opcode.MOV)),
+				Arguments.of(new Instruction(Opcode.MOV, RAX)),
+				Arguments.of(new Instruction(Opcode.MOV, RAX, RBX, RCX)),
 
 				// MOV with registers of different size
-				Arguments.of(Opcode.MOV, new Operand[] {Register8.AL, Register64.RBX}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register16.AX, Register64.RBX}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register32.EAX, Register64.RBX}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register32.EAX}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register16.AX}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, Register8.AL}),
+				Arguments.of(new Instruction(Opcode.MOV, AL, RBX)),
+				Arguments.of(new Instruction(Opcode.MOV, AX, RBX)),
+				Arguments.of(new Instruction(Opcode.MOV, EAX, RBX)),
+				Arguments.of(new Instruction(Opcode.MOV, RAX, EAX)),
+				Arguments.of(new Instruction(Opcode.MOV, RAX, AX)),
+				Arguments.of(new Instruction(Opcode.MOV, RAX, AL)),
 
 				// MOV with register and indirect operand of different size
-				Arguments.of(Opcode.MOV, new Operand[] {
-					Register64.RAX,
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.DWORD_PTR)
-							.build()
-				}),
-				Arguments.of(Opcode.MOV, new Operand[] {
-					Register64.RAX,
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.WORD_PTR)
-							.build()
-				}),
-				Arguments.of(Opcode.MOV, new Operand[] {
-					Register64.RAX,
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.BYTE_PTR)
-							.build()
-				}),
-				Arguments.of(Opcode.MOV, new Operand[] {
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.DWORD_PTR)
-							.build(),
-					Register64.RAX
-				}),
-				Arguments.of(Opcode.MOV, new Operand[] {
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.WORD_PTR)
-							.build(),
-					Register64.RAX
-				}),
-				Arguments.of(Opcode.MOV, new Operand[] {
-					IndirectOperand.builder()
-							.base(Register64.RBX)
-							.pointer(PointerSize.BYTE_PTR)
-							.build(),
-					Register64.RAX
-				}),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						RAX,
+						IndirectOperand.builder().base(RBX).pointer(DWORD_PTR).build())),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						RAX,
+						IndirectOperand.builder().base(RBX).pointer(WORD_PTR).build())),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						RAX,
+						IndirectOperand.builder().base(RBX).pointer(BYTE_PTR).build())),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						IndirectOperand.builder().base(RBX).pointer(DWORD_PTR).build(),
+						RAX)),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						IndirectOperand.builder().base(RBX).pointer(WORD_PTR).build(),
+						RAX)),
+				Arguments.of(new Instruction(
+						Opcode.MOV,
+						IndirectOperand.builder().base(RBX).pointer(BYTE_PTR).build(),
+						RAX)),
 
 				// MOV with register and immediate of different size
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, new Immediate((short) 0)}),
-				Arguments.of(Opcode.MOV, new Operand[] {Register64.RAX, new Immediate((byte) 0)}),
-				Arguments.of(Opcode.MOV, new Operand[] {new Immediate(0), Register64.RAX}),
-				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((short) 0), Register64.RAX}),
-				Arguments.of(Opcode.MOV, new Operand[] {new Immediate((byte) 0), Register64.RAX}),
+				Arguments.of(new Instruction(Opcode.MOV, RAX, simm)),
+				Arguments.of(new Instruction(Opcode.MOV, RAX, bimm)),
+				Arguments.of(new Instruction(Opcode.MOV, iimm, RAX)),
+				Arguments.of(new Instruction(Opcode.MOV, simm, RAX)),
+				Arguments.of(new Instruction(Opcode.MOV, bimm, RAX)),
 
 				// MOVSXD with 0, 1 or 3 operands
-				Arguments.of(Opcode.MOVSXD, new Operand[0]),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, Register64.RAX, Register64.RAX}),
+				Arguments.of(new Instruction(Opcode.MOVSXD)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, RAX, RAX)),
 				// MOVSXD with a non-64-bit destination operand
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register8.AH, Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register16.AX, Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register32.EAX, Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {RegisterXMM.XMM0, Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {new Immediate((byte) 0), Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {new Immediate((short) 0), Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {new Immediate(0), Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {new Immediate(0L), Register32.EAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {
-					IndirectOperand.builder()
-							.base(Register64.RAX)
-							.pointer(PointerSize.QWORD_PTR)
-							.build(),
-					Register32.EAX
-				}),
+				Arguments.of(new Instruction(Opcode.MOVSXD, AH, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, AX, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, EAX, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, XMM0, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, bimm, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, simm, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, iimm, EAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, limm, EAX)),
+				Arguments.of(new Instruction(
+						Opcode.MOVSXD,
+						IndirectOperand.builder().base(RAX).pointer(QWORD_PTR).build(),
+						EAX)),
 				// MOVSXD with a non-32-bit source operand
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, Register8.AH}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, Register16.AX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, Register64.RAX}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, RegisterXMM.XMM0}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, new Immediate((byte) 0)}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, new Immediate((short) 0)}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, new Immediate(0)}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {Register64.RAX, new Immediate(0L)}),
-				Arguments.of(Opcode.MOVSXD, new Operand[] {
-					Register64.RAX,
-					IndirectOperand.builder()
-							.base(Register64.RAX)
-							.pointer(PointerSize.QWORD_PTR)
-							.build()
-				}),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, AH)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, AX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, RAX)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, XMM0)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, bimm)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, simm)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, iimm)),
+				Arguments.of(new Instruction(Opcode.MOVSXD, RAX, limm)),
+				Arguments.of(new Instruction(
+						Opcode.MOVSXD,
+						RAX,
+						IndirectOperand.builder().base(RAX).pointer(QWORD_PTR).build())),
 
 				// NOP with 8-bit operands and immediates
-				Arguments.of(Opcode.NOP, new Operand[] {Register8.AH}),
-				Arguments.of(Opcode.NOP, new Operand[] {
-					IndirectOperand.builder()
-							.base(Register64.RAX)
-							.pointer(PointerSize.BYTE_PTR)
-							.build()
-				}),
-				Arguments.of(Opcode.NOP, new Operand[] {new Immediate((byte) 0)}),
-				Arguments.of(Opcode.NOP, new Operand[] {new Immediate((short) 0)}),
-				Arguments.of(Opcode.NOP, new Operand[] {new Immediate(0)}),
-				Arguments.of(Opcode.NOP, new Operand[] {new Immediate(0L)}),
-				Arguments.of(Opcode.NOP, new Operand[] {Register64.RAX, Register64.RAX}),
-				Arguments.of(Opcode.NOP, new Operand[] {Register64.RAX, Register64.RAX, Register64.RAX}),
+				Arguments.of(new Instruction(Opcode.NOP, AH)),
+				Arguments.of(new Instruction(
+						Opcode.NOP,
+						IndirectOperand.builder().base(RAX).pointer(BYTE_PTR).build())),
+				Arguments.of(new Instruction(Opcode.NOP, bimm)),
+				Arguments.of(new Instruction(Opcode.NOP, simm)),
+				Arguments.of(new Instruction(Opcode.NOP, iimm)),
+				Arguments.of(new Instruction(Opcode.NOP, limm)),
+				Arguments.of(new Instruction(Opcode.NOP, RAX, RAX)),
+				Arguments.of(new Instruction(Opcode.NOP, RAX, RAX, RAX)),
 
 				// LEA with 0, 1 or 3 operands
-				Arguments.of(Opcode.LEA, new Operand[0]),
-				Arguments.of(Opcode.LEA, new Operand[] {Register64.RAX}),
-				Arguments.of(Opcode.LEA, new Operand[] {Register64.RAX, Register64.RAX, Register64.RAX}),
+				Arguments.of(new Instruction(Opcode.LEA)),
+				Arguments.of(new Instruction(Opcode.LEA, RAX)),
+				Arguments.of(new Instruction(Opcode.LEA, RAX, RAX, RAX)),
 
 				// LEA with 8 bit registers
-				Arguments.of(Opcode.LEA, new Operand[] {
-					Register8.AH,
-					IndirectOperand.builder()
-							.base(Register64.RAX)
-							.pointer(PointerSize.QWORD_PTR)
-							.build()
-				}));
+				Arguments.of(new Instruction(
+						Opcode.LEA,
+						AH,
+						IndirectOperand.builder().base(RAX).pointer(QWORD_PTR).build())));
 	}
 
 	@ParameterizedTest
 	@MethodSource("invalidInstructions")
-	void invalid(final Opcode opcode, final Operand... operands) {
-		assertTrue(operands.length <= 3);
-
+	void invalid(final Instruction inst) {
 		assertThrows(
 				InvalidInstruction.class,
-				() -> InstructionChecker.check(
-						switch (operands.length) {
-							case 0 -> new Instruction(opcode);
-							case 1 -> new Instruction(opcode, operands[0]);
-							case 2 -> new Instruction(opcode, operands[0], operands[1]);
-							case 3 -> new Instruction(opcode, operands[0], operands[1], operands[2]);
-							default -> throw new Error();
-						}));
+				() -> InstructionChecker.check(inst),
+				() -> String.format("Expected instruction '%s' to be invalid but it wasn't.", inst.toString()));
 	}
 }
