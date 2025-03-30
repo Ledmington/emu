@@ -40,7 +40,7 @@ public final class GnuGoldVersion implements NoteSection {
 
 		if (header.getEntrySize() != 0) {
 			throw new IllegalArgumentException(String.format(
-					"The .note.gnu.gold-version section doesn't have fixed-size entries but its header says they should be %,d bytes each",
+					"The .note.gnu.gold-version section doesn't have fixed-size entries but its header says they should be %,d bytes each.",
 					header.getEntrySize()));
 		}
 
@@ -51,13 +51,13 @@ public final class GnuGoldVersion implements NoteSection {
 		final int expectedEntries = 1;
 		if (entries.length != expectedEntries) {
 			throw new IllegalArgumentException(String.format(
-					"Invalid .note.gnu.gold-version section: expected %,d note entry but found %,d: %s",
+					"Invalid .note.gnu.gold-version section: expected %,d note entry but found %,d: %s.",
 					expectedEntries, entries.length, Arrays.toString(entries)));
 		}
 
 		if (!"GNU".equals(entries[0].getName())) {
 			throw new IllegalArgumentException(String.format(
-					"Invalid owner for .note.gnu.gold-version section: expected 'GNU' but was '%s'",
+					"Invalid owner for .note.gnu.gold-version section: expected 'GNU' but was '%s'.",
 					entries[0].getName()));
 		}
 	}

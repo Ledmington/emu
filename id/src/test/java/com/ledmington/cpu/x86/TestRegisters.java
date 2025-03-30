@@ -100,7 +100,7 @@ final class TestRegisters {
 				expected,
 				actual,
 				() -> String.format(
-						"Decoding 0x%02x, is64Bit=%s, extension=%s, hasOperandSizeOverridePrefix=%s: expected %s but was %s",
+						"Decoding 0x%02x, is64Bit=%s, extension=%s, hasOperandSizeOverridePrefix=%s: expected %s but was %s.",
 						registerCode, is64Bit, extension, hasOperandSizeOverridePrefix, expected, actual));
 	}
 

@@ -136,9 +136,9 @@ public enum RelocationAddendEntryType {
 					return type;
 				}
 			}
-			throw new IllegalArgumentException(String.format("Unknown value %d (0x%08x) for ISA %s", code, code, isa));
+			throw new IllegalArgumentException(String.format("Unknown value %d (0x%08x) for ISA %s.", code, code, isa));
 		} else {
-			throw new IllegalArgumentException(String.format("Unknown ISA: %s", isa));
+			throw new IllegalArgumentException(String.format("Unknown ISA: %s.", isa));
 		}
 	}
 

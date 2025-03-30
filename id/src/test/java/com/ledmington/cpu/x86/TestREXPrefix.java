@@ -86,6 +86,6 @@ final class TestREXPrefix {
 		assertEquals(
 				expected,
 				actual,
-				() -> String.format("Expected REX prefix 0x%02x to be equal to %s but was %s", rex, expected, actual));
+				() -> String.format("Expected REX prefix 0x%02x to be equal to %s but was %s.", rex, expected, actual));
 	}
 }

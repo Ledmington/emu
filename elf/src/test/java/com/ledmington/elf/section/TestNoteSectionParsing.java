@@ -364,6 +364,6 @@ final class TestNoteSectionParsing {
 				expected,
 				parsed,
 				() -> String.format(
-						"Expected to parse %s but was %s", Arrays.toString(expected), Arrays.toString(parsed)));
+						"Expected to parse %s but was %s.", Arrays.toString(expected), Arrays.toString(parsed)));
 	}
 }

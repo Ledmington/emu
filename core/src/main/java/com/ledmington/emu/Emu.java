@@ -52,13 +52,13 @@ public final class Emu {
 		final FileType type = fh.fileType();
 		if (type != FileType.ET_EXEC && type != FileType.ET_DYN) {
 			throw new IllegalArgumentException(
-					String.format("Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s", type));
+					String.format("Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s.", type));
 		}
 
 		final ISA isa = fh.isa();
 		if (isa != ISA.AMD_X86_64) {
 			throw new IllegalArgumentException(
-					String.format("This file requires ISA %s, which is not implemented", isa.getName()));
+					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
 		final MemoryController mem =
