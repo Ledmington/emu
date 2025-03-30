@@ -41,6 +41,7 @@ import com.ledmington.elf.section.gnu.GnuVersionDefinitionSection;
 import com.ledmington.elf.section.gnu.GnuVersionRequirementsSection;
 import com.ledmington.elf.section.gnu.GnuVersionSection;
 import com.ledmington.elf.section.note.BasicNoteSection;
+import com.ledmington.elf.section.note.FDOPackagingMetadata;
 import com.ledmington.elf.section.note.GnuBuildIDSection;
 import com.ledmington.elf.section.note.GnuGoldVersion;
 import com.ledmington.elf.section.note.GnuPropertySection;
@@ -368,6 +369,7 @@ public final class ELFParser {
 					case ".note.ABI-tag" -> new NoteABITagSection(sh, b);
 					case ".note.gnu.gold-version" -> new GnuGoldVersion(sh, b);
 					case ".note.stapsdt" -> new SystemtapUSDTSection(sh, b);
+					case ".note.package" -> new FDOPackagingMetadata(sh, b);
 					default -> new BasicNoteSection(name, sh, b);
 				};
 			} else if (typeName.equals(SectionHeaderType.SHT_GNU_HASH.getName())) {
