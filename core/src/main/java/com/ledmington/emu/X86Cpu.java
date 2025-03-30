@@ -22,6 +22,7 @@ import java.util.Objects;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionChecker;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Register16;
@@ -93,6 +94,7 @@ public class X86Cpu implements X86Emulator {
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
 		logger.debug(InstructionEncoder.toIntelSyntax(inst));
+		InstructionChecker.check(inst);
 		switch (inst.opcode()) {
 			case SUB -> {
 				switch (inst.firstOperand()) {
