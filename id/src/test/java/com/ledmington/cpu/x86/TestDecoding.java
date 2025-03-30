@@ -18,6 +18,7 @@
 package com.ledmington.cpu.x86;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
@@ -33,14 +34,24 @@ import com.ledmington.utils.BitUtils;
 
 final class TestDecoding extends X64Encodings {
 
-	private static Stream<Arguments> instAndHex() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.hex()));
-	}
-
 	private static String asString(final byte[] v) {
 		return IntStream.range(0, v.length)
 				.mapToObj(i -> String.format("0x%02x", v[i]))
 				.collect(Collectors.joining(" "));
+	}
+
+	private static Stream<Arguments> onlyInstructions() {
+		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("onlyInstructions")
+	void checkReference(final Instruction inst) {
+		assertDoesNotThrow(() -> InstructionChecker.check(inst));
+	}
+
+	private static Stream<Arguments> instAndHex() {
+		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.hex()));
 	}
 
 	@ParameterizedTest

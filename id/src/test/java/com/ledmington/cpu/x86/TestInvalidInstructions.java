@@ -186,13 +186,15 @@ final class TestInvalidInstructions {
 	void invalid(final Opcode opcode, final Operand... operands) {
 		assertTrue(operands.length <= 3);
 
-		switch (operands.length) {
-			case 0 -> assertThrows(InvalidInstruction.class, () -> new Instruction(opcode));
-			case 1 -> assertThrows(InvalidInstruction.class, () -> new Instruction(opcode, operands[0]));
-			case 2 -> assertThrows(InvalidInstruction.class, () -> new Instruction(opcode, operands[0], operands[1]));
-			case 3 ->
-				assertThrows(
-						InvalidInstruction.class, () -> new Instruction(opcode, operands[0], operands[1], operands[2]));
-		}
+		assertThrows(
+				InvalidInstruction.class,
+				() -> InstructionChecker.check(
+						switch (operands.length) {
+							case 0 -> new Instruction(opcode);
+							case 1 -> new Instruction(opcode, operands[0]);
+							case 2 -> new Instruction(opcode, operands[0], operands[1]);
+							case 3 -> new Instruction(opcode, operands[0], operands[1], operands[2]);
+							default -> throw new Error();
+						}));
 	}
 }
