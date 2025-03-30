@@ -108,6 +108,8 @@ public final class InstructionChecker {
 			Map.entry(
 					Opcode.MOV,
 					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
 							op(OperandType.R32, OperandType.R32),
 							op(OperandType.R64, OperandType.R64),
 							op(OperandType.R8, OperandType.I8),
@@ -252,6 +254,9 @@ public final class InstructionChecker {
 			Map.entry(
 					Opcode.ADD,
 					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
+							op(OperandType.R32, OperandType.R32),
 							op(OperandType.R64, OperandType.R64),
 							op(OperandType.R8, OperandType.I8),
 							op(OperandType.R16, OperandType.I8),
@@ -272,6 +277,9 @@ public final class InstructionChecker {
 			Map.entry(
 					Opcode.AND,
 					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
+							op(OperandType.R32, OperandType.R32),
 							op(OperandType.R64, OperandType.R64),
 							op(OperandType.R8, OperandType.I8),
 							op(OperandType.R16, OperandType.I8),
@@ -283,7 +291,307 @@ public final class InstructionChecker {
 							op(OperandType.R8, OperandType.M8),
 							op(OperandType.R16, OperandType.M16),
 							op(OperandType.R32, OperandType.M32),
-							op(OperandType.R64, OperandType.M64))));
+							op(OperandType.R64, OperandType.M64))),
+			Map.entry(
+					Opcode.SUB,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64),
+							op(OperandType.R16, OperandType.I16),
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.I32),
+							op(OperandType.R32, OperandType.M32),
+							op(OperandType.R64, OperandType.M64),
+							op(OperandType.M16, OperandType.R16),
+							op(OperandType.M32, OperandType.R32),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(
+					Opcode.SBB,
+					List.of(
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64),
+							op(OperandType.R8, OperandType.I8),
+							op(OperandType.R16, OperandType.I16))),
+			Map.entry(
+					Opcode.SHR,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R8),
+							op(OperandType.R32, OperandType.R8),
+							op(OperandType.R64, OperandType.R8),
+							op(OperandType.R8, OperandType.I8),
+							op(OperandType.R16, OperandType.I8),
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R64, OperandType.I8))),
+			Map.entry(
+					Opcode.SAR,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R8),
+							op(OperandType.R32, OperandType.R8),
+							op(OperandType.R64, OperandType.R8),
+							op(OperandType.R8, OperandType.I8),
+							op(OperandType.R16, OperandType.I8),
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R64, OperandType.I8))),
+			Map.entry(
+					Opcode.SHL,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R8),
+							op(OperandType.R32, OperandType.R8),
+							op(OperandType.R64, OperandType.R8),
+							op(OperandType.R8, OperandType.I8),
+							op(OperandType.R16, OperandType.I8),
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R64, OperandType.I8))),
+			Map.entry(
+					Opcode.IMUL,
+					List.of(
+							op(OperandType.R32, OperandType.R32, OperandType.I8),
+							op(OperandType.R64, OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.M64, OperandType.I32),
+							op(OperandType.R64, OperandType.R64),
+							op(OperandType.R32, OperandType.M32),
+							op(OperandType.R64, OperandType.M64))),
+			Map.entry(Opcode.IDIV, List.of(op(OperandType.R32), op(OperandType.R64))),
+			Map.entry(
+					Opcode.DIV,
+					List.of(
+							op(OperandType.R8),
+							op(OperandType.R16),
+							op(OperandType.R32),
+							op(OperandType.R64),
+							op(OperandType.M8),
+							op(OperandType.M16),
+							op(OperandType.M32),
+							op(OperandType.M64))),
+			Map.entry(
+					Opcode.MUL,
+					List.of(op(OperandType.R8), op(OperandType.R16), op(OperandType.R32), op(OperandType.R64))),
+			Map.entry(
+					Opcode.OR,
+					List.of(
+							op(OperandType.R8, OperandType.I8),
+							op(OperandType.R16, OperandType.I16),
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.I32),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.I32),
+							op(OperandType.R32, OperandType.M32),
+							op(OperandType.R64, OperandType.M64),
+							op(OperandType.M8, OperandType.I8),
+							op(OperandType.M16, OperandType.I16),
+							op(OperandType.M32, OperandType.I32),
+							op(OperandType.M8, OperandType.R8),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(
+					Opcode.XOR,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64),
+							op(OperandType.R16, OperandType.I16),
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.I32),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.I32))),
+			Map.entry(Opcode.NOT, List.of(op(OperandType.R32), op(OperandType.R64))),
+			Map.entry(
+					Opcode.NEG,
+					List.of(op(OperandType.R32), op(OperandType.R64), op(OperandType.M32), op(OperandType.M64))),
+			Map.entry(
+					Opcode.TEST,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64),
+							op(OperandType.R8, OperandType.I8),
+							op(OperandType.R16, OperandType.I16),
+							op(OperandType.R32, OperandType.I32),
+							op(OperandType.R64, OperandType.I32),
+							op(OperandType.M8, OperandType.I8),
+							op(OperandType.M8, OperandType.R8),
+							op(OperandType.M16, OperandType.I16),
+							op(OperandType.M16, OperandType.R16),
+							op(OperandType.M32, OperandType.I32),
+							op(OperandType.M32, OperandType.R32),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(Opcode.UD2, List.of(op())),
+			Map.entry(
+					Opcode.MOVS,
+					List.of(
+							op(OperandType.M8, OperandType.M8),
+							op(OperandType.M16, OperandType.M16),
+							op(OperandType.M32, OperandType.M32))),
+			Map.entry(
+					Opcode.STOS,
+					List.of(
+							op(OperandType.M8, OperandType.R8),
+							op(OperandType.M32, OperandType.R32),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(Opcode.MOVDQA, List.of(op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.MOVAPS,
+					List.of(
+							op(OperandType.RXMM, OperandType.RXMM),
+							op(OperandType.M128, OperandType.RXMM),
+							op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.MOVAPD,
+					List.of(op(OperandType.RXMM, OperandType.RXMM), op(OperandType.M128, OperandType.RXMM))),
+			Map.entry(
+					Opcode.MOVQ,
+					List.of(
+							op(OperandType.RMM, OperandType.R64),
+							op(OperandType.RXMM, OperandType.R64),
+							op(OperandType.M64, OperandType.RXMM),
+							op(OperandType.RMM, OperandType.M64),
+							op(OperandType.RXMM, OperandType.M64))),
+			Map.entry(Opcode.MOVHPS, List.of(op(OperandType.RXMM, OperandType.M64))),
+			Map.entry(Opcode.MOVHLPS, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PUNPCKLQDQ, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PUNPCKLDQ, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PUNPCKHQDQ, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.SETA, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETAE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETNE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETB, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETBE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETL, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETLE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETG, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETGE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.MOVABS, List.of(op(OperandType.R64, OperandType.I64))),
+			Map.entry(
+					Opcode.MOVUPS,
+					List.of(op(OperandType.RXMM, OperandType.M128), op(OperandType.M128, OperandType.RXMM))),
+			Map.entry(Opcode.MOVSD, List.of(op(OperandType.RXMM, OperandType.M64))),
+			Map.entry(Opcode.ENDBR64, List.of(op())),
+			Map.entry(
+					Opcode.INC,
+					List.of(
+							op(OperandType.R8),
+							op(OperandType.R32),
+							op(OperandType.R64),
+							op(OperandType.M8),
+							op(OperandType.M16),
+							op(OperandType.M32),
+							op(OperandType.M64))),
+			Map.entry(
+					Opcode.DEC,
+					List.of(
+							op(OperandType.R8),
+							op(OperandType.R32),
+							op(OperandType.R64),
+							op(OperandType.M8),
+							op(OperandType.M16),
+							op(OperandType.M32),
+							op(OperandType.M64))),
+			Map.entry(Opcode.PSHUFD, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.I8))),
+			Map.entry(Opcode.PSHUFW, List.of(op(OperandType.RMM, OperandType.RMM, OperandType.I8))),
+			Map.entry(Opcode.SHUFPD, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.I8))),
+			Map.entry(Opcode.SHUFPS, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.I8))),
+			Map.entry(
+					Opcode.PXOR,
+					List.of(
+							op(OperandType.RMM, OperandType.RMM),
+							op(OperandType.RXMM, OperandType.RXMM),
+							op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.POR,
+					List.of(op(OperandType.RXMM, OperandType.RXMM), op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.PAND,
+					List.of(op(OperandType.RXMM, OperandType.RXMM), op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.PADDQ,
+					List.of(op(OperandType.RXMM, OperandType.RXMM), op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.PSUBQ,
+					List.of(op(OperandType.RXMM, OperandType.RXMM), op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(
+					Opcode.CVTSI2SD,
+					List.of(op(OperandType.RXMM, OperandType.R64), op(OperandType.RXMM, OperandType.R32))),
+			Map.entry(Opcode.DIVSD, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.ADDSD, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.XORPS, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.UCOMISD, List.of(op(OperandType.RXMM, OperandType.M64))),
+			Map.entry(Opcode.UCOMISS, List.of(op(OperandType.RXMM, OperandType.M32))),
+			Map.entry(
+					Opcode.BT,
+					List.of(
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.R64))),
+			Map.entry(
+					Opcode.BTC,
+					List.of(
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.R64))),
+			Map.entry(
+					Opcode.BTR,
+					List.of(
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.R64))),
+			Map.entry(
+					Opcode.BTS,
+					List.of(
+							op(OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.R64, OperandType.R64))),
+			Map.entry(Opcode.XGETBV, List.of(op())),
+			Map.entry(
+					Opcode.XCHG,
+					List.of(
+							op(OperandType.R8, OperandType.R8),
+							op(OperandType.R16, OperandType.R16),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64),
+							op(OperandType.M8, OperandType.R8),
+							op(OperandType.M16, OperandType.R16),
+							op(OperandType.M32, OperandType.R32),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(Opcode.BSWAP, List.of(op(OperandType.R32), op(OperandType.R64))),
+			Map.entry(Opcode.PREFETCHNTA, List.of(op(OperandType.M8))),
+			Map.entry(Opcode.PREFETCHT0, List.of(op(OperandType.M8))),
+			Map.entry(Opcode.PREFETCHT1, List.of(op(OperandType.M8))),
+			Map.entry(Opcode.PREFETCHT2, List.of(op(OperandType.M8))),
+			Map.entry(
+					Opcode.CMPXCHG,
+					List.of(
+							op(OperandType.M8, OperandType.R8),
+							op(OperandType.M16, OperandType.R16),
+							op(OperandType.M32, OperandType.R32),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(
+					Opcode.XADD,
+					List.of(
+							op(OperandType.M8, OperandType.R8),
+							op(OperandType.M16, OperandType.R16),
+							op(OperandType.M32, OperandType.R32),
+							op(OperandType.M64, OperandType.R64))),
+			Map.entry(
+					Opcode.PCMPEQD,
+					List.of(op(OperandType.RMM, OperandType.RMM), op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.RDRAND, List.of(op(OperandType.R16), op(OperandType.R32), op(OperandType.R64))),
+			Map.entry(Opcode.RDSEED, List.of(op(OperandType.R16), op(OperandType.R32), op(OperandType.R64))),
+			Map.entry(Opcode.RDSSPQ, List.of(op(OperandType.R64))),
+			Map.entry(Opcode.INCSSPQ, List.of(op(OperandType.R64))),
+			Map.entry(Opcode.LAHF, List.of(op())),
+			Map.entry(Opcode.SAHF, List.of(op())));
 
 	private InstructionChecker() {}
 
@@ -309,6 +617,7 @@ public final class InstructionChecker {
 
 		final List<Case> cases = CASES.get(inst.opcode());
 		for (final Case c : cases) {
+			// filter out the cases with different number of operands
 			if (c.numOperands() != numOperands) {
 				continue;
 			}
