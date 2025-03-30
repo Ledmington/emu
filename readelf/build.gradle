@@ -7,7 +7,7 @@ static def path(final String ...s) {
     return String.join(File.separator, s)
 }
 
-String readelfVersion = "1.0.0"
+String readelfVersion = "0.1.0"
 String fatJarBaseName = "${appNameLowerCase}-readelf-${readelfVersion}"
 String fatJarName = "${fatJarBaseName}.jar"
 String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "libs", "${fatJarName}")

@@ -118,7 +118,7 @@ public final class Main {
 					System.exit(0);
 					break;
 				case "-v", "--version":
-					out.println("readelf v0.0.0");
+					out.println("readelf v0.1.0");
 					out.flush();
 					System.exit(0);
 					break;

@@ -15,7 +15,7 @@ static def path(String... args) {
 
 // Tunables
 ext.basePackage = 'com.ledmington'
-def version = '0.0.0'
+def version = '0.1.0'
 String appDescription = 'Processor Emulator'
 String author = 'Filippo Barbari'
 String authorMail = 'filippo.barbari@gmail.com'

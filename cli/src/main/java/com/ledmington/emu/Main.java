@@ -168,7 +168,7 @@ public final class Main {
 							args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
 				}
 				case shortVersionFlag, longVersionFlag -> {
-					out.print(String.join("\n", "", " emu - CPU emulator", " v0.0.0", ""));
+					out.print(String.join("\n", "", " emu - CPU emulator", " v0.1.0", ""));
 					out.flush();
 					System.exit(0);
 				}
