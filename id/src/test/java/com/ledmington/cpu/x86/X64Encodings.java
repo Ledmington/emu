@@ -5851,6 +5851,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								ECX),
 						"xor DWORD PTR [rcx],ecx",
 						"31 09"),
+				test(
+						new Instruction(
+								Opcode.XOR,
+								DH,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RDI)
+										.displacement(0xc001145d)
+										.build()),
+						"xor dh,BYTE PTR [rdi-0x3ffeeba3]",
+						"32 b7 5d 14 01 c0"),
 				//  Not
 				test(new Instruction(Opcode.NOT, EAX), "not eax", "f7 d0"),
 				test(new Instruction(Opcode.NOT, EBP), "not ebp", "f7 d5"),
