@@ -149,10 +149,10 @@ final class TestExecutionWithMemory {
 	void push() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base - 8L, base, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 		mem.write(base - 8L, 0L);
 		final long val = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(val)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RAX, new Immediate(val)));
 
 		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
 
@@ -173,7 +173,7 @@ final class TestExecutionWithMemory {
 	void pop() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base, base + 7L, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 		final long val = rng.nextLong();
 		mem.write(base, val);
 
@@ -206,7 +206,7 @@ final class TestExecutionWithMemory {
 
 		// Setup stack at random location
 		final long base = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(base)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 
 		// Doing n pushes of random values
 		for (int i = 0; i < n; i++) {
@@ -214,7 +214,7 @@ final class TestExecutionWithMemory {
 			mem.setPermissions(base - 8L * (i + 1), base - 8L * i, true, true, false);
 
 			// mov RAX,val
-			cpu.executeOne(new Instruction(Opcode.MOV, Register64.RAX, new Immediate(values[i])));
+			cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RAX, new Immediate(values[i])));
 
 			final int finalI = i;
 
@@ -283,11 +283,11 @@ final class TestExecutionWithMemory {
 		// Setup stack at random location
 		final long stackBase = rng.nextLong();
 		mem.setPermissions(stackBase - 6L, stackBase, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RSP, new Immediate(stackBase)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOV, Register64.RIP, new Immediate(rip)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RIP, new Immediate(rip)));
 
 		// Write an empty function somewhere in memory (only RET instruction)
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate

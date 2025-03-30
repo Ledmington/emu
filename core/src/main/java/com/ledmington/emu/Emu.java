@@ -74,7 +74,7 @@ public final class Emu {
 				EmulatorConstants.getStackSize());
 
 		cpu.executeOne(new Instruction(
-				Opcode.MOV,
+				Opcode.MOVABS,
 				Register64.RIP,
 				new Immediate(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress())));
 
