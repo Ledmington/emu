@@ -11,7 +11,7 @@ dependencies {
 pitest {
 	targetClasses.set(['com.ledmington.cpu.x86.*'])
 	targetTests.set(['com.ledmington.cpu.x86.*'])
-	pitestVersion = '1.18.2'
+	pitestVersion = '1.19.0'
 	junit5PluginVersion = '1.2.2'
 	threads = 4
 	outputFormats.set(['XML', 'HTML'])
