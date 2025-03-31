@@ -33,27 +33,6 @@ public final class Main {
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
 
-	private static long parseLongHex(final String s) {
-		if (s.isEmpty() || s.length() > 16) {
-			throw new IllegalArgumentException(String.format("'%s' is an invalid 64-bit hex value.", s));
-		}
-		long x = 0L;
-		for (int i = s.length() - 1; i >= 0; i--) {
-			final char c = s.charAt(i);
-			final long y =
-					switch (c) {
-						case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> (c - '0');
-						case 'a', 'b', 'c', 'd', 'e', 'f' -> (c - 'a');
-						case 'A', 'B', 'C', 'D', 'E', 'F' -> (c - 'A');
-						default ->
-							throw new IllegalArgumentException(
-									String.format("'%c' is not a hexadecimal character.", c));
-					};
-			x = (x << 4) | y;
-		}
-		return x;
-	}
-
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
@@ -166,8 +145,10 @@ public final class Main {
 								String.format("Expected an argument after '%s'", baseAddressFlag));
 					}
 
-					EmulatorConstants.setBaseAddress(
-							args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
+					final long val = args[i].startsWith("0x")
+							? Long.parseUnsignedLong(args[i].substring(2), 16)
+							: Long.parseUnsignedLong(args[i], 16);
+					EmulatorConstants.setBaseAddress(val);
 				}
 				case baseStackValueFlag -> {
 					i++;
@@ -176,8 +157,10 @@ public final class Main {
 								String.format("Expected an argument after '%s'", baseStackValueFlag));
 					}
 
-					EmulatorConstants.setBaseStackValue(
-							args[i].startsWith("0x") ? parseLongHex(args[i].substring(2)) : parseLongHex(args[i]));
+					final long val = args[i].startsWith("0x")
+							? Long.parseUnsignedLong(args[i].substring(2), 16)
+							: Long.parseUnsignedLong(args[i], 16);
+					EmulatorConstants.setBaseStackValue(val);
 				}
 				case shortVersionFlag, longVersionFlag -> {
 					out.print(String.join("\n", "", " emu - CPU emulator", " v0.1.0", ""));
