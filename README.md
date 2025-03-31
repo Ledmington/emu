@@ -6,6 +6,7 @@ The project is divided as follows:
 - `gui` : the emulator + ELF viewer (GUI version)
 - `core` : the core components of the emulator
 - `readelf` : a utility executable to mimic the behavior of GNU's `readelf`
+- `objdump` : a utility executable to mimic the behavior of GNU's `objdump`
 - `elf` : ELF file parser
 - `id` : Instruction Decoder (currently only X86)
 - `mem` : implementation of various emulated memories
