@@ -781,9 +781,16 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b001;
-				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
-					wb.write(BitUtils.asByte(((inst.secondOperand() instanceof Immediate) ? (byte) 0x80 : (byte) 0x08)
-							+ ((inst.secondOperand().bits() == 8) ? (byte) 0 : (byte) 1)));
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					wb.write(
+							imm.bits() == 8
+									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x80 : (byte) 0x83)
+									: (byte) 0x81);
+					reg = (byte) 0b001;
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register r) {
+					wb.write((r instanceof Register8) ? (byte) 0x08 : (byte) 0x09);
 					reg = (byte) 0b001;
 
 					if (isIpAndOffset(io)) {
@@ -823,8 +830,8 @@ public final class InstructionEncoder {
 				}
 			}
 			case ADC -> {
-				if (inst.firstOperand() instanceof Register16 && inst.secondOperand() instanceof Immediate) {
-					wb.write((byte) 0x81);
+				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof final Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b010;
 				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x11);
@@ -854,6 +861,31 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x23);
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x21);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					wb.write(
+							imm.bits() == 8
+									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x80 : (byte) 0x83)
+									: (byte) 0x81);
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x25);
+						wb.write(BitUtils.asInt(io.getDisplacement()));
+						encodeImmediate(wb, imm);
+						return;
+					}
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register r) {
+					wb.write(
+							(r instanceof Register8)
+									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x20 : (byte) 0x23)
+									: (byte) 0x21);
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x05);
+						wb.write(BitUtils.asInt(io.getDisplacement()));
+						return;
+					}
 				}
 			}
 			case XOR -> {
@@ -1058,11 +1090,19 @@ public final class InstructionEncoder {
 					getMod(io),
 					Registers.toByte(r),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
+			if (inst.opcode() == Opcode.OR && io.hasBase() && isSP(io.getBase())) {
+				// FIXME: this could be replaced with just wb.write((byte) 0x24);
+				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
+			}
 			encodeIndirectOperand(wb, io);
 		} else if (inst.firstOperand() instanceof final IndirectOperand io
 				&& inst.secondOperand() instanceof final Immediate imm) {
 			encodeModRM(
 					wb, getMod(io), reg, (isSimpleIndirectOperand(io)) ? Registers.toByte(io.getBase()) : (byte) 0b100);
+			if (inst.opcode() == Opcode.OR && io.hasBase() && isSP(io.getBase())) {
+				// FIXME: this could be replaced with just wb.write((byte) 0x24);
+				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
+			}
 			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
 		} else if (inst.firstOperand() instanceof final Register r
@@ -1079,20 +1119,25 @@ public final class InstructionEncoder {
 			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 		}
 
+		final boolean hasExtendedFirstRegister =
+				inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r);
+		final boolean hasExtendedSecondRegister =
+				inst.secondOperand() instanceof final Register r && Registers.requiresExtension(r);
+
 		// rex
 		{
 			byte rex = DEFAULT_REX_PREFIX;
 			if (inst.firstOperand() instanceof Register64) {
 				rex = BitUtils.or(rex, (byte) 0b1000);
 			}
-			if (inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r)) {
+			if ((inst.opcode() == Opcode.IMUL && hasExtendedFirstRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0100);
 			}
-			if (hasExtendedBase(inst.secondOperand())) {
+			if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))) {
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
-			if (hasExtendedIndex(inst.secondOperand())
-					|| (inst.secondOperand() instanceof final Register r && Registers.requiresExtension(r))) {
+			if ((inst.opcode() == Opcode.IMUL && hasExtendedBase(inst.secondOperand()))
+					|| (inst.opcode() == Opcode.IMUL && hasExtendedSecondRegister)) {
 				rex = BitUtils.or(rex, (byte) 0b0001);
 			}
 			if (rex != DEFAULT_REX_PREFIX) {
@@ -1101,7 +1146,13 @@ public final class InstructionEncoder {
 		}
 
 		switch (inst.opcode()) {
-			case IMUL -> wb.write((inst.secondOperand() instanceof IndirectOperand) ? (byte) 0x69 : (byte) 0x6b);
+			case IMUL -> {
+				if (inst.firstOperand() instanceof Register
+						&& (inst.secondOperand() instanceof Register || inst.secondOperand() instanceof IndirectOperand)
+						&& inst.thirdOperand() instanceof final Immediate imm) {
+					wb.write((imm.bits() == 8) ? (byte) 0x6b : (byte) 0x69);
+				}
+			}
 			case PSHUFD, PSHUFW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x70);
 			case SHUFPS, SHUFPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
@@ -1170,8 +1221,7 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean isSimpleIndirectOperand(final IndirectOperand io) {
-		return io.hasBase() && !io.hasIndex() && !io.hasScale()
-		;
+		return io.hasBase() && !io.hasIndex() && !io.hasScale();
 	}
 
 	private static void encodeImmediate(final WriteOnlyByteBuffer wb, final Immediate imm) {

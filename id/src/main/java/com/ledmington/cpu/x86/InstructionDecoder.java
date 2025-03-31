@@ -1824,9 +1824,18 @@ public final class InstructionDecoder {
 								pref.rex().isOperand64Bit(),
 								pref.rex().hasModRMRegExtension(),
 								false),
-						parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.QWORD_PTR)
-								.build(),
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(
+												pref.rex().isOperand64Bit()
+														? PointerSize.QWORD_PTR
+														: PointerSize.DWORD_PTR)
+										.build()
+								: Registers.fromCode(
+										modrm.rm(),
+										pref.rex().isOperand64Bit(),
+										pref.rex().hasModRMRMExtension(),
+										false),
 						imm32(b));
 			}
 			case MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE -> {

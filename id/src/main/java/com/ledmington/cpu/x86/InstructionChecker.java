@@ -223,7 +223,11 @@ public final class InstructionChecker {
 			Map.entry(
 					Opcode.CMOVLE, List.of(op(OperandType.R32, OperandType.M32), op(OperandType.R64, OperandType.R64))),
 			Map.entry(
-					Opcode.CMOVG, List.of(op(OperandType.R32, OperandType.M32), op(OperandType.R64, OperandType.R64))),
+					Opcode.CMOVG,
+					List.of(
+							op(OperandType.R32, OperandType.M32),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64))),
 			Map.entry(
 					Opcode.CMOVGE, List.of(op(OperandType.R32, OperandType.M32), op(OperandType.R64, OperandType.R64))),
 			Map.entry(
@@ -288,7 +292,12 @@ public final class InstructionChecker {
 							op(OperandType.M64, OperandType.R64),
 							op(OperandType.M64, OperandType.I8),
 							op(OperandType.M64, OperandType.I32))),
-			Map.entry(Opcode.ADC, List.of(op(OperandType.R16, OperandType.I16), op(OperandType.M32, OperandType.R32))),
+			Map.entry(
+					Opcode.ADC,
+					List.of(
+							op(OperandType.R16, OperandType.I16),
+							op(OperandType.R64, OperandType.I8),
+							op(OperandType.M32, OperandType.R32))),
 			Map.entry(
 					Opcode.AND,
 					List.of(
@@ -306,7 +315,10 @@ public final class InstructionChecker {
 							op(OperandType.R8, OperandType.M8),
 							op(OperandType.R16, OperandType.M16),
 							op(OperandType.R32, OperandType.M32),
-							op(OperandType.R64, OperandType.M64))),
+							op(OperandType.R64, OperandType.M64),
+							op(OperandType.M8, OperandType.I8),
+							op(OperandType.M32, OperandType.I32),
+							op(OperandType.M32, OperandType.R32))),
 			Map.entry(
 					Opcode.SUB,
 					List.of(
@@ -368,6 +380,8 @@ public final class InstructionChecker {
 					Opcode.IMUL,
 					List.of(
 							op(OperandType.R32, OperandType.R32, OperandType.I8),
+							op(OperandType.R32, OperandType.R32, OperandType.I32),
+							op(OperandType.R32, OperandType.M32, OperandType.I32),
 							op(OperandType.R64, OperandType.R64, OperandType.I8),
 							op(OperandType.R64, OperandType.M64, OperandType.I32),
 							op(OperandType.R16, OperandType.R16),
@@ -405,6 +419,7 @@ public final class InstructionChecker {
 							op(OperandType.M8, OperandType.I8),
 							op(OperandType.M16, OperandType.I16),
 							op(OperandType.M32, OperandType.I32),
+							op(OperandType.M64, OperandType.I8),
 							op(OperandType.M8, OperandType.R8),
 							op(OperandType.M32, OperandType.R32),
 							op(OperandType.M64, OperandType.R64))),
