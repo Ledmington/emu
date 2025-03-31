@@ -174,6 +174,29 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.NOP,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(RAX)
+										.index(RAX)
+										.scale(1)
+										.build()),
+						"nop DWORD PTR [rax+rax*1]",
+						"0f 1f 04 00"),
+				test(
+						new Instruction(
+								Opcode.NOP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.index(RAX)
+										.scale(1)
+										.displacement((byte) 0)
+										.build()),
+						"nop DWORD PTR [rax+rax*1+0x0]",
+						"0f 1f 44 00 00"),
+				test(
+						new Instruction(
+								Opcode.NOP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(RBX)
 										.index(R12)
 										.scale(4)
@@ -493,6 +516,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.MOV,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0xc6a86)
+										.build(),
+								EAX),
+						"mov DWORD PTR [rip+0xc6a86],eax",
+						"89 05 86 6a 0c 00"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
 										.base(R11)
 										.index(R8)
 										.scale(4)
@@ -501,6 +535,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								new Immediate(0xdeadbeef)),
 						"mov DWORD PTR [r11+r8*4+0x12345678],0xdeadbeef",
 						"43 c7 84 83 78 56 34 12 ef be ad de"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0xc6ac2)
+										.build(),
+								new Immediate(1)),
+						"mov DWORD PTR [rip+0xc6ac2],0x00000001",
+						"c7 05 c2 6a 0c 00 01 00 00 00"),
 				test(
 						new Instruction(
 								Opcode.MOV,
@@ -591,7 +636,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement(0x12345678)
 										.build()),
 						"mov rsi,QWORD PTR [rbp+r9*4+0x12345678]",
-						"4a 8b b4 8d 78 56 34 12"));
+						"4a 8b b4 8d 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								EAX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0xc6aaf)
+										.build()),
+						"mov eax,DWORD PTR [rip+0xc6aaf]",
+						"8b 05 af 6a 0c 00"));
 	}
 
 	private static List<X64EncodingTestCase> movsxd() {
@@ -3783,6 +3839,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								new Immediate((short) 0x7788)),
 						"cmp WORD PTR [rdi],0x7788",
 						"66 81 3f 88 77"),
+				test(
+						new Instruction(
+								Opcode.CMP,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RIP)
+										.displacement(0xc6afd)
+										.build(),
+								RBX),
+						"cmp QWORD PTR [rip+0xc6afd],rbx",
+						"48 39 1d fd 6a 0c 00"),
 				//
 				test(
 						new Instruction(
@@ -3893,11 +3960,13 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.CMP, AL, DH), "cmp al,dh", "38 f0"),
 				test(new Instruction(Opcode.CMP, CX, simm), "cmp cx,0x1234", "66 81 f9 34 12"),
 				test(new Instruction(Opcode.CMP, DH, new Immediate((byte) 0x99)), "cmp dh,0x99", "80 fe 99"),
+				test(new Instruction(Opcode.CMP, EAX, bimm), "cmp eax,0x12", "83 f8 12"),
 				test(new Instruction(Opcode.CMP, EAX, iimm), "cmp eax,0x12345678", "3d 78 56 34 12"),
 				test(new Instruction(Opcode.CMP, EDI, iimm), "cmp edi,0x12345678", "81 ff 78 56 34 12"),
 				test(new Instruction(Opcode.CMP, ESP, R13D), "cmp esp,r13d", "44 39 ec"),
 				test(new Instruction(Opcode.CMP, R8B, bimm), "cmp r8b,0x12", "41 80 f8 12"),
 				test(new Instruction(Opcode.CMP, R8W, DX), "cmp r8w,dx", "66 41 39 d0"),
+				test(new Instruction(Opcode.CMP, RAX, bimm), "cmp rax,0x12", "48 83 f8 12"),
 				test(
 						new Instruction(Opcode.CMP, RAX, new Immediate(0x12345678)),
 						"cmp rax,0x12345678",
@@ -4297,8 +4366,20 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"cmove ecx,DWORD PTR [r8+rax*4+0x12345678]",
 						"41 0f 44 8c 80 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.CMOVE,
+								RDX,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.displacement((byte) 8)
+										.build()),
+						"cmove rdx,QWORD PTR [rsp+0x8]",
+						"48 0f 44 54 24 08"),
 				test(new Instruction(Opcode.CMOVE, R15, RCX), "cmove r15,rcx", "4c 0f 44 f9"),
 				test(new Instruction(Opcode.CMOVE, RCX, R15), "cmove rcx,r15", "49 0f 44 cf"),
+				test(new Instruction(Opcode.CMOVE, EDI, ESI), "cmove edi,esi", "0f 44 fe"),
 				//  Cmovns
 				test(
 						new Instruction(
@@ -4379,6 +4460,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"41 0f 45 8c 80 78 56 34 12"),
 				test(new Instruction(Opcode.CMOVNE, R15, RDX), "cmovne r15,rdx", "4c 0f 45 fa"),
 				test(new Instruction(Opcode.CMOVNE, RDX, R15), "cmovne rdx,r15", "49 0f 45 d7"),
+				test(new Instruction(Opcode.CMOVNE, ESI, EDX), "cmovne esi,edx", "0f 45 f2"),
 				//  Cmovg
 				test(
 						new Instruction(
@@ -5336,6 +5418,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SUB, CX, simm), "sub cx,0x1234", "66 81 e9 34 12"),
 				test(new Instruction(Opcode.SUB, ESI, bimm), "sub esi,0x12", "83 ee 12"),
 				test(
+						new Instruction(Opcode.SUB, EDX, new Immediate(0x7ffffffb)),
+						"sub edx,0x7ffffffb",
+						"81 ea fb ff ff 7f"),
+				test(
 						new Instruction(
 								Opcode.SUB,
 								ESP,
@@ -5480,6 +5566,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								new Immediate(0x7eadbeef)),
 						"imul r9,QWORD PTR [rax],0x7eadbeef",
 						"4c 69 08 ef be ad 7e"),
+				test(new Instruction(Opcode.IMUL, AX, DX), "imul ax,dx", "66 0f af c2"),
+				test(new Instruction(Opcode.IMUL, EAX, EDX), "imul eax,edx", "0f af c2"),
 				test(new Instruction(Opcode.IMUL, RBX, RBP), "imul rbx,rbp", "48 0f af dd"),
 				test(new Instruction(Opcode.IMUL, RDX, R9, bimm), "imul rdx,r9,0x12", "49 6b d1 12"),
 				test(new Instruction(Opcode.IMUL, R9, RDX, bimm), "imul r9,rdx,0x12", "4c 6b ca 12"),
@@ -5777,6 +5865,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(
 								Opcode.OR,
 								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0xc9dcb)
+										.build(),
+								EAX),
+						"or DWORD PTR [rip+0xc9dcb],eax",
+						"09 05 cb 9d 0c 00"),
+				test(
+						new Instruction(
+								Opcode.OR,
+								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
 										.base(R9)
 										.index(RCX)
@@ -5855,6 +5954,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"or rcx,QWORD PTR [r10]",
 						"49 0b 0a"),
 				test(new Instruction(Opcode.OR, RDI, bimm), "or rdi,0x12", "48 83 cf 12"),
+				test(new Instruction(Opcode.OR, EDI, EAX), "or edi,eax", "09 c7"),
 				//  Xor
 				test(new Instruction(Opcode.XOR, CX, simm), "xor cx,0x1234", "66 81 f1 34 12"),
 				test(new Instruction(Opcode.XOR, EAX, bimm), "xor eax,0x12", "83 f0 12"),
@@ -8407,7 +8507,20 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Lahf
 				test(new Instruction(Opcode.LAHF), "lahf", "9f"),
 				//  Sahf
-				test(new Instruction(Opcode.SAHF), "sahf", "9e"));
+				test(new Instruction(Opcode.SAHF), "sahf", "9e"),
+				// Syscall
+				test(new Instruction(Opcode.SYSCALL), "syscall", "0f 05"),
+				// Bsr
+				test(
+						new Instruction(
+								Opcode.BSR,
+								EAX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"bsr eax,DWORD PTR [rax]",
+						"0f bd 00"));
 	}
 
 	//

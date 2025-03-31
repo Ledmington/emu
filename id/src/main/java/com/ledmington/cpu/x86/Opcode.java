@@ -35,6 +35,9 @@ public enum Opcode {
 	/** Logical AND. */
 	AND("and"),
 
+	/** Bit scan reverse. */
+	BSR("bsr"),
+
 	/** Bit swap. */
 	BSWAP("bswap"),
 
@@ -385,6 +388,9 @@ public enum Opcode {
 
 	/** Subtract. */
 	SUB("sub"),
+
+	/** Fast system call. */
+	SYSCALL("syscall"),
 
 	/** Logical compare. */
 	TEST("test"),

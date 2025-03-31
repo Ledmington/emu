@@ -456,9 +456,19 @@ public class X86Cpu implements X86Emulator {
 					rf.set(Register64.RIP, newRIP);
 				}
 			}
+			case CMOVNE -> {
+				if (rf.isSet(RFlags.ZERO)) {
+					return;
+				}
+				rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+			}
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented.");
 			case HLT -> state = State.HALTED;
 			case NOP -> {}
+			case UD2 -> {
+				logger.error("Illegal instruction.");
+				state = State.HALTED;
+			}
 			default ->
 				throw new IllegalArgumentException(
 						String.format("Unknown instruction '%s'.", InstructionEncoder.toIntelSyntax(inst)));
