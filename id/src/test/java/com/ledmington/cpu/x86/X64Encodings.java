@@ -99,6 +99,7 @@ import static com.ledmington.cpu.x86.RegisterMMX.MM0;
 import static com.ledmington.cpu.x86.RegisterMMX.MM1;
 import static com.ledmington.cpu.x86.RegisterMMX.MM2;
 import static com.ledmington.cpu.x86.RegisterMMX.MM3;
+import static com.ledmington.cpu.x86.RegisterMMX.MM5;
 import static com.ledmington.cpu.x86.RegisterMMX.MM7;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM0;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM1;
@@ -605,6 +606,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								new Immediate((short) 0xbeef)),
 						"mov WORD PTR [r11+r8*4+0x12345678],0xbeef",
 						"66 43 c7 84 83 78 56 34 12 ef be"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(R15)
+										.build(),
+								SI),
+						"mov WORD PTR [r15],si",
+						"66 41 89 37"),
 				test(
 						new Instruction(
 								Opcode.MOV,
@@ -4412,6 +4423,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"41 0f 43 8c 80 78 56 34 12"),
 				test(new Instruction(Opcode.CMOVAE, R15, RCX), "cmovae r15,rcx", "4c 0f 43 f9"),
 				test(new Instruction(Opcode.CMOVAE, RCX, R15), "cmovae rcx,r15", "49 0f 43 cf"),
+				test(new Instruction(Opcode.CMOVAE, ESI, R9D), "cmovae esi,r9d", "41 0f 43 f1"),
 				//  Cmovb
 				test(
 						new Instruction(
@@ -5226,6 +5238,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Adc
 				test(new Instruction(Opcode.ADC, CX, simm), "adc cx,0x1234", "66 81 d1 34 12"),
 				test(new Instruction(Opcode.ADC, RAX, new Immediate((byte) 0)), "adc rax,0x00", "48 83 d0 00"),
+				test(new Instruction(Opcode.ADC, ECX, new Immediate((byte) 0xff)), "adc ecx,0xff", "83 d1 ff"),
 				test(
 						new Instruction(
 								Opcode.ADC,
@@ -5437,6 +5450,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								RSP),
 						"sub QWORD PTR [rax+rbx*4+0x12345678],rsp",
 						"48 29 a4 98 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.SUB,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.displacement((byte) 0x28)
+										.build(),
+								new Immediate((byte) 1)),
+						"sub QWORD PTR [rsp+0x28],0x01",
+						"48 83 6c 24 28 01"),
 				test(
 						new Instruction(
 								Opcode.SUB,
@@ -6016,6 +6040,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"49 0b 0a"),
 				test(new Instruction(Opcode.OR, RDI, bimm), "or rdi,0x12", "48 83 cf 12"),
 				test(new Instruction(Opcode.OR, EDI, EAX), "or edi,eax", "09 c7"),
+				test(new Instruction(Opcode.OR, RAX, R14), "or rax,r14", "4c 09 f0"),
 				//  Xor
 				test(new Instruction(Opcode.XOR, CX, simm), "xor cx,0x1234", "66 81 f1 34 12"),
 				test(new Instruction(Opcode.XOR, EAX, bimm), "xor eax,0x12", "83 f0 12"),
@@ -6709,6 +6734,33 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movq mm2,QWORD PTR [rsp+r9*4+0x12345678]",
 						"42 0f 6f 94 8c 78 56 34 12"),
+				// Movd
+				test(new Instruction(Opcode.MOVD, XMM3, EBX), "movd xmm3,ebx", "66 0f 6e db"),
+				test(new Instruction(Opcode.MOVD, MM5, ESI), "movd mm5,esi", "0f 6e ee"),
+				test(
+						new Instruction(
+								Opcode.MOVD,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(R14)
+										.displacement((byte) 0xc)
+										.build()),
+						"movd xmm0,DWORD PTR [r14+0xc]",
+						"66 41 0f 6e 46 0c"),
+				test(
+						new Instruction(
+								Opcode.MOVD,
+								MM2,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.index(R9)
+										.scale(4)
+										.displacement(0x12345678)
+										.build()),
+						"movd mm2,QWORD PTR [rsp+r9*4+0x12345678]",
+						"42 0f 6e 94 8c 78 56 34 12"),
 				//  Movhps
 				test(
 						new Instruction(
@@ -8581,7 +8633,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RAX)
 										.build()),
 						"bsr eax,DWORD PTR [rax]",
-						"0f bd 00"));
+						"0f bd 00"),
+				// Ror
+				test(new Instruction(Opcode.ROR, EDI, new Immediate((byte) 0)), "ror edi,0x00", "c1 cf 00"),
+				test(new Instruction(Opcode.ROR, R15, new Immediate((byte) 0x11)), "ror r15,0x11", "49 c1 cf 11"),
+				// Rol
+				test(new Instruction(Opcode.ROL, EDI, new Immediate((byte) 0)), "rol edi,0x00", "c1 c7 00"),
+				// Rcr
+				test(new Instruction(Opcode.RCR, EDI, new Immediate((byte) 0)), "rcr edi,0x00", "c1 df 00"),
+				// Rcl
+				test(new Instruction(Opcode.RCL, EDI, new Immediate((byte) 0)), "rcl edi,0x00", "c1 d7 00"));
 	}
 
 	//

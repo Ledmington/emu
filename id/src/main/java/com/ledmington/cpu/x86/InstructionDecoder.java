@@ -617,10 +617,14 @@ public final class InstructionDecoder {
 
 		final Opcode opcode =
 				switch (modrm.reg()) {
-					case 0b00000100 -> Opcode.SHL;
-					case 0b00000101 -> Opcode.SHR;
-					case 0b00000111 -> Opcode.SAR;
-					case 0b00000110 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					case 0b000 -> Opcode.ROL;
+					case 0b001 -> Opcode.ROR;
+					case 0b010 -> Opcode.RCL;
+					case 0b011 -> Opcode.RCR;
+					case 0b100 -> Opcode.SHL;
+					case 0b101 -> Opcode.SHR;
+					case 0b111 -> Opcode.SAR;
+					case 0b110 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
 					default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 				};
 
@@ -830,7 +834,7 @@ public final class InstructionDecoder {
 		final byte PUNPCKLDQ_OPCODE = (byte) 0x62;
 		final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
 		final byte PUNPCKHQDQ_OPCODE = (byte) 0x6d;
-		final byte MOVQ_OPCODE = (byte) 0x6e;
+		final byte MOVQ_MOVD_OPCODE = (byte) 0x6e;
 		final byte MOVDQA_OPCODE = (byte) 0x6f;
 		final byte PSHUF_OPCODE = (byte) 0x70;
 		final byte PCMPEQD_OPCODE = (byte) 0x76;
@@ -1223,19 +1227,28 @@ public final class InstructionDecoder {
 								.build(),
 						r2);
 			}
-			case MOVQ_OPCODE -> {
+			case MOVQ_MOVD_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final Opcode code = pref.rex().isOperand64Bit() ? Opcode.MOVQ : Opcode.MOVD;
 				final byte regByte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
-				final Register r1 =
-						Registers.fromCode(modrm.rm(), true, pref.rex().hasModRMRMExtension(), false);
+				final Register r1 = pref.hasOperandSizeOverridePrefix()
+						? RegisterXMM.fromByte(regByte)
+						: RegisterMMX.fromByte(regByte);
+				final Register r2 = Registers.fromCode(
+						modrm.rm(), pref.rex().isOperand64Bit(), pref.rex().hasModRMRMExtension(), false);
 				yield new Instruction(
-						Opcode.MOVQ,
-						pref.hasOperandSizeOverridePrefix()
-								? RegisterXMM.fromByte(regByte)
-								: RegisterMMX.fromByte(regByte),
+						code,
+						r1,
 						isIndirectOperandNeeded(modrm)
-								? parseIndirectOperand(b, pref, modrm).build()
-								: r1);
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(
+												code == Opcode.MOVQ
+														? PointerSize.fromSize(r1.bits())
+														: (r1.bits() == 64
+																? PointerSize.QWORD_PTR
+																: PointerSize.DWORD_PTR))
+										.build()
+								: r2);
 			}
 			case MOVQ_INDIRECT_XMM_OPCODE -> {
 				final ModRM modrm = modrm(b);

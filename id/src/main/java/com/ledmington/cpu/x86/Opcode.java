@@ -209,6 +209,9 @@ public enum Opcode {
 	/** Move aligned packed single-precision floating-point values. */
 	MOVAPS("movaps"),
 
+	/** Move doubleword. */
+	MOVD("movd"),
+
 	/** Move aligned double-quadword. */
 	MOVDQA("movdqa"),
 
@@ -320,6 +323,12 @@ public enum Opcode {
 	/** Logical XOR (MMX/XMM registers). */
 	PXOR("pxor"),
 
+	/** Rotate thru carry left. */
+	RCL("rcl"),
+
+	/** Rotate thru carry right. */
+	RCR("rcr"),
+
 	/** Read random number. */
 	RDRAND("rdrand"),
 
@@ -331,6 +340,12 @@ public enum Opcode {
 
 	/** Return from procedure. */
 	RET("ret"),
+
+	/** Rotate left. */
+	ROL("rol"),
+
+	/** Rotate right. */
+	ROR("ror"),
 
 	/** Load status flags into AH register. */
 	SAHF("sahf"),
