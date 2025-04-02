@@ -809,6 +809,7 @@ public final class InstructionDecoder {
 		final byte MOVUPS_OPCODE = (byte) 0x11;
 		final byte MOVHLPS_OPCODE = (byte) 0x12;
 		final byte MOVHPS_OPCODE = (byte) 0x16;
+		final byte MOVHPS_MOVHPD_OPCODE = (byte) 0x17;
 		final byte GROUP16_OPCODE = (byte) 0x18;
 		final byte ENDBR_OPCODE = (byte) 0x1e;
 		final byte NOP_OPCODE = (byte) 0x1f;
@@ -1286,6 +1287,16 @@ public final class InstructionDecoder {
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.QWORD_PTR)
 								.build());
+			}
+			case MOVHPS_MOVHPD_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte regByte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				yield new Instruction(
+						pref.hasOperandSizeOverridePrefix() ? Opcode.MOVHPD : Opcode.MOVHPS,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.QWORD_PTR)
+								.build(),
+						RegisterXMM.fromByte(regByte));
 			}
 			case PAND_OPCODE -> {
 				final ModRM modrm = modrm(b);

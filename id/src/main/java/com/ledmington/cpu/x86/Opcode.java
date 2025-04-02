@@ -219,7 +219,13 @@ public enum Opcode {
 	MOVHLPS("movhlps"),
 
 	/**
-	 * Move two packed single precision floating-point values to and from the high quadword of an XMM register and
+	 * Move high packed double precision floating-point values to and from the high quadword of an XMM register and
+	 * memory.
+	 */
+	MOVHPD("movhpd"),
+
+	/**
+	 * Move high packed single precision floating-point values to and from the high quadword of an XMM register and
 	 * memory.
 	 */
 	MOVHPS("movhps"),
