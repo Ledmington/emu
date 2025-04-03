@@ -1247,6 +1247,10 @@ public final class InstructionEncoder {
 			case PSHUFD, PSHUFW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x70);
 			case SHUFPS, SHUFPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
 			case PALIGNR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, THREE_BYTE_ESCAPE_PREFIX, (byte) 0x0f);
+			case VPXOR -> {
+				encodeVexPrefix(wb, inst);
+				wb.write((byte) 0xef);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1265,7 +1269,23 @@ public final class InstructionEncoder {
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
+		} else if (requiresVexPrefix(inst)
+				&& inst.firstOperand() instanceof final Register r1
+				&& inst.secondOperand() instanceof final Register r2) {
+			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 		}
+	}
+
+	private static boolean requiresVexPrefix(final Instruction inst) {
+		return switch (inst.opcode()) {
+			case VPXOR -> true;
+			default -> false;
+		};
+	}
+
+	private static void encodeVexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		wb.write((byte) 0xc5);
+		wb.write(BitUtils.shl(RegisterXMM.toByte((RegisterXMM) inst.thirdOperand()), 3));
 	}
 
 	private static byte getMod(final IndirectOperand io) {

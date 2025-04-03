@@ -488,6 +488,9 @@ public enum Opcode {
 	/** Undefined instruction. */
 	UD2("ud2"),
 
+	/** Logical exclusive OR. */
+	VPXOR("vpxor"),
+
 	/** Exchange and add. */
 	XADD("xadd"),
 

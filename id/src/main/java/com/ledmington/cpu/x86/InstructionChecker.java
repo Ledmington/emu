@@ -688,7 +688,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.RCL, List.of(op(OperandType.R32, OperandType.I8))),
 			Map.entry(Opcode.PMOVMSKB, List.of(op(OperandType.R32, OperandType.RXMM))),
 			Map.entry(Opcode.PMINUB, List.of(op(OperandType.RXMM, OperandType.RXMM))),
-			Map.entry(Opcode.PALIGNR, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.I8))));
+			Map.entry(Opcode.PALIGNR, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.I8))),
+			Map.entry(Opcode.VPXOR, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM))));
 
 	private InstructionChecker() {}
 

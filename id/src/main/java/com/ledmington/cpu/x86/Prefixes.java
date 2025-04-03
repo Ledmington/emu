@@ -36,7 +36,8 @@ public record Prefixes(
 		boolean hasOperandSizeOverridePrefix,
 		boolean hasAddressSizeOverridePrefix,
 		boolean hasRexPrefix,
-		RexPrefix rex) {
+		RexPrefix rex,
+		Optional<VexPrefix> vex) {
 
 	@Override
 	public String toString() {

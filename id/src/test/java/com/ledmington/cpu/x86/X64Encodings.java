@@ -8824,7 +8824,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(
 						new Instruction(Opcode.PALIGNR, XMM2, XMM3, new Immediate((byte) 0x1)),
 						"palignr xmm2,xmm3,0x01",
-						"66 0f 3a 0f d3 01"));
+						"66 0f 3a 0f d3 01"),
+				// Vpxor
+				test(new Instruction(Opcode.VPXOR, XMM7, XMM7, XMM7), "vpxor xmm7,xmm7,xmm7", "c5 c1 ef ff"));
 	}
 
 	//

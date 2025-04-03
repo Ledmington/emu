@@ -1465,21 +1465,29 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
 				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
-				yield new Instruction(
-						Opcode.PXOR,
-						pref.hasOperandSizeOverridePrefix()
-								? RegisterXMM.fromByte(r1Byte)
-								: RegisterMMX.fromByte(r1Byte),
-						isIndirectOperandNeeded(modrm)
-								? parseIndirectOperand(b, pref, modrm)
-										.pointer(
-												pref.hasOperandSizeOverridePrefix()
-														? PointerSize.XMMWORD_PTR
-														: PointerSize.QWORD_PTR)
-										.build()
-								: (pref.hasOperandSizeOverridePrefix()
-										? RegisterXMM.fromByte(r2Byte)
-										: RegisterMMX.fromByte(r2Byte)));
+				if (pref.vex().isPresent()) {
+					yield new Instruction(
+							Opcode.VPXOR,
+							RegisterXMM.fromByte(r1Byte),
+							RegisterXMM.fromByte(r2Byte),
+							RegisterXMM.fromByte(pref.vex().orElseThrow().v()));
+				} else {
+					yield new Instruction(
+							Opcode.PXOR,
+							pref.hasOperandSizeOverridePrefix()
+									? RegisterXMM.fromByte(r1Byte)
+									: RegisterMMX.fromByte(r1Byte),
+							isIndirectOperandNeeded(modrm)
+									? parseIndirectOperand(b, pref, modrm)
+											.pointer(
+													pref.hasOperandSizeOverridePrefix()
+															? PointerSize.XMMWORD_PTR
+															: PointerSize.QWORD_PTR)
+											.build()
+									: (pref.hasOperandSizeOverridePrefix()
+											? RegisterXMM.fromByte(r2Byte)
+											: RegisterMMX.fromByte(r2Byte)));
+				}
 			}
 			case PCMPEQB_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -2381,6 +2389,7 @@ public final class InstructionDecoder {
 
 			case LEA_OPCODE -> parseRxMx(b, pref, Opcode.LEA);
 
+			case (byte) 0xc5 -> throw new UnrecognizedPrefix("VEX2", b.getPosition());
 			case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("operand size override", b.getPosition());
 			case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("address size override", b.getPosition());
 			case (byte) 0xf0 -> throw new UnrecognizedPrefix("LOCK", b.getPosition());
@@ -2437,7 +2446,16 @@ public final class InstructionDecoder {
 			b.setPosition(b.getPosition() - 1);
 		}
 
-		return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix);
+		final byte vexByte = b.read1();
+		Optional<VexPrefix> vex;
+		if (VexPrefix.isVEX2Prefix(vexByte)) {
+			vex = Optional.of(VexPrefix.of2(b.read1()));
+		} else {
+			b.setPosition(b.getPosition() - 1);
+			vex = Optional.empty();
+		}
+
+		return new Prefixes(p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix, vex);
 	}
 
 	/** Parses an instruction like OP IndirectXX,RXX (where XX can be 16, 32 or 64) */
