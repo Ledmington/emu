@@ -772,12 +772,11 @@ public final class InstructionDecoder {
 
 		final Opcode opcode =
 				switch (modrm.reg()) {
-					case 0b00000100 -> Opcode.BT;
-					case 0b00000101 -> Opcode.BTS;
-					case 0b00000110 -> Opcode.BTR;
-					case 0b00000111 -> Opcode.BTC;
-					case 0b00000000, 0b00000001, 0b00000010, 0b00000011 ->
-						throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					case 0b100 -> Opcode.BT;
+					case 0b101 -> Opcode.BTS;
+					case 0b110 -> Opcode.BTR;
+					case 0b111 -> Opcode.BTC;
+					case 0b000, 0b001, 0b010, 0b011 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
 					default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 				};
 
@@ -789,6 +788,80 @@ public final class InstructionDecoder {
 						pref.rex().hasModRMRMExtension(),
 						pref.hasOperandSizeOverridePrefix()),
 				new Immediate(b.read1()));
+	}
+
+	private static Instruction parseExtendedOpcodeGroup12(
+			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte) {
+		final ModRM modrm = modrm(b);
+
+		if (isIndirectOperandNeeded(modrm)) {
+			throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+		}
+
+		final Opcode opcode =
+				switch (modrm.reg()) {
+					case 0b010 -> Opcode.PSRLW;
+					case 0b100 -> Opcode.PSRAW;
+					case 0b110 -> Opcode.PSLLW;
+					case 0b000, 0b001, 0b011, 0b101, 0b111 ->
+						throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+				};
+
+		return new Instruction(opcode);
+	}
+
+	private static Instruction parseExtendedOpcodeGroup13(
+			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte) {
+		final ModRM modrm = modrm(b);
+
+		if (isIndirectOperandNeeded(modrm)) {
+			throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+		}
+
+		final Opcode opcode =
+				switch (modrm.reg()) {
+					case 0b010 -> Opcode.PSRLD;
+					case 0b100 -> Opcode.PSRAD;
+					case 0b110 -> Opcode.PSLLD;
+					case 0b000, 0b001, 0b011, 0b101, 0b111 ->
+						throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+				};
+
+		return new Instruction(opcode);
+	}
+
+	private static Instruction parseExtendedOpcodeGroup14(
+			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+		final ModRM modrm = modrm(b);
+
+		if (isIndirectOperandNeeded(modrm)) {
+			throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+		}
+
+		final Opcode opcode =
+				switch (modrm.reg()) {
+					case 0b010 -> Opcode.PSRLQ;
+					case 0b011 -> {
+						if (pref.hasOperandSizeOverridePrefix()) {
+							yield Opcode.PSRLDQ;
+						}
+						throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					}
+					case 0b110 -> Opcode.PSLLQ;
+					case 0b111 -> {
+						if (pref.hasOperandSizeOverridePrefix()) {
+							yield Opcode.PSLLDQ;
+						}
+						throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					}
+					case 0b000, 0b001, 0b100, 0b101 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+					default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+				};
+
+		return new Instruction(
+				opcode, RegisterXMM.fromByte(Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm())), imm8(b));
 	}
 
 	private static Operand getXMMArgument(
@@ -817,6 +890,7 @@ public final class InstructionDecoder {
 		final byte MOVAPx_INDIRECT128_R128_OPCODE = (byte) 0x29;
 		final byte CVTSI2SD_OPCODE = (byte) 0x2a;
 		final byte UCOMISx_OPCODE = (byte) 0x2e;
+		final byte THREE_BYTE_ESCAPE_OPCODE = (byte) 0x3a;
 		final byte CMOVB_OPCODE = (byte) 0x42;
 		final byte CMOVAE_OPCODE = (byte) 0x43;
 		final byte CMOVE_OPCODE = (byte) 0x44;
@@ -838,6 +912,9 @@ public final class InstructionDecoder {
 		final byte MOVQ_MOVD_OPCODE = (byte) 0x6e;
 		final byte MOVDQA_OPCODE = (byte) 0x6f;
 		final byte PSHUF_OPCODE = (byte) 0x70;
+		final byte GROUP12_OPCODE = (byte) 0x71;
+		final byte GROUP13_OPCODE = (byte) 0x72;
+		final byte GROUP14_OPCODE = (byte) 0x73;
 		final byte PCMPEQB_OPCODE = (byte) 0x74;
 		final byte PCMPEQW_OPCODE = (byte) 0x75;
 		final byte PCMPEQD_OPCODE = (byte) 0x76;
@@ -879,6 +956,7 @@ public final class InstructionDecoder {
 		final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
 		final byte GROUP8_OPCODE = (byte) 0xba;
 		final byte BTC_INDIRECT32_R32_OPCODE = (byte) 0xbb;
+		final byte BSF_OPCODE = (byte) 0xbc;
 		final byte BSR_R32_INDIRECT32_OPCODE = (byte) 0xbd;
 		final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
 		final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
@@ -896,9 +974,14 @@ public final class InstructionDecoder {
 		final byte BSWAP_EBP_OPCODE = (byte) 0xcf;
 		final byte PADDQ_OPCODE = (byte) 0xd4;
 		final byte MOVQ_INDIRECT_XMM_OPCODE = (byte) 0xd6;
+		final byte PMOVMSKB_OPCODE = (byte) 0xd7;
+		final byte PMINUB_OPCODE = (byte) 0xda;
 		final byte PAND_OPCODE = (byte) 0xdb;
 		final byte POR_OPCODE = (byte) 0xeb;
 		final byte PXOR_OPCODE = (byte) 0xef;
+		final byte PSUBB_OPCODE = (byte) 0xf8;
+		final byte PSUBW_OPCODE = (byte) 0xf9;
+		final byte PSUBD_OPCODE = (byte) 0xfa;
 		final byte PSUBQ_OPCODE = (byte) 0xfb;
 
 		final Opcode[] cmovOpcodes = {
@@ -945,8 +1028,12 @@ public final class InstructionDecoder {
 			case GROUP7_OPCODE -> parseExtendedOpcodeGroup7(b, opcodeFirstByte, opcodeSecondByte);
 			case GROUP8_OPCODE -> parseExtendedOpcodeGroup8(b, opcodeFirstByte, opcodeSecondByte, pref);
 			case GROUP9_OPCODE -> parseExtendedOpcodeGroup9(b, opcodeFirstByte, opcodeSecondByte, pref);
+			case GROUP12_OPCODE -> parseExtendedOpcodeGroup12(b, opcodeFirstByte, opcodeSecondByte);
+			case GROUP13_OPCODE -> parseExtendedOpcodeGroup13(b, opcodeFirstByte, opcodeSecondByte);
+			case GROUP14_OPCODE -> parseExtendedOpcodeGroup14(b, opcodeFirstByte, opcodeSecondByte, pref);
 			case GROUP15_OPCODE -> parseExtendedOpcodeGroup15(b, opcodeFirstByte, opcodeSecondByte, pref);
 			case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(b, opcodeFirstByte, opcodeSecondByte, pref);
+			case THREE_BYTE_ESCAPE_OPCODE -> parse3BytesEscape(b, opcodeFirstByte, opcodeSecondByte, pref);
 
 			// conditional jumps
 			case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, imm32(b));
@@ -1095,6 +1182,21 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.BTC,
+						Registers.fromCode(
+								modrm.rm(),
+								pref.rex().isOperand64Bit(),
+								pref.rex().hasModRMRMExtension(),
+								pref.hasOperandSizeOverridePrefix()),
+						Registers.fromCode(
+								modrm.reg(),
+								pref.rex().isOperand64Bit(),
+								pref.rex().hasModRMRegExtension(),
+								pref.hasOperandSizeOverridePrefix()));
+			}
+			case BSF_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.BSF,
 						Registers.fromCode(
 								modrm.rm(),
 								pref.rex().isOperand64Bit(),
@@ -1304,6 +1406,13 @@ public final class InstructionDecoder {
 								.build(),
 						RegisterXMM.fromByte(regByte));
 			}
+			case PMINUB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(
+						Opcode.PMINUB, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
+			}
 			case PAND_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
@@ -1317,6 +1426,27 @@ public final class InstructionDecoder {
 				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
 				yield new Instruction(
 						Opcode.PADDQ, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
+			}
+			case PSUBB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(
+						Opcode.PSUBB, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
+			}
+			case PSUBW_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(
+						Opcode.PSUBW, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
+			}
+			case PSUBD_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(
+						Opcode.PSUBD, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
 			}
 			case PSUBQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -1542,7 +1672,32 @@ public final class InstructionDecoder {
 												: PointerSize.DWORD_PTR)
 								.build());
 			}
+			case PMOVMSKB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.PMOVMSKB,
+						Register32.fromByte(Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg())),
+						RegisterXMM.fromByte(Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm())));
+			}
 			default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+		};
+	}
+
+	private static Instruction parse3BytesEscape(
+			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+		final byte PALIGNR_OPCODE = (byte) 0x0f;
+
+		final byte x = b.read1();
+		final ModRM modrm = modrm(b);
+
+		return switch (x) {
+			case PALIGNR_OPCODE ->
+				new Instruction(
+						Opcode.PALIGNR,
+						RegisterXMM.fromByte(Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg())),
+						RegisterXMM.fromByte(Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm())),
+						imm8(b));
+			default -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte, x);
 		};
 	}
 

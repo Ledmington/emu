@@ -7802,6 +7802,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"psubq xmm4,XMMWORD PTR [rdi]",
 						"66 0f fb 27"),
 				test(new Instruction(Opcode.PSUBQ, XMM7, XMM7), "psubq xmm7,xmm7", "66 0f fb ff"),
+				// Psubb
+				test(new Instruction(Opcode.PSUBB, XMM3, XMM14), "psubb xmm3,xmm14", "66 41 0f f8 de"),
+				// Psubw
+				test(new Instruction(Opcode.PSUBW, XMM3, XMM14), "psubw xmm3,xmm14", "66 41 0f f9 de"),
+				// Psubd
+				test(new Instruction(Opcode.PSUBD, XMM3, XMM14), "psubd xmm3,xmm14", "66 41 0f fa de"),
 				//  Cvtsi2sd
 				test(new Instruction(Opcode.CVTSI2SD, XMM2, RDI), "cvtsi2sd xmm2,rdi", "f2 48 0f 2a d7"),
 				test(new Instruction(Opcode.CVTSI2SD, XMM8, EAX), "cvtsi2sd xmm8,eax", "f2 44 0f 2a c0"),
@@ -8788,6 +8794,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"bsr eax,DWORD PTR [rax]",
 						"0f bd 00"),
+				// Bsf
+				test(new Instruction(Opcode.BSF, RDX, RDX), "bsf rdx,rdx", "48 0f bc d2"),
 				// Ror
 				test(new Instruction(Opcode.ROR, EDI, new Immediate((byte) 0)), "ror edi,0x00", "c1 cf 00"),
 				test(new Instruction(Opcode.ROR, R15, new Immediate((byte) 0x11)), "ror r15,0x11", "49 c1 cf 11"),
@@ -8797,7 +8805,26 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Rcr
 				test(new Instruction(Opcode.RCR, EDI, new Immediate((byte) 0)), "rcr edi,0x00", "c1 df 00"),
 				// Rcl
-				test(new Instruction(Opcode.RCL, EDI, new Immediate((byte) 0)), "rcl edi,0x00", "c1 d7 00"));
+				test(new Instruction(Opcode.RCL, EDI, new Immediate((byte) 0)), "rcl edi,0x00", "c1 d7 00"),
+				// Pmovmskb
+				test(new Instruction(Opcode.PMOVMSKB, EDI, XMM6), "pmovmskb edi,xmm6", "66 0f d7 fe"),
+				// Pslldq
+				test(
+						new Instruction(Opcode.PSLLDQ, XMM2, new Immediate((byte) 0x0f)),
+						"pslldq xmm2,0x0f",
+						"66 0f 73 fa 0f"),
+				// Psrldq
+				test(
+						new Instruction(Opcode.PSRLDQ, XMM3, new Immediate((byte) 0x1)),
+						"psrldq xmm3,0x01",
+						"66 0f 73 db 01"),
+				// Pminub
+				test(new Instruction(Opcode.PMINUB, XMM0, XMM1), "pminub xmm0,xmm1", "66 0f da c1"),
+				// Palignr
+				test(
+						new Instruction(Opcode.PALIGNR, XMM2, XMM3, new Immediate((byte) 0x1)),
+						"palignr xmm2,xmm3,0x01",
+						"66 0f 3a 0f d3 01"));
 	}
 
 	//

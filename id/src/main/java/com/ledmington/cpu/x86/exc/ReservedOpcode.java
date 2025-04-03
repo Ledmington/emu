@@ -38,4 +38,8 @@ public final class ReservedOpcode extends RuntimeException {
 	public ReservedOpcode(final byte firstByte, final byte secondByte) {
 		super(String.format("Reserved opcode 0x%02x%02x", firstByte, secondByte));
 	}
+
+	public ReservedOpcode(final byte firstByte, final byte secondByte, final byte thirdByte) {
+		super(String.format("Reserved opcode 0x%02x%02x%02x", firstByte, secondByte, thirdByte));
+	}
 }

@@ -592,6 +592,11 @@ public final class InstructionChecker {
 			Map.entry(
 					Opcode.PSUBQ,
 					List.of(op(OperandType.RXMM, OperandType.RXMM), op(OperandType.RXMM, OperandType.M128))),
+			Map.entry(Opcode.PSUBB, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PSUBW, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PSUBD, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PSLLDQ, List.of(op(OperandType.RXMM, OperandType.I8))),
+			Map.entry(Opcode.PSRLDQ, List.of(op(OperandType.RXMM, OperandType.I8))),
 			Map.entry(
 					Opcode.CVTSI2SD,
 					List.of(op(OperandType.RXMM, OperandType.R64), op(OperandType.RXMM, OperandType.R32))),
@@ -676,10 +681,14 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SAHF, List.of(op())),
 			Map.entry(Opcode.SYSCALL, List.of(op())),
 			Map.entry(Opcode.BSR, List.of(op(OperandType.R32, OperandType.M32))),
+			Map.entry(Opcode.BSF, List.of(op(OperandType.R64, OperandType.R64))),
 			Map.entry(Opcode.ROR, List.of(op(OperandType.R32, OperandType.I8), op(OperandType.R64, OperandType.I8))),
 			Map.entry(Opcode.ROL, List.of(op(OperandType.R32, OperandType.I8), op(OperandType.R64, OperandType.I8))),
 			Map.entry(Opcode.RCR, List.of(op(OperandType.R32, OperandType.I8))),
-			Map.entry(Opcode.RCL, List.of(op(OperandType.R32, OperandType.I8))));
+			Map.entry(Opcode.RCL, List.of(op(OperandType.R32, OperandType.I8))),
+			Map.entry(Opcode.PMOVMSKB, List.of(op(OperandType.R32, OperandType.RXMM))),
+			Map.entry(Opcode.PMINUB, List.of(op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(Opcode.PALIGNR, List.of(op(OperandType.RXMM, OperandType.RXMM, OperandType.I8))));
 
 	private InstructionChecker() {}
 

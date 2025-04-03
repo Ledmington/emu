@@ -35,6 +35,9 @@ public enum Opcode {
 	/** Logical AND. */
 	AND("and"),
 
+	/** Bit scan forward. */
+	BSF("bsf"),
+
 	/** Bit scan reverse. */
 	BSR("bsr"),
 
@@ -269,6 +272,9 @@ public enum Opcode {
 	/** Add packed quadword integers. */
 	PADDQ("paddq"),
 
+	/** Packed align right. */
+	PALIGNR("palignr"),
+
 	/** Logical AND (MMX/XMM registers). */
 	PAND("pand"),
 
@@ -280,6 +286,12 @@ public enum Opcode {
 
 	/** Compare packed words for equal. */
 	PCMPEQW("pcmpeqw"),
+
+	/** Minimum of packed unsigned byte integers. */
+	PMINUB("pminub"),
+
+	/** Move byte mask. */
+	PMOVMSKB("pmovmskb"),
 
 	/** Pop a value from the stack. */
 	POP("pop"),
@@ -317,8 +329,47 @@ public enum Opcode {
 	/** Shuffle packed integer word in MMX register. */
 	PSHUFW("pshufw"),
 
+	/** Shift packed doublewords left logical. */
+	PSLLD("pslld"),
+
+	/** Shift packed double quadwords left logical. */
+	PSLLDQ("pslldq"),
+
+	/** Shift packed quadwords left logical. */
+	PSLLQ("psllq"),
+
+	/** Shift packed words left logical. */
+	PSLLW("psllw"),
+
+	/** Shift packed doublewords right arithmetic. */
+	PSRAD("psrad"),
+
+	/** Shift packed words right arithmetic. */
+	PSRAW("psraw"),
+
+	/** Shift packed doublewords right logical. */
+	PSRLD("psrld"),
+
+	/** Shift packed double quadwords right logical. */
+	PSRLDQ("psrldq"),
+
+	/** Shift packed quadwords right logical. */
+	PSRLQ("psrlq"),
+
+	/** Shift packed words right logical. */
+	PSRLW("psrlw"),
+
+	/** Subtract packed byte integers. */
+	PSUBB("psubb"),
+
+	/** Subtract packed doubleword integers. */
+	PSUBD("psubd"),
+
 	/** Subtract packed quadword integers. */
 	PSUBQ("psubq"),
+
+	/** Subtract packed word integers. */
+	PSUBW("psubw"),
 
 	/** Unpack high data. */
 	PUNPCKHQDQ("punpckhqdq"),

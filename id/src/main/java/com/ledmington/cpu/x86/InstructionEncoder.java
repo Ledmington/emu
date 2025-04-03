@@ -35,6 +35,7 @@ public final class InstructionEncoder {
 	private static final byte OPERAND_SIZE_OVERRIDE_PREFIX = (byte) 0x66;
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
 	private static final byte DOUBLE_BYTE_OPCODE_PREFIX = (byte) 0x0f;
+	private static final byte THREE_BYTE_ESCAPE_PREFIX = (byte) 0x3a;
 	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
 	private static final Map<Opcode, Byte> CONDITIONAL_JUMPS_OPCODES = Map.ofEntries(
 			Map.entry(Opcode.JB, (byte) 0x02),
@@ -442,12 +443,19 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.POR && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PAND && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PADDQ && inst.firstOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PSUBB && inst.firstOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PSUBW && inst.firstOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PSUBD && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PSUBQ && inst.firstOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PMINUB && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.UCOMISD)
 				|| (inst.opcode() == Opcode.PCMPEQB && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PCMPEQW && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PCMPEQD && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.MOVD && inst.firstOperand() instanceof RegisterXMM)) {
+				|| (inst.opcode() == Opcode.MOVD && inst.firstOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PMOVMSKB)
+				|| (inst.opcode() == Opcode.PSLLDQ)
+				|| (inst.opcode() == Opcode.PSRLDQ)) {
 			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.hasLockPrefix()) {
@@ -575,7 +583,6 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.PADDQ && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.PSUBQ && hasExtendedIndex(inst.secondOperand()))
 					|| (inst.opcode() == Opcode.SUB && hasExtendedIndex(inst.firstOperand()))) {
-
 				rex = BitUtils.or(rex, (byte) 0b0010);
 			}
 			if ((isShift && hasExtendedFirstRegister)
@@ -622,6 +629,9 @@ public final class InstructionEncoder {
 					|| (inst.opcode() == Opcode.POR && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.PAND && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.PADDQ && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.PSUBB && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.PSUBW && hasExtendedSecondRegister)
+					|| (inst.opcode() == Opcode.PSUBD && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.PSUBQ && hasExtendedSecondRegister)
 					|| (inst.opcode() == Opcode.XCHG && hasExtendedFirstRegister)
 					|| (inst.opcode() == Opcode.DIVSD && hasExtendedSecondRegister)
@@ -1048,8 +1058,12 @@ public final class InstructionEncoder {
 			case MOVSD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
 			case PXOR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xef);
 			case POR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xeb);
+			case PMINUB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xda);
 			case PAND -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xdb);
 			case PADDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd4);
+			case PSUBB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xf8);
+			case PSUBW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xf9);
+			case PSUBD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfa);
 			case PSUBQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
 			case XCHG -> {
 				if (inst.firstOperand() instanceof final Register r
@@ -1093,6 +1107,7 @@ public final class InstructionEncoder {
 			case PCMPEQB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x74);
 			case PCMPEQW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x75);
 			case PCMPEQD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x76);
+			case BSF -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xbc);
 			case BSR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xbd);
 			case ROL -> {
 				wb.write((byte) 0xc1);
@@ -1108,6 +1123,15 @@ public final class InstructionEncoder {
 			}
 			case RCR -> {
 				wb.write((byte) 0xc1);
+				reg = (byte) 0b011;
+			}
+			case PMOVMSKB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd7);
+			case PSLLDQ -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x73);
+				reg = (byte) 0b111;
+			}
+			case PSRLDQ -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x73);
 				reg = (byte) 0b011;
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
@@ -1182,7 +1206,7 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeThreeOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
-		if (inst.opcode() == Opcode.PSHUFD || inst.opcode() == Opcode.SHUFPD) {
+		if ((inst.opcode() == Opcode.PSHUFD) || (inst.opcode() == Opcode.SHUFPD) || (inst.opcode() == Opcode.PALIGNR)) {
 			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 		}
 
@@ -1222,6 +1246,7 @@ public final class InstructionEncoder {
 			}
 			case PSHUFD, PSHUFW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x70);
 			case SHUFPS, SHUFPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
+			case PALIGNR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, THREE_BYTE_ESCAPE_PREFIX, (byte) 0x0f);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
