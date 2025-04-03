@@ -838,6 +838,8 @@ public final class InstructionDecoder {
 		final byte MOVQ_MOVD_OPCODE = (byte) 0x6e;
 		final byte MOVDQA_OPCODE = (byte) 0x6f;
 		final byte PSHUF_OPCODE = (byte) 0x70;
+		final byte PCMPEQB_OPCODE = (byte) 0x74;
+		final byte PCMPEQW_OPCODE = (byte) 0x75;
 		final byte PCMPEQD_OPCODE = (byte) 0x76;
 		final byte MOVQ_R128_INDIRECT64_OPCODE = (byte) 0x7e;
 		final byte JB_DISP32_OPCODE = (byte) 0x82;
@@ -853,6 +855,8 @@ public final class InstructionDecoder {
 		final byte JGE_DISP32_OPCODE = (byte) 0x8d;
 		final byte JLE_DISP32_OPCODE = (byte) 0x8e;
 		final byte JG_DISP32_OPCODE = (byte) 0x8f;
+		final byte SETO_OPCODE = (byte) 0x90;
+		final byte SETNO_OPCODE = (byte) 0x91;
 		final byte SETB_OPCODE = (byte) 0x92;
 		final byte SETAE_OPCODE = (byte) 0x93;
 		final byte SETE_OPCODE = (byte) 0x94;
@@ -917,8 +921,8 @@ public final class InstructionDecoder {
 		};
 
 		final Opcode[] setOpcodes = {
-			null,
-			null,
+			Opcode.SETO,
+			Opcode.SETNO,
 			Opcode.SETB,
 			Opcode.SETAE,
 			Opcode.SETE,
@@ -995,6 +999,8 @@ public final class InstructionDecoder {
 
 			// conditional set bytes
 			case SETE_OPCODE,
+					SETO_OPCODE,
+					SETNO_OPCODE,
 					SETB_OPCODE,
 					SETLE_OPCODE,
 					SETAE_OPCODE,
@@ -1344,6 +1350,32 @@ public final class InstructionDecoder {
 								: (pref.hasOperandSizeOverridePrefix()
 										? RegisterXMM.fromByte(r2Byte)
 										: RegisterMMX.fromByte(r2Byte)));
+			}
+			case PCMPEQB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(
+						Opcode.PCMPEQB,
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r1Byte)
+								: RegisterMMX.fromByte(r1Byte),
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r2Byte)
+								: RegisterMMX.fromByte(r2Byte));
+			}
+			case PCMPEQW_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(
+						Opcode.PCMPEQW,
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r1Byte)
+								: RegisterMMX.fromByte(r1Byte),
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r2Byte)
+								: RegisterMMX.fromByte(r2Byte));
 			}
 			case PCMPEQD_OPCODE -> {
 				final ModRM modrm = modrm(b);

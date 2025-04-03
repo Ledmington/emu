@@ -99,11 +99,14 @@ import static com.ledmington.cpu.x86.RegisterMMX.MM0;
 import static com.ledmington.cpu.x86.RegisterMMX.MM1;
 import static com.ledmington.cpu.x86.RegisterMMX.MM2;
 import static com.ledmington.cpu.x86.RegisterMMX.MM3;
+import static com.ledmington.cpu.x86.RegisterMMX.MM4;
 import static com.ledmington.cpu.x86.RegisterMMX.MM5;
+import static com.ledmington.cpu.x86.RegisterMMX.MM6;
 import static com.ledmington.cpu.x86.RegisterMMX.MM7;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM0;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM1;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM11;
+import static com.ledmington.cpu.x86.RegisterXMM.XMM12;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM13;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM14;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM15;
@@ -4438,8 +4441,20 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"cmovb ecx,DWORD PTR [r8+rax*4+0x12345678]",
 						"41 0f 42 8c 80 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.CMOVB,
+								RAX,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.displacement((byte) 0x28)
+										.build()),
+						"cmovb rax,QWORD PTR [rsp+0x28]",
+						"48 0f 42 44 24 28"),
 				test(new Instruction(Opcode.CMOVB, R15, RCX), "cmovb r15,rcx", "4c 0f 42 f9"),
 				test(new Instruction(Opcode.CMOVB, RCX, R15), "cmovb rcx,r15", "49 0f 42 cf"),
+				test(new Instruction(Opcode.CMOVB, R11D, R9D), "cmovb r11d,r9d", "45 0f 42 d9"),
 				//  Cmovbe
 				test(
 						new Instruction(
@@ -4456,6 +4471,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"41 0f 46 8c 80 78 56 34 12"),
 				test(new Instruction(Opcode.CMOVBE, R15, RCX), "cmovbe r15,rcx", "4c 0f 46 f9"),
 				test(new Instruction(Opcode.CMOVBE, RCX, R15), "cmovbe rcx,r15", "49 0f 46 cf"),
+				test(new Instruction(Opcode.CMOVBE, R12D, EAX), "cmovbe r12d,eax", "44 0f 46 e0"),
 				//  Cmovne
 				test(
 						new Instruction(
@@ -4823,6 +4839,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	private static List<X64EncodingTestCase> movzx() {
 		return List.of(
 				test(new Instruction(Opcode.MOVZX, ESI, BL), "movzx esi,bl", "0f b6 f3"),
+				test(new Instruction(Opcode.MOVZX, R12D, R10W), "movzx r12d,r10w", "45 0f b7 e2"),
 				test(
 						new Instruction(
 								Opcode.MOVZX,
@@ -5243,6 +5260,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(
 								Opcode.ADC,
 								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RAX)
+										.displacement(0x3c9df09a)
+										.build(),
+								CL),
+						"adc BYTE PTR [rax+0x3c9df09a],cl",
+						"10 88 9a f0 9d 3c"),
+				test(
+						new Instruction(
+								Opcode.ADC,
+								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RBP)
 										.displacement(0x2FF0E4B1)
@@ -5342,6 +5370,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(
 								Opcode.AND,
 								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(R14)
+										.displacement((byte) 0x8)
+										.build(),
+								bimm),
+						"and QWORD PTR [r14+0x8],0x12",
+						"49 83 66 08 12"),
+				test(
+						new Instruction(
+								Opcode.AND,
+								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
 										.base(RIP)
 										.displacement(0xc898a)
@@ -5411,6 +5450,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								R8D),
 						"sub DWORD PTR [eax+ebx*4+0x12345678],r8d",
 						"67 44 29 84 98 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.SUB,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(R12)
+										.index(R15)
+										.scale(2)
+										.build(),
+								new Immediate((byte) 0x1)),
+						"sub WORD PTR [r12+r15*2],0x01",
+						"66 43 83 2c 7c 01"),
 				test(
 						new Instruction(
 								Opcode.SUB,
@@ -6060,6 +6111,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.XOR, EBX, iimm), "xor ebx,0x12345678", "81 f3 78 56 34 12"),
 				test(new Instruction(Opcode.XOR, R8, bimm), "xor r8,0x12", "49 83 f0 12"),
 				test(new Instruction(Opcode.XOR, R8, iimm), "xor r8,0x12345678", "49 81 f0 78 56 34 12"),
+				test(new Instruction(Opcode.XOR, SIL, new Immediate((byte) 0x80)), "xor sil,0x80", "40 80 f6 80"),
+				test(
+						new Instruction(
+								Opcode.XOR,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RAX)
+										.displacement(0x2454c60f)
+										.build(),
+								CL),
+						"xor BYTE PTR [rax+0x2454c60f],cl",
+						"30 88 0f c6 54 24"),
 				test(
 						new Instruction(
 								Opcode.XOR,
@@ -6081,6 +6144,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"xor dh,BYTE PTR [rdi-0x3ffeeba3]",
 						"32 b7 5d 14 01 c0"),
+				test(
+						new Instruction(
+								Opcode.XOR,
+								EBX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RSP)
+										.displacement((byte) 0x8)
+										.build()),
+						"xor ebx,DWORD PTR [rsp+0x8]",
+						"33 5c 24 08"),
 				test(
 						new Instruction(
 								Opcode.XOR,
@@ -7003,6 +7077,34 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"42 0f 9d 84 4a 78 56 34 12"),
 				test(new Instruction(Opcode.SETGE, AL), "setge al", "0f 9d c0"),
 				test(new Instruction(Opcode.SETGE, R8B), "setge r8b", "41 0f 9d c0"),
+				// Seto
+				test(
+						new Instruction(
+								Opcode.SETO,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RDX)
+										.index(R9)
+										.scale(2)
+										.displacement(0x12345678)
+										.build()),
+						"seto BYTE PTR [rdx+r9*2+0x12345678]",
+						"42 0f 90 84 4a 78 56 34 12"),
+				test(new Instruction(Opcode.SETO, AL), "seto al", "0f 90 c0"),
+				// Setno
+				test(
+						new Instruction(
+								Opcode.SETNO,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RDX)
+										.index(R9)
+										.scale(2)
+										.displacement(0x12345678)
+										.build()),
+						"setno BYTE PTR [rdx+r9*2+0x12345678]",
+						"42 0f 91 84 4a 78 56 34 12"),
+				test(new Instruction(Opcode.SETNO, AL), "setno al", "0f 91 c0"),
 				//  Movabs
 				test(
 						new Instruction(Opcode.MOVABS, RCX, new Immediate(0x1234567812345678L)),
@@ -8639,6 +8741,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								DX),
 						"xadd WORD PTR [rsi],dx",
 						"66 0f c1 16"),
+				// Pcmpeqb
+				test(new Instruction(Opcode.PCMPEQB, XMM3, XMM11), "pcmpeqb xmm3,xmm11", "66 41 0f 74 db"),
+				test(new Instruction(Opcode.PCMPEQB, MM4, MM6), "pcmpeqb mm4,mm6", "0f 74 e6"),
+				// Pcmpeqw
+				test(new Instruction(Opcode.PCMPEQW, XMM7, XMM12), "pcmpeqw xmm7,xmm12", "66 41 0f 75 fc"),
+				test(new Instruction(Opcode.PCMPEQW, MM3, MM5), "pcmpeqw mm3,mm5", "0f 75 dd"),
 				//  Pcmpeqd
 				test(new Instruction(Opcode.PCMPEQD, XMM0, XMM0), "pcmpeqd xmm0,xmm0", "66 0f 76 c0"),
 				test(new Instruction(Opcode.PCMPEQD, XMM3, XMM11), "pcmpeqd xmm3,xmm11", "66 41 0f 76 db"),

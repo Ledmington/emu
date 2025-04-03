@@ -272,8 +272,14 @@ public enum Opcode {
 	/** Logical AND (MMX/XMM registers). */
 	PAND("pand"),
 
+	/** Compare packed bytes for equal. */
+	PCMPEQB("pcmpeqb"),
+
 	/** Compare packed doublewords for equal. */
 	PCMPEQD("pcmpeqd"),
+
+	/** Compare packed words for equal. */
+	PCMPEQW("pcmpeqw"),
 
 	/** Pop a value from the stack. */
 	POP("pop"),
@@ -391,6 +397,12 @@ public enum Opcode {
 
 	/** Set byte if not equal. */
 	SETNE("setne"),
+
+	/** Set byte if not overflow. */
+	SETNO("setno"),
+
+	/** Set byte if overflow. */
+	SETO("seto"),
 
 	/** Logical shift left. */
 	SHL("shl"),

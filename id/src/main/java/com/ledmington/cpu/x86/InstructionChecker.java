@@ -220,9 +220,18 @@ public final class InstructionChecker {
 							op(OperandType.R32, OperandType.R32),
 							op(OperandType.R64, OperandType.R64))),
 			Map.entry(
-					Opcode.CMOVB, List.of(op(OperandType.R32, OperandType.M32), op(OperandType.R64, OperandType.R64))),
+					Opcode.CMOVB,
+					List.of(
+							op(OperandType.R32, OperandType.M32),
+							op(OperandType.R64, OperandType.M64),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64))),
 			Map.entry(
-					Opcode.CMOVBE, List.of(op(OperandType.R32, OperandType.M32), op(OperandType.R64, OperandType.R64))),
+					Opcode.CMOVBE,
+					List.of(
+							op(OperandType.R32, OperandType.M32),
+							op(OperandType.R32, OperandType.R32),
+							op(OperandType.R64, OperandType.R64))),
 			Map.entry(
 					Opcode.CMOVL, List.of(op(OperandType.R32, OperandType.M32), op(OperandType.R64, OperandType.R64))),
 			Map.entry(
@@ -245,6 +254,7 @@ public final class InstructionChecker {
 					Opcode.MOVZX,
 					List.of(
 							op(OperandType.R32, OperandType.R8),
+							op(OperandType.R32, OperandType.R16),
 							op(OperandType.R64, OperandType.R8),
 							op(OperandType.R64, OperandType.R16),
 							op(OperandType.R32, OperandType.M8),
@@ -303,6 +313,7 @@ public final class InstructionChecker {
 							op(OperandType.R16, OperandType.I16),
 							op(OperandType.R32, OperandType.I8),
 							op(OperandType.R64, OperandType.I8),
+							op(OperandType.M8, OperandType.R8),
 							op(OperandType.M32, OperandType.R32))),
 			Map.entry(
 					Opcode.AND,
@@ -324,6 +335,7 @@ public final class InstructionChecker {
 							op(OperandType.R64, OperandType.M64),
 							op(OperandType.M8, OperandType.I8),
 							op(OperandType.M32, OperandType.I32),
+							op(OperandType.M64, OperandType.I8),
 							op(OperandType.M32, OperandType.R32))),
 			Map.entry(
 					Opcode.SUB,
@@ -343,6 +355,7 @@ public final class InstructionChecker {
 							op(OperandType.M32, OperandType.R32),
 							op(OperandType.M64, OperandType.R64),
 							op(OperandType.M8, OperandType.I8),
+							op(OperandType.M16, OperandType.I8),
 							op(OperandType.M64, OperandType.I8))),
 			Map.entry(
 					Opcode.SBB,
@@ -440,13 +453,16 @@ public final class InstructionChecker {
 							op(OperandType.R16, OperandType.R16),
 							op(OperandType.R32, OperandType.R32),
 							op(OperandType.R64, OperandType.R64),
+							op(OperandType.R8, OperandType.I8),
 							op(OperandType.R16, OperandType.I16),
 							op(OperandType.R32, OperandType.I8),
 							op(OperandType.R32, OperandType.I32),
 							op(OperandType.R64, OperandType.I8),
 							op(OperandType.R64, OperandType.I32),
-							op(OperandType.R8, OperandType.M8),
+							op(OperandType.M8, OperandType.R8),
 							op(OperandType.M32, OperandType.R32),
+							op(OperandType.R8, OperandType.M8),
+							op(OperandType.R32, OperandType.M32),
 							op(OperandType.R64, OperandType.M64))),
 			Map.entry(Opcode.NOT, List.of(op(OperandType.R32), op(OperandType.R64))),
 			Map.entry(
@@ -526,6 +542,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SETLE, List.of(op(OperandType.R8), op(OperandType.M8))),
 			Map.entry(Opcode.SETG, List.of(op(OperandType.R8), op(OperandType.M8))),
 			Map.entry(Opcode.SETGE, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETO, List.of(op(OperandType.R8), op(OperandType.M8))),
+			Map.entry(Opcode.SETNO, List.of(op(OperandType.R8), op(OperandType.M8))),
 			Map.entry(Opcode.MOVABS, List.of(op(OperandType.R64, OperandType.I64))),
 			Map.entry(
 					Opcode.MOVUPS,
@@ -641,6 +659,12 @@ public final class InstructionChecker {
 							op(OperandType.M16, OperandType.R16),
 							op(OperandType.M32, OperandType.R32),
 							op(OperandType.M64, OperandType.R64))),
+			Map.entry(
+					Opcode.PCMPEQB,
+					List.of(op(OperandType.RMM, OperandType.RMM), op(OperandType.RXMM, OperandType.RXMM))),
+			Map.entry(
+					Opcode.PCMPEQW,
+					List.of(op(OperandType.RMM, OperandType.RMM), op(OperandType.RXMM, OperandType.RXMM))),
 			Map.entry(
 					Opcode.PCMPEQD,
 					List.of(op(OperandType.RMM, OperandType.RMM), op(OperandType.RXMM, OperandType.RXMM))),
