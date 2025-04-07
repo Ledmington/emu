@@ -407,16 +407,7 @@ public final class MemoryController implements Memory {
 	 */
 	public void write(final long address, final long value) {
 		checkWrite(address, 8);
-
-		// Little-endian
-		mem.write(address, BitUtils.asByte(value));
-		mem.write(address + 1L, BitUtils.asByte(value >> 8));
-		mem.write(address + 2L, BitUtils.asByte(value >> 16));
-		mem.write(address + 3L, BitUtils.asByte(value >> 24));
-		mem.write(address + 4L, BitUtils.asByte(value >> 32));
-		mem.write(address + 5L, BitUtils.asByte(value >> 40));
-		mem.write(address + 6L, BitUtils.asByte(value >> 48));
-		mem.write(address + 7L, BitUtils.asByte(value >> 56));
+		initialize(address, BitUtils.asBEBytes(value));
 	}
 
 	@Override

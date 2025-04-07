@@ -49,7 +49,7 @@ public class X86Cpu implements X86Emulator {
 		HALTED
 	}
 
-	private final RegisterFile rf = new X86RegisterFile();
+	private final RegisterFile rf;
 	private final MemoryController mem;
 	private final InstructionFetcher instFetch;
 
@@ -66,8 +66,13 @@ public class X86Cpu implements X86Emulator {
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public X86Cpu(final MemoryController mem) {
+		this(mem, new X86RegisterFile());
+	}
+
+	public X86Cpu(final MemoryController mem, final RegisterFile rf) {
 		this.mem = Objects.requireNonNull(mem);
 		this.instFetch = new InstructionFetcher(mem, rf);
+		this.rf = Objects.requireNonNull(rf);
 	}
 
 	@Override
@@ -98,8 +103,8 @@ public class X86Cpu implements X86Emulator {
 	@Override
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
-		logger.debug(InstructionEncoder.toIntelSyntax(inst));
 		InstructionChecker.check(inst);
+		logger.debug(InstructionEncoder.toIntelSyntax(inst));
 		switch (inst.opcode()) {
 			case SUB -> {
 				switch (inst.firstOperand()) {

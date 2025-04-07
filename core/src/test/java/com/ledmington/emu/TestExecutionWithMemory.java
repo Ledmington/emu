@@ -38,7 +38,6 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.PointerSize;
-import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
@@ -54,20 +53,9 @@ final class TestExecutionWithMemory {
 
 	@BeforeEach
 	void setup() {
+		final DebuggingX86RegisterFile rf = new DebuggingX86RegisterFile(rng);
 		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		cpu = new X86Cpu(mem);
-
-		final RegisterFile rf = (RegisterFile) cpu.getRegisters();
-
-		// set registers to random values
-		for (final Register64 r : Register64.values()) {
-			rf.set(r, rng.nextLong());
-		}
-		for (final Register16 r : new Register16[] {
-			Register16.CS, Register16.DS, Register16.ES, Register16.FS, Register16.GS, Register16.SS
-		}) {
-			rf.set(r, BitUtils.asShort(rng.nextInt()));
-		}
+		cpu = new X86Cpu(mem, rf);
 	}
 
 	@AfterEach
@@ -77,17 +65,19 @@ final class TestExecutionWithMemory {
 	}
 
 	private static Stream<Arguments> pairs64() {
-		return Arrays.stream(Register64.values())
-				.flatMap(r -> Arrays.stream(Register64.values()).map(x -> Arguments.of(r, x)));
+		return Arrays.stream(Register64.values()).flatMap(r -> Arrays.stream(Register64.values())
+				.filter(x -> !x.equals(r))
+				.map(x -> Arguments.of(r, x)));
 	}
 
 	@ParameterizedTest
 	@MethodSource("pairs64")
 	void movMem64R64(final Register64 r1, final Register64 r2) {
-		final long oldValue1 = cpu.getRegisters().get(r1);
-		final long oldValue2 = cpu.getRegisters().get(r2);
+		final long oldValue1 = rng.nextLong();
+		final long oldValue2 = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOVABS, r1, new Immediate(oldValue1)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		mem.initialize(oldValue1, 8L, (byte) 0x00);
-		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		mem.setPermissions(oldValue1, oldValue1 + 7L, false, true, false);
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,
@@ -103,29 +93,15 @@ final class TestExecutionWithMemory {
 				x,
 				() -> String.format(
 						"Expected memory at 0x%016x to be 0x%016x but was 0x%016x.", oldValue1, oldValue2, x));
-		assertEquals(
-				expected,
-				cpu.getRegisters(),
-				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
 	@ParameterizedTest
 	@MethodSource("pairs64")
 	void movR64Mem64(final Register64 r1, final Register64 r2) {
-		final long oldValue2 = cpu.getRegisters().get(r2);
+		final long oldValue2 = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		final long val = rng.nextLong();
-		mem.initialize(oldValue2, new byte[] {
-			BitUtils.asByte(val),
-			BitUtils.asByte(val >>> 8),
-			BitUtils.asByte(val >>> 16),
-			BitUtils.asByte(val >>> 24),
-			BitUtils.asByte(val >>> 32),
-			BitUtils.asByte(val >>> 40),
-			BitUtils.asByte(val >>> 48),
-			BitUtils.asByte(val >>> 56),
-		});
-		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
-		expected.set(r1, val);
+		mem.initialize(oldValue2, BitUtils.asBEBytes(val));
 		mem.setPermissions(oldValue2, oldValue2 + 7L, true, false, false);
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,
@@ -139,10 +115,6 @@ final class TestExecutionWithMemory {
 				val,
 				x,
 				() -> String.format("Expected memory at 0x%016x to be 0x%016x but was 0x%016x.", oldValue2, val, x));
-		assertEquals(
-				expected,
-				cpu.getRegisters(),
-				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
 	}
 
 	@Test
@@ -295,7 +267,7 @@ final class TestExecutionWithMemory {
 		final long functionAddress = rip + BitUtils.asLong(offset);
 		final byte[] functionCode = InstructionEncoder.toHex(new Instruction(Opcode.RET));
 		mem.initialize(functionAddress, functionCode);
-		mem.setPermissions(functionAddress, functionAddress + (long) functionCode.length, false, false, true);
+		mem.setPermissions(functionAddress, functionAddress + (long) functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
