@@ -19,7 +19,6 @@ package com.ledmington.elf;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.ledmington.elf.section.Section;
 
@@ -81,21 +80,6 @@ public final class ELF implements ProgramHeaderTable, SectionTable {
 	@Override
 	public Section getSection(final int idx) {
 		return sectionTable[idx];
-	}
-
-	/**
-	 * Looks for a section with the given name inside the Section Table and returns it.
-	 *
-	 * @param name The name of the section to look for.
-	 * @return The Section encountered such that {@code s.getName().equals(name)} returns true.
-	 */
-	public Optional<Section> getSectionByName(final String name) {
-		for (final Section s : sectionTable) {
-			if (s.getName().equals(name)) {
-				return Optional.of(s);
-			}
-		}
-		return Optional.empty();
 	}
 
 	@Override

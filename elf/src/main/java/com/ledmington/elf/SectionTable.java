@@ -17,6 +17,8 @@
  */
 package com.ledmington.elf;
 
+import java.util.Optional;
+
 import com.ledmington.elf.section.Section;
 
 /** An interface for ELF files/objects which behave like a section table. */
@@ -36,4 +38,20 @@ public interface SectionTable {
 	 * @return The i-th section.
 	 */
 	Section getSection(int idx);
+
+	/**
+	 * Looks for a section with the given name inside the Section Table and returns it.
+	 *
+	 * @param name The name of the section to look for.
+	 * @return The Section encountered such that {@code s.getName().equals(name)} returns true.
+	 */
+	default Optional<Section> getSectionByName(final String name) {
+		for (int i = 0; i < getSectionTableLength(); i++) {
+			final Section s = getSection(i);
+			if (s.getName().equals(name)) {
+				return Optional.of(s);
+			}
+		}
+		return Optional.empty();
+	}
 }
