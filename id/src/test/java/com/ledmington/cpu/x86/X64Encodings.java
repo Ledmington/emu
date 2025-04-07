@@ -5076,6 +5076,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.CDQE), "cdqe", "48 98"),
 				//  Leave
 				test(new Instruction(Opcode.LEAVE), "leave", "c9"),
+				// Int3
+				test(new Instruction(Opcode.INT3), "int3", "cc"),
 				//  Ret
 				test(new Instruction(Opcode.RET), "ret", "c3"),
 				//  Cpuid

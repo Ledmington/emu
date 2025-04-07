@@ -282,6 +282,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.CDQE, List.of(op())),
 			Map.entry(Opcode.CWDE, List.of(op())),
 			Map.entry(Opcode.LEAVE, List.of(op())),
+			Map.entry(Opcode.INT3, List.of(op())),
 			Map.entry(Opcode.RET, List.of(op())),
 			Map.entry(Opcode.CPUID, List.of(op())),
 			Map.entry(Opcode.HLT, List.of(op())),
