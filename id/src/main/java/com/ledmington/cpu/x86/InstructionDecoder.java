@@ -1465,29 +1465,21 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				final byte r1Byte = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
 				final byte r2Byte = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
-				if (pref.vex().isPresent()) {
-					yield new Instruction(
-							Opcode.VPXOR,
-							RegisterXMM.fromByte(r1Byte),
-							RegisterXMM.fromByte(r2Byte),
-							RegisterXMM.fromByte(pref.vex().orElseThrow().v()));
-				} else {
-					yield new Instruction(
-							Opcode.PXOR,
-							pref.hasOperandSizeOverridePrefix()
-									? RegisterXMM.fromByte(r1Byte)
-									: RegisterMMX.fromByte(r1Byte),
-							isIndirectOperandNeeded(modrm)
-									? parseIndirectOperand(b, pref, modrm)
-											.pointer(
-													pref.hasOperandSizeOverridePrefix()
-															? PointerSize.XMMWORD_PTR
-															: PointerSize.QWORD_PTR)
-											.build()
-									: (pref.hasOperandSizeOverridePrefix()
-											? RegisterXMM.fromByte(r2Byte)
-											: RegisterMMX.fromByte(r2Byte)));
-				}
+				yield new Instruction(
+						Opcode.PXOR,
+						pref.hasOperandSizeOverridePrefix()
+								? RegisterXMM.fromByte(r1Byte)
+								: RegisterMMX.fromByte(r1Byte),
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(
+												pref.hasOperandSizeOverridePrefix()
+														? PointerSize.XMMWORD_PTR
+														: PointerSize.QWORD_PTR)
+										.build()
+								: (pref.hasOperandSizeOverridePrefix()
+										? RegisterXMM.fromByte(r2Byte)
+										: RegisterMMX.fromByte(r2Byte)));
 			}
 			case PCMPEQB_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -1897,6 +1889,7 @@ public final class InstructionDecoder {
 		final byte CALL_OPCODE = (byte) 0xe8;
 		final byte JMP_DISP32_OPCODE = (byte) 0xe9;
 		final byte JMP_DISP8_OPCODE = (byte) 0xeb;
+		final byte VPXOR_OPCODE = (byte) 0xef;
 		final byte HLT_OPCODE = (byte) 0xf4;
 
 		final Opcode[] opcodeTable = {
@@ -2388,6 +2381,16 @@ public final class InstructionDecoder {
 			}
 
 			case LEA_OPCODE -> parseRxMx(b, pref, Opcode.LEA);
+
+			case VPXOR_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPXOR,
+						RegisterXMM.fromByte(Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg())),
+						RegisterXMM.fromByte(BitUtils.and(
+								BitUtils.not(pref.vex().orElseThrow().v()), (byte) 0b1111)),
+						RegisterXMM.fromByte(Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm())));
+			}
 
 			case (byte) 0xc5 -> throw new UnrecognizedPrefix("VEX2", b.getPosition());
 			case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("operand size override", b.getPosition());

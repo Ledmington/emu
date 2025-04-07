@@ -1271,7 +1271,7 @@ public final class InstructionEncoder {
 			encodeImmediate(wb, imm);
 		} else if (requiresVexPrefix(inst)
 				&& inst.firstOperand() instanceof final Register r1
-				&& inst.secondOperand() instanceof final Register r2) {
+				&& inst.thirdOperand() instanceof final Register r2) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 		}
 	}
@@ -1285,7 +1285,11 @@ public final class InstructionEncoder {
 
 	private static void encodeVexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		wb.write((byte) 0xc5);
-		wb.write(BitUtils.shl(RegisterXMM.toByte((RegisterXMM) inst.thirdOperand()), 3));
+		byte vex = 0;
+		vex = BitUtils.or(
+				vex, BitUtils.shl(BitUtils.not(RegisterXMM.toByte((RegisterXMM) inst.secondOperand())), 3), (byte)
+						0b01);
+		wb.write(vex);
 	}
 
 	private static byte getMod(final IndirectOperand io) {
