@@ -61,7 +61,7 @@ final class TestUninitializedMemory {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			mem.write(address, 0);
+			mem.write(address, (byte) 0);
 		}
 
 		for (final long address : positions) {
@@ -85,7 +85,7 @@ final class TestUninitializedMemory {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			mem.write(address, 0);
+			mem.write(address, (byte) 0);
 		}
 
 		for (final long address : positions) {
@@ -99,7 +99,7 @@ final class TestUninitializedMemory {
 				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
 
 		for (final long address : positions) {
-			assertDoesNotThrow(() -> mem.write(address, 0));
+			assertDoesNotThrow(() -> mem.write(address, (byte) 0));
 		}
 	}
 }

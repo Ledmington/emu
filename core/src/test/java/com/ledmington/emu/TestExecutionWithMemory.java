@@ -274,15 +274,15 @@ final class TestExecutionWithMemory {
 				base,
 				cpu.getRegisters().get(Register64.RSP),
 				() -> String.format(
-						"At the end, expectedRSP to be 0x%016x but was 0x%016x.",
+						"At the end, expected RSP to be 0x%016x but was 0x%016x.",
 						base, cpu.getRegisters().get(Register64.RSP)));
 	}
 
 	@Test
 	void callAndReturn() {
-		// Setup stack at random location
-		final long stackBase = rng.nextLong();
-		mem.setPermissions(stackBase - 6L, stackBase, true, true, false);
+		// Setup stack at random location (8-byte aligned)
+		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
+		mem.setPermissions(stackBase, stackBase, true, true, false);
 		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
@@ -294,6 +294,50 @@ final class TestExecutionWithMemory {
 		final int offset = rng.nextInt();
 		final long functionAddress = rip + BitUtils.asLong(offset);
 		final byte[] functionCode = InstructionEncoder.toHex(new Instruction(Opcode.RET));
+		mem.initialize(functionAddress, functionCode);
+		mem.setPermissions(functionAddress, functionAddress + (long) functionCode.length, false, false, true);
+
+		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
+		final int callInstructionLength =
+				InstructionEncoder.toHex(new Instruction(Opcode.CALL, new Immediate(0))).length;
+		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
+		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
+		mem.initialize(rip, mainCode);
+		mem.setPermissions(rip, rip + (long) mainCode.length - 1L, false, false, true);
+
+		// Start the CPU
+		cpu.execute();
+	}
+
+	@Test
+	void callAllocateAndReturn() {
+		// Setup stack at random location (8-byte aligned)
+		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
+		// mem.setPermissions(stackBase /*- 6L*/, stackBase, true, true, false);
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
+
+		// Setup RIP at random location
+		final long rip = rng.nextLong();
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RIP, new Immediate(rip)));
+
+		// Write a function which just allocates a variable
+		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
+		final int offset = rng.nextInt();
+		final long functionAddress = rip + BitUtils.asLong(offset);
+		final byte[] functionCode = InstructionEncoder.toHex(
+				// code adapted from this one: https://godbolt.org/z/W8Kjj6Woz
+				new Instruction(Opcode.PUSH, Register64.RBP),
+				new Instruction(Opcode.MOV, Register64.RBP, Register64.RSP),
+				new Instruction(
+						Opcode.MOV,
+						IndirectOperand.builder()
+								.pointer(PointerSize.DWORD_PTR)
+								.base(Register64.RBP)
+								.displacement((byte) -4)
+								.build(),
+						new Immediate(rng.nextInt())),
+				new Instruction(Opcode.POP, Register64.RBP),
+				new Instruction(Opcode.RET));
 		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 		mem.initialize(functionAddress, functionCode);
 

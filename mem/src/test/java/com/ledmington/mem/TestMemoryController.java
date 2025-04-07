@@ -17,6 +17,7 @@
  */
 package com.ledmington.mem;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -39,6 +40,20 @@ final class TestMemoryController {
 
 	private static Stream<Arguments> randomMemoryLocations() {
 		return Stream.generate(rng::nextLong).distinct().limit(100).map(Arguments::of);
+	}
+
+	@ParameterizedTest
+	@MethodSource("randomMemoryLocations")
+	void granularPermissions(final long address) {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, false);
+
+		// Setting permissions only to the first byte
+		mem.setPermissions(address, address, true, true, false);
+
+		assertDoesNotThrow(() -> mem.read(address));
+		assertThrows(IllegalReadException.class, () -> mem.read4(address));
+		assertThrows(IllegalReadException.class, () -> mem.read8(address));
 	}
 
 	@ParameterizedTest

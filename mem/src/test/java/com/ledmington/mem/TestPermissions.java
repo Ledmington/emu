@@ -92,6 +92,24 @@ final class TestPermissions {
 	}
 
 	@Test
+	void canReadSingleAddress() {
+		final long address = rng.nextLong();
+		mem.setPermissions(address, address, true, false, false);
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address - 1L));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address - 1L));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address - 1L, (byte) rng.nextInt()));
+
+		assertDoesNotThrow(() -> mem.read(address));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address, (byte) rng.nextInt()));
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address + 1L));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address + 1L));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address + 1L, (byte) rng.nextInt()));
+	}
+
+	@Test
 	void canWrite() {
 		final long start = rng.nextLong();
 		final long end = start + 100L;
@@ -103,6 +121,24 @@ final class TestPermissions {
 			assertThrows(IllegalReadException.class, () -> mem.read(finalI));
 			assertThrows(IllegalExecutionException.class, () -> mem.readCode(finalI));
 		}
+	}
+
+	@Test
+	void canWriteSingleAddress() {
+		final long address = rng.nextLong();
+		mem.setPermissions(address, address, false, true, false);
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address - 1L));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address - 1L));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address - 1L, (byte) rng.nextInt()));
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address));
+		assertDoesNotThrow(() -> mem.write(address, (byte) rng.nextInt()));
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address + 1L));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address + 1L));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address + 1L, (byte) rng.nextInt()));
 	}
 
 	@Test
@@ -131,6 +167,24 @@ final class TestPermissions {
 			assertThrows(IllegalReadException.class, () -> mem.read(finalI));
 			assertThrows(IllegalWriteException.class, () -> mem.write(finalI, BitUtils.asByte(rng.nextInt())));
 		}
+	}
+
+	@Test
+	void canExecuteSingleAddress() {
+		final long address = rng.nextLong();
+		mem.setPermissions(address, address, false, false, true);
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address - 1L));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address - 1L));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address - 1L, (byte) rng.nextInt()));
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address));
+		assertDoesNotThrow(() -> mem.readCode(address));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address, (byte) rng.nextInt()));
+
+		assertThrows(IllegalReadException.class, () -> mem.read(address + 1L));
+		assertThrows(IllegalExecutionException.class, () -> mem.readCode(address + 1L));
+		assertThrows(IllegalWriteException.class, () -> mem.write(address + 1L, (byte) rng.nextInt()));
 	}
 
 	@Test

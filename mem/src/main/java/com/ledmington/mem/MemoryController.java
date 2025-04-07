@@ -290,11 +290,22 @@ public final class MemoryController implements Memory {
 	}
 
 	private void checkRead(final long address, final int length) {
+		if (!breakOnWrongPermissions) {
+			return;
+		}
 		for (int i = 0; i < length; i++) {
-			if (breakOnWrongPermissions && !canRead(address + i)) {
+			if (!canRead(address + i)) {
 				reportIllegalRead(address, length);
 			}
-			if (breakWhenReadingUninitializedMemory && !isInitialized(address + i)) {
+		}
+	}
+
+	private void checkInitialized(final long address, final int length) {
+		if (!breakWhenReadingUninitializedMemory) {
+			return;
+		}
+		for (int i = 0; i < length; i++) {
+			if (!isInitialized(address + i)) {
 				reportAccessToUninitialized(address, length);
 			}
 		}
@@ -303,6 +314,7 @@ public final class MemoryController implements Memory {
 	@Override
 	public byte read(final long address) {
 		checkRead(address, 1);
+		checkInitialized(address, 1);
 		return this.mem.read(address);
 	}
 
@@ -314,6 +326,7 @@ public final class MemoryController implements Memory {
 	 */
 	public int read4(final long address) {
 		checkRead(address, 4);
+		checkInitialized(address, 4);
 
 		int x = 0x00000000;
 		x |= BitUtils.asInt(mem.read(address));
@@ -331,6 +344,7 @@ public final class MemoryController implements Memory {
 	 */
 	public long read8(final long address) {
 		checkRead(address, 8);
+		checkInitialized(address, 8);
 
 		// Little-endian
 		long x = 0x0000000000000000L;
@@ -346,12 +360,12 @@ public final class MemoryController implements Memory {
 	}
 
 	private void checkExecute(final long address, final int length) {
+		if (!breakOnWrongPermissions) {
+			return;
+		}
 		for (int i = 0; i < length; i++) {
-			if (breakOnWrongPermissions && !canExecute(address + i)) {
+			if (!canExecute(address + i)) {
 				reportIllegalExecution(address, length);
-			}
-			if (breakWhenReadingUninitializedMemory && !isInitialized(address + i)) {
-				reportAccessToUninitialized(address, length);
 			}
 		}
 	}
@@ -364,12 +378,16 @@ public final class MemoryController implements Memory {
 	 */
 	public byte readCode(final long address) {
 		checkExecute(address, 1);
+		checkInitialized(address, 1);
 		return mem.read(address);
 	}
 
 	private void checkWrite(final long address, final int length) {
+		if (!breakOnWrongPermissions) {
+			return;
+		}
 		for (int i = 0; i < length; i++) {
-			if (breakOnWrongPermissions && !canWrite(address + i)) {
+			if (!canWrite(address + i)) {
 				reportIllegalWrite(address, length);
 			}
 		}
