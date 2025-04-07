@@ -29,9 +29,9 @@ public enum SymbolTableEntryVisibility {
 
 	/**
 	 * The visibility of symbols with the STV_DEFAULT attribute is as specified by the symbol's binding type. That is,
-	 * global and weak symbols are visible outside of their defining component, the executable file or shared object.
-	 * Local symbols are hidden. Global and weak symbols can also be preempted, that is, they may by interposed by
-	 * definitions of the same name in another component.
+	 * global and weak symbols are visible outside their defining component, the executable file or shared object. Local
+	 * symbols are hidden. Global and weak symbols can also be preempted, that is, they may be interposed by definitions
+	 * of the same name in another component.
 	 */
 	STV_DEFAULT((byte) 0, "DEFAULT"),
 
