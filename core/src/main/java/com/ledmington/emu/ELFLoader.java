@@ -159,7 +159,7 @@ public final class ELFLoader {
 	}
 
 	private static void runFrom(final X86Emulator cpu, final long startAddress) {
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RIP, new Immediate(startAddress)));
+		cpu.setInstructionPointer(startAddress);
 		cpu.execute();
 	}
 
