@@ -43,6 +43,18 @@ public record PHTEntry(
 		long segmentMemorySize,
 		long alignment) {
 
+	/**
+	 * Default constructor.
+	 *
+	 * @param type The type of this entry.
+	 * @param flags Miscellaneous flags.
+	 * @param segmentOffset The segment's offset in file.
+	 * @param segmentVirtualAddress The virtual address where to load this segment in memory.
+	 * @param segmentPhysicalAddress The physical address where to load this segment in memory.
+	 * @param segmentFileSize The size in bytes of this segment on the file.
+	 * @param segmentMemorySize The size in bytes of this segment in memory.
+	 * @param alignment Byte alignment.
+	 */
 	public PHTEntry {
 		Objects.requireNonNull(type);
 

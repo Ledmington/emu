@@ -183,11 +183,11 @@ public final class ELFParser {
 					is32Bit ? 52 : 64, headerSize, headerSize));
 		}
 
-		final short programHeaderTableEntrySize = b.read2();
-		final short nProgramHeaderTableEntries = b.read2();
-		final short sectionHeaderTableEntrySize = b.read2();
-		final short nSectionHeaderTableEntries = b.read2();
-		final short namesSectionHeaderTableEntryIndex = b.read2();
+		final short PHTEntrySize = b.read2();
+		final short nPHTEntries = b.read2();
+		final short SHTEntrySize = b.read2();
+		final short nSHTEntries = b.read2();
+		final short namesSHTEntryIndex = b.read2();
 
 		return new FileHeader(
 				is32Bit,
@@ -202,11 +202,11 @@ public final class ELFParser {
 				SHTOffset,
 				flags,
 				headerSize,
-				programHeaderTableEntrySize,
-				nProgramHeaderTableEntries,
-				sectionHeaderTableEntrySize,
-				nSectionHeaderTableEntries,
-				namesSectionHeaderTableEntryIndex);
+				PHTEntrySize,
+				nPHTEntries,
+				SHTEntrySize,
+				nSHTEntries,
+				namesSHTEntryIndex);
 	}
 
 	private static PHTEntry parseProgramHeaderEntry(final boolean is32Bit) {

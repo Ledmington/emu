@@ -169,6 +169,12 @@ public final class BitUtils {
 		return new String(v);
 	}
 
+	/**
+	 * Computes the bitwise NOT and returns it as a byte.
+	 *
+	 * @param x The byte to be inverted.
+	 * @return The inverted byte.
+	 */
 	public static byte not(final byte x) {
 		return asByte(~x);
 	}

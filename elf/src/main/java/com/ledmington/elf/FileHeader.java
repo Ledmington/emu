@@ -62,6 +62,27 @@ public record FileHeader(
 		short numSectionHeaderTableEntries,
 		short sectionHeaderStringTableIndex) {
 
+	/**
+	 * Default constructor.
+	 *
+	 * @param is32Bit Used to differentiate between ELF32 and ELF64 versions.
+	 * @param isLittleEndian The endianness for the binary representation of this file header.
+	 * @param version The version of the ELF file.
+	 * @param osabi The operating system ABI.
+	 * @param ABIVersion The (minimum?) version of the ABI supported.
+	 * @param fileType The type of this file.
+	 * @param isa The ISA of the code contained in ths file.
+	 * @param entryPointVirtualAddress The virtual memory address where to start execution.
+	 * @param programHeaderTableOffset The offset in the file where the PH table is stored.
+	 * @param sectionHeaderTableOffset The offset in the file where the SH table is stored.
+	 * @param flags Miscellaneous flags.
+	 * @param headerSize The size in bytes of this header on file.
+	 * @param programHeaderTableEntrySize The size in bytes of each PHT entry.
+	 * @param numProgramHeaderTableEntries The number of PHT entries.
+	 * @param sectionHeaderTableEntrySize The size in bytes of each SHT entry.
+	 * @param numSectionHeaderTableEntries The number of SHT entries.
+	 * @param sectionHeaderStringTableIndex The index of the String Table in the SHT.
+	 */
 	public FileHeader {
 		Objects.requireNonNull(osabi);
 		Objects.requireNonNull(fileType);
