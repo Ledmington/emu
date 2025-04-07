@@ -114,12 +114,7 @@ public final class Main {
 		final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(content, true, 1L);
 		while (b.getPosition() < content.length) {
 			final long startOfInstruction = b.getPosition();
-			Instruction inst = null;
-			try {
-				inst = InstructionDecoder.fromHex(b);
-			} catch (Throwable t) {
-				b.setPosition(b.getPosition() + 1);
-			}
+			final Instruction inst = InstructionDecoder.fromHex(b);
 			final long endOfInstruction = b.getPosition();
 			final long lengthOfInstruction = endOfInstruction - startOfInstruction;
 			out.printf("%8x:      ", startOfSection + startOfInstruction);
