@@ -101,7 +101,7 @@ public final class CheckObjdump {
 
 	private static List<String> runSystemObjdump(final Path p) {
 		final String systemObjdump = "/usr/bin/objdump";
-		final String[] cmd = new String[] {systemObjdump, "-d", p.toString()};
+		final String[] cmd = new String[] {systemObjdump, "-d", "-Mintel", p.toString()};
 		return run(cmd);
 	}
 

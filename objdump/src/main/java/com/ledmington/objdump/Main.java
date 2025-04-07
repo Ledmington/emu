@@ -47,8 +47,7 @@ public final class Main {
 		String filename = null;
 		boolean disassembleExecutableSections = false;
 
-		for (int i = 0; i < args.length; i++) {
-			final String arg = args[i];
+		for (final String arg : args) {
 			switch (arg) {
 				case "-H", "--help":
 					printHelp();
@@ -56,7 +55,7 @@ public final class Main {
 					System.exit(0);
 					break;
 				case "-v", "--version":
-					out.println("readelf v0.1.0");
+					out.println("objdump v0.1.0");
 					out.flush();
 					System.exit(0);
 					break;
@@ -80,13 +79,13 @@ public final class Main {
 			out.flush();
 			System.exit(0);
 		}
-		if (!disassembleExecutableSections) {
-			printHelp();
-			out.flush();
-			System.exit(0);
-		}
 
 		final ELF elf = ELFParser.parse(filename);
+
+		out.println();
+		out.printf("%s:     file format elf64-x86-64%n", filename);
+		out.println();
+		out.println();
 
 		if (disassembleExecutableSections) {
 			for (int i = 0; i < elf.getSectionTableLength(); i++) {
@@ -107,8 +106,8 @@ public final class Main {
 		out.printf("Disassembly of section %s:%n", s.getName());
 		out.println();
 
-		final long startOfSection = s.getHeader().getFileOffset();
-		out.printf("%016x <.init>:%n", startOfSection);
+		final long startOfSection = s.getHeader().getVirtualAddress();
+		out.printf("%016x <%s>:%n", startOfSection, s.getName());
 
 		final byte[] content = ((LoadableSection) s).getLoadableContent();
 		final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(content, true, 1L);
@@ -124,15 +123,27 @@ public final class Main {
 			}
 			final long endOfInstruction = b.getPosition();
 			final long lengthOfInstruction = endOfInstruction - startOfInstruction;
-			out.printf("%8x:      ", startOfSection + startOfInstruction);
-			for (int i = 0; i < 8; i++) {
+			out.printf("%8x:\t", startOfSection + startOfInstruction);
+			for (int i = 0; i < 7; i++) {
 				if (i < lengthOfInstruction) {
 					out.printf("%02x ", content[BitUtils.asInt(startOfInstruction + i)]);
 				} else {
 					out.print("   ");
 				}
 			}
-			out.printf("%s%n", InstructionEncoder.toIntelSyntax(inst));
+			out.printf("\t%s%n", InstructionEncoder.toIntelSyntax(inst));
+
+			if (lengthOfInstruction >= 8L) {
+				out.printf("%8x:\t", startOfSection + startOfInstruction + 7L);
+				for (int i = 7; i < 14; i++) {
+					if (i < lengthOfInstruction) {
+						out.printf("%02x ", content[BitUtils.asInt(startOfInstruction + i)]);
+					} else {
+						break;
+					}
+				}
+				out.println();
+			}
 		}
 
 		out.println();
