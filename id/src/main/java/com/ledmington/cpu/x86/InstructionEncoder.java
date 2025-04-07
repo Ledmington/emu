@@ -428,7 +428,7 @@ public final class InstructionEncoder {
 		if (requiresAddressSizeOverride(inst.firstOperand()) || requiresAddressSizeOverride(inst.secondOperand())) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
-		if (inst.firstOperand().bits() == 16
+		if ((inst.firstOperand().bits() == 16 && inst.opcode() != Opcode.OUTS)
 				|| (inst.opcode() == Opcode.MOVDQA && inst.firstOperand().bits() == 128)
 				|| (inst.opcode() == Opcode.MOVAPD)
 				|| (inst.opcode() == Opcode.MOVQ
@@ -1134,6 +1134,20 @@ public final class InstructionEncoder {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x73);
 				reg = (byte) 0b011;
 			}
+			case OUTS -> {
+				if (inst.firstOperand().equals(Register16.DX)
+						&& inst.secondOperand() instanceof final IndirectOperand io
+						&& io.hasBase()
+						&& io.getBase().equals(Register64.RSI)
+						&& io.hasSegment()
+						&& io.getSegment().equals(Register16.DS)
+						&& !io.hasIndex()
+						&& !io.hasScale()
+						&& !io.hasDisplacement()) {
+					wb.write(io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x6e : (byte) 0x6f);
+					return;
+				}
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1251,6 +1265,7 @@ public final class InstructionEncoder {
 				encodeVexPrefix(wb, inst);
 				wb.write((byte) 0xef);
 			}
+			case PEXTRW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc5);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 

@@ -8828,7 +8828,33 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"palignr xmm2,xmm3,0x01",
 						"66 0f 3a 0f d3 01"),
 				// Vpxor
-				test(new Instruction(Opcode.VPXOR, XMM5, XMM6, XMM7), "vpxor xmm5,xmm6,xmm7", "c5 c9 ef ef"));
+				test(new Instruction(Opcode.VPXOR, XMM5, XMM6, XMM7), "vpxor xmm5,xmm6,xmm7", "c5 c9 ef ef"),
+				// Outs
+				test(
+						new Instruction(
+								Opcode.OUTS,
+								DX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(new SegmentRegister(DS, RSI))
+										.build()),
+						"outs dx,DWORD PTR ds:[rsi]",
+						"6f"),
+				test(
+						new Instruction(
+								Opcode.OUTS,
+								DX,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(new SegmentRegister(DS, RSI))
+										.build()),
+						"outs dx,BYTE PTR ds:[rsi]",
+						"6e"),
+				// Pextrw
+				test(
+						new Instruction(Opcode.PEXTRW, EDI, MM6, new Immediate((byte) 0x6f)),
+						"pextrw edi,mm6,0x6f",
+						"0f c5 fe 6f"));
 	}
 
 	//

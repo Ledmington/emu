@@ -962,6 +962,7 @@ public final class InstructionDecoder {
 		final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
 		final byte XADD_INDIRECT8_R8_OPCODE = (byte) 0xc0;
 		final byte XADD_INDIRECT32_R32_OPCODE = (byte) 0xc1;
+		final byte PEXTRW_OPCODE = (byte) 0xc5;
 		final byte SHUFPx_OPCODE = (byte) 0xc6;
 		final byte GROUP9_OPCODE = (byte) 0xc7;
 		final byte BSWAP_EAX_OPCODE = (byte) 0xc8;
@@ -1308,6 +1309,12 @@ public final class InstructionDecoder {
 						RegisterXMM.fromByte(r1),
 						RegisterXMM.fromByte(r2),
 						imm8(b));
+			}
+			case PEXTRW_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1 = Registers.combine(pref.rex().hasModRMRegExtension(), modrm.reg());
+				final byte r2 = Registers.combine(pref.rex().hasModRMRMExtension(), modrm.rm());
+				yield new Instruction(Opcode.PEXTRW, Register32.fromByte(r1), RegisterMMX.fromByte(r2), imm8(b));
 			}
 			case XADD_INDIRECT8_R8_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -1827,6 +1834,8 @@ public final class InstructionDecoder {
 		final byte IMUL_R32_INDIRECT32_IMM32_OPCODE = (byte) 0x69;
 		final byte PUSH_IMM8_OPCODE = (byte) 0x6a;
 		final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
+		final byte OUTS_BYTE_PTR_OPCODE = (byte) 0x6e;
+		final byte OUTS_DWORD_PTR_OPCODE = (byte) 0x6f;
 		final byte JB_DISP8_OPCODE = (byte) 0x72;
 		final byte JAE_DISP8_OPCODE = (byte) 0x73;
 		final byte JE_DISP8_OPCODE = (byte) 0x74;
@@ -2026,6 +2035,22 @@ public final class InstructionDecoder {
 								false),
 						imm8(b));
 			}
+			case OUTS_BYTE_PTR_OPCODE ->
+				new Instruction(
+						Opcode.OUTS,
+						Register16.DX,
+						IndirectOperand.builder()
+								.pointer(PointerSize.BYTE_PTR)
+								.base(new SegmentRegister(Register16.DS, Register64.RSI))
+								.build());
+			case OUTS_DWORD_PTR_OPCODE ->
+				new Instruction(
+						Opcode.OUTS,
+						Register16.DX,
+						IndirectOperand.builder()
+								.pointer(PointerSize.DWORD_PTR)
+								.base(new SegmentRegister(Register16.DS, Register64.RSI))
+								.build());
 			case PUSH_IMM32_OPCODE -> new Instruction(Opcode.PUSH, imm32(b));
 			case IMUL_R32_INDIRECT32_IMM32_OPCODE -> {
 				final ModRM modrm = modrm(b);

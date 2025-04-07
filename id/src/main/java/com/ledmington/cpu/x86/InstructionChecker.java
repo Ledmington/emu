@@ -144,7 +144,9 @@ public final class InstructionChecker {
 	private static final Case M64_RXMM = new Case(OperandType.M64, OperandType.RXMM);
 	private static final Case M128_RXMM = new Case(OperandType.M128, OperandType.RXMM);
 	private static final Case R8_M8 = new Case(OperandType.R8, OperandType.M8);
+	private static final Case R16_M8 = new Case(OperandType.R16, OperandType.M8);
 	private static final Case R16_M16 = new Case(OperandType.R16, OperandType.M16);
+	private static final Case R16_M32 = new Case(OperandType.R16, OperandType.M32);
 	private static final Case R32_M8 = new Case(OperandType.R32, OperandType.M8);
 	private static final Case R32_M16 = new Case(OperandType.R32, OperandType.M16);
 	private static final Case R32_M32 = new Case(OperandType.R32, OperandType.M32);
@@ -158,6 +160,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_M128 = new Case(OperandType.RXMM, OperandType.M128);
 	private static final Case R32_R32_I8 = new Case(OperandType.R32, OperandType.R32, OperandType.I8);
 	private static final Case R32_R32_I32 = new Case(OperandType.R32, OperandType.R32, OperandType.I32);
+	private static final Case R32_RMM_I8 = new Case(OperandType.R32, OperandType.RMM, OperandType.I8);
 	private static final Case R64_R64_I8 = new Case(OperandType.R64, OperandType.R64, OperandType.I8);
 	private static final Case RMM_RMM_I8 = new Case(OperandType.RMM, OperandType.RMM, OperandType.I8);
 	private static final Case RXMM_RXMM_I8 = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.I8);
@@ -356,7 +359,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PMOVMSKB, List.of(R32_RXMM)),
 			Map.entry(Opcode.PMINUB, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)));
+			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)),
+			Map.entry(Opcode.OUTS, List.of(R16_M32, R16_M8)),
+			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)));
 
 	private InstructionChecker() {}
 

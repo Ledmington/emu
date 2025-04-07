@@ -269,6 +269,9 @@ public enum Opcode {
 	/** Logical OR. */
 	OR("or"),
 
+	/** Output to DX port. */
+	OUTS("outs"),
+
 	/** Add packed quadword integers. */
 	PADDQ("paddq"),
 
@@ -286,6 +289,9 @@ public enum Opcode {
 
 	/** Compare packed words for equal. */
 	PCMPEQW("pcmpeqw"),
+
+	/** Extract word. */
+	PEXTRW("pextrw"),
 
 	/** Minimum of packed unsigned byte integers. */
 	PMINUB("pminub"),
