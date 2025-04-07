@@ -512,4 +512,9 @@ public class X86Cpu implements X86Emulator {
 	public ImmutableRegisterFile getRegisters() {
 		return rf;
 	}
+
+	@Override
+	public void setInstructionPointer(final long ip) {
+		this.rf.set(Register64.RIP, ip);
+	}
 }

@@ -30,9 +30,9 @@ public final class InstructionChecker {
 		R8,
 		// A 16-bit register
 		R16,
-		// A 32-bit register
+		// A 32-bit register (without EIP)
 		R32,
-		// A general-purpose 64-bit register
+		// A general-purpose 64-bit register (without RIP)
 		R64,
 		// An MMX 64-bit register
 		RMM,
@@ -788,8 +788,8 @@ public final class InstructionChecker {
 		return switch (opt) {
 			case R8 -> op instanceof Register8;
 			case R16 -> op instanceof Register16;
-			case R32 -> op instanceof Register32;
-			case R64 -> op instanceof Register64;
+			case R32 -> op instanceof final Register32 r && !r.equals(Register32.EIP);
+			case R64 -> op instanceof final Register64 r && !r.equals(Register64.RIP);
 			case RMM -> op instanceof RegisterMMX;
 			case RXMM -> op instanceof RegisterXMM;
 			case M8 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.BYTE_PTR;

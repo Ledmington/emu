@@ -51,8 +51,12 @@ final class TestExecution {
 			RandomGeneratorFactory.getDefault().create(42);
 	private static final List<Register8> r8 = Arrays.asList(Register8.values());
 	private static final List<Register16> r16 = Arrays.asList(Register16.values());
-	private static final List<Register32> r32 = Arrays.asList(Register32.values());
-	private static final List<Register64> r64 = Arrays.asList(Register64.values());
+	private static final List<Register32> r32 = Arrays.stream(Register32.values())
+			.filter(x -> !x.equals(Register32.EIP))
+			.toList();
+	private static final List<Register64> r64 = Arrays.stream(Register64.values())
+			.filter(x -> !x.equals(Register64.RIP))
+			.toList();
 	private static final List<Arguments> r8r8 =
 			r8.stream().flatMap(a -> r8.stream().map(b -> Arguments.of(a, b))).toList();
 	private static final List<Arguments> r16r16 =

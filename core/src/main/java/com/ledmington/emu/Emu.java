@@ -20,10 +20,6 @@ package com.ledmington.emu;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import com.ledmington.cpu.x86.Immediate;
-import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.Opcode;
-import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
@@ -75,10 +71,7 @@ public final class Emu {
 				EmulatorConstants.getBaseStackValue());
 
 		cpu.turnOn();
-		cpu.executeOne(new Instruction(
-				Opcode.MOVABS,
-				Register64.RIP,
-				new Immediate(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress())));
+		cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());
 
 		logger.info(" ### Execution start ### ");
 		{

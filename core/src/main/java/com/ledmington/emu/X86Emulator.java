@@ -47,4 +47,11 @@ public interface X86Emulator {
 	 * @return An immutable view of the registers in use.
 	 */
 	ImmutableRegisterFile getRegisters();
+
+	/**
+	 * Sets the instruction pointer which couldn't be accesses in any other way.
+	 *
+	 * @param ip The new instruction pointer.
+	 */
+	void setInstructionPointer(final long ip);
 }

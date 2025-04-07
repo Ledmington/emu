@@ -65,9 +65,11 @@ final class TestExecutionWithMemory {
 	}
 
 	private static Stream<Arguments> pairs64() {
-		return Arrays.stream(Register64.values()).flatMap(r -> Arrays.stream(Register64.values())
-				.filter(x -> !x.equals(r))
-				.map(x -> Arguments.of(r, x)));
+		return Arrays.stream(Register64.values())
+				.filter(r -> !r.equals(Register64.RIP))
+				.flatMap(r -> Arrays.stream(Register64.values())
+						.filter(x -> !x.equals(r) && !x.equals(Register64.RIP))
+						.map(x -> Arguments.of(r, x)));
 	}
 
 	@ParameterizedTest
@@ -259,7 +261,7 @@ final class TestExecutionWithMemory {
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RIP, new Immediate(rip)));
+		cpu.setInstructionPointer(rip);
 
 		// Write an empty function somewhere in memory (only RET instruction)
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
@@ -290,7 +292,7 @@ final class TestExecutionWithMemory {
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RIP, new Immediate(rip)));
+		cpu.setInstructionPointer(rip);
 
 		// Write a function which just allocates a variable
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
