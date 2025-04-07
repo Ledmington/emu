@@ -430,8 +430,8 @@ public class X86Cpu implements X86Emulator {
 
 				final long jumpAddress;
 				if (inst.firstOperand() instanceof final Immediate imm) {
-					// TODO: check this (should modify stack pointers)
-					final long relativeAddress = imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong();
+					// TODO: check this (should modify stack pointers?)
+					final long relativeAddress = getAsLongSX(imm);
 					jumpAddress = rip + relativeAddress;
 				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
 					jumpAddress = computeIndirectOperand(rf, io);

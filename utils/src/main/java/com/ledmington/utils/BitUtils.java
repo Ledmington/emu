@@ -169,6 +169,10 @@ public final class BitUtils {
 		return new String(v);
 	}
 
+	public static byte not(final byte x) {
+		return asByte(~x);
+	}
+
 	/**
 	 * Computes the bitwise AND and returns it as a byte.
 	 *
