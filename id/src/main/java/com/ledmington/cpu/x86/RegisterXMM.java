@@ -100,7 +100,7 @@ public enum RegisterXMM implements Register {
 			case 0x0d -> XMM13;
 			case 0x0e -> XMM14;
 			case 0x0f -> XMM15;
-			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x", b));
+			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
 		};
 	}
 

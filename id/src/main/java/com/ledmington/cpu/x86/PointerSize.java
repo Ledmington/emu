@@ -33,7 +33,10 @@ public enum PointerSize {
 	QWORD_PTR(64),
 
 	/** Pointer to word for XMM registers (2x64 bits). */
-	XMMWORD_PTR(128);
+	XMMWORD_PTR(128),
+
+	/** Pointer to word for YMM registers (4x64 bits). */
+	YMMWORD_PTR(256);
 
 	private final int size;
 
@@ -63,6 +66,7 @@ public enum PointerSize {
 			case 32 -> DWORD_PTR;
 			case 64 -> QWORD_PTR;
 			case 128 -> XMMWORD_PTR;
+			case 256 -> YMMWORD_PTR;
 			default -> throw new IllegalStateException(String.format("Unexpected value: %,d.", size));
 		};
 	}

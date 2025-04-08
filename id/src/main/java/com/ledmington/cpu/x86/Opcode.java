@@ -218,6 +218,9 @@ public enum Opcode {
 	/** Move aligned double-quadword. */
 	MOVDQA("movdqa"),
 
+	/** Move unaligned double-quadword. */
+	MOVDQU("movdqu"),
+
 	/** Move packed single-precision floating-point values high to low. */
 	MOVHLPS("movhlps"),
 
@@ -268,9 +271,6 @@ public enum Opcode {
 
 	/** Logical OR. */
 	OR("or"),
-
-	/** Output to DX port. */
-	OUTS("outs"),
 
 	/** Add packed quadword integers. */
 	PADDQ("paddq"),
@@ -493,6 +493,9 @@ public enum Opcode {
 
 	/** Undefined instruction. */
 	UD2("ud2"),
+
+	/** Move unaligned packed integer values. */
+	VMOVDQU("vmovdqu"),
 
 	/** Logical exclusive OR. */
 	VPXOR("vpxor"),
