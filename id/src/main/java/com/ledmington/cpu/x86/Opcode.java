@@ -494,8 +494,17 @@ public enum Opcode {
 	/** Undefined instruction. */
 	UD2("ud2"),
 
+	/** Compare packed data for equal. */
+	VPCMPEQB("vpcmpeqb"),
+
+	/** Minimum of packed unsigned byte integers. */
+	VPMINUB("vpminub"),
+
 	/** Move unaligned packed integer values. */
 	VMOVDQU("vmovdqu"),
+
+	/** Move byte mask. */
+	VPMOVMSKB("vpmovmskb"),
 
 	/** Logical exclusive OR. */
 	VPXOR("vpxor"),

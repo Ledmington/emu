@@ -113,6 +113,7 @@ public final class InstructionChecker {
 	private static final Case R32_R16 = new Case(OperandType.R32, OperandType.R16);
 	private static final Case R32_R32 = new Case(OperandType.R32, OperandType.R32);
 	private static final Case R32_RXMM = new Case(OperandType.R32, OperandType.RXMM);
+	private static final Case R32_RYMM = new Case(OperandType.R32, OperandType.RYMM);
 	private static final Case R64_R8 = new Case(OperandType.R64, OperandType.R8);
 	private static final Case R64_R16 = new Case(OperandType.R64, OperandType.R16);
 	private static final Case R64_R32 = new Case(OperandType.R64, OperandType.R32);
@@ -148,9 +149,7 @@ public final class InstructionChecker {
 	private static final Case M64_RXMM = new Case(OperandType.M64, OperandType.RXMM);
 	private static final Case M128_RXMM = new Case(OperandType.M128, OperandType.RXMM);
 	private static final Case R8_M8 = new Case(OperandType.R8, OperandType.M8);
-	private static final Case R16_M8 = new Case(OperandType.R16, OperandType.M8);
 	private static final Case R16_M16 = new Case(OperandType.R16, OperandType.M16);
-	private static final Case R16_M32 = new Case(OperandType.R16, OperandType.M32);
 	private static final Case R32_M8 = new Case(OperandType.R32, OperandType.M8);
 	private static final Case R32_M16 = new Case(OperandType.R32, OperandType.M16);
 	private static final Case R32_M32 = new Case(OperandType.R32, OperandType.M32);
@@ -173,6 +172,8 @@ public final class InstructionChecker {
 	private static final Case R32_M32_I32 = new Case(OperandType.R32, OperandType.M32, OperandType.I32);
 	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
 	private static final Case RXMM_RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM);
+	private static final Case RYMM_RYMM_RYMM = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.RYMM);
+	private static final Case RYMM_RYMM_M256 = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.M256);
 
 	private static final Map<Opcode, List<Case>> CASES = Map.<Opcode, List<Case>>ofEntries(
 			Map.entry(Opcode.NOP, List.of(NOTHING, R16, R32, R64, M16, M32, M64)),
@@ -359,7 +360,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SAHF, List.of(NOTHING)),
 			Map.entry(Opcode.SYSCALL, List.of(NOTHING)),
 			Map.entry(Opcode.BSR, List.of(R32_M32)),
-			Map.entry(Opcode.BSF, List.of(R64_R64)),
+			Map.entry(Opcode.BSF, List.of(R32_R32, R64_R64)),
 			Map.entry(Opcode.ROR, List.of(R32_I8, R64_I8)),
 			Map.entry(Opcode.ROL, List.of(R32_I8, R64_I8)),
 			Map.entry(Opcode.RCR, List.of(R32_I8)),
@@ -369,7 +370,10 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)),
 			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)),
-			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256)));
+			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256)),
+			Map.entry(Opcode.VPMINUB, List.of(RYMM_RYMM_RYMM)),
+			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RYMM)),
+			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)));
 
 	private InstructionChecker() {}
 

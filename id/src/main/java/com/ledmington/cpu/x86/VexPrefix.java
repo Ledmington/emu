@@ -52,6 +52,10 @@ public final class VexPrefix {
 		this.p = p;
 	}
 
+	public boolean r() {
+		return r;
+	}
+
 	public byte v() {
 		return v;
 	}

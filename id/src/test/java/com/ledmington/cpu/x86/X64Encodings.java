@@ -120,9 +120,11 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM6;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM7;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM8;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM9;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM0;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM1;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -8926,6 +8928,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"0f bd 00"),
 				// Bsf
 				test(new Instruction(Opcode.BSF, RDX, RDX), "bsf rdx,rdx", "48 0f bc d2"),
+				test(new Instruction(Opcode.BSF, ECX, EDX), "bsf ecx,edx", "0f bc ca"),
 				// Ror
 				test(new Instruction(Opcode.ROR, EDI, new Immediate((byte) 0)), "ror edi,0x00", "c1 cf 00"),
 				test(new Instruction(Opcode.ROR, R15, new Immediate((byte) 0x11)), "ror r15,0x11", "49 c1 cf 11"),
@@ -8994,7 +8997,24 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RDI)
 										.build()),
 						"vmovdqu ymm3,YMMWORD PTR [rdi]",
-						"c5 fe 6f 1f"));
+						"c5 fe 6f 1f"),
+				// Vpminub
+				test(new Instruction(Opcode.VPMINUB, YMM0, YMM0, YMM1), "vpminub ymm0,ymm0,ymm1", "c5 fd da c1"),
+				// Vpmovmskb
+				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
+				// Vpcmpeqb
+				test(
+						new Instruction(
+								Opcode.VPCMPEQB,
+								YMM3,
+								YMM6,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RSI)
+										.displacement((byte) 0x20)
+										.build()),
+						"vpcmpeqb ymm3,ymm6,YMMWORD PTR [rsi+0x20]",
+						"c5 cd 74 5e 20"));
 	}
 
 	//

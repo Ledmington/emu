@@ -1198,14 +1198,14 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.BSF,
 						Registers.fromCode(
-								modrm.rm(),
-								pref.rex().isOperand64Bit(),
-								pref.rex().hasModRMRMExtension(),
-								pref.hasOperandSizeOverridePrefix()),
-						Registers.fromCode(
 								modrm.reg(),
 								pref.rex().isOperand64Bit(),
 								pref.rex().hasModRMRegExtension(),
+								pref.hasOperandSizeOverridePrefix()),
+						Registers.fromCode(
+								modrm.rm(),
+								pref.rex().isOperand64Bit(),
+								pref.rex().hasModRMRMExtension(),
 								pref.hasOperandSizeOverridePrefix()));
 			}
 			case BSR_R32_INDIRECT32_OPCODE -> {
@@ -1892,6 +1892,8 @@ public final class InstructionDecoder {
 		final byte RET_OPCODE = (byte) 0xc3;
 		final byte LEAVE_OPCODE = (byte) 0xc9;
 		final byte INT3_OPCODE = (byte) 0xcc;
+		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
+		final byte VPMINUB_OPCODE = (byte) 0xda;
 		final byte CALL_OPCODE = (byte) 0xe8;
 		final byte JMP_DISP32_OPCODE = (byte) 0xe9;
 		final byte JMP_DISP8_OPCODE = (byte) 0xeb;
@@ -2377,19 +2379,48 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VPXOR,
-						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterXMM.fromByte(
+								Registers.combine(!pref.vex().orElseThrow().r(), modrm.reg())),
 						RegisterXMM.fromByte(BitUtils.and(
 								BitUtils.not(pref.vex().orElseThrow().v()), (byte) 0b1111)),
 						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
+			}
+			case VPMINUB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPMINUB,
+						RegisterYMM.fromByte(
+								Registers.combine(!pref.vex().orElseThrow().r(), modrm.reg())),
+						RegisterYMM.fromByte(BitUtils.and(
+								BitUtils.not(pref.vex().orElseThrow().v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 			case VMOVDQU_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VMOVDQU,
-						RegisterYMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterYMM.fromByte(
+								Registers.combine(!pref.vex().orElseThrow().r(), modrm.reg())),
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
+			}
+			case VPMOVMSKB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPMOVMSKB,
+						Register32.fromByte(getByteFromReg(pref, modrm)),
+						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
+			}
+			case VPCMPEQB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPCMPEQB,
+						RegisterYMM.fromByte(
+								Registers.combine(!pref.vex().orElseThrow().r(), modrm.reg())),
+						RegisterYMM.fromByte(BitUtils.and(
+								BitUtils.not(pref.vex().orElseThrow().v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 
 			case (byte) 0xc5 -> throw new UnrecognizedPrefix("VEX2", b.getPosition());
@@ -2400,9 +2431,7 @@ public final class InstructionDecoder {
 			case (byte) 0xf3 -> throw new UnrecognizedPrefix("REP", b.getPosition());
 			default -> {
 				final long pos = b.getPosition();
-				logger.debug(
-						"Unknown opcode: 0x%02x 0x%02x 0x%02x 0x%02x",
-						opcodeFirstByte, b.read1(), b.read1(), b.read1());
+				logger.debug("Unknown opcode: 0x%02x.", opcodeFirstByte);
 				b.setPosition(pos);
 				throw new UnknownOpcode(opcodeFirstByte);
 			}
