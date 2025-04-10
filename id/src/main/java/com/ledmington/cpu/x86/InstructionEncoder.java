@@ -1156,11 +1156,17 @@ public final class InstructionEncoder {
 				reg = (byte) 0b011;
 			}
 			case VMOVDQU -> {
-				encodeVexPrefix(wb, inst);
+				if (inst.firstOperand() instanceof Register
+						&& inst.secondOperand() instanceof final IndirectOperand io
+						&& !isSimpleIndirectOperand(io)) {
+					encodeVex3Prefix(wb, inst);
+				} else {
+					encodeVex2Prefix(wb, inst);
+				}
 				wb.write((byte) 0x6f);
 			}
 			case VPMOVMSKB -> {
-				encodeVexPrefix(wb, inst);
+				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0xd7);
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
@@ -1279,15 +1285,15 @@ public final class InstructionEncoder {
 			case SHUFPS, SHUFPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc6);
 			case PALIGNR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, THREE_BYTE_ESCAPE_PREFIX, (byte) 0x0f);
 			case VPXOR -> {
-				encodeVexPrefix(wb, inst);
+				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0xef);
 			}
 			case VPMINUB -> {
-				encodeVexPrefix(wb, inst);
+				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0xda);
 			}
 			case VPCMPEQB -> {
-				encodeVexPrefix(wb, inst);
+				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0x74);
 			}
 			case PEXTRW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc5);
@@ -1347,7 +1353,7 @@ public final class InstructionEncoder {
 		return false;
 	}
 
-	private static void encodeVexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeVex2Prefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		wb.write((byte) 0xc5);
 
 		byte vex = 0;
@@ -1379,6 +1385,20 @@ public final class InstructionEncoder {
 		}
 
 		wb.write(vex);
+	}
+
+	private static void encodeVex3Prefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		wb.write((byte) 0xc4);
+
+		{
+			byte b1 = (byte) 0;
+			wb.write(b1);
+		}
+
+		{
+			byte b2 = (byte) 0;
+			wb.write(b2);
+		}
 	}
 
 	private static byte getMod(final IndirectOperand io) {
