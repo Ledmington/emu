@@ -9041,8 +9041,53 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpcmpeqb ymm3,ymm6,YMMWORD PTR [rsi+0x20]",
 						"c5 cd 74 5e 20"),
+				test(
+						new Instruction(
+								Opcode.VPCMPEQB,
+								YMM1,
+								YMM3,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDX)
+										.index(R10)
+										.scale(1)
+										.displacement((byte) 0x20)
+										.build()),
+						"vpcmpeqb ymm1,ymm3,YMMWORD PTR [rdx+r10*1+0x20]",
+						"c4 a1 65 74 4c 12 20"),
 				// Vzeroall
-				test(new Instruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"));
+				test(new Instruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"),
+				// Vmovq
+				test(
+						new Instruction(
+								Opcode.VMOVQ,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSI)
+										.index(RDX)
+										.scale(1)
+										.build()),
+						"vmovq xmm0,QWORD PTR [rsi+rdx*1]",
+						"c5 fa 7e 04 16"),
+				// Vmovd
+				test(
+						new Instruction(
+								Opcode.VMOVD,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDI)
+										.index(RDX)
+										.scale(1)
+										.build()),
+						"vmovd xmm1,DWORD PTR [rdi+rdx*1]",
+						"c5 f9 6e 0c 17"),
+				// Pcmpistri
+				test(
+						new Instruction(Opcode.PCMPISTRI, XMM0, XMM1, new Immediate((byte) 0x1a)),
+						"pcmpistri xmm0,xmm1,0x1a",
+						"66 0f 3a 63 c1 1a"));
 	}
 
 	//

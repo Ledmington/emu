@@ -1699,6 +1699,7 @@ public final class InstructionDecoder {
 	private static Instruction parse3BytesEscape(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final byte PALIGNR_OPCODE = (byte) 0x0f;
+		final byte PCMPISTRI_OPCODE = (byte) 0x63;
 
 		final byte x = b.read1();
 		final ModRM modrm = modrm(b);
@@ -1707,6 +1708,12 @@ public final class InstructionDecoder {
 			case PALIGNR_OPCODE ->
 				new Instruction(
 						Opcode.PALIGNR,
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterXMM.fromByte(getByteFromRM(pref, modrm)),
+						imm8(b));
+			case PCMPISTRI_OPCODE ->
+				new Instruction(
+						Opcode.PCMPISTRI,
 						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
 						RegisterXMM.fromByte(getByteFromRM(pref, modrm)),
 						imm8(b));
@@ -2396,9 +2403,11 @@ public final class InstructionDecoder {
 
 	private static Instruction parseVex2Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+		final byte VMOVD_OPCODE = (byte) 0x6e;
 		final byte VMOVDQU_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VZEROALL_OPCODE = (byte) 0x77;
+		final byte VMOVQ_OPCODE = (byte) 0x7e;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
 		final byte VPXOR_OPCODE = (byte) 0xef;
@@ -2432,6 +2441,24 @@ public final class InstructionDecoder {
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
 			}
+			case VMOVD_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVD,
+						RegisterXMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.DWORD_PTR)
+								.build());
+			}
+			case VMOVQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVQ,
+						RegisterXMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.QWORD_PTR)
+								.build());
+			}
 			case VPMOVMSKB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
@@ -2461,6 +2488,7 @@ public final class InstructionDecoder {
 	private static Instruction parseVex3Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VMOVDQU_OPCODE = (byte) 0x6f;
+		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 
 		final Vex3Prefix vex3 = pref.vex3().orElse(null);
 
@@ -2470,6 +2498,16 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VMOVDQU,
 						RegisterYMM.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.YMMWORD_PTR)
+								.build());
+			}
+			case VPCMPEQB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPCMPEQB,
+						RegisterYMM.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
+						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)),
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());

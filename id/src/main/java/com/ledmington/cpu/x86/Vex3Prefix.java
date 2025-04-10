@@ -86,4 +86,8 @@ public final class Vex3Prefix {
 	public boolean x() {
 		return x;
 	}
+
+	public byte v() {
+		return v;
+	}
 }

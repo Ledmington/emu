@@ -290,6 +290,9 @@ public enum Opcode {
 	/** Compare packed words for equal. */
 	PCMPEQW("pcmpeqw"),
 
+	/** Packed compare implicit-length strings. */
+	PCMPISTRI("pcmpistri"),
+
 	/** Extract word. */
 	PEXTRW("pextrw"),
 
@@ -500,8 +503,14 @@ public enum Opcode {
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB("vpminub"),
 
+	/** Move doubleword. */
+	VMOVD("vmovd"),
+
 	/** Move unaligned packed integer values. */
 	VMOVDQU("vmovdqu"),
+
+	/** Move quadword. */
+	VMOVQ("vmovq"),
 
 	/** Move byte mask. */
 	VPMOVMSKB("vpmovmskb"),
