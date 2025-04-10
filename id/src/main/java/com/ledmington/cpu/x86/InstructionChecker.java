@@ -373,7 +373,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256)),
 			Map.entry(Opcode.VPMINUB, List.of(RYMM_RYMM_RYMM)),
 			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RYMM)),
-			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)));
+			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)),
+			Map.entry(Opcode.VZEROALL, List.of(NOTHING)));
 
 	private InstructionChecker() {}
 

@@ -37,13 +37,15 @@ public record Prefixes(
 		boolean hasAddressSizeOverridePrefix,
 		boolean hasRexPrefix,
 		RexPrefix rex,
-		Optional<VexPrefix> vex) {
+		Optional<Vex2Prefix> vex2,
+		Optional<Vex3Prefix> vex3) {
 
 	@Override
 	public String toString() {
 		return "Prefixes[p1=" + (p1.isPresent() ? p1.orElseThrow().name() : p1) + ";p2="
 				+ (p2.isPresent() ? String.format("0x%02x", p2.orElseThrow()) : p2) + ";hasOperandSizeOverridePrefix="
-				+ hasOperandSizeOverridePrefix + ";hasAddressSizeoverridePrefix=" + hasAddressSizeOverridePrefix
-				+ ";rex=" + rex.toString() + "]";
+				+ hasOperandSizeOverridePrefix + ";hasAddressSizeOverridePrefix=" + hasAddressSizeOverridePrefix
+				+ ";rex=" + rex.toString() + ";vex2="
+				+ vex2.toString() + ";vex3=" + vex3.toString() + "]";
 	}
 }

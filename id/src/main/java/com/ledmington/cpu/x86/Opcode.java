@@ -509,6 +509,9 @@ public enum Opcode {
 	/** Logical exclusive OR. */
 	VPXOR("vpxor"),
 
+	/** Zero all XMM, YMM and ZMM registers. */
+	VZEROALL("vzeroall"),
+
 	/** Exchange and add. */
 	XADD("xadd"),
 

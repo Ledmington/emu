@@ -19,7 +19,8 @@ package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
 
-public final class VexPrefix {
+/** The VEX2 prefix (0xc5 + 1 byte). */
+public final class Vex2Prefix {
 
 	private final boolean r;
 	private final byte v;
@@ -30,20 +31,20 @@ public final class VexPrefix {
 		return vexByte == (byte) 0xc5;
 	}
 
-	public static VexPrefix of2(final byte b) {
+	public static Vex2Prefix of(final byte b) {
 		final boolean r = BitUtils.and(b, (byte) 0b10000000) != 0;
 		final byte v = BitUtils.shr(BitUtils.and(b, (byte) 0b01111000), 3);
 		final boolean l = BitUtils.and(b, (byte) 0b00000100) != 0;
 		final byte p = BitUtils.and(b, (byte) 0b00000011);
-		return new VexPrefix(r, v, l, p);
+		return new Vex2Prefix(r, v, l, p);
 	}
 
-	private VexPrefix(final boolean r, final byte v, final boolean l, final byte p) {
+	private Vex2Prefix(final boolean r, final byte v, final boolean l, final byte p) {
 		if (BitUtils.and(v, (byte) 0b11110000) != 0) {
-			throw new IllegalArgumentException(String.format("Invalid v field in VEX prefix: 0x%02x.", v));
+			throw new IllegalArgumentException(String.format("Invalid v field in VEX2 prefix: 0x%02x.", v));
 		}
 		if (BitUtils.and(p, (byte) 0b11111100) != 0) {
-			throw new IllegalArgumentException(String.format("Invalid p field in VEX prefix: 0x%02x.", p));
+			throw new IllegalArgumentException(String.format("Invalid p field in VEX2 prefix: 0x%02x.", p));
 		}
 
 		this.r = r;

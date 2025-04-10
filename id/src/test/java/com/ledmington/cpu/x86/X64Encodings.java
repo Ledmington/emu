@@ -123,6 +123,7 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM9;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM0;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM1;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM2;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 
@@ -8998,6 +8999,31 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovdqu ymm3,YMMWORD PTR [rdi]",
 						"c5 fe 6f 1f"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								YMM2,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RAX)
+										.index(R10)
+										.scale(1)
+										.build()),
+						"vmovdqu ymm2,YMMWORD PTR [rax+r10*1]",
+						"c4 a1 7e 6f 14 10"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								YMM3,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RAX)
+										.index(R10)
+										.scale(1)
+										.displacement((byte) 0x20)
+										.build()),
+						"vmovdqu ymm3,YMMWORD PTR [rax+r10*1+0x20]",
+						"c4 a1 7e 6f 5c 10 20"),
 				// Vpminub
 				test(new Instruction(Opcode.VPMINUB, YMM0, YMM0, YMM1), "vpminub ymm0,ymm0,ymm1", "c5 fd da c1"),
 				// Vpmovmskb
@@ -9014,7 +9040,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement((byte) 0x20)
 										.build()),
 						"vpcmpeqb ymm3,ymm6,YMMWORD PTR [rsi+0x20]",
-						"c5 cd 74 5e 20"));
+						"c5 cd 74 5e 20"),
+				// Vzeroall
+				test(new Instruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"));
 	}
 
 	//
