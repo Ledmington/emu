@@ -126,6 +126,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM2;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -5244,6 +5245,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								R8W),
 						"add WORD PTR [rax+rbx*4+0x12345678],r8w",
 						"66 44 01 84 98 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.ADD,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RAX)
+										.build(),
+								AL),
+						"add BYTE PTR [rax],al",
+						"00 00"),
 				test(new Instruction(Opcode.ADD, AL, new Immediate((byte) 0x99)), "add al,0x99", "04 99"),
 				test(new Instruction(Opcode.ADD, AX, simm), "add ax,0x1234", "66 05 34 12"),
 				test(new Instruction(Opcode.ADD, AX, bimm), "add ax,0x12", "66 83 c0 12"),
@@ -5700,6 +5711,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SBB, ESI, ESI), "sbb esi,esi", "19 f6"),
 				test(new Instruction(Opcode.SBB, R12D, R12D), "sbb r12d,r12d", "45 19 e4"),
 				test(new Instruction(Opcode.SBB, RAX, RAX), "sbb rax,rax", "48 19 c0"),
+				test(
+						new Instruction(
+								Opcode.SBB,
+								CL,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RAX)
+										.displacement((byte) 0x8d)
+										.build()),
+						"sbb cl,BYTE PTR [rax-0x73]",
+						"1a 48 8d"),
 				//  Shr
 				test(new Instruction(Opcode.SHR, BPL, new Immediate((byte) 1)), "shr bpl,0x01", "40 d0 ed"),
 				test(new Instruction(Opcode.SHR, BX, bimm), "shr bx,0x12", "66 c1 eb 12"),
@@ -8959,6 +8981,29 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(Opcode.PALIGNR, XMM2, XMM3, new Immediate((byte) 0x1)),
 						"palignr xmm2,xmm3,0x01",
 						"66 0f 3a 0f d3 01"),
+				test(
+						new Instruction(
+								Opcode.PALIGNR,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RSI)
+										.displacement((byte) 0x20)
+										.build(),
+								new Immediate((byte) 0x0f)),
+						"palignr xmm0,XMMWORD PTR [rsi+0x20],0x0f",
+						"66 0f 3a 0f 46 20 0f"),
+				// Pcmpeqb
+				test(
+						new Instruction(
+								Opcode.PCMPEQB,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"pcmpeqb xmm0,XMMWORD PTR [rdi]",
+						"66 0f 74 07"),
 				// Vpxor
 				test(new Instruction(Opcode.VPXOR, XMM5, XMM6, XMM7), "vpxor xmm5,xmm6,xmm7", "c5 c9 ef ef"),
 				test(new Instruction(Opcode.VPXOR, XMM12, XMM6, XMM7), "vpxor xmm12,xmm6,xmm7", "c5 49 ef e7"),
@@ -9087,7 +9132,27 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(
 						new Instruction(Opcode.PCMPISTRI, XMM0, XMM1, new Immediate((byte) 0x1a)),
 						"pcmpistri xmm0,xmm1,0x1a",
-						"66 0f 3a 63 c1 1a"));
+						"66 0f 3a 63 c1 1a"),
+				test(
+						new Instruction(
+								Opcode.PCMPISTRI,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RSI)
+										.index(RDX)
+										.scale(1)
+										.build(),
+								new Immediate((byte) 0x1a)),
+						"pcmpistri xmm0,XMMWORD PTR [rsi+rdx*1],0x1a",
+						"66 0f 3a 63 04 16 1a"),
+				// Punpcklbw
+				test(new Instruction(Opcode.PUNPCKLBW, XMM1, XMM1), "punpcklbw xmm1,xmm1", "66 0f 60 c9"),
+				// Pmaxub
+				test(new Instruction(Opcode.PMAXUB, XMM3, XMM0), "pmaxub xmm3,xmm0", "66 0f de d8"),
+				// Vpbroadcastb
+				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM9), "vpbroadcastb ymm2,xmm9", "c4 c2 7d 78 d1"),
+				test(new Instruction(Opcode.VPBROADCASTB, YMM8, XMM4), "vpbroadcastb ymm8,xmm4", "c4 62 7d 78 c4"));
 	}
 
 	//

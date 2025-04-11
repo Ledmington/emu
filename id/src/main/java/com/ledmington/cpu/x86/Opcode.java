@@ -296,6 +296,9 @@ public enum Opcode {
 	/** Extract word. */
 	PEXTRW("pextrw"),
 
+	/** Maximum of packed unsigned byte integers. */
+	PMAXUB("pmaxub"),
+
 	/** Minimum of packed unsigned byte integers. */
 	PMINUB("pminub"),
 
@@ -382,6 +385,9 @@ public enum Opcode {
 
 	/** Unpack high data. */
 	PUNPCKHQDQ("punpckhqdq"),
+
+	/** Unpack low-order bytes. */
+	PUNPCKLBW("punpcklbw"),
 
 	/** Unpack low-order doublewords. */
 	PUNPCKLDQ("punpckldq"),
@@ -496,6 +502,9 @@ public enum Opcode {
 
 	/** Undefined instruction. */
 	UD2("ud2"),
+
+	/** Load with broadcast integer data from general-purpose register. */
+	VPBROADCASTB("vpbroadcastb"),
 
 	/** Compare packed data for equal. */
 	VPCMPEQB("vpcmpeqb"),

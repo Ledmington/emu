@@ -915,6 +915,7 @@ public final class InstructionDecoder {
 		final byte XORPS_OPCODE = (byte) 0x57;
 		final byte ADDSD_OPCODE = (byte) 0x58;
 		final byte DIVSD_OPCODE = (byte) 0x5e;
+		final byte PUNPCKLBW_OPCODE = (byte) 0x60;
 		final byte PUNPCKLDQ_OPCODE = (byte) 0x62;
 		final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
 		final byte PUNPCKHQDQ_OPCODE = (byte) 0x6d;
@@ -986,6 +987,7 @@ public final class InstructionDecoder {
 		final byte MOVQ_INDIRECT_XMM_OPCODE = (byte) 0xd6;
 		final byte PMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte PMINUB_OPCODE = (byte) 0xda;
+		final byte PMAXUB_OPCODE = (byte) 0xde;
 		final byte PAND_OPCODE = (byte) 0xdb;
 		final byte POR_OPCODE = (byte) 0xeb;
 		final byte PXOR_OPCODE = (byte) 0xef;
@@ -1426,6 +1428,13 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.PMINUB, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
 			}
+			case PMAXUB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1Byte = getByteFromReg(pref, modrm);
+				final byte r2Byte = getByteFromRM(pref, modrm);
+				yield new Instruction(
+						Opcode.PMAXUB, RegisterXMM.fromByte(r1Byte), getXMMArgument(b, modrm, pref, r2Byte));
+			}
 			case PAND_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte r1Byte = getByteFromReg(pref, modrm);
@@ -1503,9 +1512,16 @@ public final class InstructionDecoder {
 						pref.hasOperandSizeOverridePrefix()
 								? RegisterXMM.fromByte(r1Byte)
 								: RegisterMMX.fromByte(r1Byte),
-						pref.hasOperandSizeOverridePrefix()
-								? RegisterXMM.fromByte(r2Byte)
-								: RegisterMMX.fromByte(r2Byte));
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(
+												pref.hasOperandSizeOverridePrefix()
+														? PointerSize.XMMWORD_PTR
+														: PointerSize.QWORD_PTR)
+										.build()
+								: (pref.hasOperandSizeOverridePrefix()
+										? RegisterXMM.fromByte(r2Byte)
+										: RegisterMMX.fromByte(r2Byte)));
 			}
 			case PCMPEQW_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -1621,6 +1637,13 @@ public final class InstructionDecoder {
 			}
 			case UD2_OPCODE -> new Instruction(Opcode.UD2);
 			case SYSCALL_OPCODE -> new Instruction(Opcode.SYSCALL);
+			case PUNPCKLBW_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.PUNPCKLBW,
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
+			}
 			case PUNPCKLDQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
@@ -1709,13 +1732,21 @@ public final class InstructionDecoder {
 				new Instruction(
 						Opcode.PALIGNR,
 						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
-						RegisterXMM.fromByte(getByteFromRM(pref, modrm)),
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(PointerSize.XMMWORD_PTR)
+										.build()
+								: RegisterXMM.fromByte(getByteFromRM(pref, modrm)),
 						imm8(b));
 			case PCMPISTRI_OPCODE ->
 				new Instruction(
 						Opcode.PCMPISTRI,
 						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
-						RegisterXMM.fromByte(getByteFromRM(pref, modrm)),
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(PointerSize.XMMWORD_PTR)
+										.build()
+								: RegisterXMM.fromByte(getByteFromRM(pref, modrm)),
 						imm8(b));
 			default -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte, x);
 		};
@@ -2489,6 +2520,7 @@ public final class InstructionDecoder {
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VMOVDQU_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
+		final byte VPBROADCASTB_OPCODE = (byte) 0x78;
 
 		final Vex3Prefix vex3 = pref.vex3().orElse(null);
 
@@ -2511,6 +2543,13 @@ public final class InstructionDecoder {
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
+			}
+			case VPBROADCASTB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPBROADCASTB,
+						RegisterYMM.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
+						RegisterXMM.fromByte(Registers.combine(!vex3.b(), modrm.rm())));
 			}
 			default -> {
 				final long pos = b.getPosition();

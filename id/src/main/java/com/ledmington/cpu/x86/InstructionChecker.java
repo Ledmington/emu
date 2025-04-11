@@ -124,6 +124,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_R32 = new Case(OperandType.RXMM, OperandType.R32);
 	private static final Case RXMM_R64 = new Case(OperandType.RXMM, OperandType.R64);
 	private static final Case RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM);
+	private static final Case RYMM_RXMM = new Case(OperandType.RYMM, OperandType.RXMM);
 	private static final Case R8_I8 = new Case(OperandType.R8, OperandType.I8);
 	private static final Case R16_I8 = new Case(OperandType.R16, OperandType.I8);
 	private static final Case R16_I16 = new Case(OperandType.R16, OperandType.I16);
@@ -169,6 +170,7 @@ public final class InstructionChecker {
 	private static final Case R64_R64_I8 = new Case(OperandType.R64, OperandType.R64, OperandType.I8);
 	private static final Case RMM_RMM_I8 = new Case(OperandType.RMM, OperandType.RMM, OperandType.I8);
 	private static final Case RXMM_RXMM_I8 = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.I8);
+	private static final Case RXMM_M128_I8 = new Case(OperandType.RXMM, OperandType.M128, OperandType.I8);
 	private static final Case R32_M32_I32 = new Case(OperandType.R32, OperandType.M32, OperandType.I32);
 	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
 	private static final Case RXMM_RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM);
@@ -233,7 +235,7 @@ public final class InstructionChecker {
 					Opcode.ADD,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32,
-							R32_M32, R64_M64, M8_I8, M16_R16, M32_R32, M64_R64, M64_I8, M64_I32)),
+							R32_M32, R64_M64, M8_I8, M8_R8, M16_R16, M32_R32, M64_R64, M64_I8, M64_I32)),
 			Map.entry(Opcode.ADC, List.of(R16_I16, R32_I8, R64_I8, M8_R8, M32_R32)),
 			Map.entry(
 					Opcode.AND,
@@ -245,7 +247,7 @@ public final class InstructionChecker {
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R16_I16, R32_I8, R32_I32, R8_I8, R64_I8, R64_I32, R32_M32,
 							R64_M64, M16_R16, M32_R32, M64_R64, M8_I8, M16_I8, M64_I8, M64_I32)),
-			Map.entry(Opcode.SBB, List.of(R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R64_I8)),
+			Map.entry(Opcode.SBB, List.of(R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R64_I8, R8_M8)),
 			Map.entry(Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SHL, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
@@ -349,7 +351,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PREFETCHT2, List.of(M8)),
 			Map.entry(Opcode.CMPXCHG, List.of(M8_R8, M16_R16, M32_R32, M64_R64)),
 			Map.entry(Opcode.XADD, List.of(M8_R8, M16_R16, M32_R32, M64_R64)),
-			Map.entry(Opcode.PCMPEQB, List.of(RMM_RMM, RXMM_RXMM)),
+			Map.entry(Opcode.PCMPEQB, List.of(RMM_RMM, RXMM_RXMM, RXMM_M128)),
 			Map.entry(Opcode.PCMPEQW, List.of(RMM_RMM, RXMM_RXMM)),
 			Map.entry(Opcode.PCMPEQD, List.of(RMM_RMM, RXMM_RXMM)),
 			Map.entry(Opcode.RDRAND, List.of(R16, R32, R64)),
@@ -367,7 +369,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.RCL, List.of(R32_I8)),
 			Map.entry(Opcode.PMOVMSKB, List.of(R32_RXMM)),
 			Map.entry(Opcode.PMINUB, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8)),
+			Map.entry(Opcode.PMAXUB, List.of(RXMM_RXMM)),
+			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
 			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)),
 			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)),
 			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256)),
@@ -377,7 +380,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VZEROALL, List.of(NOTHING)),
 			Map.entry(Opcode.VMOVQ, List.of(RXMM_M64)),
 			Map.entry(Opcode.VMOVD, List.of(RXMM_M32)),
-			Map.entry(Opcode.PCMPISTRI, List.of(RXMM_RXMM_I8)));
+			Map.entry(Opcode.PCMPISTRI, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
+			Map.entry(Opcode.PUNPCKLBW, List.of(RXMM_RXMM)),
+			Map.entry(Opcode.VPBROADCASTB, List.of(RYMM_RXMM)));
 
 	private InstructionChecker() {}
 
