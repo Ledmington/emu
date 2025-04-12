@@ -1313,6 +1313,10 @@ public final class InstructionEncoder {
 				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0xef);
 			}
+			case VPOR -> {
+				encodeVex2Prefix(wb, inst);
+				wb.write((byte) 0xeb);
+			}
 			case VPMINUB -> {
 				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0xda);
@@ -1328,6 +1332,10 @@ public final class InstructionEncoder {
 				wb.write((byte) 0x74);
 			}
 			case PEXTRW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc5);
+			case SARX -> {
+				encodeVex3Prefix(wb, inst);
+				wb.write((byte) 0xf7);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1346,11 +1354,17 @@ public final class InstructionEncoder {
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
-		} else if (requiresVexPrefix(inst)
+		} else if (requiresVex2Prefix(inst)
 				&& inst.firstOperand() instanceof final Register r1
+				&& inst.secondOperand() instanceof Register
 				&& inst.thirdOperand() instanceof final Register r2) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
-		} else if (requiresVexPrefix(inst)
+		} else if (requiresVex3Prefix(inst)
+				&& inst.firstOperand() instanceof final Register r1
+				&& inst.secondOperand() instanceof final Register r2
+				&& inst.thirdOperand() instanceof Register) {
+			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
+		} else if (requiresVex2Prefix(inst)
 				&& inst.firstOperand() instanceof final Register r1
 				&& inst.secondOperand() instanceof Register
 				&& inst.thirdOperand() instanceof final IndirectOperand io) {
@@ -1363,23 +1377,30 @@ public final class InstructionEncoder {
 		}
 	}
 
-	private static boolean requiresVexPrefix(final Instruction inst) {
+	private static boolean requiresVex2Prefix(final Instruction inst) {
 		return switch (inst.opcode()) {
-			case VPXOR, VPMINUB, VPCMPEQB -> true;
+			case VPXOR, VPMINUB, VPCMPEQB, VPOR -> true;
+			default -> false;
+		};
+	}
+
+	private static boolean requiresVex3Prefix(final Instruction inst) {
+		return switch (inst.opcode()) {
+			case SARX -> true;
 			default -> false;
 		};
 	}
 
 	private static boolean hasImpliedOperandSizeOverridePrefix(final Instruction inst) {
 		return switch (inst.opcode()) {
-			case VPXOR, VPMINUB, VPMOVMSKB, VPCMPEQB, VMOVD, VPBROADCASTB -> true;
+			case VPXOR, VPOR, VPMINUB, VPMOVMSKB, VPCMPEQB, VMOVD, VPBROADCASTB -> true;
 			default -> false;
 		};
 	}
 
 	private static boolean hasImpliedRepPrefix(final Instruction inst) {
 		return switch (inst.opcode()) {
-			case VMOVDQU, VMOVQ -> true;
+			case VMOVDQU, VMOVQ, SARX -> true;
 			default -> false;
 		};
 	}
@@ -1390,7 +1411,7 @@ public final class InstructionEncoder {
 
 	private static byte getOpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
-			case VPBROADCASTB -> (byte) 0b10;
+			case VPBROADCASTB, SARX -> (byte) 0b10;
 			default -> (byte) 0b01;
 		};
 	}
@@ -1481,14 +1502,16 @@ public final class InstructionEncoder {
 		{
 			byte b2 = (byte) 0;
 			final byte rb;
-			if (inst.hasThirdOperand()) {
+			if (inst.hasThirdOperand() && inst.thirdOperand() instanceof final Register r) {
+				rb = Registers.combine(Registers.requiresExtension(r), Registers.toByte(r));
+			} else if (inst.hasThirdOperand() && inst.thirdOperand() instanceof IndirectOperand) {
 				rb = Registers.combine(
 						Registers.requiresExtension((Register) inst.secondOperand()),
 						Registers.toByte((Register) inst.secondOperand()));
 			} else {
 				rb = 0;
 			}
-			b2 = BitUtils.or(b2, BitUtils.shl(BitUtils.and(BitUtils.not(rb), (byte) 0b1111), 3));
+			b2 = BitUtils.or(b2, BitUtils.shl(BitUtils.and(BitUtils.not(rb), (byte) 0b00001111), 3));
 			if (inst.firstOperand().bits() == 256 || inst.secondOperand().bits() == 256) {
 				b2 = BitUtils.or(b2, (byte) 0b00000100);
 			}

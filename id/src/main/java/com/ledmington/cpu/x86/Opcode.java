@@ -431,6 +431,9 @@ public enum Opcode {
 	/** Arithmetic shift right. */
 	SAR("sar"),
 
+	/** Arithmetic shift right without affecting flags. */
+	SARX("sarx"),
+
 	/** Integer subtraction with borrow. */
 	SBB("sbb"),
 
@@ -523,6 +526,9 @@ public enum Opcode {
 
 	/** Move byte mask. */
 	VPMOVMSKB("vpmovmskb"),
+
+	/** Logical OR. */
+	VPOR("vpor"),
 
 	/** Logical exclusive OR. */
 	VPXOR("vpxor"),

@@ -2441,6 +2441,7 @@ public final class InstructionDecoder {
 		final byte VMOVQ_OPCODE = (byte) 0x7e;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
+		final byte VPOR_OPCODE = (byte) 0xeb;
 		final byte VPXOR_OPCODE = (byte) 0xef;
 
 		final Vex2Prefix vex2 = pref.vex2().orElse(null);
@@ -2454,6 +2455,14 @@ public final class InstructionDecoder {
 						RegisterXMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
 						RegisterXMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
 						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
+			}
+			case VPOR_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPOR,
+						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
+						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 			case VPMINUB_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -2521,8 +2530,9 @@ public final class InstructionDecoder {
 		final byte VMOVDQU_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x78;
+		final byte SARX_OPCODE = (byte) 0xf7;
 
-		final Vex3Prefix vex3 = pref.vex3().orElse(null);
+		final Vex3Prefix vex3 = pref.vex3().orElseThrow();
 
 		return switch (opcodeFirstByte) {
 			case VMOVDQU_OPCODE -> {
@@ -2550,6 +2560,14 @@ public final class InstructionDecoder {
 						Opcode.VPBROADCASTB,
 						RegisterYMM.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
 						RegisterXMM.fromByte(Registers.combine(!vex3.b(), modrm.rm())));
+			}
+			case SARX_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.SARX,
+						Register32.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
+						Register32.fromByte(Registers.combine(!vex3.b(), modrm.rm())),
+						Register32.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)));
 			}
 			default -> {
 				final long pos = b.getPosition();
