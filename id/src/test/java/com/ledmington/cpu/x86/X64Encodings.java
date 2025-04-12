@@ -9059,6 +9059,30 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(
 						new Instruction(
 								Opcode.VMOVDQU,
+								YMM2,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(R9)
+										.index(RBX)
+										.scale(1)
+										.build()),
+						"vmovdqu ymm2,YMMWORD PTR [r9+rbx*1]",
+						"c4 c1 7e 6f 14 19"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								YMM11,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RAX)
+										.index(RBX)
+										.scale(1)
+										.build()),
+						"vmovdqu ymm11,YMMWORD PTR [rax+rbx*1]",
+						"c5 7e 6f 1c 18"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
 								YMM3,
 								IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
@@ -9151,7 +9175,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Pmaxub
 				test(new Instruction(Opcode.PMAXUB, XMM3, XMM0), "pmaxub xmm3,xmm0", "66 0f de d8"),
 				// Vpbroadcastb
+				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM1), "vpbroadcastb ymm2,xmm1", "c4 e2 7d 78 d1"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM9), "vpbroadcastb ymm2,xmm9", "c4 c2 7d 78 d1"),
+				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM8), "vpbroadcastb ymm2,xmm8", "c4 c2 7d 78 d0"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM8, XMM4), "vpbroadcastb ymm8,xmm4", "c4 62 7d 78 c4"));
 	}
 
