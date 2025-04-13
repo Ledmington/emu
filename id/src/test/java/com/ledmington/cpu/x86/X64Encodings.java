@@ -6310,6 +6310,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"xor r14,QWORD PTR [rbp+0x30]",
 						"4c 33 75 30"),
 				//  Not
+				test(new Instruction(Opcode.NOT, CX), "not cx", "66 f7 d1"),
 				test(new Instruction(Opcode.NOT, EAX), "not eax", "f7 d0"),
 				test(new Instruction(Opcode.NOT, EBP), "not ebp", "f7 d5"),
 				test(new Instruction(Opcode.NOT, EBX), "not ebx", "f7 d3"),
@@ -6765,6 +6766,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movdqa xmm2,XMMWORD PTR [rsp+r9*4+0x12345678]",
 						"66 42 0f 6f 94 8c 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.MOVDQA,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM1),
+						"movdqa XMMWORD PTR [rdi],xmm1",
+						"66 0f 7f 0f"),
 				test(new Instruction(Opcode.MOVDQA, XMM11, XMM10), "movdqa xmm11,xmm10", "66 45 0f 6f da"),
 				// Movdqu
 				test(
@@ -7377,6 +7388,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.INC, DH), "inc dh", "fe c6"),
 				test(new Instruction(Opcode.INC, DIL), "inc dil", "40 fe c7"),
 				test(new Instruction(Opcode.INC, DL), "inc dl", "fe c2"),
+				test(new Instruction(Opcode.INC, AX), "inc ax", "66 ff c0"),
 				test(new Instruction(Opcode.INC, EAX), "inc eax", "ff c0"),
 				test(new Instruction(Opcode.INC, EBP), "inc ebp", "ff c5"),
 				test(new Instruction(Opcode.INC, EBX), "inc ebx", "ff c3"),
@@ -9183,7 +9195,47 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Sarx
 				test(new Instruction(Opcode.SARX, EAX, EAX, ECX), "sarx eax,eax,ecx", "c4 e2 72 f7 c0"),
 				// Vpor
-				test(new Instruction(Opcode.VPOR, YMM5, YMM2, YMM1), "vpor ymm5,ymm2,ymm1", "c5 ed eb e9"));
+				test(new Instruction(Opcode.VPOR, YMM5, YMM2, YMM1), "vpor ymm5,ymm2,ymm1", "c5 ed eb e9"),
+				// Vpand
+				test(new Instruction(Opcode.VPAND, YMM5, YMM2, YMM1), "vpand ymm5,ymm2,ymm1", "c5 ed db e9"),
+				// Bzhi
+				test(new Instruction(Opcode.BZHI, EDX, EAX, EDX), "bzhi edx,eax,edx", "c4 e2 68 f5 d0"),
+				// Movbe
+				test(
+						new Instruction(
+								Opcode.MOVBE,
+								EAX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDI)
+										.build()),
+						"movbe eax,DWORD PTR [rdi]",
+						"0f 38 f0 07"),
+				// Movntdq
+				test(
+						new Instruction(
+								Opcode.MOVNTDQ,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM1),
+						"movntdq XMMWORD PTR [rdi],xmm1",
+						"66 0f e7 0f"),
+				// Sfence
+				test(new Instruction(Opcode.SFENCE), "sfence", "0f ae f8"),
+				// Lddqu
+				test(
+						new Instruction(
+								Opcode.LDDQU,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RSI)
+										.displacement((byte) -0x80)
+										.build()),
+						"lddqu xmm0,[rsi-0x80]",
+						"f2 0f f0 46 80"));
 	}
 
 	//

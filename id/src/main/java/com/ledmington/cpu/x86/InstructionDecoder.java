@@ -173,14 +173,7 @@ public final class InstructionDecoder {
 			default -> {
 				// This might be a LEA instruction, meaning that the displacement has no explicit pointer size in front
 				// of it, so we just rewind the iterator.
-				iob.pointer(
-						switch (previousOperand.bits()) {
-							case 8 -> PointerSize.BYTE_PTR;
-							case 16 -> PointerSize.WORD_PTR;
-							case 32 -> PointerSize.DWORD_PTR;
-							case 64 -> PointerSize.QWORD_PTR;
-							default -> throw new IllegalArgumentException("Cannot determine pointer size.");
-						});
+				iob.pointer(PointerSize.fromSize(previousOperand.bits()));
 				it.setIndex(0);
 			}
 		}
@@ -272,8 +265,8 @@ public final class InstructionDecoder {
 				displacementString = displacementString.substring(1);
 			}
 			final char sign = isNegative ? '-' : '+';
-			final boolean isFirstBitSet = displacementString.length() >= 2
-					&& Integer.parseInt(String.valueOf(displacementString.charAt(0)), 16) >= 8;
+			final boolean isFirstBitSet =
+					displacementString.length() >= 2 && Integer.parseInt(displacementString, 16) > 128;
 			final int disp = Integer.parseInt(sign + displacementString, 16);
 			if (displacementString.length() > 2 || isFirstBitSet) {
 				iob.displacement(disp);
@@ -895,11 +888,12 @@ public final class InstructionDecoder {
 		final byte GROUP16_OPCODE = (byte) 0x18;
 		final byte ENDBR_OPCODE = (byte) 0x1e;
 		final byte NOP_OPCODE = (byte) 0x1f;
-		final byte MOVAPx_R128_INDIRECT128_OPCODE = (byte) 0x28;
-		final byte MOVAPx_INDIRECT128_R128_OPCODE = (byte) 0x29;
+		final byte MOVAPx_R128_M128_OPCODE = (byte) 0x28;
+		final byte MOVAPx_M128_R128_OPCODE = (byte) 0x29;
 		final byte CVTSI2SD_OPCODE = (byte) 0x2a;
 		final byte UCOMISx_OPCODE = (byte) 0x2e;
-		final byte THREE_BYTE_ESCAPE_OPCODE = (byte) 0x3a;
+		final byte TABLE_A4_OPCODE = (byte) 0x38;
+		final byte TABLE_A5_OPCODE = (byte) 0x3a;
 		final byte CMOVB_OPCODE = (byte) 0x42;
 		final byte CMOVAE_OPCODE = (byte) 0x43;
 		final byte CMOVE_OPCODE = (byte) 0x44;
@@ -928,7 +922,8 @@ public final class InstructionDecoder {
 		final byte PCMPEQB_OPCODE = (byte) 0x74;
 		final byte PCMPEQW_OPCODE = (byte) 0x75;
 		final byte PCMPEQD_OPCODE = (byte) 0x76;
-		final byte MOVQ_R128_INDIRECT64_OPCODE = (byte) 0x7e;
+		final byte MOVQ_R128_M64_OPCODE = (byte) 0x7e;
+		final byte MOVDQA_M128_R128_OPCODE = (byte) 0x7f;
 		final byte JB_DISP32_OPCODE = (byte) 0x82;
 		final byte JAE_DISP32_OPCODE = (byte) 0x83;
 		final byte JE_DISP32_OPCODE = (byte) 0x84;
@@ -955,23 +950,23 @@ public final class InstructionDecoder {
 		final byte SETLE_OPCODE = (byte) 0x9e;
 		final byte SETG_OPCODE = (byte) 0x9f;
 		final byte CPUID_OPCODE = (byte) 0xa2;
-		final byte BT_INDIRECT32_R32_OPCODE = (byte) 0xa3;
-		final byte BTS_INDIRECT32_R32_OPCODE = (byte) 0xab;
+		final byte BT_M32_R32_OPCODE = (byte) 0xa3;
+		final byte BTS_M32_R32_OPCODE = (byte) 0xab;
 		final byte GROUP15_OPCODE = (byte) 0xae;
 		final byte IMUL_OPCODE = (byte) 0xaf;
-		final byte XCHG_INDIRECT8_R8_OPCODE = (byte) 0xb0;
-		final byte XCHG_INDIRECT32_R32_OPCODE = (byte) 0xb1;
-		final byte BTR_INDIRECT32_R32_OPCODE = (byte) 0xb3;
+		final byte XCHG_M8_R8_OPCODE = (byte) 0xb0;
+		final byte XCHG_M32_R32_OPCODE = (byte) 0xb1;
+		final byte BTR_M32_R32_OPCODE = (byte) 0xb3;
 		final byte MOVZX_BYTE_PTR_OPCODE = (byte) 0xb6;
 		final byte MOVZX_WORD_PTR_OPCODE = (byte) 0xb7;
 		final byte GROUP8_OPCODE = (byte) 0xba;
-		final byte BTC_INDIRECT32_R32_OPCODE = (byte) 0xbb;
+		final byte BTC_M32_R32_OPCODE = (byte) 0xbb;
 		final byte BSF_OPCODE = (byte) 0xbc;
-		final byte BSR_R32_INDIRECT32_OPCODE = (byte) 0xbd;
+		final byte BSR_R32_M32_OPCODE = (byte) 0xbd;
 		final byte MOVSX_BYTE_PTR_OPCODE = (byte) 0xbe;
 		final byte MOVSX_WORD_PTR_OPCODE = (byte) 0xbf;
-		final byte XADD_INDIRECT8_R8_OPCODE = (byte) 0xc0;
-		final byte XADD_INDIRECT32_R32_OPCODE = (byte) 0xc1;
+		final byte XADD_M8_R8_OPCODE = (byte) 0xc0;
+		final byte XADD_M32_R32_OPCODE = (byte) 0xc1;
 		final byte PEXTRW_OPCODE = (byte) 0xc5;
 		final byte SHUFPx_OPCODE = (byte) 0xc6;
 		final byte GROUP9_OPCODE = (byte) 0xc7;
@@ -984,13 +979,15 @@ public final class InstructionDecoder {
 		final byte BSWAP_ESP_OPCODE = (byte) 0xce;
 		final byte BSWAP_EBP_OPCODE = (byte) 0xcf;
 		final byte PADDQ_OPCODE = (byte) 0xd4;
-		final byte MOVQ_INDIRECT_XMM_OPCODE = (byte) 0xd6;
+		final byte MOVQ_M_XMM_OPCODE = (byte) 0xd6;
 		final byte PMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte PMINUB_OPCODE = (byte) 0xda;
 		final byte PMAXUB_OPCODE = (byte) 0xde;
 		final byte PAND_OPCODE = (byte) 0xdb;
+		final byte MOVNTDQ_OPCODE = (byte) 0xe7;
 		final byte POR_OPCODE = (byte) 0xeb;
 		final byte PXOR_OPCODE = (byte) 0xef;
+		final byte LDDQU_OPCODE = (byte) 0xf0;
 		final byte PSUBB_OPCODE = (byte) 0xf8;
 		final byte PSUBW_OPCODE = (byte) 0xf9;
 		final byte PSUBD_OPCODE = (byte) 0xfa;
@@ -1045,7 +1042,8 @@ public final class InstructionDecoder {
 			case GROUP14_OPCODE -> parseExtendedOpcodeGroup14(b, opcodeFirstByte, opcodeSecondByte, pref);
 			case GROUP15_OPCODE -> parseExtendedOpcodeGroup15(b, opcodeFirstByte, opcodeSecondByte, pref);
 			case GROUP16_OPCODE -> parseExtendedOpcodeGroup16(b, opcodeFirstByte, opcodeSecondByte, pref);
-			case THREE_BYTE_ESCAPE_OPCODE -> parse3BytesEscape(b, opcodeFirstByte, opcodeSecondByte, pref);
+			case TABLE_A4_OPCODE -> parseTableA4(b, opcodeFirstByte, opcodeSecondByte, pref);
+			case TABLE_A5_OPCODE -> parseTableA5(b, opcodeFirstByte, opcodeSecondByte, pref);
 
 			// conditional jumps
 			case JA_DISP32_OPCODE -> new Instruction(Opcode.JA, imm32(b));
@@ -1143,7 +1141,7 @@ public final class InstructionDecoder {
 			}
 
 			// Bit tests
-			case BT_INDIRECT32_R32_OPCODE -> {
+			case BT_M32_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.BT,
@@ -1158,7 +1156,7 @@ public final class InstructionDecoder {
 								pref.rex().hasModRMRegExtension(),
 								pref.hasOperandSizeOverridePrefix()));
 			}
-			case BTR_INDIRECT32_R32_OPCODE -> {
+			case BTR_M32_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.BTR,
@@ -1173,7 +1171,7 @@ public final class InstructionDecoder {
 								pref.rex().hasModRMRegExtension(),
 								pref.hasOperandSizeOverridePrefix()));
 			}
-			case BTS_INDIRECT32_R32_OPCODE -> {
+			case BTS_M32_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.BTS,
@@ -1188,7 +1186,7 @@ public final class InstructionDecoder {
 								pref.rex().hasModRMRegExtension(),
 								pref.hasOperandSizeOverridePrefix()));
 			}
-			case BTC_INDIRECT32_R32_OPCODE -> {
+			case BTC_M32_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.BTC,
@@ -1218,7 +1216,7 @@ public final class InstructionDecoder {
 								pref.rex().hasModRMRMExtension(),
 								pref.hasOperandSizeOverridePrefix()));
 			}
-			case BSR_R32_INDIRECT32_OPCODE -> {
+			case BSR_R32_M32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final Register r1 = Registers.fromCode(
 						modrm.rm(),
@@ -1233,7 +1231,7 @@ public final class InstructionDecoder {
 								.build());
 			}
 
-			case XCHG_INDIRECT8_R8_OPCODE -> {
+			case XCHG_M8_R8_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final Operand op1 = parseIndirectOperand(b, pref, modrm)
 						.pointer(PointerSize.BYTE_PTR)
@@ -1242,7 +1240,7 @@ public final class InstructionDecoder {
 
 				yield new Instruction(pref.p1().orElse(null), Opcode.CMPXCHG, op1, op2);
 			}
-			case XCHG_INDIRECT32_R32_OPCODE -> {
+			case XCHG_M32_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final Register r2 = Registers.fromCode(
 						modrm.reg(),
@@ -1300,6 +1298,15 @@ public final class InstructionDecoder {
 										.build()
 								: RegisterXMM.fromByte(r2));
 			}
+			case MOVDQA_M128_R128_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.MOVDQA,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.XMMWORD_PTR)
+								.build(),
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)));
+			}
 			case PSHUF_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte r1 = getByteFromReg(pref, modrm);
@@ -1326,7 +1333,7 @@ public final class InstructionDecoder {
 				final byte r2 = getByteFromRM(pref, modrm);
 				yield new Instruction(Opcode.PEXTRW, Register32.fromByte(r1), RegisterMMX.fromByte(r2), imm8(b));
 			}
-			case XADD_INDIRECT8_R8_OPCODE -> {
+			case XADD_M8_R8_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						pref.p1().orElse(null),
@@ -1336,7 +1343,7 @@ public final class InstructionDecoder {
 								.build(),
 						Register8.fromByte(getByteFromReg(pref, modrm), pref.hasRexPrefix()));
 			}
-			case XADD_INDIRECT32_R32_OPCODE -> {
+			case XADD_M32_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final Register r2 = Registers.fromCode(
 						modrm.reg(),
@@ -1374,7 +1381,7 @@ public final class InstructionDecoder {
 										.build()
 								: r2);
 			}
-			case MOVQ_INDIRECT_XMM_OPCODE -> {
+			case MOVQ_M_XMM_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref, modrm);
 				yield new Instruction(
@@ -1384,7 +1391,7 @@ public final class InstructionDecoder {
 								.build(),
 						RegisterXMM.fromByte(regByte));
 			}
-			case MOVQ_R128_INDIRECT64_OPCODE -> {
+			case MOVQ_R128_M64_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref, modrm);
 				yield new Instruction(
@@ -1567,7 +1574,7 @@ public final class InstructionDecoder {
 				final byte r2Byte = getByteFromRM(pref, modrm);
 				yield new Instruction(Opcode.DIVSD, RegisterXMM.fromByte(r1Byte), RegisterXMM.fromByte(r2Byte));
 			}
-			case MOVAPx_R128_INDIRECT128_OPCODE -> {
+			case MOVAPx_R128_M128_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte r1Byte = getByteFromReg(pref, modrm);
 				final byte r2Byte = getByteFromRM(pref, modrm);
@@ -1576,7 +1583,7 @@ public final class InstructionDecoder {
 						RegisterXMM.fromByte(r1Byte),
 						getXMMArgument(b, modrm, pref, r2Byte));
 			}
-			case MOVAPx_INDIRECT128_R128_OPCODE -> {
+			case MOVAPx_M128_R128_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						pref.hasOperandSizeOverridePrefix() ? Opcode.MOVAPD : Opcode.MOVAPS,
@@ -1715,11 +1722,48 @@ public final class InstructionDecoder {
 						Register32.fromByte(getByteFromReg(pref, modrm)),
 						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
 			}
+			case MOVNTDQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.MOVNTDQ,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.XMMWORD_PTR)
+								.build(),
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)));
+			}
+			case LDDQU_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.LDDQU,
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.XMMWORD_PTR)
+								.build());
+			}
 			default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 		};
 	}
 
-	private static Instruction parse3BytesEscape(
+	private static Instruction parseTableA4(
+			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+		final byte MOVBE_OPCODE = (byte) 0xf0;
+
+		final byte x = b.read1();
+		final ModRM modrm = modrm(b);
+
+		return switch (x) {
+			case MOVBE_OPCODE ->
+				new Instruction(
+						Opcode.MOVBE,
+						Register32.fromByte(getByteFromReg(pref, modrm)),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.DWORD_PTR)
+								.build());
+			default -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte, x);
+		};
+	}
+
+	private static Instruction parseTableA5(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final byte PALIGNR_OPCODE = (byte) 0x0f;
 		final byte PCMPISTRI_OPCODE = (byte) 0x63;
@@ -1760,13 +1804,11 @@ public final class InstructionDecoder {
 			notImplemented();
 		}
 
-		final byte INCSSPQOpcode = 0b00000101;
-		if (modrm.reg() != INCSSPQOpcode) {
-			throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
-		}
-
-		return new Instruction(
-				Opcode.INCSSPQ, Registers.fromCode(modrm.rm(), true, pref.rex().hasModRMRMExtension(), false));
+		return switch (modrm.reg()) {
+			case (byte) 0b101 -> new Instruction(Opcode.INCSSPQ, Register64.fromByte(getByteFromRM(pref, modrm)));
+			case (byte) 0b111 -> new Instruction(Opcode.SFENCE);
+			default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+		};
 	}
 
 	private static Instruction parseExtendedOpcodeGroup9(
@@ -1809,52 +1851,52 @@ public final class InstructionDecoder {
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte OPCODE_REG_MASK = 0b00000111;
 
-		final byte ADD_INDIRECT8_R8_OPCODE = (byte) 0x00;
-		final byte ADD_INDIRECT32_R32_OPCODE = (byte) 0x01;
-		final byte ADD_R8_INDIRECT8_OPCODE = (byte) 0x02;
-		final byte ADD_R32_INDIRECT32_OPCODE = (byte) 0x03;
+		final byte ADD_M8_R8_OPCODE = (byte) 0x00;
+		final byte ADD_M32_R32_OPCODE = (byte) 0x01;
+		final byte ADD_R8_M8_OPCODE = (byte) 0x02;
+		final byte ADD_R32_M32_OPCODE = (byte) 0x03;
 		final byte ADD_AL_IMM8_OPCODE = (byte) 0x04;
 		final byte ADD_EAX_IMM32_OPCODE = (byte) 0x05;
-		final byte OR_INDIRECT8_R8_OPCODE = (byte) 0x08;
-		final byte OR_INDIRECT32_R32_OPCODE = (byte) 0x09;
-		final byte OR_R8_INDIRECT8_OPCODE = (byte) 0x0a;
-		final byte OR_R32_INDIRECT32_OPCODE = (byte) 0x0b;
+		final byte OR_M8_R8_OPCODE = (byte) 0x08;
+		final byte OR_M32_R32_OPCODE = (byte) 0x09;
+		final byte OR_R8_M8_OPCODE = (byte) 0x0a;
+		final byte OR_R32_M32_OPCODE = (byte) 0x0b;
 		final byte OR_AL_IMM8_OPCODE = (byte) 0x0c;
 		final byte OR_EAX_IMM32_OPCODE = (byte) 0x0d;
-		final byte ADC_INDIRECT8_R8_OPCODE = (byte) 0x10;
-		final byte ADC_INDIRECT32_R32_OPCODE = (byte) 0x11;
-		final byte ADC_R8_INDIRECT8_OPCODE = (byte) 0x12;
-		final byte ADC_R32_INDIRECT32_OPCODE = (byte) 0x13;
+		final byte ADC_M8_R8_OPCODE = (byte) 0x10;
+		final byte ADC_M32_R32_OPCODE = (byte) 0x11;
+		final byte ADC_R8_M8_OPCODE = (byte) 0x12;
+		final byte ADC_R32_M32_OPCODE = (byte) 0x13;
 		final byte ADC_AL_IMM8_OPCODE = (byte) 0x14;
 		final byte ADC_EAX_IMM32_OPCODE = (byte) 0x15;
-		final byte SBB_INDIRECT8_R8_OPCODE = (byte) 0x18;
-		final byte SBB_INDIRECT32_R32_OPCODE = (byte) 0x19;
-		final byte SBB_R8_INDIRECT8_OPCODE = (byte) 0x1a;
-		final byte SBB_R32_INDIRECT32_OPCODE = (byte) 0x1b;
+		final byte SBB_M8_R8_OPCODE = (byte) 0x18;
+		final byte SBB_M32_R32_OPCODE = (byte) 0x19;
+		final byte SBB_R8_M8_OPCODE = (byte) 0x1a;
+		final byte SBB_R32_M32_OPCODE = (byte) 0x1b;
 		final byte SBB_AL_IMM8_OPCODE = (byte) 0x1c;
 		final byte SBB_EAX_IMM32_OPCODE = (byte) 0x1d;
-		final byte AND_INDIRECT8_R8_OPCODE = (byte) 0x20;
-		final byte AND_INDIRECT32_R32_OPCODE = (byte) 0x21;
-		final byte AND_R8_INDIRECT8_OPCODE = (byte) 0x22;
-		final byte AND_R32_INDIRECT32_OPCODE = (byte) 0x23;
+		final byte AND_M8_R8_OPCODE = (byte) 0x20;
+		final byte AND_M32_R32_OPCODE = (byte) 0x21;
+		final byte AND_R8_M8_OPCODE = (byte) 0x22;
+		final byte AND_R32_M32_OPCODE = (byte) 0x23;
 		final byte AND_AL_IMM8_OPCODE = (byte) 0x24;
 		final byte AND_EAX_IMM32_OPCODE = (byte) 0x25;
-		final byte SUB_INDIRECT8_R8_OPCODE = (byte) 0x28;
-		final byte SUB_INDIRECT32_R32_OPCODE = (byte) 0x29;
-		final byte SUB_R8_INDIRECT8_OPCODE = (byte) 0x2a;
-		final byte SUB_R32_INDIRECT32_OPCODE = (byte) 0x2b;
+		final byte SUB_M8_R8_OPCODE = (byte) 0x28;
+		final byte SUB_M32_R32_OPCODE = (byte) 0x29;
+		final byte SUB_R8_M8_OPCODE = (byte) 0x2a;
+		final byte SUB_R32_M32_OPCODE = (byte) 0x2b;
 		final byte SUB_AL_IMM8_OPCODE = (byte) 0x2c;
 		final byte SUB_EAX_IMM32_OPCODE = (byte) 0x2d;
-		final byte XOR_INDIRECT8_R8_OPCODE = (byte) 0x30;
-		final byte XOR_INDIRECT32_R32_OPCODE = (byte) 0x31;
-		final byte XOR_R8_INDIRECT8_OPCODE = (byte) 0x32;
-		final byte XOR_R32_INDIRECT32_OPCODE = (byte) 0x33;
+		final byte XOR_M8_R8_OPCODE = (byte) 0x30;
+		final byte XOR_M32_R32_OPCODE = (byte) 0x31;
+		final byte XOR_R8_M8_OPCODE = (byte) 0x32;
+		final byte XOR_R32_M32_OPCODE = (byte) 0x33;
 		final byte XOR_AL_IMM8_OPCODE = (byte) 0x34;
 		final byte XOR_EAX_IMM32_OPCODE = (byte) 0x35;
-		final byte CMP_INDIRECT8_R8_OPCODE = (byte) 0x38;
-		final byte CMP_INDIRECT32_R32_OPCODE = (byte) 0x39;
-		final byte CMP_R8_INDIRECT8_OPCODE = (byte) 0x3a;
-		final byte CMP_R32_INDIRECT32_OPCODE = (byte) 0x3b;
+		final byte CMP_M8_R8_OPCODE = (byte) 0x38;
+		final byte CMP_M32_R32_OPCODE = (byte) 0x39;
+		final byte CMP_R8_M8_OPCODE = (byte) 0x3a;
+		final byte CMP_R32_M32_OPCODE = (byte) 0x3b;
 		final byte CMP_AL_IMM8_OPCODE = (byte) 0x3c;
 		final byte CMP_EAX_IMM32_OPCODE = (byte) 0x3d;
 		final byte PUSH_EAX_OPCODE = (byte) 0x50;
@@ -1875,7 +1917,7 @@ public final class InstructionDecoder {
 		final byte POP_EDI_OPCODE = (byte) 0x5f;
 		final byte MOVSXD_OPCODE = (byte) 0x63;
 		final byte PUSH_IMM32_OPCODE = (byte) 0x68;
-		final byte IMUL_R32_INDIRECT32_IMM32_OPCODE = (byte) 0x69;
+		final byte IMUL_R32_M32_IMM32_OPCODE = (byte) 0x69;
 		final byte PUSH_IMM8_OPCODE = (byte) 0x6a;
 		final byte IMUL_REG_REG_IMM8_OPCODE = (byte) 0x6b;
 		final byte JB_DISP8_OPCODE = (byte) 0x72;
@@ -1893,12 +1935,12 @@ public final class InstructionDecoder {
 		final byte JG_DISP8_OPCODE = (byte) 0x7f;
 		final byte TEST_R8_R8_OPCODE = (byte) 0x84;
 		final byte TEST_R32_R32_OPCODE = (byte) 0x85;
-		final byte XCHG_INDIRECT8_R8_OPCODE = (byte) 0x86;
-		final byte XCHG_INDIRECT32_R32_OPCODE = (byte) 0x87;
+		final byte XCHG_M8_R8_OPCODE = (byte) 0x86;
+		final byte XCHG_M32_R32_OPCODE = (byte) 0x87;
 		final byte MOV_MEM8_REG8_OPCODE = (byte) 0x88;
-		final byte MOV_INDIRECT32_R32_OPCODE = (byte) 0x89;
-		final byte MOV_R8_INDIRECT8_OPCODE = (byte) 0x8a;
-		final byte MOV_R32_INDIRECT32_OPCODE = (byte) 0x8b;
+		final byte MOV_M32_R32_OPCODE = (byte) 0x89;
+		final byte MOV_R8_M8_OPCODE = (byte) 0x8a;
+		final byte MOV_R32_M32_OPCODE = (byte) 0x8b;
 		final byte LEA_OPCODE = (byte) 0x8d;
 		final byte NOP_OPCODE = (byte) 0x90;
 		final byte XCHG_ECX_EAX_OPCODE = (byte) 0x91;
@@ -1962,8 +2004,8 @@ public final class InstructionDecoder {
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
-			case MOV_R32_INDIRECT32_OPCODE -> parseRxMx(b, pref, Opcode.MOV);
-			case MOV_INDIRECT32_R32_OPCODE -> parseMxRx(b, pref, Opcode.MOV);
+			case MOV_R32_M32_OPCODE -> parseRxMx(b, pref, Opcode.MOV);
+			case MOV_M32_R32_OPCODE -> parseMxRx(b, pref, Opcode.MOV);
 			case MOV_MEM8_REG8_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
@@ -1973,7 +2015,7 @@ public final class InstructionDecoder {
 								.build(),
 						Register8.fromByte(getByteFromReg(pref, modrm), pref.hasRexPrefix()));
 			}
-			case MOV_R8_INDIRECT8_OPCODE -> {
+			case MOV_R8_M8_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.MOV,
@@ -2017,7 +2059,7 @@ public final class InstructionDecoder {
 			case TEST_EAX_IMM32_OPCODE ->
 				new Instruction(
 						Opcode.TEST, getFirstRegister(pref), pref.hasOperandSizeOverridePrefix() ? imm16(b) : imm32(b));
-			case XCHG_INDIRECT8_R8_OPCODE -> {
+			case XCHG_M8_R8_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.XCHG,
@@ -2028,7 +2070,7 @@ public final class InstructionDecoder {
 								: Register8.fromByte(getByteFromRM(pref, modrm), pref.hasRexPrefix()),
 						Register8.fromByte(getByteFromReg(pref, modrm), pref.hasRexPrefix()));
 			}
-			case XCHG_INDIRECT32_R32_OPCODE -> parseMxRx(b, pref, Opcode.XCHG);
+			case XCHG_M32_R32_OPCODE -> parseMxRx(b, pref, Opcode.XCHG);
 
 			// jumps
 			case JMP_DISP32_OPCODE -> new Instruction(Opcode.JMP, imm32(b));
@@ -2066,7 +2108,7 @@ public final class InstructionDecoder {
 						imm8(b));
 			}
 			case PUSH_IMM32_OPCODE -> new Instruction(Opcode.PUSH, imm32(b));
-			case IMUL_R32_INDIRECT32_IMM32_OPCODE -> {
+			case IMUL_R32_M32_IMM32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.IMUL,
@@ -2155,14 +2197,14 @@ public final class InstructionDecoder {
 			}
 
 			// OP Indirect8,R8
-			case ADD_INDIRECT8_R8_OPCODE,
-					ADC_INDIRECT8_R8_OPCODE,
-					AND_INDIRECT8_R8_OPCODE,
-					XOR_INDIRECT8_R8_OPCODE,
-					OR_INDIRECT8_R8_OPCODE,
-					SBB_INDIRECT8_R8_OPCODE,
-					SUB_INDIRECT8_R8_OPCODE,
-					CMP_INDIRECT8_R8_OPCODE -> {
+			case ADD_M8_R8_OPCODE,
+					ADC_M8_R8_OPCODE,
+					AND_M8_R8_OPCODE,
+					XOR_M8_R8_OPCODE,
+					OR_M8_R8_OPCODE,
+					SBB_M8_R8_OPCODE,
+					SUB_M8_R8_OPCODE,
+					CMP_M8_R8_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
 				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000000) {
@@ -2184,14 +2226,14 @@ public final class InstructionDecoder {
 			}
 
 			// OP Indirect32,R32
-			case ADD_INDIRECT32_R32_OPCODE,
-					ADC_INDIRECT32_R32_OPCODE,
-					AND_INDIRECT32_R32_OPCODE,
-					XOR_INDIRECT32_R32_OPCODE,
-					OR_INDIRECT32_R32_OPCODE,
-					SBB_INDIRECT32_R32_OPCODE,
-					SUB_INDIRECT32_R32_OPCODE,
-					CMP_INDIRECT32_R32_OPCODE -> {
+			case ADD_M32_R32_OPCODE,
+					ADC_M32_R32_OPCODE,
+					AND_M32_R32_OPCODE,
+					XOR_M32_R32_OPCODE,
+					OR_M32_R32_OPCODE,
+					SBB_M32_R32_OPCODE,
+					SUB_M32_R32_OPCODE,
+					CMP_M32_R32_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
 				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000001) {
@@ -2204,14 +2246,14 @@ public final class InstructionDecoder {
 			}
 
 			// OP R8,Indirect8
-			case ADD_R8_INDIRECT8_OPCODE,
-					ADC_R8_INDIRECT8_OPCODE,
-					AND_R8_INDIRECT8_OPCODE,
-					XOR_R8_INDIRECT8_OPCODE,
-					OR_R8_INDIRECT8_OPCODE,
-					SBB_R8_INDIRECT8_OPCODE,
-					SUB_R8_INDIRECT8_OPCODE,
-					CMP_R8_INDIRECT8_OPCODE -> {
+			case ADD_R8_M8_OPCODE,
+					ADC_R8_M8_OPCODE,
+					AND_R8_M8_OPCODE,
+					XOR_R8_M8_OPCODE,
+					OR_R8_M8_OPCODE,
+					SBB_R8_M8_OPCODE,
+					SUB_R8_M8_OPCODE,
+					CMP_R8_M8_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
 				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000010) {
@@ -2233,14 +2275,14 @@ public final class InstructionDecoder {
 			}
 
 			// OP R32,Indirect32
-			case ADD_R32_INDIRECT32_OPCODE,
-					ADC_R32_INDIRECT32_OPCODE,
-					AND_R32_INDIRECT32_OPCODE,
-					XOR_R32_INDIRECT32_OPCODE,
-					OR_R32_INDIRECT32_OPCODE,
-					SBB_R32_INDIRECT32_OPCODE,
-					SUB_R32_INDIRECT32_OPCODE,
-					CMP_R32_INDIRECT32_OPCODE -> {
+			case ADD_R32_M32_OPCODE,
+					ADC_R32_M32_OPCODE,
+					AND_R32_M32_OPCODE,
+					XOR_R32_M32_OPCODE,
+					OR_R32_M32_OPCODE,
+					SBB_R32_M32_OPCODE,
+					SUB_R32_M32_OPCODE,
+					CMP_R32_M32_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
 				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000011) {
@@ -2441,6 +2483,7 @@ public final class InstructionDecoder {
 		final byte VMOVQ_OPCODE = (byte) 0x7e;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
+		final byte VPAND_OPCODE = (byte) 0xdb;
 		final byte VPOR_OPCODE = (byte) 0xeb;
 		final byte VPXOR_OPCODE = (byte) 0xef;
 
@@ -2460,6 +2503,14 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VPOR,
+						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
+						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
+			}
+			case VPAND_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPAND,
 						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
 						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
 						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
@@ -2530,6 +2581,7 @@ public final class InstructionDecoder {
 		final byte VMOVDQU_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x78;
+		final byte BZHI_OPCODE = (byte) 0xf5;
 		final byte SARX_OPCODE = (byte) 0xf7;
 
 		final Vex3Prefix vex3 = pref.vex3().orElseThrow();
@@ -2565,6 +2617,14 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.SARX,
+						Register32.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
+						Register32.fromByte(Registers.combine(!vex3.b(), modrm.rm())),
+						Register32.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)));
+			}
+			case BZHI_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.BZHI,
 						Register32.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
 						Register32.fromByte(Registers.combine(!vex3.b(), modrm.rm())),
 						Register32.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)));

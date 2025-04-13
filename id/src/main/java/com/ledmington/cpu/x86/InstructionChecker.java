@@ -220,6 +220,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.CMOVG, List.of(R32_M32, R64_M64, R32_R32, R64_R64)),
 			Map.entry(Opcode.CMOVGE, List.of(R32_M32, R32_R32, R64_R64)),
 			Map.entry(Opcode.LEA, List.of(R16_M16, R32_M32, R64_M64)),
+			Map.entry(Opcode.LDDQU, List.of(RXMM_M128)),
 			Map.entry(Opcode.MOVZX, List.of(R32_R8, R32_R16, R64_R8, R64_R16, R32_M8, R32_M16)),
 			Map.entry(Opcode.MOVSX, List.of(R32_R8, R64_R8, R64_R16, R32_M8, R32_M16, R64_M8, R64_M16)),
 			Map.entry(Opcode.PUSH, List.of(I8, I32, R16, R64, M64)),
@@ -279,7 +280,7 @@ public final class InstructionChecker {
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32, M8_R8,
 							M32_R32, R8_M8, R32_M32, R64_M64)),
-			Map.entry(Opcode.NOT, List.of(R32, R64)),
+			Map.entry(Opcode.NOT, List.of(R16, R32, R64)),
 			Map.entry(Opcode.NEG, List.of(R32, R64, M32, M64)),
 			Map.entry(
 					Opcode.TEST,
@@ -289,7 +290,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.UD2, List.of(NOTHING)),
 			Map.entry(Opcode.MOVS, List.of(M8_M8, M16_M16, M32_M32)),
 			Map.entry(Opcode.STOS, List.of(M8_R8, M32_R32, M64_R64)),
-			Map.entry(Opcode.MOVDQA, List.of(RXMM_RXMM, RXMM_M128)),
+			Map.entry(Opcode.MOVDQA, List.of(RXMM_RXMM, RXMM_M128, M128_RXMM)),
 			Map.entry(Opcode.MOVDQU, List.of(RXMM_M128)),
 			Map.entry(Opcode.MOVAPS, List.of(RXMM_RXMM, M128_RXMM, RXMM_M128)),
 			Map.entry(Opcode.MOVAPD, List.of(RXMM_RXMM, M128_RXMM)),
@@ -317,7 +318,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.MOVUPS, List.of(RXMM_M128, M128_RXMM)),
 			Map.entry(Opcode.MOVSD, List.of(RXMM_M64)),
 			Map.entry(Opcode.ENDBR64, List.of(NOTHING)),
-			Map.entry(Opcode.INC, List.of(R8, R32, R64, M8, M16, M32, M64)),
+			Map.entry(Opcode.INC, List.of(R8, R16, R32, R64, M8, M16, M32, M64)),
 			Map.entry(Opcode.DEC, List.of(R8, R32, R64, M8, M16, M32, M64)),
 			Map.entry(Opcode.PSHUFD, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.PSHUFW, List.of(RMM_RMM_I8)),
@@ -385,7 +386,12 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PUNPCKLBW, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.VPBROADCASTB, List.of(RYMM_RXMM)),
 			Map.entry(Opcode.SARX, List.of(R32_R32_R32)),
-			Map.entry(Opcode.VPOR, List.of(RYMM_RYMM_RYMM)));
+			Map.entry(Opcode.VPOR, List.of(RYMM_RYMM_RYMM)),
+			Map.entry(Opcode.VPAND, List.of(RYMM_RYMM_RYMM)),
+			Map.entry(Opcode.BZHI, List.of(R32_R32_R32)),
+			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
+			Map.entry(Opcode.MOVNTDQ, List.of(M128_RXMM)),
+			Map.entry(Opcode.SFENCE, List.of(NOTHING)));
 
 	private InstructionChecker() {}
 

@@ -56,6 +56,9 @@ public enum Opcode {
 	/** Bit test and set. */
 	BTS("bts"),
 
+	/** Zero high bits starting from specified bit position. */
+	BZHI("bzhi"),
+
 	/** Call procedure. */
 	CALL("call"),
 
@@ -194,6 +197,9 @@ public enum Opcode {
 	/** Load status flags into AH register. */
 	LAHF("lahf"),
 
+	/** Load unaligned integer 128-bit. */
+	LDDQU("lddqu"),
+
 	/** Load effective address. */
 	LEA("lea"),
 
@@ -211,6 +217,9 @@ public enum Opcode {
 
 	/** Move aligned packed single-precision floating-point values. */
 	MOVAPS("movaps"),
+
+	/** Move data after swapping bytes. */
+	MOVBE("movbe"),
 
 	/** Move doubleword. */
 	MOVD("movd"),
@@ -235,6 +244,9 @@ public enum Opcode {
 	 * memory.
 	 */
 	MOVHPS("movhps"),
+
+	/** Store double quadword using non-temporal hint. */
+	MOVNTDQ("movntdq"),
 
 	/** Move quadword. */
 	MOVQ("movq"),
@@ -473,6 +485,9 @@ public enum Opcode {
 	/** Set byte if overflow. */
 	SETO("seto"),
 
+	/** Store fence. */
+	SFENCE("sfence"),
+
 	/** Logical shift left. */
 	SHL("shl"),
 
@@ -523,6 +538,9 @@ public enum Opcode {
 
 	/** Move quadword. */
 	VMOVQ("vmovq"),
+
+	/** Logical AND. */
+	VPAND("vpand"),
 
 	/** Move byte mask. */
 	VPMOVMSKB("vpmovmskb"),
