@@ -2649,12 +2649,13 @@ public final class InstructionDecoder {
 
 	private static Instruction parseEvexOpcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
-		final byte VMOVUPS_OPCODE = (byte) 0x10;
+		final byte VMOVUPS_R512_M512_OPCODE = (byte) 0x10;
+		final byte VMOVUPS_M512_R512_OPCODE = (byte) 0x11;
 
 		final EvexPrefix evex = pref.evex().orElseThrow();
 
 		return switch (opcodeFirstByte) {
-			case VMOVUPS_OPCODE -> {
+			case VMOVUPS_R512_M512_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VMOVUPS,
@@ -2662,6 +2663,15 @@ public final class InstructionDecoder {
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.ZMMWORD_PTR)
 								.build());
+			}
+			case VMOVUPS_M512_R512_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVUPS,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.ZMMWORD_PTR)
+								.build(),
+						RegisterZMM.fromByte(getByteFromReg(pref, modrm)));
 			}
 			default -> {
 				final long pos = b.getPosition();

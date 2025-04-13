@@ -9248,7 +9248,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RSI)
 										.build()),
 						"vmovups zmm0,ZMMWORD PTR [rsi]",
-						"62 f1 7c 48 10 06"));
+						"62 f1 7c 48 10 06"),
+				test(
+						new Instruction(
+								Opcode.VMOVUPS,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								ZMM0),
+						"vmovups ZMMWORD PTR [rdi],zmm0",
+						"62 f1 7c 48 11 07"));
 	}
 
 	//

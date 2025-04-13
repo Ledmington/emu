@@ -153,6 +153,7 @@ public final class InstructionChecker {
 	private static final Case M64_R64 = new Case(OperandType.M64, OperandType.R64);
 	private static final Case M64_RXMM = new Case(OperandType.M64, OperandType.RXMM);
 	private static final Case M128_RXMM = new Case(OperandType.M128, OperandType.RXMM);
+	private static final Case M512_RZMM = new Case(OperandType.M512, OperandType.RZMM);
 	private static final Case R8_M8 = new Case(OperandType.R8, OperandType.M8);
 	private static final Case R16_M16 = new Case(OperandType.R16, OperandType.M16);
 	private static final Case R32_M8 = new Case(OperandType.R32, OperandType.M8);
@@ -397,7 +398,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
 			Map.entry(Opcode.MOVNTDQ, List.of(M128_RXMM)),
 			Map.entry(Opcode.SFENCE, List.of(NOTHING)),
-			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512)));
+			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512, M512_RZMM)));
 
 	private InstructionChecker() {}
 

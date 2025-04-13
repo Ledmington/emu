@@ -1204,7 +1204,11 @@ public final class InstructionEncoder {
 			case LDDQU -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xf0);
 			case VMOVUPS -> {
 				encodeEvexPrefix(wb, inst);
-				wb.write((byte) 0x10);
+				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
+					wb.write((byte) 0x10);
+				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x11);
+				}
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
