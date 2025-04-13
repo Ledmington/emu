@@ -23,6 +23,7 @@ import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.WORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.XMMWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.YMMWORD_PTR;
+import static com.ledmington.cpu.x86.PointerSize.ZMMWORD_PTR;
 import static com.ledmington.cpu.x86.Register16.AX;
 import static com.ledmington.cpu.x86.Register16.BP;
 import static com.ledmington.cpu.x86.Register16.BX;
@@ -128,6 +129,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
+import static com.ledmington.cpu.x86.RegisterZMM.ZMM0;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9235,7 +9237,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement((byte) -0x80)
 										.build()),
 						"lddqu xmm0,[rsi-0x80]",
-						"f2 0f f0 46 80"));
+						"f2 0f f0 46 80"),
+				// Vmovups
+				test(
+						new Instruction(
+								Opcode.VMOVUPS,
+								ZMM0,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RSI)
+										.build()),
+						"vmovups zmm0,ZMMWORD PTR [rsi]",
+						"62 f1 7c 48 10 06"));
 	}
 
 	//

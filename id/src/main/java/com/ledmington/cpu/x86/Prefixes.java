@@ -38,7 +38,8 @@ public record Prefixes(
 		boolean hasRexPrefix,
 		RexPrefix rex,
 		Optional<Vex2Prefix> vex2,
-		Optional<Vex3Prefix> vex3) {
+		Optional<Vex3Prefix> vex3,
+		Optional<EvexPrefix> evex) {
 
 	@Override
 	public String toString() {
@@ -46,6 +47,6 @@ public record Prefixes(
 				+ (p2.isPresent() ? String.format("0x%02x", p2.orElseThrow()) : p2) + ";hasOperandSizeOverridePrefix="
 				+ hasOperandSizeOverridePrefix + ";hasAddressSizeOverridePrefix=" + hasAddressSizeOverridePrefix
 				+ ";rex=" + rex.toString() + ";vex2="
-				+ vex2.toString() + ";vex3=" + vex3.toString() + "]";
+				+ vex2.toString() + ";vex3=" + vex3.toString() + ";evex=" + evex.toString() + "]";
 	}
 }

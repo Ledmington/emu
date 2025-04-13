@@ -58,7 +58,8 @@ public final class InstructionDecoder {
 					Arrays.stream(Register64.values()),
 					Arrays.stream(RegisterMMX.values()),
 					Arrays.stream(RegisterXMM.values()),
-					Arrays.stream(RegisterYMM.values()))
+					Arrays.stream(RegisterYMM.values()),
+					Arrays.stream(RegisterZMM.values()))
 			.flatMap(x -> x)
 			.collect(Collectors.toUnmodifiableMap(Operand::toIntelSyntax, x -> x));
 
@@ -170,8 +171,10 @@ public final class InstructionDecoder {
 			case "QWORD PTR" -> iob.pointer(PointerSize.QWORD_PTR);
 			case "XMMWORD PTR" -> iob.pointer(PointerSize.XMMWORD_PTR);
 			case "YMMWORD PTR" -> iob.pointer(PointerSize.YMMWORD_PTR);
+			case "ZMMWORD PTR" -> iob.pointer(PointerSize.ZMMWORD_PTR);
 			default -> {
-				// This might be a LEA instruction, meaning that the displacement has no explicit pointer size in front
+				// This might be a LEA-like instruction, meaning that the displacement has no explicit pointer size in
+				// front
 				// of it, so we just rewind the iterator.
 				iob.pointer(PointerSize.fromSize(previousOperand.bits()));
 				it.setIndex(0);
@@ -322,6 +325,10 @@ public final class InstructionDecoder {
 
 		if (pref.vex3().isPresent()) {
 			return parseVex3Opcodes(b, opcodeFirstByte, pref);
+		}
+
+		if (pref.evex().isPresent()) {
+			return parseEvexOpcodes(b, opcodeFirstByte, pref);
 		}
 
 		return switch (opcodeFirstByte) {
@@ -2459,6 +2466,8 @@ public final class InstructionDecoder {
 
 			case LEA_OPCODE -> parseRxMx(b, pref, Opcode.LEA);
 
+			case (byte) 0x62 -> throw new UnrecognizedPrefix("EVEX", b.getPosition());
+			case (byte) 0xc4 -> throw new UnrecognizedPrefix("VEX3", b.getPosition());
 			case (byte) 0xc5 -> throw new UnrecognizedPrefix("VEX2", b.getPosition());
 			case OPERAND_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("operand size override", b.getPosition());
 			case ADDRESS_SIZE_OVERRIDE_PREFIX -> throw new UnrecognizedPrefix("address size override", b.getPosition());
@@ -2638,6 +2647,31 @@ public final class InstructionDecoder {
 		};
 	}
 
+	private static Instruction parseEvexOpcodes(
+			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+		final byte VMOVUPS_OPCODE = (byte) 0x10;
+
+		final EvexPrefix evex = pref.evex().orElseThrow();
+
+		return switch (opcodeFirstByte) {
+			case VMOVUPS_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVUPS,
+						RegisterZMM.fromByte(getByteFromReg(pref, modrm)),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.ZMMWORD_PTR)
+								.build());
+			}
+			default -> {
+				final long pos = b.getPosition();
+				logger.debug("Unknown opcode: 0x%02x.", opcodeFirstByte);
+				b.setPosition(pos);
+				throw new UnknownOpcode(opcodeFirstByte);
+			}
+		};
+	}
+
 	private static void invalidValue() {
 		throw new IllegalArgumentException("Invalid value.");
 	}
@@ -2700,6 +2734,17 @@ public final class InstructionDecoder {
 			}
 		}
 
+		Optional<EvexPrefix> evex;
+		{
+			final byte evexByte = b.read1();
+			if (EvexPrefix.isEvexPrefix(evexByte)) {
+				evex = Optional.of(EvexPrefix.of(b.read1(), b.read1(), b.read1()));
+			} else {
+				b.setPosition(b.getPosition() - 1);
+				evex = Optional.empty();
+			}
+		}
+
 		// Check that the combination of prefixes is valid
 		{
 			final boolean hasNormalPrefix =
@@ -2714,13 +2759,16 @@ public final class InstructionDecoder {
 			if (vex3.isPresent()) {
 				count++;
 			}
+			if (evex.isPresent()) {
+				count++;
+			}
 			if (count >= 2) {
 				throw new IllegalArgumentException("Illegal combination of prefixes.");
 			}
 		}
 
 		return new Prefixes(
-				p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix, vex2, vex3);
+				p1, p2, hasOperandSizeOverridePrefix, hasAddressSizeOverridePrefix, isREX, rexPrefix, vex2, vex3, evex);
 	}
 
 	/** Parses an instruction like OP IndirectXX,RXX (where XX can be 16, 32 or 64) */

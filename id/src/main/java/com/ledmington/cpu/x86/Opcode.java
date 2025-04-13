@@ -539,6 +539,9 @@ public enum Opcode {
 	/** Move quadword. */
 	VMOVQ("vmovq"),
 
+	/** Move unaligned packed single precision floating-point values. */
+	VMOVUPS("vmovups"),
+
 	/** Logical AND. */
 	VPAND("vpand"),
 

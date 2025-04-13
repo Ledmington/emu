@@ -1202,6 +1202,10 @@ public final class InstructionEncoder {
 			}
 			case MOVBE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, TABLE_A4_PREFIX, (byte) 0xf0);
 			case LDDQU -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xf0);
+			case VMOVUPS -> {
+				encodeEvexPrefix(wb, inst);
+				wb.write((byte) 0x10);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1544,6 +1548,13 @@ public final class InstructionEncoder {
 			}
 			wb.write(b2);
 		}
+	}
+
+	private static void encodeEvexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		wb.write((byte) 0x62);
+		wb.write((byte) 0xf1);
+		wb.write((byte) 0x7c);
+		wb.write((byte) 0x48);
 	}
 
 	private static byte getMod(final IndirectOperand io) {

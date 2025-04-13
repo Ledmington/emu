@@ -36,7 +36,10 @@ public enum PointerSize {
 	XMMWORD_PTR(128),
 
 	/** Pointer to word for YMM registers (4x64 bits). */
-	YMMWORD_PTR(256);
+	YMMWORD_PTR(256),
+
+	/** Pointer to word for ZMM registers (8x64 bits). */
+	ZMMWORD_PTR(512);
 
 	private final int size;
 

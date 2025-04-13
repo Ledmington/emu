@@ -40,6 +40,8 @@ public final class InstructionChecker {
 		RXMM,
 		// An YMM 256-bit register
 		RYMM,
+		// An ZMM 512-bit register
+		RZMM,
 		// An indirect operand with BYTE PTR size
 		M8,
 		// An indirect operand with WORD PTR size
@@ -52,6 +54,8 @@ public final class InstructionChecker {
 		M128,
 		// An indirect operand with YMMWORD PTR size
 		M256,
+		// An indirect operand with ZMMWORD PTR size
+		M512,
 		// An immediate value of 8 bits
 		I8,
 		// An immediate value of 16 bits
@@ -163,6 +167,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_M64 = new Case(OperandType.RXMM, OperandType.M64);
 	private static final Case RXMM_M128 = new Case(OperandType.RXMM, OperandType.M128);
 	private static final Case RYMM_M256 = new Case(OperandType.RYMM, OperandType.M256);
+	private static final Case RZMM_M512 = new Case(OperandType.RZMM, OperandType.M512);
 	private static final Case R32_R32_I8 = new Case(OperandType.R32, OperandType.R32, OperandType.I8);
 	private static final Case R32_R32_I32 = new Case(OperandType.R32, OperandType.R32, OperandType.I32);
 	private static final Case R64_R64_I32 = new Case(OperandType.R64, OperandType.R64, OperandType.I32);
@@ -391,7 +396,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.BZHI, List.of(R32_R32_R32)),
 			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
 			Map.entry(Opcode.MOVNTDQ, List.of(M128_RXMM)),
-			Map.entry(Opcode.SFENCE, List.of(NOTHING)));
+			Map.entry(Opcode.SFENCE, List.of(NOTHING)),
+			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512)));
 
 	private InstructionChecker() {}
 
@@ -495,12 +501,14 @@ public final class InstructionChecker {
 			case RMM -> op instanceof RegisterMMX;
 			case RXMM -> op instanceof RegisterXMM;
 			case RYMM -> op instanceof RegisterYMM;
+			case RZMM -> op instanceof RegisterZMM;
 			case M8 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.BYTE_PTR;
 			case M16 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.WORD_PTR;
 			case M32 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.DWORD_PTR;
 			case M64 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.QWORD_PTR;
 			case M128 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.XMMWORD_PTR;
 			case M256 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.YMMWORD_PTR;
+			case M512 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.ZMMWORD_PTR;
 			case I8 -> op instanceof final Immediate imm && imm.bits() == 8;
 			case I16 -> op instanceof final Immediate imm && imm.bits() == 16;
 			case I32 -> op instanceof final Immediate imm && imm.bits() == 32;
