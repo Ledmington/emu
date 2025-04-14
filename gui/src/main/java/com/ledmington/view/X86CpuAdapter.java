@@ -31,7 +31,7 @@ public final class X86CpuAdapter extends X86Cpu {
 	private final BlockingQueue<Object> executionCompleted = new ArrayBlockingQueue<>(1);
 
 	public X86CpuAdapter(final MemoryController mem) {
-		super(mem);
+		super(mem, true);
 	}
 
 	private void waitToStartExecution() {

@@ -49,7 +49,10 @@
         <exclude name="CommentRequired" />
     </rule>
 
-    <rule ref="category/java/errorprone.xml" />
+    <rule ref="category/java/errorprone.xml">
+        <!-- Avoid reporting methods with the same name of a field -->
+        <exclude name="AvoidFieldNameMatchingMethodName" />
+    </rule>
 
     <rule ref="category/java/multithreading.xml" />
 

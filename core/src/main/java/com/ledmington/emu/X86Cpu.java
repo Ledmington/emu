@@ -25,6 +25,8 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionChecker;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
+import com.ledmington.cpu.x86.Operand;
+import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
@@ -52,6 +54,7 @@ public class X86Cpu implements X86Emulator {
 	private final RegisterFile rf;
 	private final MemoryController mem;
 	private final InstructionFetcher instFetch;
+	private final boolean checkInstructions;
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -65,14 +68,15 @@ public class X86Cpu implements X86Emulator {
 	 * @param mem The object to be used to access the memory.
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
-	public X86Cpu(final MemoryController mem) {
-		this(mem, new X86RegisterFile());
+	public X86Cpu(final MemoryController mem, final boolean checkInstructions) {
+		this(mem, new X86RegisterFile(), checkInstructions);
 	}
 
-	public X86Cpu(final MemoryController mem, final RegisterFile rf) {
+	public X86Cpu(final MemoryController mem, final RegisterFile rf, final boolean checkInstructions) {
 		this.mem = Objects.requireNonNull(mem);
 		this.instFetch = new InstructionFetcher(mem, rf);
 		this.rf = Objects.requireNonNull(rf);
+		this.checkInstructions = checkInstructions;
 	}
 
 	@Override
@@ -103,7 +107,11 @@ public class X86Cpu implements X86Emulator {
 	@Override
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
-		InstructionChecker.check(inst);
+
+		if (checkInstructions) {
+			InstructionChecker.check(inst);
+		}
+
 		logger.debug(InstructionEncoder.toIntelSyntax(inst));
 		switch (inst.opcode()) {
 			case SUB -> {
@@ -290,12 +298,12 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final Register8 r2) {
 					final byte result = BitUtils.and(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0);
+					rf.set(RFlags.ZERO, result == (byte) 0);
 				} else if (inst.firstOperand() instanceof final Register16 r1
 						&& inst.secondOperand() instanceof final Register16 r2) {
 					final short result = BitUtils.and(rf.get(r1), rf.get(r2));
 					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0);
+					rf.set(RFlags.ZERO, result == (short) 0);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Register32 r2) {
 					final int result = rf.get(r1) & rf.get(r2);
@@ -314,9 +322,8 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case CMP -> {
-				final long address = computeIndirectOperand(rf, (IndirectOperand) inst.firstOperand());
-				final long a = mem.read8(address);
-				final long b = ((Immediate) inst.secondOperand()).asLong();
+				final long a = getAsLongSX(inst.firstOperand());
+				final long b = getAsLongSX(inst.secondOperand());
 				final long result = a - b;
 				rf.resetFlags();
 				rf.set(RFlags.ZERO, result == 0L);
@@ -328,45 +335,27 @@ public class X86Cpu implements X86Emulator {
 				rf.resetFlags();
 				rf.set(RFlags.ZERO, (r1 & r2) == 0L);
 			}
-			case JMP -> {
-				final long offset = (inst.firstOperand() instanceof Register64)
-						? rf.get((Register64) inst.firstOperand())
-						: getAsLongSX((Immediate) inst.firstOperand());
-				instFetch.setPosition(instFetch.getPosition() + offset);
-			}
-			case JE -> {
-				if (rf.isSet(RFlags.ZERO)) {
-					instFetch.setPosition(instFetch.getPosition() + getAsLongSX((Immediate) inst.firstOperand()));
-				}
-			}
-			case JNE -> {
-				if (!rf.isSet(RFlags.ZERO)) {
-					instFetch.setPosition(instFetch.getPosition() + ((Immediate) inst.firstOperand()).asLong());
-				}
-			}
+
+			// Jumps
+			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
+			case JE -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.ZERO));
+			case JNE -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.ZERO));
+
 			case MOV -> {
-				if (inst.firstOperand() instanceof final Register64 op1
-						&& inst.secondOperand() instanceof final Register64 op2) {
-					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof final Register32 op1
-						&& inst.secondOperand() instanceof final Register32 op2) {
+				if (inst.firstOperand() instanceof Register64 r) {
+					rf.set(r, getAsLongSX(inst.secondOperand()));
+				} else if (inst.firstOperand() instanceof final Register8 op1
+						&& inst.secondOperand() instanceof final Register8 op2) {
 					rf.set(op1, rf.get(op2));
 				} else if (inst.firstOperand() instanceof final Register16 op1
 						&& inst.secondOperand() instanceof final Register16 op2) {
 					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof final Register8 op1
-						&& inst.secondOperand() instanceof final Register8 op2) {
+				} else if (inst.firstOperand() instanceof final Register32 op1
+						&& inst.secondOperand() instanceof final Register32 op2) {
 					rf.set(op1, rf.get(op2));
-				} else if (inst.firstOperand() instanceof final Register64 op1
-						&& inst.secondOperand() instanceof final Immediate imm) {
-					rf.set(op1, imm.bits() == 32 ? BitUtils.asLong(imm.asInt()) : imm.asLong());
 				} else if (inst.firstOperand() instanceof final Register32 op1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					rf.set(op1, imm.asInt());
-				} else if (inst.firstOperand() instanceof final Register64 op1
-						&& inst.secondOperand() instanceof final IndirectOperand io) {
-					final long address = computeIndirectOperand(rf, io);
-					rf.set(op1, mem.read8(address));
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register64 op2) {
 					final long address = computeIndirectOperand(rf, io);
@@ -381,10 +370,7 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case MOVABS -> rf.set((Register64) inst.firstOperand(), ((Immediate) inst.secondOperand()).asLong());
-			case MOVSXD -> {
-				final int x = rf.get((Register32) inst.secondOperand());
-				rf.set((Register64) inst.firstOperand(), x);
-			}
+			case MOVSXD -> rf.set((Register64) inst.firstOperand(), getAsLongSX(inst.secondOperand()));
 			case PUSH -> {
 				final long value =
 						switch (inst.firstOperand()) {
@@ -403,10 +389,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case POP -> {
 				final Register64 dest = (Register64) inst.firstOperand();
-				final long rsp = rf.get(Register64.RSP);
-				rf.set(dest, mem.read8(rsp));
-				// the stack "grows downward"
-				rf.set(Register64.RSP, rsp + 8L);
+				rf.set(dest, pop());
 			}
 			case LEA -> {
 				final IndirectOperand src = (IndirectOperand) inst.secondOperand();
@@ -426,8 +409,10 @@ public class X86Cpu implements X86Emulator {
 				// This points to the instruction right next to 'CALL ...'
 				final long rip = rf.get(Register64.RIP);
 
-				// Push the return address (the position of the next instruction) on top of the stack.
-				// This little subroutine may be replaced entirely by a PUSH instruction and a MOV
+				// Push the return address (the position of the next instruction) on top of the
+				// stack.
+				// This little subroutine may be replaced entirely by a PUSH instruction and a
+				// MOV
 				final long oldStackPointer = rf.get(Register64.RSP);
 				final long newStackPointer = oldStackPointer - 8L;
 				rf.set(Register64.RSP, newStackPointer);
@@ -446,21 +431,7 @@ public class X86Cpu implements X86Emulator {
 
 				rf.set(Register64.RIP, jumpAddress);
 			}
-			case RET -> {
-				// TODO: check this
-				final long prev = rf.get(Register64.RSP); // + 8L;
-
-				final long newRIP = mem.read8(prev);
-
-				// If we read the baseStackValue, we have exhausted the stack
-				if (newRIP == EmulatorConstants.getBaseStackValue()) {
-					state = State.HALTED;
-					logger.debug("Found the base of the stack, halting execution");
-				} else {
-					rf.set(Register64.RSP, prev);
-					rf.set(Register64.RIP, newRIP);
-				}
-			}
+			case RET -> rf.set(Register64.RIP, pop());
 			case CMOVNE -> {
 				if (rf.isSet(RFlags.ZERO)) {
 					return;
@@ -480,6 +451,41 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	private void jumpToIf(final long offset, final boolean condition) {
+		if (!condition) {
+			return;
+		}
+		jumpTo(offset);
+	}
+
+	private void jumpTo(final long offset) {
+		instFetch.setPosition(instFetch.getPosition() + offset);
+	}
+
+	private long pop() {
+		final long rsp = rf.get(Register64.RSP);
+		final long value = mem.read8(rsp);
+		// If we read the baseStackValue, we have exhausted the stack
+		if (value == EmulatorConstants.getBaseStackValue()) {
+			logger.warning("Found the base of the stack, halting execution");
+			state = State.HALTED;
+		}
+		// the stack "grows downward"
+		rf.set(Register64.RSP, rsp + 8L);
+		return value;
+	}
+
+	/** Returns a sign-extended long */
+	private long getAsLongSX(final Operand op) {
+		return switch (op) {
+			case Immediate imm -> getAsLongSX(imm);
+			case IndirectOperand io -> getAsLongSX(io);
+			case Register64 r -> rf.get(r);
+			case Register32 r -> (long) rf.get(r);
+			default -> throw new IllegalArgumentException(String.format("Unknown operand '%s'.", op));
+		};
+	}
+
 	/** Returns a sign-extended long */
 	private long getAsLongSX(final Immediate imm) {
 		return switch (imm.bits()) {
@@ -487,7 +493,17 @@ public class X86Cpu implements X86Emulator {
 			case 16 -> (long) imm.asShort();
 			case 32 -> (long) imm.asInt();
 			case 64 -> imm.asLong();
-			default -> throw new IllegalArgumentException("Invalid immediate.");
+			default -> throw new IllegalArgumentException(String.format("Invalid immediate: '%s'.", imm));
+		};
+	}
+
+	/** Returns a sign-extended long */
+	private long getAsLongSX(final IndirectOperand io) {
+		final long address = computeIndirectOperand(rf, io);
+		return switch (io.getPointerSize()) {
+			case PointerSize.QWORD_PTR -> mem.read8(address);
+			default ->
+				throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
 		};
 	}
 

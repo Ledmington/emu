@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.ledmington.mem.MemoryInitializer;
+import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -46,13 +47,18 @@ public final class Main {
 		final String longQuietFlag = "--quiet";
 		final String verboseFlag = "-v";
 		final String veryVerboseFlag = "-vv";
-		final String memoryInitializerRandomFlag = "--mem-init-random";
-		final String memoryInitializerZeroFlag = "--mem-init-zero";
+		final String memoryInitializerFlag = "--mem-init";
 		final String stackSizeFlag = "--stack-size";
 		final String baseAddressFlag = "--base-address";
 		final String baseStackValueFlag = "--base-stack-value";
 		final String shortVersionFlag = "-V";
 		final String longVersionFlag = "--version";
+		final String checkMemPermissionsFlag = "--check-mem-perm";
+		final String noCheckMemPermissionsFlag = "--no-check-mem-perm";
+		final String checkMemInitFlag = "--check-mem-init";
+		final String noCheckMemInitFlag = "--no-check-mem-init";
+		final String checkInstructionsFlags = "--check-instructions";
+		final String noCheckInstructionsFlags = "--no-check-instructions";
 
 		label:
 		for (int i = 0; i < args.length; i++) {
@@ -69,27 +75,74 @@ public final class Main {
 							"",
 							" Command line options:",
 							"",
-							" -h, --help   Shows this help message and exits.",
-							" -q, --quiet  Only errors are reported.",
-							" -v           Errors, warnings and info messages are reported.",
-							" -vv          All messages are reported.",
+							" General options:",
+							" -h, --help     Shows this help message and exits.",
+							" -q, --quiet    Only errors are reported.",
+							" -v             Errors, warnings and info messages are reported.",
+							" -vv            All messages are reported.",
+							" -V, --version  Prints the version of the emulator and exits.",
 							"",
-							" --mem-init-random     Uninitialized memory has random values (default).",
-							" --mem-init-zero       Uninitialized memory contains binary zero.",
-							" --stack-size N        Number of bytes to allocate for the stack. Accepts only integers.",
-							"                       Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
-							" --base-address X      Memory location where to load the executable file (hexadecimal 64-bits).",
-							" --base-stack-value X  The value to put at the base of the stack.",
+							" Memory options:",
+							" --mem-init MI          What value to initialize memory with: random (default), binary zero",
+							"                          or any hexadecimal 1-byte value (example: 0xfa).",
+							" --stack-size N         Number of bytes to allocate for the stack. Accepts only integers.",
+							"                          Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
+							"                          Default: " + EmulatorConstants.getStackSize() + " bytes ("
+									+ EmulatorConstants.getStackSize() / 1_048_576L + " MiB).",
+							" --base-address X       Memory location where to load the executable file as hexadecimal 64-bits.",
+							"                          Default: "
+									+ String.format("0x%x", EmulatorConstants.getBaseAddress()) + ".",
+							" --base-stack-value X   The value to put at the base of the stack (default: "
+									+ String.format("0x%x", EmulatorConstants.getBaseStackValue()) + ").",
+							" --check-mem-perm       Breaks when the program tries to access a memory location",
+							"                          with the wrong permissions (default).",
+							" --no-check-mem-perm    Disables the above.",
+							" --check-mem-init       Breaks when reading uninitialized memory locations (default).",
+							" --no-check-mem-init    Disables the above.",
+							"",
+							" CPU options:",
+							" --check-instructions      Checks that disassembled instructions are correct (default).",
+							" --no-check-instructions   Disables the above.",
+							"",
 							" FILE                  The ELF executable file to emulate.",
 							""));
+					out.flush();
+					System.exit(0);
+				}
+				case shortVersionFlag, longVersionFlag -> {
+					out.print(String.join("\n", "", " emu - CPU emulator", " v0.1.0", ""));
 					out.flush();
 					System.exit(0);
 				}
 				case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 				case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
 				case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-				case memoryInitializerRandomFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::random);
-				case memoryInitializerZeroFlag -> EmulatorConstants.setMemoryInitializer(MemoryInitializer::zero);
+				case checkMemPermissionsFlag -> EmulatorConstants.setBreakOnWrongPermissions(true);
+				case noCheckMemPermissionsFlag -> EmulatorConstants.setBreakOnWrongPermissions(false);
+				case checkMemInitFlag -> EmulatorConstants.setBreakWhenReadingUninitializedMemory(true);
+				case noCheckMemInitFlag -> EmulatorConstants.setBreakWhenReadingUninitializedMemory(false);
+				case checkInstructionsFlags -> EmulatorConstants.setCheckInstructions(true);
+				case noCheckInstructionsFlags -> EmulatorConstants.setCheckInstructions(false);
+				case memoryInitializerFlag -> {
+					i++;
+					if (i >= args.length) {
+						throw new IllegalArgumentException(
+								String.format("Expected an argument after '%s'", memoryInitializerFlag));
+					}
+
+					String x = args[i];
+					if (x.equals("zero")) {
+						EmulatorConstants.setMemoryInitializer(MemoryInitializer.zero());
+					} else if (x.equals("random")) {
+						EmulatorConstants.setMemoryInitializer(MemoryInitializer.random());
+					} else {
+						if (x.startsWith("0x")) {
+							x = x.substring(2);
+						}
+						final byte v = BitUtils.asByte(Integer.parseInt(x, 16));
+						EmulatorConstants.setMemoryInitializer(MemoryInitializer.of(v));
+					}
+				}
 				case stackSizeFlag -> {
 					i++;
 					if (i >= args.length) {
@@ -161,11 +214,6 @@ public final class Main {
 							? Long.parseUnsignedLong(args[i].substring(2), 16)
 							: Long.parseUnsignedLong(args[i], 16);
 					EmulatorConstants.setBaseStackValue(val);
-				}
-				case shortVersionFlag, longVersionFlag -> {
-					out.print(String.join("\n", "", " emu - CPU emulator", " v0.1.0", ""));
-					out.flush();
-					System.exit(0);
 				}
 				default -> {
 					filename = arg;

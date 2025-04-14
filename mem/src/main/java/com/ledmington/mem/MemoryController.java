@@ -98,7 +98,7 @@ public final class MemoryController implements Memory {
 		// The start of the given range must be in the middle 16-bytes aligned line
 		final long startAddress = address / bytesPerLine * bytesPerLine - bytesPerLine * linesAround;
 
-		final StringBuilder sb = new StringBuilder(128);
+		final StringBuilder sb = new StringBuilder(256);
 
 		sb.append("\nLegend:\n ")
 				.append(white)

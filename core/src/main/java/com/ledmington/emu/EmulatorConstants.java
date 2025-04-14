@@ -18,7 +18,6 @@
 package com.ledmington.emu;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import com.ledmington.mem.MemoryInitializer;
 
@@ -26,16 +25,21 @@ import com.ledmington.mem.MemoryInitializer;
 public final class EmulatorConstants {
 
 	/** The default memory initializer */
-	private static Supplier<MemoryInitializer> memoryInitializer = MemoryInitializer::random;
+	private static MemoryInitializer memoryInitializer = MemoryInitializer.random();
+
+	private static boolean breakOnWrongPermissions = true;
+	private static boolean breakWhenReadingUninitializedMemory = true;
 
 	/** Base address where to load the executable file. */
-	private static long baseAddress = 0x5a5a000000000000L;
+	private static long baseAddress = 0x00005a5a00000000L;
 
 	/** The default stack size. */
 	private static long stackSize = 8192L * 1024L;
 
 	/** The value at the base of the stack. */
-	private static long baseStackValue = 0xdeadbeefdeadbeefL;
+	private static long baseStackValue = 0x00fafa00deadbeefL;
+
+	private static boolean checkInstructions = true;
 
 	private EmulatorConstants() {}
 
@@ -44,7 +48,7 @@ public final class EmulatorConstants {
 	 *
 	 * @param memInit The new memory initializer.
 	 */
-	public static void setMemoryInitializer(final Supplier<MemoryInitializer> memInit) {
+	public static void setMemoryInitializer(final MemoryInitializer memInit) {
 		memoryInitializer = Objects.requireNonNull(memInit);
 	}
 
@@ -54,7 +58,23 @@ public final class EmulatorConstants {
 	 * @return The default memory initializer.
 	 */
 	public static MemoryInitializer getMemoryInitializer() {
-		return memoryInitializer.get();
+		return memoryInitializer;
+	}
+
+	public static boolean getBreakOnWrongPermissions() {
+		return breakOnWrongPermissions;
+	}
+
+	public static void setBreakOnWrongPermissions(final boolean b) {
+		breakOnWrongPermissions = b;
+	}
+
+	public static boolean getBreakWhenReadingUninitializedMemory() {
+		return breakWhenReadingUninitializedMemory;
+	}
+
+	public static void setBreakWhenReadingUninitializedMemory(final boolean b) {
+		breakWhenReadingUninitializedMemory = b;
 	}
 
 	/**
@@ -103,5 +123,13 @@ public final class EmulatorConstants {
 
 	public static long getBaseStackValue() {
 		return baseStackValue;
+	}
+
+	public static boolean getCheckInstruction() {
+		return checkInstructions;
+	}
+
+	public static void setCheckInstructions(final boolean b) {
+		checkInstructions = b;
 	}
 }

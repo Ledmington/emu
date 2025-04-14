@@ -167,7 +167,6 @@ final class TestIndirectOperand {
 				args.add(Arguments.of(iob.build(), sb.toString()));
 			}
 		}
-		System.out.println("here");
 
 		// [base + index*scale]
 		for (final PointerSize ps : ptr) {
@@ -183,7 +182,6 @@ final class TestIndirectOperand {
 								.base(base)
 								.index(r)
 								.scale(c);
-						System.out.println(iob);
 
 						final StringBuilder sb = new StringBuilder();
 

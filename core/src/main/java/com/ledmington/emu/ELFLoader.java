@@ -102,7 +102,11 @@ public final class ELFLoader {
 				Opcode.MOVABS, Register64.RDI, new Immediate(BitUtils.asLong(commandLineArguments.length))));
 
 		final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
-				mem, highestAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
+				mem,
+				// highestAddress,
+				stackPointer,
+				elf.getFileHeader().is32Bit(),
+				commandLineArguments);
 
 		// set RSI to 'argv'
 		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSI, new Immediate(p.first())));
@@ -251,8 +255,8 @@ public final class ELFLoader {
 							+ st.getSection(i).getHeader().getSectionSize());
 		}
 
-		// Make sure that the base address is 16-byte aligned
-		highestAddress = (highestAddress + 0xf) & (~0xf);
+		// Make sure that the base address is 16-byte aligned and far enough from the file
+		highestAddress = (highestAddress + 0xf000000L) & 0xfffffffffffffff0L;
 
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3e B) at 0x%016x-0x%016x",
@@ -345,7 +349,7 @@ public final class ELFLoader {
 		}
 
 		// write null word
-		mem.initialize(p, p + wordSize, (byte) 0x00);
+		mem.initialize(p, wordSize, (byte) 0x00);
 
 		// write envp pointers and contents
 		long currentEnvPointer = stackBase - totalEnvBytesAligned;
@@ -409,7 +413,7 @@ public final class ELFLoader {
 				final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
 				final long size = sec.getHeader().getSectionSize();
 				logger.debug(
-						"Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+						"Loading section %s in memory range 0x%x-0x%x (%,d bytes)",
 						sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
 				mem.initialize(startVirtualAddress, size, (byte) 0x00);
 			}
@@ -417,7 +421,7 @@ public final class ELFLoader {
 				final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
 				final byte[] content = ls.getLoadableContent();
 				logger.debug(
-						"Loading section '%s' in memory range 0x%x-0x%x (%,d bytes)",
+						"Loading section %s in memory range 0x%x-0x%x (%,d bytes)",
 						sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
 				mem.initialize(startVirtualAddress, content);
 			}

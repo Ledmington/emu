@@ -53,5 +53,5 @@ public interface X86Emulator {
 	 *
 	 * @param ip The new instruction pointer.
 	 */
-	void setInstructionPointer(final long ip);
+	void setInstructionPointer(long ip);
 }

@@ -57,9 +57,11 @@ public final class Emu {
 					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()));
-		final X86Emulator cpu = new X86Cpu(mem);
+		final MemoryController mem = new MemoryController(
+				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
+				EmulatorConstants.getBreakOnWrongPermissions(),
+				EmulatorConstants.getBreakWhenReadingUninitializedMemory());
+		final X86Emulator cpu = new X86Cpu(mem, EmulatorConstants.getCheckInstruction());
 
 		ELFLoader.load(
 				elf,

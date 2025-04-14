@@ -55,7 +55,7 @@ final class TestExecutionWithMemory {
 	void setup() {
 		final DebuggingX86RegisterFile rf = new DebuggingX86RegisterFile(rng);
 		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		cpu = new X86Cpu(mem, rf);
+		cpu = new X86Cpu(mem, rf, true);
 	}
 
 	@AfterEach
@@ -287,8 +287,10 @@ final class TestExecutionWithMemory {
 	void callAllocateAndReturn() {
 		// Setup stack at random location (8-byte aligned)
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
-		// mem.setPermissions(stackBase /*- 6L*/, stackBase, true, true, false);
+		mem.initialize(stackBase - 16L - 4L, stackBase, (byte) 0);
+		mem.setPermissions(stackBase - 16L - 4L, stackBase, true, true, false);
 		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
+		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
@@ -296,7 +298,7 @@ final class TestExecutionWithMemory {
 
 		// Write a function which just allocates a variable
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
-		final int offset = rng.nextInt();
+		final int offset = Math.abs(rng.nextInt());
 		final long functionAddress = rip + BitUtils.asLong(offset);
 		final byte[] functionCode = InstructionEncoder.toHex(
 				// code adapted from this one: https://godbolt.org/z/W8Kjj6Woz
@@ -312,8 +314,8 @@ final class TestExecutionWithMemory {
 						new Immediate(rng.nextInt())),
 				new Instruction(Opcode.POP, Register64.RBP),
 				new Instruction(Opcode.RET));
-		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 		mem.initialize(functionAddress, functionCode);
+		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
@@ -321,7 +323,7 @@ final class TestExecutionWithMemory {
 		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
 		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
-		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
+		mem.setPermissions(rip, rip + (long) mainCode.length - 1L, false, false, true);
 
 		// Start the CPU
 		cpu.execute();

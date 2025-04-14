@@ -24,6 +24,7 @@ import java.util.random.RandomGeneratorFactory;
 import com.ledmington.utils.BitUtils;
 
 /** A procedure to initialize the memory. */
+@FunctionalInterface
 public interface MemoryInitializer extends Supplier<Byte> {
 
 	/**
@@ -38,12 +39,16 @@ public interface MemoryInitializer extends Supplier<Byte> {
 		return () -> BitUtils.asByte(rng.nextInt());
 	}
 
+	static MemoryInitializer of(final byte v) {
+		return () -> v;
+	}
+
 	/**
 	 * Initializes the memory to all zeroes.
 	 *
 	 * @return A memory initializer which returns always the zero byte.
 	 */
 	static MemoryInitializer zero() {
-		return () -> (byte) 0x00;
+		return of((byte) 0);
 	}
 }
