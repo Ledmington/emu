@@ -2486,10 +2486,11 @@ public final class InstructionDecoder {
 	private static Instruction parseVex2Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VMOVD_OPCODE = (byte) 0x6e;
-		final byte VMOVDQU_OPCODE = (byte) 0x6f;
+		final byte VMOVDQU_RYMM_M256_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VZEROALL_OPCODE = (byte) 0x77;
 		final byte VMOVQ_OPCODE = (byte) 0x7e;
+		final byte VMOVDQU_M256_RYMM_OPCODE = (byte) 0x7f;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
 		final byte VPAND_OPCODE = (byte) 0xdb;
@@ -2532,7 +2533,7 @@ public final class InstructionDecoder {
 						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
 						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
-			case VMOVDQU_OPCODE -> {
+			case VMOVDQU_RYMM_M256_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VMOVDQU,
@@ -2540,6 +2541,15 @@ public final class InstructionDecoder {
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
+			}
+			case VMOVDQU_M256_RYMM_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVDQU,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.YMMWORD_PTR)
+								.build(),
+						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())));
 			}
 			case VMOVD_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -2587,16 +2597,17 @@ public final class InstructionDecoder {
 
 	private static Instruction parseVex3Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
-		final byte VMOVDQU_OPCODE = (byte) 0x6f;
+		final byte VMOVDQU_RYMM_M256_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x78;
+		final byte VMOVDQU_M256_RYMM_OPCODE = (byte) 0x7f;
 		final byte BZHI_OPCODE = (byte) 0xf5;
 		final byte SARX_OPCODE = (byte) 0xf7;
 
 		final Vex3Prefix vex3 = pref.vex3().orElseThrow();
 
 		return switch (opcodeFirstByte) {
-			case VMOVDQU_OPCODE -> {
+			case VMOVDQU_RYMM_M256_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VMOVDQU,
@@ -2604,6 +2615,15 @@ public final class InstructionDecoder {
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
+			}
+			case VMOVDQU_M256_RYMM_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVDQU,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.YMMWORD_PTR)
+								.build(),
+						RegisterYMM.fromByte(Registers.combine(!vex3.r(), modrm.reg())));
 			}
 			case VPCMPEQB_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -2879,7 +2899,6 @@ public final class InstructionDecoder {
 			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
 		Register baseRegister = Registers.fromCode(
 				modrm.rm(), !pref.hasAddressSizeOverridePrefix(), pref.rex().hasModRMRMExtension(), false);
-		final RexPrefix rexPrefix = pref.rex();
 		final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
 		final IndirectOperandBuilder iob = IndirectOperand.builder();
 		final SIB sib;
@@ -2887,12 +2906,10 @@ public final class InstructionDecoder {
 			// SIB needed
 			sib = sib(b);
 
-			final boolean sibBaseExtension = pref.hasRexPrefix()
-					? pref.rex().hasSIBBaseExtension()
-					: (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b());
-			final boolean sibIndexExtension = pref.hasRexPrefix()
-					? pref.rex().hasSIBIndexExtension()
-					: (pref.vex3().isPresent() && !pref.vex3().orElseThrow().x());
+			final boolean sibBaseExtension = (pref.hasRexPrefix() && pref.rex().b())
+					|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b());
+			final boolean sibIndexExtension = (pref.hasRexPrefix() && pref.rex().x())
+					|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().x());
 
 			final Register decodedBase =
 					Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, sibBaseExtension, false);

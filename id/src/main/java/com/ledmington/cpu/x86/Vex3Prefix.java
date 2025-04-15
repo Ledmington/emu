@@ -79,12 +79,12 @@ public final class Vex3Prefix {
 		return r;
 	}
 
-	public boolean b() {
-		return b;
-	}
-
 	public boolean x() {
 		return x;
+	}
+
+	public boolean b() {
+		return b;
 	}
 
 	public byte v() {

@@ -123,6 +123,7 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM8;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM9;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM0;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM1;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM10;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM2;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
@@ -9108,6 +9109,88 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovdqu ymm3,YMMWORD PTR [rax+r10*1+0x20]",
 						"c4 a1 7e 6f 5c 10 20"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								YMM0),
+						"vmovdqu YMMWORD PTR [rdi],ymm0",
+						"c5 fe 7f 07"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RCX)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM2),
+						"vmovdqu YMMWORD PTR [rcx-0x40],ymm2",
+						"c5 fe 7f 51 c0"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(R9)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM2),
+						"vmovdqu YMMWORD PTR [r9-0x40],ymm2",
+						"c4 c1 7e 7f 51 c0"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(R9)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM10),
+						"vmovdqu YMMWORD PTR [r9-0x40],ymm10",
+						"c4 41 7e 7f 51 c0"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RCX)
+										.index(R10)
+										.scale(1)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM2),
+						"vmovdqu YMMWORD PTR [rcx+r10*1-0x40],ymm2",
+						"c4 a1 7e 7f 54 11 c0"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RCX)
+										.index(RDX)
+										.scale(1)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM10),
+						"vmovdqu YMMWORD PTR [rcx+rdx*1-0x40],ymm10",
+						"c5 fe 7f 54 11 c0"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RCX)
+										.index(R10)
+										.scale(1)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM10),
+						"vmovdqu YMMWORD PTR [rcx+r10*1-0x40],ymm10",
+						"c4 21 7e 7f 54 11 c0"),
 				// Vpminub
 				test(new Instruction(Opcode.VPMINUB, YMM0, YMM0, YMM1), "vpminub ymm0,ymm0,ymm1", "c5 fd da c1"),
 				// Vpmovmskb
@@ -9193,6 +9276,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM1), "vpbroadcastb ymm2,xmm1", "c4 e2 7d 78 d1"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM9), "vpbroadcastb ymm2,xmm9", "c4 c2 7d 78 d1"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM2, XMM8), "vpbroadcastb ymm2,xmm8", "c4 c2 7d 78 d0"),
+				test(new Instruction(Opcode.VPBROADCASTB, YMM10, XMM8), "vpbroadcastb ymm10,xmm8", "c4 42 7d 78 d0"),
+				test(new Instruction(Opcode.VPBROADCASTB, YMM0, XMM4), "vpbroadcastb ymm0,xmm4", "c4 e2 7d 78 c4"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM8, XMM4), "vpbroadcastb ymm8,xmm4", "c4 62 7d 78 c4"),
 				// Sarx
 				test(new Instruction(Opcode.SARX, EAX, EAX, ECX), "sarx eax,eax,ecx", "c4 e2 72 f7 c0"),

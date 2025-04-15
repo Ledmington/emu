@@ -1174,15 +1174,21 @@ public final class InstructionEncoder {
 				reg = (byte) 0b011;
 			}
 			case VMOVDQU -> {
-				if (inst.firstOperand() instanceof Register
-						&& inst.secondOperand() instanceof final IndirectOperand io
-						&& ((io.hasBase() && Registers.requiresExtension(io.getBase()))
-								|| (io.hasIndex() && Registers.requiresExtension(io.getIndex())))) {
+				if ((inst.firstOperand() instanceof final IndirectOperand io
+								&& ((io.hasBase() && Registers.requiresExtension(io.getBase()))
+										|| (io.hasIndex() && Registers.requiresExtension(io.getIndex()))))
+						|| (inst.secondOperand() instanceof final IndirectOperand io2
+								&& ((io2.hasBase() && Registers.requiresExtension(io2.getBase()))
+										|| (io2.hasIndex() && Registers.requiresExtension(io2.getIndex()))))) {
 					encodeVex3Prefix(wb, inst);
 				} else {
 					encodeVex2Prefix(wb, inst);
 				}
-				wb.write((byte) 0x6f);
+				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
+					wb.write((byte) 0x6f);
+				} else if (inst.firstOperand() instanceof IndirectOperand && inst.secondOperand() instanceof Register) {
+					wb.write((byte) 0x7f);
+				}
 			}
 			case VPMOVMSKB -> {
 				encodeVex2Prefix(wb, inst);
@@ -1449,8 +1455,18 @@ public final class InstructionEncoder {
 
 		byte vex = 0;
 
-		if (inst.firstOperand() instanceof final Register r && !Registers.requiresExtension(r)) {
-			vex = BitUtils.or(vex, (byte) 0b10000000);
+		{
+			boolean rexR = false;
+			if (inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r)) {
+				rexR = true;
+			} else if (inst.firstOperand() instanceof final IndirectOperand io
+					&& io.hasBase()
+					&& Registers.requiresExtension(io.getBase())) {
+				rexR = true;
+			}
+			if (!rexR) {
+				vex = BitUtils.or(vex, (byte) 0b10000000);
+			}
 		}
 
 		final byte rb;
@@ -1484,14 +1500,29 @@ public final class InstructionEncoder {
 		{
 			byte b1 = (byte) 0;
 			{
-				final boolean rexR = inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r);
+				boolean rexR = false;
+				if (countOperands(inst) == 2) {
+					if (inst.firstOperand() instanceof final Register r
+							&& Registers.requiresExtension(r)
+							&& inst.secondOperand() instanceof Register) {
+						rexR = true;
+					} else if (inst.firstOperand() instanceof IndirectOperand
+							&& inst.secondOperand() instanceof final Register r
+							&& Registers.requiresExtension(r)) {
+						rexR = true;
+					}
+				}
 				if (!rexR) {
 					b1 = BitUtils.or(b1, (byte) 0b10000000);
 				}
 			}
 			{
 				boolean rexX = false;
-				if (inst.secondOperand() instanceof final IndirectOperand io
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& io.hasIndex()
+						&& Registers.requiresExtension(io.getIndex())) {
+					rexX = true;
+				} else if (inst.secondOperand() instanceof final IndirectOperand io
 						&& io.hasIndex()
 						&& Registers.requiresExtension(io.getIndex())) {
 					rexX = true;
@@ -1507,17 +1538,22 @@ public final class InstructionEncoder {
 			}
 			{
 				boolean rexB = false;
-				if (inst.secondOperand() instanceof final IndirectOperand io
-						&& io.hasBase()
-						&& Registers.requiresExtension(io.getBase())) {
-					rexB = true;
-				} else if (inst.hasThirdOperand()
-						&& inst.thirdOperand() instanceof final IndirectOperand io
-						&& io.hasBase()
-						&& Registers.requiresExtension(io.getBase())) {
-					rexB = true;
-				} else if (inst.secondOperand() instanceof final Register r && Registers.requiresExtension(r)) {
-					rexB = true;
+				if (countOperands(inst) == 2) {
+					if (inst.firstOperand() instanceof Register
+							&& inst.secondOperand() instanceof final IndirectOperand io
+							&& io.hasBase()
+							&& Registers.requiresExtension(io.getBase())) {
+						rexB = true;
+					} else if (inst.firstOperand() instanceof final IndirectOperand io
+							&& io.hasBase()
+							&& Registers.requiresExtension(io.getBase())
+							&& inst.secondOperand() instanceof Register) {
+						rexB = true;
+					} else if (inst.firstOperand() instanceof Register
+							&& inst.secondOperand() instanceof final Register r
+							&& Registers.requiresExtension(r)) {
+						rexB = true;
+					}
 				}
 				if (!rexB) {
 					b1 = BitUtils.or(b1, (byte) 0b00100000);
