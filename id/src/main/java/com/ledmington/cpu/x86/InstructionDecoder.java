@@ -17,6 +17,13 @@
  */
 package com.ledmington.cpu.x86;
 
+import static com.ledmington.utils.BitUtils.and;
+import static com.ledmington.utils.BitUtils.asByte;
+import static com.ledmington.utils.BitUtils.asInt;
+import static com.ledmington.utils.BitUtils.asShort;
+import static com.ledmington.utils.BitUtils.not;
+import static com.ledmington.utils.BitUtils.shr;
+
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -32,7 +39,6 @@ import java.util.stream.Stream;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
@@ -144,9 +150,9 @@ public final class InstructionDecoder {
 				return new Immediate(Long.parseUnsignedLong(imm, 16));
 			}
 			if (imm.length() <= 2) {
-				return new Immediate(BitUtils.asByte(Integer.parseUnsignedInt(imm, 16)));
+				return new Immediate(asByte(Integer.parseUnsignedInt(imm, 16)));
 			} else if (imm.length() <= 4) {
-				return new Immediate(BitUtils.asShort(Integer.parseUnsignedInt(imm, 16)));
+				return new Immediate(asShort(Integer.parseUnsignedInt(imm, 16)));
 			} else if (imm.length() <= 8) {
 				return new Immediate(Integer.parseUnsignedInt(imm, 16));
 			} else if (imm.length() <= 16) {
@@ -274,7 +280,7 @@ public final class InstructionDecoder {
 			if (displacementString.length() > 2 || isFirstBitSet) {
 				iob.displacement(disp);
 			} else {
-				iob.displacement(BitUtils.asByte(disp));
+				iob.displacement(asByte(disp));
 			}
 		}
 
@@ -759,7 +765,7 @@ public final class InstructionDecoder {
 		return switch (modrm.reg()) {
 			case 0, 1, 2, 3 ->
 				new Instruction(
-						opcodes[BitUtils.and(modrm.reg(), (byte) 0b00000011)],
+						opcodes[and(modrm.reg(), (byte) 0b00000011)],
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.BYTE_PTR)
 								.build());
@@ -1114,7 +1120,7 @@ public final class InstructionDecoder {
 					SETL_OPCODE,
 					SETGE_OPCODE,
 					SETG_OPCODE -> {
-				final Opcode opcode = setOpcodes[BitUtils.and(opcodeSecondByte, (byte) 0b00001111)];
+				final Opcode opcode = setOpcodes[and(opcodeSecondByte, (byte) 0b00001111)];
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						opcode,
@@ -1612,7 +1618,7 @@ public final class InstructionDecoder {
 					CMOVLE_OPCODE,
 					CMOVA_OPCODE,
 					CMOVS_OPCODE -> {
-				final Opcode opcode = cmovOpcodes[BitUtils.and(opcodeSecondByte, (byte) 0b00001111)];
+				final Opcode opcode = cmovOpcodes[and(opcodeSecondByte, (byte) 0b00001111)];
 				final ModRM modrm = modrm(b);
 				final Register r1 = Registers.fromCode(
 						modrm.reg(),
@@ -1640,7 +1646,7 @@ public final class InstructionDecoder {
 					BSWAP_EDI_OPCODE,
 					BSWAP_ESP_OPCODE,
 					BSWAP_EBP_OPCODE -> {
-				final byte regByte = BitUtils.and(opcodeSecondByte, (byte) 0b00000111);
+				final byte regByte = and(opcodeSecondByte, (byte) 0b00000111);
 				yield new Instruction(
 						Opcode.BSWAP,
 						pref.rex().isOperand64Bit()
@@ -2214,11 +2220,11 @@ public final class InstructionDecoder {
 					CMP_M8_R8_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
-				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000000) {
+				if (and(opcodeFirstByte, m1) != (byte) 0b00000000) {
 					invalidValue();
 				}
 				final byte m2 = (byte) 0b00111000; // (the inverse of m1)
-				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+				final byte opcodeByte = shr(and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref, modrm);
@@ -2243,11 +2249,11 @@ public final class InstructionDecoder {
 					CMP_M32_R32_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
-				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000001) {
+				if (and(opcodeFirstByte, m1) != (byte) 0b00000001) {
 					invalidValue();
 				}
 				final byte m2 = ~m1;
-				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+				final byte opcodeByte = shr(and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
 				yield parseMxRx(b, pref, opcode);
 			}
@@ -2263,11 +2269,11 @@ public final class InstructionDecoder {
 					CMP_R8_M8_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
-				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000010) {
+				if (and(opcodeFirstByte, m1) != (byte) 0b00000010) {
 					invalidValue();
 				}
 				final byte m2 = ~m1;
-				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+				final byte opcodeByte = shr(and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref, modrm);
@@ -2292,11 +2298,11 @@ public final class InstructionDecoder {
 					CMP_R32_M32_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
-				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000011) {
+				if (and(opcodeFirstByte, m1) != (byte) 0b00000011) {
 					invalidValue();
 				}
 				final byte m2 = ~m1;
-				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+				final byte opcodeByte = shr(and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
 				yield parseRxMx(b, pref, opcode);
 			}
@@ -2312,11 +2318,11 @@ public final class InstructionDecoder {
 					CMP_AL_IMM8_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
-				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000100) {
+				if (and(opcodeFirstByte, m1) != (byte) 0b00000100) {
 					invalidValue();
 				}
 				final byte m2 = ~m1;
-				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+				final byte opcodeByte = shr(and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
 				yield new Instruction(opcode, Register8.AL, imm8(b));
 			}
@@ -2332,11 +2338,11 @@ public final class InstructionDecoder {
 					CMP_EAX_IMM32_OPCODE -> {
 				// (just to check that we are doing the correct thing)
 				final byte m1 = (byte) 0b11000111;
-				if (BitUtils.and(opcodeFirstByte, m1) != (byte) 0b00000101) {
+				if (and(opcodeFirstByte, m1) != (byte) 0b00000101) {
 					invalidValue();
 				}
 				final byte m2 = ~m1;
-				final byte opcodeByte = BitUtils.shr(BitUtils.and(opcodeFirstByte, m2), 3);
+				final byte opcodeByte = shr(and(opcodeFirstByte, m2), 3);
 				final Opcode opcode = opcodeTable[opcodeByte];
 				final Register r = getFirstRegister(pref);
 				final Immediate imm;
@@ -2361,7 +2367,7 @@ public final class InstructionDecoder {
 					MOV_BH_IMM8_OPCODE,
 					MOV_CH_IMM8_OPCODE,
 					MOV_DH_IMM8_OPCODE -> {
-				final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+				final byte regByte = and(opcodeFirstByte, OPCODE_REG_MASK);
 				yield new Instruction(
 						Opcode.MOV,
 						Register8.fromByte(
@@ -2378,8 +2384,8 @@ public final class InstructionDecoder {
 					MOV_EBP_IMM32_OPCODE,
 					MOV_ESI_IMM32_OPCODE,
 					MOV_EDI_IMM32_OPCODE -> {
-				final byte regByte = Registers.combine(
-						pref.rex().hasOpcodeRegExtension(), BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK));
+				final byte regByte =
+						Registers.combine(pref.rex().hasOpcodeRegExtension(), and(opcodeFirstByte, OPCODE_REG_MASK));
 				final int size =
 						pref.hasOperandSizeOverridePrefix() ? 16 : pref.rex().isOperand64Bit() ? 64 : 32;
 				final Register r =
@@ -2413,7 +2419,7 @@ public final class InstructionDecoder {
 					XCHG_EDI_EAX_OPCODE,
 					XCHG_ESP_EAX_OPCODE,
 					XCHG_EBP_EAX_OPCODE -> {
-				final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+				final byte regByte = and(opcodeFirstByte, OPCODE_REG_MASK);
 				yield new Instruction(
 						Opcode.XCHG,
 						Registers.fromCode(
@@ -2433,7 +2439,7 @@ public final class InstructionDecoder {
 					PUSH_EDI_OPCODE,
 					PUSH_ESP_OPCODE,
 					PUSH_EBP_OPCODE -> {
-				final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+				final byte regByte = and(opcodeFirstByte, OPCODE_REG_MASK);
 				yield new Instruction(
 						Opcode.PUSH,
 						Registers.fromCode(
@@ -2454,7 +2460,7 @@ public final class InstructionDecoder {
 					POP_EDI_OPCODE,
 					POP_ESP_OPCODE,
 					POP_EBP_OPCODE -> {
-				final byte regByte = BitUtils.and(opcodeFirstByte, OPCODE_REG_MASK);
+				final byte regByte = and(opcodeFirstByte, OPCODE_REG_MASK);
 				yield new Instruction(
 						Opcode.POP,
 						Registers.fromCode(
@@ -2497,7 +2503,7 @@ public final class InstructionDecoder {
 		final byte VPOR_OPCODE = (byte) 0xeb;
 		final byte VPXOR_OPCODE = (byte) 0xef;
 
-		final Vex2Prefix vex2 = pref.vex2().orElse(null);
+		final Vex2Prefix vex2 = pref.vex2().orElseThrow();
 
 		return switch (opcodeFirstByte) {
 			case VZEROALL_OPCODE -> new Instruction(Opcode.VZEROALL);
@@ -2506,7 +2512,7 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VPXOR,
 						RegisterXMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
-						RegisterXMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterXMM.fromByte(and(not(vex2.v()), (byte) 0b1111)),
 						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 			case VPOR_OPCODE -> {
@@ -2514,7 +2520,7 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VPOR,
 						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
-						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(and(not(vex2.v()), (byte) 0b1111)),
 						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 			case VPAND_OPCODE -> {
@@ -2522,7 +2528,7 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VPAND,
 						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
-						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(and(not(vex2.v()), (byte) 0b1111)),
 						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 			case VPMINUB_OPCODE -> {
@@ -2530,7 +2536,7 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VPMINUB,
 						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
-						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(and(not(vex2.v()), (byte) 0b1111)),
 						RegisterYMM.fromByte(getByteFromRM(pref, modrm)));
 			}
 			case VMOVDQU_RYMM_M256_OPCODE -> {
@@ -2581,7 +2587,7 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VPCMPEQB,
 						RegisterYMM.fromByte(Registers.combine(!vex2.r(), modrm.reg())),
-						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex2.v()), (byte) 0b1111)),
+						RegisterYMM.fromByte(and(not(vex2.v()), (byte) 0b1111)),
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
@@ -2630,7 +2636,7 @@ public final class InstructionDecoder {
 				yield new Instruction(
 						Opcode.VPCMPEQB,
 						RegisterYMM.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
-						RegisterYMM.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)),
+						RegisterYMM.fromByte(and(not(vex3.v()), (byte) 0b00001111)),
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
 								.build());
@@ -2648,7 +2654,7 @@ public final class InstructionDecoder {
 						Opcode.SARX,
 						Register32.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
 						Register32.fromByte(Registers.combine(!vex3.b(), modrm.rm())),
-						Register32.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)));
+						Register32.fromByte(and(not(vex3.v()), (byte) 0b00001111)));
 			}
 			case BZHI_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -2656,7 +2662,7 @@ public final class InstructionDecoder {
 						Opcode.BZHI,
 						Register32.fromByte(Registers.combine(!vex3.r(), modrm.reg())),
 						Register32.fromByte(Registers.combine(!vex3.b(), modrm.rm())),
-						Register32.fromByte(BitUtils.and(BitUtils.not(vex3.v()), (byte) 0b00001111)));
+						Register32.fromByte(and(not(vex3.v()), (byte) 0b00001111)));
 			}
 			default -> {
 				final long pos = b.getPosition();
@@ -2671,6 +2677,8 @@ public final class InstructionDecoder {
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VMOVUPS_R512_M512_OPCODE = (byte) 0x10;
 		final byte VMOVUPS_M512_R512_OPCODE = (byte) 0x11;
+		final byte VMOVDQU64_OPCODE = (byte) 0x6f;
+		final byte VMOVNTDQ_OPCODE = (byte) 0xe7;
 
 		final EvexPrefix evex = pref.evex().orElseThrow();
 
@@ -2692,6 +2700,24 @@ public final class InstructionDecoder {
 								.pointer(PointerSize.ZMMWORD_PTR)
 								.build(),
 						RegisterZMM.fromByte(getByteFromReg(pref, modrm)));
+			}
+			case VMOVDQU64_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVDQU64,
+						RegisterZMM.fromByte(getByteFromReg(pref, modrm)),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.ZMMWORD_PTR)
+								.build());
+			}
+			case VMOVNTDQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVNTDQ,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.ZMMWORD_PTR)
+								.build(),
+						RegisterZMM.fromByte(and(not(evex.v()), (byte) 0b00001111)));
 			}
 			default -> {
 				final long pos = b.getPosition();
@@ -2738,7 +2764,7 @@ public final class InstructionDecoder {
 		if (isREX) {
 			rexPrefix = RexPrefix.of(rexByte);
 		} else {
-			rexPrefix = RexPrefix.of((byte) 0b01000000);
+			rexPrefix = RexPrefix.of((byte) 0x40);
 			b.setPosition(b.getPosition() - 1);
 		}
 
@@ -2897,8 +2923,10 @@ public final class InstructionDecoder {
 
 	private static IndirectOperandBuilder parseIndirectOperand(
 			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
-		Register baseRegister = Registers.fromCode(
-				modrm.rm(), !pref.hasAddressSizeOverridePrefix(), pref.rex().hasModRMRMExtension(), false);
+		final boolean baseRegisterExtension = (pref.hasRexPrefix() && pref.rex().b())
+				|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b());
+		Register baseRegister =
+				Registers.fromCode(modrm.rm(), !pref.hasAddressSizeOverridePrefix(), baseRegisterExtension, false);
 		final boolean hasAddressSizeOverridePrefix = pref.hasAddressSizeOverridePrefix();
 		final IndirectOperandBuilder iob = IndirectOperand.builder();
 		final SIB sib;
@@ -2906,13 +2934,11 @@ public final class InstructionDecoder {
 			// SIB needed
 			sib = sib(b);
 
-			final boolean sibBaseExtension = (pref.hasRexPrefix() && pref.rex().b())
-					|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b());
 			final boolean sibIndexExtension = (pref.hasRexPrefix() && pref.rex().x())
 					|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().x());
 
 			final Register decodedBase =
-					Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, sibBaseExtension, false);
+					Registers.fromCode(sib.base(), !hasAddressSizeOverridePrefix, baseRegisterExtension, false);
 			final Register decodedIndex =
 					Registers.fromCode(sib.index(), !hasAddressSizeOverridePrefix, sibIndexExtension, false);
 
@@ -2921,7 +2947,7 @@ public final class InstructionDecoder {
 				baseRegister = decodedBase;
 			} else {
 				iob.index(decodedIndex);
-				iob.scale(1 << BitUtils.asInt(sib.scale()));
+				iob.scale(1 << asInt(sib.scale()));
 
 				baseRegister = (isBP(decodedBase) && modrm.mod() == (byte) 0b00) ? null : decodedBase;
 			}

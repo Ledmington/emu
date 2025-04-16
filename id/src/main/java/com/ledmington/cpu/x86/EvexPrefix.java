@@ -17,16 +17,101 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.utils.BitUtils;
+
 /** The extended VEX prefix (EVEX): 0x62 + 3 bytes. */
 public final class EvexPrefix {
+
+	private final boolean r;
+	private final boolean x;
+	private final boolean b;
+	private final boolean r1;
+	private final byte m;
+	private final boolean w;
+	final byte v;
+	private final byte p;
+	private final boolean z;
+	private final boolean l1;
+	private final boolean l;
+	private final boolean b1;
+	private final boolean v1;
+	private final byte a;
 
 	public static boolean isEvexPrefix(final byte evexByte) {
 		return evexByte == (byte) 0x62;
 	}
 
-	public static EvexPrefix of(final byte b1, byte b2, byte b3) {
-		return new EvexPrefix();
+	public static EvexPrefix of(final byte firstByte, final byte secondByte, final byte thirdByte) {
+		final boolean r = BitUtils.and(firstByte, (byte) 0b10000000) != (byte) 0;
+		final boolean x = BitUtils.and(firstByte, (byte) 0b01000000) != (byte) 0;
+		final boolean b = BitUtils.and(firstByte, (byte) 0b00100000) != (byte) 0;
+		final boolean r1 = BitUtils.and(firstByte, (byte) 0b00010000) != (byte) 0;
+		if (BitUtils.and(firstByte, (byte) 0b00001000) != 0) {
+			throw new IllegalArgumentException("Invalid first byte of EVEX prefix: bit n.3 should be 0.");
+		}
+		final byte m = BitUtils.and(firstByte, (byte) 0b00000111);
+
+		final boolean w = BitUtils.and(secondByte, (byte) 0b10000000) != (byte) 0;
+		final byte v = BitUtils.shr(BitUtils.and(secondByte, (byte) 0b01111000), 3);
+		if (BitUtils.and(secondByte, (byte) 0b00000100) == 0) {
+			throw new IllegalArgumentException("Invalid second byte of EVEX prefix: bit n.2 should be 1.");
+		}
+		final byte p = BitUtils.and(secondByte, (byte) 0b00000011);
+
+		final boolean z = BitUtils.and(thirdByte, (byte) 0b10000000) != (byte) 0;
+		final boolean l1 = BitUtils.and(thirdByte, (byte) 0b01000000) != (byte) 0;
+		final boolean l = BitUtils.and(thirdByte, (byte) 0b00100000) != (byte) 0;
+		final boolean b1 = BitUtils.and(thirdByte, (byte) 0b00010000) != (byte) 0;
+		final boolean v1 = BitUtils.and(thirdByte, (byte) 0b00001000) != (byte) 0;
+		final byte a = BitUtils.and(thirdByte, (byte) 0b00000111);
+
+		return new EvexPrefix(r, x, b, r1, m, w, v, p, z, l1, l, b1, v1, a);
 	}
 
-	private EvexPrefix() {}
+	private EvexPrefix(
+			final boolean r,
+			final boolean x,
+			final boolean b,
+			final boolean r1,
+			final byte m,
+			final boolean w,
+			final byte v,
+			final byte p,
+			final boolean z,
+			final boolean l1,
+			final boolean l,
+			final boolean b1,
+			final boolean v1,
+			final byte a) {
+		if (BitUtils.and(m, (byte) 0b11111000) != 0) {
+			throw new IllegalArgumentException(String.format("Invalid m field in EVEX prefix: 0x%02x.", m));
+		}
+		if (BitUtils.and(v, (byte) 0b11110000) != 0) {
+			throw new IllegalArgumentException(String.format("Invalid v field in EVEX prefix: 0x%02x.", v));
+		}
+		if (BitUtils.and(p, (byte) 0b11111100) != 0) {
+			throw new IllegalArgumentException(String.format("Invalid p field in EVEX prefix: 0x%02x.", p));
+		}
+		if (BitUtils.and(a, (byte) 0b11111000) != 0) {
+			throw new IllegalArgumentException(String.format("Invalid a field in EVEX prefix: 0x%02x.", a));
+		}
+		this.r = r;
+		this.x = x;
+		this.b = b;
+		this.r1 = r1;
+		this.m = m;
+		this.w = w;
+		this.v = v;
+		this.p = p;
+		this.z = z;
+		this.l1 = l1;
+		this.l = l;
+		this.b1 = b1;
+		this.v1 = v1;
+		this.a = a;
+	}
+
+	public byte v() {
+		return v;
+	}
 }

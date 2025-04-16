@@ -131,6 +131,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM0;
+import static com.ledmington.cpu.x86.RegisterZMM.ZMM1;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9170,13 +9171,26 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								Opcode.VMOVDQU,
 								IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
+										.base(R9)
+										.index(R10)
+										.scale(1)
+										.displacement((byte) -0x40)
+										.build(),
+								YMM2),
+						"vmovdqu YMMWORD PTR [r9+r10*1-0x40],ymm2",
+						"c4 81 7e 7f 54 11 c0"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
 										.base(RCX)
 										.index(RDX)
 										.scale(1)
 										.displacement((byte) -0x40)
 										.build(),
-								YMM10),
-						"vmovdqu YMMWORD PTR [rcx+rdx*1-0x40],ymm10",
+								YMM2),
+						"vmovdqu YMMWORD PTR [rcx+rdx*1-0x40],ymm2",
 						"c5 fe 7f 54 11 c0"),
 				test(
 						new Instruction(
@@ -9343,7 +9357,29 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build(),
 								ZMM0),
 						"vmovups ZMMWORD PTR [rdi],zmm0",
-						"62 f1 7c 48 11 07"));
+						"62 f1 7c 48 11 07"),
+				// Vmodqu64
+				test(
+						new Instruction(
+								Opcode.VMOVDQU64,
+								ZMM0,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RSI)
+										.build()),
+						"vmovdqu64 zmm0,ZMMWORD PTR [rsi]",
+						"62 f1 fe 48 6f 06"),
+				// Vmovntdq
+				test(
+						new Instruction(
+								Opcode.VMOVNTDQ,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								ZMM1),
+						"vmovntdq ZMMWORD PTR [rdi],zmm1",
+						"62 f1 7d 48 e7 07"));
 	}
 
 	//

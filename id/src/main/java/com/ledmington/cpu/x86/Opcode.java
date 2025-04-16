@@ -536,6 +536,12 @@ public enum Opcode {
 	/** Move unaligned packed integer values. */
 	VMOVDQU("vmovdqu"),
 
+	/** Move unaligned packed integer values. */
+	VMOVDQU64("vmovdqu64"),
+
+	/** Store double quadword using non-temporal hint. */
+	VMOVNTDQ("vmovntdq"),
+
 	/** Move quadword. */
 	VMOVQ("vmovq"),
 
