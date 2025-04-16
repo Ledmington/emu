@@ -10,7 +10,7 @@ dependencies {
 pitest {
 	targetClasses.set(['com.ledmington.mem.*'])
 	targetTests.set(['com.ledmington.mem.*'])
-	pitestVersion = '1.19.0'
+	pitestVersion = '1.19.1'
 	junit5PluginVersion = '1.2.2'
 	threads = 4
 	outputFormats.set(['XML', 'HTML'])
