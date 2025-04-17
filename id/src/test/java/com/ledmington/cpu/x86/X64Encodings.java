@@ -131,7 +131,6 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM0;
-import static com.ledmington.cpu.x86.RegisterZMM.ZMM1;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9299,6 +9298,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.VPOR, YMM5, YMM2, YMM1), "vpor ymm5,ymm2,ymm1", "c5 ed eb e9"),
 				// Vpand
 				test(new Instruction(Opcode.VPAND, YMM5, YMM2, YMM1), "vpand ymm5,ymm2,ymm1", "c5 ed db e9"),
+				// Vpandn
+				test(new Instruction(Opcode.VPANDN, XMM8, XMM8, XMM7), "vpandn xmm8,xmm8,xmm7", "c5 39 df c7"),
+				test(new Instruction(Opcode.VPANDN, XMM10, XMM10, XMM9), "vpandn xmm10,xmm10,xmm9", "c4 41 29 df d1"),
 				// Bzhi
 				test(new Instruction(Opcode.BZHI, EDX, EAX, EDX), "bzhi edx,eax,edx", "c4 e2 68 f5 d0"),
 				// Movbe
@@ -9377,9 +9379,13 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.pointer(ZMMWORD_PTR)
 										.base(RDI)
 										.build(),
-								ZMM1),
-						"vmovntdq ZMMWORD PTR [rdi],zmm1",
-						"62 f1 7d 48 e7 07"));
+								ZMM0),
+						"vmovntdq ZMMWORD PTR [rdi],zmm0",
+						"62 f1 7d 48 e7 07"),
+				// Pcmpgtb
+				test(new Instruction(Opcode.PCMPGTB, XMM8, XMM5), "pcmpgtb xmm8,xmm5", "66 44 0f 64 c5"),
+				// Vpcmpgtb
+				test(new Instruction(Opcode.VPCMPGTB, XMM7, XMM1, XMM4), "vpcmpgtb xmm7,xmm1,xmm4", "c5 f1 64 fc"));
 	}
 
 	//

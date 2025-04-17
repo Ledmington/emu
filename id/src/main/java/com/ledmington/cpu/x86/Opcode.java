@@ -302,6 +302,9 @@ public enum Opcode {
 	/** Compare packed words for equal. */
 	PCMPEQW("pcmpeqw"),
 
+	/** Compare packed signed integers for greater than. */
+	PCMPGTB("pcmpgtb"),
+
 	/** Packed compare implicit-length strings. */
 	PCMPISTRI("pcmpistri"),
 
@@ -527,6 +530,9 @@ public enum Opcode {
 	/** Compare packed data for equal. */
 	VPCMPEQB("vpcmpeqb"),
 
+	/** Compare packed signed integers for greater than. */
+	VPCMPGTB("vpcmpgtb"),
+
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB("vpminub"),
 
@@ -550,6 +556,9 @@ public enum Opcode {
 
 	/** Logical AND. */
 	VPAND("vpand"),
+
+	/** Logical AND NOT. */
+	VPANDN("vpandn"),
 
 	/** Move byte mask. */
 	VPMOVMSKB("vpmovmskb"),

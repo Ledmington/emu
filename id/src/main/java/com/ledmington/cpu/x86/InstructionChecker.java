@@ -395,13 +395,16 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SARX, List.of(R32_R32_R32)),
 			Map.entry(Opcode.VPOR, List.of(RYMM_RYMM_RYMM)),
 			Map.entry(Opcode.VPAND, List.of(RYMM_RYMM_RYMM)),
+			Map.entry(Opcode.VPANDN, List.of(RXMM_RXMM_RXMM)),
 			Map.entry(Opcode.BZHI, List.of(R32_R32_R32)),
 			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
 			Map.entry(Opcode.MOVNTDQ, List.of(M128_RXMM)),
 			Map.entry(Opcode.SFENCE, List.of(NOTHING)),
 			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512, M512_RZMM)),
 			Map.entry(Opcode.VMOVDQU64, List.of(RZMM_M512)),
-			Map.entry(Opcode.VMOVNTDQ, List.of(M512_RZMM)));
+			Map.entry(Opcode.VMOVNTDQ, List.of(M512_RZMM)),
+			Map.entry(Opcode.PCMPGTB, List.of(RXMM_RXMM)),
+			Map.entry(Opcode.VPCMPGTB, List.of(RXMM_RXMM_RXMM)));
 
 	private InstructionChecker() {}
 

@@ -111,6 +111,18 @@ public final class EvexPrefix {
 		this.a = a;
 	}
 
+	public boolean r() {
+		return r;
+	}
+
+	public boolean x() {
+		return x;
+	}
+
+	public boolean b() {
+		return b;
+	}
+
 	public byte v() {
 		return v;
 	}
