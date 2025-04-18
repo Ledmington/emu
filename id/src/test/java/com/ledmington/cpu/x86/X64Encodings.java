@@ -5712,6 +5712,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SBB, CX, simm), "sbb cx,0x1234", "66 81 d9 34 12"),
 				test(new Instruction(Opcode.SBB, R9D, bimm), "sbb r9d,0x12", "41 83 d9 12"),
 				test(new Instruction(Opcode.SBB, RAX, bimm), "sbb rax,0x12", "48 83 d8 12"),
+				test(
+						new Instruction(Opcode.SBB, EDX, new Immediate(0x0000ffff)),
+						"sbb edx,0x0000ffff",
+						"81 da ff ff 00 00"),
 				test(new Instruction(Opcode.SBB, ESI, ESI), "sbb esi,esi", "19 f6"),
 				test(new Instruction(Opcode.SBB, R12D, R12D), "sbb r12d,r12d", "45 19 e4"),
 				test(new Instruction(Opcode.SBB, RAX, RAX), "sbb rax,rax", "48 19 c0"),
@@ -7097,6 +7101,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Punpckldq
 				test(new Instruction(Opcode.PUNPCKLDQ, XMM0, XMM0), "punpckldq xmm0,xmm0", "66 0f 62 c0"),
 				test(new Instruction(Opcode.PUNPCKLDQ, XMM3, XMM9), "punpckldq xmm3,xmm9", "66 41 0f 62 d9"),
+				// Punpcklwd
+				test(new Instruction(Opcode.PUNPCKLWD, XMM1, XMM1), "punpcklwd xmm1,xmm1", "66 0f 61 c9"),
 				//  Setae
 				test(
 						new Instruction(
@@ -8038,6 +8044,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.XCHG, AL, CL), "xchg al,cl", "86 c8"),
 				test(new Instruction(Opcode.XCHG, BH, CL), "xchg bh,cl", "86 cf"),
 				test(new Instruction(Opcode.XCHG, DI, AX), "xchg di,ax", "66 97"),
+				test(new Instruction(Opcode.XCHG, AX, AX), "xchg ax,ax", "66 90"),
 				test(new Instruction(Opcode.XCHG, EBP, EAX), "xchg ebp,eax", "95"),
 				test(new Instruction(Opcode.XCHG, EBX, EAX), "xchg ebx,eax", "93"),
 				test(new Instruction(Opcode.XCHG, EBX, R9D), "xchg ebx,r9d", "44 87 cb"),
@@ -8992,6 +8999,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 0f 73 db 01"),
 				// Pminub
 				test(new Instruction(Opcode.PMINUB, XMM0, XMM1), "pminub xmm0,xmm1", "66 0f da c1"),
+				test(
+						new Instruction(
+								Opcode.PMINUB,
+								XMM5,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"pminub xmm5,XMMWORD PTR [rdi]",
+						"66 0f da 2f"),
 				// Palignr
 				test(
 						new Instruction(Opcode.PALIGNR, XMM2, XMM3, new Immediate((byte) 0x1)),
@@ -9024,6 +9041,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.VPXOR, XMM5, XMM6, XMM7), "vpxor xmm5,xmm6,xmm7", "c5 c9 ef ef"),
 				test(new Instruction(Opcode.VPXOR, XMM12, XMM6, XMM7), "vpxor xmm12,xmm6,xmm7", "c5 49 ef e7"),
 				test(new Instruction(Opcode.VPXOR, XMM2, XMM13, XMM7), "vpxor xmm2,xmm13,xmm7", "c5 91 ef d7"),
+				test(new Instruction(Opcode.VPXOR, XMM9, XMM9, XMM9), "vpxor xmm9,xmm9,xmm9", "c4 41 31 ef c9"),
 				// Pextrw
 				test(
 						new Instruction(Opcode.PEXTRW, EDI, MM6, new Immediate((byte) 0x6f)),
@@ -9205,7 +9223,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"vmovdqu YMMWORD PTR [rcx+r10*1-0x40],ymm10",
 						"c4 21 7e 7f 54 11 c0"),
 				// Vpminub
-				test(new Instruction(Opcode.VPMINUB, YMM0, YMM0, YMM1), "vpminub ymm0,ymm0,ymm1", "c5 fd da c1"),
+				test(new Instruction(Opcode.VPMINUB, YMM0, YMM1, YMM2), "vpminub ymm0,ymm1,ymm2", "c5 f5 da c2"),
+				test(
+						new Instruction(
+								Opcode.VPMINUB,
+								YMM2,
+								YMM1,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x21)
+										.build()),
+						"vpminub ymm2,ymm1,YMMWORD PTR [rdi+0x21]",
+						"c5 f5 da 57 21"),
 				// Vpmovmskb
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb
@@ -9293,16 +9323,22 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.VPBROADCASTB, YMM0, XMM4), "vpbroadcastb ymm0,xmm4", "c4 e2 7d 78 c4"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM8, XMM4), "vpbroadcastb ymm8,xmm4", "c4 62 7d 78 c4"),
 				// Sarx
-				test(new Instruction(Opcode.SARX, EAX, EAX, ECX), "sarx eax,eax,ecx", "c4 e2 72 f7 c0"),
+				test(new Instruction(Opcode.SARX, EAX, EBX, ECX), "sarx eax,ebx,ecx", "c4 e2 72 f7 c3"),
+				test(new Instruction(Opcode.SARX, EAX, ECX, ECX), "sarx eax,ecx,ecx", "c4 e2 72 f7 c1"),
+				test(new Instruction(Opcode.SARX, EAX, ECX, EBX), "sarx eax,ecx,ebx", "c4 e2 62 f7 c1"),
+				test(new Instruction(Opcode.SARX, EBX, ECX, EAX), "sarx ebx,ecx,eax", "c4 e2 7a f7 d9"),
+				test(new Instruction(Opcode.SARX, ECX, EBX, EAX), "sarx ecx,ebx,eax", "c4 e2 7a f7 cb"),
 				// Vpor
 				test(new Instruction(Opcode.VPOR, YMM5, YMM2, YMM1), "vpor ymm5,ymm2,ymm1", "c5 ed eb e9"),
 				// Vpand
 				test(new Instruction(Opcode.VPAND, YMM5, YMM2, YMM1), "vpand ymm5,ymm2,ymm1", "c5 ed db e9"),
 				// Vpandn
+				test(new Instruction(Opcode.VPANDN, XMM1, XMM2, XMM3), "vpandn xmm1,xmm2,xmm3", "c5 e9 df cb"),
 				test(new Instruction(Opcode.VPANDN, XMM8, XMM8, XMM7), "vpandn xmm8,xmm8,xmm7", "c5 39 df c7"),
-				test(new Instruction(Opcode.VPANDN, XMM10, XMM10, XMM9), "vpandn xmm10,xmm10,xmm9", "c4 41 29 df d1"),
+				test(new Instruction(Opcode.VPANDN, XMM10, XMM9, XMM8), "vpandn xmm10,xmm9,xmm8", "c4 41 31 df d0"),
 				// Bzhi
-				test(new Instruction(Opcode.BZHI, EDX, EAX, EDX), "bzhi edx,eax,edx", "c4 e2 68 f5 d0"),
+				test(new Instruction(Opcode.BZHI, EDX, ECX, EBX), "bzhi edx,ecx,ebx", "c4 e2 60 f5 d1"),
+				test(new Instruction(Opcode.BZHI, EDX, EBX, ECX), "bzhi edx,ebx,ecx", "c4 e2 70 f5 d3"),
 				// Movbe
 				test(
 						new Instruction(
@@ -9385,7 +9421,40 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Pcmpgtb
 				test(new Instruction(Opcode.PCMPGTB, XMM8, XMM5), "pcmpgtb xmm8,xmm5", "66 44 0f 64 c5"),
 				// Vpcmpgtb
-				test(new Instruction(Opcode.VPCMPGTB, XMM7, XMM1, XMM4), "vpcmpgtb xmm7,xmm1,xmm4", "c5 f1 64 fc"));
+				test(new Instruction(Opcode.VPCMPGTB, XMM7, XMM1, XMM4), "vpcmpgtb xmm7,xmm1,xmm4", "c5 f1 64 fc"),
+				// Vpsubb
+				test(new Instruction(Opcode.VPSUBB, XMM1, XMM1, XMM0), "vpsubb xmm1,xmm1,xmm0", "c5 f1 f8 c8"),
+				// Vpcmpistri
+				test(
+						new Instruction(Opcode.VPCMPISTRI, XMM0, XMM1, new Immediate((byte) 0x1a)),
+						"vpcmpistri xmm0,xmm1,0x1a",
+						"c4 e3 79 63 c1 1a"),
+				// Vpslldq
+				test(
+						new Instruction(Opcode.VPSLLDQ, XMM2, XMM2, new Immediate((byte) 0x0f)),
+						"vpslldq xmm2,xmm2,0x0f",
+						"c5 e9 73 fa 0f"),
+				// Vpsrldq
+				test(
+						new Instruction(Opcode.VPSRLDQ, XMM2, XMM2, new Immediate((byte) 0x0f)),
+						"vpsrldq xmm2,xmm2,0x0f",
+						"c5 e9 73 d2 0f"),
+				// Vpalignr
+				test(
+						new Instruction(
+								Opcode.VPALIGNR,
+								XMM0,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.index(RDX)
+										.scale(1)
+										.displacement((byte) -0x10)
+										.build(),
+								new Immediate((byte) 0x01)),
+						"vpalignr xmm0,xmm0,XMMWORD PTR [rdi+rdx*1-0x10],0x01",
+						"c4 e3 79 0f 44 17 f0 01"));
 	}
 
 	//

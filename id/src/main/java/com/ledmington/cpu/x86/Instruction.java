@@ -27,13 +27,15 @@ public final class Instruction {
 	private final Operand op1;
 	private final Operand op2;
 	private final Operand op3;
+	private final Operand op4;
 
 	Instruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
 			final Operand firstOperand,
 			final Operand secondOperand,
-			final Operand thirdOperand) {
+			final Operand thirdOperand,
+			final Operand fourthOperand) {
 		this.prefix = prefix;
 		this.code = Objects.requireNonNull(opcode);
 		this.op1 = firstOperand;
@@ -48,6 +50,12 @@ public final class Instruction {
 					thirdOperand));
 		}
 		this.op3 = thirdOperand;
+		if (fourthOperand != null && (firstOperand == null || secondOperand == null || thirdOperand == null)) {
+			throw new IllegalArgumentException(String.format(
+					"Cannot have an x86 instruction with a fourth operand (%s) but not a first or a second or a third.",
+					fourthOperand));
+		}
+		this.op4 = fourthOperand;
 	}
 
 	/**
@@ -63,7 +71,7 @@ public final class Instruction {
 			final Opcode opcode,
 			final Operand firstOperand,
 			final Operand secondOperand) {
-		this(prefix, opcode, firstOperand, secondOperand, null);
+		this(prefix, opcode, firstOperand, secondOperand, null, null);
 	}
 
 	/**
@@ -76,7 +84,25 @@ public final class Instruction {
 	 */
 	public Instruction(
 			final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
-		this(null, opcode, firstOperand, secondOperand, thirdOperand);
+		this(null, opcode, firstOperand, secondOperand, thirdOperand, null);
+	}
+
+	public Instruction(
+			final InstructionPrefix prefix,
+			final Opcode opcode,
+			final Operand firstOperand,
+			final Operand secondOperand,
+			final Operand thirdOperand) {
+		this(prefix, opcode, firstOperand, secondOperand, thirdOperand, null);
+	}
+
+	public Instruction(
+			final Opcode opcode,
+			final Operand firstOperand,
+			final Operand secondOperand,
+			final Operand thirdOperand,
+			final Operand fourthOperand) {
+		this(null, opcode, firstOperand, secondOperand, thirdOperand, fourthOperand);
 	}
 
 	/**
@@ -87,11 +113,15 @@ public final class Instruction {
 	 * @param secondOperand The second operand of the Instruction.
 	 */
 	public Instruction(final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
-		this(null, opcode, firstOperand, secondOperand, null);
+		this(null, opcode, firstOperand, secondOperand, null, null);
 	}
 
 	public Instruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
-		this(prefix, opcode, firstOperand, null, null);
+		this(prefix, opcode, firstOperand, null, null, null);
+	}
+
+	public Instruction(final InstructionPrefix prefix, final Opcode opcode) {
+		this(prefix, opcode, null, null, null, null);
 	}
 
 	/**
@@ -101,7 +131,7 @@ public final class Instruction {
 	 * @param firstOperand The only operand of this instruction.
 	 */
 	public Instruction(final Opcode opcode, final Operand firstOperand) {
-		this(null, opcode, firstOperand, null, null);
+		this(null, opcode, firstOperand, null, null, null);
 	}
 
 	/**
@@ -110,7 +140,7 @@ public final class Instruction {
 	 * @param opcode The opcode of the instruction.
 	 */
 	public Instruction(final Opcode opcode) {
-		this(null, opcode, null, null, null);
+		this(null, opcode, null, null, null, null);
 	}
 
 	public boolean hasPrefix() {
@@ -188,6 +218,33 @@ public final class Instruction {
 			throw new IllegalArgumentException("No third operand.");
 		}
 		return op3;
+	}
+
+	public boolean hasFourthOperand() {
+		return op4 != null;
+	}
+
+	public Operand fourthOperand() {
+		if (!hasFourthOperand()) {
+			throw new IllegalArgumentException("No fourth operand.");
+		}
+		return op4;
+	}
+
+	public int getNumOperands() {
+		if (op4 != null) {
+			return 4;
+		}
+		if (op3 != null) {
+			return 3;
+		}
+		if (op2 != null) {
+			return 2;
+		}
+		if (op1 != null) {
+			return 1;
+		}
+		return 0;
 	}
 
 	/**

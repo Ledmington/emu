@@ -70,19 +70,21 @@ public final class InstructionChecker {
 		private final OperandType op1;
 		private final OperandType op2;
 		private final OperandType op3;
+		private final OperandType op4;
 
 		Case(final OperandType... ot) {
 			Objects.requireNonNull(ot);
 			this.op1 = ot.length > 0 ? Objects.requireNonNull(ot[0]) : null;
 			this.op2 = ot.length > 1 ? Objects.requireNonNull(ot[1]) : null;
 			this.op3 = ot.length > 2 ? Objects.requireNonNull(ot[2]) : null;
-			if (ot.length > 3) {
+			this.op4 = ot.length > 3 ? Objects.requireNonNull(ot[3]) : null;
+			if (ot.length > 4) {
 				throw new IllegalArgumentException("Too many operand types.");
 			}
 		}
 
 		public int numOperands() {
-			return op3 != null ? 3 : (op2 != null ? 2 : (op1 != null ? 1 : 0));
+			return op4 != null ? 4 : (op3 != null ? 3 : (op2 != null ? 2 : (op1 != null ? 1 : 0)));
 		}
 
 		public OperandType firstOperandType() {
@@ -95,6 +97,10 @@ public final class InstructionChecker {
 
 		public OperandType thirdOperandType() {
 			return op3;
+		}
+
+		public OperandType fourthOperandType() {
+			return op4;
 		}
 	}
 
@@ -184,6 +190,8 @@ public final class InstructionChecker {
 	private static final Case RXMM_RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM);
 	private static final Case RYMM_RYMM_RYMM = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.RYMM);
 	private static final Case RYMM_RYMM_M256 = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.M256);
+	private static final Case RXMM_RXMM_M128_I8 =
+			new Case(OperandType.RXMM, OperandType.RXMM, OperandType.M128, OperandType.I8);
 
 	private static final Map<Opcode, List<Case>> CASES = Map.<Opcode, List<Case>>ofEntries(
 			Map.entry(Opcode.NOP, List.of(NOTHING, R16, R32, R64, M16, M32, M64)),
@@ -256,7 +264,7 @@ public final class InstructionChecker {
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R16_I16, R32_I8, R32_I32, R8_I8, R64_I8, R64_I32, R32_M32,
 							R64_M64, M16_R16, M32_R32, M64_R64, M8_I8, M16_I8, M64_I8, M64_I32)),
-			Map.entry(Opcode.SBB, List.of(R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R64_I8, R8_M8)),
+			Map.entry(Opcode.SBB, List.of(R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8)),
 			Map.entry(Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SHL, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
@@ -309,6 +317,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PUNPCKLQDQ, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.PUNPCKLDQ, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.PUNPCKHQDQ, List.of(RXMM_RXMM)),
+			Map.entry(Opcode.PUNPCKLWD, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.SETA, List.of(R8, M8)),
 			Map.entry(Opcode.SETAE, List.of(R8, M8)),
 			Map.entry(Opcode.SETE, List.of(R8, M8)),
@@ -377,13 +386,13 @@ public final class InstructionChecker {
 			Map.entry(Opcode.RCR, List.of(R32_I8)),
 			Map.entry(Opcode.RCL, List.of(R32_I8)),
 			Map.entry(Opcode.PMOVMSKB, List.of(R32_RXMM)),
-			Map.entry(Opcode.PMINUB, List.of(RXMM_RXMM)),
+			Map.entry(Opcode.PMINUB, List.of(RXMM_RXMM, RXMM_M128)),
 			Map.entry(Opcode.PMAXUB, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
 			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)),
 			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)),
 			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256, M256_RYMM)),
-			Map.entry(Opcode.VPMINUB, List.of(RYMM_RYMM_RYMM)),
+			Map.entry(Opcode.VPMINUB, List.of(RYMM_RYMM_RYMM, RYMM_RYMM_M256)),
 			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RYMM)),
 			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)),
 			Map.entry(Opcode.VZEROALL, List.of(NOTHING)),
@@ -404,7 +413,12 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VMOVDQU64, List.of(RZMM_M512)),
 			Map.entry(Opcode.VMOVNTDQ, List.of(M512_RZMM)),
 			Map.entry(Opcode.PCMPGTB, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.VPCMPGTB, List.of(RXMM_RXMM_RXMM)));
+			Map.entry(Opcode.VPCMPGTB, List.of(RXMM_RXMM_RXMM)),
+			Map.entry(Opcode.VPSUBB, List.of(RXMM_RXMM_RXMM)),
+			Map.entry(Opcode.VPCMPISTRI, List.of(RXMM_RXMM_I8)),
+			Map.entry(Opcode.VPSLLDQ, List.of(RXMM_RXMM_I8)),
+			Map.entry(Opcode.VPSRLDQ, List.of(RXMM_RXMM_I8)),
+			Map.entry(Opcode.VPALIGNR, List.of(RXMM_RXMM_M128_I8)));
 
 	private InstructionChecker() {}
 
@@ -413,11 +427,9 @@ public final class InstructionChecker {
 	}
 
 	public static void check(final Instruction inst) {
-		final boolean hasFirstOperand = inst.hasFirstOperand();
-		final boolean hasSecondOperand = inst.hasSecondOperand();
-		final boolean hasThirdOperand = inst.hasThirdOperand();
-
-		final int numOperands = hasThirdOperand ? 3 : (hasSecondOperand ? 2 : (hasFirstOperand ? 1 : 0));
+		final int numOperands = inst.hasFourthOperand()
+				? 4
+				: (inst.hasThirdOperand() ? 3 : (inst.hasSecondOperand() ? 2 : (inst.hasFirstOperand() ? 1 : 0)));
 
 		if (numOperands >= 2) {
 			checkNoMoreThanOneImmediate(inst);
@@ -447,6 +459,10 @@ public final class InstructionChecker {
 				continue;
 			}
 
+			if (numOperands == 4 && !matches(c.fourthOperandType(), inst.fourthOperand())) {
+				continue;
+			}
+
 			// we return (meaning that the instruction is correct) as soon as we find a case that matches the current
 			// instruction
 			return;
@@ -468,6 +484,9 @@ public final class InstructionChecker {
 			count++;
 		}
 		if (inst.hasThirdOperand() && inst.thirdOperand() instanceof Immediate) {
+			count++;
+		}
+		if (inst.hasFourthOperand() && inst.fourthOperand() instanceof Immediate) {
 			count++;
 		}
 		if (count > 1) {
@@ -492,6 +511,9 @@ public final class InstructionChecker {
 			count++;
 		}
 		if (inst.hasThirdOperand() && inst.thirdOperand() instanceof IndirectOperand) {
+			count++;
+		}
+		if (inst.hasFourthOperand() && inst.fourthOperand() instanceof IndirectOperand) {
 			count++;
 		}
 		if (count > 1) {

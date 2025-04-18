@@ -410,6 +410,9 @@ public enum Opcode {
 	/** Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register. */
 	PUNPCKLQDQ("punpcklqdq"),
 
+	/** Unpack low data. */
+	PUNPCKLWD("punpcklwd"),
+
 	/** Push word, doubleword or quadword onto the stack. */
 	PUSH("push"),
 
@@ -524,6 +527,9 @@ public enum Opcode {
 	/** Undefined instruction. */
 	UD2("ud2"),
 
+	/** Packed align right. */
+	VPALIGNR("vpalignr"),
+
 	/** Load with broadcast integer data from general-purpose register. */
 	VPBROADCASTB("vpbroadcastb"),
 
@@ -533,8 +539,20 @@ public enum Opcode {
 	/** Compare packed signed integers for greater than. */
 	VPCMPGTB("vpcmpgtb"),
 
+	/** Packed compare implicit length strings, return index. */
+	VPCMPISTRI("vpcmpistri"),
+
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB("vpminub"),
+
+	/** Shift double quadword left logical. */
+	VPSLLDQ("vpslldq"),
+
+	/** Shift double quadword right logical. */
+	VPSRLDQ("vpsrldq"),
+
+	/** Subtract packed integers. */
+	VPSUBB("vpsubb"),
 
 	/** Move doubleword. */
 	VMOVD("vmovd"),
