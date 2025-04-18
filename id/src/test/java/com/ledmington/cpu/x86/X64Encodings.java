@@ -9454,7 +9454,13 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build(),
 								new Immediate((byte) 0x01)),
 						"vpalignr xmm0,xmm0,XMMWORD PTR [rdi+rdx*1-0x10],0x01",
-						"c4 e3 79 0f 44 17 f0 01"));
+						"c4 e3 79 0f 44 17 f0 01"),
+				// Cld
+				test(new Instruction(Opcode.CLD), "cld", "fc"),
+				// Pshufb
+				test(new Instruction(Opcode.PSHUFB, XMM0, XMM2), "pshufb xmm0,xmm2", "66 0f 38 00 c2"),
+				// Vpshufb
+				test(new Instruction(Opcode.VPSHUFB, XMM0, XMM1, XMM0), "vpshufb xmm0,xmm1,xmm0", "c4 e2 71 00 c0"));
 	}
 
 	//

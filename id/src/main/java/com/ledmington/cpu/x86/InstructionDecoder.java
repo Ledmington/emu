@@ -1793,12 +1793,18 @@ public final class InstructionDecoder {
 
 	private static Instruction parseTableA4(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+		final byte PSHUFB_OPCODE = (byte) 0x00;
 		final byte MOVBE_OPCODE = (byte) 0xf0;
 
 		final byte x = b.read1();
 		final ModRM modrm = modrm(b);
 
 		return switch (x) {
+			case PSHUFB_OPCODE ->
+				new Instruction(
+						Opcode.PSHUFB,
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
 			case MOVBE_OPCODE ->
 				new Instruction(
 						Opcode.MOVBE,
@@ -2030,6 +2036,7 @@ public final class InstructionDecoder {
 		final byte JMP_DISP32_OPCODE = (byte) 0xe9;
 		final byte JMP_DISP8_OPCODE = (byte) 0xeb;
 		final byte HLT_OPCODE = (byte) 0xf4;
+		final byte CLD_OPCODE = (byte) 0xfc;
 
 		final Opcode[] opcodeTable = {
 			Opcode.ADD, Opcode.OR, Opcode.ADC, Opcode.SBB, Opcode.AND, Opcode.SUB, Opcode.XOR, Opcode.CMP
@@ -2051,6 +2058,7 @@ public final class InstructionDecoder {
 			case SAHF_OPCODE -> new Instruction(Opcode.SAHF);
 			case LAHF_OPCODE -> new Instruction(Opcode.LAHF);
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
+			case CLD_OPCODE -> new Instruction(Opcode.CLD);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
 			case MOV_R32_M32_OPCODE -> parseRxMx(b, pref, Opcode.MOV);
@@ -2683,6 +2691,7 @@ public final class InstructionDecoder {
 
 	private static Instruction parseVex3Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+		final byte VPSHUFB_OPCODE = (byte) 0x00;
 		final byte VPALIGNR_OPCODE = (byte) 0x0f;
 		final byte VPCMPISTRI_OPCODE = (byte) 0x63;
 		final byte VMOVDQU_RYMM_M256_OPCODE = (byte) 0x6f;
@@ -2697,6 +2706,14 @@ public final class InstructionDecoder {
 		final Vex3Prefix vex3 = pref.vex3().orElseThrow();
 
 		return switch (opcodeFirstByte) {
+			case VPSHUFB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPSHUFB,
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterXMM.fromByte(getByteFromV(vex3)),
+						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
+			}
 			case VPALIGNR_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(

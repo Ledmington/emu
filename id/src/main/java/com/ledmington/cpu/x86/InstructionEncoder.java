@@ -198,6 +198,7 @@ public final class InstructionEncoder {
 			case ENDBR64 -> wb.write((byte) 0xf3, DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
 			case VZEROALL -> wb.write((byte) 0xc5, (byte) 0xfc, (byte) 0x77);
 			case SFENCE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae, (byte) 0xf8);
+			case CLD -> wb.write((byte) 0xfc);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}
@@ -453,6 +454,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.PSUBQ && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PMINUB && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PMAXUB && inst.firstOperand() instanceof RegisterXMM)
+				|| (inst.opcode() == Opcode.PSHUFB && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.UCOMISD)
 				|| (inst.opcode() == Opcode.PCMPEQB && inst.firstOperand() instanceof RegisterXMM)
 				|| (inst.opcode() == Opcode.PCMPEQW && inst.firstOperand() instanceof RegisterXMM)
@@ -1224,6 +1226,7 @@ public final class InstructionEncoder {
 				wb.write((byte) 0xe7);
 			}
 			case PCMPGTB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x64);
+			case PSHUFB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, TABLE_A4_PREFIX, (byte) 0x00);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1413,6 +1416,10 @@ public final class InstructionEncoder {
 				wb.write((byte) 0x73);
 				reg = (byte) 0b010;
 			}
+			case VPSHUFB -> {
+				encodeVex3Prefix(wb, inst);
+				wb.write((byte) 0x00);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1494,7 +1501,7 @@ public final class InstructionEncoder {
 			return true;
 		}
 		return switch (inst.opcode()) {
-			case SARX, BZHI -> true;
+			case SARX, BZHI, VPSHUFB -> true;
 			default -> false;
 		};
 	}
@@ -1516,7 +1523,8 @@ public final class InstructionEncoder {
 					VPCMPISTRI,
 					VPSLLDQ,
 					VPSRLDQ,
-					VPALIGNR -> true;
+					VPALIGNR,
+					VPSHUFB -> true;
 			default -> false;
 		};
 	}
@@ -1535,7 +1543,7 @@ public final class InstructionEncoder {
 	private static byte getOpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
 			case VPCMPISTRI, VPALIGNR -> (byte) 0b11;
-			case VPBROADCASTB, SARX, BZHI -> (byte) 0b10;
+			case VPBROADCASTB, SARX, BZHI, VPSHUFB -> (byte) 0b10;
 			default -> (byte) 0b01;
 		};
 	}

@@ -338,6 +338,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.DEC, List.of(R8, R32, R64, M8, M16, M32, M64)),
 			Map.entry(Opcode.PSHUFD, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.PSHUFW, List.of(RMM_RMM_I8)),
+			Map.entry(Opcode.PSHUFB, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.SHUFPD, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.SHUFPS, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.PXOR, List.of(RMM_RMM, RXMM_RXMM, RXMM_M128)),
@@ -418,7 +419,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPCMPISTRI, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.VPSLLDQ, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.VPSRLDQ, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.VPALIGNR, List.of(RXMM_RXMM_M128_I8)));
+			Map.entry(Opcode.VPALIGNR, List.of(RXMM_RXMM_M128_I8)),
+			Map.entry(Opcode.CLD, List.of(NOTHING)),
+			Map.entry(Opcode.VPSHUFB, List.of(RXMM_RXMM_RXMM)));
 
 	private InstructionChecker() {}
 

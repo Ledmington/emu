@@ -259,7 +259,7 @@ public final class Instruction {
 	@Override
 	public String toString() {
 		return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
-				+ ";operands=[" + op1 + "," + op2 + "," + op3 + "]"
+				+ ";operands=[" + op1 + "," + op2 + "," + op3 + "," + op4 + "]"
 				+ ")";
 	}
 
@@ -271,6 +271,7 @@ public final class Instruction {
 		h = 31 * h + (op1 == null ? 0 : op1.hashCode());
 		h = 31 * h + (op2 == null ? 0 : op2.hashCode());
 		h = 31 * h + (op3 == null ? 0 : op3.hashCode());
+		h = 31 * h + (op4 == null ? 0 : op4.hashCode());
 		return h;
 	}
 
@@ -289,6 +290,7 @@ public final class Instruction {
 				&& this.code.equals(inst.code)
 				&& Objects.equals(this.op1, inst.op1)
 				&& Objects.equals(this.op2, inst.op2)
-				&& Objects.equals(this.op3, inst.op3);
+				&& Objects.equals(this.op3, inst.op3)
+				&& Objects.equals(this.op4, inst.op4);
 	}
 }

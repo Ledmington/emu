@@ -68,6 +68,9 @@ public enum Opcode {
 	/** Convert doubleword to quadword. */
 	CDQE("cdqe"),
 
+	/** Clear direction flag. */
+	CLD("cld"),
+
 	/** Conditional move if above. */
 	CMOVA("cmova"),
 
@@ -350,6 +353,9 @@ public enum Opcode {
 	 */
 	PREFETCHT2("prefetcht2"),
 
+	/** Packed shuffle bytes. */
+	PSHUFB("pshufb"),
+
 	/** Shuffle packed doublewords. */
 	PSHUFD("pshufd"),
 
@@ -544,6 +550,9 @@ public enum Opcode {
 
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB("vpminub"),
+
+	/** Packed shuffle bytes. */
+	VPSHUFB("vpshufb"),
 
 	/** Shift double quadword left logical. */
 	VPSLLDQ("vpslldq"),
