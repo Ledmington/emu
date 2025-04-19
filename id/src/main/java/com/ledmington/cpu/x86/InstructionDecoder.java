@@ -2037,6 +2037,7 @@ public final class InstructionDecoder {
 		final byte JMP_DISP8_OPCODE = (byte) 0xeb;
 		final byte HLT_OPCODE = (byte) 0xf4;
 		final byte CLD_OPCODE = (byte) 0xfc;
+		final byte STD_OPCODE = (byte) 0xfd;
 
 		final Opcode[] opcodeTable = {
 			Opcode.ADD, Opcode.OR, Opcode.ADC, Opcode.SBB, Opcode.AND, Opcode.SUB, Opcode.XOR, Opcode.CMP
@@ -2059,6 +2060,7 @@ public final class InstructionDecoder {
 			case LAHF_OPCODE -> new Instruction(Opcode.LAHF);
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
 			case CLD_OPCODE -> new Instruction(Opcode.CLD);
+			case STD_OPCODE -> new Instruction(Opcode.STD);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
 
 			case MOV_R32_M32_OPCODE -> parseRxMx(b, pref, Opcode.MOV);
@@ -2549,12 +2551,14 @@ public final class InstructionDecoder {
 		final byte VPSxLDQ_OPCODE = (byte) 0x73;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VZEROALL_OPCODE = (byte) 0x77;
-		final byte VMOVQ_OPCODE = (byte) 0x7e;
+		final byte VMOVQ_RXMM_M64_OPCODE = (byte) 0x7e;
 		final byte VMOVDQU_M256_RYMM_OPCODE = (byte) 0x7f;
+		final byte VMOVQ_M64_RXMM_OPCODE = (byte) 0xd6;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
 		final byte VPAND_OPCODE = (byte) 0xdb;
 		final byte VPANDN_OPCODE = (byte) 0xdf;
+		final byte VMOVNTDQ_OPCODE = (byte) 0xe7;
 		final byte VPOR_OPCODE = (byte) 0xeb;
 		final byte VPXOR_OPCODE = (byte) 0xef;
 		final byte VPSUBB_OPCODE = (byte) 0xf8;
@@ -2619,6 +2623,15 @@ public final class InstructionDecoder {
 						RegisterYMM.fromByte(getByteFromV(vex2)),
 						getYMMArgument(b, modrm, pref, getByteFromRM(pref, modrm)));
 			}
+			case VMOVNTDQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVNTDQ,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.YMMWORD_PTR)
+								.build(),
+						RegisterYMM.fromByte(getByteFromReg(pref, modrm)));
+			}
 			case VMOVDQU_RYMM_M256_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
@@ -2646,7 +2659,7 @@ public final class InstructionDecoder {
 								.pointer(PointerSize.DWORD_PTR)
 								.build());
 			}
-			case VMOVQ_OPCODE -> {
+			case VMOVQ_RXMM_M64_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VMOVQ,
@@ -2654,6 +2667,15 @@ public final class InstructionDecoder {
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.QWORD_PTR)
 								.build());
+			}
+			case VMOVQ_M64_RXMM_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVQ,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.QWORD_PTR)
+								.build(),
+						RegisterXMM.fromByte(getByteFromReg(pref, modrm)));
 			}
 			case VPMOVMSKB_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -2813,6 +2835,8 @@ public final class InstructionDecoder {
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VMOVUPS_R512_M512_OPCODE = (byte) 0x10;
 		final byte VMOVUPS_M512_R512_OPCODE = (byte) 0x11;
+		final byte VBROADCASTSS_OPCODE = (byte) 0x18;
+		final byte VMOVAPS_OPCODE = (byte) 0x29;
 		final byte VMOVDQU64_OPCODE = (byte) 0x6f;
 		final byte VMOVNTDQ_OPCODE = (byte) 0xe7;
 
@@ -2832,6 +2856,22 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VMOVUPS,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.ZMMWORD_PTR)
+								.build(),
+						RegisterZMM.fromByte(getByteFromReg(pref, modrm)));
+			}
+			case VBROADCASTSS_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VBROADCASTSS,
+						RegisterZMM.fromByte(getByteFromReg(pref, modrm)),
+						RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
+			}
+			case VMOVAPS_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVAPS,
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.ZMMWORD_PTR)
 								.build(),

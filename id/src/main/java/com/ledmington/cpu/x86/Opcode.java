@@ -512,6 +512,9 @@ public enum Opcode {
 	/** Shuffles values in packed single-precision floating-point operands. */
 	SHUFPS("shufps"),
 
+	/** Set direction flag. */
+	STD("std"),
+
 	/** Store string. */
 	STOS("stos"),
 
@@ -532,6 +535,12 @@ public enum Opcode {
 
 	/** Undefined instruction. */
 	UD2("ud2"),
+
+	/** Load with broadcast floating-point data. */
+	VBROADCASTSS("vbroadcastss"),
+
+	/** Move aligned packed single-precision floating-point values. */
+	VMOVAPS("vmovaps"),
 
 	/** Packed align right. */
 	VPALIGNR("vpalignr"),

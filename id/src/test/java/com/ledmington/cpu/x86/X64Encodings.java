@@ -131,6 +131,8 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM0;
+import static com.ledmington.cpu.x86.RegisterZMM.ZMM16;
+import static com.ledmington.cpu.x86.RegisterZMM.ZMM2;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9280,6 +9282,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovq xmm0,QWORD PTR [rsi+rdx*1]",
 						"c5 fa 7e 04 16"),
+				test(
+						new Instruction(
+								Opcode.VMOVQ,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM0),
+						"vmovq QWORD PTR [rdi],xmm0",
+						"c5 f9 d6 07"),
 				// Vmovd
 				test(
 						new Instruction(
@@ -9407,7 +9419,27 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovdqu64 zmm0,ZMMWORD PTR [rsi]",
 						"62 f1 fe 48 6f 06"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU64,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								ZMM16),
+						"vmovdqu64 ZMMWORD PTR [rdi],zmm16",
+						"62 e1 fe 48 7f 07"),
 				// Vmovntdq
+				test(
+						new Instruction(
+								Opcode.VMOVNTDQ,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								YMM0),
+						"vmovntdq YMMWORD PTR [rdi],ymm0",
+						"c5 fd e7 07"),
 				test(
 						new Instruction(
 								Opcode.VMOVNTDQ,
@@ -9457,10 +9489,25 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"c4 e3 79 0f 44 17 f0 01"),
 				// Cld
 				test(new Instruction(Opcode.CLD), "cld", "fc"),
+				// Std
+				test(new Instruction(Opcode.STD), "std", "fd"),
 				// Pshufb
 				test(new Instruction(Opcode.PSHUFB, XMM0, XMM2), "pshufb xmm0,xmm2", "66 0f 38 00 c2"),
 				// Vpshufb
-				test(new Instruction(Opcode.VPSHUFB, XMM0, XMM1, XMM0), "vpshufb xmm0,xmm1,xmm0", "c4 e2 71 00 c0"));
+				test(new Instruction(Opcode.VPSHUFB, XMM0, XMM1, XMM0), "vpshufb xmm0,xmm1,xmm0", "c4 e2 71 00 c0"),
+				// Vbroadcatss
+				test(new Instruction(Opcode.VBROADCASTSS, ZMM2, XMM0), "vbroadcastss zmm2,xmm0", "62 f2 7d 48 18 d0"),
+				// Vmovaps
+				test(
+						new Instruction(
+								Opcode.VMOVAPS,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								ZMM2),
+						"vmovaps ZMMWORD PTR [rdi],zmm2",
+						"62 f1 7c 48 29 17"));
 	}
 
 	//

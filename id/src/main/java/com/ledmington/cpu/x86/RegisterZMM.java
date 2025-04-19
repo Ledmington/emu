@@ -68,7 +68,55 @@ public enum RegisterZMM implements Register {
 	ZMM14("zmm14"),
 
 	/** The register ZMM15. */
-	ZMM15("zmm15");
+	ZMM15("zmm15"),
+
+	/** The register ZMM16. */
+	ZMM16("zmm16"),
+
+	/** The register ZMM17. */
+	ZMM17("zmm17"),
+
+	/** The register ZMM18. */
+	ZMM18("zmm18"),
+
+	/** The register ZMM19. */
+	ZMM19("zmm19"),
+
+	/** The register ZMM20. */
+	ZMM20("zmm20"),
+
+	/** The register ZMM21. */
+	ZMM21("zmm21"),
+
+	/** The register ZMM22. */
+	ZMM22("zmm22"),
+
+	/** The register ZMM23. */
+	ZMM23("zmm23"),
+
+	/** The register ZMM24. */
+	ZMM24("zmm24"),
+
+	/** The register ZMM25. */
+	ZMM25("zmm25"),
+
+	/** The register ZMM26. */
+	ZMM26("zmm26"),
+
+	/** The register ZMM27. */
+	ZMM27("zmm27"),
+
+	/** The register ZMM28. */
+	ZMM28("zmm28"),
+
+	/** The register ZMM29. */
+	ZMM29("zmm29"),
+
+	/** The register ZMM30. */
+	ZMM30("zmm30"),
+
+	/** The register ZMM31. */
+	ZMM31("zmm31");
 
 	private final String mnemonic;
 
@@ -116,6 +164,8 @@ public enum RegisterZMM implements Register {
 			case ZMM5, ZMM13 -> (byte) 0x05;
 			case ZMM6, ZMM14 -> (byte) 0x06;
 			case ZMM7, ZMM15 -> (byte) 0x07;
+			// TODO: remove this
+			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
 		};
 	}
 
@@ -125,6 +175,8 @@ public enum RegisterZMM implements Register {
 		return switch (r) {
 			case ZMM0, ZMM1, ZMM2, ZMM3, ZMM4, ZMM5, ZMM6, ZMM7 -> false;
 			case ZMM8, ZMM9, ZMM10, ZMM11, ZMM12, ZMM13, ZMM14, ZMM15 -> true;
+			// TODO: remove this
+			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
 		};
 	}
 

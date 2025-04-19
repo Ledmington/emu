@@ -135,6 +135,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_R64 = new Case(OperandType.RXMM, OperandType.R64);
 	private static final Case RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM);
 	private static final Case RYMM_RXMM = new Case(OperandType.RYMM, OperandType.RXMM);
+	private static final Case RZMM_RXMM = new Case(OperandType.RZMM, OperandType.RXMM);
 	private static final Case R8_I8 = new Case(OperandType.R8, OperandType.I8);
 	private static final Case R16_I8 = new Case(OperandType.R16, OperandType.I8);
 	private static final Case R16_I16 = new Case(OperandType.R16, OperandType.I16);
@@ -397,7 +398,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RYMM)),
 			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)),
 			Map.entry(Opcode.VZEROALL, List.of(NOTHING)),
-			Map.entry(Opcode.VMOVQ, List.of(RXMM_M64)),
+			Map.entry(Opcode.VMOVQ, List.of(RXMM_M64, M64_RXMM)),
 			Map.entry(Opcode.VMOVD, List.of(RXMM_M32)),
 			Map.entry(Opcode.PCMPISTRI, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
 			Map.entry(Opcode.PUNPCKLBW, List.of(RXMM_RXMM)),
@@ -412,7 +413,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SFENCE, List.of(NOTHING)),
 			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512, M512_RZMM)),
 			Map.entry(Opcode.VMOVDQU64, List.of(RZMM_M512)),
-			Map.entry(Opcode.VMOVNTDQ, List.of(M512_RZMM)),
+			Map.entry(Opcode.VMOVNTDQ, List.of(M256_RYMM, M512_RZMM)),
 			Map.entry(Opcode.PCMPGTB, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.VPCMPGTB, List.of(RXMM_RXMM_RXMM)),
 			Map.entry(Opcode.VPSUBB, List.of(RXMM_RXMM_RXMM)),
@@ -421,7 +422,10 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPSRLDQ, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.VPALIGNR, List.of(RXMM_RXMM_M128_I8)),
 			Map.entry(Opcode.CLD, List.of(NOTHING)),
-			Map.entry(Opcode.VPSHUFB, List.of(RXMM_RXMM_RXMM)));
+			Map.entry(Opcode.STD, List.of(NOTHING)),
+			Map.entry(Opcode.VPSHUFB, List.of(RXMM_RXMM_RXMM)),
+			Map.entry(Opcode.VBROADCASTSS, List.of(RZMM_RXMM)),
+			Map.entry(Opcode.VMOVAPS, List.of(M512_RZMM)));
 
 	private InstructionChecker() {}
 
