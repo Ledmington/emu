@@ -197,6 +197,18 @@ public enum Opcode {
 	/** Conditional jump if signed. */
 	JS("js"),
 
+	/** Move from and to mask registers. */
+	KMOVB("kmovb"),
+
+	/** Move from and to mask registers. */
+	KMOVD("kmovd"),
+
+	/** Move from and to mask registers. */
+	KMOVQ("kmovq"),
+
+	/** Move from and to mask registers. */
+	KMOVW("kmovw"),
+
 	/** Load status flags into AH register. */
 	LAHF("lahf"),
 
@@ -548,6 +560,15 @@ public enum Opcode {
 	/** Load with broadcast integer data from general-purpose register. */
 	VPBROADCASTB("vpbroadcastb"),
 
+	/** Load with broadcast integer data from general-purpose register. */
+	VPBROADCASTD("vpbroadcastd"),
+
+	/** Load with broadcast integer data from general-purpose register. */
+	VPBROADCASTQ("vpbroadcastq"),
+
+	/** Load with broadcast integer data from general-purpose register. */
+	VPBROADCASTW("vpbroadcastw"),
+
 	/** Compare packed data for equal. */
 	VPCMPEQB("vpcmpeqb"),
 
@@ -577,6 +598,15 @@ public enum Opcode {
 
 	/** Move unaligned packed integer values. */
 	VMOVDQU("vmovdqu"),
+
+	/** Move unaligned packed integer values. */
+	VMOVDQU8("vmovdqu8"),
+
+	/** Move unaligned packed integer values. */
+	VMOVDQU16("vmovdqu16"),
+
+	/** Move unaligned packed integer values. */
+	VMOVDQU32("vmovdqu32"),
 
 	/** Move unaligned packed integer values. */
 	VMOVDQU64("vmovdqu64"),

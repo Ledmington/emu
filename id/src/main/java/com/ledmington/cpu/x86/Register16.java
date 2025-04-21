@@ -70,6 +70,7 @@ public enum Register16 implements Register {
 	/** The register R15W. */
 	R15W("r15w"),
 
+	// TODO: should the proper segment registers be separated from the general-purpose ones?
 	/** The segment register CS (Code Segment). */
 	CS("cs"),
 

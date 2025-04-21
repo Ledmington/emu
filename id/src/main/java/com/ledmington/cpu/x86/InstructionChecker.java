@@ -42,6 +42,8 @@ public final class InstructionChecker {
 		RYMM,
 		// An ZMM 512-bit register
 		RZMM,
+		// A mask register
+		RK,
 		// An indirect operand with BYTE PTR size
 		M8,
 		// An indirect operand with WORD PTR size
@@ -128,6 +130,7 @@ public final class InstructionChecker {
 	private static final Case R64_R16 = new Case(OperandType.R64, OperandType.R16);
 	private static final Case R64_R32 = new Case(OperandType.R64, OperandType.R32);
 	private static final Case R64_R64 = new Case(OperandType.R64, OperandType.R64);
+	private static final Case R64_RXMM = new Case(OperandType.R64, OperandType.RXMM);
 	private static final Case RMM_R32 = new Case(OperandType.RMM, OperandType.R32);
 	private static final Case RMM_R64 = new Case(OperandType.RMM, OperandType.R64);
 	private static final Case RMM_RMM = new Case(OperandType.RMM, OperandType.RMM);
@@ -135,6 +138,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_R64 = new Case(OperandType.RXMM, OperandType.R64);
 	private static final Case RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM);
 	private static final Case RYMM_RXMM = new Case(OperandType.RYMM, OperandType.RXMM);
+	private static final Case RZMM_R32 = new Case(OperandType.RZMM, OperandType.R32);
 	private static final Case RZMM_RXMM = new Case(OperandType.RZMM, OperandType.RXMM);
 	private static final Case R8_I8 = new Case(OperandType.R8, OperandType.I8);
 	private static final Case R16_I8 = new Case(OperandType.R16, OperandType.I8);
@@ -176,6 +180,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_M64 = new Case(OperandType.RXMM, OperandType.M64);
 	private static final Case RXMM_M128 = new Case(OperandType.RXMM, OperandType.M128);
 	private static final Case RYMM_M256 = new Case(OperandType.RYMM, OperandType.M256);
+	private static final Case RK_R64 = new Case(OperandType.RK, OperandType.R64);
 	private static final Case RZMM_M512 = new Case(OperandType.RZMM, OperandType.M512);
 	private static final Case R32_R32_I8 = new Case(OperandType.R32, OperandType.R32, OperandType.I8);
 	private static final Case R32_R32_I32 = new Case(OperandType.R32, OperandType.R32, OperandType.I32);
@@ -188,6 +193,7 @@ public final class InstructionChecker {
 	private static final Case R32_M32_I32 = new Case(OperandType.R32, OperandType.M32, OperandType.I32);
 	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
 	private static final Case R32_R32_R32 = new Case(OperandType.R32, OperandType.R32, OperandType.R32);
+	private static final Case R64_R64_R64 = new Case(OperandType.R64, OperandType.R64, OperandType.R64);
 	private static final Case RXMM_RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM);
 	private static final Case RYMM_RYMM_RYMM = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.RYMM);
 	private static final Case RYMM_RYMM_M256 = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.M256);
@@ -398,21 +404,23 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RYMM)),
 			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)),
 			Map.entry(Opcode.VZEROALL, List.of(NOTHING)),
-			Map.entry(Opcode.VMOVQ, List.of(RXMM_M64, M64_RXMM)),
+			Map.entry(Opcode.VMOVQ, List.of(R64_RXMM, RXMM_M64, M64_RXMM)),
 			Map.entry(Opcode.VMOVD, List.of(RXMM_M32)),
 			Map.entry(Opcode.PCMPISTRI, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
 			Map.entry(Opcode.PUNPCKLBW, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.VPBROADCASTB, List.of(RYMM_RXMM)),
+			Map.entry(Opcode.VPBROADCASTB, List.of(RYMM_RXMM, RZMM_R32)),
+			Map.entry(Opcode.VPBROADCASTD, List.of(RYMM_RXMM, RZMM_R32)),
 			Map.entry(Opcode.SARX, List.of(R32_R32_R32)),
 			Map.entry(Opcode.VPOR, List.of(RYMM_RYMM_RYMM)),
 			Map.entry(Opcode.VPAND, List.of(RYMM_RYMM_RYMM)),
 			Map.entry(Opcode.VPANDN, List.of(RXMM_RXMM_RXMM)),
-			Map.entry(Opcode.BZHI, List.of(R32_R32_R32)),
+			Map.entry(Opcode.BZHI, List.of(R32_R32_R32, R64_R64_R64)),
 			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
 			Map.entry(Opcode.MOVNTDQ, List.of(M128_RXMM)),
 			Map.entry(Opcode.SFENCE, List.of(NOTHING)),
 			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512, M512_RZMM)),
-			Map.entry(Opcode.VMOVDQU64, List.of(RZMM_M512)),
+			Map.entry(Opcode.VMOVDQU8, List.of(RZMM_M512, M512_RZMM)),
+			Map.entry(Opcode.VMOVDQU64, List.of(RZMM_M512, M512_RZMM)),
 			Map.entry(Opcode.VMOVNTDQ, List.of(M256_RYMM, M512_RZMM)),
 			Map.entry(Opcode.PCMPGTB, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.VPCMPGTB, List.of(RXMM_RXMM_RXMM)),
@@ -425,7 +433,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.STD, List.of(NOTHING)),
 			Map.entry(Opcode.VPSHUFB, List.of(RXMM_RXMM_RXMM)),
 			Map.entry(Opcode.VBROADCASTSS, List.of(RZMM_RXMM)),
-			Map.entry(Opcode.VMOVAPS, List.of(M512_RZMM)));
+			Map.entry(Opcode.VMOVAPS, List.of(M512_RZMM)),
+			Map.entry(Opcode.KMOVQ, List.of(RK_R64)));
 
 	private InstructionChecker() {}
 
@@ -538,6 +547,7 @@ public final class InstructionChecker {
 			case RXMM -> op instanceof RegisterXMM;
 			case RYMM -> op instanceof RegisterYMM;
 			case RZMM -> op instanceof RegisterZMM;
+			case RK -> op instanceof MaskRegister;
 			case M8 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.BYTE_PTR;
 			case M16 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.WORD_PTR;
 			case M32 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.DWORD_PTR;

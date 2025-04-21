@@ -22,8 +22,10 @@ import java.util.Objects;
 /** High-level representation of an x86 instruction. */
 public final class Instruction {
 
+	// TODO: should this be refactored into an InstructionBuilder?
 	private final InstructionPrefix prefix;
 	private final Opcode code;
+	private final MaskRegister destinationMask;
 	private final Operand op1;
 	private final Operand op2;
 	private final Operand op3;
@@ -32,12 +34,14 @@ public final class Instruction {
 	Instruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
+			final MaskRegister destinationMask,
 			final Operand firstOperand,
 			final Operand secondOperand,
 			final Operand thirdOperand,
 			final Operand fourthOperand) {
 		this.prefix = prefix;
 		this.code = Objects.requireNonNull(opcode);
+		this.destinationMask = destinationMask;
 		this.op1 = firstOperand;
 		if (firstOperand == null && secondOperand != null) {
 			throw new IllegalArgumentException(String.format(
@@ -58,6 +62,10 @@ public final class Instruction {
 		this.op4 = fourthOperand;
 	}
 
+	public Instruction(final Opcode opcode, final MaskRegister destinationMask, final Operand op1, final Operand op2) {
+		this(null, opcode, destinationMask, op1, op2, null, null);
+	}
+
 	/**
 	 * Creates an instruction with a prefix and two operands (like REP MOVS BYTE PTR ES:[EDI],BYTE PTR DS:[ESI]).
 	 *
@@ -71,7 +79,7 @@ public final class Instruction {
 			final Opcode opcode,
 			final Operand firstOperand,
 			final Operand secondOperand) {
-		this(prefix, opcode, firstOperand, secondOperand, null, null);
+		this(prefix, opcode, null, firstOperand, secondOperand, null, null);
 	}
 
 	/**
@@ -84,7 +92,7 @@ public final class Instruction {
 	 */
 	public Instruction(
 			final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
-		this(null, opcode, firstOperand, secondOperand, thirdOperand, null);
+		this(null, opcode, null, firstOperand, secondOperand, thirdOperand, null);
 	}
 
 	public Instruction(
@@ -93,7 +101,7 @@ public final class Instruction {
 			final Operand firstOperand,
 			final Operand secondOperand,
 			final Operand thirdOperand) {
-		this(prefix, opcode, firstOperand, secondOperand, thirdOperand, null);
+		this(prefix, opcode, null, firstOperand, secondOperand, thirdOperand, null);
 	}
 
 	public Instruction(
@@ -102,7 +110,7 @@ public final class Instruction {
 			final Operand secondOperand,
 			final Operand thirdOperand,
 			final Operand fourthOperand) {
-		this(null, opcode, firstOperand, secondOperand, thirdOperand, fourthOperand);
+		this(null, opcode, null, firstOperand, secondOperand, thirdOperand, fourthOperand);
 	}
 
 	/**
@@ -113,15 +121,15 @@ public final class Instruction {
 	 * @param secondOperand The second operand of the Instruction.
 	 */
 	public Instruction(final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
-		this(null, opcode, firstOperand, secondOperand, null, null);
+		this(null, opcode, null, firstOperand, secondOperand, null, null);
 	}
 
 	public Instruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
-		this(prefix, opcode, firstOperand, null, null, null);
+		this(prefix, opcode, null, firstOperand, null, null, null);
 	}
 
 	public Instruction(final InstructionPrefix prefix, final Opcode opcode) {
-		this(prefix, opcode, null, null, null, null);
+		this(prefix, opcode, null, null, null, null, null);
 	}
 
 	/**
@@ -131,7 +139,7 @@ public final class Instruction {
 	 * @param firstOperand The only operand of this instruction.
 	 */
 	public Instruction(final Opcode opcode, final Operand firstOperand) {
-		this(null, opcode, firstOperand, null, null, null);
+		this(null, opcode, null, firstOperand, null, null, null);
 	}
 
 	/**
@@ -140,7 +148,7 @@ public final class Instruction {
 	 * @param opcode The opcode of the instruction.
 	 */
 	public Instruction(final Opcode opcode) {
-		this(null, opcode, null, null, null, null);
+		this(null, opcode, null, null, null, null, null);
 	}
 
 	public boolean hasPrefix() {
@@ -173,6 +181,17 @@ public final class Instruction {
 	 */
 	public Opcode opcode() {
 		return code;
+	}
+
+	public boolean hasDestinationMask() {
+		return destinationMask != null;
+	}
+
+	public MaskRegister getDestinationMask() {
+		if (!hasDestinationMask()) {
+			throw new IllegalArgumentException("No destination mask.");
+		}
+		return destinationMask;
 	}
 
 	public boolean hasFirstOperand() {
@@ -259,6 +278,7 @@ public final class Instruction {
 	@Override
 	public String toString() {
 		return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
+				+ ";mask=" + destinationMask
 				+ ";operands=[" + op1 + "," + op2 + "," + op3 + "," + op4 + "]"
 				+ ")";
 	}
@@ -268,6 +288,7 @@ public final class Instruction {
 		int h = 17;
 		h = 31 * h + (prefix == null ? 0 : prefix.hashCode());
 		h = 31 * h + code.hashCode();
+		h = 31 * h + (destinationMask == null ? 0 : destinationMask.hashCode());
 		h = 31 * h + (op1 == null ? 0 : op1.hashCode());
 		h = 31 * h + (op2 == null ? 0 : op2.hashCode());
 		h = 31 * h + (op3 == null ? 0 : op3.hashCode());
@@ -288,6 +309,7 @@ public final class Instruction {
 		}
 		return Objects.equals(this.prefix, inst.prefix)
 				&& this.code.equals(inst.code)
+				&& Objects.equals(this.destinationMask, inst.destinationMask)
 				&& Objects.equals(this.op1, inst.op1)
 				&& Objects.equals(this.op2, inst.op2)
 				&& Objects.equals(this.op3, inst.op3)

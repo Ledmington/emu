@@ -123,6 +123,10 @@ public final class EvexPrefix {
 		return b;
 	}
 
+	public boolean r1() {
+		return r1;
+	}
+
 	public byte v() {
 		return v;
 	}

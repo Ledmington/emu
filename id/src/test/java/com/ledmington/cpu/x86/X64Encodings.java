@@ -17,6 +17,8 @@
  */
 package com.ledmington.cpu.x86;
 
+import static com.ledmington.cpu.x86.MaskRegister.K1;
+import static com.ledmington.cpu.x86.MaskRegister.K7;
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
@@ -131,6 +133,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM0;
+import static com.ledmington.cpu.x86.RegisterZMM.ZMM15;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM16;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM2;
 
@@ -9270,6 +9273,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Vzeroall
 				test(new Instruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"),
 				// Vmovq
+				test(new Instruction(Opcode.VMOVQ, RDI, XMM0), "vmovq rdi,xmm0", "c4 e1 f9 7e c7"),
 				test(
 						new Instruction(
 								Opcode.VMOVQ,
@@ -9334,6 +9338,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.VPBROADCASTB, YMM10, XMM8), "vpbroadcastb ymm10,xmm8", "c4 42 7d 78 d0"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM0, XMM4), "vpbroadcastb ymm0,xmm4", "c4 e2 7d 78 c4"),
 				test(new Instruction(Opcode.VPBROADCASTB, YMM8, XMM4), "vpbroadcastb ymm8,xmm4", "c4 62 7d 78 c4"),
+				test(new Instruction(Opcode.VPBROADCASTB, ZMM16, ESI), "vpbroadcastb zmm16,esi", "62 e2 7d 48 7a c6"),
+				// Vpbroadcastd
+				test(new Instruction(Opcode.VPBROADCASTD, YMM0, XMM0), "vpbroadcastd ymm0,xmm0", "c4 e2 7d 58 c0"),
+				test(new Instruction(Opcode.VPBROADCASTD, ZMM16, ESI), "vpbroadcastd zmm16,esi", "62 e2 7d 48 7c c6"),
 				// Sarx
 				test(new Instruction(Opcode.SARX, EAX, EBX, ECX), "sarx eax,ebx,ecx", "c4 e2 72 f7 c3"),
 				test(new Instruction(Opcode.SARX, EAX, ECX, ECX), "sarx eax,ecx,ecx", "c4 e2 72 f7 c1"),
@@ -9351,6 +9359,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Bzhi
 				test(new Instruction(Opcode.BZHI, EDX, ECX, EBX), "bzhi edx,ecx,ebx", "c4 e2 60 f5 d1"),
 				test(new Instruction(Opcode.BZHI, EDX, EBX, ECX), "bzhi edx,ebx,ecx", "c4 e2 70 f5 d3"),
+				test(new Instruction(Opcode.BZHI, RCX, RCX, RDX), "bzhi rcx,rcx,rdx", "c4 e2 e8 f5 c9"),
 				// Movbe
 				test(
 						new Instruction(
@@ -9408,6 +9417,40 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								ZMM0),
 						"vmovups ZMMWORD PTR [rdi],zmm0",
 						"62 f1 7c 48 11 07"),
+				// Vmovdqu8
+				test(
+						new Instruction(
+								Opcode.VMOVDQU8,
+								K1,
+								ZMM16,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RAX)
+										.build()),
+						"vmovdqu8 zmm16{k1},ZMMWORD PTR [rax]",
+						"62 e1 7f 49 6f 00"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU8,
+								K1,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RAX)
+										.build(),
+								ZMM16),
+						"vmovdqu8 ZMMWORD PTR [rax]{k1},zmm16",
+						"62 e1 7f 49 7f 00"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU8,
+								K7,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(new SegmentRegister(CS, RAX))
+										.build(),
+								ZMM15),
+						"vmovdqu8 ZMMWORD PTR cs:[rax]{k7},zmm15",
+						"2e 62 71 7f 4f 7f 38"),
 				// Vmodqu64
 				test(
 						new Instruction(
@@ -9507,7 +9550,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build(),
 								ZMM2),
 						"vmovaps ZMMWORD PTR [rdi],zmm2",
-						"62 f1 7c 48 29 17"));
+						"62 f1 7c 48 29 17"),
+				// Kmovq
+				test(new Instruction(Opcode.KMOVQ, K1, RCX), "kmovq k1,rcx", "c4 e1 fb 92 c9"));
 	}
 
 	//

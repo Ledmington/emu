@@ -148,6 +148,22 @@ public enum RegisterZMM implements Register {
 			case 0x0d -> ZMM13;
 			case 0x0e -> ZMM14;
 			case 0x0f -> ZMM15;
+			case 0x10 -> ZMM16;
+			case 0x11 -> ZMM17;
+			case 0x12 -> ZMM18;
+			case 0x13 -> ZMM19;
+			case 0x14 -> ZMM20;
+			case 0x15 -> ZMM21;
+			case 0x16 -> ZMM22;
+			case 0x17 -> ZMM23;
+			case 0x18 -> ZMM24;
+			case 0x19 -> ZMM25;
+			case 0x1a -> ZMM26;
+			case 0x1b -> ZMM27;
+			case 0x1c -> ZMM28;
+			case 0x1d -> ZMM29;
+			case 0x1e -> ZMM30;
+			case 0x1f -> ZMM31;
 			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
 		};
 	}
@@ -156,16 +172,14 @@ public enum RegisterZMM implements Register {
 	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final RegisterZMM r) {
 		return switch (r) {
-			case ZMM0, ZMM8 -> (byte) 0x00;
-			case ZMM1, ZMM9 -> (byte) 0x01;
-			case ZMM2, ZMM10 -> (byte) 0x02;
-			case ZMM3, ZMM11 -> (byte) 0x03;
-			case ZMM4, ZMM12 -> (byte) 0x04;
-			case ZMM5, ZMM13 -> (byte) 0x05;
-			case ZMM6, ZMM14 -> (byte) 0x06;
-			case ZMM7, ZMM15 -> (byte) 0x07;
-			// TODO: remove this
-			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
+			case ZMM0, ZMM8, ZMM16, ZMM24 -> (byte) 0x00;
+			case ZMM1, ZMM9, ZMM17, ZMM25 -> (byte) 0x01;
+			case ZMM2, ZMM10, ZMM18, ZMM26 -> (byte) 0x02;
+			case ZMM3, ZMM11, ZMM19, ZMM27 -> (byte) 0x03;
+			case ZMM4, ZMM12, ZMM20, ZMM28 -> (byte) 0x04;
+			case ZMM5, ZMM13, ZMM21, ZMM29 -> (byte) 0x05;
+			case ZMM6, ZMM14, ZMM22, ZMM30 -> (byte) 0x06;
+			case ZMM7, ZMM15, ZMM23, ZMM31 -> (byte) 0x07;
 		};
 	}
 
@@ -173,10 +187,61 @@ public enum RegisterZMM implements Register {
 	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final RegisterZMM r) {
 		return switch (r) {
-			case ZMM0, ZMM1, ZMM2, ZMM3, ZMM4, ZMM5, ZMM6, ZMM7 -> false;
-			case ZMM8, ZMM9, ZMM10, ZMM11, ZMM12, ZMM13, ZMM14, ZMM15 -> true;
-			// TODO: remove this
-			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
+			case ZMM0,
+					ZMM1,
+					ZMM2,
+					ZMM3,
+					ZMM4,
+					ZMM5,
+					ZMM6,
+					ZMM7,
+					ZMM16,
+					ZMM17,
+					ZMM18,
+					ZMM19,
+					ZMM20,
+					ZMM21,
+					ZMM22,
+					ZMM23 -> false;
+			case ZMM8,
+					ZMM9,
+					ZMM10,
+					ZMM11,
+					ZMM12,
+					ZMM13,
+					ZMM14,
+					ZMM15,
+					ZMM24,
+					ZMM25,
+					ZMM26,
+					ZMM27,
+					ZMM28,
+					ZMM29,
+					ZMM30,
+					ZMM31 -> true;
+		};
+	}
+
+	public static boolean requiresEvexR1(final RegisterZMM r) {
+		return switch (r) {
+			case ZMM0, ZMM1, ZMM2, ZMM3, ZMM4, ZMM5, ZMM6, ZMM7, ZMM8, ZMM9, ZMM10, ZMM11, ZMM12, ZMM13, ZMM14, ZMM15 ->
+				false;
+			case ZMM16,
+					ZMM17,
+					ZMM18,
+					ZMM19,
+					ZMM20,
+					ZMM21,
+					ZMM22,
+					ZMM23,
+					ZMM24,
+					ZMM25,
+					ZMM26,
+					ZMM27,
+					ZMM28,
+					ZMM29,
+					ZMM30,
+					ZMM31 -> true;
 		};
 	}
 

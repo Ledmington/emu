@@ -177,7 +177,7 @@ public final class IndirectOperand implements Operand {
 	}
 
 	public boolean hasSegment() {
-		return hasBase() && base instanceof SegmentRegister;
+		return hasBase() && base instanceof final SegmentRegister sr;
 	}
 
 	public Register16 getSegment() {
