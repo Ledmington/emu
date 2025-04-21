@@ -2609,6 +2609,7 @@ public final class InstructionDecoder {
 		final byte VZEROALL_OPCODE = (byte) 0x77;
 		final byte VMOVQ_RXMM_M64_OPCODE = (byte) 0x7e;
 		final byte VMOVDQU_M256_RYMM_OPCODE = (byte) 0x7f;
+		final byte KMOVD_OPCODE = (byte) 0x92;
 		final byte VMOVQ_M64_RXMM_OPCODE = (byte) 0xd6;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
@@ -2757,6 +2758,13 @@ public final class InstructionDecoder {
 						RegisterXMM.fromByte(getByteFromV(vex2)),
 						RegisterXMM.fromByte(modrm.rm()),
 						imm8(b));
+			}
+			case KMOVD_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.KMOVD,
+						MaskRegister.fromByte(getByteFromReg(vex2, modrm)),
+						Register32.fromByte(getByteFromRM(pref, modrm)));
 			}
 			default -> {
 				final long pos = b.getPosition();

@@ -1295,6 +1295,10 @@ public final class InstructionEncoder {
 				encodeVex3Prefix(wb, inst);
 				wb.write((byte) 0x92);
 			}
+			case KMOVD -> {
+				encodeVex2Prefix(wb, inst);
+				wb.write((byte) 0x92);
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1613,7 +1617,7 @@ public final class InstructionEncoder {
 
 	private static boolean hasImpliedRepnzPrefix(final Instruction inst) {
 		return switch (inst.opcode()) {
-			case VMOVDQU8, KMOVQ -> true;
+			case VMOVDQU8, KMOVQ, KMOVD -> true;
 			default -> false;
 		};
 	}
@@ -1637,7 +1641,7 @@ public final class InstructionEncoder {
 				(inst.getNumOperands() == 3 && inst.secondOperand() instanceof final Register r)
 						? Registers.combine(Registers.requiresExtension(r), Registers.toByte(r))
 						: 0,
-				inst.firstOperand().bits() == 256 || inst.secondOperand().bits() == 256,
+				inst.firstOperand() instanceof RegisterYMM || inst.secondOperand() instanceof RegisterYMM,
 				hasImpliedOperandSizeOverridePrefix(inst)
 						? (byte) 0b01
 						: (hasImpliedRepPrefix(inst) ? (byte) 0b10 : (hasImpliedRepnzPrefix(inst) ? (byte) 0b11 : 0)));

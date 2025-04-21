@@ -18,6 +18,7 @@
 package com.ledmington.cpu.x86;
 
 import static com.ledmington.cpu.x86.MaskRegister.K1;
+import static com.ledmington.cpu.x86.MaskRegister.K2;
 import static com.ledmington.cpu.x86.MaskRegister.K7;
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
@@ -9565,6 +9566,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"62 f1 7c 48 29 17"),
 				// Kmovq
 				test(new Instruction(Opcode.KMOVQ, K1, RCX), "kmovq k1,rcx", "c4 e1 fb 92 c9"),
+				// Kmovd
+				test(new Instruction(Opcode.KMOVD, K2, ECX), "kmovd k2,ecx", "c5 fb 92 d1"),
 				// Xtest
 				test(new Instruction(Opcode.XTEST), "xtest", "0f 01 d6"));
 	}

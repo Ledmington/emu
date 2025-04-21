@@ -17,661 +17,661 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** X86 opcode mnemonics. */
 @SuppressWarnings("PMD.ExcessivePublicCount")
 public enum Opcode {
 
 	/** Add with carry. */
-	ADC("adc"),
+	ADC,
 
 	/** Add. */
-	ADD("add"),
+	ADD,
 
 	/** Add scalar double-precision floating-point values. */
-	ADDSD("addsd"),
+	ADDSD,
 
 	/** Logical AND. */
-	AND("and"),
+	AND,
 
 	/** Bit scan forward. */
-	BSF("bsf"),
+	BSF,
 
 	/** Bit scan reverse. */
-	BSR("bsr"),
+	BSR,
 
 	/** Bit swap. */
-	BSWAP("bswap"),
+	BSWAP,
 
 	/** Bit test. */
-	BT("bt"),
+	BT,
 
 	/** Bit test and complement. */
-	BTC("btc"),
+	BTC,
 
 	/** Bit test and reset. */
-	BTR("btr"),
+	BTR,
 
 	/** Bit test and set. */
-	BTS("bts"),
+	BTS,
 
 	/** Zero high bits starting from specified bit position. */
-	BZHI("bzhi"),
+	BZHI,
 
 	/** Call procedure. */
-	CALL("call"),
+	CALL,
 
 	/** Convert doubleword to quadword. */
-	CDQ("cdq"),
+	CDQ,
 
 	/** Convert doubleword to quadword. */
-	CDQE("cdqe"),
+	CDQE,
 
 	/** Clear direction flag. */
-	CLD("cld"),
+	CLD,
 
 	/** Conditional move if above. */
-	CMOVA("cmova"),
+	CMOVA,
 
 	/** Conditional move if above or equal. */
-	CMOVAE("cmovae"),
+	CMOVAE,
 
 	/** Conditional move if below. */
-	CMOVB("cmovb"),
+	CMOVB,
 
 	/** Conditional move if below or equal. */
-	CMOVBE("cmovbe"),
+	CMOVBE,
 
 	/** Conditional move if equal. */
-	CMOVE("cmove"),
+	CMOVE,
 
 	/** Conditional move if greater. */
-	CMOVG("cmovg"),
+	CMOVG,
 
 	/** Conditional move if greater or equal. */
-	CMOVGE("cmovge"),
+	CMOVGE,
 
 	/** Conditional move if less. */
-	CMOVL("cmovl"),
+	CMOVL,
 
 	/** Conditional move if less or equal. */
-	CMOVLE("cmovle"),
+	CMOVLE,
 
 	/** Conditional move if not equal. */
-	CMOVNE("cmovne"),
+	CMOVNE,
 
 	/** Conditional move if not signed. */
-	CMOVNS("cmovns"),
+	CMOVNS,
 
 	/** Conditional move if signed. */
-	CMOVS("cmovs"),
+	CMOVS,
 
 	/** Compare two operands. */
-	CMP("cmp"),
+	CMP,
 
 	/** Compare and exchange. */
-	CMPXCHG("cmpxchg"),
+	CMPXCHG,
 
 	/** CPU identification. */
-	CPUID("cpuid"),
+	CPUID,
 
 	/** Convert doubleword integer to scalar double precision floating-point value. */
-	CVTSI2SD("cvtsi2sd"),
+	CVTSI2SD,
 
 	/** Convert word to doubleword. */
-	CWDE("cwde"),
+	CWDE,
 
 	/** Decrement. */
-	DEC("dec"),
+	DEC,
 
 	/** Unsigned divide. */
-	DIV("div"),
+	DIV,
 
 	/** Divide scalar double-precision floating-point values. */
-	DIVSD("divsd"),
+	DIVSD,
 
 	/** Execute an Enclave user function of specified leaf number. */
-	ENCLU("enclu"),
+	ENCLU,
 
 	/** Terminate an indirect branch in 32-bit mode. */
-	ENDBR32("endbr32"),
+	ENDBR32,
 
 	/** Terminate an indirect branch in 64-bit mode. */
-	ENDBR64("endbr64"),
+	ENDBR64,
 
 	/** Halt. */
-	HLT("hlt"),
+	HLT,
 
 	/** Signed divide. */
-	IDIV("idiv"),
+	IDIV,
 
 	/** Signed multiply. */
-	IMUL("imul"),
+	IMUL,
 
 	/** Increment. */
-	INC("inc"),
+	INC,
 
 	/** Increment shadow stack pointer. */
-	INCSSPQ("incsspq"),
+	INCSSPQ,
 
 	/** Call to interrupt procedure. */
-	INT3("int3"),
+	INT3,
 
 	/** Unsigned conditional jump if above. */
-	JA("ja"),
+	JA,
 
 	/** Unsigned conditional jump if above or equal. */
-	JAE("jae"),
+	JAE,
 
 	/** Unsigned conditional jump if below. */
-	JB("jb"),
+	JB,
 
 	/** Unsigned conditional jump if below or equal. */
-	JBE("jbe"),
+	JBE,
 
 	/** Unsigned conditional jump if equal. */
-	JE("je"),
+	JE,
 
 	/** Signed conditional jump if greater. */
-	JG("jg"),
+	JG,
 
 	/** Signed conditional jump if greater or equal. */
-	JGE("jge"),
+	JGE,
 
 	/** Signed conditional jump if less. */
-	JL("jl"),
+	JL,
 
 	/** Signed conditional jump if less or equal. */
-	JLE("jle"),
+	JLE,
 
 	/** Unconditional jump. */
-	JMP("jmp"),
+	JMP,
 
 	/** Unsigned conditional jump if not equal. */
-	JNE("jne"),
+	JNE,
 
 	/** Conditional jump if not signed. */
-	JNS("jns"),
+	JNS,
 
 	/** Conditional jump if parity. */
-	JP("jp"),
+	JP,
 
 	/** Conditional jump if signed. */
-	JS("js"),
+	JS,
 
 	/** Move from and to mask registers. */
-	KMOVB("kmovb"),
+	KMOVB,
 
 	/** Move from and to mask registers. */
-	KMOVD("kmovd"),
+	KMOVD,
 
 	/** Move from and to mask registers. */
-	KMOVQ("kmovq"),
+	KMOVQ,
 
 	/** Move from and to mask registers. */
-	KMOVW("kmovw"),
+	KMOVW,
 
 	/** Load status flags into AH register. */
-	LAHF("lahf"),
+	LAHF,
 
 	/** Load unaligned integer 128-bit. */
-	LDDQU("lddqu"),
+	LDDQU,
 
 	/** Load effective address. */
-	LEA("lea"),
+	LEA,
 
 	/** High-level procedure exit. */
-	LEAVE("leave"),
+	LEAVE,
 
 	/** Move to/from registers and memory. */
-	MOV("mov"),
+	MOV,
 
 	/** Move a 64-bit immediate into a 64-bit register. */
-	MOVABS("movabs"),
+	MOVABS,
 
 	/** Move aligned packed double-precision floating-point values. */
-	MOVAPD("movapd"),
+	MOVAPD,
 
 	/** Move aligned packed single-precision floating-point values. */
-	MOVAPS("movaps"),
+	MOVAPS,
 
 	/** Move data after swapping bytes. */
-	MOVBE("movbe"),
+	MOVBE,
 
 	/** Move doubleword. */
-	MOVD("movd"),
+	MOVD,
 
 	/** Move aligned double-quadword. */
-	MOVDQA("movdqa"),
+	MOVDQA,
 
 	/** Move unaligned double-quadword. */
-	MOVDQU("movdqu"),
+	MOVDQU,
 
 	/** Move packed single-precision floating-point values high to low. */
-	MOVHLPS("movhlps"),
+	MOVHLPS,
 
 	/**
 	 * Move high packed double precision floating-point values to and from the high quadword of an XMM register and
 	 * memory.
 	 */
-	MOVHPD("movhpd"),
+	MOVHPD,
 
 	/**
 	 * Move high packed single precision floating-point values to and from the high quadword of an XMM register and
 	 * memory.
 	 */
-	MOVHPS("movhps"),
+	MOVHPS,
 
 	/** Store double quadword using non-temporal hint. */
-	MOVNTDQ("movntdq"),
+	MOVNTDQ,
 
 	/** Move quadword. */
-	MOVQ("movq"),
+	MOVQ,
 
 	/** Move string. */
-	MOVS("movs"),
+	MOVS,
 
 	/** Move double-word string. */
-	MOVSD("movsd"),
+	MOVSD,
 
 	/** Move and sign-extend. */
-	MOVSX("movsx"),
+	MOVSX,
 
 	/** Move and sign-extend doubleword. */
-	MOVSXD("movsxd"),
+	MOVSXD,
 
 	/** Move unaligned packed single precision floating-point values into XMM register. */
-	MOVUPS("movups"),
+	MOVUPS,
 
 	/** Move and zero-extend. */
-	MOVZX("movzx"),
+	MOVZX,
 
 	/** Unsigned multiply. */
-	MUL("mul"),
+	MUL,
 
 	/** Two's complement negation. */
-	NEG("neg"),
+	NEG,
 
 	/** No operation. */
-	NOP("nop"),
+	NOP,
 
 	/** Logical NOT. */
-	NOT("not"),
+	NOT,
 
 	/** Logical OR. */
-	OR("or"),
+	OR,
 
 	/** Add packed quadword integers. */
-	PADDQ("paddq"),
+	PADDQ,
 
 	/** Packed align right. */
-	PALIGNR("palignr"),
+	PALIGNR,
 
-	/** Logical AND (MMX/XMM registers). */
-	PAND("pand"),
+	/** Logical AND . */
+	PAND,
 
 	/** Compare packed bytes for equal. */
-	PCMPEQB("pcmpeqb"),
+	PCMPEQB,
 
 	/** Compare packed doublewords for equal. */
-	PCMPEQD("pcmpeqd"),
+	PCMPEQD,
 
 	/** Compare packed words for equal. */
-	PCMPEQW("pcmpeqw"),
+	PCMPEQW,
 
 	/** Compare packed signed integers for greater than. */
-	PCMPGTB("pcmpgtb"),
+	PCMPGTB,
 
 	/** Packed compare implicit-length strings. */
-	PCMPISTRI("pcmpistri"),
+	PCMPISTRI,
 
 	/** Extract word. */
-	PEXTRW("pextrw"),
+	PEXTRW,
 
 	/** Maximum of packed unsigned byte integers. */
-	PMAXUB("pmaxub"),
+	PMAXUB,
 
 	/** Minimum of packed unsigned byte integers. */
-	PMINUB("pminub"),
+	PMINUB,
 
 	/** Move byte mask. */
-	PMOVMSKB("pmovmskb"),
+	PMOVMSKB,
 
 	/** Pop a value from the stack. */
-	POP("pop"),
+	POP,
 
-	/** Logical OR (MMX/XMM registers). */
-	POR("por"),
+	/** Logical OR . */
+	POR,
 
 	/**
 	 * Non-temporal data—fetch data into location close to the processor, minimizing cache pollution. Pentium III
 	 * processor: 1st-level cache Pentium 4 and Intel Xeon processor: 2nd-level cache
 	 */
-	PREFETCHNTA("prefetchnta"),
+	PREFETCHNTA,
 
 	/**
 	 * Temporal data—fetch data into all levels of cache hierarchy. Pentium III processor: 1st-level cache or 2nd-level
 	 * cache Pentium 4 and Intel Xeon processor: 2nd-level cache
 	 */
-	PREFETCHT0("prefetcht0"),
+	PREFETCHT0,
 
 	/**
 	 * Temporal data—fetch data into level 2 cache and higher. Pentium III processor: 2nd-level cache Pentium 4 and
 	 * Intel Xeon processor: 2nd-level cache
 	 */
-	PREFETCHT1("prefetcht1"),
+	PREFETCHT1,
 
 	/**
 	 * Temporal data—fetch data into level 2 cache and higher. Pentium III processor: 2nd-level cache Pentium 4 and
 	 * Intel Xeon processor: 2nd-level cache
 	 */
-	PREFETCHT2("prefetcht2"),
+	PREFETCHT2,
 
 	/** Packed shuffle bytes. */
-	PSHUFB("pshufb"),
+	PSHUFB,
 
 	/** Shuffle packed doublewords. */
-	PSHUFD("pshufd"),
+	PSHUFD,
 
 	/** Shuffle packed integer word in MMX register. */
-	PSHUFW("pshufw"),
+	PSHUFW,
 
 	/** Shift packed doublewords left logical. */
-	PSLLD("pslld"),
+	PSLLD,
 
 	/** Shift packed double quadwords left logical. */
-	PSLLDQ("pslldq"),
+	PSLLDQ,
 
 	/** Shift packed quadwords left logical. */
-	PSLLQ("psllq"),
+	PSLLQ,
 
 	/** Shift packed words left logical. */
-	PSLLW("psllw"),
+	PSLLW,
 
 	/** Shift packed doublewords right arithmetic. */
-	PSRAD("psrad"),
+	PSRAD,
 
 	/** Shift packed words right arithmetic. */
-	PSRAW("psraw"),
+	PSRAW,
 
 	/** Shift packed doublewords right logical. */
-	PSRLD("psrld"),
+	PSRLD,
 
 	/** Shift packed double quadwords right logical. */
-	PSRLDQ("psrldq"),
+	PSRLDQ,
 
 	/** Shift packed quadwords right logical. */
-	PSRLQ("psrlq"),
+	PSRLQ,
 
 	/** Shift packed words right logical. */
-	PSRLW("psrlw"),
+	PSRLW,
 
 	/** Subtract packed byte integers. */
-	PSUBB("psubb"),
+	PSUBB,
 
 	/** Subtract packed doubleword integers. */
-	PSUBD("psubd"),
+	PSUBD,
 
 	/** Subtract packed quadword integers. */
-	PSUBQ("psubq"),
+	PSUBQ,
 
 	/** Subtract packed word integers. */
-	PSUBW("psubw"),
+	PSUBW,
 
 	/** Unpack high data. */
-	PUNPCKHQDQ("punpckhqdq"),
+	PUNPCKHQDQ,
 
 	/** Unpack low-order bytes. */
-	PUNPCKLBW("punpcklbw"),
+	PUNPCKLBW,
 
 	/** Unpack low-order doublewords. */
-	PUNPCKLDQ("punpckldq"),
+	PUNPCKLDQ,
 
 	/** Interleave low-order quadword from xmm1 and xmm2/m128 into xmm1 register. */
-	PUNPCKLQDQ("punpcklqdq"),
+	PUNPCKLQDQ,
 
 	/** Unpack low data. */
-	PUNPCKLWD("punpcklwd"),
+	PUNPCKLWD,
 
 	/** Push word, doubleword or quadword onto the stack. */
-	PUSH("push"),
+	PUSH,
 
-	/** Logical XOR (MMX/XMM registers). */
-	PXOR("pxor"),
+	/** Logical XOR . */
+	PXOR,
 
 	/** Rotate thru carry left. */
-	RCL("rcl"),
+	RCL,
 
 	/** Rotate thru carry right. */
-	RCR("rcr"),
+	RCR,
 
 	/** Read random number. */
-	RDRAND("rdrand"),
+	RDRAND,
 
 	/** Read random seed. */
-	RDSEED("rdseed"),
+	RDSEED,
 
 	/** Read shadow stack pointer. */
-	RDSSPQ("rdsspq"),
+	RDSSPQ,
 
 	/** Return from procedure. */
-	RET("ret"),
+	RET,
 
 	/** Rotate left. */
-	ROL("rol"),
+	ROL,
 
 	/** Rotate right. */
-	ROR("ror"),
+	ROR,
 
 	/** Load status flags into AH register. */
-	SAHF("sahf"),
+	SAHF,
 
 	/** Arithmetic shift right. */
-	SAR("sar"),
+	SAR,
 
 	/** Arithmetic shift right without affecting flags. */
-	SARX("sarx"),
+	SARX,
 
 	/** Integer subtraction with borrow. */
-	SBB("sbb"),
+	SBB,
 
 	/** Set byte if above. */
-	SETA("seta"),
+	SETA,
 
 	/** Set byte if above or equal. */
-	SETAE("setae"),
+	SETAE,
 
 	/** Set byte if below. */
-	SETB("setb"),
+	SETB,
 
 	/** Set byte if below or equal. */
-	SETBE("setbe"),
+	SETBE,
 
 	/** Set byte if equal. */
-	SETE("sete"),
+	SETE,
 
 	/** Set byte if greater. */
-	SETG("setg"),
+	SETG,
 
 	/** Set byte if greater or equal. */
-	SETGE("setge"),
+	SETGE,
 
 	/** Set byte if less. */
-	SETL("setl"),
+	SETL,
 
 	/** Set byte if less or equal. */
-	SETLE("setle"),
+	SETLE,
 
 	/** Set byte if not equal. */
-	SETNE("setne"),
+	SETNE,
 
 	/** Set byte if not overflow. */
-	SETNO("setno"),
+	SETNO,
 
 	/** Set byte if overflow. */
-	SETO("seto"),
+	SETO,
 
 	/** Store fence. */
-	SFENCE("sfence"),
+	SFENCE,
 
 	/** Logical shift left. */
-	SHL("shl"),
+	SHL,
 
 	/** Logical shift right. */
-	SHR("shr"),
+	SHR,
 
 	/** Shuffles values in packed double-precision floating-point operands. */
-	SHUFPD("shufpd"),
+	SHUFPD,
 
 	/** Shuffles values in packed single-precision floating-point operands. */
-	SHUFPS("shufps"),
+	SHUFPS,
 
 	/** Set direction flag. */
-	STD("std"),
+	STD,
 
 	/** Store string. */
-	STOS("stos"),
+	STOS,
 
 	/** Subtract. */
-	SUB("sub"),
+	SUB,
 
 	/** Fast system call. */
-	SYSCALL("syscall"),
+	SYSCALL,
 
 	/** Logical compare. */
-	TEST("test"),
+	TEST,
 
 	/** Unordered compare scalar double-precision floating-point values and set EFLAGS. */
-	UCOMISD("ucomisd"),
+	UCOMISD,
 
 	/** Unordered compare scalar single-precision floating-point values and set EFLAGS. */
-	UCOMISS("ucomiss"),
+	UCOMISS,
 
 	/** Undefined instruction. */
-	UD2("ud2"),
+	UD2,
 
 	/** Load with broadcast floating-point data. */
-	VBROADCASTSS("vbroadcastss"),
+	VBROADCASTSS,
 
 	/** Move aligned packed single-precision floating-point values. */
-	VMOVAPS("vmovaps"),
+	VMOVAPS,
 
 	/** Packed align right. */
-	VPALIGNR("vpalignr"),
+	VPALIGNR,
 
 	/** Load with broadcast integer data from general-purpose register. */
-	VPBROADCASTB("vpbroadcastb"),
+	VPBROADCASTB,
 
 	/** Load with broadcast integer data from general-purpose register. */
-	VPBROADCASTD("vpbroadcastd"),
+	VPBROADCASTD,
 
 	/** Load with broadcast integer data from general-purpose register. */
-	VPBROADCASTQ("vpbroadcastq"),
+	VPBROADCASTQ,
 
 	/** Load with broadcast integer data from general-purpose register. */
-	VPBROADCASTW("vpbroadcastw"),
+	VPBROADCASTW,
 
 	/** Compare packed data for equal. */
-	VPCMPEQB("vpcmpeqb"),
+	VPCMPEQB,
 
 	/** Compare packed signed integers for greater than. */
-	VPCMPGTB("vpcmpgtb"),
+	VPCMPGTB,
 
 	/** Packed compare implicit length strings, return index. */
-	VPCMPISTRI("vpcmpistri"),
+	VPCMPISTRI,
 
 	/** Minimum of packed unsigned byte integers. */
-	VPMINUB("vpminub"),
+	VPMINUB,
 
 	/** Packed shuffle bytes. */
-	VPSHUFB("vpshufb"),
+	VPSHUFB,
 
 	/** Shift double quadword left logical. */
-	VPSLLDQ("vpslldq"),
+	VPSLLDQ,
 
 	/** Shift double quadword right logical. */
-	VPSRLDQ("vpsrldq"),
+	VPSRLDQ,
 
 	/** Subtract packed integers. */
-	VPSUBB("vpsubb"),
+	VPSUBB,
 
 	/** Invoke VM function. */
-	VMFUNC("vmfunc"),
+	VMFUNC,
 
 	/** Move doubleword. */
-	VMOVD("vmovd"),
+	VMOVD,
 
 	/** Move unaligned packed integer values. */
-	VMOVDQU("vmovdqu"),
+	VMOVDQU,
 
 	/** Move unaligned packed integer values. */
-	VMOVDQU8("vmovdqu8"),
+	VMOVDQU8,
 
 	/** Move unaligned packed integer values. */
-	VMOVDQU16("vmovdqu16"),
+	VMOVDQU16,
 
 	/** Move unaligned packed integer values. */
-	VMOVDQU32("vmovdqu32"),
+	VMOVDQU32,
 
 	/** Move unaligned packed integer values. */
-	VMOVDQU64("vmovdqu64"),
+	VMOVDQU64,
 
 	/** Store double quadword using non-temporal hint. */
-	VMOVNTDQ("vmovntdq"),
+	VMOVNTDQ,
 
 	/** Move quadword. */
-	VMOVQ("vmovq"),
+	VMOVQ,
 
 	/** Move unaligned packed single precision floating-point values. */
-	VMOVUPS("vmovups"),
+	VMOVUPS,
 
 	/** Logical AND. */
-	VPAND("vpand"),
+	VPAND,
 
 	/** Logical AND NOT. */
-	VPANDN("vpandn"),
+	VPANDN,
 
 	/** Move byte mask. */
-	VPMOVMSKB("vpmovmskb"),
+	VPMOVMSKB,
 
 	/** Logical OR. */
-	VPOR("vpor"),
+	VPOR,
 
 	/** Logical exclusive OR. */
-	VPXOR("vpxor"),
+	VPXOR,
 
 	/** Zero all XMM, YMM and ZMM registers. */
-	VZEROALL("vzeroall"),
+	VZEROALL,
 
 	/** Exchange and add. */
-	XADD("xadd"),
+	XADD,
 
 	/** Exchange. */
-	XCHG("xchg"),
+	XCHG,
 
 	/** Transactional end. */
-	XEND("xend"),
+	XEND,
 
 	/** Reads the state of an extended control register. */
-	XGETBV("xgetbv"),
+	XGETBV,
 
 	/** Logical XOR. */
-	XOR("xor"),
+	XOR,
 
 	/** Bitwise logical XOR of single-precision floating-point values. */
-	XORPS("xorps"),
+	XORPS,
 
 	/** Set extended control register. */
-	XSETBV("xsetbv"),
+	XSETBV,
 
 	/** Test if in transactional execution. */
-	XTEST("xtest");
+	XTEST;
 
 	private final String mnemonicString;
 
-	Opcode(final String mnemonicString) {
-		this.mnemonicString = Objects.requireNonNull(mnemonicString);
+	Opcode() {
+		this.mnemonicString = name().toLowerCase(Locale.US);
 	}
 
 	/**
