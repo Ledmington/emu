@@ -778,11 +778,19 @@ public final class InstructionDecoder {
 			notImplemented();
 		}
 
-		if (modrm.reg() != 0b00000010 || modrm.rm() != 0b00000000) {
+		if (modrm.reg() != 0b010) {
 			throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 		}
 
-		return new Instruction(Opcode.XGETBV);
+		return switch (modrm.rm()) {
+			case (byte) 0b000 -> new Instruction(Opcode.XGETBV);
+			case (byte) 0b001 -> new Instruction(Opcode.XSETBV);
+			case (byte) 0b100 -> new Instruction(Opcode.VMFUNC);
+			case (byte) 0b101 -> new Instruction(Opcode.XEND);
+			case (byte) 0b110 -> new Instruction(Opcode.XTEST);
+			case (byte) 0b111 -> new Instruction(Opcode.ENCLU);
+			default -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+		};
 	}
 
 	private static Instruction parseExtendedOpcodeGroup16(
@@ -2920,6 +2928,7 @@ public final class InstructionDecoder {
 		final byte VMOVDQU64_RZMM_M512_OPCODE = (byte) 0x6f;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x7a;
 		final byte VPBROADCASTD_OPCODE = (byte) 0x7c;
+		final byte VMOVQ_OPCODE = (byte) 0x7e;
 		final byte VMOVDQU64_M512_RZMM_OPCODE = (byte) 0x7f;
 		final byte VMOVNTDQ_OPCODE = (byte) 0xe7;
 
@@ -2955,14 +2964,14 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VPBROADCASTB,
-						RegisterZMM.fromByte(or(getByteFromReg(evex, modrm), !evex.r1() ? (byte) 0b00010000 : 0)),
+						getZmmFromReg(evex, modrm),
 						Register32.fromByte(getByteFromRM(evex, modrm)));
 			}
 			case VPBROADCASTD_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VPBROADCASTD,
-						RegisterZMM.fromByte(or(getByteFromReg(evex, modrm), !evex.r1() ? (byte) 0b00010000 : 0)),
+						getZmmFromReg(evex, modrm),
 						Register32.fromByte(getByteFromRM(evex, modrm)));
 			}
 			case VMOVAPS_OPCODE -> {
@@ -2976,21 +2985,25 @@ public final class InstructionDecoder {
 			}
 			case VMOVDQU64_RZMM_M512_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final MaskRegister k = evex.a() == (byte) 0 ? null : MaskRegister.fromByte(evex.a());
 				yield new Instruction(
-						Opcode.VMOVDQU64,
-						RegisterZMM.fromByte(getByteFromReg(evex, modrm)),
+						evex.w() ? Opcode.VMOVDQU64 : Opcode.VMOVDQU8,
+						k,
+						getZmmFromReg(evex, modrm),
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.ZMMWORD_PTR)
 								.build());
 			}
 			case VMOVDQU64_M512_RZMM_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final MaskRegister k = evex.a() == (byte) 0 ? null : MaskRegister.fromByte(evex.a());
 				yield new Instruction(
-						Opcode.VMOVDQU64,
+						evex.w() ? Opcode.VMOVDQU64 : Opcode.VMOVDQU8,
+						k,
 						parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.ZMMWORD_PTR)
 								.build(),
-						RegisterZMM.fromByte(or(getByteFromReg(evex, modrm), !evex.r1() ? (byte) 0b00010000 : 0)));
+						getZmmFromReg(evex, modrm));
 			}
 			case VMOVNTDQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -3001,6 +3014,13 @@ public final class InstructionDecoder {
 								.build(),
 						RegisterZMM.fromByte(getByteFromReg(evex, modrm)));
 			}
+			case VMOVQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VMOVQ,
+						Register64.fromByte(getByteFromRM(evex, modrm)),
+						RegisterXMM.fromByte(or(!evex.r1() ? (byte) 0b00010000 : 0, getByteFromReg(evex, modrm))));
+			}
 			default -> {
 				final long pos = b.getPosition();
 				logger.debug("Unknown opcode: 0x%02x.", opcodeFirstByte);
@@ -3008,6 +3028,10 @@ public final class InstructionDecoder {
 				throw new UnknownOpcode(opcodeFirstByte);
 			}
 		};
+	}
+
+	private static RegisterZMM getZmmFromReg(final EvexPrefix evex, final ModRM modrm) {
+		return RegisterZMM.fromByte(or(getByteFromReg(evex, modrm), !evex.r1() ? (byte) 0b00010000 : 0));
 	}
 
 	private static void invalidValue() {
@@ -3084,6 +3108,7 @@ public final class InstructionDecoder {
 		}
 
 		// Check that the combination of prefixes is valid
+		// FIXME: is this correct?
 		{
 			final boolean hasNormalPrefix =
 					p1.isPresent() || p2.isPresent() || hasAddressSizeOverridePrefix || hasOperandSizeOverridePrefix;
@@ -3100,7 +3125,7 @@ public final class InstructionDecoder {
 			if (evex.isPresent()) {
 				count++;
 			}
-			if (count >= 2) {
+			if (count >= 3) {
 				throw new IllegalArgumentException("Illegal combination of prefixes.");
 			}
 		}

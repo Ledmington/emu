@@ -79,4 +79,17 @@ public enum MaskRegister implements Register {
 			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
 		};
 	}
+
+	public static byte toByte(final MaskRegister r) {
+		return switch (r) {
+			case K0 -> (byte) 0x00;
+			case K1 -> (byte) 0x01;
+			case K2 -> (byte) 0x02;
+			case K3 -> (byte) 0x03;
+			case K4 -> (byte) 0x04;
+			case K5 -> (byte) 0x05;
+			case K6 -> (byte) 0x06;
+			case K7 -> (byte) 0x07;
+		};
+	}
 }

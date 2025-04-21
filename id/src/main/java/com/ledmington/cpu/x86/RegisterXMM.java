@@ -68,7 +68,55 @@ public enum RegisterXMM implements Register {
 	XMM14("xmm14"),
 
 	/** The register XMM15. */
-	XMM15("xmm15");
+	XMM15("xmm15"),
+
+	/** The register XMM16. */
+	XMM16("xmm16"),
+
+	/** The register XMM17. */
+	XMM17("xmm17"),
+
+	/** The register XMM18. */
+	XMM18("xmm18"),
+
+	/** The register XMM19. */
+	XMM19("xmm19"),
+
+	/** The register XMM20. */
+	XMM20("xmm20"),
+
+	/** The register XMM21. */
+	XMM21("xmm21"),
+
+	/** The register XMM22. */
+	XMM22("xmm22"),
+
+	/** The register XMM23. */
+	XMM23("xmm23"),
+
+	/** The register XMM24. */
+	XMM24("xmm24"),
+
+	/** The register XMM25. */
+	XMM25("xmm25"),
+
+	/** The register XMM26. */
+	XMM26("xmm26"),
+
+	/** The register XMM27. */
+	XMM27("xmm27"),
+
+	/** The register XMM28. */
+	XMM28("xmm28"),
+
+	/** The register XMM29. */
+	XMM29("xmm29"),
+
+	/** The register XMM30. */
+	XMM30("xmm30"),
+
+	/** The register XMM31. */
+	XMM31("xmm31");
 
 	private final String mnemonic;
 
@@ -100,6 +148,22 @@ public enum RegisterXMM implements Register {
 			case 0x0d -> XMM13;
 			case 0x0e -> XMM14;
 			case 0x0f -> XMM15;
+			case 0x10 -> XMM16;
+			case 0x11 -> XMM17;
+			case 0x12 -> XMM18;
+			case 0x13 -> XMM19;
+			case 0x14 -> XMM20;
+			case 0x15 -> XMM21;
+			case 0x16 -> XMM22;
+			case 0x17 -> XMM23;
+			case 0x18 -> XMM24;
+			case 0x19 -> XMM25;
+			case 0x1a -> XMM26;
+			case 0x1b -> XMM27;
+			case 0x1c -> XMM28;
+			case 0x1d -> XMM29;
+			case 0x1e -> XMM30;
+			case 0x1f -> XMM31;
 			default -> throw new IllegalArgumentException(String.format("Unknown register byte 0x%02x.", b));
 		};
 	}
@@ -108,14 +172,14 @@ public enum RegisterXMM implements Register {
 	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final RegisterXMM r) {
 		return switch (r) {
-			case XMM0, XMM8 -> (byte) 0x00;
-			case XMM1, XMM9 -> (byte) 0x01;
-			case XMM2, XMM10 -> (byte) 0x02;
-			case XMM3, XMM11 -> (byte) 0x03;
-			case XMM4, XMM12 -> (byte) 0x04;
-			case XMM5, XMM13 -> (byte) 0x05;
-			case XMM6, XMM14 -> (byte) 0x06;
-			case XMM7, XMM15 -> (byte) 0x07;
+			case XMM0, XMM8, XMM16, XMM24 -> (byte) 0x00;
+			case XMM1, XMM9, XMM17, XMM25 -> (byte) 0x01;
+			case XMM2, XMM10, XMM18, XMM26 -> (byte) 0x02;
+			case XMM3, XMM11, XMM19, XMM27 -> (byte) 0x03;
+			case XMM4, XMM12, XMM20, XMM28 -> (byte) 0x04;
+			case XMM5, XMM13, XMM21, XMM29 -> (byte) 0x05;
+			case XMM6, XMM14, XMM22, XMM30 -> (byte) 0x06;
+			case XMM7, XMM15, XMM23, XMM31 -> (byte) 0x07;
 		};
 	}
 
@@ -123,8 +187,61 @@ public enum RegisterXMM implements Register {
 	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final RegisterXMM r) {
 		return switch (r) {
-			case XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7 -> false;
-			case XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15 -> true;
+			case XMM0,
+					XMM1,
+					XMM2,
+					XMM3,
+					XMM4,
+					XMM5,
+					XMM6,
+					XMM7,
+					XMM16,
+					XMM17,
+					XMM18,
+					XMM19,
+					XMM20,
+					XMM21,
+					XMM22,
+					XMM23 -> false;
+			case XMM8,
+					XMM9,
+					XMM10,
+					XMM11,
+					XMM12,
+					XMM13,
+					XMM14,
+					XMM15,
+					XMM24,
+					XMM25,
+					XMM26,
+					XMM27,
+					XMM28,
+					XMM29,
+					XMM30,
+					XMM31 -> true;
+		};
+	}
+
+	public static boolean requiresEvexR1(final RegisterXMM r) {
+		return switch (r) {
+			case XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15 ->
+				false;
+			case XMM16,
+					XMM17,
+					XMM18,
+					XMM19,
+					XMM20,
+					XMM21,
+					XMM22,
+					XMM23,
+					XMM24,
+					XMM25,
+					XMM26,
+					XMM27,
+					XMM28,
+					XMM29,
+					XMM30,
+					XMM31 -> true;
 		};
 	}
 

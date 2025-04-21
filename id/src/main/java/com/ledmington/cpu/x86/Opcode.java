@@ -131,6 +131,9 @@ public enum Opcode {
 	/** Divide scalar double-precision floating-point values. */
 	DIVSD("divsd"),
 
+	/** Execute an Enclave user function of specified leaf number. */
+	ENCLU("enclu"),
+
 	/** Terminate an indirect branch in 32-bit mode. */
 	ENDBR32("endbr32"),
 
@@ -593,6 +596,9 @@ public enum Opcode {
 	/** Subtract packed integers. */
 	VPSUBB("vpsubb"),
 
+	/** Invoke VM function. */
+	VMFUNC("vmfunc"),
+
 	/** Move doubleword. */
 	VMOVD("vmovd"),
 
@@ -644,14 +650,23 @@ public enum Opcode {
 	/** Exchange. */
 	XCHG("xchg"),
 
+	/** Transactional end. */
+	XEND("xend"),
+
 	/** Reads the state of an extended control register. */
 	XGETBV("xgetbv"),
 
 	/** Logical XOR. */
 	XOR("xor"),
 
-	/** Bitwise logical XOR of single-precision ploating-point values. */
-	XORPS("xorps");
+	/** Bitwise logical XOR of single-precision floating-point values. */
+	XORPS("xorps"),
+
+	/** Set extended control register. */
+	XSETBV("xsetbv"),
+
+	/** Test if in transactional execution. */
+	XTEST("xtest");
 
 	private final String mnemonicString;
 

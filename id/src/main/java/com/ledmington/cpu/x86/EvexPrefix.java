@@ -127,7 +127,19 @@ public final class EvexPrefix {
 		return r1;
 	}
 
+	public byte m() {
+		return m;
+	}
+
+	public boolean w() {
+		return w;
+	}
+
 	public byte v() {
 		return v;
+	}
+
+	public byte a() {
+		return a;
 	}
 }

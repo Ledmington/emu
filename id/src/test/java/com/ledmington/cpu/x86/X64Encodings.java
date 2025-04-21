@@ -115,6 +115,7 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM12;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM13;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM14;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM15;
+import static com.ledmington.cpu.x86.RegisterXMM.XMM16;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM2;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM3;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM4;
@@ -9274,6 +9275,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"),
 				// Vmovq
 				test(new Instruction(Opcode.VMOVQ, RDI, XMM0), "vmovq rdi,xmm0", "c4 e1 f9 7e c7"),
+				test(new Instruction(Opcode.VMOVQ, RDI, XMM16), "vmovq rdi,xmm16", "62 e1 fd 08 7e c7"),
 				test(
 						new Instruction(
 								Opcode.VMOVQ,
@@ -9451,6 +9453,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								ZMM15),
 						"vmovdqu8 ZMMWORD PTR cs:[rax]{k7},zmm15",
 						"2e 62 71 7f 4f 7f 38"),
+				test(
+						new Instruction(
+								Opcode.VMOVDQU8,
+								ZMM0,
+								IndirectOperand.builder()
+										.pointer(ZMMWORD_PTR)
+										.base(RSI)
+										.build()),
+						"vmovdqu8 zmm0,ZMMWORD PTR [rsi]",
+						"62 f1 7f 48 6f 06"),
 				// Vmodqu64
 				test(
 						new Instruction(
@@ -9552,7 +9564,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"vmovaps ZMMWORD PTR [rdi],zmm2",
 						"62 f1 7c 48 29 17"),
 				// Kmovq
-				test(new Instruction(Opcode.KMOVQ, K1, RCX), "kmovq k1,rcx", "c4 e1 fb 92 c9"));
+				test(new Instruction(Opcode.KMOVQ, K1, RCX), "kmovq k1,rcx", "c4 e1 fb 92 c9"),
+				// Xtest
+				test(new Instruction(Opcode.XTEST), "xtest", "0f 01 d6"));
 	}
 
 	//

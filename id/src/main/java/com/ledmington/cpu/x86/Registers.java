@@ -65,6 +65,7 @@ public final class Registers {
 			case RegisterXMM rxmm -> RegisterXMM.toByte(rxmm);
 			case RegisterYMM rymm -> RegisterYMM.toByte(rymm);
 			case RegisterZMM rzmm -> RegisterZMM.toByte(rzmm);
+			case MaskRegister rk -> MaskRegister.toByte(rk);
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}
@@ -80,6 +81,23 @@ public final class Registers {
 			case RegisterYMM rymm -> RegisterYMM.requiresExtension(rymm);
 			case RegisterZMM rzmm -> RegisterZMM.requiresExtension(rzmm);
 			case SegmentRegister ignored -> false;
+			case MaskRegister ignored -> false;
+			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
+		};
+	}
+
+	public static boolean requiresEvexR1(final Register r) {
+		return switch (r) {
+			case Register8 ignored -> false;
+			case Register16 ignored -> false;
+			case Register32 ignored -> false;
+			case Register64 ignored -> false;
+			case RegisterMMX ignored -> false;
+			case SegmentRegister ignored -> false;
+			case MaskRegister ignored -> false;
+			case RegisterXMM rxmm -> RegisterXMM.requiresEvexR1(rxmm);
+			case RegisterYMM rymm -> RegisterYMM.requiresEvexR1(rymm);
+			case RegisterZMM rzmm -> RegisterZMM.requiresEvexR1(rzmm);
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}
