@@ -17,67 +17,63 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 64-bit general-purpose register. */
 public enum Register64 implements Register {
 
 	/** The register RAX. Usually contains the return value of a function call. */
-	RAX("rax"),
+	RAX,
 
 	/** The register RBX. */
-	RBX("rbx"),
+	RBX,
 
 	/** The register RCX. */
-	RCX("rcx"),
+	RCX,
 
 	/** The register RDX. */
-	RDX("rdx"),
+	RDX,
 
 	/** The register RSI. */
-	RSI("rsi"),
+	RSI,
 
 	/** The register RDI. */
-	RDI("rdi"),
+	RDI,
 
 	/** The register RSP. Usually points to the top (the end) of the current stack frame. */
-	RSP("rsp"),
+	RSP,
 
 	/** The register RBP. Usually points to the base (the start) of the current stack frame. */
-	RBP("rbp"),
+	RBP,
 
 	/** The register R8. */
-	R8("r8"),
+	R8,
 
 	/** The register R9. */
-	R9("r9"),
+	R9,
 
 	/** The register R10. */
-	R10("r10"),
+	R10,
 
 	/** The register R11. */
-	R11("r11"),
+	R11,
 
 	/** The register R12. */
-	R12("r12"),
+	R12,
 
 	/** The register R13. */
-	R13("r13"),
+	R13,
 
 	/** The register R14. */
-	R14("r14"),
+	R14,
 
 	/** The register R15. */
-	R15("r15"),
+	R15,
 
 	/** The instruction pointer register RIP. */
-	RIP("rip");
+	RIP;
 
-	private final String mnemonic;
-
-	Register64(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 64-bit register corresponding to the given byte.

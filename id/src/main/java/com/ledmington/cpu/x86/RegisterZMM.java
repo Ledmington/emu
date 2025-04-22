@@ -17,112 +17,108 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 512-bit general-purpose register. */
 public enum RegisterZMM implements Register {
 
 	/** The register ZMM0. */
-	ZMM0("zmm0"),
+	ZMM0,
 
 	/** The register ZMM1. */
-	ZMM1("zmm1"),
+	ZMM1,
 
 	/** The register ZMM2. */
-	ZMM2("zmm2"),
+	ZMM2,
 
 	/** The register ZMM3. */
-	ZMM3("zmm3"),
+	ZMM3,
 
 	/** The register ZMM4. */
-	ZMM4("zmm4"),
+	ZMM4,
 
 	/** The register ZMM5. */
-	ZMM5("zmm5"),
+	ZMM5,
 
 	/** The register ZMM6. */
-	ZMM6("zmm6"),
+	ZMM6,
 
 	/** The register ZMM7. */
-	ZMM7("zmm7"),
+	ZMM7,
 
 	/** The register ZMM8. */
-	ZMM8("zmm8"),
+	ZMM8,
 
 	/** The register ZMM9. */
-	ZMM9("zmm9"),
+	ZMM9,
 
 	/** The register ZMM10. */
-	ZMM10("zmm10"),
+	ZMM10,
 
 	/** The register ZMM11. */
-	ZMM11("zmm11"),
+	ZMM11,
 
 	/** The register ZMM12. */
-	ZMM12("zmm12"),
+	ZMM12,
 
 	/** The register ZMM13. */
-	ZMM13("zmm13"),
+	ZMM13,
 
 	/** The register ZMM14. */
-	ZMM14("zmm14"),
+	ZMM14,
 
 	/** The register ZMM15. */
-	ZMM15("zmm15"),
+	ZMM15,
 
 	/** The register ZMM16. */
-	ZMM16("zmm16"),
+	ZMM16,
 
 	/** The register ZMM17. */
-	ZMM17("zmm17"),
+	ZMM17,
 
 	/** The register ZMM18. */
-	ZMM18("zmm18"),
+	ZMM18,
 
 	/** The register ZMM19. */
-	ZMM19("zmm19"),
+	ZMM19,
 
 	/** The register ZMM20. */
-	ZMM20("zmm20"),
+	ZMM20,
 
 	/** The register ZMM21. */
-	ZMM21("zmm21"),
+	ZMM21,
 
 	/** The register ZMM22. */
-	ZMM22("zmm22"),
+	ZMM22,
 
 	/** The register ZMM23. */
-	ZMM23("zmm23"),
+	ZMM23,
 
 	/** The register ZMM24. */
-	ZMM24("zmm24"),
+	ZMM24,
 
 	/** The register ZMM25. */
-	ZMM25("zmm25"),
+	ZMM25,
 
 	/** The register ZMM26. */
-	ZMM26("zmm26"),
+	ZMM26,
 
 	/** The register ZMM27. */
-	ZMM27("zmm27"),
+	ZMM27,
 
 	/** The register ZMM28. */
-	ZMM28("zmm28"),
+	ZMM28,
 
 	/** The register ZMM29. */
-	ZMM29("zmm29"),
+	ZMM29,
 
 	/** The register ZMM30. */
-	ZMM30("zmm30"),
+	ZMM30,
 
 	/** The register ZMM31. */
-	ZMM31("zmm31");
+	ZMM31;
 
-	private final String mnemonic;
-
-	RegisterZMM(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 512-bit ZMM register corresponding to the given byte.

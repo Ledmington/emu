@@ -17,112 +17,108 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 256-bit general-purpose register. */
 public enum RegisterYMM implements Register {
 
 	/** The register YMM0. */
-	YMM0("ymm0"),
+	YMM0,
 
 	/** The register YMM1. */
-	YMM1("ymm1"),
+	YMM1,
 
 	/** The register YMM2. */
-	YMM2("ymm2"),
+	YMM2,
 
 	/** The register YMM3. */
-	YMM3("ymm3"),
+	YMM3,
 
 	/** The register YMM4. */
-	YMM4("ymm4"),
+	YMM4,
 
 	/** The register YMM5. */
-	YMM5("ymm5"),
+	YMM5,
 
 	/** The register YMM6. */
-	YMM6("ymm6"),
+	YMM6,
 
 	/** The register YMM7. */
-	YMM7("ymm7"),
+	YMM7,
 
 	/** The register YMM8. */
-	YMM8("ymm8"),
+	YMM8,
 
 	/** The register YMM9. */
-	YMM9("ymm9"),
+	YMM9,
 
 	/** The register YMM10. */
-	YMM10("ymm10"),
+	YMM10,
 
 	/** The register YMM11. */
-	YMM11("ymm11"),
+	YMM11,
 
 	/** The register YMM12. */
-	YMM12("ymm12"),
+	YMM12,
 
 	/** The register YMM13. */
-	YMM13("ymm13"),
+	YMM13,
 
 	/** The register YMM14. */
-	YMM14("ymm14"),
+	YMM14,
 
 	/** The register YMM15. */
-	YMM15("ymm15"),
+	YMM15,
 
 	/** The register YMM16. */
-	YMM16("ymm16"),
+	YMM16,
 
 	/** The register YMM17. */
-	YMM17("ymm17"),
+	YMM17,
 
 	/** The register YMM18. */
-	YMM18("ymm18"),
+	YMM18,
 
 	/** The register YMM19. */
-	YMM19("ymm19"),
+	YMM19,
 
 	/** The register YMM20. */
-	YMM20("ymm20"),
+	YMM20,
 
 	/** The register YMM21. */
-	YMM21("ymm21"),
+	YMM21,
 
 	/** The register YMM22. */
-	YMM22("ymm22"),
+	YMM22,
 
 	/** The register YMM23. */
-	YMM23("ymm23"),
+	YMM23,
 
 	/** The register YMM24. */
-	YMM24("ymm24"),
+	YMM24,
 
 	/** The register YMM25. */
-	YMM25("ymm25"),
+	YMM25,
 
 	/** The register YMM26. */
-	YMM26("ymm26"),
+	YMM26,
 
 	/** The register YMM27. */
-	YMM27("ymm27"),
+	YMM27,
 
 	/** The register YMM28. */
-	YMM28("ymm28"),
+	YMM28,
 
 	/** The register YMM29. */
-	YMM29("ymm29"),
+	YMM29,
 
 	/** The register YMM30. */
-	YMM30("ymm30"),
+	YMM30,
 
 	/** The register YMM31. */
-	YMM31("ymm31");
+	YMM31;
 
-	private final String mnemonic;
-
-	RegisterYMM(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 256-bit YMM register corresponding to the given byte.

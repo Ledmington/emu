@@ -17,40 +17,36 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** SSE registers. */
 public enum RegisterMMX implements Register {
 
 	/** The register MM0. */
-	MM0("mm0"),
+	MM0,
 
 	/** The register MM1. */
-	MM1("mm1"),
+	MM1,
 
 	/** The register MM2. */
-	MM2("mm2"),
+	MM2,
 
 	/** The register MM3. */
-	MM3("mm3"),
+	MM3,
 
 	/** The register MM4. */
-	MM4("mm4"),
+	MM4,
 
 	/** The register MM5. */
-	MM5("mm5"),
+	MM5,
 
 	/** The register MM6. */
-	MM6("mm6"),
+	MM6,
 
 	/** The register MM7. */
-	MM7("mm7");
+	MM7;
 
-	private final String mnemonic;
-
-	RegisterMMX(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 64-bit MMX register corresponding to the given byte.

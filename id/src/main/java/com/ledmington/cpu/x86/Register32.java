@@ -17,67 +17,63 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 32-bit general-purpose register. */
 public enum Register32 implements Register {
 
 	/** The register EAX. */
-	EAX("eax"),
+	EAX,
 
 	/** The register EBX. */
-	EBX("ebx"),
+	EBX,
 
 	/** The register ECX. */
-	ECX("ecx"),
+	ECX,
 
 	/** The register EDX. */
-	EDX("edx"),
+	EDX,
 
 	/** The register ESI. */
-	ESI("esi"),
+	ESI,
 
 	/** The register EDI. */
-	EDI("edi"),
+	EDI,
 
 	/** The register ESP. */
-	ESP("esp"),
+	ESP,
 
 	/** The register EBP. */
-	EBP("ebp"),
+	EBP,
 
 	/** The register R8D. */
-	R8D("r8d"),
+	R8D,
 
 	/** The register R9D. */
-	R9D("r9d"),
+	R9D,
 
 	/** The register R10D. */
-	R10D("r10d"),
+	R10D,
 
 	/** The register R11D. */
-	R11D("r11d"),
+	R11D,
 
 	/** The register R12D. */
-	R12D("r12d"),
+	R12D,
 
 	/** The register R13D. */
-	R13D("r13d"),
+	R13D,
 
 	/** The register R14D. */
-	R14D("r14d"),
+	R14D,
 
 	/** The register R15D. */
-	R15D("r15d"),
+	R15D,
 
 	/** The instruction pointer register EIP. */
-	EIP("eip");
+	EIP;
 
-	private final String mnemonic;
-
-	Register32(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 32-bit register corresponding to the given byte.

@@ -17,83 +17,79 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 16-bit general-purpose register. */
 public enum Register16 implements Register {
 
 	/** The register AX. */
-	AX("ax"),
+	AX,
 
 	/** The register BX. */
-	BX("bx"),
+	BX,
 
 	/** The register CX. */
-	CX("cx"),
+	CX,
 
 	/** The register DX. */
-	DX("dx"),
+	DX,
 
 	/** The register SI. */
-	SI("si"),
+	SI,
 
 	/** The register DI. */
-	DI("di"),
+	DI,
 
 	/** The register SP. */
-	SP("sp"),
+	SP,
 
 	/** The register BP. */
-	BP("bp"),
+	BP,
 
 	/** The register R8W. */
-	R8W("r8w"),
+	R8W,
 
 	/** The register R9W. */
-	R9W("r9w"),
+	R9W,
 
 	/** The register R10W. */
-	R10W("r10w"),
+	R10W,
 
 	/** The register R11W. */
-	R11W("r11w"),
+	R11W,
 
 	/** The register R12W. */
-	R12W("r12w"),
+	R12W,
 
 	/** The register R13W. */
-	R13W("r13w"),
+	R13W,
 
 	/** The register R14W. */
-	R14W("r14w"),
+	R14W,
 
 	/** The register R15W. */
-	R15W("r15w"),
+	R15W,
 
 	// TODO: should the proper segment registers be separated from the general-purpose ones?
 	/** The segment register CS (Code Segment). */
-	CS("cs"),
+	CS,
 
 	/** The segment register DS (Data Segment). */
-	DS("ds"),
+	DS,
 
 	/** The segment register SS (Stack Segment). */
-	SS("ss"),
+	SS,
 
 	/** The segment register ES (Extra Segment). */
-	ES("es"),
+	ES,
 
 	/** The segment register FS. */
-	FS("fs"),
+	FS,
 
 	/** The segment register GS. */
-	GS("gs");
+	GS;
 
-	private final String mnemonic;
-
-	Register16(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 16-bit register corresponding to the given byte.

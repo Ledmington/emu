@@ -17,112 +17,108 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 128-bit general-purpose register. */
 public enum RegisterXMM implements Register {
 
 	/** The register XMM0. */
-	XMM0("xmm0"),
+	XMM0,
 
 	/** The register XMM1. */
-	XMM1("xmm1"),
+	XMM1,
 
 	/** The register XMM2. */
-	XMM2("xmm2"),
+	XMM2,
 
 	/** The register XMM3. */
-	XMM3("xmm3"),
+	XMM3,
 
 	/** The register XMM4. */
-	XMM4("xmm4"),
+	XMM4,
 
 	/** The register XMM5. */
-	XMM5("xmm5"),
+	XMM5,
 
 	/** The register XMM6. */
-	XMM6("xmm6"),
+	XMM6,
 
 	/** The register XMM7. */
-	XMM7("xmm7"),
+	XMM7,
 
 	/** The register XMM8. */
-	XMM8("xmm8"),
+	XMM8,
 
 	/** The register XMM9. */
-	XMM9("xmm9"),
+	XMM9,
 
 	/** The register XMM10. */
-	XMM10("xmm10"),
+	XMM10,
 
 	/** The register XMM11. */
-	XMM11("xmm11"),
+	XMM11,
 
 	/** The register XMM12. */
-	XMM12("xmm12"),
+	XMM12,
 
 	/** The register XMM13. */
-	XMM13("xmm13"),
+	XMM13,
 
 	/** The register XMM14. */
-	XMM14("xmm14"),
+	XMM14,
 
 	/** The register XMM15. */
-	XMM15("xmm15"),
+	XMM15,
 
 	/** The register XMM16. */
-	XMM16("xmm16"),
+	XMM16,
 
 	/** The register XMM17. */
-	XMM17("xmm17"),
+	XMM17,
 
 	/** The register XMM18. */
-	XMM18("xmm18"),
+	XMM18,
 
 	/** The register XMM19. */
-	XMM19("xmm19"),
+	XMM19,
 
 	/** The register XMM20. */
-	XMM20("xmm20"),
+	XMM20,
 
 	/** The register XMM21. */
-	XMM21("xmm21"),
+	XMM21,
 
 	/** The register XMM22. */
-	XMM22("xmm22"),
+	XMM22,
 
 	/** The register XMM23. */
-	XMM23("xmm23"),
+	XMM23,
 
 	/** The register XMM24. */
-	XMM24("xmm24"),
+	XMM24,
 
 	/** The register XMM25. */
-	XMM25("xmm25"),
+	XMM25,
 
 	/** The register XMM26. */
-	XMM26("xmm26"),
+	XMM26,
 
 	/** The register XMM27. */
-	XMM27("xmm27"),
+	XMM27,
 
 	/** The register XMM28. */
-	XMM28("xmm28"),
+	XMM28,
 
 	/** The register XMM29. */
-	XMM29("xmm29"),
+	XMM29,
 
 	/** The register XMM30. */
-	XMM30("xmm30"),
+	XMM30,
 
 	/** The register XMM31. */
-	XMM31("xmm31");
+	XMM31;
 
-	private final String mnemonic;
-
-	RegisterXMM(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 128-bit XMM register corresponding to the given byte.

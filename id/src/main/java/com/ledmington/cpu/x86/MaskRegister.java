@@ -17,39 +17,35 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 public enum MaskRegister implements Register {
 
 	/** The mask register k0. */
-	K0("k0"),
+	K0,
 
 	/** The mask register k1. */
-	K1("k1"),
+	K1,
 
 	/** The mask register k2. */
-	K2("k2"),
+	K2,
 
 	/** The mask register k3. */
-	K3("k3"),
+	K3,
 
 	/** The mask register k4. */
-	K4("k4"),
+	K4,
 
 	/** The mask register k5. */
-	K5("k5"),
+	K5,
 
 	/** The mask register k6. */
-	K6("k6"),
+	K6,
 
 	/** The mask register k7. */
-	K7("k7");
+	K7;
 
-	private final String mnemonic;
-
-	MaskRegister(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	@Override
 	public int bits() {

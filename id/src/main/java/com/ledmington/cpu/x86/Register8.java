@@ -17,76 +17,72 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /** An x86 8-bit general-purpose register. */
 public enum Register8 implements Register {
 
 	/** The register AL. */
-	AL("al"),
+	AL,
 
 	/** The register BL. */
-	BL("bl"),
+	BL,
 
 	/** The register CL. */
-	CL("cl"),
+	CL,
 
 	/** The register DL. */
-	DL("dl"),
+	DL,
 
 	/** The register AH. */
-	AH("ah"),
+	AH,
 
 	/** The register BH. */
-	BH("bh"),
+	BH,
 
 	/** The register CH. */
-	CH("ch"),
+	CH,
 
 	/** The register DH. */
-	DH("dh"),
+	DH,
 
 	/** The register DIL. */
-	DIL("dil"),
+	DIL,
 
 	/** The register SIL. */
-	SIL("sil"),
+	SIL,
 
 	/** The register BPL. */
-	BPL("bpl"),
+	BPL,
 
 	/** The register SPL. */
-	SPL("spl"),
+	SPL,
 
 	/** The register R8B. */
-	R8B("r8b"),
+	R8B,
 
 	/** The register R9B. */
-	R9B("r9b"),
+	R9B,
 
 	/** The register R10B. */
-	R10B("r10b"),
+	R10B,
 
 	/** The register R11B. */
-	R11B("r11b"),
+	R11B,
 
 	/** The register R12B. */
-	R12B("r12b"),
+	R12B,
 
 	/** The register R13B. */
-	R13B("r13b"),
+	R13B,
 
 	/** The register R14B. */
-	R14B("r14b"),
+	R14B,
 
 	/** The register R15B. */
-	R15B("r15b");
+	R15B;
 
-	private final String mnemonic;
-
-	Register8(final String mnemonic) {
-		this.mnemonic = Objects.requireNonNull(mnemonic);
-	}
+	private final String mnemonic = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the 8-bit register corresponding to the given byte.
