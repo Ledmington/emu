@@ -2599,6 +2599,10 @@ public final class InstructionDecoder {
 		return and(not(vex3.v()), (byte) 0b00001111);
 	}
 
+	private static byte getByteFromV(final EvexPrefix evex) {
+		return and(not(evex.v()), (byte) 0b00001111);
+	}
+
 	private static Instruction parseVex2Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VPCMPGTB_OPCODE = (byte) 0x64;
@@ -2609,7 +2613,8 @@ public final class InstructionDecoder {
 		final byte VZEROALL_OPCODE = (byte) 0x77;
 		final byte VMOVQ_RXMM_M64_OPCODE = (byte) 0x7e;
 		final byte VMOVDQU_M256_RYMM_OPCODE = (byte) 0x7f;
-		final byte KMOVD_OPCODE = (byte) 0x92;
+		final byte KMOVD_RK_R32_OPCODE = (byte) 0x92;
+		final byte KMOVD_R32_RK_OPCODE = (byte) 0x93;
 		final byte VMOVQ_M64_RXMM_OPCODE = (byte) 0xd6;
 		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
@@ -2759,12 +2764,19 @@ public final class InstructionDecoder {
 						RegisterXMM.fromByte(modrm.rm()),
 						imm8(b));
 			}
-			case KMOVD_OPCODE -> {
+			case KMOVD_RK_R32_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.KMOVD,
-						MaskRegister.fromByte(getByteFromReg(vex2, modrm)),
+						MaskRegister.fromByte(modrm.reg()),
 						Register32.fromByte(getByteFromRM(pref, modrm)));
+			}
+			case KMOVD_R32_RK_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.KMOVD,
+						Register32.fromByte(getByteFromReg(pref, modrm)),
+						MaskRegister.fromByte(modrm.rm()));
 			}
 			default -> {
 				final long pos = b.getPosition();
@@ -2933,12 +2945,14 @@ public final class InstructionDecoder {
 		final byte VMOVUPS_M512_R512_OPCODE = (byte) 0x11;
 		final byte VBROADCASTSS_OPCODE = (byte) 0x18;
 		final byte VMOVAPS_OPCODE = (byte) 0x29;
+		final byte VPCMPNEQUB_OPCODE = (byte) 0x3e;
 		final byte VMOVDQU64_RZMM_M512_OPCODE = (byte) 0x6f;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x7a;
 		final byte VPBROADCASTD_OPCODE = (byte) 0x7c;
 		final byte VMOVQ_OPCODE = (byte) 0x7e;
 		final byte VMOVDQU64_M512_RZMM_OPCODE = (byte) 0x7f;
 		final byte VMOVNTDQ_OPCODE = (byte) 0xe7;
+		final byte VPXORQ_OPCODE = (byte) 0xef;
 
 		final EvexPrefix evex = pref.evex().orElseThrow();
 
@@ -3028,6 +3042,34 @@ public final class InstructionDecoder {
 						Opcode.VMOVQ,
 						Register64.fromByte(getByteFromRM(evex, modrm)),
 						RegisterXMM.fromByte(or(!evex.r1() ? (byte) 0b00010000 : 0, getByteFromReg(evex, modrm))));
+			}
+			case VPCMPNEQUB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final MaskRegister k = evex.a() == (byte) 0 ? null : MaskRegister.fromByte(evex.a());
+				final byte r2 = or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex));
+				final Instruction tmp = new Instruction(
+						Opcode.VPCMPNEQUB,
+						k,
+						MaskRegister.fromByte(modrm.reg()),
+						evex.l() ? RegisterYMM.fromByte(r2) : RegisterXMM.fromByte(r2),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(evex.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+								.build());
+				// For some unknown (to me) reason, after VPCMPNEQUB instructions there is an extra 0x04 byte which is
+				// not needed
+				// why?
+				b.read1();
+				yield tmp;
+			}
+			case VPXORQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPXORQ,
+						RegisterYMM.fromByte(or(!evex.r1() ? (byte) 0b00010000 : 0, getByteFromReg(evex, modrm))),
+						RegisterYMM.fromByte(or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex))),
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.YMMWORD_PTR)
+								.build());
 			}
 			default -> {
 				final long pos = b.getPosition();

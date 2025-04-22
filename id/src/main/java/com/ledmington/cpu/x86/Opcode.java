@@ -581,6 +581,9 @@ public enum Opcode {
 	/** Packed compare implicit length strings, return index. */
 	VPCMPISTRI,
 
+	/** Compare packed byte values into mask. */
+	VPCMPNEQUB,
+
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB,
 
@@ -641,6 +644,12 @@ public enum Opcode {
 	/** Logical exclusive OR. */
 	VPXOR,
 
+	/** Logical exclusive OR. */
+	VPXORD,
+
+	/** Logical exclusive OR. */
+	VPXORQ,
+
 	/** Zero all XMM, YMM and ZMM registers. */
 	VZEROALL,
 
@@ -668,11 +677,7 @@ public enum Opcode {
 	/** Test if in transactional execution. */
 	XTEST;
 
-	private final String mnemonicString;
-
-	Opcode() {
-		this.mnemonicString = name().toLowerCase(Locale.US);
-	}
+	private final String mnemonicString = name().toLowerCase(Locale.US);
 
 	/**
 	 * Returns the mnemonic for this opcode.

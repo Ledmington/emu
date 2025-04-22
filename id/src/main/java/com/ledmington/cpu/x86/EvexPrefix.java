@@ -139,6 +139,14 @@ public final class EvexPrefix {
 		return v;
 	}
 
+	public boolean l() {
+		return l;
+	}
+
+	public boolean v1() {
+		return v1;
+	}
+
 	public byte a() {
 		return a;
 	}

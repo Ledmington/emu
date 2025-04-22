@@ -129,7 +129,10 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM0;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM1;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM10;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM17;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM18;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM2;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM24;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
@@ -9568,8 +9571,92 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.KMOVQ, K1, RCX), "kmovq k1,rcx", "c4 e1 fb 92 c9"),
 				// Kmovd
 				test(new Instruction(Opcode.KMOVD, K2, ECX), "kmovd k2,ecx", "c5 fb 92 d1"),
+				test(new Instruction(Opcode.KMOVD, EAX, K1), "kmovd eax,k1", "c5 fb 93 c1"),
 				// Xtest
-				test(new Instruction(Opcode.XTEST), "xtest", "0f 01 d6"));
+				test(new Instruction(Opcode.XTEST), "xtest", "0f 01 d6"),
+				// Vpcmpnequb
+				test(
+						new Instruction(
+								Opcode.VPCMPNEQUB,
+								K2,
+								K1,
+								YMM18,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpcmpnequb k1{k2},ymm18,YMMWORD PTR [rdi]",
+						"62 f3 6d 22 3e 0f 04"),
+				test(
+						new Instruction(
+								Opcode.VPCMPNEQUB,
+								K2,
+								K1,
+								YMM24,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpcmpnequb k1{k2},ymm24,YMMWORD PTR [rdi]",
+						"62 f3 3d 22 3e 0f 04"),
+				test(
+						new Instruction(
+								Opcode.VPCMPNEQUB,
+								K2,
+								K1,
+								YMM2,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpcmpnequb k1{k2},ymm2,YMMWORD PTR [rdi]",
+						"62 f3 6d 2a 3e 0f 04"),
+				test(
+						new Instruction(
+								Opcode.VPCMPNEQUB,
+								K2,
+								K1,
+								XMM2,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpcmpnequb k1{k2},xmm2,XMMWORD PTR [rdi]",
+						"62 f3 6d 0a 3e 0f 04"),
+				// Vpxorq
+				test(
+						new Instruction(
+								Opcode.VPXORQ,
+								YMM17,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpxorq ymm17,ymm17,YMMWORD PTR [rdi]",
+						"62 e1 f5 20 ef 0f"),
+				test(
+						new Instruction(
+								Opcode.VPXORQ,
+								YMM1,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpxorq ymm1,ymm17,YMMWORD PTR [rdi]",
+						"62 f1 f5 20 ef 0f"),
+				test(
+						new Instruction(
+								Opcode.VPXORQ,
+								YMM17,
+								YMM1,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpxorq ymm17,ymm1,YMMWORD PTR [rdi]",
+						"62 e1 f5 28 ef 0f"));
 	}
 
 	//

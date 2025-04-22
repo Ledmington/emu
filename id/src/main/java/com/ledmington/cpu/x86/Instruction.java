@@ -96,6 +96,15 @@ public final class Instruction {
 	}
 
 	public Instruction(
+			final Opcode opcode,
+			final MaskRegister destinationMask,
+			final Operand firstOperand,
+			final Operand secondOperand,
+			final Operand thirdOperand) {
+		this(null, opcode, destinationMask, firstOperand, secondOperand, thirdOperand, null);
+	}
+
+	public Instruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
 			final Operand firstOperand,

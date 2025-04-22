@@ -180,6 +180,7 @@ public final class InstructionChecker {
 	private static final Case RXMM_M64 = new Case(OperandType.RXMM, OperandType.M64);
 	private static final Case RXMM_M128 = new Case(OperandType.RXMM, OperandType.M128);
 	private static final Case RYMM_M256 = new Case(OperandType.RYMM, OperandType.M256);
+	private static final Case R32_RK = new Case(OperandType.R32, OperandType.RK);
 	private static final Case RK_R32 = new Case(OperandType.RK, OperandType.R32);
 	private static final Case RK_R64 = new Case(OperandType.RK, OperandType.R64);
 	private static final Case RZMM_M512 = new Case(OperandType.RZMM, OperandType.M512);
@@ -195,6 +196,8 @@ public final class InstructionChecker {
 	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
 	private static final Case R32_R32_R32 = new Case(OperandType.R32, OperandType.R32, OperandType.R32);
 	private static final Case R64_R64_R64 = new Case(OperandType.R64, OperandType.R64, OperandType.R64);
+	private static final Case RK_RXMM_M128 = new Case(OperandType.RK, OperandType.RXMM, OperandType.M128);
+	private static final Case RK_RYMM_M256 = new Case(OperandType.RK, OperandType.RYMM, OperandType.M256);
 	private static final Case RXMM_RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM);
 	private static final Case RYMM_RYMM_RYMM = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.RYMM);
 	private static final Case RYMM_RYMM_M256 = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.M256);
@@ -399,6 +402,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PMAXUB, List.of(RXMM_RXMM)),
 			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
 			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)),
+			Map.entry(Opcode.VPXORQ, List.of(RYMM_RYMM_M256)),
 			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)),
 			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256, M256_RYMM)),
 			Map.entry(Opcode.VPMINUB, List.of(RYMM_RYMM_RYMM, RYMM_RYMM_M256)),
@@ -436,8 +440,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VBROADCASTSS, List.of(RZMM_RXMM)),
 			Map.entry(Opcode.VMOVAPS, List.of(M512_RZMM)),
 			Map.entry(Opcode.KMOVQ, List.of(RK_R64)),
-			Map.entry(Opcode.KMOVD, List.of(RK_R32)),
-			Map.entry(Opcode.XTEST, List.of(NOTHING)));
+			Map.entry(Opcode.KMOVD, List.of(R32_RK, RK_R32)),
+			Map.entry(Opcode.XTEST, List.of(NOTHING)),
+			Map.entry(Opcode.VPCMPNEQUB, List.of(RK_RXMM_M128, RK_RYMM_M256)));
 
 	private InstructionChecker() {}
 
@@ -446,13 +451,15 @@ public final class InstructionChecker {
 	}
 
 	public static void check(final Instruction inst) {
-		final int numOperands = inst.hasFourthOperand()
-				? 4
-				: (inst.hasThirdOperand() ? 3 : (inst.hasSecondOperand() ? 2 : (inst.hasFirstOperand() ? 1 : 0)));
+		final int numOperands = inst.getNumOperands();
 
 		if (numOperands >= 2) {
 			checkNoMoreThanOneImmediate(inst);
 			checkNoMoreThanOneIndirect(inst);
+		}
+		if (inst.hasDestinationMask()) {
+			checkRegistersXYZ(inst);
+			checkNoDuplicateMask(inst);
 		}
 
 		if (!CASES.containsKey(inst.opcode())) {
@@ -537,6 +544,63 @@ public final class InstructionChecker {
 		}
 		if (count > 1) {
 			error("No instruction can have more than 1 indirect operand.");
+		}
+	}
+
+	private static boolean isXYZ(final Operand op) {
+		return op instanceof RegisterXMM
+				|| op instanceof RegisterYMM
+				|| op instanceof RegisterZMM
+				|| (op instanceof final IndirectOperand io
+						&& (io.getPointerSize() == PointerSize.XMMWORD_PTR
+								|| io.getPointerSize() == PointerSize.YMMWORD_PTR
+								|| io.getPointerSize() == PointerSize.ZMMWORD_PTR));
+	}
+
+	/**
+	 * When using a mask register on the destination operand, at least one of the operands must be an XMM, YMM or ZMM
+	 * register or an indirect operand with XMMWORD, YMMWORD or ZMMWORD pointer size.
+	 */
+	private static void checkRegistersXYZ(final Instruction inst) {
+		if (!inst.hasDestinationMask()) {
+			return;
+		}
+
+		if (inst.getNumOperands() < 1) {
+			error("An instruction with no operands cannot have a destination mask.");
+		}
+
+		if (isXYZ(inst.firstOperand())) {
+			return;
+		}
+		if (inst.hasSecondOperand() && isXYZ(inst.secondOperand())) {
+			return;
+		}
+		if (inst.hasThirdOperand() && isXYZ(inst.thirdOperand())) {
+			return;
+		}
+		if (inst.hasFourthOperand() && isXYZ(inst.fourthOperand())) {
+			return;
+		}
+		error(
+				"When using a destination mask, at least one operand must be an XMM, YMM or ZMM register or an indirect operand with XMMWORD, YMMWORD or ZMMWORD pointer size.");
+	}
+
+	/** When using a destination mask, the mask register cannot be used as an operand. */
+	private static void checkNoDuplicateMask(final Instruction inst) {
+		if (!inst.hasDestinationMask()) {
+			return;
+		}
+		if (inst.getNumOperands() < 1) {
+			error("An instruction with no operands cannot have a destination mask.");
+		}
+
+		final MaskRegister m = inst.getDestinationMask();
+		if (inst.firstOperand().equals(m)
+				|| (inst.hasSecondOperand() && inst.secondOperand().equals(m))
+				|| (inst.hasThirdOperand() && inst.thirdOperand().equals(m))
+				|| (inst.hasFourthOperand() && inst.fourthOperand().equals(m))) {
+			error("The destination mask register cannot be used as an operand in the same instruction.");
 		}
 	}
 
