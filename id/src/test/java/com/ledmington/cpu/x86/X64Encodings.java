@@ -645,6 +645,26 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(
 						new Instruction(
 								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build(),
+								ES),
+						"mov WORD PTR [rax],es",
+						"8c 00"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								ES,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"mov es,WORD PTR [rax]",
+						"8e 00"),
+				test(
+						new Instruction(
+								Opcode.MOV,
 								AL,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -4261,6 +4281,15 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Jp
 				test(new Instruction(Opcode.JP, bimm), "jp 0x12", "7a 12"),
 				test(new Instruction(Opcode.JP, iimm), "jp 0x12345678", "0f 8a 78 56 34 12"),
+				//  Jnp
+				test(new Instruction(Opcode.JNP, bimm), "jnp 0x12", "7b 12"),
+				test(new Instruction(Opcode.JNP, iimm), "jnp 0x12345678", "0f 8b 78 56 34 12"),
+				//  Jo
+				test(new Instruction(Opcode.JO, bimm), "jo 0x12", "70 12"),
+				test(new Instruction(Opcode.JO, iimm), "jo 0x12345678", "0f 80 78 56 34 12"),
+				//  Jno
+				test(new Instruction(Opcode.JNO, bimm), "jno 0x12", "71 12"),
+				test(new Instruction(Opcode.JNO, iimm), "jno 0x12345678", "0f 81 78 56 34 12"),
 				//  Jmp
 				test(new Instruction(Opcode.JMP, bimm), "jmp 0x12", "eb 12"),
 				test(new Instruction(Opcode.JMP, iimm), "jmp 0x12345678", "e9 78 56 34 12"),
@@ -5146,7 +5175,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.POP, RSI), "pop rsi", "5e"),
 				test(new Instruction(Opcode.POP, RSP), "pop rsp", "5c"),
 				test(new Instruction(Opcode.POP, SI), "pop si", "66 5e"),
-				test(new Instruction(Opcode.POP, SP), "pop sp", "66 5c"));
+				test(new Instruction(Opcode.POP, SP), "pop sp", "66 5c"),
+				test(
+						new Instruction(
+								Opcode.POP,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.build()),
+						"pop QWORD PTR [rax]",
+						"8f 00"));
 	}
 
 	private static List<X64EncodingTestCase> others() {
@@ -5167,6 +5205,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.CPUID), "cpuid", "0f a2"),
 				//  Hlt
 				test(new Instruction(Opcode.HLT), "hlt", "f4"),
+				// Fwait
+				test(new Instruction(Opcode.FWAIT), "fwait", "9b"),
+				// Pushf
+				test(new Instruction(Opcode.PUSHF), "pushf", "9c"),
+				// Popf
+				test(new Instruction(Opcode.POPF), "popf", "9d"),
 				//  Add
 				test(
 						new Instruction(
@@ -5275,6 +5319,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.ADD, CX, simm), "add cx,0x1234", "66 81 c1 34 12"),
 				test(new Instruction(Opcode.ADD, EAX, bimm), "add eax,0x12", "83 c0 12"),
 				test(new Instruction(Opcode.ADD, EAX, iimm), "add eax,0x12345678", "05 78 56 34 12"),
+				test(
+						new Instruction(
+								Opcode.ADD,
+								AL,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RAX)
+										.build()),
+						"add al,BYTE PTR [rax]",
+						"02 00"),
 				test(
 						new Instruction(
 								Opcode.ADD,
@@ -9656,7 +9710,59 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.base(RDI)
 										.build()),
 						"vpxorq ymm17,ymm1,YMMWORD PTR [rdi]",
-						"62 e1 f5 28 ef 0f"));
+						"62 e1 f5 28 ef 0f"),
+				// Sldt
+				test(
+						new Instruction(
+								Opcode.SLDT,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"sldt WORD PTR [rax]",
+						"0f 00 00"),
+				// Ins
+				test(
+						new Instruction(
+								Opcode.INS,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(new SegmentRegister(ES, RDI))
+										.build(),
+								DX),
+						"ins BYTE PTR es:[rdi],dx",
+						"6c"),
+				test(
+						new Instruction(
+								Opcode.INS,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(new SegmentRegister(ES, RDI))
+										.build(),
+								DX),
+						"ins DWORD PTR es:[rdi],dx",
+						"6d"),
+				// Outs
+				test(
+						new Instruction(
+								Opcode.OUTS,
+								DX,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(new SegmentRegister(DS, RSI))
+										.build()),
+						"outs dx,BYTE PTR ds:[rsi]",
+						"6e"),
+				test(
+						new Instruction(
+								Opcode.OUTS,
+								DX,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(new SegmentRegister(DS, RSI))
+										.build()),
+						"outs dx,DWORD PTR ds:[rsi]",
+						"6f"));
 	}
 
 	//

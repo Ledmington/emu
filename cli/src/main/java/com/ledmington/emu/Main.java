@@ -23,6 +23,9 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -36,6 +39,35 @@ public final class Main {
 
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	public static void main(final String[] args) {
+		{ // TODO: remove this thing when finished
+			MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+			int n = 1;
+			for (int i = 0; i < 256; i++) {
+				final byte[] v = new byte[n];
+				v[0] = BitUtils.asByte(i);
+				for (int j = 1; j < n; j++) {
+					v[j] = (byte) 0x00;
+				}
+				Instruction inst = null;
+				try {
+					inst = InstructionDecoder.fromHex(v, n).getFirst();
+				} catch (final ArrayIndexOutOfBoundsException aioobe) {
+					n++;
+					i--;
+					continue;
+				} catch (final Throwable t) {
+					out.printf(" 0x%02x -> %s: %s%n", i, t.getClass().getSimpleName(), t.getMessage());
+					continue;
+				}
+				out.printf(" 0x%02x -> %s%n", i, InstructionEncoder.toIntelSyntax(inst));
+				n = 1;
+			}
+			out.flush();
+			if (true) {
+				return;
+			}
+		}
+
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
 		String filename = null;

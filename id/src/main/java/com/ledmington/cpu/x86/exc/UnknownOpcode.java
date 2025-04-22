@@ -31,7 +31,7 @@ public final class UnknownOpcode extends RuntimeException {
 	 * @param opcodeByte The unknown opcode.
 	 */
 	public UnknownOpcode(final byte opcodeByte) {
-		super(String.format("Unknown opcode 0x%02x", opcodeByte));
+		super(String.format("Unknown opcode 0x%02x.", opcodeByte));
 	}
 
 	/**
@@ -41,6 +41,6 @@ public final class UnknownOpcode extends RuntimeException {
 	 * @param secondByte The unknown opcode's second byte.
 	 */
 	public UnknownOpcode(final byte firstByte, final byte secondByte) {
-		super(String.format("Unknown opcode 0x%02x%02x", firstByte, secondByte));
+		super(String.format("Unknown opcode 0x%02x%02x.", firstByte, secondByte));
 	}
 }

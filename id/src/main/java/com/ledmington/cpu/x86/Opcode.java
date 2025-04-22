@@ -140,6 +140,9 @@ public enum Opcode {
 	/** Terminate an indirect branch in 64-bit mode. */
 	ENDBR64,
 
+	/** Wait for floating-point unit. */
+	FWAIT,
+
 	/** Halt. */
 	HLT,
 
@@ -154,6 +157,9 @@ public enum Opcode {
 
 	/** Increment shadow stack pointer. */
 	INCSSPQ,
+
+	/** Input string. */
+	INS,
 
 	/** Call to interrupt procedure. */
 	INT3,
@@ -193,6 +199,15 @@ public enum Opcode {
 
 	/** Conditional jump if not signed. */
 	JNS,
+
+	/** Conditional jump if overflow. */
+	JO,
+
+	/** Conditional jump if not overflow. */
+	JNO,
+
+	/** Conditional jump if not parity. */
+	JNP,
 
 	/** Conditional jump if parity. */
 	JP,
@@ -302,6 +317,9 @@ public enum Opcode {
 	/** Logical OR. */
 	OR,
 
+	/** Output string to port. */
+	OUTS,
+
 	/** Add packed quadword integers. */
 	PADDQ,
 
@@ -340,6 +358,9 @@ public enum Opcode {
 
 	/** Pop a value from the stack. */
 	POP,
+
+	/** Pop stack into flags register. */
+	POPF,
 
 	/** Logical OR . */
 	POR,
@@ -437,7 +458,10 @@ public enum Opcode {
 	/** Push word, doubleword or quadword onto the stack. */
 	PUSH,
 
-	/** Logical XOR . */
+	/** Push flags register onto the stack. */
+	PUSHF,
+
+	/** Logical XOR. */
 	PXOR,
 
 	/** Rotate thru carry left. */
@@ -526,6 +550,9 @@ public enum Opcode {
 
 	/** Shuffles values in packed single-precision floating-point operands. */
 	SHUFPS,
+
+	/** Store local descriptor table register. */
+	SLDT,
 
 	/** Set direction flag. */
 	STD,

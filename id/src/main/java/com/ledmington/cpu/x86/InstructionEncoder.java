@@ -46,6 +46,8 @@ public final class InstructionEncoder {
 	private static final byte TABLE_A5_PREFIX = (byte) 0x3a;
 	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
 	private static final Map<Opcode, Byte> CONDITIONAL_JUMPS_OPCODES = Map.ofEntries(
+			Map.entry(Opcode.JO, (byte) 0x00),
+			Map.entry(Opcode.JNO, (byte) 0x01),
 			Map.entry(Opcode.JB, (byte) 0x02),
 			Map.entry(Opcode.JAE, (byte) 0x03),
 			Map.entry(Opcode.JE, (byte) 0x04),
@@ -55,6 +57,7 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.JS, (byte) 0x08),
 			Map.entry(Opcode.JNS, (byte) 0x09),
 			Map.entry(Opcode.JP, (byte) 0x0a),
+			Map.entry(Opcode.JNP, (byte) 0x0b),
 			Map.entry(Opcode.JL, (byte) 0x0c),
 			Map.entry(Opcode.JGE, (byte) 0x0d),
 			Map.entry(Opcode.JLE, (byte) 0x0e),
@@ -184,6 +187,9 @@ public final class InstructionEncoder {
 			case NOP -> wb.write((byte) 0x90);
 			case CWDE -> wb.write((byte) 0x98);
 			case CDQ -> wb.write((byte) 0x99);
+			case FWAIT -> wb.write((byte) 0x9b);
+			case PUSHF -> wb.write((byte) 0x9c);
+			case POPF -> wb.write((byte) 0x9d);
 			case SAHF -> wb.write((byte) 0x9e);
 			case LAHF -> wb.write((byte) 0x9f);
 			case RET -> wb.write((byte) 0xc3);
@@ -237,7 +243,7 @@ public final class InstructionEncoder {
 		if (requiresAddressSizeOverride(inst.firstOperand())) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
-		if (inst.firstOperand().bits() == 16
+		if ((inst.firstOperand().bits() == 16 && inst.opcode() != Opcode.SLDT)
 				|| ((inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.JMP)
 						&& inst.firstOperand() instanceof IndirectOperand
 						&& inst.firstOperand().bits() == 32)) {
@@ -292,7 +298,7 @@ public final class InstructionEncoder {
 					}
 				}
 			}
-			case JA, JAE, JB, JBE, JG, JE, JL, JLE, JGE, JNE, JNS, JS, JP -> {
+			case JA, JAE, JB, JBE, JG, JE, JL, JLE, JGE, JNE, JNS, JS, JP, JNP, JO, JNO -> {
 				final byte c = CONDITIONAL_JUMPS_OPCODES.get(inst.opcode());
 				if (inst.firstOperand().bits() == 8) {
 					wb.write(asByte((byte) 0x70 + c));
@@ -334,6 +340,8 @@ public final class InstructionEncoder {
 				if (inst.firstOperand() instanceof final Register r) {
 					wb.write(asByte((byte) 0x58 + Registers.toByte(r)));
 					return;
+				} else if (inst.firstOperand() instanceof IndirectOperand) {
+					wb.write((byte) 0x8f);
 				}
 			}
 			case NOT -> {
@@ -374,6 +382,7 @@ public final class InstructionEncoder {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae);
 				reg = (byte) 0b101;
 			}
+			case SLDT -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x00);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -435,42 +444,47 @@ public final class InstructionEncoder {
 	}
 
 	private static boolean requiresOperandSizeOverride(final Instruction inst) {
-		return (inst.firstOperand() instanceof Register16
-						|| inst.firstOperand() instanceof final IndirectOperand io
-								&& io.getPointerSize() == PointerSize.WORD_PTR)
-				|| (inst.opcode() == Opcode.MOVDQA && inst.firstOperand().bits() == 128)
-				|| (inst.opcode() == Opcode.MOVAPD)
-				|| (inst.opcode() == Opcode.MOVQ
-						&& inst.firstOperand() instanceof RegisterXMM
-						&& !(inst.secondOperand() instanceof IndirectOperand))
-				|| (inst.opcode() == Opcode.MOVQ && inst.secondOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PUNPCKLQDQ)
-				|| (inst.opcode() == Opcode.PUNPCKLDQ)
-				|| (inst.opcode() == Opcode.PUNPCKLBW)
-				|| (inst.opcode() == Opcode.PUNPCKHQDQ)
-				|| (inst.opcode() == Opcode.PUNPCKLWD)
-				|| (inst.opcode() == Opcode.MOVHPD)
-				|| (inst.opcode() == Opcode.PXOR && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.POR && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PAND && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PADDQ && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PSUBB && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PSUBW && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PSUBD && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PSUBQ && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PMINUB && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PMAXUB && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PSHUFB && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.UCOMISD)
-				|| (inst.opcode() == Opcode.PCMPEQB && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PCMPEQW && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PCMPEQD && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.MOVD && inst.firstOperand() instanceof RegisterXMM)
-				|| (inst.opcode() == Opcode.PMOVMSKB)
-				|| (inst.opcode() == Opcode.PSLLDQ)
-				|| (inst.opcode() == Opcode.PSRLDQ)
-				|| (inst.opcode() == Opcode.MOVNTDQ)
-				|| (inst.opcode() == Opcode.PCMPGTB);
+		// TODO: refactor
+		return (((inst.firstOperand() instanceof final Register16 r && !Register16.isSegment(r))
+								|| (inst.firstOperand() instanceof final IndirectOperand io
+										&& io.getPointerSize() == PointerSize.WORD_PTR
+										&& !(inst.secondOperand() instanceof final Register16 r2
+												&& Register16.isSegment(r2))))
+						|| (inst.opcode() == Opcode.MOVDQA
+								&& inst.firstOperand().bits() == 128)
+						|| (inst.opcode() == Opcode.MOVAPD)
+						|| (inst.opcode() == Opcode.MOVQ
+								&& inst.firstOperand() instanceof RegisterXMM
+								&& !(inst.secondOperand() instanceof IndirectOperand))
+						|| (inst.opcode() == Opcode.MOVQ && inst.secondOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PUNPCKLQDQ)
+						|| (inst.opcode() == Opcode.PUNPCKLDQ)
+						|| (inst.opcode() == Opcode.PUNPCKLBW)
+						|| (inst.opcode() == Opcode.PUNPCKHQDQ)
+						|| (inst.opcode() == Opcode.PUNPCKLWD)
+						|| (inst.opcode() == Opcode.MOVHPD)
+						|| (inst.opcode() == Opcode.PXOR && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.POR && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PAND && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PADDQ && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PSUBB && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PSUBW && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PSUBD && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PSUBQ && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PMINUB && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PMAXUB && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PSHUFB && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.UCOMISD)
+						|| (inst.opcode() == Opcode.PCMPEQB && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PCMPEQW && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PCMPEQD && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.MOVD && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PMOVMSKB)
+						|| (inst.opcode() == Opcode.PSLLDQ)
+						|| (inst.opcode() == Opcode.PSRLDQ)
+						|| (inst.opcode() == Opcode.MOVNTDQ)
+						|| (inst.opcode() == Opcode.PCMPGTB))
+				&& inst.opcode() != Opcode.OUTS;
 	}
 
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
@@ -758,7 +772,11 @@ public final class InstructionEncoder {
 					}
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register r2) {
-					wb.write(r2 instanceof Register8 ? (byte) 0x88 : (byte) 0x89);
+					if (r2 instanceof final Register16 r16 && Register16.isSegment(r16)) {
+						wb.write((byte) 0x8c);
+					} else {
+						wb.write(r2 instanceof Register8 ? (byte) 0x88 : (byte) 0x89);
+					}
 
 					if (isIpAndOffset(io)) {
 						wb.write((byte) 0x05);
@@ -767,7 +785,11 @@ public final class InstructionEncoder {
 					}
 				} else if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof IndirectOperand io) {
-					wb.write((r instanceof Register8) ? (byte) 0x8a : (byte) 0x8b);
+					if (r instanceof final Register16 r16 && Register16.isSegment(r16)) {
+						wb.write((byte) 0x8e);
+					} else {
+						wb.write((r instanceof Register8) ? (byte) 0x8a : (byte) 0x8b);
+					}
 
 					if (isIpAndOffset(io)) {
 						wb.write((byte) 0x05);
@@ -908,8 +930,9 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b000;
-				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
-					wb.write((byte) 0x03);
+				} else if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof IndirectOperand) {
+					wb.write((r instanceof Register8) ? (byte) 0x02 : (byte) 0x03);
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x01);
 				} else if (inst.firstOperand() instanceof IndirectOperand
@@ -1029,6 +1052,42 @@ public final class InstructionEncoder {
 					wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xaa : (byte) 0xab);
 					return;
 				}
+			}
+			case INS -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& io.hasBase()
+						&& io.getBase() == Register64.RDI
+						&& io.hasSegment()
+						&& io.getSegment() == Register16.ES
+						&& !io.hasIndex()
+						&& !io.hasScale()
+						&& !io.hasDisplacement()
+						&& inst.secondOperand() == Register16.DX) {
+					if (io.getPointerSize() == PointerSize.BYTE_PTR) {
+						wb.write((byte) 0x6c);
+					} else if (io.getPointerSize() == PointerSize.DWORD_PTR) {
+						wb.write((byte) 0x6d);
+					}
+				}
+				return;
+			}
+			case OUTS -> {
+				if (inst.firstOperand() == Register16.DX
+						&& inst.secondOperand() instanceof final IndirectOperand io
+						&& io.hasBase()
+						&& io.getBase() == Register64.RSI
+						&& io.hasSegment()
+						&& io.getSegment() == Register16.DS
+						&& !io.hasIndex()
+						&& !io.hasScale()
+						&& !io.hasDisplacement()) {
+					if (io.getPointerSize() == PointerSize.BYTE_PTR) {
+						wb.write((byte) 0x6e);
+					} else if (io.getPointerSize() == PointerSize.DWORD_PTR) {
+						wb.write((byte) 0x6f);
+					}
+				}
+				return;
 			}
 			case MOVDQA, MOVDQU -> {
 				if (inst.firstOperand() instanceof IndirectOperand) {
