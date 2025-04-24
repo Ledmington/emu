@@ -5860,6 +5860,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"sbb cl,BYTE PTR [rax-0x73]",
 						"1a 48 8d"),
+				test(
+						new Instruction(
+								Opcode.SBB,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RAX)
+										.displacement((byte) 0x53)
+										.build(),
+								new Immediate((byte) 0x0f)),
+						"sbb BYTE PTR [rax+0x53],0x0f",
+						"80 58 53 0f"),
 				//  Shr
 				test(new Instruction(Opcode.SHR, BPL, new Immediate((byte) 1)), "shr bpl,0x01", "40 d0 ed"),
 				test(new Instruction(Opcode.SHR, BX, bimm), "shr bx,0x12", "66 c1 eb 12"),
@@ -9253,8 +9264,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Rcr
 				test(new Instruction(Opcode.RCR, EDI, new Immediate((byte) 0)), "rcr edi,0x00", "c1 df 00"),
 				test(new Instruction(Opcode.RCR, BL, bimm), "rcr bl,0x12", "c0 db 12"),
+				test(new Instruction(Opcode.RCR, DL, CL), "rcr dl,cl", "d2 da"),
 				// Rcl
+				test(new Instruction(Opcode.RCL, CL, bimm), "rcl cl,0x12", "c0 d1 12"),
 				test(new Instruction(Opcode.RCL, EDI, new Immediate((byte) 0)), "rcl edi,0x00", "c1 d7 00"),
+				test(new Instruction(Opcode.RCL, EBX, CL), "rcl ebx,cl", "d3 d3"),
+				test(new Instruction(Opcode.RCL, AL, CL), "rcl al,cl", "d2 d0"),
 				// Pmovmskb
 				test(new Instruction(Opcode.PMOVMSKB, EDI, XMM6), "pmovmskb edi,xmm6", "66 0f d7 fe"),
 				// Pslldq

@@ -942,11 +942,11 @@ public final class InstructionEncoder {
 				}
 			}
 			case SBB -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
+				if (inst.firstOperand() == Register8.AL && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x1c);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.firstOperand().equals(Register16.AX)
+				} else if (inst.firstOperand() == Register16.AX
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x1d);
 					encodeImmediate(wb, imm);
@@ -960,6 +960,10 @@ public final class InstructionEncoder {
 					wb.write((r instanceof Register8) ? (byte) 0x18 : (byte) 0x19);
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
 					wb.write((byte) 0x1a);
+					reg = (byte) 0b011;
+				} else if (inst.firstOperand() instanceof IndirectOperand
+						&& inst.secondOperand() instanceof Immediate) {
+					wb.write((byte) 0x80);
 					reg = (byte) 0b011;
 				}
 			}
@@ -1423,12 +1427,25 @@ public final class InstructionEncoder {
 				reg = (byte) 0b001;
 			}
 			case RCL -> {
-				wb.write((byte) 0xc1);
-				reg = (byte) 0b010;
+				if (inst.firstOperand() instanceof final Register r && inst.secondOperand() == Register8.CL) {
+					wb.write((r instanceof Register8) ? (byte) 0xd2 : (byte) 0xd3);
+					wb.write(or(shl((byte) 0b11, 6), shl((byte) 0b010, 3), Registers.toByte(r)));
+					return;
+				} else if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof Immediate) {
+					wb.write((r instanceof Register8) ? (byte) 0xc0 : (byte) 0xc1);
+					reg = (byte) 0b010;
+				}
 			}
 			case RCR -> {
-				wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
-				reg = (byte) 0b011;
+				if (inst.firstOperand() instanceof final Register r && inst.secondOperand() == Register8.CL) {
+					wb.write((byte) 0xd2);
+					wb.write(or(shl((byte) 0b11, 6), shl((byte) 0b011, 3), Registers.toByte(r)));
+					return;
+				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Immediate) {
+					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
+					reg = (byte) 0b011;
+				}
 			}
 			case PMOVMSKB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd7);
 			case MOVNTDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xe7);

@@ -40,11 +40,11 @@ public final class InstructionChecker {
 		/** An MMX 64-bit register. */
 		RMM,
 		/** An XMM 128-bit register. */
-		RXMM,
+		RX,
 		/** A YMM 256-bit register. */
-		RYMM,
+		RY,
 		/** A ZMM 512-bit register. */
-		RZMM,
+		RZ,
 		/** A mask register. */
 		RK,
 		/** A segment register. */
@@ -136,22 +136,22 @@ public final class InstructionChecker {
 	private static final Case R32_R8 = new Case(OperandType.R32, OperandType.R8);
 	private static final Case R32_R16 = new Case(OperandType.R32, OperandType.R16);
 	private static final Case R32_R32 = new Case(OperandType.R32, OperandType.R32);
-	private static final Case R32_RXMM = new Case(OperandType.R32, OperandType.RXMM);
-	private static final Case R32_RYMM = new Case(OperandType.R32, OperandType.RYMM);
+	private static final Case R32_RX = new Case(OperandType.R32, OperandType.RX);
+	private static final Case R32_RY = new Case(OperandType.R32, OperandType.RY);
 	private static final Case R64_R8 = new Case(OperandType.R64, OperandType.R8);
 	private static final Case R64_R16 = new Case(OperandType.R64, OperandType.R16);
 	private static final Case R64_R32 = new Case(OperandType.R64, OperandType.R32);
 	private static final Case R64_R64 = new Case(OperandType.R64, OperandType.R64);
-	private static final Case R64_RXMM = new Case(OperandType.R64, OperandType.RXMM);
+	private static final Case R64_RX = new Case(OperandType.R64, OperandType.RX);
 	private static final Case RMM_R32 = new Case(OperandType.RMM, OperandType.R32);
 	private static final Case RMM_R64 = new Case(OperandType.RMM, OperandType.R64);
 	private static final Case RMM_RMM = new Case(OperandType.RMM, OperandType.RMM);
-	private static final Case RXMM_R32 = new Case(OperandType.RXMM, OperandType.R32);
-	private static final Case RXMM_R64 = new Case(OperandType.RXMM, OperandType.R64);
-	private static final Case RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM);
-	private static final Case RYMM_RXMM = new Case(OperandType.RYMM, OperandType.RXMM);
-	private static final Case RZMM_R32 = new Case(OperandType.RZMM, OperandType.R32);
-	private static final Case RZMM_RXMM = new Case(OperandType.RZMM, OperandType.RXMM);
+	private static final Case RX_R32 = new Case(OperandType.RX, OperandType.R32);
+	private static final Case RX_R64 = new Case(OperandType.RX, OperandType.R64);
+	private static final Case RX_RX = new Case(OperandType.RX, OperandType.RX);
+	private static final Case RY_RX = new Case(OperandType.RY, OperandType.RX);
+	private static final Case RZ_R32 = new Case(OperandType.RZ, OperandType.R32);
+	private static final Case RZ_RX = new Case(OperandType.RZ, OperandType.RX);
 	private static final Case R32_RK = new Case(OperandType.R32, OperandType.RK);
 	private static final Case RK_R32 = new Case(OperandType.RK, OperandType.R32);
 	private static final Case RK_R64 = new Case(OperandType.RK, OperandType.R64);
@@ -163,7 +163,7 @@ public final class InstructionChecker {
 	private static final Case R64_I8 = new Case(OperandType.R64, OperandType.I8);
 	private static final Case R64_I32 = new Case(OperandType.R64, OperandType.I32);
 	private static final Case R64_I64 = new Case(OperandType.R64, OperandType.I64);
-	private static final Case RXMM_I8 = new Case(OperandType.RXMM, OperandType.I8);
+	private static final Case RX_I8 = new Case(OperandType.RX, OperandType.I8);
 	private static final Case R8_S64 = new Case(OperandType.R8, OperandType.S64);
 	private static final Case R32_S64 = new Case(OperandType.R32, OperandType.S64);
 	private static final Case S64_R8 = new Case(OperandType.S64, OperandType.R8);
@@ -185,10 +185,10 @@ public final class InstructionChecker {
 	private static final Case M32_R16 = new Case(OperandType.M32, OperandType.R16);
 	private static final Case M32_R32 = new Case(OperandType.M32, OperandType.R32);
 	private static final Case M64_R64 = new Case(OperandType.M64, OperandType.R64);
-	private static final Case M64_RXMM = new Case(OperandType.M64, OperandType.RXMM);
-	private static final Case M128_RXMM = new Case(OperandType.M128, OperandType.RXMM);
-	private static final Case M256_RYMM = new Case(OperandType.M256, OperandType.RYMM);
-	private static final Case M512_RZMM = new Case(OperandType.M512, OperandType.RZMM);
+	private static final Case M64_RX = new Case(OperandType.M64, OperandType.RX);
+	private static final Case M128_RX = new Case(OperandType.M128, OperandType.RX);
+	private static final Case M256_RY = new Case(OperandType.M256, OperandType.RY);
+	private static final Case M512_RZ = new Case(OperandType.M512, OperandType.RZ);
 	private static final Case R8_M8 = new Case(OperandType.R8, OperandType.M8);
 	private static final Case R16_M8 = new Case(OperandType.R16, OperandType.M8);
 	private static final Case R16_M16 = new Case(OperandType.R16, OperandType.M16);
@@ -201,11 +201,11 @@ public final class InstructionChecker {
 	private static final Case R64_M32 = new Case(OperandType.R64, OperandType.M32);
 	private static final Case R64_M64 = new Case(OperandType.R64, OperandType.M64);
 	private static final Case RMM_M64 = new Case(OperandType.RMM, OperandType.M64);
-	private static final Case RXMM_M32 = new Case(OperandType.RXMM, OperandType.M32);
-	private static final Case RXMM_M64 = new Case(OperandType.RXMM, OperandType.M64);
-	private static final Case RXMM_M128 = new Case(OperandType.RXMM, OperandType.M128);
-	private static final Case RYMM_M256 = new Case(OperandType.RYMM, OperandType.M256);
-	private static final Case RZMM_M512 = new Case(OperandType.RZMM, OperandType.M512);
+	private static final Case RX_M32 = new Case(OperandType.RX, OperandType.M32);
+	private static final Case RX_M64 = new Case(OperandType.RX, OperandType.M64);
+	private static final Case RX_M128 = new Case(OperandType.RX, OperandType.M128);
+	private static final Case RY_M256 = new Case(OperandType.RY, OperandType.M256);
+	private static final Case RZ_M512 = new Case(OperandType.RZ, OperandType.M512);
 	private static final Case RS_M16 = new Case(OperandType.RS, OperandType.M16);
 	private static final Case I8_R8 = new Case(OperandType.I8, OperandType.R8);
 	private static final Case I8_R32 = new Case(OperandType.I8, OperandType.R32);
@@ -215,19 +215,19 @@ public final class InstructionChecker {
 	private static final Case R32_RMM_I8 = new Case(OperandType.R32, OperandType.RMM, OperandType.I8);
 	private static final Case R64_R64_I8 = new Case(OperandType.R64, OperandType.R64, OperandType.I8);
 	private static final Case RMM_RMM_I8 = new Case(OperandType.RMM, OperandType.RMM, OperandType.I8);
-	private static final Case RXMM_RXMM_I8 = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.I8);
-	private static final Case RXMM_M128_I8 = new Case(OperandType.RXMM, OperandType.M128, OperandType.I8);
+	private static final Case RX_RX_I8 = new Case(OperandType.RX, OperandType.RX, OperandType.I8);
+	private static final Case RX_M128_I8 = new Case(OperandType.RX, OperandType.M128, OperandType.I8);
 	private static final Case R32_M32_I32 = new Case(OperandType.R32, OperandType.M32, OperandType.I32);
 	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
 	private static final Case R32_R32_R32 = new Case(OperandType.R32, OperandType.R32, OperandType.R32);
 	private static final Case R64_R64_R64 = new Case(OperandType.R64, OperandType.R64, OperandType.R64);
-	private static final Case RK_RXMM_M128 = new Case(OperandType.RK, OperandType.RXMM, OperandType.M128);
-	private static final Case RK_RYMM_M256 = new Case(OperandType.RK, OperandType.RYMM, OperandType.M256);
-	private static final Case RXMM_RXMM_RXMM = new Case(OperandType.RXMM, OperandType.RXMM, OperandType.RXMM);
-	private static final Case RYMM_RYMM_RYMM = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.RYMM);
-	private static final Case RYMM_RYMM_M256 = new Case(OperandType.RYMM, OperandType.RYMM, OperandType.M256);
-	private static final Case RXMM_RXMM_M128_I8 =
-			new Case(OperandType.RXMM, OperandType.RXMM, OperandType.M128, OperandType.I8);
+	private static final Case RK_RX_M128 = new Case(OperandType.RK, OperandType.RX, OperandType.M128);
+	private static final Case RK_RY_M256 = new Case(OperandType.RK, OperandType.RY, OperandType.M256);
+	private static final Case RX_RX_RX = new Case(OperandType.RX, OperandType.RX, OperandType.RX);
+	private static final Case RY_RY_RY = new Case(OperandType.RY, OperandType.RY, OperandType.RY);
+	private static final Case RY_RY_M256 = new Case(OperandType.RY, OperandType.RY, OperandType.M256);
+	private static final Case RX_RX_M128_I8 =
+			new Case(OperandType.RX, OperandType.RX, OperandType.M128, OperandType.I8);
 
 	private static final Map<Opcode, List<Case>> CASES = Map.<Opcode, List<Case>>ofEntries(
 			Map.entry(Opcode.NOP, List.of(NOTHING, R16, R32, R64, M16, M32, M64)),
@@ -275,7 +275,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.CMOVG, List.of(R32_M32, R64_M64, R32_R32, R64_R64)),
 			Map.entry(Opcode.CMOVGE, List.of(R32_M32, R32_R32, R64_R64)),
 			Map.entry(Opcode.LEA, List.of(R16_M16, R32_M32, R64_M64)),
-			Map.entry(Opcode.LDDQU, List.of(RXMM_M128)),
+			Map.entry(Opcode.LDDQU, List.of(RX_M128)),
 			Map.entry(Opcode.MOVZX, List.of(R32_R8, R32_R16, R64_R8, R64_R16, R32_M8, R32_M16)),
 			Map.entry(Opcode.MOVSX, List.of(R32_R8, R64_R8, R64_R16, R32_M8, R32_M16, R64_M8, R64_M16)),
 			Map.entry(Opcode.PUSH, List.of(I8, I32, R16, R64, M64)),
@@ -321,7 +321,7 @@ public final class InstructionChecker {
 					Opcode.SBB,
 					List.of(
 							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8,
-							M32_R32)),
+							M32_R32, M8_I8)),
 			Map.entry(Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SHL, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
@@ -365,19 +365,19 @@ public final class InstructionChecker {
 			Map.entry(Opcode.CMPS, List.of(M8_M8, M32_M32)),
 			Map.entry(Opcode.LODS, List.of(R8_M8, R32_M32)),
 			Map.entry(Opcode.SCAS, List.of(R8_M8, R32_M32)),
-			Map.entry(Opcode.MOVDQA, List.of(RXMM_RXMM, RXMM_M128, M128_RXMM)),
-			Map.entry(Opcode.MOVDQU, List.of(RXMM_M128)),
-			Map.entry(Opcode.MOVAPS, List.of(RXMM_RXMM, M128_RXMM, RXMM_M128)),
-			Map.entry(Opcode.MOVAPD, List.of(RXMM_RXMM, M128_RXMM)),
-			Map.entry(Opcode.MOVQ, List.of(RMM_R64, RXMM_R64, M64_RXMM, RMM_M64, RXMM_M64)),
-			Map.entry(Opcode.MOVD, List.of(RMM_R32, RXMM_R32, RXMM_M32, RMM_M64)),
-			Map.entry(Opcode.MOVHPS, List.of(RXMM_M64, M64_RXMM)),
-			Map.entry(Opcode.MOVHPD, List.of(M64_RXMM)),
-			Map.entry(Opcode.MOVHLPS, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PUNPCKLQDQ, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PUNPCKLDQ, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PUNPCKHQDQ, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PUNPCKLWD, List.of(RXMM_RXMM)),
+			Map.entry(Opcode.MOVDQA, List.of(RX_RX, RX_M128, M128_RX)),
+			Map.entry(Opcode.MOVDQU, List.of(RX_M128)),
+			Map.entry(Opcode.MOVAPS, List.of(RX_RX, M128_RX, RX_M128)),
+			Map.entry(Opcode.MOVAPD, List.of(RX_RX, M128_RX)),
+			Map.entry(Opcode.MOVQ, List.of(RMM_R64, RX_R64, M64_RX, RMM_M64, RX_M64)),
+			Map.entry(Opcode.MOVD, List.of(RMM_R32, RX_R32, RX_M32, RMM_M64)),
+			Map.entry(Opcode.MOVHPS, List.of(RX_M64, M64_RX)),
+			Map.entry(Opcode.MOVHPD, List.of(M64_RX)),
+			Map.entry(Opcode.MOVHLPS, List.of(RX_RX)),
+			Map.entry(Opcode.PUNPCKLQDQ, List.of(RX_RX)),
+			Map.entry(Opcode.PUNPCKLDQ, List.of(RX_RX)),
+			Map.entry(Opcode.PUNPCKHQDQ, List.of(RX_RX)),
+			Map.entry(Opcode.PUNPCKLWD, List.of(RX_RX)),
 			Map.entry(Opcode.SETA, List.of(R8, M8)),
 			Map.entry(Opcode.SETAE, List.of(R8, M8)),
 			Map.entry(Opcode.SETE, List.of(R8, M8)),
@@ -391,32 +391,32 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SETO, List.of(R8, M8)),
 			Map.entry(Opcode.SETNO, List.of(R8, M8)),
 			Map.entry(Opcode.MOVABS, List.of(R64_I64, R8_S64, R32_S64, S64_R8, S64_R32)),
-			Map.entry(Opcode.MOVUPS, List.of(RXMM_M128, M128_RXMM)),
-			Map.entry(Opcode.MOVSD, List.of(RXMM_M64)),
+			Map.entry(Opcode.MOVUPS, List.of(RX_M128, M128_RX)),
+			Map.entry(Opcode.MOVSD, List.of(RX_M64)),
 			Map.entry(Opcode.ENDBR64, List.of(NOTHING)),
 			Map.entry(Opcode.INC, List.of(R8, R16, R32, R64, M8, M16, M32, M64)),
 			Map.entry(Opcode.DEC, List.of(R8, R32, R64, M8, M16, M32, M64)),
-			Map.entry(Opcode.PSHUFD, List.of(RXMM_RXMM_I8)),
+			Map.entry(Opcode.PSHUFD, List.of(RX_RX_I8)),
 			Map.entry(Opcode.PSHUFW, List.of(RMM_RMM_I8)),
-			Map.entry(Opcode.PSHUFB, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.SHUFPD, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.SHUFPS, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.PXOR, List.of(RMM_RMM, RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.POR, List.of(RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.PAND, List.of(RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.PADDQ, List.of(RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.PSUBQ, List.of(RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.PSUBB, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PSUBW, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PSUBD, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PSLLDQ, List.of(RXMM_I8)),
-			Map.entry(Opcode.PSRLDQ, List.of(RXMM_I8)),
-			Map.entry(Opcode.CVTSI2SD, List.of(RXMM_R64, RXMM_R32)),
-			Map.entry(Opcode.DIVSD, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.ADDSD, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.XORPS, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.UCOMISD, List.of(RXMM_M64)),
-			Map.entry(Opcode.UCOMISS, List.of(RXMM_M32)),
+			Map.entry(Opcode.PSHUFB, List.of(RX_RX)),
+			Map.entry(Opcode.SHUFPD, List.of(RX_RX_I8)),
+			Map.entry(Opcode.SHUFPS, List.of(RX_RX_I8)),
+			Map.entry(Opcode.PXOR, List.of(RMM_RMM, RX_RX, RX_M128)),
+			Map.entry(Opcode.POR, List.of(RX_RX, RX_M128)),
+			Map.entry(Opcode.PAND, List.of(RX_RX, RX_M128)),
+			Map.entry(Opcode.PADDQ, List.of(RX_RX, RX_M128)),
+			Map.entry(Opcode.PSUBQ, List.of(RX_RX, RX_M128)),
+			Map.entry(Opcode.PSUBB, List.of(RX_RX)),
+			Map.entry(Opcode.PSUBW, List.of(RX_RX)),
+			Map.entry(Opcode.PSUBD, List.of(RX_RX)),
+			Map.entry(Opcode.PSLLDQ, List.of(RX_I8)),
+			Map.entry(Opcode.PSRLDQ, List.of(RX_I8)),
+			Map.entry(Opcode.CVTSI2SD, List.of(RX_R64, RX_R32)),
+			Map.entry(Opcode.DIVSD, List.of(RX_RX)),
+			Map.entry(Opcode.ADDSD, List.of(RX_RX)),
+			Map.entry(Opcode.XORPS, List.of(RX_RX)),
+			Map.entry(Opcode.UCOMISD, List.of(RX_M64)),
+			Map.entry(Opcode.UCOMISS, List.of(RX_M32)),
 			Map.entry(Opcode.BT, List.of(R32_I8, R32_R32, R64_I8, R64_R64)),
 			Map.entry(Opcode.BTC, List.of(R32_I8, R32_R32, R64_I8, R64_R64)),
 			Map.entry(Opcode.BTR, List.of(R32_I8, R32_R32, R64_I8, R64_R64)),
@@ -430,9 +430,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PREFETCHT2, List.of(M8)),
 			Map.entry(Opcode.CMPXCHG, List.of(M8_R8, M16_R16, M32_R32, M64_R64)),
 			Map.entry(Opcode.XADD, List.of(M8_R8, M16_R16, M32_R32, M64_R64)),
-			Map.entry(Opcode.PCMPEQB, List.of(RMM_RMM, RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.PCMPEQW, List.of(RMM_RMM, RXMM_RXMM)),
-			Map.entry(Opcode.PCMPEQD, List.of(RMM_RMM, RXMM_RXMM)),
+			Map.entry(Opcode.PCMPEQB, List.of(RMM_RMM, RX_RX, RX_M128)),
+			Map.entry(Opcode.PCMPEQW, List.of(RMM_RMM, RX_RX)),
+			Map.entry(Opcode.PCMPEQD, List.of(RMM_RMM, RX_RX)),
 			Map.entry(Opcode.RDRAND, List.of(R16, R32, R64)),
 			Map.entry(Opcode.RDSEED, List.of(R16, R32, R64)),
 			Map.entry(Opcode.RDSSPQ, List.of(R64)),
@@ -444,58 +444,58 @@ public final class InstructionChecker {
 			Map.entry(Opcode.BSF, List.of(R32_R32, R64_R64)),
 			Map.entry(Opcode.ROR, List.of(R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.ROL, List.of(R8_R8, R32_R8, R8_I8, R32_I8, R64_I8)),
-			Map.entry(Opcode.RCR, List.of(R8_I8, R32_I8)),
-			Map.entry(Opcode.RCL, List.of(R32_I8)),
-			Map.entry(Opcode.PMOVMSKB, List.of(R32_RXMM)),
-			Map.entry(Opcode.PMINUB, List.of(RXMM_RXMM, RXMM_M128)),
-			Map.entry(Opcode.PMAXUB, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.PALIGNR, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
-			Map.entry(Opcode.VPXOR, List.of(RXMM_RXMM_RXMM)),
-			Map.entry(Opcode.VPXORQ, List.of(RYMM_RYMM_M256)),
+			Map.entry(Opcode.RCR, List.of(R8_R8, R8_I8, R32_I8)),
+			Map.entry(Opcode.RCL, List.of(R8_R8, R32_R8, R8_I8, R32_I8)),
+			Map.entry(Opcode.PMOVMSKB, List.of(R32_RX)),
+			Map.entry(Opcode.PMINUB, List.of(RX_RX, RX_M128)),
+			Map.entry(Opcode.PMAXUB, List.of(RX_RX)),
+			Map.entry(Opcode.PALIGNR, List.of(RX_RX_I8, RX_M128_I8)),
+			Map.entry(Opcode.VPXOR, List.of(RX_RX_RX)),
+			Map.entry(Opcode.VPXORQ, List.of(RY_RY_M256)),
 			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)),
-			Map.entry(Opcode.VMOVDQU, List.of(RYMM_M256, M256_RYMM)),
-			Map.entry(Opcode.VPMINUB, List.of(RYMM_RYMM_RYMM, RYMM_RYMM_M256)),
-			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RYMM)),
-			Map.entry(Opcode.VPCMPEQB, List.of(RYMM_RYMM_M256)),
+			Map.entry(Opcode.VMOVDQU, List.of(RY_M256, M256_RY)),
+			Map.entry(Opcode.VPMINUB, List.of(RY_RY_RY, RY_RY_M256)),
+			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RY)),
+			Map.entry(Opcode.VPCMPEQB, List.of(RY_RY_M256)),
 			Map.entry(Opcode.VZEROALL, List.of(NOTHING)),
-			Map.entry(Opcode.VMOVQ, List.of(R64_RXMM, RXMM_M64, M64_RXMM)),
-			Map.entry(Opcode.VMOVD, List.of(RXMM_M32)),
-			Map.entry(Opcode.PCMPISTRI, List.of(RXMM_RXMM_I8, RXMM_M128_I8)),
-			Map.entry(Opcode.PUNPCKLBW, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.VPBROADCASTB, List.of(RYMM_RXMM, RZMM_R32)),
-			Map.entry(Opcode.VPBROADCASTD, List.of(RYMM_RXMM, RZMM_R32)),
+			Map.entry(Opcode.VMOVQ, List.of(R64_RX, RX_M64, M64_RX)),
+			Map.entry(Opcode.VMOVD, List.of(RX_M32)),
+			Map.entry(Opcode.PCMPISTRI, List.of(RX_RX_I8, RX_M128_I8)),
+			Map.entry(Opcode.PUNPCKLBW, List.of(RX_RX)),
+			Map.entry(Opcode.VPBROADCASTB, List.of(RY_RX, RZ_R32)),
+			Map.entry(Opcode.VPBROADCASTD, List.of(RY_RX, RZ_R32)),
 			Map.entry(Opcode.SARX, List.of(R32_R32_R32)),
-			Map.entry(Opcode.VPOR, List.of(RYMM_RYMM_RYMM)),
-			Map.entry(Opcode.VPAND, List.of(RYMM_RYMM_RYMM)),
-			Map.entry(Opcode.VPANDN, List.of(RXMM_RXMM_RXMM)),
+			Map.entry(Opcode.VPOR, List.of(RY_RY_RY)),
+			Map.entry(Opcode.VPAND, List.of(RY_RY_RY)),
+			Map.entry(Opcode.VPANDN, List.of(RX_RX_RX)),
 			Map.entry(Opcode.BZHI, List.of(R32_R32_R32, R64_R64_R64)),
 			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
-			Map.entry(Opcode.MOVNTDQ, List.of(M128_RXMM)),
+			Map.entry(Opcode.MOVNTDQ, List.of(M128_RX)),
 			Map.entry(Opcode.SFENCE, List.of(NOTHING)),
-			Map.entry(Opcode.VMOVUPS, List.of(RZMM_M512, M512_RZMM)),
-			Map.entry(Opcode.VMOVDQU8, List.of(RZMM_M512, M512_RZMM)),
-			Map.entry(Opcode.VMOVDQU64, List.of(RZMM_M512, M512_RZMM)),
-			Map.entry(Opcode.VMOVNTDQ, List.of(M256_RYMM, M512_RZMM)),
-			Map.entry(Opcode.PCMPGTB, List.of(RXMM_RXMM)),
-			Map.entry(Opcode.VPCMPGTB, List.of(RXMM_RXMM_RXMM)),
-			Map.entry(Opcode.VPSUBB, List.of(RXMM_RXMM_RXMM)),
-			Map.entry(Opcode.VPCMPISTRI, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.VPSLLDQ, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.VPSRLDQ, List.of(RXMM_RXMM_I8)),
-			Map.entry(Opcode.VPALIGNR, List.of(RXMM_RXMM_M128_I8)),
+			Map.entry(Opcode.VMOVUPS, List.of(RZ_M512, M512_RZ)),
+			Map.entry(Opcode.VMOVDQU8, List.of(RZ_M512, M512_RZ)),
+			Map.entry(Opcode.VMOVDQU64, List.of(RZ_M512, M512_RZ)),
+			Map.entry(Opcode.VMOVNTDQ, List.of(M256_RY, M512_RZ)),
+			Map.entry(Opcode.PCMPGTB, List.of(RX_RX)),
+			Map.entry(Opcode.VPCMPGTB, List.of(RX_RX_RX)),
+			Map.entry(Opcode.VPSUBB, List.of(RX_RX_RX)),
+			Map.entry(Opcode.VPCMPISTRI, List.of(RX_RX_I8)),
+			Map.entry(Opcode.VPSLLDQ, List.of(RX_RX_I8)),
+			Map.entry(Opcode.VPSRLDQ, List.of(RX_RX_I8)),
+			Map.entry(Opcode.VPALIGNR, List.of(RX_RX_M128_I8)),
 			Map.entry(Opcode.CLC, List.of(NOTHING)),
 			Map.entry(Opcode.STC, List.of(NOTHING)),
 			Map.entry(Opcode.CLI, List.of(NOTHING)),
 			Map.entry(Opcode.STI, List.of(NOTHING)),
 			Map.entry(Opcode.CLD, List.of(NOTHING)),
 			Map.entry(Opcode.STD, List.of(NOTHING)),
-			Map.entry(Opcode.VPSHUFB, List.of(RXMM_RXMM_RXMM)),
-			Map.entry(Opcode.VBROADCASTSS, List.of(RZMM_RXMM)),
-			Map.entry(Opcode.VMOVAPS, List.of(M512_RZMM)),
+			Map.entry(Opcode.VPSHUFB, List.of(RX_RX_RX)),
+			Map.entry(Opcode.VBROADCASTSS, List.of(RZ_RX)),
+			Map.entry(Opcode.VMOVAPS, List.of(M512_RZ)),
 			Map.entry(Opcode.KMOVQ, List.of(RK_R64)),
 			Map.entry(Opcode.KMOVD, List.of(R32_RK, RK_R32)),
 			Map.entry(Opcode.XTEST, List.of(NOTHING)),
-			Map.entry(Opcode.VPCMPNEQUB, List.of(RK_RXMM_M128, RK_RYMM_M256)),
+			Map.entry(Opcode.VPCMPNEQUB, List.of(RK_RX_M128, RK_RY_M256)),
 			Map.entry(Opcode.SLDT, List.of(M16)),
 			Map.entry(Opcode.INS, List.of(M8_R16, M32_R16)),
 			Map.entry(Opcode.OUTS, List.of(R16_M8, R16_M32)),
@@ -683,9 +683,9 @@ public final class InstructionChecker {
 			case R32 -> op instanceof final Register32 r && !r.equals(Register32.EIP);
 			case R64 -> op instanceof final Register64 r && !r.equals(Register64.RIP);
 			case RMM -> op instanceof RegisterMMX;
-			case RXMM -> op instanceof RegisterXMM;
-			case RYMM -> op instanceof RegisterYMM;
-			case RZMM -> op instanceof RegisterZMM;
+			case RX -> op instanceof RegisterXMM;
+			case RY -> op instanceof RegisterYMM;
+			case RZ -> op instanceof RegisterZMM;
 			case RK -> op instanceof MaskRegister;
 			case RS -> op instanceof SegmentRegister;
 			case M8 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.BYTE_PTR;
