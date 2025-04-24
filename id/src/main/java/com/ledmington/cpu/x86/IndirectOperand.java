@@ -40,6 +40,7 @@ import com.ledmington.utils.HashUtils;
 public final class IndirectOperand implements Operand {
 
 	private final PointerSize ptrSize;
+	private final SegmentRegister segment;
 	private final Register base;
 	private final Register index;
 	private final Integer scale;
@@ -97,6 +98,7 @@ public final class IndirectOperand implements Operand {
 
 	/* default */ IndirectOperand(
 			final PointerSize ptrSize,
+			final SegmentRegister segment,
 			final Register base,
 			final Register index,
 			final Integer scale,
@@ -135,9 +137,7 @@ public final class IndirectOperand implements Operand {
 					(displacement == null) ? "no displacement" : "displacement=" + displacement));
 		}
 
-		if (!(base == null
-				|| isValidRegister(base)
-				|| (base instanceof final SegmentRegister sr && isValidRegister(sr.register())))) {
+		if (!(base == null || isValidRegister(base))) {
 			throw new IllegalArgumentException(String.format("%s is not a valid base register.", base));
 		}
 		if (index != null && (!isValidRegister(index) || index == Register32.ESP || index == Register64.RSP)) {
@@ -151,6 +151,7 @@ public final class IndirectOperand implements Operand {
 		}
 
 		this.ptrSize = ptrSize;
+		this.segment = segment;
 		this.base = base;
 		this.index = index;
 		this.scale = scale;
@@ -169,7 +170,7 @@ public final class IndirectOperand implements Operand {
 	 */
 	public Register getBase() {
 		Objects.requireNonNull(this.base, "No base register.");
-		return (base instanceof final SegmentRegister sr) ? sr.register() : base;
+		return base;
 	}
 
 	public boolean hasBase() {
@@ -177,15 +178,12 @@ public final class IndirectOperand implements Operand {
 	}
 
 	public boolean hasSegment() {
-		return hasBase() && base instanceof final SegmentRegister sr;
+		return segment != null;
 	}
 
-	public Register16 getSegment() {
-		Objects.requireNonNull(this.base, "No base register.");
-		if (!hasSegment()) {
-			throw new IllegalStateException("No segment register.");
-		}
-		return ((SegmentRegister) base).segment();
+	public SegmentRegister getSegment() {
+		Objects.requireNonNull(this.segment, "No segment.");
+		return segment;
 	}
 
 	/**
@@ -273,8 +271,8 @@ public final class IndirectOperand implements Operand {
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
 		}
-		if (base instanceof final SegmentRegister sr) {
-			sb.append(sr.segment().toIntelSyntax()).append(':');
+		if (hasSegment()) {
+			sb.append(segment.toIntelSyntax()).append(':');
 		}
 		sb.append('[');
 		if (hasBase()) {
@@ -304,7 +302,8 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public String toString() {
-		return "IndirectOperand(ptrSize=" + ptrSize + ";base="
+		return "IndirectOperand(ptrSize=" + ptrSize + ";segment="
+				+ segment + ";base="
 				+ (base == null ? "null" : base.toString())
 				+ ";index="
 				+ (index == null ? "null" : index.toString()) + ";scale="
@@ -317,6 +316,7 @@ public final class IndirectOperand implements Operand {
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + ptrSize.hashCode();
+		h = 31 * h + (segment == null ? 0 : segment.hashCode());
 		h = 31 * h + (base == null ? 0 : base.hashCode());
 		h = 31 * h + (index == null ? 0 : index.hashCode());
 		h = 31 * h + (scale == null ? 0 : scale.hashCode());
@@ -337,6 +337,7 @@ public final class IndirectOperand implements Operand {
 			return false;
 		}
 		return this.ptrSize.equals(io.ptrSize)
+				&& Objects.equals(this.segment, io.segment)
 				&& Objects.equals(this.base, io.base)
 				&& Objects.equals(this.scale, io.scale)
 				&& Objects.equals(this.index, io.index)

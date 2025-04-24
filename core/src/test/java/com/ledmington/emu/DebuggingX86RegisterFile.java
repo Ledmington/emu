@@ -26,6 +26,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 
 /**
@@ -44,9 +45,7 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 		for (final Register64 r : Register64.values()) {
 			this.rf.set(r, rng.nextLong());
 		}
-		for (final Register16 r : new Register16[] {
-			Register16.CS, Register16.DS, Register16.ES, Register16.FS, Register16.GS, Register16.SS
-		}) {
+		for (final SegmentRegister r : SegmentRegister.values()) {
 			this.rf.set(r, BitUtils.asShort(rng.nextInt()));
 		}
 	}
@@ -82,6 +81,12 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	public void set(final SegmentRegister r, final short v) {
+		this.initialized.add(r);
+		this.rf.set(r, v);
+	}
+
+	@Override
 	public void set(final RFlags f, final boolean v) {
 		this.rf.set(f, v);
 	}
@@ -111,6 +116,12 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 
 	@Override
 	public long get(final Register64 r) {
+		checkIsInitialized(r);
+		return this.rf.get(r);
+	}
+
+	@Override
+	public short get(final SegmentRegister r) {
 		checkIsInitialized(r);
 		return this.rf.get(r);
 	}

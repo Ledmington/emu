@@ -34,6 +34,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 
 final class TestX86RegisterFile {
@@ -78,13 +79,7 @@ final class TestX86RegisterFile {
 		Register16.R12W,
 		Register16.R13W,
 		Register16.R14W,
-		Register16.R15W,
-		Register16.CS,
-		Register16.DS,
-		Register16.ES,
-		Register16.FS,
-		Register16.GS,
-		Register16.SS
+		Register16.R15W
 	};
 	private static final Register32[] ALL_32_BIT_REGISTERS = {
 		Register32.EAX,
@@ -123,6 +118,14 @@ final class TestX86RegisterFile {
 		Register64.R14,
 		Register64.R15,
 		Register64.RIP
+	};
+	private static final SegmentRegister[] ALL_SEGMENT_REGISTERS = {
+		SegmentRegister.CS,
+		SegmentRegister.DS,
+		SegmentRegister.ES,
+		SegmentRegister.FS,
+		SegmentRegister.GS,
+		SegmentRegister.SS
 	};
 	private X86RegisterFile regFile;
 
@@ -293,6 +296,47 @@ final class TestX86RegisterFile {
 					regFile.get(other),
 					() -> String.format(
 							"Expected register %s to be initially zero but was 0x%016x", other, regFile.get(other)));
+		}
+	}
+
+	private static Stream<Arguments> allSegmentRegisters() {
+		return Arrays.stream(ALL_SEGMENT_REGISTERS).map(Arguments::of);
+	}
+
+	@ParameterizedTest
+	@MethodSource("allSegmentRegisters")
+	void initiallyAllZero(final SegmentRegister r) {
+		assertEquals(
+				(short) 0x0000,
+				regFile.get(r),
+				() -> String.format("Expected register %s to be initially zero but was 0x%04x", r, regFile.get(r)));
+	}
+
+	@ParameterizedTest
+	@MethodSource("allSegmentRegisters")
+	void setToValue(final SegmentRegister r) {
+		final short x = BitUtils.asShort(RNG.nextInt(1, 65_536));
+		regFile.set(r, x);
+		assertEquals(
+				x,
+				regFile.get(r),
+				() -> String.format("Expected register %s to be 0x%04x but was 0x%04x", r, x, regFile.get(r)));
+	}
+
+	@ParameterizedTest
+	@MethodSource("allSegmentRegisters")
+	void setToValueShouldNotChangeOtherRegisters(final SegmentRegister r) {
+		final short x = BitUtils.asShort(RNG.nextInt(1, 65_536));
+		regFile.set(r, x);
+
+		for (final SegmentRegister other : ALL_SEGMENT_REGISTERS) {
+			if (r.equals(other)) {
+				continue;
+			}
+			assertEquals(
+					(short) 0x0000,
+					regFile.get(other),
+					() -> String.format("Expected register %s to be zero but was 0x%04x", other, regFile.get(other)));
 		}
 	}
 

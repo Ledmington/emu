@@ -41,6 +41,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
@@ -155,9 +156,7 @@ final class TestExecution {
 		for (final Register64 r : Register64.values()) {
 			rf.set(r, rng.nextLong());
 		}
-		for (final Register16 r : new Register16[] {
-			Register16.CS, Register16.DS, Register16.ES, Register16.FS, Register16.GS, Register16.SS
-		}) {
+		for (final SegmentRegister r : SegmentRegister.values()) {
 			rf.set(r, BitUtils.asShort(rng.nextInt()));
 		}
 	}

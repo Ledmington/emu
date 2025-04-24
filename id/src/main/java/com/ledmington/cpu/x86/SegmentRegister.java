@@ -17,89 +17,53 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
+import java.util.Locale;
 
-/**
- * This class represents a pair of an x86 segment register and a general-purpose x86 register, used for representing
- * string operands inside x86 instructions.
- */
-public final class SegmentRegister implements Register {
+public enum SegmentRegister implements Register {
 
-	private final Register16 seg;
-	private final Register reg;
+	/** The segment register CS (Code Segment). */
+	CS,
 
-	/**
-	 * Creates a segment register with the given couple of registers.
-	 *
-	 * @param segment The 16-bit register.
-	 * @param register The general-purpose register.
-	 */
-	public SegmentRegister(final Register16 segment, final Register register) {
-		Objects.requireNonNull(segment, "Segment cannot be null.");
-		Objects.requireNonNull(register, "Register cannot be null.");
+	/** The segment register DS (Data Segment). */
+	DS,
 
-		if (!(register instanceof Register32) && !(register instanceof Register64)) {
-			throw new IllegalArgumentException(
-					String.format("'%s' is not a valid register: must be 32-bit or 64-bit.", register));
-		}
+	/** The segment register SS (Stack Segment). */
+	SS,
 
-		this.seg = segment;
-		this.reg = register;
-	}
+	/** The segment register ES (Extra Segment). */
+	ES,
 
-	/**
-	 * Returns the segment.
-	 *
-	 * @return The segment.
-	 */
-	public Register16 segment() {
-		return seg;
-	}
+	/** The segment register FS. */
+	FS,
 
-	/**
-	 * Returns the general-purpose register.
-	 *
-	 * @return The general-purpose register.
-	 */
-	public Register register() {
-		return reg;
-	}
+	/** The segment register GS. */
+	GS;
 
-	@Override
-	public int bits() {
-		// TODO: check this
-		return reg.bits();
+	private final String mnemonic = name().toLowerCase(Locale.US);
+
+	public static byte toByte(final SegmentRegister r) {
+		return switch (r) {
+			case ES -> (byte) 0x00;
+			case SS -> (byte) 0x01;
+			case DS -> (byte) 0x02;
+			case FS -> (byte) 0x03;
+			case GS -> (byte) 0x04;
+			default -> throw new IllegalArgumentException(String.format("Unknown segment register '%s'.", r));
+		};
 	}
 
 	@Override
 	public String toIntelSyntax() {
-		return reg.toIntelSyntax();
+		return mnemonic;
+	}
+
+	@Override
+	public int bits() {
+		throw new UnsupportedOperationException("This is a segment register.");
 	}
 
 	@Override
 	public String toString() {
-		return "SegmentRegister(seg=" + seg + ";reg=" + reg + ')';
-	}
-
-	@Override
-	public int hashCode() {
-		int h = 17;
-		h = 31 * h + seg.hashCode();
-		h = 31 * h + reg.hashCode();
-		return h;
-	}
-
-	@Override
-	public boolean equals(final Object other) {
-		if (other == null) {
-			return false;
-		}
-		if (this == other) {
-			return true;
-		}
-		if (!(other instanceof final SegmentRegister sr)) {
-			return false;
-		}
-		return this.seg.equals(sr.seg) && this.reg.equals(sr.reg);
+		return "SegmentRegister(mnemonic=" + mnemonic + ")";
 	}
 }

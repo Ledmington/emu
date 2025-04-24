@@ -25,47 +25,55 @@ import com.ledmington.cpu.x86.exc.InvalidInstruction;
 
 public final class InstructionChecker {
 
+	/** Different categories of operands. Check {@link #matches} to know exactly what each one represents. */
 	private enum OperandType {
-		// An 8-bit register
+		// TODO: since some instruction can only target AL, AX, EAX or RAX, maybe make a specific category only for
+		// those?
+		/** An 8-bit register. */
 		R8,
-		// A 16-bit register
+		/** A 16-bit register. */
 		R16,
-		// A 32-bit register (without EIP)
+		/** A 32-bit register (without EIP). */
 		R32,
-		// A general-purpose 64-bit register (without RIP)
+		/** A general-purpose 64-bit register (without RIP). */
 		R64,
-		// An MMX 64-bit register
+		/** An MMX 64-bit register. */
 		RMM,
-		// An XMM 128-bit register
+		/** An XMM 128-bit register. */
 		RXMM,
-		// An YMM 256-bit register
+		/** A YMM 256-bit register. */
 		RYMM,
-		// An ZMM 512-bit register
+		/** A ZMM 512-bit register. */
 		RZMM,
-		// A mask register
+		/** A mask register. */
 		RK,
-		// An indirect operand with BYTE PTR size
+		/** A segment register. */
+		RS,
+		// TODO: encode also indirect operands with and without a segment register
+		/** An indirect operand with BYTE PTR size. */
 		M8,
-		// An indirect operand with WORD PTR size
+		/** An indirect operand with WORD PTR size. */
 		M16,
-		// An indirect operand with DWORD PTR size
+		/** An indirect operand with DWORD PTR size. */
 		M32,
-		// An indirect operand with QWORD PTR size
+		/** An indirect operand with QWORD PTR size. */
 		M64,
-		// An indirect operand with XMMWORD PTR size
+		/** An indirect operand with XMMWORD PTR size. */
 		M128,
-		// An indirect operand with YMMWORD PTR size
+		/** An indirect operand with YMMWORD PTR size. */
 		M256,
-		// An indirect operand with ZMMWORD PTR size
+		/** An indirect operand with ZMMWORD PTR size. */
 		M512,
-		// An immediate value of 8 bits
+		/** An immediate value of 8 bits. */
 		I8,
-		// An immediate value of 16 bits
+		/** An immediate value of 16 bits. */
 		I16,
-		// An immediate value of 32 bits
+		/** An immediate value of 32 bits. */
 		I32,
-		// An immediate value of 64 bits
-		I64
+		/** An immediate value of 64 bits. */
+		I64,
+		/** A segmented address with a 64-bit immediate. */
+		S64
 	}
 
 	private static final class Case {
@@ -117,10 +125,14 @@ public final class InstructionChecker {
 	private static final Case M32 = new Case(OperandType.M32);
 	private static final Case M64 = new Case(OperandType.M64);
 	private static final Case I8 = new Case(OperandType.I8);
+	private static final Case I16 = new Case(OperandType.I16);
 	private static final Case I32 = new Case(OperandType.I32);
+	private static final Case I16_I8 = new Case(OperandType.I16, OperandType.I8);
 	private static final Case R8_R8 = new Case(OperandType.R8, OperandType.R8);
+	private static final Case R8_R16 = new Case(OperandType.R8, OperandType.R16);
 	private static final Case R16_R8 = new Case(OperandType.R16, OperandType.R8);
 	private static final Case R16_R16 = new Case(OperandType.R16, OperandType.R16);
+	private static final Case R16_R32 = new Case(OperandType.R16, OperandType.R32);
 	private static final Case R32_R8 = new Case(OperandType.R32, OperandType.R8);
 	private static final Case R32_R16 = new Case(OperandType.R32, OperandType.R16);
 	private static final Case R32_R32 = new Case(OperandType.R32, OperandType.R32);
@@ -140,6 +152,9 @@ public final class InstructionChecker {
 	private static final Case RYMM_RXMM = new Case(OperandType.RYMM, OperandType.RXMM);
 	private static final Case RZMM_R32 = new Case(OperandType.RZMM, OperandType.R32);
 	private static final Case RZMM_RXMM = new Case(OperandType.RZMM, OperandType.RXMM);
+	private static final Case R32_RK = new Case(OperandType.R32, OperandType.RK);
+	private static final Case RK_R32 = new Case(OperandType.RK, OperandType.R32);
+	private static final Case RK_R64 = new Case(OperandType.RK, OperandType.R64);
 	private static final Case R8_I8 = new Case(OperandType.R8, OperandType.I8);
 	private static final Case R16_I8 = new Case(OperandType.R16, OperandType.I8);
 	private static final Case R16_I16 = new Case(OperandType.R16, OperandType.I16);
@@ -149,9 +164,14 @@ public final class InstructionChecker {
 	private static final Case R64_I32 = new Case(OperandType.R64, OperandType.I32);
 	private static final Case R64_I64 = new Case(OperandType.R64, OperandType.I64);
 	private static final Case RXMM_I8 = new Case(OperandType.RXMM, OperandType.I8);
+	private static final Case R8_S64 = new Case(OperandType.R8, OperandType.S64);
+	private static final Case R32_S64 = new Case(OperandType.R32, OperandType.S64);
+	private static final Case S64_R8 = new Case(OperandType.S64, OperandType.R8);
+	private static final Case S64_R32 = new Case(OperandType.S64, OperandType.R32);
 	private static final Case M8_I8 = new Case(OperandType.M8, OperandType.I8);
 	private static final Case M16_I8 = new Case(OperandType.M16, OperandType.I8);
 	private static final Case M16_I16 = new Case(OperandType.M16, OperandType.I16);
+	private static final Case M32_I8 = new Case(OperandType.M32, OperandType.I8);
 	private static final Case M32_I32 = new Case(OperandType.M32, OperandType.I32);
 	private static final Case M64_I8 = new Case(OperandType.M64, OperandType.I8);
 	private static final Case M64_I32 = new Case(OperandType.M64, OperandType.I32);
@@ -161,6 +181,7 @@ public final class InstructionChecker {
 	private static final Case M8_R8 = new Case(OperandType.M8, OperandType.R8);
 	private static final Case M8_R16 = new Case(OperandType.M8, OperandType.R16);
 	private static final Case M16_R16 = new Case(OperandType.M16, OperandType.R16);
+	private static final Case M16_RS = new Case(OperandType.M16, OperandType.RS);
 	private static final Case M32_R16 = new Case(OperandType.M32, OperandType.R16);
 	private static final Case M32_R32 = new Case(OperandType.M32, OperandType.R32);
 	private static final Case M64_R64 = new Case(OperandType.M64, OperandType.R64);
@@ -184,10 +205,10 @@ public final class InstructionChecker {
 	private static final Case RXMM_M64 = new Case(OperandType.RXMM, OperandType.M64);
 	private static final Case RXMM_M128 = new Case(OperandType.RXMM, OperandType.M128);
 	private static final Case RYMM_M256 = new Case(OperandType.RYMM, OperandType.M256);
-	private static final Case R32_RK = new Case(OperandType.R32, OperandType.RK);
-	private static final Case RK_R32 = new Case(OperandType.RK, OperandType.R32);
-	private static final Case RK_R64 = new Case(OperandType.RK, OperandType.R64);
 	private static final Case RZMM_M512 = new Case(OperandType.RZMM, OperandType.M512);
+	private static final Case RS_M16 = new Case(OperandType.RS, OperandType.M16);
+	private static final Case I8_R8 = new Case(OperandType.I8, OperandType.R8);
+	private static final Case I8_R32 = new Case(OperandType.I8, OperandType.R32);
 	private static final Case R32_R32_I8 = new Case(OperandType.R32, OperandType.R32, OperandType.I8);
 	private static final Case R32_R32_I32 = new Case(OperandType.R32, OperandType.R32, OperandType.I32);
 	private static final Case R64_R64_I32 = new Case(OperandType.R64, OperandType.R64, OperandType.I32);
@@ -214,14 +235,15 @@ public final class InstructionChecker {
 					Opcode.MOV,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I16, R32_I32, R64_I32, M8_I8, M16_I16, M32_I32,
-							M64_I32, M8_R8, M16_R16, M32_R32, M64_R64, R8_M8, R16_M16, R32_M32, R64_M64)),
-			Map.entry(Opcode.MOVSXD, List.of(R64_R32, R32_M32, R64_M32)),
+							M64_I32, M8_R8, M16_R16, M16_RS, M32_R32, M64_R64, R8_M8, R16_M16, R32_M32, R64_M64,
+							RS_M16)),
+			Map.entry(Opcode.MOVSXD, List.of(R32_R32, R64_R32, R32_M32, R64_M32)),
 			Map.entry(
 					Opcode.CMP,
 					List.of(
 							R8_M8, R16_M16, R32_M32, R64_M64, R8_I8, R16_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32,
-							R8_R8, R16_R16, R32_R32, R64_R64, M8_R8, M32_R32, M64_R64, M8_I8, M16_I8, M16_I16, M32_I32,
-							M64_I8, M64_I32)),
+							R8_R8, R16_R16, R32_R32, R64_R64, M8_R8, M32_R32, M64_R64, M8_I8, M16_I8, M16_I16, M32_I8,
+							M32_I32, M64_I8, M64_I32)),
 			Map.entry(Opcode.CALL, List.of(I32, R64, M16, M32, M64)),
 			Map.entry(Opcode.JA, List.of(I8, I32)),
 			Map.entry(Opcode.JAE, List.of(I8, I32)),
@@ -263,32 +285,43 @@ public final class InstructionChecker {
 			Map.entry(Opcode.CWDE, List.of(NOTHING)),
 			Map.entry(Opcode.LEAVE, List.of(NOTHING)),
 			Map.entry(Opcode.INT3, List.of(NOTHING)),
-			Map.entry(Opcode.RET, List.of(NOTHING)),
+			Map.entry(Opcode.INT, List.of(I8)),
+			Map.entry(Opcode.IRET, List.of(NOTHING)),
+			Map.entry(Opcode.RET, List.of(NOTHING, I16)),
+			Map.entry(Opcode.RETF, List.of(NOTHING, I16)),
 			Map.entry(Opcode.CPUID, List.of(NOTHING)),
 			Map.entry(Opcode.HLT, List.of(NOTHING)),
 			Map.entry(Opcode.FWAIT, List.of(NOTHING)),
 			Map.entry(Opcode.PUSHF, List.of(NOTHING)),
 			Map.entry(Opcode.POPF, List.of(NOTHING)),
+			Map.entry(Opcode.CMC, List.of(NOTHING)),
 			Map.entry(
 					Opcode.ADD,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32,
-							R8_M8, R32_M32, R64_M64, M8_I8, M8_R8, M16_R16, M32_R32, M64_R64, M32_I32, M64_I8,
+							R8_M8, R32_M32, R64_M64, M8_I8, M8_R8, M16_R16, M32_R32, M64_R64, M32_I8, M32_I32, M64_I8,
 							M64_I32)),
-			Map.entry(Opcode.ADC, List.of(R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8, M32_R32)),
+			Map.entry(
+					Opcode.ADC,
+					List.of(
+							R8_R8, R32_R32, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8, M32_R32,
+							M32_I8)),
 			Map.entry(
 					Opcode.AND,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32,
-							R8_M8, R16_M16, R32_M32, R64_M64, M8_I8, M32_I32, M64_I8, M64_I32, M8_R8, M32_R32)),
+							R8_M8, R16_M16, R32_M32, R64_M64, M8_I8, M32_I8, M32_I32, M64_I8, M64_I32, M8_R8, M32_R32)),
 			Map.entry(
 					Opcode.SUB,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R16_I16, R32_I8, R32_I32, R8_I8, R64_I8, R64_I32, R8_M8,
-							R32_M32, R64_M64, M8_R8, M16_R16, M32_R32, M64_R64, M8_I8, M16_I8, M64_I8, M64_I32)),
+							R32_M32, R64_M64, M8_R8, M16_R16, M32_R32, M64_R64, M8_I8, M16_I8, M32_I8, M64_I8,
+							M64_I32)),
 			Map.entry(
 					Opcode.SBB,
-					List.of(R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8, M32_R32)),
+					List.of(
+							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8,
+							M32_R32)),
 			Map.entry(Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SHL, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
@@ -313,7 +346,7 @@ public final class InstructionChecker {
 					Opcode.OR,
 					List.of(
 							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32, R8_M8, R32_M32,
-							R64_M64, M8_I8, M16_I16, M32_I32, M64_I8, M64_I32, M8_R8, M32_R32, M64_R64)),
+							R64_M64, M8_I8, M16_I16, M32_I8, M32_I32, M64_I8, M64_I32, M8_R8, M32_R32, M64_R64)),
 			Map.entry(
 					Opcode.XOR,
 					List.of(
@@ -329,6 +362,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.UD2, List.of(NOTHING)),
 			Map.entry(Opcode.MOVS, List.of(M8_M8, M16_M16, M32_M32)),
 			Map.entry(Opcode.STOS, List.of(M8_R8, M32_R32, M64_R64)),
+			Map.entry(Opcode.CMPS, List.of(M8_M8, M32_M32)),
+			Map.entry(Opcode.LODS, List.of(R8_M8, R32_M32)),
+			Map.entry(Opcode.SCAS, List.of(R8_M8, R32_M32)),
 			Map.entry(Opcode.MOVDQA, List.of(RXMM_RXMM, RXMM_M128, M128_RXMM)),
 			Map.entry(Opcode.MOVDQU, List.of(RXMM_M128)),
 			Map.entry(Opcode.MOVAPS, List.of(RXMM_RXMM, M128_RXMM, RXMM_M128)),
@@ -354,7 +390,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SETGE, List.of(R8, M8)),
 			Map.entry(Opcode.SETO, List.of(R8, M8)),
 			Map.entry(Opcode.SETNO, List.of(R8, M8)),
-			Map.entry(Opcode.MOVABS, List.of(R64_I64)),
+			Map.entry(Opcode.MOVABS, List.of(R64_I64, R8_S64, R32_S64, S64_R8, S64_R32)),
 			Map.entry(Opcode.MOVUPS, List.of(RXMM_M128, M128_RXMM)),
 			Map.entry(Opcode.MOVSD, List.of(RXMM_M64)),
 			Map.entry(Opcode.ENDBR64, List.of(NOTHING)),
@@ -406,9 +442,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SYSCALL, List.of(NOTHING)),
 			Map.entry(Opcode.BSR, List.of(R32_M32)),
 			Map.entry(Opcode.BSF, List.of(R32_R32, R64_R64)),
-			Map.entry(Opcode.ROR, List.of(R32_I8, R64_I8)),
+			Map.entry(Opcode.ROR, List.of(R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.ROL, List.of(R8_R8, R32_R8, R8_I8, R32_I8, R64_I8)),
-			Map.entry(Opcode.RCR, List.of(R32_I8)),
+			Map.entry(Opcode.RCR, List.of(R8_I8, R32_I8)),
 			Map.entry(Opcode.RCL, List.of(R32_I8)),
 			Map.entry(Opcode.PMOVMSKB, List.of(R32_RXMM)),
 			Map.entry(Opcode.PMINUB, List.of(RXMM_RXMM, RXMM_M128)),
@@ -447,6 +483,10 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPSLLDQ, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.VPSRLDQ, List.of(RXMM_RXMM_I8)),
 			Map.entry(Opcode.VPALIGNR, List.of(RXMM_RXMM_M128_I8)),
+			Map.entry(Opcode.CLC, List.of(NOTHING)),
+			Map.entry(Opcode.STC, List.of(NOTHING)),
+			Map.entry(Opcode.CLI, List.of(NOTHING)),
+			Map.entry(Opcode.STI, List.of(NOTHING)),
 			Map.entry(Opcode.CLD, List.of(NOTHING)),
 			Map.entry(Opcode.STD, List.of(NOTHING)),
 			Map.entry(Opcode.VPSHUFB, List.of(RXMM_RXMM_RXMM)),
@@ -458,7 +498,19 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPCMPNEQUB, List.of(RK_RXMM_M128, RK_RYMM_M256)),
 			Map.entry(Opcode.SLDT, List.of(M16)),
 			Map.entry(Opcode.INS, List.of(M8_R16, M32_R16)),
-			Map.entry(Opcode.OUTS, List.of(R16_M8, R16_M32)));
+			Map.entry(Opcode.OUTS, List.of(R16_M8, R16_M32)),
+			Map.entry(Opcode.ENTER, List.of(I16_I8)),
+			Map.entry(Opcode.XLAT, List.of(M8)),
+			Map.entry(Opcode.FADD, List.of(M32, M64)),
+			Map.entry(Opcode.FIADD, List.of(M16, M32)),
+			Map.entry(Opcode.FLD, List.of(M32, M64)),
+			Map.entry(Opcode.FILD, List.of(M16, M32)),
+			Map.entry(Opcode.LOOPNE, List.of(I8)),
+			Map.entry(Opcode.LOOPE, List.of(I8)),
+			Map.entry(Opcode.LOOP, List.of(I8)),
+			Map.entry(Opcode.JRCXZ, List.of(I8)),
+			Map.entry(Opcode.IN, List.of(R8_I8, R32_I8, R8_R16, R32_R16)),
+			Map.entry(Opcode.OUT, List.of(I8_R8, I8_R32, R16_R8, R16_R32)));
 
 	private InstructionChecker() {}
 
@@ -515,9 +567,13 @@ public final class InstructionChecker {
 
 	/**
 	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
-	 * more than one immediate value.
+	 * more than one immediate value (except ENTER).
 	 */
 	private static void checkNoMoreThanOneImmediate(final Instruction inst) {
+		if (inst.opcode() == Opcode.ENTER) {
+			return;
+		}
+
 		int count = 0;
 		if (inst.hasFirstOperand() && inst.firstOperand() instanceof Immediate) {
 			count++;
@@ -538,10 +594,10 @@ public final class InstructionChecker {
 
 	/**
 	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
-	 * more than one indirect operand (except MOVS).
+	 * more than one indirect operand (except MOVS and CMPS).
 	 */
 	private static void checkNoMoreThanOneIndirect(final Instruction inst) {
-		if (inst.opcode() == Opcode.MOVS) {
+		if (inst.opcode() == Opcode.MOVS || inst.opcode() == Opcode.CMPS) {
 			return;
 		}
 
@@ -631,6 +687,7 @@ public final class InstructionChecker {
 			case RYMM -> op instanceof RegisterYMM;
 			case RZMM -> op instanceof RegisterZMM;
 			case RK -> op instanceof MaskRegister;
+			case RS -> op instanceof SegmentRegister;
 			case M8 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.BYTE_PTR;
 			case M16 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.WORD_PTR;
 			case M32 -> op instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.DWORD_PTR;
@@ -642,6 +699,8 @@ public final class InstructionChecker {
 			case I16 -> op instanceof final Immediate imm && imm.bits() == 16;
 			case I32 -> op instanceof final Immediate imm && imm.bits() == 32;
 			case I64 -> op instanceof final Immediate imm && imm.bits() == 64;
+			case S64 ->
+				op instanceof final SegmentedAddress sa && sa.immediate().bits() == 64;
 		};
 	}
 }

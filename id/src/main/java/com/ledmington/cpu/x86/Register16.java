@@ -68,26 +68,7 @@ public enum Register16 implements Register {
 	R14W,
 
 	/** The register R15W. */
-	R15W,
-
-	// TODO: should the proper segment registers be separated from the general-purpose ones?
-	/** The segment register CS (Code Segment). */
-	CS,
-
-	/** The segment register DS (Data Segment). */
-	DS,
-
-	/** The segment register SS (Stack Segment). */
-	SS,
-
-	/** The segment register ES (Extra Segment). */
-	ES,
-
-	/** The segment register FS. */
-	FS,
-
-	/** The segment register GS. */
-	GS;
+	R15W;
 
 	private final String mnemonic = name().toLowerCase(Locale.US);
 
@@ -131,13 +112,6 @@ public enum Register16 implements Register {
 			case BP, R13W -> (byte) 0x05;
 			case SI, R14W -> (byte) 0x06;
 			case DI, R15W -> (byte) 0x07;
-			//
-			case ES -> (byte) 0x00;
-			case SS -> (byte) 0x01;
-			case DS -> (byte) 0x02;
-			case FS -> (byte) 0x03;
-			case GS -> (byte) 0x04;
-			default -> throw new IllegalArgumentException(String.format("Unknown register %s.", r));
 		};
 	}
 
@@ -145,15 +119,8 @@ public enum Register16 implements Register {
 	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final Register16 r) {
 		return switch (r) {
-			case AX, BX, CX, DX, SI, DI, SP, BP, CS, DS, ES, FS, GS, SS -> false;
+			case AX, BX, CX, DX, SI, DI, SP, BP -> false;
 			case R8W, R9W, R10W, R11W, R12W, R13W, R14W, R15W -> true;
-		};
-	}
-
-	public static boolean isSegment(final Register16 r) {
-		return switch (r) {
-			case CS, DS, ES, FS, GS, SS -> true;
-			default -> false;
 		};
 	}
 

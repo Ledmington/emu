@@ -20,12 +20,12 @@ package com.ledmington.emu;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.HashUtils;
 
@@ -132,6 +132,12 @@ public final class X86RegisterFile implements RegisterFile {
 			case R13W -> BitUtils.asShort(gpr[13]);
 			case R14W -> BitUtils.asShort(gpr[14]);
 			case R15W -> BitUtils.asShort(gpr[15]);
+		};
+	}
+
+	@Override
+	public short get(final SegmentRegister r) {
+		return switch (r) {
 			case CS -> seg[0];
 			case DS -> seg[1];
 			case ES -> seg[2];
@@ -139,6 +145,19 @@ public final class X86RegisterFile implements RegisterFile {
 			case GS -> seg[4];
 			case SS -> seg[5];
 		};
+	}
+
+	@Override
+	public void set(final SegmentRegister r, final short v) {
+		switch (r) {
+			case CS -> seg[0] = v;
+			case DS -> seg[1] = v;
+			case ES -> seg[2] = v;
+			case FS -> seg[3] = v;
+			case GS -> seg[4] = v;
+			case SS -> seg[5] = v;
+		}
+		;
 	}
 
 	@Override
@@ -160,12 +179,6 @@ public final class X86RegisterFile implements RegisterFile {
 			case R13W -> gpr[13] = (gpr[13] & 0xffffffffff0000L) | BitUtils.asLong(v);
 			case R14W -> gpr[14] = (gpr[14] & 0xffffffffff0000L) | BitUtils.asLong(v);
 			case R15W -> gpr[15] = (gpr[15] & 0xffffffffff0000L) | BitUtils.asLong(v);
-			case CS -> seg[0] = v;
-			case DS -> seg[1] = v;
-			case ES -> seg[2] = v;
-			case FS -> seg[3] = v;
-			case GS -> seg[4] = v;
-			case SS -> seg[5] = v;
 		}
 	}
 
@@ -296,7 +309,7 @@ public final class X86RegisterFile implements RegisterFile {
 						.map(r -> String.format("%s=0x%016x", r.name(), get(r)))
 						.collect(Collectors.joining(","))
 				+ ","
-				+ Stream.of(Register16.CS, Register16.DS, Register16.ES, Register16.FS, Register16.GS, Register16.SS)
+				+ Arrays.stream(SegmentRegister.values())
 						.map(r -> String.format("%s=0x%016x", r.name(), get(r)))
 						.collect(Collectors.joining(","))
 				+ ",RFLAGS="

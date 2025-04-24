@@ -15,26 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.cpu.x86.exc;
+package com.ledmington.cpu.x86;
 
-import java.io.Serial;
+import java.util.Objects;
 
-/**
- * This exception is thrown when a prefix is detected during opcode decoding, meaning that it was not properly
- * recognized by earlier decoding steps.
- */
-public final class UnrecognizedPrefix extends DecodingException {
+public record SegmentedAddress(SegmentRegister segment, Immediate immediate) implements Operand {
 
-	@Serial
-	private static final long serialVersionUID = -5061777630768344350L;
+	public SegmentedAddress {
+		Objects.requireNonNull(segment);
+		Objects.requireNonNull(immediate);
+	}
 
-	/**
-	 * Creates a new UnrecognizedPrefix runtime exception with a proper message.
-	 *
-	 * @param type The type of the prefix.
-	 * @param position The position of the unrecognized prefix.
-	 */
-	public UnrecognizedPrefix(final String type, final long position) {
-		super(String.format("Found an unrecognized %s prefix at byte 0x%016x", type, position));
+	@Override
+	public String toIntelSyntax() {
+		return segment.toIntelSyntax() + ":" + immediate.toIntelSyntax();
+	}
+
+	@Override
+	public int bits() {
+		throw new UnsupportedOperationException("This is a segmented address.");
 	}
 }

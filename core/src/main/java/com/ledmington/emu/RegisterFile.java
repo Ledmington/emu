@@ -21,6 +21,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.SegmentRegister;
 
 /** Represents a mutable register file. */
 public interface RegisterFile extends ImmutableRegisterFile {
@@ -40,6 +41,8 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param v The value to be written.
 	 */
 	void set(Register16 r, short v);
+
+	void set(SegmentRegister r, short v);
 
 	/**
 	 * Sets the value of the given 32-bit register to given int. This operation does not modify the other registers.

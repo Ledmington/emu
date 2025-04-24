@@ -84,8 +84,8 @@ final class TestExecutionWithMemory {
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,
 				IndirectOperand.builder()
-						.base(r1)
 						.pointer(PointerSize.QWORD_PTR)
+						.base(r1)
 						.build(),
 				r2));
 		mem.setPermissions(oldValue1, oldValue1 + 7L, true, false, false);

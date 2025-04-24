@@ -17,6 +17,7 @@
  */
 package com.ledmington.cpu.x86;
 
+import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.utils.BitUtils;
 
 /** The extended VEX prefix (EVEX): 0x62 + 3 bytes. */
@@ -47,14 +48,14 @@ public final class EvexPrefix {
 		final boolean b = BitUtils.and(firstByte, (byte) 0b00100000) != (byte) 0;
 		final boolean r1 = BitUtils.and(firstByte, (byte) 0b00010000) != (byte) 0;
 		if (BitUtils.and(firstByte, (byte) 0b00001000) != 0) {
-			throw new IllegalArgumentException("Invalid first byte of EVEX prefix: bit n.3 should be 0.");
+			throw new DecodingException("Invalid first byte of EVEX prefix: bit n.3 should be 0.");
 		}
 		final byte m = BitUtils.and(firstByte, (byte) 0b00000111);
 
 		final boolean w = BitUtils.and(secondByte, (byte) 0b10000000) != (byte) 0;
 		final byte v = BitUtils.shr(BitUtils.and(secondByte, (byte) 0b01111000), 3);
 		if (BitUtils.and(secondByte, (byte) 0b00000100) == 0) {
-			throw new IllegalArgumentException("Invalid second byte of EVEX prefix: bit n.2 should be 1.");
+			throw new DecodingException("Invalid second byte of EVEX prefix: bit n.2 should be 1.");
 		}
 		final byte p = BitUtils.and(secondByte, (byte) 0b00000011);
 

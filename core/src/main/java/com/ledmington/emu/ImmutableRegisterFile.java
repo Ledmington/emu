@@ -21,6 +21,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.SegmentRegister;
 
 /** Represents an immutable register file. */
 public interface ImmutableRegisterFile {
@@ -40,6 +41,8 @@ public interface ImmutableRegisterFile {
 	 * @return The value in the register.
 	 */
 	short get(Register16 r);
+
+	short get(SegmentRegister s);
 
 	/**
 	 * Returns the value of the given 32-bit register as an int.

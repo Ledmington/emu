@@ -23,6 +23,7 @@ import java.util.Objects;
 public final class IndirectOperandBuilder {
 
 	private PointerSize ptrSize = null;
+	private SegmentRegister segmentRegister = null;
 	private Register baseRegister = null;
 	private Register indexRegister = null;
 	private Integer scale = null;
@@ -37,6 +38,30 @@ public final class IndirectOperandBuilder {
 	public IndirectOperandBuilder() {}
 
 	/**
+	 * Sets an explicit pointer size for the IndirectOperand. This method is currently required in the current
+	 * implementation since it does not allow, otherwise, to create indirect operands such as "WORD PTR ...".
+	 *
+	 * @param ptrSize The explicit pointer size.
+	 * @return This instance of IndirectOperandBuilder.
+	 */
+	public IndirectOperandBuilder pointer(final PointerSize ptrSize) {
+		if (this.ptrSize != null) {
+			throw new IllegalArgumentException("Cannot define pointer size twice.");
+		}
+
+		this.ptrSize = Objects.requireNonNull(ptrSize);
+		return this;
+	}
+
+	public IndirectOperandBuilder segment(final SegmentRegister segmentRegister) {
+		if (this.segmentRegister != null) {
+			throw new IllegalArgumentException("Cannot define segment register twice.");
+		}
+		this.segmentRegister = Objects.requireNonNull(segmentRegister);
+		return this;
+	}
+
+	/**
 	 * Sets the base register for the IndirectOperand.
 	 *
 	 * @param r The new base register.
@@ -47,9 +72,9 @@ public final class IndirectOperandBuilder {
 			throw new IllegalArgumentException("Cannot define base register twice.");
 		}
 		Objects.requireNonNull(r);
-		if (!(r instanceof Register32) && !(r instanceof Register64) && !(r instanceof SegmentRegister)) {
+		if (!(r instanceof Register32) && !(r instanceof Register64)) {
 			throw new IllegalArgumentException(
-					String.format("'%s' is not a valid base register: must be 32-bit, 64-bit or a segment.", r));
+					String.format("'%s' is not a valid base register: must be 32-bit, 64-bit.", r));
 		}
 		if (indexRegister != null && r.bits() != indexRegister.bits()) {
 			throw new IllegalArgumentException(String.format(
@@ -131,22 +156,6 @@ public final class IndirectOperandBuilder {
 	}
 
 	/**
-	 * Sets an explicit pointer size for the IndirectOperand. This method is currently required in the current
-	 * implementation since it does not allow, otherwise, to create indirect operands such as "WORD PTR ...".
-	 *
-	 * @param ptrSize The explicit pointer size.
-	 * @return This instance of IndirectOperandBuilder.
-	 */
-	public IndirectOperandBuilder pointer(final PointerSize ptrSize) {
-		if (this.ptrSize != null) {
-			throw new IllegalArgumentException("Cannot define pointer size twice.");
-		}
-
-		this.ptrSize = Objects.requireNonNull(ptrSize);
-		return this;
-	}
-
-	/**
 	 * Builds the IndirectOperand object with the parameters that have been set.
 	 *
 	 * @return A new instance of IndirectOperand.
@@ -158,7 +167,8 @@ public final class IndirectOperandBuilder {
 
 		alreadyBuilt = true;
 
-		return new IndirectOperand(ptrSize, baseRegister, indexRegister, scale, displacement, displacementType);
+		return new IndirectOperand(
+				ptrSize, segmentRegister, baseRegister, indexRegister, scale, displacement, displacementType);
 	}
 
 	@Override
@@ -173,9 +183,10 @@ public final class IndirectOperandBuilder {
 
 	@Override
 	public String toString() {
-		return "IndirectOperandBuilder(base=" + baseRegister + ";index=" + indexRegister + ";scale=" + scale
+		return "IndirectOperandBuilder(ptrSize=" + ptrSize + ";segment=" + segmentRegister + ";base="
+				+ baseRegister + ";index=" + indexRegister + ";scale=" + scale
 				+ ";displacement="
 				+ displacement + ";displacementType="
-				+ displacementType + ";ptrSize=" + ptrSize + ";alreadyBuilt=" + alreadyBuilt + ")";
+				+ displacementType + ";alreadyBuilt=" + alreadyBuilt + ")";
 	}
 }

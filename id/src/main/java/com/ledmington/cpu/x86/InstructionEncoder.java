@@ -193,6 +193,8 @@ public final class InstructionEncoder {
 			case SAHF -> wb.write((byte) 0x9e);
 			case LAHF -> wb.write((byte) 0x9f);
 			case RET -> wb.write((byte) 0xc3);
+			case RETF -> wb.write((byte) 0xcb);
+			case IRET -> wb.write((byte) 0xcf);
 			case LEAVE -> wb.write((byte) 0xc9);
 			case INT3 -> wb.write((byte) 0xcc);
 			case HLT -> wb.write((byte) 0xf4);
@@ -207,9 +209,14 @@ public final class InstructionEncoder {
 			case ENDBR64 -> wb.write((byte) 0xf3, DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
 			case VZEROALL -> wb.write((byte) 0xc5, (byte) 0xfc, (byte) 0x77);
 			case SFENCE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae, (byte) 0xf8);
+			case CLC -> wb.write((byte) 0xf8);
+			case STC -> wb.write((byte) 0xf9);
+			case CLI -> wb.write((byte) 0xfa);
+			case STI -> wb.write((byte) 0xfb);
 			case CLD -> wb.write((byte) 0xfc);
 			case STD -> wb.write((byte) 0xfd);
 			case XTEST -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd6);
+			case CMC -> wb.write((byte) 0xf5);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}
@@ -237,13 +244,18 @@ public final class InstructionEncoder {
 	private static void encodeSingleOperandInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		if (inst.firstOperand() instanceof final IndirectOperand io
 				&& io.hasSegment()
-				&& io.getSegment() == Register16.CS) {
+				&& io.getSegment() == SegmentRegister.CS) {
 			wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
 		}
 		if (requiresAddressSizeOverride(inst.firstOperand())) {
 			wb.write(ADDRESS_SIZE_OVERRIDE_PREFIX);
 		}
-		if ((inst.firstOperand().bits() == 16 && inst.opcode() != Opcode.SLDT)
+		if ((inst.firstOperand().bits() == 16
+						&& !(inst.opcode() == Opcode.SLDT
+								|| inst.opcode() == Opcode.RET
+								|| inst.opcode() == Opcode.RETF
+								|| inst.opcode() == Opcode.FIADD
+								|| inst.opcode() == Opcode.FILD))
 				|| ((inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.JMP)
 						&& inst.firstOperand() instanceof IndirectOperand
 						&& inst.firstOperand().bits() == 32)) {
@@ -260,7 +272,9 @@ public final class InstructionEncoder {
 					&& !(inst.opcode() == Opcode.CALL
 							|| inst.opcode() == Opcode.JMP
 							|| inst.opcode() == Opcode.PUSH
-							|| inst.opcode() == Opcode.POP)) {
+							|| inst.opcode() == Opcode.POP
+							|| inst.opcode() == Opcode.FADD
+							|| inst.opcode() == Opcode.FLD)) {
 				rex = or(rex, (byte) 0b1000);
 			}
 			if (hasExtendedIndex(inst.firstOperand()) && inst.opcode() != Opcode.JMP) {
@@ -281,6 +295,60 @@ public final class InstructionEncoder {
 
 		switch (inst.opcode()) {
 			case NOP -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1f);
+			case RET -> wb.write((byte) 0xc2);
+			case RETF -> wb.write((byte) 0xca);
+			case INT -> wb.write((byte) 0xcd);
+			case LOOPNE -> wb.write((byte) 0xe0);
+			case LOOPE -> wb.write((byte) 0xe1);
+			case LOOP -> wb.write((byte) 0xe2);
+			case JRCXZ -> wb.write((byte) 0xe3);
+			case XLAT -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& io.getPointerSize() == PointerSize.BYTE_PTR
+						&& io.hasSegment()
+						&& io.getSegment() == SegmentRegister.DS
+						&& io.hasBase()
+						&& io.getBase() == Register64.RBX) {
+					wb.write((byte) 0xd7);
+					return;
+				}
+			}
+			case FADD -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					if (io.getPointerSize() == PointerSize.DWORD_PTR) {
+						wb.write((byte) 0xd8);
+					} else if (io.getPointerSize() == PointerSize.QWORD_PTR) {
+						wb.write((byte) 0xdc);
+					}
+				}
+			}
+			case FIADD -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					if (io.getPointerSize() == PointerSize.DWORD_PTR) {
+						wb.write((byte) 0xda);
+					} else if (io.getPointerSize() == PointerSize.WORD_PTR) {
+						wb.write((byte) 0xde);
+					}
+				}
+			}
+			case FILD -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					if (io.getPointerSize() == PointerSize.DWORD_PTR) {
+						wb.write((byte) 0xdb);
+					} else if (io.getPointerSize() == PointerSize.WORD_PTR) {
+						wb.write((byte) 0xdf);
+					}
+				}
+			}
+			case FLD -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					if (io.getPointerSize() == PointerSize.DWORD_PTR) {
+						wb.write((byte) 0xd9);
+					} else if (io.getPointerSize() == PointerSize.QWORD_PTR) {
+						wb.write((byte) 0xdd);
+					}
+				}
+			}
 			case CALL -> {
 				if (inst.firstOperand() instanceof Immediate) {
 					wb.write((byte) 0xe8);
@@ -401,6 +469,8 @@ public final class InstructionEncoder {
 		} else if (inst.firstOperand() instanceof final Immediate imm) {
 			if (imm.bits() == 8) {
 				wb.write(imm.asByte());
+			} else if (imm.bits() == 16) {
+				wb.write(imm.asShort());
 			} else if (imm.bits() == 32) {
 				wb.write(imm.asInt());
 			} else {
@@ -416,7 +486,7 @@ public final class InstructionEncoder {
 				&& io.hasBase()
 				&& (io.getBase() == Register64.RSI || io.getBase() == Register32.ESI)
 				&& io.hasSegment()
-				&& io.getSegment() == Register16.DS
+				&& io.getSegment() == SegmentRegister.DS
 				&& !io.hasIndex()
 				&& !io.hasScale()
 				&& !io.hasDisplacement();
@@ -427,7 +497,7 @@ public final class InstructionEncoder {
 				&& io.hasBase()
 				&& (io.getBase() == Register64.RDI || io.getBase() == Register32.EDI)
 				&& io.hasSegment()
-				&& io.getSegment() == Register16.ES
+				&& io.getSegment() == SegmentRegister.ES
 				&& !io.hasIndex()
 				&& !io.hasScale()
 				&& !io.hasDisplacement();
@@ -445,11 +515,10 @@ public final class InstructionEncoder {
 
 	private static boolean requiresOperandSizeOverride(final Instruction inst) {
 		// TODO: refactor
-		return (((inst.firstOperand() instanceof final Register16 r && !Register16.isSegment(r))
+		return (((inst.firstOperand() instanceof Register16)
 								|| (inst.firstOperand() instanceof final IndirectOperand io
 										&& io.getPointerSize() == PointerSize.WORD_PTR
-										&& !(inst.secondOperand() instanceof final Register16 r2
-												&& Register16.isSegment(r2))))
+										&& !(inst.secondOperand() instanceof SegmentRegister)))
 						|| (inst.opcode() == Opcode.MOVDQA
 								&& inst.firstOperand().bits() == 128)
 						|| (inst.opcode() == Opcode.MOVAPD)
@@ -484,13 +553,14 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.PSRLDQ)
 						|| (inst.opcode() == Opcode.MOVNTDQ)
 						|| (inst.opcode() == Opcode.PCMPGTB))
-				&& inst.opcode() != Opcode.OUTS;
+				&& inst.opcode() != Opcode.OUTS
+				&& inst.opcode() != Opcode.OUT;
 	}
 
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		if (inst.firstOperand() instanceof final IndirectOperand io
 				&& io.hasSegment()
-				&& io.getSegment() == Register16.CS) {
+				&& io.getSegment() == SegmentRegister.CS) {
 			wb.write(CS_SEGMENT_OVERRIDE_PREFIX);
 		}
 		if (requiresAddressSizeOverride(inst.firstOperand()) || requiresAddressSizeOverride(inst.secondOperand())) {
@@ -709,6 +779,48 @@ public final class InstructionEncoder {
 
 		byte reg = 0;
 		switch (inst.opcode()) {
+			case ENTER -> {
+				wb.write((byte) 0xc8);
+				encodeImmediate(wb, (Immediate) inst.firstOperand());
+				encodeImmediate(wb, (Immediate) inst.secondOperand());
+				return;
+			}
+			case IN -> {
+				if (inst.secondOperand() instanceof final Immediate imm && imm.bits() == 8) {
+					if (inst.firstOperand() == Register8.AL) {
+						wb.write((byte) 0xe4);
+					} else if (inst.firstOperand() == Register32.EAX) {
+						wb.write((byte) 0xe5);
+					}
+					encodeImmediate(wb, imm);
+					return;
+				} else if (inst.secondOperand() == Register16.DX) {
+					if (inst.firstOperand() == Register8.AL) {
+						wb.write((byte) 0xec);
+					} else if (inst.firstOperand() == Register32.EAX) {
+						wb.write((byte) 0xed);
+					}
+					return;
+				}
+			}
+			case OUT -> {
+				if (inst.firstOperand() instanceof final Immediate imm && imm.bits() == 8) {
+					if (inst.secondOperand() == Register8.AL) {
+						wb.write((byte) 0xe6);
+					} else if (inst.secondOperand() == Register32.EAX) {
+						wb.write((byte) 0xe7);
+					}
+					encodeImmediate(wb, imm);
+					return;
+				} else if (inst.firstOperand() == Register16.DX) {
+					if (inst.secondOperand() == Register8.AL) {
+						wb.write((byte) 0xee);
+					} else if (inst.secondOperand() == Register32.EAX) {
+						wb.write((byte) 0xef);
+					}
+					return;
+				}
+			}
 			case CMOVE, CMOVNS, CMOVAE, CMOVB, CMOVBE, CMOVNE, CMOVG, CMOVGE, CMOVS, CMOVA, CMOVL, CMOVLE ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, asByte((byte) 0x40 + CONDITIONAL_MOVE_OPCODES.get(inst.opcode())));
 			case CMP -> {
@@ -718,7 +830,7 @@ public final class InstructionEncoder {
 
 					if (isIpAndOffset(io)) {
 						wb.write((byte) 0x1d);
-						wb.write(asInt(io.getDisplacement()));
+						encodeDisplacement(wb, io);
 						return;
 					}
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
@@ -728,6 +840,13 @@ public final class InstructionEncoder {
 									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x80 : (byte) 0x83)
 									: (byte) 0x81);
 					reg = (byte) 0b111;
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x3d);
+						encodeDisplacement(wb, io);
+						encodeImmediate(wb, imm);
+						return;
+					}
 				} else if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof IndirectOperand) {
 					wb.write(r instanceof Register8 ? (byte) 0x3a : (byte) 0x3b);
@@ -772,7 +891,7 @@ public final class InstructionEncoder {
 					}
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register r2) {
-					if (r2 instanceof final Register16 r16 && Register16.isSegment(r16)) {
+					if (r2 instanceof SegmentRegister) {
 						wb.write((byte) 0x8c);
 					} else {
 						wb.write(r2 instanceof Register8 ? (byte) 0x88 : (byte) 0x89);
@@ -785,7 +904,7 @@ public final class InstructionEncoder {
 					}
 				} else if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof IndirectOperand io) {
-					if (r instanceof final Register16 r16 && Register16.isSegment(r16)) {
+					if (r instanceof SegmentRegister) {
 						wb.write((byte) 0x8e);
 					} else {
 						wb.write((r instanceof Register8) ? (byte) 0x8a : (byte) 0x8b);
@@ -836,8 +955,9 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((imm.bits() == 8) ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b011;
-				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof Register) {
-					wb.write((byte) 0x19);
+				} else if (inst.firstOperand() instanceof final Register r
+						&& inst.secondOperand() instanceof Register) {
+					wb.write((r instanceof Register8) ? (byte) 0x18 : (byte) 0x19);
 				} else if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof IndirectOperand) {
 					wb.write((byte) 0x1a);
 					reg = (byte) 0b011;
@@ -897,6 +1017,13 @@ public final class InstructionEncoder {
 									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x80 : (byte) 0x83)
 									: (byte) 0x81);
 					reg = (byte) 0b001;
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x0d);
+						encodeDisplacement(wb, io);
+						encodeImmediate(wb, imm);
+						return;
+					}
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register r) {
 					wb.write((r instanceof Register8) ? (byte) 0x08 : (byte) 0x09);
@@ -941,12 +1068,13 @@ public final class InstructionEncoder {
 				}
 			}
 			case ADC -> {
-				if (inst.firstOperand() instanceof Register && inst.secondOperand() instanceof final Immediate imm) {
-					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
+				if ((inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand)
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					wb.write((imm.bits() == 8) ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b010;
-				} else if (inst.firstOperand() instanceof final IndirectOperand io
+				} else if ((inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand)
 						&& inst.secondOperand() instanceof Register) {
-					wb.write((io.bits() == 8) ? (byte) 0x10 : (byte) 0x11);
+					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0x10 : (byte) 0x11);
 				}
 			}
 			case DEC -> wb.write((byte) 0xfe);
@@ -1047,9 +1175,39 @@ public final class InstructionEncoder {
 					return;
 				}
 			}
+			case CMPS -> {
+				if (isDefaultMovsSource(inst.firstOperand()) && isDefaultMovsDestination(inst.secondOperand())) {
+					wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xa6 : (byte) 0xa7);
+					return;
+				}
+			}
 			case STOS -> {
-				if (isDefaultMovsDestination(inst.firstOperand()) && inst.secondOperand() instanceof Register) {
-					wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xaa : (byte) 0xab);
+				if (isDefaultMovsDestination(inst.firstOperand())) {
+					if (inst.secondOperand() == Register8.AL) {
+						wb.write((byte) 0xaa);
+					} else if (inst.secondOperand() == Register32.EAX || inst.secondOperand() == Register64.RAX) {
+						wb.write((byte) 0xab);
+					}
+					return;
+				}
+			}
+			case LODS -> {
+				if (isDefaultMovsSource(inst.secondOperand())) {
+					if (inst.firstOperand() == Register8.AL) {
+						wb.write((byte) 0xac);
+					} else if (inst.firstOperand() == Register32.EAX) {
+						wb.write((byte) 0xad);
+					}
+					return;
+				}
+			}
+			case SCAS -> {
+				if (isDefaultMovsDestination(inst.secondOperand())) {
+					if (inst.firstOperand() == Register8.AL) {
+						wb.write((byte) 0xae);
+					} else if (inst.firstOperand() == Register32.EAX) {
+						wb.write((byte) 0xaf);
+					}
 					return;
 				}
 			}
@@ -1058,7 +1216,7 @@ public final class InstructionEncoder {
 						&& io.hasBase()
 						&& io.getBase() == Register64.RDI
 						&& io.hasSegment()
-						&& io.getSegment() == Register16.ES
+						&& io.getSegment() == SegmentRegister.ES
 						&& !io.hasIndex()
 						&& !io.hasScale()
 						&& !io.hasDisplacement()
@@ -1077,7 +1235,7 @@ public final class InstructionEncoder {
 						&& io.hasBase()
 						&& io.getBase() == Register64.RSI
 						&& io.hasSegment()
-						&& io.getSegment() == Register16.DS
+						&& io.getSegment() == SegmentRegister.DS
 						&& !io.hasIndex()
 						&& !io.hasScale()
 						&& !io.hasDisplacement()) {
@@ -1156,6 +1314,36 @@ public final class InstructionEncoder {
 			case PUNPCKLQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6c);
 			case PUNPCKHQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6d);
 			case MOVABS -> {
+				if (inst.firstOperand() == Register8.AL
+						&& inst.secondOperand()
+								instanceof SegmentedAddress(final SegmentRegister segment, final Immediate imm)
+						&& segment == SegmentRegister.DS) {
+					wb.write((byte) 0xa0);
+					encodeImmediate(wb, imm);
+					return;
+				}
+				if (inst.firstOperand() == Register32.EAX
+						&& inst.secondOperand()
+								instanceof SegmentedAddress(final SegmentRegister segment, final Immediate imm)
+						&& segment == SegmentRegister.DS) {
+					wb.write((byte) 0xa1);
+					encodeImmediate(wb, imm);
+					return;
+				}
+				if (inst.firstOperand() instanceof SegmentedAddress(final SegmentRegister segment, final Immediate imm)
+						&& segment == SegmentRegister.DS
+						&& inst.secondOperand() == Register8.AL) {
+					wb.write((byte) 0xa2);
+					encodeImmediate(wb, imm);
+					return;
+				}
+				if (inst.firstOperand() instanceof SegmentedAddress(final SegmentRegister segment, final Immediate imm)
+						&& segment == SegmentRegister.DS
+						&& inst.secondOperand() == Register32.EAX) {
+					wb.write((byte) 0xa3);
+					encodeImmediate(wb, imm);
+					return;
+				}
 				if (inst.firstOperand() instanceof final Register64 r
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(or((byte) 0xb8, Registers.toByte(r)));
@@ -1231,7 +1419,7 @@ public final class InstructionEncoder {
 				reg = (byte) 0b000;
 			}
 			case ROR -> {
-				wb.write((byte) 0xc1);
+				wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
 				reg = (byte) 0b001;
 			}
 			case RCL -> {
@@ -1239,7 +1427,7 @@ public final class InstructionEncoder {
 				reg = (byte) 0b010;
 			}
 			case RCR -> {
-				wb.write((byte) 0xc1);
+				wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
 				reg = (byte) 0b011;
 			}
 			case PMOVMSKB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd7);
@@ -1372,8 +1560,10 @@ public final class InstructionEncoder {
 			// FIXME: actually, it seems to be the opposite... why?
 			if (inst.opcode() == Opcode.MOV
 					|| inst.opcode() == Opcode.SUB
+					|| inst.opcode() == Opcode.SBB
 					|| inst.opcode() == Opcode.CMP
 					|| inst.opcode() == Opcode.ADD
+					|| inst.opcode() == Opcode.ADC
 					|| inst.opcode() == Opcode.AND
 					|| inst.opcode() == Opcode.OR
 					|| inst.opcode() == Opcode.XCHG

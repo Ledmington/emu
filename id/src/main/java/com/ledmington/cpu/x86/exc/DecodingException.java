@@ -19,22 +19,12 @@ package com.ledmington.cpu.x86.exc;
 
 import java.io.Serial;
 
-/**
- * This exception is thrown when a prefix is detected during opcode decoding, meaning that it was not properly
- * recognized by earlier decoding steps.
- */
-public final class UnrecognizedPrefix extends DecodingException {
+public class DecodingException extends RuntimeException {
 
 	@Serial
-	private static final long serialVersionUID = -5061777630768344350L;
+	private static final long serialVersionUID = -9133924907493926505L;
 
-	/**
-	 * Creates a new UnrecognizedPrefix runtime exception with a proper message.
-	 *
-	 * @param type The type of the prefix.
-	 * @param position The position of the unrecognized prefix.
-	 */
-	public UnrecognizedPrefix(final String type, final long position) {
-		super(String.format("Found an unrecognized %s prefix at byte 0x%016x", type, position));
+	public DecodingException(final String message) {
+		super(message);
 	}
 }

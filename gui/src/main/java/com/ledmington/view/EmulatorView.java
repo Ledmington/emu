@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -43,11 +44,10 @@ import javafx.stage.Stage;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
-import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register64;
-import com.ledmington.cpu.x86.exc.ReservedOpcode;
-import com.ledmington.cpu.x86.exc.UnknownOpcode;
-import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
+import com.ledmington.cpu.x86.SegmentRegister;
+import com.ledmington.cpu.x86.exc.DecodingException;
+import com.ledmington.cpu.x86.exc.InvalidLegacyOpcode;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.EmulatorConstants;
@@ -73,7 +73,7 @@ public final class EmulatorView extends Stage {
 	private final TextArea codeArea = new TextArea();
 	private final TextArea memoryArea = new TextArea();
 	private final Map<Register64, Label> regLabels = new ConcurrentHashMap<>(Register64.values().length);
-	private final Map<Register16, Label> segLabels = new ConcurrentHashMap<>(Register16.values().length);
+	private final Map<SegmentRegister, Label> segLabels = new ConcurrentHashMap<>(SegmentRegister.values().length);
 	private final Label rflagsLabel;
 
 	public EmulatorView() {
@@ -134,7 +134,8 @@ public final class EmulatorView extends Stage {
 				registerPane.add(LabelFactory.getDefaultLabel(r.name()), 0, row);
 				final Label rl = LabelFactory.getDefaultLabel("0x" + "0".repeat(16));
 				rl.setTooltip(TooltipFactory.getDefaultTooltip("Click to see the memory at [" + r.name() + "]"));
-				final long maxMemoryBytes = AppConstants.getMaxMemoryLines() * AppConstants.getMemoryBytesPerLine();
+				final long maxMemoryBytes =
+						(long) AppConstants.getMaxMemoryLines() * (long) AppConstants.getMemoryBytesPerLine();
 				rl.setOnMouseClicked(e -> updateMemory(cpu.getRegisters().get(r) - maxMemoryBytes / 2L));
 				registerPane.add(rl, 1, row);
 				regLabels.put(r, rl);
@@ -146,9 +147,7 @@ public final class EmulatorView extends Stage {
 			registerPane.add(rflagsLabel, 1, row);
 			row++;
 
-			for (final Register16 s : new Register16[] {
-				Register16.CS, Register16.DS, Register16.SS, Register16.ES, Register16.FS, Register16.GS
-			}) {
+			for (final SegmentRegister s : SegmentRegister.values()) {
 				registerPane.add(LabelFactory.getDefaultLabel(s.name()), 0, row);
 				final Label rl = LabelFactory.getDefaultLabel("0x" + "0".repeat(4));
 				registerPane.add(rl, 1, row);
@@ -253,22 +252,26 @@ public final class EmulatorView extends Stage {
 	private void updateRegisters() {
 		final ImmutableRegisterFile regFile = this.cpu.getRegisters();
 
-		for (final Register64 r : Register64.values()) {
-			this.regLabels.get(r).setText(String.format("0x%016x", regFile.get(r)));
-		}
-
-		for (final Register16 s : new Register16[] {
-			Register16.CS, Register16.DS, Register16.SS, Register16.ES, Register16.FS, Register16.GS
-		}) {
-			this.segLabels.get(s).setText(String.format("0x%04x", regFile.get(s)));
-		}
-
-		this.rflagsLabel.setText("|"
+		// cache the rflags string
+		final String rflagsString = "|"
 				+ Arrays.stream(RFlags.values())
+						.filter(regFile::isSet)
 						.sorted(Comparator.comparingInt(RFlags::bit))
-						.map(f -> regFile.isSet(f) ? f.getSymbol() : "")
+						.map(RFlags::getSymbol)
 						.collect(Collectors.joining("|"))
-				+ "|");
+				+ "|";
+
+		Platform.runLater(() -> {
+			for (final Register64 r : Register64.values()) {
+				this.regLabels.get(r).setText(String.format("0x%016x", regFile.get(r)));
+			}
+
+			for (final SegmentRegister s : SegmentRegister.values()) {
+				this.segLabels.get(s).setText(String.format("0x%04x", regFile.get(s)));
+			}
+
+			this.rflagsLabel.setText(rflagsString);
+		});
 	}
 
 	private void updateCode() {
@@ -287,7 +290,10 @@ public final class EmulatorView extends Stage {
 				final Instruction inst = InstructionDecoder.fromHex(new InstructionFetcher(this.mem, regFile));
 				instString = InstructionEncoder.toIntelSyntax(inst);
 				rip = regFile.get(Register64.RIP);
-			} catch (final UnknownOpcode | ReservedOpcode | UnrecognizedPrefix e) {
+			} catch (final InvalidLegacyOpcode e) {
+				instString = "(bad)";
+				rip = startRIP + 1L;
+			} catch (final DecodingException e) {
 				instString = String.format(".byte 0x%02x", this.mem.readCode(rip));
 				rip = startRIP + 1L;
 			}

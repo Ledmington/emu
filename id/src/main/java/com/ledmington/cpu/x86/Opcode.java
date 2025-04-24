@@ -68,8 +68,17 @@ public enum Opcode {
 	/** Convert doubleword to quadword. */
 	CDQE,
 
+	/** Clear carry flag. */
+	CLC,
+
 	/** Clear direction flag. */
 	CLD,
+
+	/** Clear interrupt flag. */
+	CLI,
+
+	/** Complement carry flag. */
+	CMC,
 
 	/** Conditional move if above. */
 	CMOVA,
@@ -110,6 +119,9 @@ public enum Opcode {
 	/** Compare two operands. */
 	CMP,
 
+	/** Compare string operands. */
+	CMPS,
+
 	/** Compare and exchange. */
 	CMPXCHG,
 
@@ -140,6 +152,21 @@ public enum Opcode {
 	/** Terminate an indirect branch in 64-bit mode. */
 	ENDBR64,
 
+	/** Make stack frame for high level procedure. */
+	ENTER,
+
+	/** Add. */
+	FADD,
+
+	/** Add integer. */
+	FIADD,
+
+	/** Load integer. */
+	FILD,
+
+	/** Load real. */
+	FLD,
+
 	/** Wait for floating-point unit. */
 	FWAIT,
 
@@ -152,6 +179,9 @@ public enum Opcode {
 	/** Signed multiply. */
 	IMUL,
 
+	/** Input from port. */
+	IN,
+
 	/** Increment. */
 	INC,
 
@@ -161,8 +191,14 @@ public enum Opcode {
 	/** Input string. */
 	INS,
 
+	/** Call to interrupt. */
+	INT,
+
 	/** Call to interrupt procedure. */
 	INT3,
+
+	/** Interrupt return. */
+	IRET,
 
 	/** Unsigned conditional jump if above. */
 	JA,
@@ -212,6 +248,9 @@ public enum Opcode {
 	/** Conditional jump if parity. */
 	JP,
 
+	/** Jump short if RCX is 0. */
+	JRCXZ,
+
 	/** Conditional jump if signed. */
 	JS,
 
@@ -238,6 +277,18 @@ public enum Opcode {
 
 	/** High-level procedure exit. */
 	LEAVE,
+
+	/** Load string operand. */
+	LODS,
+
+	/** Loop count. */
+	LOOP,
+
+	/** Loop count while zero/equal. */
+	LOOPE,
+
+	/** Loop count while not zero/equal. */
+	LOOPNE,
 
 	/** Move to/from registers and memory. */
 	MOV,
@@ -316,6 +367,9 @@ public enum Opcode {
 
 	/** Logical OR. */
 	OR,
+
+	/** Output to port. */
+	OUT,
 
 	/** Output string to port. */
 	OUTS,
@@ -479,8 +533,11 @@ public enum Opcode {
 	/** Read shadow stack pointer. */
 	RDSSPQ,
 
-	/** Return from procedure. */
+	/** Return from procedure (near). */
 	RET,
+
+	/** Return from procedure (far). */
+	RETF,
 
 	/** Rotate left. */
 	ROL,
@@ -499,6 +556,9 @@ public enum Opcode {
 
 	/** Integer subtraction with borrow. */
 	SBB,
+
+	/** Scan string. */
+	SCAS,
 
 	/** Set byte if above. */
 	SETA,
@@ -554,8 +614,14 @@ public enum Opcode {
 	/** Store local descriptor table register. */
 	SLDT,
 
+	/** Set carry flag. */
+	STC,
+
 	/** Set direction flag. */
 	STD,
+
+	/** Set interrupt flag. */
+	STI,
 
 	/** Store string. */
 	STOS,
@@ -691,6 +757,9 @@ public enum Opcode {
 
 	/** Reads the state of an extended control register. */
 	XGETBV,
+
+	/** Table look-up translation. */
+	XLAT,
 
 	/** Logical XOR. */
 	XOR,

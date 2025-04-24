@@ -20,7 +20,7 @@ package com.ledmington.cpu.x86.exc;
 import java.io.Serial;
 
 /** This exception is thrown when an unknown opcode is detected during instruction decoding. */
-public final class UnknownOpcode extends RuntimeException {
+public final class UnknownOpcode extends DecodingException {
 
 	@Serial
 	private static final long serialVersionUID = 2581758152120570603L;

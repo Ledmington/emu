@@ -37,6 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.ledmington.cpu.x86.exc.DecodingException;
+import com.ledmington.cpu.x86.exc.InvalidLegacyOpcode;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
@@ -67,8 +69,11 @@ public final class InstructionDecoder {
 					Arrays.stream(RegisterXMM.values()),
 					Arrays.stream(RegisterYMM.values()),
 					Arrays.stream(RegisterZMM.values()),
-					Arrays.stream(MaskRegister.values()))
+					Arrays.stream(MaskRegister.values()),
+					Arrays.stream(SegmentRegister.values()))
 			.flatMap(x -> x)
+			.collect(Collectors.toUnmodifiableMap(Operand::toIntelSyntax, x -> x));
+	private static final Map<String, SegmentRegister> fromStringToSegment = Arrays.stream(SegmentRegister.values())
 			.collect(Collectors.toUnmodifiableMap(Operand::toIntelSyntax, x -> x));
 	private static final Map<String, MaskRegister> fromStringToMask =
 			Arrays.stream(MaskRegister.values()).collect(Collectors.toUnmodifiableMap(Operand::toIntelSyntax, x -> x));
@@ -129,11 +134,10 @@ public final class InstructionDecoder {
 			}
 		}
 
-		final Operand firstOperand = args.length < 1 ? null : parseOperand(args[0].strip(), null, null);
-		final Operand secondOperand =
-				args.length < 2 ? null : parseOperand(args[1].strip(), firstOperand, opcodeString);
-		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip(), null, null);
-		final Operand fourthOperand = args.length < 4 ? null : parseOperand(args[3].strip(), null, null);
+		final Operand firstOperand = parseOperand(args[0].strip(), null);
+		final Operand secondOperand = args.length < 2 ? null : parseOperand(args[1].strip(), firstOperand);
+		final Operand thirdOperand = args.length < 3 ? null : parseOperand(args[2].strip(), null);
+		final Operand fourthOperand = args.length < 4 ? null : parseOperand(args[3].strip(), null);
 
 		return new Instruction(
 				prefix, opcode, destinationMask, firstOperand, secondOperand, thirdOperand, fourthOperand);
@@ -157,28 +161,32 @@ public final class InstructionDecoder {
 		return sb.toString();
 	}
 
-	private static Operand parseOperand(final String input, final Operand previousOperand, final String opcodeString) {
+	private static Immediate parseImmediate(final String imm) {
+		if (imm.length() <= 2) {
+			return new Immediate(asByte(Integer.parseUnsignedInt(imm, 16)));
+		}
+		if (imm.length() <= 4) {
+			return new Immediate(asShort(Integer.parseUnsignedInt(imm, 16)));
+		}
+		if (imm.length() <= 8) {
+			return new Immediate(Integer.parseUnsignedInt(imm, 16));
+		}
+		if (imm.length() <= 16) {
+			return new Immediate(Long.parseUnsignedLong(imm, 16));
+		}
+		throw new IllegalArgumentException(String.format("Immediate too long: '%s'.", imm));
+	}
+
+	private static Operand parseOperand(final String input, final Operand previousOperand) {
 		if (fromStringToRegister.containsKey(input)) {
 			// It's a register
 			return fromStringToRegister.get(input);
 		}
+		if (input.startsWith("ds:")) {
+			return new SegmentedAddress(SegmentRegister.DS, parseImmediate(input.split("0x")[1]));
+		}
 		if (input.startsWith("0x")) {
-			// It's an immediate
-			final String imm = input.substring(2);
-			if ("movabs".equals(opcodeString)) {
-				return new Immediate(Long.parseUnsignedLong(imm, 16));
-			}
-			if (imm.length() <= 2) {
-				return new Immediate(asByte(Integer.parseUnsignedInt(imm, 16)));
-			} else if (imm.length() <= 4) {
-				return new Immediate(asShort(Integer.parseUnsignedInt(imm, 16)));
-			} else if (imm.length() <= 8) {
-				return new Immediate(Integer.parseUnsignedInt(imm, 16));
-			} else if (imm.length() <= 16) {
-				return new Immediate(Long.parseUnsignedLong(imm, 16));
-			} else {
-				throw new IllegalArgumentException(String.format("Immediate too long: '%s'.", input));
-			}
+			return parseImmediate(input.substring(2));
 		}
 
 		// It's an indirect operand
@@ -208,15 +216,13 @@ public final class InstructionDecoder {
 
 		skipWhitespaces(it);
 
-		Register16 segReg = null;
-		MaskRegister maskReg = null;
-
 		// Must begin with '['
 		if (it.current() != '[') {
 			// try reading segment register
 			final String seg = readUntil(it, ':').strip();
-			if (fromStringToRegister.containsKey(seg)) {
-				segReg = (Register16) fromStringToRegister.get(seg);
+			if (fromStringToSegment.containsKey(seg)) {
+				final SegmentRegister segReg = fromStringToSegment.get(seg);
+				iob.segment(segReg);
 				skipWhitespaces(it);
 				it.next();
 			} else {
@@ -227,18 +233,6 @@ public final class InstructionDecoder {
 
 		// Read until ']'
 		String indirectOperandString = readUntil(it, ']').strip();
-
-		if (it.current() == '{') {
-			final String mask = readUntil(it, '}').strip();
-			if (fromStringToMask.containsKey(mask)) {
-				maskReg = fromStringToMask.get(mask);
-				skipWhitespaces(it);
-				it.next();
-			} else {
-				throw new IllegalArgumentException(String.format("Invalid indirect operand: '%s'.", input));
-			}
-			it.next();
-		}
 
 		// check that there is nothing else after the ']'
 		it.next();
@@ -278,9 +272,6 @@ public final class InstructionDecoder {
 
 		if (baseString != null) {
 			Register reg = fromStringToRegister.get(baseString);
-			if (segReg != null) {
-				reg = new SegmentRegister(segReg, reg);
-			}
 			iob.base(reg);
 		}
 		if (indexString != null) {
@@ -373,8 +364,7 @@ public final class InstructionDecoder {
 		return switch (opcodeFirstByte) {
 			case (byte) 0x0f -> parse2BytesOpcode(b, opcodeFirstByte, pref);
 
-			case (byte) 0x80, (byte) 0x81, (byte) 0x82, (byte) 0x83 ->
-				parseExtendedOpcodeGroup1(b, opcodeFirstByte, pref);
+			case (byte) 0x80, (byte) 0x81, (byte) 0x83 -> parseExtendedOpcodeGroup1(b, opcodeFirstByte, pref);
 
 			case (byte) 0xc0, (byte) 0xc1, (byte) 0xd0, (byte) 0xd1, (byte) 0xd2, (byte) 0xd3 ->
 				parseExtendedOpcodeGroup2(b, opcodeFirstByte, pref);
@@ -687,7 +677,7 @@ public final class InstructionDecoder {
 
 		final ModRM modrm = new ModRM(opcodeSecondByte);
 
-		final boolean isRegister8Bit = opcodeFirstByte == (byte) 0x80 || opcodeFirstByte == (byte) 0x82;
+		final boolean isRegister8Bit = opcodeFirstByte == (byte) 0x80;
 		final int immediateBits =
 				(opcodeFirstByte == (byte) 0x81) ? (pref.hasOperandSizeOverridePrefix() ? 16 : 32) : 8;
 		final boolean isIndirectOperandNeeded = modrm.mod() != 0b11;
@@ -727,7 +717,7 @@ public final class InstructionDecoder {
 											? PointerSize.WORD_PTR
 											: pref.rex().isOperand64Bit()
 													? PointerSize.QWORD_PTR
-													: PointerSize.fromSize(immediateBits))
+													: PointerSize.DWORD_PTR)
 							.build()
 					: Registers.fromCode(
 							modrm.rm(),
@@ -2076,6 +2066,7 @@ public final class InstructionDecoder {
 		final byte JGE_DISP8_OPCODE = (byte) 0x7d;
 		final byte JLE_DISP8_OPCODE = (byte) 0x7e;
 		final byte JG_DISP8_OPCODE = (byte) 0x7f;
+		final byte UNDEFINED_OLD_MOV_OPCODE = (byte) 0x82;
 		final byte TEST_R8_R8_OPCODE = (byte) 0x84;
 		final byte TEST_R32_R32_OPCODE = (byte) 0x85;
 		final byte XCHG_M8_R8_OPCODE = (byte) 0x86;
@@ -2104,12 +2095,22 @@ public final class InstructionDecoder {
 		final byte POPF_OPCODE = (byte) 0x9d;
 		final byte SAHF_OPCODE = (byte) 0x9e;
 		final byte LAHF_OPCODE = (byte) 0x9f;
-		final byte MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE = (byte) 0xa4;
-		final byte MOVS_ES_EDI_DS_ESI_OPCODE = (byte) 0xa5;
+		final byte MOVABS_R8_S64_OPCODE = (byte) 0xa0;
+		final byte MOVABS_R32_S64_OPCODE = (byte) 0xa1;
+		final byte MOVABS_S64_R8_OPCODE = (byte) 0xa2;
+		final byte MOVABS_S64_R32_OPCODE = (byte) 0xa3;
+		final byte MOVS_M8_OPCODE = (byte) 0xa4;
+		final byte MOVS_M32_OPCODE = (byte) 0xa5;
+		final byte CMPS_M8_OPCODE = (byte) 0xa6;
+		final byte CMPS_M32_OPCODE = (byte) 0xa7;
 		final byte TEST_AL_IMM8_OPCODE = (byte) 0xa8;
 		final byte TEST_EAX_IMM32_OPCODE = (byte) 0xa9;
 		final byte STOS_R8_OPCODE = (byte) 0xaa;
 		final byte STOS_R32_OPCODE = (byte) 0xab;
+		final byte LODS_R8_OPCODE = (byte) 0xac;
+		final byte LODS_R32_OPCODE = (byte) 0xad;
+		final byte SCAS_R8_OPCODE = (byte) 0xae;
+		final byte SCAS_R32_OPCODE = (byte) 0xaf;
 		final byte MOV_AL_IMM8_OPCODE = (byte) 0xb0;
 		final byte MOV_CL_IMM8_OPCODE = (byte) 0xb1;
 		final byte MOV_DL_IMM8_OPCODE = (byte) 0xb2;
@@ -2126,13 +2127,51 @@ public final class InstructionDecoder {
 		final byte MOV_EBP_IMM32_OPCODE = (byte) 0xbd;
 		final byte MOV_ESI_IMM32_OPCODE = (byte) 0xbe;
 		final byte MOV_EDI_IMM32_OPCODE = (byte) 0xbf;
+		final byte RET_I16_OPCODE = (byte) 0xc2;
 		final byte RET_OPCODE = (byte) 0xc3;
+		final byte ENTER_OPCODE = (byte) 0xc8;
 		final byte LEAVE_OPCODE = (byte) 0xc9;
+		final byte RETF_I16_OPCODE = (byte) 0xca;
+		final byte RETF_OPCODE = (byte) 0xcb;
 		final byte INT3_OPCODE = (byte) 0xcc;
+		final byte INT_OPCODE = (byte) 0xcd;
+		final byte BAD_INTO_OPCODE = (byte) 0xce;
+		final byte IRET_OPCODE = (byte) 0xcf;
+		final byte BAD_AAM_OPCODE = (byte) 0xd4;
+		final byte BAD_AAD_OPCODE = (byte) 0xd5;
+		final byte BAD_SALC_OPCODE = (byte) 0xd6;
+		final byte XLAT_OPCODE = (byte) 0xd7;
+		final byte FADD_M32_OPCODE = (byte) 0xd8;
+		final byte FLD_M32_OPCODE = (byte) 0xd9;
+		final byte FIADD_M32_OPCODE = (byte) 0xda;
+		final byte FILD_M32_OPCODE = (byte) 0xdb;
+		final byte FADD_M64_OPCODE = (byte) 0xdc;
+		final byte FLD_M64_OPCODE = (byte) 0xdd;
+		final byte FIADD_M16_OPCODE = (byte) 0xde;
+		final byte FILD_M16_OPCODE = (byte) 0xdf;
+		final byte LOOPNE_OPCODE = (byte) 0xe0;
+		final byte LOOPE_OPCODE = (byte) 0xe1;
+		final byte LOOP_OPCODE = (byte) 0xe2;
+		final byte JRCXZ_OPCODE = (byte) 0xe3;
+		final byte IN_AL_OPCODE = (byte) 0xe4;
+		final byte IN_EAX_OPCODE = (byte) 0xe5;
+		final byte OUT_AL_OPCODE = (byte) 0xe6;
+		final byte OUT_EAX_OPCODE = (byte) 0xe7;
 		final byte CALL_OPCODE = (byte) 0xe8;
 		final byte JMP_DISP32_OPCODE = (byte) 0xe9;
+		final byte BAD_FAR_JMP_OPCODE = (byte) 0xea;
 		final byte JMP_DISP8_OPCODE = (byte) 0xeb;
+		final byte IN_AL_DX_OPCODE = (byte) 0xec;
+		final byte IN_EAX_DX_OPCODE = (byte) 0xed;
+		final byte OUT_DX_AL_OPCODE = (byte) 0xee;
+		final byte OUT_DX_EAX_OPCODE = (byte) 0xef;
+		final byte BAD_INT1_OPCODE = (byte) 0xf1;
 		final byte HLT_OPCODE = (byte) 0xf4;
+		final byte CMC_OPCODE = (byte) 0xf5;
+		final byte CLC_OPCODE = (byte) 0xf8;
+		final byte STC_OPCODE = (byte) 0xf9;
+		final byte CLI_OPCODE = (byte) 0xfa;
+		final byte STI_OPCODE = (byte) 0xfb;
 		final byte CLD_OPCODE = (byte) 0xfc;
 		final byte STD_OPCODE = (byte) 0xfd;
 
@@ -2141,11 +2180,11 @@ public final class InstructionDecoder {
 		};
 
 		final Register[] segments = {
-			Register16.ES,
-			Register16.SS,
-			Register16.DS,
-			Register16.FS,
-			Register16.GS,
+			SegmentRegister.ES,
+			SegmentRegister.SS,
+			SegmentRegister.DS,
+			SegmentRegister.FS,
+			SegmentRegister.GS,
 			NullRegister.getInstance(),
 			NullRegister.getInstance()
 		};
@@ -2159,19 +2198,115 @@ public final class InstructionDecoder {
 										? new Instruction(Opcode.XCHG, Register64.R8, Register64.RAX)
 										: new Instruction(Opcode.XCHG, Register32.R8D, Register32.EAX))
 								: new Instruction(Opcode.NOP));
+			case RET_I16_OPCODE -> new Instruction(Opcode.RET, imm16(b));
 			case RET_OPCODE -> new Instruction(Opcode.RET);
+			case RETF_I16_OPCODE -> new Instruction(Opcode.RETF, imm16(b));
+			case RETF_OPCODE -> new Instruction(Opcode.RETF);
+			case ENTER_OPCODE -> new Instruction(Opcode.ENTER, imm16(b), imm8(b));
 			case LEAVE_OPCODE -> new Instruction(Opcode.LEAVE);
 			case INT3_OPCODE -> new Instruction(Opcode.INT3);
+			case INT_OPCODE -> new Instruction(Opcode.INT, imm8(b));
+			case IRET_OPCODE -> new Instruction(Opcode.IRET);
 			case CDQ_OPCODE -> new Instruction(Opcode.CDQ);
 			case SAHF_OPCODE -> new Instruction(Opcode.SAHF);
 			case LAHF_OPCODE -> new Instruction(Opcode.LAHF);
 			case HLT_OPCODE -> new Instruction(Opcode.HLT);
+			case CLC_OPCODE -> new Instruction(Opcode.CLC);
+			case STC_OPCODE -> new Instruction(Opcode.STC);
+			case CLI_OPCODE -> new Instruction(Opcode.CLI);
+			case STI_OPCODE -> new Instruction(Opcode.STI);
 			case CLD_OPCODE -> new Instruction(Opcode.CLD);
 			case STD_OPCODE -> new Instruction(Opcode.STD);
 			case FWAIT_OPCODE -> new Instruction(Opcode.FWAIT);
 			case PUSHF_OPCODE -> new Instruction(Opcode.PUSHF);
 			case POPF_OPCODE -> new Instruction(Opcode.POPF);
 			case CDQE_OPCODE -> new Instruction(pref.rex().isOperand64Bit() ? Opcode.CDQE : Opcode.CWDE);
+			case CMC_OPCODE -> new Instruction(Opcode.CMC);
+			case XLAT_OPCODE ->
+				new Instruction(
+						Opcode.XLAT,
+						IndirectOperand.builder()
+								.pointer(PointerSize.BYTE_PTR)
+								.segment(SegmentRegister.DS)
+								.base(Register64.RBX)
+								.build());
+
+			case FADD_M32_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FADD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.DWORD_PTR)
+								.build());
+			}
+			case FADD_M64_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FADD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.QWORD_PTR)
+								.build());
+			}
+			case FLD_M32_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FLD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.DWORD_PTR)
+								.build());
+			}
+			case FLD_M64_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FLD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.QWORD_PTR)
+								.build());
+			}
+			case FIADD_M32_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FIADD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.DWORD_PTR)
+								.build());
+			}
+			case FIADD_M16_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FIADD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.WORD_PTR)
+								.build());
+			}
+			case FILD_M32_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FILD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.DWORD_PTR)
+								.build());
+			}
+			case FILD_M16_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.FILD,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.WORD_PTR)
+								.build());
+			}
+			case LOOPNE_OPCODE -> new Instruction(Opcode.LOOPNE, imm8(b));
+			case LOOPE_OPCODE -> new Instruction(Opcode.LOOPE, imm8(b));
+			case LOOP_OPCODE -> new Instruction(Opcode.LOOP, imm8(b));
+			case JRCXZ_OPCODE -> new Instruction(Opcode.JRCXZ, imm8(b));
+			case IN_AL_OPCODE -> new Instruction(Opcode.IN, Register8.AL, imm8(b));
+			case IN_EAX_OPCODE -> new Instruction(Opcode.IN, Register32.EAX, imm8(b));
+			case IN_AL_DX_OPCODE -> new Instruction(Opcode.IN, Register8.AL, Register16.DX);
+			case IN_EAX_DX_OPCODE -> new Instruction(Opcode.IN, Register32.EAX, Register16.DX);
+			case OUT_AL_OPCODE -> new Instruction(Opcode.OUT, imm8(b), Register8.AL);
+			case OUT_EAX_OPCODE -> new Instruction(Opcode.OUT, imm8(b), Register32.EAX);
+			case OUT_DX_AL_OPCODE -> new Instruction(Opcode.OUT, Register16.DX, Register8.AL);
+			case OUT_DX_EAX_OPCODE -> new Instruction(Opcode.OUT, Register16.DX, Register32.EAX);
 
 			case MOV_R32_M32_OPCODE -> parseRxMx(b, pref, Opcode.MOV);
 			case MOV_M32_R32_OPCODE -> parseMxRx(b, pref, Opcode.MOV);
@@ -2321,39 +2456,73 @@ public final class InstructionDecoder {
 										false),
 						imm32(b));
 			}
-			case MOVS_ES_EDI_DS_ESI_BYTE_PTR_OPCODE -> {
+			case MOVABS_R8_S64_OPCODE ->
+				new Instruction(Opcode.MOVABS, Register8.AL, new SegmentedAddress(SegmentRegister.DS, imm64(b)));
+			case MOVABS_R32_S64_OPCODE ->
+				new Instruction(Opcode.MOVABS, Register32.EAX, new SegmentedAddress(SegmentRegister.DS, imm64(b)));
+			case MOVABS_S64_R8_OPCODE ->
+				new Instruction(Opcode.MOVABS, new SegmentedAddress(SegmentRegister.DS, imm64(b)), Register8.AL);
+			case MOVABS_S64_R32_OPCODE ->
+				new Instruction(Opcode.MOVABS, new SegmentedAddress(SegmentRegister.DS, imm64(b)), Register32.EAX);
+			case MOVS_M8_OPCODE -> {
 				final Operand op1 = IndirectOperand.builder()
 						.pointer(PointerSize.BYTE_PTR)
-						.base(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+						.segment(SegmentRegister.ES)
+						.base(pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI)
 						.build();
 				final Operand op2 = IndirectOperand.builder()
 						.pointer(PointerSize.BYTE_PTR)
-						.base(new SegmentRegister(
-								Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
+						.segment(SegmentRegister.DS)
+						.base(pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI)
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.MOVS, op1, op2);
 			}
-			case MOVS_ES_EDI_DS_ESI_OPCODE -> {
+			case MOVS_M32_OPCODE -> {
 				final PointerSize size =
 						pref.hasOperandSizeOverridePrefix() ? PointerSize.WORD_PTR : PointerSize.DWORD_PTR;
 				final Operand op1 = IndirectOperand.builder()
 						.pointer(size)
-						.base(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+						.segment(SegmentRegister.ES)
+						.base(pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI)
 						.build();
 				final Operand op2 = IndirectOperand.builder()
 						.pointer(size)
-						.base(new SegmentRegister(
-								Register16.DS, pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI))
+						.segment(SegmentRegister.DS)
+						.base(pref.hasAddressSizeOverridePrefix() ? Register32.ESI : Register64.RSI)
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.MOVS, op1, op2);
 			}
+			case CMPS_M8_OPCODE ->
+				new Instruction(
+						Opcode.CMPS,
+						IndirectOperand.builder()
+								.pointer(PointerSize.BYTE_PTR)
+								.segment(SegmentRegister.DS)
+								.base(Register64.RSI)
+								.build(),
+						IndirectOperand.builder()
+								.pointer(PointerSize.BYTE_PTR)
+								.segment(SegmentRegister.ES)
+								.base(Register64.RDI)
+								.build());
+			case CMPS_M32_OPCODE ->
+				new Instruction(
+						Opcode.CMPS,
+						IndirectOperand.builder()
+								.pointer(PointerSize.DWORD_PTR)
+								.segment(SegmentRegister.DS)
+								.base(Register64.RSI)
+								.build(),
+						IndirectOperand.builder()
+								.pointer(PointerSize.DWORD_PTR)
+								.segment(SegmentRegister.ES)
+								.base(Register64.RDI)
+								.build());
 			case STOS_R8_OPCODE -> {
 				final Operand op1 = IndirectOperand.builder()
 						.pointer(PointerSize.BYTE_PTR)
-						.base(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+						.segment(SegmentRegister.ES)
+						.base(pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI)
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.STOS, op1, Register8.AL);
 			}
@@ -2361,11 +2530,47 @@ public final class InstructionDecoder {
 				final Operand op2 = pref.rex().isOperand64Bit() ? Register64.RAX : Register32.EAX;
 				final Operand op1 = IndirectOperand.builder()
 						.pointer(PointerSize.fromSize(op2.bits()))
-						.base(new SegmentRegister(
-								Register16.ES, pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI))
+						.segment(SegmentRegister.ES)
+						.base(pref.hasAddressSizeOverridePrefix() ? Register32.EDI : Register64.RDI)
 						.build();
 				yield new Instruction(pref.p1().orElse(null), Opcode.STOS, op1, op2);
 			}
+			case LODS_R8_OPCODE ->
+				new Instruction(
+						Opcode.LODS,
+						Register8.AL,
+						IndirectOperand.builder()
+								.pointer(PointerSize.BYTE_PTR)
+								.segment(SegmentRegister.DS)
+								.base(Register64.RSI)
+								.build());
+			case LODS_R32_OPCODE ->
+				new Instruction(
+						Opcode.LODS,
+						Register32.EAX,
+						IndirectOperand.builder()
+								.pointer(PointerSize.DWORD_PTR)
+								.segment(SegmentRegister.DS)
+								.base(Register64.RSI)
+								.build());
+			case SCAS_R8_OPCODE ->
+				new Instruction(
+						Opcode.SCAS,
+						Register8.AL,
+						IndirectOperand.builder()
+								.pointer(PointerSize.BYTE_PTR)
+								.segment(SegmentRegister.ES)
+								.base(Register64.RDI)
+								.build());
+			case SCAS_R32_OPCODE ->
+				new Instruction(
+						Opcode.SCAS,
+						Register32.EAX,
+						IndirectOperand.builder()
+								.pointer(PointerSize.DWORD_PTR)
+								.segment(SegmentRegister.ES)
+								.base(Register64.RDI)
+								.build());
 			case MOVSXD_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
@@ -2655,13 +2860,27 @@ public final class InstructionDecoder {
 								.build());
 			}
 
-			case LEA_OPCODE -> parseRxMx(b, pref, Opcode.LEA);
+			case LEA_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final Register r = Registers.fromCode(
+						getByteFromReg(pref, modrm),
+						pref.rex().isOperand64Bit(),
+						pref.rex().b(),
+						pref.hasOperandSizeOverridePrefix());
+				yield new Instruction(
+						Opcode.LEA,
+						r,
+						parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.fromSize(r.bits()))
+								.build());
+			}
 			case INS_M8_OPCODE ->
 				new Instruction(
 						Opcode.INS,
 						IndirectOperand.builder()
 								.pointer(PointerSize.BYTE_PTR)
-								.base(new SegmentRegister(Register16.ES, Register64.RDI))
+								.segment(SegmentRegister.ES)
+								.base(Register64.RDI)
 								.build(),
 						Register16.DX);
 			case INS_M32_OPCODE ->
@@ -2669,7 +2888,8 @@ public final class InstructionDecoder {
 						Opcode.INS,
 						IndirectOperand.builder()
 								.pointer(PointerSize.DWORD_PTR)
-								.base(new SegmentRegister(Register16.ES, Register64.RDI))
+								.segment(SegmentRegister.ES)
+								.base(Register64.RDI)
 								.build(),
 						Register16.DX);
 			case OUTS_M8_OPCODE ->
@@ -2678,7 +2898,8 @@ public final class InstructionDecoder {
 						Register16.DX,
 						IndirectOperand.builder()
 								.pointer(PointerSize.BYTE_PTR)
-								.base(new SegmentRegister(Register16.DS, Register64.RSI))
+								.segment(SegmentRegister.DS)
+								.base(Register64.RSI)
 								.build());
 			case OUTS_M32_OPCODE ->
 				new Instruction(
@@ -2686,38 +2907,35 @@ public final class InstructionDecoder {
 						Register16.DX,
 						IndirectOperand.builder()
 								.pointer(PointerSize.DWORD_PTR)
-								.base(new SegmentRegister(Register16.DS, Register64.RSI))
+								.segment(SegmentRegister.DS)
+								.base(Register64.RSI)
 								.build());
 
-			case BAD_PUSH_ES_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x06 (legacy 'push es' instruction) is invalid in x86_64.");
-			case BAD_POP_ES_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x07 (legacy 'pop es' instruction) is invalid in x86_64.");
-			case BAD_PUSH_CS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x0e (legacy 'push cs' instruction) is invalid in x86_64.");
-			case BAD_PUSH_SS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x16 (legacy 'push ss' instruction) is invalid in x86_64.");
-			case BAD_POP_SS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x17 (legacy 'pop ss' instruction) is invalid in x86_64.");
-			case BAD_PUSH_DS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x1e (legacy 'push ds' instruction) is invalid in x86_64.");
-			case BAD_POP_DS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x1f (legacy 'pop ds' instruction) is invalid in x86_64.");
-			case BAD_DAA_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x27 (legacy 'daa' instruction) is invalid in x86_64.");
-			case BAD_DAS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x2f (legacy 'das' instruction) is invalid in x86_64.");
-			case BAD_AAA_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x37 (legacy 'aaa' instruction) is invalid in x86_64.");
-			case BAD_AAS_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x3f (legacy 'aas' instruction) is invalid in x86_64.");
-			case BAD_PUSHAD_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x60 (legacy 'pushad' instruction) is invalid in x86_64.");
-			case BAD_POPAD_OPCODE ->
-				throw new IllegalArgumentException("Byte 0x61 (legacy 'popad' instruction) is invalid in x86_64.");
+			case BAD_PUSH_ES_OPCODE -> throw new InvalidLegacyOpcode(BAD_PUSH_ES_OPCODE, "push es");
+			case BAD_POP_ES_OPCODE -> throw new InvalidLegacyOpcode(BAD_POP_ES_OPCODE, "pop es");
+			case BAD_PUSH_CS_OPCODE -> throw new InvalidLegacyOpcode(BAD_PUSH_CS_OPCODE, "push cs");
+			case BAD_PUSH_SS_OPCODE -> throw new InvalidLegacyOpcode(BAD_PUSH_SS_OPCODE, "push ss");
+			case BAD_POP_SS_OPCODE -> throw new InvalidLegacyOpcode(BAD_POP_SS_OPCODE, "pop ss");
+			case BAD_PUSH_DS_OPCODE -> throw new InvalidLegacyOpcode(BAD_PUSH_DS_OPCODE, "push ds");
+			case BAD_POP_DS_OPCODE -> throw new InvalidLegacyOpcode(BAD_POP_DS_OPCODE, "pop ds");
+			case BAD_DAA_OPCODE -> throw new InvalidLegacyOpcode(BAD_DAA_OPCODE, "daa");
+			case BAD_DAS_OPCODE -> throw new InvalidLegacyOpcode(BAD_DAS_OPCODE, "das");
+			case BAD_AAA_OPCODE -> throw new InvalidLegacyOpcode(BAD_AAA_OPCODE, "aaa");
+			case BAD_AAS_OPCODE -> throw new InvalidLegacyOpcode(BAD_AAS_OPCODE, "aas");
+			case BAD_PUSHAD_OPCODE -> throw new InvalidLegacyOpcode(BAD_PUSHAD_OPCODE, "pushad");
+			case BAD_POPAD_OPCODE -> throw new InvalidLegacyOpcode(BAD_POPAD_OPCODE, "popad");
 			// Does this error make sense in an emulator?
 			case FAR_CALL_OPCODE ->
-				throw new IllegalArgumentException("Far call to different segments (byte 0x9a) is not allowed.");
+				throw new DecodingException("Far call to different segments (byte 0x9a) is not allowed.");
+			case UNDEFINED_OLD_MOV_OPCODE -> throw new DecodingException("Byte 0x82 is undefined in x86_64.");
+			case BAD_INTO_OPCODE -> throw new InvalidLegacyOpcode(BAD_INTO_OPCODE, "into");
+			case BAD_AAM_OPCODE -> throw new InvalidLegacyOpcode(BAD_AAM_OPCODE, "aam");
+			case BAD_AAD_OPCODE -> throw new InvalidLegacyOpcode(BAD_AAD_OPCODE, "aad");
+			case BAD_SALC_OPCODE -> throw new InvalidLegacyOpcode(BAD_SALC_OPCODE, "salc");
+			// Does this error make sense in an emulator?
+			case BAD_FAR_JMP_OPCODE ->
+				throw new DecodingException("Far call to explicit segment (byte 0xea) is not allowed.");
+			case BAD_INT1_OPCODE -> throw new InvalidLegacyOpcode(BAD_INT1_OPCODE, "int1");
 			case (byte) 0x0f -> throw new UnrecognizedPrefix("double byte", b.getPosition());
 			case (byte) 0xc5 -> throw new UnrecognizedPrefix("VEX2", b.getPosition());
 			case (byte) 0xc4 -> throw new UnrecognizedPrefix("VEX3", b.getPosition());
@@ -3465,7 +3683,7 @@ public final class InstructionDecoder {
 
 		if (baseRegister != null) {
 			if (pref.p2().isPresent() && pref.p2().orElseThrow() == CS_SEGMENT_OVERRIDE_PREFIX) {
-				baseRegister = new SegmentRegister(Register16.CS, baseRegister);
+				iob.segment(SegmentRegister.CS);
 			}
 			iob.base(baseRegister);
 		}
