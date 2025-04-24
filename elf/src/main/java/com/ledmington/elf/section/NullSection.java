@@ -63,9 +63,6 @@ public final class NullSection implements Section {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof final NullSection ns)) {
-			return false;
-		}
-		return this.header.equals(ns.header);
+		return other instanceof final NullSection ns && this.header.equals(ns.header);
 	}
 }

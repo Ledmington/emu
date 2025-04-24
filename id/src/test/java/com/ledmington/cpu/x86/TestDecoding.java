@@ -66,11 +66,7 @@ final class TestDecoding extends X64Encodings {
 			String s = String.format(
 					"Expected '%s' to be encoded as '%s' but was '%s'.",
 					inst.toString(), asString(expected), asString(actual));
-			if (expected.length != actual.length) {
-				s = s
-						+ String.format(
-								" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
-			} else {
+			if (expected.length == actual.length) {
 				for (int i = 0; i < expected.length; i++) {
 					if (expected[i] != actual[i]) {
 						s = s
@@ -80,6 +76,10 @@ final class TestDecoding extends X64Encodings {
 						break;
 					}
 				}
+			} else {
+				s = s
+						+ String.format(
+								" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
 			}
 			return s;
 		});

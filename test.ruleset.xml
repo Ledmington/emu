@@ -59,6 +59,8 @@
     <rule ref="category/java/performance.xml">
         <!-- Avoid reporting redundant field initialization -->
         <exclude name="RedundantFieldInitializer" />
+        <!-- Avoid reporting "slow" string appends in tests -->
+        <exclude name="UseStringBufferForStringAppends" />
     </rule>
 
     <rule ref="category/java/security.xml" />

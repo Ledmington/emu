@@ -157,7 +157,6 @@ public final class X86RegisterFile implements RegisterFile {
 			case GS -> seg[4] = v;
 			case SS -> seg[5] = v;
 		}
-		;
 	}
 
 	@Override

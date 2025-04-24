@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
 
+@SuppressWarnings("PMD.FieldDeclarationsShouldBeAtStartOfClass")
 public final class InstructionChecker {
 
 	/** Different categories of operands. Check {@link #matches} to know exactly what each one represents. */
@@ -82,7 +83,7 @@ public final class InstructionChecker {
 		private final OperandType op3;
 		private final OperandType op4;
 
-		Case(final OperandType... ot) {
+		/* default */ Case(final OperandType... ot) {
 			Objects.requireNonNull(ot);
 			this.op1 = ot.length > 0 ? Objects.requireNonNull(ot[0]) : null;
 			this.op2 = ot.length > 1 ? Objects.requireNonNull(ot[1]) : null;

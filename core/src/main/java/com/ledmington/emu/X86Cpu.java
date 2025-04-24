@@ -487,6 +487,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	/** Returns a sign-extended long */
+	@SuppressWarnings("PMD.UnnecessaryCast")
 	private long getAsLongSX(final Immediate imm) {
 		return switch (imm.bits()) {
 			case 8 -> (long) imm.asByte();

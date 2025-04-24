@@ -34,6 +34,8 @@ public final class Main {
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
 
+	private Main() {}
+
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
@@ -60,8 +62,9 @@ public final class Main {
 		final String checkInstructionsFlags = "--check-instructions";
 		final String noCheckInstructionsFlags = "--no-check-instructions";
 
-		label:
-		for (int i = 0; i < args.length; i++) {
+		int i = 0;
+		while (i < args.length) {
+			boolean shouldExit = false;
 			final String arg = args[i];
 
 			switch (arg) {
@@ -159,7 +162,7 @@ public final class Main {
 					int k = 0;
 					long bytes = 0L;
 					while (k < s.length() && Character.isDigit(s.charAt(k))) {
-						final long idx = (s.charAt(k) - '0');
+						final long idx = s.charAt(k) - '0';
 						bytes = bytes * 10L + idx;
 						k++;
 					}
@@ -221,9 +224,13 @@ public final class Main {
 					// all the next command-line arguments are considered to be related to the
 					// executable to be emulated
 					innerArgs = Arrays.copyOfRange(args, i + 1, args.length);
-					break label;
+					shouldExit = true;
 				}
 			}
+			if (shouldExit) {
+				break;
+			}
+			i++;
 		}
 
 		if (filename == null) {

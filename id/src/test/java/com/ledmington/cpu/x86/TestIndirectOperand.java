@@ -183,19 +183,15 @@ final class TestIndirectOperand {
 								.index(r)
 								.scale(c);
 
-						final StringBuilder sb = new StringBuilder();
+						final String s = ps.name().replace('_', ' ') + " ["
+								+ base.toIntelSyntax()
+								+ '+'
+								+ r.toIntelSyntax()
+								+ '*'
+								+ c
+								+ ']';
 
-						sb.append(ps.name().replace('_', ' '))
-								.append(" [")
-								.append(base.toIntelSyntax())
-								.append('+')
-								.append(r.toIntelSyntax())
-								.append('*')
-								.append(c);
-
-						sb.append(']');
-
-						args.add(Arguments.of(iob.build(), sb.toString()));
+						args.add(Arguments.of(iob.build(), s));
 					}
 				}
 			}

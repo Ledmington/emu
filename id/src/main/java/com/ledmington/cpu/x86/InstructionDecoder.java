@@ -30,6 +30,7 @@ import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -84,31 +85,22 @@ public final class InstructionDecoder {
 		final CharacterIterator it = new StringCharacterIterator(input);
 
 		InstructionPrefix prefix = null;
-		final Opcode opcode;
 
 		String opcodeString = readUntilWhitespace(it);
-		switch (opcodeString) {
-			case "lock" -> {
-				prefix = InstructionPrefix.LOCK;
-				skipWhitespaces(it);
-				opcodeString = readUntilWhitespace(it);
-			}
-			case "rep" -> {
-				prefix = InstructionPrefix.REP;
-				skipWhitespaces(it);
-				opcodeString = readUntilWhitespace(it);
-			}
-			case "repnz" -> {
-				prefix = InstructionPrefix.REPNZ;
-				skipWhitespaces(it);
-				opcodeString = readUntilWhitespace(it);
-			}
+		if (opcodeString.equals("lock") || opcodeString.equals("rep") || opcodeString.equals("repnz")) {
+			final String finalOpcodeString = opcodeString;
+			prefix = Arrays.stream(InstructionPrefix.values())
+					.filter(p -> p.name().toLowerCase(Locale.US).equals(finalOpcodeString))
+					.findAny()
+					.orElseThrow();
+			skipWhitespaces(it);
+			opcodeString = readUntilWhitespace(it);
 		}
 
 		if (!fromStringToOpcode.containsKey(opcodeString)) {
 			throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", opcodeString));
 		}
-		opcode = fromStringToOpcode.get(opcodeString);
+		final Opcode opcode = fromStringToOpcode.get(opcodeString);
 
 		skipWhitespaces(it);
 

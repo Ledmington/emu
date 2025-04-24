@@ -106,14 +106,14 @@ public final class IndirectOperand implements Operand {
 			final DisplacementType displacementType) {
 		Objects.requireNonNull(ptrSize, "Cannot build an IndirectOperand without an explicit pointer size.");
 
+		if (displacement != null && displacementType == null) {
+			throw new IllegalArgumentException("Cannot have displacement with no type.");
+		}
+
 		final boolean hasBase = base != null;
 		final boolean hasIndex = index != null;
 		final boolean hasScale = scale != null;
 		final boolean hasDisplacement = displacement != null && displacementType != null;
-
-		if (displacement != null && displacementType == null) {
-			throw new IllegalArgumentException("Cannot have displacement with no type.");
-		}
 
 		// [base]
 		final boolean isB = hasBase && !hasIndex && !hasScale && !hasDisplacement;

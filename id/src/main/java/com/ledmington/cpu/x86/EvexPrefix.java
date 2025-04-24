@@ -29,7 +29,7 @@ public final class EvexPrefix {
 	private final boolean r1;
 	private final byte m;
 	private final boolean w;
-	final byte v;
+	private final byte v;
 	private final byte p;
 	private final boolean z;
 	private final boolean l1;
