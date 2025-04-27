@@ -37,6 +37,12 @@ public final class IndirectOperandBuilder {
 	 */
 	public IndirectOperandBuilder() {}
 
+	private void assertNotBuilt() {
+		if (alreadyBuilt) {
+			throw new IllegalArgumentException("Cannot build twice.");
+		}
+	}
+
 	/**
 	 * Sets an explicit pointer size for the IndirectOperand. This method is currently required in the current
 	 * implementation since it does not allow, otherwise, to create indirect operands such as "WORD PTR ...".
@@ -45,6 +51,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder pointer(final PointerSize ptrSize) {
+		assertNotBuilt();
 		if (this.ptrSize != null) {
 			throw new IllegalArgumentException("Cannot define pointer size twice.");
 		}
@@ -54,6 +61,7 @@ public final class IndirectOperandBuilder {
 	}
 
 	public IndirectOperandBuilder segment(final SegmentRegister segmentRegister) {
+		assertNotBuilt();
 		if (this.segmentRegister != null) {
 			throw new IllegalArgumentException("Cannot define segment register twice.");
 		}
@@ -68,6 +76,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder base(final Register r) {
+		assertNotBuilt();
 		if (this.baseRegister != null) {
 			throw new IllegalArgumentException("Cannot define base register twice.");
 		}
@@ -92,6 +101,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder scale(final int c) {
+		assertNotBuilt();
 		if (this.scale != null) {
 			throw new IllegalArgumentException("Cannot define scale twice.");
 		}
@@ -109,6 +119,7 @@ public final class IndirectOperandBuilder {
 	 * @return This instance of IndirectOperandBuilder.
 	 */
 	public IndirectOperandBuilder index(final Register r) {
+		assertNotBuilt();
 		if (this.indexRegister != null) {
 			throw new IllegalArgumentException("Cannot define index register twice.");
 		}
@@ -147,6 +158,7 @@ public final class IndirectOperandBuilder {
 	}
 
 	private IndirectOperandBuilder displacement(final long disp, final DisplacementType displacementType) {
+		assertNotBuilt();
 		if (this.displacement != null) {
 			throw new IllegalArgumentException("Cannot define displacement twice.");
 		}
@@ -161,9 +173,7 @@ public final class IndirectOperandBuilder {
 	 * @return A new instance of IndirectOperand.
 	 */
 	public IndirectOperand build() {
-		if (alreadyBuilt) {
-			throw new IllegalArgumentException("Cannot build the same IndirectOperandBuilder twice.");
-		}
+		assertNotBuilt();
 
 		alreadyBuilt = true;
 

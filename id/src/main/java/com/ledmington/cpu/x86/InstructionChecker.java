@@ -226,9 +226,13 @@ public final class InstructionChecker {
 	private static final Case RK_RY_M256 = new Case(OperandType.RK, OperandType.RY, OperandType.M256);
 	private static final Case RX_RX_RX = new Case(OperandType.RX, OperandType.RX, OperandType.RX);
 	private static final Case RY_RY_RY = new Case(OperandType.RY, OperandType.RY, OperandType.RY);
+	private static final Case RK_RY_RY = new Case(OperandType.RK, OperandType.RY, OperandType.RY);
 	private static final Case RY_RY_M256 = new Case(OperandType.RY, OperandType.RY, OperandType.M256);
 	private static final Case RX_RX_M128_I8 =
 			new Case(OperandType.RX, OperandType.RX, OperandType.M128, OperandType.I8);
+	private static final Case RY_RY_M256_I8 =
+			new Case(OperandType.RY, OperandType.RY, OperandType.M256, OperandType.I8);
+	private static final Case RY_RY_RY_I8 = new Case(OperandType.RY, OperandType.RY, OperandType.RY, OperandType.I8);
 
 	private static final Map<Opcode, List<Case>> CASES = Map.<Opcode, List<Case>>ofEntries(
 			Map.entry(Opcode.NOP, List.of(NOTHING, R16, R32, R64, M16, M32, M64)),
@@ -511,7 +515,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.LOOP, List.of(I8)),
 			Map.entry(Opcode.JRCXZ, List.of(I8)),
 			Map.entry(Opcode.IN, List.of(R8_I8, R32_I8, R8_R16, R32_R16)),
-			Map.entry(Opcode.OUT, List.of(I8_R8, I8_R32, R16_R8, R16_R32)));
+			Map.entry(Opcode.OUT, List.of(I8_R8, I8_R32, R16_R8, R16_R32)),
+			Map.entry(Opcode.VPTERNLOGD, List.of(RY_RY_M256_I8, RY_RY_RY_I8)),
+			Map.entry(Opcode.VPTESTMB, List.of(RK_RY_RY)));
 
 	private InstructionChecker() {}
 

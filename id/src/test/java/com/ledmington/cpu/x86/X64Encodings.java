@@ -128,7 +128,9 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM10;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM17;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM18;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM19;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM2;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM20;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM24;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
@@ -9586,37 +9588,40 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"62 f1 7c 48 11 07"),
 				// Vmovdqu8
 				test(
-						new Instruction(
-								Opcode.VMOVDQU8,
-								K1,
-								ZMM16,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VMOVDQU8)
+								.mask(K1)
+								.op(ZMM16)
+								.op(IndirectOperand.builder()
 										.pointer(ZMMWORD_PTR)
 										.base(RAX)
-										.build()),
+										.build())
+								.build(),
 						"vmovdqu8 zmm16{k1},ZMMWORD PTR [rax]",
 						"62 e1 7f 49 6f 00"),
 				test(
-						new Instruction(
-								Opcode.VMOVDQU8,
-								K1,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VMOVDQU8)
+								.mask(K1)
+								.op(IndirectOperand.builder()
 										.pointer(ZMMWORD_PTR)
 										.base(RAX)
-										.build(),
-								ZMM16),
+										.build())
+								.op(ZMM16)
+								.build(),
 						"vmovdqu8 ZMMWORD PTR [rax]{k1},zmm16",
 						"62 e1 7f 49 7f 00"),
 				test(
-						new Instruction(
-								Opcode.VMOVDQU8,
-								K7,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VMOVDQU8)
+								.mask(K7)
+								.op(IndirectOperand.builder()
 										.pointer(ZMMWORD_PTR)
 										.segment(CS)
 										.base(RAX)
-										.build(),
-								ZMM15),
+										.build())
+								.op(ZMM15)
+								.build(),
 						"vmovdqu8 ZMMWORD PTR cs:[rax]{k7},zmm15",
 						"2e 62 71 7f 4f 7f 38"),
 				test(
@@ -9738,51 +9743,55 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.XTEST), "xtest", "0f 01 d6"),
 				// Vpcmpnequb
 				test(
-						new Instruction(
-								Opcode.VPCMPNEQUB,
-								K2,
-								K1,
-								YMM18,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VPCMPNEQUB)
+								.mask(K2)
+								.op(K1)
+								.op(YMM18)
+								.op(IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.build()),
+										.build())
+								.build(),
 						"vpcmpnequb k1{k2},ymm18,YMMWORD PTR [rdi]",
 						"62 f3 6d 22 3e 0f 04"),
 				test(
-						new Instruction(
-								Opcode.VPCMPNEQUB,
-								K2,
-								K1,
-								YMM24,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VPCMPNEQUB)
+								.mask(K2)
+								.op(K1)
+								.op(YMM24)
+								.op(IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.build()),
+										.build())
+								.build(),
 						"vpcmpnequb k1{k2},ymm24,YMMWORD PTR [rdi]",
 						"62 f3 3d 22 3e 0f 04"),
 				test(
-						new Instruction(
-								Opcode.VPCMPNEQUB,
-								K2,
-								K1,
-								YMM2,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VPCMPNEQUB)
+								.mask(K2)
+								.op(K1)
+								.op(YMM2)
+								.op(IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.build()),
+										.build())
+								.build(),
 						"vpcmpnequb k1{k2},ymm2,YMMWORD PTR [rdi]",
 						"62 f3 6d 2a 3e 0f 04"),
 				test(
-						new Instruction(
-								Opcode.VPCMPNEQUB,
-								K2,
-								K1,
-								XMM2,
-								IndirectOperand.builder()
+						Instruction.builder()
+								.opcode(Opcode.VPCMPNEQUB)
+								.mask(K2)
+								.op(K1)
+								.op(XMM2)
+								.op(IndirectOperand.builder()
 										.pointer(XMMWORD_PTR)
 										.base(RDI)
-										.build()),
+										.build())
+								.build(),
 						"vpcmpnequb k1{k2},xmm2,XMMWORD PTR [rdi]",
 						"62 f3 6d 0a 3e 0f 04"),
 				// Vpxorq
@@ -9994,7 +10003,39 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Cli
 				test(new Instruction(Opcode.CLI), "cli", "fa"),
 				// Sti
-				test(new Instruction(Opcode.STI), "sti", "fb"));
+				test(new Instruction(Opcode.STI), "sti", "fb"),
+				// Vpternlogd
+				test(
+						new Instruction(
+								Opcode.VPTERNLOGD,
+								YMM20,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x60)
+										.build(),
+								new Immediate((byte) 0xde)),
+						"vpternlogd ymm20,ymm17,YMMWORD PTR [rdi+0x60],0xde",
+						"62 e3 75 20 25 67 03 de"),
+				test(
+						new Instruction(Opcode.VPTERNLOGD, YMM20, YMM19, YMM18, new Immediate((byte) 0xfe)),
+						"vpternlogd ymm20,ymm19,ymm18,0xfe",
+						"62 a3 65 20 25 e2 fe"),
+				test(
+						new Instruction(Opcode.VPTERNLOGD, YMM20, YMM19, YMM2, new Immediate((byte) 0xfe)),
+						"vpternlogd ymm20,ymm19,ymm2,0xfe",
+						"62 e3 65 20 25 e2 fe"),
+				// Vptestmb
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPTESTMB)
+								.op(K1)
+								.op(YMM20)
+								.op(YMM20)
+								.build(),
+						"vptestmb k1,ymm20,ymm20",
+						"62 b2 5d 20 26 cc"));
 	}
 
 	//

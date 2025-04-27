@@ -22,7 +22,10 @@ import java.util.Objects;
 /** High-level representation of an x86 instruction. */
 public final class Instruction {
 
-	// TODO: should this be refactored into an InstructionBuilder?
+	public static InstructionBuilder builder() {
+		return new InstructionBuilder();
+	}
+
 	private final InstructionPrefix prefix;
 	private final Opcode code;
 	private final MaskRegister destinationMask;

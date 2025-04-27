@@ -692,6 +692,12 @@ public enum Opcode {
 	/** Subtract packed integers. */
 	VPSUBB,
 
+	/** Bitwise ternary logic. */
+	VPTERNLOGD,
+
+	/** Logical AND and set mask. */
+	VPTESTMB,
+
 	/** Invoke VM function. */
 	VMFUNC,
 
