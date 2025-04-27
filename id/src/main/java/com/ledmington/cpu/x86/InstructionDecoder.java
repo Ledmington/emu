@@ -3694,6 +3694,7 @@ public final class InstructionDecoder {
 		final byte VPTESTMB_OPCODE = (byte) 0x26;
 		final byte VMOVAPS_OPCODE = (byte) 0x29;
 		final byte VPCMPNEQUB_OPCODE = (byte) 0x3e;
+		final byte VPCMPEQB_OPCODE = (byte) 0x3f;
 		final byte VMOVDQU64_RZMM_M512_OPCODE = (byte) 0x6f;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x7a;
 		final byte VPBROADCASTD_OPCODE = (byte) 0x7c;
@@ -3818,10 +3819,24 @@ public final class InstructionDecoder {
 								.build())
 						.build();
 				// For some unknown (to me) reason, after VPCMPNEQUB instructions there is an extra 0x04 byte which is
-				// not needed
-				// why?
+				// not needed... why?
 				b.read1();
 				yield tmp;
+			}
+			case VPCMPEQB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r2 = or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex));
+				final InstructionBuilder ib = Instruction.builder()
+						.op(MaskRegister.fromByte(modrm.reg()))
+						.op(evex.l() ? RegisterYMM.fromByte(r2) : RegisterXMM.fromByte(r2))
+						.op(parseIndirectOperand(b, pref, modrm)
+								.pointer(evex.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+								.build());
+				switch (b.read1()) {
+					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB);
+					case (byte) 0x04 -> ib.opcode(Opcode.VPCMPNEQB);
+				}
+				yield ib.build();
 			}
 			case VPXORQ_OPCODE -> {
 				final ModRM modrm = modrm(b);

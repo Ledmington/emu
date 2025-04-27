@@ -674,6 +674,9 @@ public enum Opcode {
 	/** Packed compare implicit length strings, return index. */
 	VPCMPISTRI,
 
+	/** Compare packed data for not equal. */
+	VPCMPNEQB,
+
 	/** Compare packed byte values into mask. */
 	VPCMPNEQUB,
 

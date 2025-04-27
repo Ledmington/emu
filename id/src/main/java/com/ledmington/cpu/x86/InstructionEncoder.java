@@ -184,9 +184,23 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeZeroOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+		if (inst.opcode() == Opcode.ENDBR64) {
+			wb.write((byte) 0xf3);
+		}
+
+		if (inst.opcode() == Opcode.CDQE) {
+			wb.write((byte) 0x48);
+		}
+
+		if (inst.opcode() == Opcode.VZEROALL) {
+			wb.write((byte) 0xc5, (byte) 0xfc);
+		}
+
+		// TODO: refactor this into a map
 		switch (inst.opcode()) {
+			case VZEROALL -> wb.write((byte) 0x77);
 			case NOP -> wb.write((byte) 0x90);
-			case CWDE -> wb.write((byte) 0x98);
+			case CWDE, CDQE -> wb.write((byte) 0x98);
 			case CDQ -> wb.write((byte) 0x99);
 			case FWAIT -> wb.write((byte) 0x9b);
 			case PUSHF -> wb.write((byte) 0x9c);
@@ -194,30 +208,28 @@ public final class InstructionEncoder {
 			case SAHF -> wb.write((byte) 0x9e);
 			case LAHF -> wb.write((byte) 0x9f);
 			case RET -> wb.write((byte) 0xc3);
-			case RETF -> wb.write((byte) 0xcb);
-			case IRET -> wb.write((byte) 0xcf);
 			case LEAVE -> wb.write((byte) 0xc9);
+			case RETF -> wb.write((byte) 0xcb);
 			case INT3 -> wb.write((byte) 0xcc);
+			case IRET -> wb.write((byte) 0xcf);
 			case HLT -> wb.write((byte) 0xf4);
-			case DEC -> wb.write((byte) 0xff);
-			case CPUID -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xa2);
-			case XGETBV -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd0);
-			case UD2 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x0b);
-			case SYSCALL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x05);
-			case CDQE -> wb.write((byte) 0x48, (byte) 0x98);
-			case SETG -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x9f);
-			case BSWAP -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xcc);
-			case ENDBR64 -> wb.write((byte) 0xf3, DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
-			case VZEROALL -> wb.write((byte) 0xc5, (byte) 0xfc, (byte) 0x77);
-			case SFENCE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae, (byte) 0xf8);
+			case CMC -> wb.write((byte) 0xf5);
 			case CLC -> wb.write((byte) 0xf8);
 			case STC -> wb.write((byte) 0xf9);
 			case CLI -> wb.write((byte) 0xfa);
 			case STI -> wb.write((byte) 0xfb);
 			case CLD -> wb.write((byte) 0xfc);
 			case STD -> wb.write((byte) 0xfd);
+			case DEC -> wb.write((byte) 0xff);
+			case SYSCALL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x05);
+			case UD2 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x0b);
+			case SETG -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x9f);
+			case CPUID -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xa2);
+			case BSWAP -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xcc);
+			case XGETBV -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd0);
 			case XTEST -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd6);
-			case CMC -> wb.write((byte) 0xf5);
+			case ENDBR64 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
+			case SFENCE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae, (byte) 0xf8);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}
@@ -1679,6 +1691,7 @@ public final class InstructionEncoder {
 		}
 
 		byte reg = -1;
+		byte lastByte = -1;
 		switch (inst.opcode()) {
 			case IMUL -> {
 				if (inst.firstOperand() instanceof Register
@@ -1728,14 +1741,30 @@ public final class InstructionEncoder {
 				wb.write((byte) 0x64);
 			}
 			case VPCMPEQB -> {
-				if (inst.firstOperand() instanceof Register
+				if (inst.firstOperand() instanceof MaskRegister
+						&& inst.secondOperand() instanceof Register
+						&& inst.thirdOperand() instanceof IndirectOperand) {
+					encodeEvexPrefix(wb, inst);
+					wb.write((byte) 0x3f);
+					lastByte = (byte) 0x00;
+				} else if (inst.firstOperand() instanceof Register
 						&& inst.thirdOperand() instanceof final IndirectOperand io
 						&& !isSimpleIndirectOperand(io)) {
 					encodeVex3Prefix(wb, inst);
+					wb.write((byte) 0x74);
 				} else {
 					encodeVex2Prefix(wb, inst);
+					wb.write((byte) 0x74);
 				}
-				wb.write((byte) 0x74);
+			}
+			case VPCMPNEQB -> {
+				if (inst.firstOperand() instanceof MaskRegister
+						&& inst.secondOperand() instanceof Register
+						&& inst.thirdOperand() instanceof IndirectOperand) {
+					encodeEvexPrefix(wb, inst);
+					wb.write((byte) 0x3f);
+					lastByte = (byte) 0x04;
+				}
 			}
 			case PEXTRW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc5);
 			case SARX -> {
@@ -1771,6 +1800,7 @@ public final class InstructionEncoder {
 			case VPCMPNEQUB -> {
 				encodeEvexPrefix(wb, inst);
 				wb.write((byte) 0x3e);
+				lastByte = (byte) 0x04;
 			}
 			case VPTESTMB -> {
 				encodeEvexPrefix(wb, inst);
@@ -1816,7 +1846,7 @@ public final class InstructionEncoder {
 					getMod(io),
 					Registers.toByte(r1),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-			wb.write((byte) 0x04);
+			wb.write(lastByte);
 		} else if (inst.firstOperand() instanceof final Register r1
 				&& inst.secondOperand() instanceof Register
 				&& inst.thirdOperand() instanceof final IndirectOperand io) {
@@ -1902,6 +1932,7 @@ public final class InstructionEncoder {
 					VPMINUB,
 					VPMOVMSKB,
 					VPCMPEQB,
+					VPCMPNEQB,
 					VPCMPGTB,
 					VMOVD,
 					VPBROADCASTB,
@@ -2041,7 +2072,7 @@ public final class InstructionEncoder {
 		return switch (opcode) {
 			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ -> (byte) 0b001;
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB -> (byte) 0b010;
-			case VPCMPNEQUB, VPTERNLOGD -> (byte) 0b011;
+			case VPCMPNEQUB, VPCMPEQB, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
 			default -> (byte) 0b000;
 		};
 	}

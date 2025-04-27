@@ -17,6 +17,7 @@
  */
 package com.ledmington.cpu.x86;
 
+import static com.ledmington.cpu.x86.MaskRegister.K0;
 import static com.ledmington.cpu.x86.MaskRegister.K1;
 import static com.ledmington.cpu.x86.MaskRegister.K2;
 import static com.ledmington.cpu.x86.MaskRegister.K7;
@@ -126,6 +127,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM0;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM1;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM10;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM11;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM16;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM17;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM18;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM19;
@@ -9438,6 +9440,31 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpcmpeqb ymm1,ymm3,YMMWORD PTR [rdx+r10*1+0x20]",
 						"c4 a1 65 74 4c 12 20"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQB)
+								.op(K0)
+								.op(YMM16)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build())
+								.build(),
+						"vpcmpeqb k0,ymm16,YMMWORD PTR [rdi]",
+						"62 f3 7d 20 3f 07 00"),
+				// Vpcmpneqb
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPNEQB)
+								.op(K0)
+								.op(YMM16)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build())
+								.build(),
+						"vpcmpneqb k0,ymm16,YMMWORD PTR [rdi]",
+						"62 f3 7d 20 3f 07 04"),
 				// Vzeroall
 				test(new Instruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"),
 				// Vmovq
