@@ -218,7 +218,7 @@ public enum RegisterYMM implements Register {
 		};
 	}
 
-	public static boolean requiresEvexR1(final RegisterYMM r) {
+	public static boolean requiresEvexExtension(final RegisterYMM r) {
 		return switch (r) {
 			case YMM0, YMM1, YMM2, YMM3, YMM4, YMM5, YMM6, YMM7, YMM8, YMM9, YMM10, YMM11, YMM12, YMM13, YMM14, YMM15 ->
 				false;

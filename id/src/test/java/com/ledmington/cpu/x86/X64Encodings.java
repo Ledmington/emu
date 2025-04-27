@@ -115,6 +115,8 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM13;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM14;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM15;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM16;
+import static com.ledmington.cpu.x86.RegisterXMM.XMM17;
+import static com.ledmington.cpu.x86.RegisterXMM.XMM18;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM2;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM3;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM4;
@@ -133,7 +135,9 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM18;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM19;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM2;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM20;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM21;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM24;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM26;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
@@ -9411,6 +9415,26 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpminub ymm2,ymm1,YMMWORD PTR [rdi+0x21]",
 						"c5 f5 da 57 21"),
+				test(
+						new Instruction(Opcode.VPMINUB, YMM18, YMM20, YMM21),
+						"vpminub ymm18,ymm20,ymm21",
+						"62 a1 5d 20 da d5"),
+				test(
+						new Instruction(Opcode.VPMINUB, YMM18, YMM18, YMM21),
+						"vpminub ymm18,ymm18,ymm21",
+						"62 a1 6d 20 da d5"),
+				test(
+						new Instruction(
+								Opcode.VPMINUB,
+								YMM18,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0xa0)
+										.build()),
+						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0xa0]",
+						"62 e1 75 20 da 57 05"),
 				// Vpmovmskb
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb
@@ -9452,6 +9476,40 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqb k0,ymm16,YMMWORD PTR [rdi]",
 						"62 f3 7d 20 3f 07 00"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQB)
+								.op(K0)
+								.op(YMM16)
+								.op(YMM18)
+								.build(),
+						"vpcmpeqb k0,ymm16,ymm18",
+						"62 b3 7d 20 3f c2 00"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQB)
+								.mask(K2)
+								.op(K1)
+								.op(XMM17)
+								.op(IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RSI)
+										.index(RDX)
+										.scale(1)
+										.build())
+								.build(),
+						"vpcmpeqb k1{k2},xmm17,XMMWORD PTR [rsi+rdx*1]",
+						"62 f3 75 02 3f 0c 16 00"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQB)
+								.mask(K2)
+								.op(K1)
+								.op(XMM17)
+								.op(XMM18)
+								.build(),
+						"vpcmpeqb k1{k2},xmm17,xmm18",
+						"62 b3 75 02 3f ca 00"),
 				// Vpcmpneqb
 				test(
 						Instruction.builder()
@@ -9482,6 +9540,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovq xmm0,QWORD PTR [rsi+rdx*1]",
 						"c5 fa 7e 04 16"),
+				test(
+						new Instruction(
+								Opcode.VMOVQ,
+								XMM17,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.index(RDX)
+										.scale(1)
+										.build()),
+						"vmovq xmm17,QWORD PTR [rdi+rdx*1]",
+						"62 e1 fd 08 6e 0c 17"),
 				test(
 						new Instruction(
 								Opcode.VMOVQ,
@@ -9855,6 +9925,15 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpxorq ymm17,ymm1,YMMWORD PTR [rdi]",
 						"62 e1 f5 28 ef 0f"),
+				// Vporq,
+				test(
+						new Instruction(Opcode.VPORQ, YMM26, YMM20, YMM18),
+						"vporq ymm26,ymm20,ymm18",
+						"62 21 dd 20 eb d2"),
+				test(
+						new Instruction(Opcode.VPORQ, YMM10, YMM20, YMM18),
+						"vporq ymm10,ymm20,ymm18",
+						"62 31 dd 20 eb d2"),
 				// Sldt
 				test(
 						new Instruction(
@@ -10062,7 +10141,21 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.op(YMM20)
 								.build(),
 						"vptestmb k1,ymm20,ymm20",
-						"62 b2 5d 20 26 cc"));
+						"62 b2 5d 20 26 cc"),
+				// Kortestd
+				test(new Instruction(Opcode.KORTESTD, K1, K0), "kortestd k1,k0", "c4 e1 f9 98 c8"),
+				// Kord
+				test(
+						Instruction.builder()
+								.opcode(Opcode.KORD)
+								.op(K0)
+								.op(K1)
+								.op(K0)
+								.build(),
+						"kord k0,k1,k0",
+						"c4 e1 f5 45 c0"),
+				// Tzcnt
+				test(new Instruction(Opcode.TZCNT, EAX, EAX), "tzcnt eax,eax", "f3 0f bc c0"));
 	}
 
 	//

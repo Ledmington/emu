@@ -218,7 +218,7 @@ public enum RegisterXMM implements Register {
 		};
 	}
 
-	public static boolean requiresEvexR1(final RegisterXMM r) {
+	public static boolean requiresEvexExtension(final RegisterXMM r) {
 		return switch (r) {
 			case XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15 ->
 				false;

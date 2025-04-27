@@ -266,6 +266,12 @@ public enum Opcode {
 	/** Move from and to mask registers. */
 	KMOVW,
 
+	/** Bitwise logical OR masks. */
+	KORD,
+
+	/** OR masks and set flags. */
+	KORTESTD,
+
 	/** Load status flags into AH register. */
 	LAHF,
 
@@ -635,6 +641,9 @@ public enum Opcode {
 	/** Logical compare. */
 	TEST,
 
+	/** Count the number of trailing zero bits. */
+	TZCNT,
+
 	/** Unordered compare scalar double-precision floating-point values and set EFLAGS. */
 	UCOMISD,
 
@@ -742,6 +751,9 @@ public enum Opcode {
 
 	/** Logical OR. */
 	VPOR,
+
+	/** Logical OR. */
+	VPORQ,
 
 	/** Logical exclusive OR. */
 	VPXOR,

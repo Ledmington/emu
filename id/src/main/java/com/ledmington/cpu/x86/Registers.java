@@ -87,7 +87,7 @@ public final class Registers {
 		};
 	}
 
-	public static boolean requiresEvexR1(final Register r) {
+	public static boolean requiresEvexExtension(final Register r) {
 		return switch (r) {
 			case Register8 ignored -> false;
 			case Register16 ignored -> false;
@@ -95,9 +95,9 @@ public final class Registers {
 			case Register64 ignored -> false;
 			case RegisterMMX ignored -> false;
 			case MaskRegister ignored -> false;
-			case RegisterXMM rxmm -> RegisterXMM.requiresEvexR1(rxmm);
-			case RegisterYMM rymm -> RegisterYMM.requiresEvexR1(rymm);
-			case RegisterZMM rzmm -> RegisterZMM.requiresEvexR1(rzmm);
+			case RegisterXMM rxmm -> RegisterXMM.requiresEvexExtension(rxmm);
+			case RegisterYMM rymm -> RegisterYMM.requiresEvexExtension(rymm);
+			case RegisterZMM rzmm -> RegisterZMM.requiresEvexExtension(rzmm);
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}
