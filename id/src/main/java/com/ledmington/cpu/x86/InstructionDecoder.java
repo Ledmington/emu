@@ -101,7 +101,8 @@ public final class InstructionDecoder {
 		if (!fromStringToOpcode.containsKey(opcodeString)) {
 			throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", opcodeString));
 		}
-		ib.opcode(fromStringToOpcode.get(opcodeString));
+		final Opcode opcode = fromStringToOpcode.get(opcodeString);
+		ib.opcode(opcode);
 
 		skipWhitespaces(it);
 
@@ -126,17 +127,19 @@ public final class InstructionDecoder {
 			}
 		}
 
-		final Operand firstOperand = parseOperand(args[0].strip(), null);
+		final boolean hasCompressedDisplacement = opcode == Opcode.VPTERNLOGD || opcode == Opcode.VPMINUB;
+
+		final Operand firstOperand = parseOperand(args[0].strip(), null, hasCompressedDisplacement);
 		ib.op(firstOperand);
 
 		if (args.length >= 2) {
-			ib.op(parseOperand(args[1].strip(), firstOperand));
+			ib.op(parseOperand(args[1].strip(), firstOperand, hasCompressedDisplacement));
 
 			if (args.length >= 3) {
-				ib.op(parseOperand(args[2].strip(), null));
+				ib.op(parseOperand(args[2].strip(), null, hasCompressedDisplacement));
 
 				if (args.length == 4) {
-					ib.op(parseOperand(args[3].strip(), null));
+					ib.op(parseOperand(args[3].strip(), null, hasCompressedDisplacement));
 				}
 			}
 		}
@@ -178,7 +181,8 @@ public final class InstructionDecoder {
 		throw new IllegalArgumentException(String.format("Immediate too long: '%s'.", imm));
 	}
 
-	private static Operand parseOperand(final String input, final Operand previousOperand) {
+	private static Operand parseOperand(
+			final String input, final Operand previousOperand, final boolean hasCompressedDisplacement) {
 		if (fromStringToRegister.containsKey(input)) {
 			// It's a register
 			return fromStringToRegister.get(input);
@@ -298,8 +302,9 @@ public final class InstructionDecoder {
 				displacementString = displacementString.substring(1);
 			}
 			final char sign = isNegative ? '-' : '+';
-			final boolean isFirstBitSet =
-					displacementString.length() >= 2 && Integer.parseInt(displacementString, 16) > 128;
+			final boolean isFirstBitSet = displacementString.length() >= 2
+					&& Integer.parseInt(displacementString, 16) > 128
+					&& !hasCompressedDisplacement;
 			final int disp = Integer.parseInt(sign + displacementString, 16);
 			if (displacementString.length() > 2 || isFirstBitSet) {
 				iob.displacement(disp);

@@ -27,7 +27,7 @@ public final class IndirectOperandBuilder {
 	private Register baseRegister = null;
 	private Register indexRegister = null;
 	private Integer scale = null;
-	private Long displacement = null;
+	private Integer displacement = null;
 	private DisplacementType displacementType = null;
 	private boolean alreadyBuilt = false;
 
@@ -157,11 +157,12 @@ public final class IndirectOperandBuilder {
 		return displacement(disp, DisplacementType.LONG);
 	}
 
-	private IndirectOperandBuilder displacement(final long disp, final DisplacementType displacementType) {
+	private IndirectOperandBuilder displacement(final int disp, final DisplacementType displacementType) {
 		assertNotBuilt();
 		if (this.displacement != null) {
 			throw new IllegalArgumentException("Cannot define displacement twice.");
 		}
+		System.out.printf(" disp = 0x%08x%n", disp);
 		this.displacement = disp;
 		this.displacementType = Objects.requireNonNull(displacementType);
 		return this;

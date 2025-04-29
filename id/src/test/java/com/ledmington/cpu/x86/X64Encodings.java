@@ -9435,6 +9435,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0xa0]",
 						"62 e1 75 20 da 57 05"),
+				test(
+						new Instruction(
+								Opcode.VPMINUB,
+								YMM18,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) -0x60)
+										.build()),
+						"vpminub ymm18,ymm17,YMMWORD PTR [rdi-0x60]",
+						"62 e1 75 20 da 57 fd"),
 				// Vpmovmskb
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb

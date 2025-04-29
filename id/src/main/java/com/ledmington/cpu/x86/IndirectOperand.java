@@ -20,7 +20,6 @@ package com.ledmington.cpu.x86;
 import java.util.Objects;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 
 /**
  * This class maps the following cases:
@@ -44,7 +43,7 @@ public final class IndirectOperand implements Operand {
 	private final Register base;
 	private final Register index;
 	private final Integer scale;
-	private final Long displacement;
+	private final Integer displacement;
 	private final DisplacementType displacementType;
 
 	/**
@@ -102,7 +101,7 @@ public final class IndirectOperand implements Operand {
 			final Register base,
 			final Register index,
 			final Integer scale,
-			final Long displacement,
+			final Integer displacement,
 			final DisplacementType displacementType) {
 		Objects.requireNonNull(ptrSize, "Cannot build an IndirectOperand without an explicit pointer size.");
 
@@ -113,7 +112,7 @@ public final class IndirectOperand implements Operand {
 		final boolean hasBase = base != null;
 		final boolean hasIndex = index != null;
 		final boolean hasScale = scale != null;
-		final boolean hasDisplacement = displacement != null && displacementType != null;
+		final boolean hasDisplacement = displacement != null;
 
 		// [base]
 		final boolean isB = hasBase && !hasIndex && !hasScale && !hasDisplacement;
@@ -222,12 +221,14 @@ public final class IndirectOperand implements Operand {
 	 *
 	 * @return The displacement of this indirect operand.
 	 */
-	public long getDisplacement() {
+	public int getDisplacement() {
 		return displacement;
 	}
 
 	public DisplacementType getDisplacementType() {
-		Objects.requireNonNull(displacementType, "No displacement.");
+		if (!hasDisplacement()) {
+			throw new IllegalArgumentException("No displacement.");
+		}
 		return displacementType;
 	}
 
@@ -237,10 +238,11 @@ public final class IndirectOperand implements Operand {
 	}
 
 	private boolean isDisplacementNegative() {
-		return switch (displacementType) {
+		/*return switch (displacementType) {
 			case DisplacementType.SHORT -> BitUtils.asByte(displacement) < (byte) 0;
 			case DisplacementType.LONG -> BitUtils.asInt(displacement) < 0;
-		};
+		};*/
+		return displacement < 0;
 	}
 
 	private void addDisplacementSign(final StringBuilder sb) {
@@ -320,7 +322,7 @@ public final class IndirectOperand implements Operand {
 		h = 31 * h + (base == null ? 0 : base.hashCode());
 		h = 31 * h + (index == null ? 0 : index.hashCode());
 		h = 31 * h + (scale == null ? 0 : scale.hashCode());
-		h = 31 * h + (displacement == null ? 0 : HashUtils.hash(displacement));
+		h = 31 * h + (displacement == null ? 0 : displacement);
 		h = 31 * h + (displacementType == null ? 0 : displacementType.hashCode());
 		return h;
 	}
