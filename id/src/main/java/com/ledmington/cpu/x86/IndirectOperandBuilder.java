@@ -195,8 +195,8 @@ public final class IndirectOperandBuilder {
 	public String toString() {
 		return "IndirectOperandBuilder(ptrSize=" + ptrSize + ";segment=" + segmentRegister + ";base="
 				+ baseRegister + ";index=" + indexRegister + ";scale=" + scale
-				+ ";displacement="
-				+ displacement + ";displacementType="
+				+ ";displacement=0x"
+				+ String.format("%x", displacement) + ";displacementType="
 				+ displacementType + ";alreadyBuilt=" + alreadyBuilt + ")";
 	}
 }

@@ -88,16 +88,16 @@ final class TestIndirectOperand {
 		if (disp instanceof final Byte b) {
 			iob.displacement(b);
 			if (b < (byte) 0) {
-				sb.append(String.format("-0x%x", -b));
+				sb.append(String.format("-0x%02x", -b));
 			} else {
-				sb.append(String.format("+0x%x", b));
+				sb.append(String.format("+0x%02x", b));
 			}
 		} else {
 			iob.displacement(disp.intValue());
 			if (disp.intValue() < 0) {
-				sb.append(String.format("-0x%x", -disp.intValue()));
+				sb.append(String.format("-0x%08x", -disp.intValue()));
 			} else {
-				sb.append(String.format("+0x%x", disp.intValue()));
+				sb.append(String.format("+0x%08x", disp.intValue()));
 			}
 		}
 	}

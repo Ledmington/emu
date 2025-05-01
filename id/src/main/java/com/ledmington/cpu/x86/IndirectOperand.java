@@ -238,10 +238,6 @@ public final class IndirectOperand implements Operand {
 	}
 
 	private boolean isDisplacementNegative() {
-		/*return switch (displacementType) {
-			case DisplacementType.SHORT -> BitUtils.asByte(displacement) < (byte) 0;
-			case DisplacementType.LONG -> BitUtils.asInt(displacement) < 0;
-		};*/
 		return displacement < 0;
 	}
 
@@ -253,11 +249,11 @@ public final class IndirectOperand implements Operand {
 		switch (displacementType) {
 			case DisplacementType.SHORT -> {
 				final byte x = BitUtils.asByte(displacement);
-				sb.append(String.format("0x%x", isDisplacementNegative() ? -x : x));
+				sb.append(String.format("0x%02x", isDisplacementNegative() ? -x : x));
 			}
 			case DisplacementType.LONG -> {
 				final int x = BitUtils.asInt(displacement);
-				sb.append(String.format("0x%x", isDisplacementNegative() ? -x : x));
+				sb.append(String.format("0x%08x", isDisplacementNegative() ? -x : x));
 			}
 		}
 	}
@@ -309,8 +305,8 @@ public final class IndirectOperand implements Operand {
 				+ (base == null ? "null" : base.toString())
 				+ ";index="
 				+ (index == null ? "null" : index.toString()) + ";scale="
-				+ scale + ";displacement="
-				+ displacement + ";displacementType=" + displacementType
+				+ scale + ";displacement=0x"
+				+ String.format("%x", displacement) + ";displacementType=" + displacementType
 				+ ")";
 	}
 

@@ -82,6 +82,14 @@ public final class InstructionDecoder {
 
 	private InstructionDecoder() {}
 
+	/**
+	 * Decodes an x86_64 instruction from its representation in Intel's syntax.
+	 *
+	 * <p>Note: Intel's syntax is ambiguous when dealing with displacements.
+	 *
+	 * @param input The instruction to decode.
+	 * @return The decoded instruction.
+	 */
 	public static Instruction fromIntelSyntax(final String input) {
 		final CharacterIterator it = new StringCharacterIterator(input);
 
@@ -306,11 +314,6 @@ public final class InstructionDecoder {
 					&& Integer.parseInt(displacementString, 16) > 128
 					&& !hasCompressedDisplacement;
 			final int disp = Integer.parseInt(sign + displacementString, 16);
-			System.out.printf(" displacementString = '%s'%n", displacementString);
-			System.out.printf(" isNegative = %s%n", isNegative);
-			System.out.printf(" sign = '%c'%n", sign);
-			System.out.printf(" isFirstBitSet = %s%n", isFirstBitSet);
-			System.out.printf(" disp = 0x%x%n", disp);
 			if (displacementString.length() > 2 || isFirstBitSet) {
 				iob.displacement(disp);
 			} else {
@@ -3926,7 +3929,7 @@ public final class InstructionDecoder {
 						RegisterYMM.fromByte(or(!evex.r1() ? (byte) 0b00010000 : 0, getByteFromReg(evex, modrm))),
 						RegisterYMM.fromByte(or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex))),
 						isIndirectOperandNeeded(modrm)
-								? parseIndirectOperand(b, pref, modrm, Optional.of(32))
+								? parseIndirectOperand(b, pref, modrm)
 										.pointer(PointerSize.YMMWORD_PTR)
 										.build()
 								: RegisterYMM.fromByte(
@@ -4231,13 +4234,12 @@ public final class InstructionDecoder {
 			} else if (modrm.mod() == (byte) 0b01) {
 				byte disp8 = b.read1();
 				if (compressedDisplacement.isPresent()) {
-					final boolean isNegative = disp8 < (byte) 0;
+					//	final boolean isNegative = disp8 < (byte) 0;
 					System.out.printf("Before: 0x%02x%n", disp8);
-					disp8 = BitUtils.asByte(
-							disp8 * compressedDisplacement.orElseThrow());
-					if (isNegative) {
-						disp8 = BitUtils.asByte(-disp8);
-					}
+					disp8 = BitUtils.asByte(disp8 * compressedDisplacement.orElseThrow());
+					//	if (isNegative) {
+					//		disp8 = BitUtils.asByte(-disp8);
+					//	}
 					System.out.printf("After : 0x%02x%n", disp8);
 				}
 				iob.displacement(disp8);
