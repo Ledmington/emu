@@ -162,7 +162,6 @@ public final class IndirectOperandBuilder {
 		if (this.displacement != null) {
 			throw new IllegalArgumentException("Cannot define displacement twice.");
 		}
-		System.out.printf(" disp = 0x%08x%n", disp);
 		this.displacement = disp;
 		this.displacementType = Objects.requireNonNull(displacementType);
 		return this;

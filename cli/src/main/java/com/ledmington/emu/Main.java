@@ -17,21 +17,12 @@
  */
 package com.ledmington.emu;
 
-import static com.ledmington.cpu.x86.PointerSize.YMMWORD_PTR;
-import static com.ledmington.cpu.x86.Register64.RDI;
-import static com.ledmington.cpu.x86.RegisterYMM.YMM17;
-import static com.ledmington.cpu.x86.RegisterYMM.YMM18;
-
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.ledmington.cpu.x86.IndirectOperand;
-import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionEncoder;
-import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -47,35 +38,6 @@ public final class Main {
 
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	public static void main(final String[] args) {
-		{
-			final Instruction a = new Instruction(
-					Opcode.VPMINUB,
-					YMM18,
-					YMM17,
-					IndirectOperand.builder()
-							.pointer(YMMWORD_PTR)
-							.base(RDI)
-							.displacement((byte) 0xa0)
-							.build());
-			final Instruction b = new Instruction(
-					Opcode.VPMINUB,
-					YMM18,
-					YMM17,
-					IndirectOperand.builder()
-							.pointer(YMMWORD_PTR)
-							.base(RDI)
-							.displacement((byte) -0x60)
-							.build());
-
-			System.out.println(InstructionEncoder.toIntelSyntax(a));
-			System.out.println(InstructionEncoder.toIntelSyntax(b));
-			System.out.println(a.equals(b));
-		}
-
-		if (true) {
-			System.exit(0);
-		}
-
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
 		String filename = null;

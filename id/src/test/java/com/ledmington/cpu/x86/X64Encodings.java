@@ -9443,10 +9443,46 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.displacement((byte) -0x60)
+										.displacement((byte) 0x60)
+										.build()),
+						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0x60]",
+						"62 e1 75 20 da 57 03"),
+				test(
+						new Instruction(
+								Opcode.VPMINUB,
+								YMM18,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0xfb)
+										.build()),
+						"vpminub ymm18,ymm17,YMMWORD PTR [rdi-0xa0]",
+						"62 e1 75 20 da 57 fb"),
+				test(
+						new Instruction(
+								Opcode.VPMINUB,
+								YMM18,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0xfd)
 										.build()),
 						"vpminub ymm18,ymm17,YMMWORD PTR [rdi-0x60]",
 						"62 e1 75 20 da 57 fd"),
+				test(
+						new Instruction(
+								Opcode.VPMINUB,
+								YMM18,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement(0xfd)
+										.build()),
+						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0xfd]",
+						"62 e1 75 20 da 97 fd 00 00 00"),
 				// Vpmovmskb
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb

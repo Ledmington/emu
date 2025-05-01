@@ -306,6 +306,11 @@ public final class InstructionDecoder {
 					&& Integer.parseInt(displacementString, 16) > 128
 					&& !hasCompressedDisplacement;
 			final int disp = Integer.parseInt(sign + displacementString, 16);
+			System.out.printf(" displacementString = '%s'%n", displacementString);
+			System.out.printf(" isNegative = %s%n", isNegative);
+			System.out.printf(" sign = '%c'%n", sign);
+			System.out.printf(" isFirstBitSet = %s%n", isFirstBitSet);
+			System.out.printf(" disp = 0x%x%n", disp);
 			if (displacementString.length() > 2 || isFirstBitSet) {
 				iob.displacement(disp);
 			} else {
@@ -4226,7 +4231,14 @@ public final class InstructionDecoder {
 			} else if (modrm.mod() == (byte) 0b01) {
 				byte disp8 = b.read1();
 				if (compressedDisplacement.isPresent()) {
-					disp8 = BitUtils.asByte(disp8 * compressedDisplacement.orElseThrow());
+					final boolean isNegative = disp8 < (byte) 0;
+					System.out.printf("Before: 0x%02x%n", disp8);
+					disp8 = BitUtils.asByte(
+							disp8 * compressedDisplacement.orElseThrow());
+					if (isNegative) {
+						disp8 = BitUtils.asByte(-disp8);
+					}
+					System.out.printf("After : 0x%02x%n", disp8);
 				}
 				iob.displacement(disp8);
 			}
