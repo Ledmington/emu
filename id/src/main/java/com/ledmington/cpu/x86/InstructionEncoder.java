@@ -1704,6 +1704,7 @@ public final class InstructionEncoder {
 
 		byte reg = -1;
 		byte lastByte = -1;
+		Optional<Integer> compressedDisplacement = Optional.empty();
 		switch (inst.opcode()) {
 			case IMUL -> {
 				if (inst.firstOperand() instanceof Register
@@ -1750,6 +1751,7 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Register r2
 						&& Registers.requiresEvexExtension(r2)) {
 					encodeEvexPrefix(wb, inst);
+					compressedDisplacement = Optional.of(32);
 				} else {
 					encodeVex2Prefix(wb, inst);
 				}
@@ -1897,7 +1899,7 @@ public final class InstructionEncoder {
 					getMod(io),
 					Registers.toByte(r1),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-			encodeIndirectOperand(wb, io, inst.opcode() == Opcode.VPMINUB ? Optional.of(32) : Optional.empty());
+			encodeIndirectOperand(wb, io, compressedDisplacement);
 		}
 	}
 
