@@ -9453,7 +9453,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.displacement((byte) 0xa0)
+										.displacement((byte) 0x05)
 										.build()),
 						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0xa0]",
 						"62 e1 75 20 da 57 05"),
@@ -9465,7 +9465,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.displacement((byte) 0x60)
+										.displacement((byte) 0x03)
 										.build()),
 						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0x60]",
 						"62 e1 75 20 da 57 03"),
@@ -10225,7 +10225,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								IndirectOperand.builder()
 										.pointer(YMMWORD_PTR)
 										.base(RDI)
-										.displacement((byte) 0x60)
+										.displacement((byte) 0x03)
 										.build(),
 								new Immediate((byte) 0xde)),
 						"vpternlogd ymm20,ymm17,YMMWORD PTR [rdi+0x60],0xde",

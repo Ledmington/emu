@@ -43,7 +43,6 @@ import com.ledmington.cpu.x86.exc.InvalidLegacyOpcode;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
-import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
@@ -135,19 +134,27 @@ public final class InstructionDecoder {
 			}
 		}
 
-		final boolean hasCompressedDisplacement = opcode == Opcode.VPTERNLOGD || opcode == Opcode.VPMINUB;
-
-		final Operand firstOperand = parseOperand(args[0].strip(), null, hasCompressedDisplacement);
+		final Operand firstOperand = parseOperand(args[0].strip(), null, Optional.empty());
 		ib.op(firstOperand);
 
 		if (args.length >= 2) {
-			ib.op(parseOperand(args[1].strip(), firstOperand, hasCompressedDisplacement));
+			final Operand secondOperand = parseOperand(args[1].strip(), firstOperand, Optional.empty());
+			ib.op(secondOperand);
 
 			if (args.length >= 3) {
-				ib.op(parseOperand(args[2].strip(), null, hasCompressedDisplacement));
+				final Optional<Integer> compressedDisplacement =
+						((opcode == Opcode.VPTERNLOGD || opcode == Opcode.VPMINUB)
+										&& firstOperand instanceof Register r1
+										&& Registers.requiresEvexExtension(r1)
+										&& secondOperand instanceof Register r2
+										&& Registers.requiresEvexExtension(r2))
+								? Optional.of(32)
+								: Optional.empty();
+
+				ib.op(parseOperand(args[2].strip(), null, compressedDisplacement));
 
 				if (args.length == 4) {
-					ib.op(parseOperand(args[3].strip(), null, hasCompressedDisplacement));
+					ib.op(parseOperand(args[3].strip(), null, Optional.empty()));
 				}
 			}
 		}
@@ -190,7 +197,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Operand parseOperand(
-			final String input, final Operand previousOperand, final boolean hasCompressedDisplacement) {
+			final String input, final Operand previousOperand, final Optional<Integer> compressedDisplacement) {
 		if (fromStringToRegister.containsKey(input)) {
 			// It's a register
 			return fromStringToRegister.get(input);
@@ -310,14 +317,16 @@ public final class InstructionDecoder {
 				displacementString = displacementString.substring(1);
 			}
 			final char sign = isNegative ? '-' : '+';
-			final boolean isFirstBitSet = displacementString.length() >= 2
-					&& Integer.parseInt(displacementString, 16) > 128
-					&& !hasCompressedDisplacement;
-			final int disp = Integer.parseInt(sign + displacementString, 16);
-			if (displacementString.length() > 2 || isFirstBitSet) {
-				iob.displacement(disp);
+			int disp32 = Integer.parseInt(sign + displacementString, 16);
+			System.out.printf(" '%s' -> 0x%08x%n", displacementString, disp32);
+			if (displacementString.length() == 8) {
+				iob.displacement(disp32);
 			} else {
-				iob.displacement(asByte(disp));
+				int disp8 = disp32;
+				if (compressedDisplacement.isPresent()) {
+					disp8 /= compressedDisplacement.orElseThrow();
+				}
+				iob.displacement(asByte(disp8));
 			}
 		}
 
@@ -3905,7 +3914,7 @@ public final class InstructionDecoder {
 						.op(RegisterYMM.fromByte(or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex))))
 						.op(
 								isIndirectOperandNeeded(modrm)
-										? parseIndirectOperand(b, pref, modrm, Optional.of(32))
+										? parseIndirectOperand(b, pref, modrm)
 												.pointer(PointerSize.YMMWORD_PTR)
 												.build()
 										: RegisterYMM.fromByte(
@@ -4171,14 +4180,6 @@ public final class InstructionDecoder {
 
 	private static IndirectOperandBuilder parseIndirectOperand(
 			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
-		return parseIndirectOperand(b, pref, modrm, Optional.empty());
-	}
-
-	private static IndirectOperandBuilder parseIndirectOperand(
-			final ReadOnlyByteBuffer b,
-			final Prefixes pref,
-			final ModRM modrm,
-			final Optional<Integer> compressedDisplacement) {
 		final boolean baseRegisterExtension = (pref.hasRexPrefix() && pref.rex().b())
 				|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b())
 				|| (pref.evex().isPresent() && !pref.evex().orElseThrow().b());
@@ -4232,16 +4233,7 @@ public final class InstructionDecoder {
 				final int disp32 = b.read4LE();
 				iob.displacement(disp32);
 			} else if (modrm.mod() == (byte) 0b01) {
-				byte disp8 = b.read1();
-				if (compressedDisplacement.isPresent()) {
-					//	final boolean isNegative = disp8 < (byte) 0;
-					System.out.printf("Before: 0x%02x%n", disp8);
-					disp8 = BitUtils.asByte(disp8 * compressedDisplacement.orElseThrow());
-					//	if (isNegative) {
-					//		disp8 = BitUtils.asByte(-disp8);
-					//	}
-					System.out.printf("After : 0x%02x%n", disp8);
-				}
+				final byte disp8 = b.read1();
 				iob.displacement(disp8);
 			}
 		}

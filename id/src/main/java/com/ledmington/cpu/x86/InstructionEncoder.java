@@ -111,10 +111,18 @@ public final class InstructionEncoder {
 
 	private InstructionEncoder() {}
 
-	private static String operandString(final Opcode code, final Operand op) {
+	private static String operandString(final Instruction inst, final Operand op) {
 		if (op instanceof final IndirectOperand io) {
+			final Opcode code = inst.opcode();
 			final boolean requiresExplicitPointerSize = code != Opcode.LEA && code != Opcode.LDDQU;
-			return io.toIntelSyntax(requiresExplicitPointerSize);
+			final Optional<Integer> compressedDisplacement = ((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB)
+							&& inst.firstOperand() instanceof Register r1
+							&& Registers.requiresEvexExtension(r1)
+							&& inst.secondOperand() instanceof Register r2
+							&& Registers.requiresEvexExtension(r2))
+					? Optional.of(32)
+					: Optional.empty();
+			return io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement);
 		}
 		return op.toIntelSyntax();
 	}
@@ -136,16 +144,16 @@ public final class InstructionEncoder {
 		sb.append(inst.opcode().mnemonic());
 
 		if (inst.hasFirstOperand()) {
-			sb.append(' ').append(operandString(inst.opcode(), inst.firstOperand()));
+			sb.append(' ').append(operandString(inst, inst.firstOperand()));
 			if (inst.hasDestinationMask()) {
 				sb.append('{').append(inst.getDestinationMask().toIntelSyntax()).append('}');
 			}
 			if (inst.hasSecondOperand()) {
-				sb.append(',').append(operandString(inst.opcode(), inst.secondOperand()));
+				sb.append(',').append(operandString(inst, inst.secondOperand()));
 				if (inst.hasThirdOperand()) {
-					sb.append(',').append(operandString(inst.opcode(), inst.thirdOperand()));
+					sb.append(',').append(operandString(inst, inst.thirdOperand()));
 					if (inst.hasFourthOperand()) {
-						sb.append(',').append(operandString(inst.opcode(), inst.fourthOperand()));
+						sb.append(',').append(operandString(inst, inst.fourthOperand()));
 					}
 				}
 			}
@@ -1704,7 +1712,6 @@ public final class InstructionEncoder {
 
 		byte reg = -1;
 		byte lastByte = -1;
-		Optional<Integer> compressedDisplacement = Optional.empty();
 		switch (inst.opcode()) {
 			case IMUL -> {
 				if (inst.firstOperand() instanceof Register
@@ -1751,7 +1758,6 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Register r2
 						&& Registers.requiresEvexExtension(r2)) {
 					encodeEvexPrefix(wb, inst);
-					compressedDisplacement = Optional.of(32);
 				} else {
 					encodeVex2Prefix(wb, inst);
 				}
@@ -1899,7 +1905,7 @@ public final class InstructionEncoder {
 					getMod(io),
 					Registers.toByte(r1),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-			encodeIndirectOperand(wb, io, compressedDisplacement);
+			encodeIndirectOperand(wb, io);
 		}
 	}
 
@@ -1925,7 +1931,7 @@ public final class InstructionEncoder {
 					getMod(io),
 					Registers.toByte(r1),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-			encodeIndirectOperand(wb, io, inst.opcode() == Opcode.VPTERNLOGD ? Optional.of(32) : Optional.empty());
+			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
 		} else if (inst.firstOperand() instanceof final Register r1
 				&& inst.secondOperand() instanceof Register
@@ -2278,11 +2284,6 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
-		encodeIndirectOperand(wb, io, Optional.empty());
-	}
-
-	private static void encodeIndirectOperand(
-			final WriteOnlyByteBuffer wb, final IndirectOperand io, final Optional<Integer> compressedDisplacement) {
 		// no SIB needed for "simple" indirect operands
 		if (!isSimpleIndirectOperand(io)) {
 			final byte base = io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0b101;
@@ -2290,22 +2291,13 @@ public final class InstructionEncoder {
 		}
 
 		if (io.hasDisplacement()) {
-			encodeDisplacement(wb, io, compressedDisplacement);
+			encodeDisplacement(wb, io);
 		}
 	}
 
 	private static void encodeDisplacement(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
-		encodeDisplacement(wb, io, Optional.empty());
-	}
-
-	private static void encodeDisplacement(
-			final WriteOnlyByteBuffer wb, final IndirectOperand io, final Optional<Integer> compressedDisplacement) {
 		switch (io.getDisplacementType()) {
-			case DisplacementType.SHORT ->
-				wb.write(
-						compressedDisplacement.isPresent()
-								? asByte(asByte(io.getDisplacement()) / compressedDisplacement.orElseThrow())
-								: asByte(io.getDisplacement()));
+			case DisplacementType.SHORT -> wb.write(asByte(io.getDisplacement()));
 			case DisplacementType.LONG -> wb.write(asInt(io.getDisplacement()));
 		}
 	}

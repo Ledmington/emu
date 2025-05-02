@@ -18,6 +18,7 @@
 package com.ledmington.cpu.x86;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.ledmington.utils.BitUtils;
 
@@ -245,11 +246,16 @@ public final class IndirectOperand implements Operand {
 		sb.append(isDisplacementNegative() ? '-' : '+');
 	}
 
-	private void addDisplacement(final StringBuilder sb) {
+	private void addDisplacement(final StringBuilder sb, final Optional<Integer> compressedDisplacement) {
 		switch (displacementType) {
 			case DisplacementType.SHORT -> {
-				final byte x = BitUtils.asByte(displacement);
-				sb.append(String.format("0x%02x", isDisplacementNegative() ? -x : x));
+				if (compressedDisplacement.isEmpty()) {
+					final byte x = BitUtils.asByte(displacement);
+					sb.append(String.format("0x%02x", isDisplacementNegative() ? -x : x));
+				} else {
+					final int x = displacement * compressedDisplacement.orElseThrow();
+					sb.append(String.format("0x%02x", isDisplacementNegative() ? -x : x));
+				}
 			}
 			case DisplacementType.LONG -> {
 				final int x = BitUtils.asInt(displacement);
@@ -264,7 +270,7 @@ public final class IndirectOperand implements Operand {
 	 * @param addPointerSize If true, adds the pointer size.
 	 * @return The assembly representation of this instruction in Intel syntax.
 	 */
-	public String toIntelSyntax(final boolean addPointerSize) {
+	public String toIntelSyntax(final boolean addPointerSize, final Optional<Integer> compressedDisplacement) {
 		final StringBuilder sb = new StringBuilder();
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
@@ -287,7 +293,7 @@ public final class IndirectOperand implements Operand {
 		}
 		if (hasDisplacement()) {
 			addDisplacementSign(sb);
-			addDisplacement(sb);
+			addDisplacement(sb, compressedDisplacement);
 		}
 		sb.append(']');
 		return sb.toString();
@@ -295,7 +301,7 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public String toIntelSyntax() {
-		return toIntelSyntax(true);
+		return toIntelSyntax(true, Optional.empty());
 	}
 
 	@Override
