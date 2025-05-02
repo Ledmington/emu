@@ -561,7 +561,9 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.PSUBW && inst.firstOperand() instanceof RegisterXMM)
 						|| (inst.opcode() == Opcode.PSUBD && inst.firstOperand() instanceof RegisterXMM)
 						|| (inst.opcode() == Opcode.PSUBQ && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PADDD)
 						|| (inst.opcode() == Opcode.PMINUB && inst.firstOperand() instanceof RegisterXMM)
+						|| (inst.opcode() == Opcode.PMINUD)
 						|| (inst.opcode() == Opcode.PMAXUB && inst.firstOperand() instanceof RegisterXMM)
 						|| (inst.opcode() == Opcode.PSHUFB && inst.firstOperand() instanceof RegisterXMM)
 						|| (inst.opcode() == Opcode.UCOMISD)
@@ -653,7 +655,8 @@ public final class InstructionEncoder {
 					&& !(inst.opcode() == Opcode.MOVD)
 					&& !(inst.opcode() == Opcode.MOVHPS)
 					&& !(inst.opcode() == Opcode.MOVHPD)
-					&& !(inst.opcode() == Opcode.VMOVQ)) {
+					&& !(inst.opcode() == Opcode.VMOVQ)
+					&& !(inst.opcode() == Opcode.KMOVQ)) {
 				rex = or(rex, (byte) 0b1000);
 			}
 			if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister)
@@ -1396,6 +1399,8 @@ public final class InstructionEncoder {
 			case PSUBW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xf9);
 			case PSUBD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfa);
 			case PSUBQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfb);
+			case PADDD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xfe);
+			case PMINUD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, TABLE_A4_PREFIX, (byte) 0x3b);
 			case XCHG -> {
 				if (inst.firstOperand() instanceof final Register r
 						&& (inst.secondOperand() == Register16.AX
@@ -1585,7 +1590,11 @@ public final class InstructionEncoder {
 			}
 			case KMOVQ -> {
 				encodeVex3Prefix(wb, inst);
-				wb.write((byte) 0x92);
+				if (inst.firstOperand() instanceof Register64 && inst.secondOperand() instanceof MaskRegister) {
+					wb.write((byte) 0x93);
+				} else if (inst.firstOperand() instanceof MaskRegister && inst.secondOperand() instanceof Register64) {
+					wb.write((byte) 0x92);
+				}
 			}
 			case KMOVD -> {
 				encodeVex2Prefix(wb, inst);
@@ -1843,6 +1852,10 @@ public final class InstructionEncoder {
 				encodeVex3Prefix(wb, inst);
 				wb.write((byte) 0x45);
 			}
+			case KUNPCKDQ -> {
+				encodeVex3Prefix(wb, inst);
+				wb.write((byte) 0x4b);
+			}
 			case VPORQ -> {
 				encodeEvexPrefix(wb, inst);
 				wb.write((byte) 0xeb);
@@ -1894,7 +1907,7 @@ public final class InstructionEncoder {
 				&& inst.secondOperand() instanceof Register
 				&& inst.thirdOperand() instanceof final Register r3) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r3));
-			if (inst.opcode() != Opcode.VPTESTMB && inst.opcode() != Opcode.KORD) {
+			if (inst.opcode() != Opcode.VPTESTMB && inst.opcode() != Opcode.KORD && inst.opcode() != Opcode.KUNPCKDQ) {
 				wb.write(lastByte);
 			}
 		} else if (inst.firstOperand() instanceof final Register r1
@@ -1973,7 +1986,7 @@ public final class InstructionEncoder {
 
 	private static byte getVex3OpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
-			case VPXOR, VMOVDQU, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD -> (byte) 0b01;
+			case VPXOR, VMOVDQU, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD, KUNPCKDQ -> (byte) 0b01;
 			case VPBROADCASTB, VPBROADCASTD, SARX, BZHI, VPSHUFB -> (byte) 0b10;
 			case VPCMPISTRI, VPALIGNR -> (byte) 0b11;
 			default -> throw new IllegalArgumentException(String.format("Unknown VEX3 opcode map for %s.", opcode));

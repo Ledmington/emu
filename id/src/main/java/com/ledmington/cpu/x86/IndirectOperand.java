@@ -311,8 +311,9 @@ public final class IndirectOperand implements Operand {
 				+ (base == null ? "null" : base.toString())
 				+ ";index="
 				+ (index == null ? "null" : index.toString()) + ";scale="
-				+ scale + ";displacement=0x"
-				+ String.format("%x", displacement) + ";displacementType=" + displacementType
+				+ scale + ";displacement="
+				+ (displacement == null ? "null" : String.format("0x%x", displacement)) + ";displacementType="
+				+ displacementType
 				+ ")";
 	}
 

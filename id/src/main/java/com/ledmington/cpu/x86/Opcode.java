@@ -272,6 +272,9 @@ public enum Opcode {
 	/** OR masks and set flags. */
 	KORTESTD,
 
+	/** Unpack for Mask Registers. */
+	KUNPCKDQ,
+
 	/** Load status flags into AH register. */
 	LAHF,
 
@@ -380,6 +383,9 @@ public enum Opcode {
 	/** Output string to port. */
 	OUTS,
 
+	/** Add packed doubleword integers. */
+	PADDD,
+
 	/** Add packed quadword integers. */
 	PADDQ,
 
@@ -412,6 +418,9 @@ public enum Opcode {
 
 	/** Minimum of packed unsigned byte integers. */
 	PMINUB,
+
+	/** Minimum of packed unsigned integers. */
+	PMINUD,
 
 	/** Move byte mask. */
 	PMOVMSKB,
