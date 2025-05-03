@@ -686,6 +686,9 @@ public enum Opcode {
 	/** Compare packed data for equal. */
 	VPCMPEQB,
 
+	/** Compare packed data for equal. */
+	VPCMPEQD,
+
 	/** Compare packed signed integers for greater than. */
 	VPCMPGTB,
 
@@ -700,6 +703,9 @@ public enum Opcode {
 
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB,
+
+	/** Minimum of packed unsigned integers. */
+	VPMINUD,
 
 	/** Packed shuffle bytes. */
 	VPSHUFB,

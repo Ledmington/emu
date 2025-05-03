@@ -9600,6 +9600,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpminub ymm18,ymm17,YMMWORD PTR [rdi+0x000000fd]",
 						"62 e1 75 20 da 97 fd 00 00 00"),
+				// Vpminud
+				test(
+						new Instruction(
+								Opcode.VPMINUD,
+								YMM2,
+								YMM1,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x21)
+										.build()),
+						"vpminud ymm2,ymm1,YMMWORD PTR [rdi+0x21]",
+						"c4 e2 75 3b 57 21"),
 				// Vpmovmskb
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb
@@ -9675,6 +9688,30 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqb k1{k2},xmm17,xmm18",
 						"62 b3 75 02 3f ca 00"),
+				// Vpcmpeqd
+				test(
+						new Instruction(
+								Opcode.VPCMPEQD,
+								YMM1,
+								YMM0,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpcmpeqd ymm1,ymm0,YMMWORD PTR [rdi]",
+						"c5 fd 76 0f"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQD)
+								.op(K0)
+								.op(YMM16)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build())
+								.build(),
+						"vpcmpeqd k0,ymm16,YMMWORD PTR [rdi]",
+						"62 f3 7d 20 1f 07 00"),
 				// Vpcmpneqb
 				test(
 						Instruction.builder()

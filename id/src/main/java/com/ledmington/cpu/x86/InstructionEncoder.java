@@ -1772,6 +1772,10 @@ public final class InstructionEncoder {
 				}
 				wb.write((byte) 0xda);
 			}
+			case VPMINUD -> {
+				encodeVex3Prefix(wb, inst);
+				wb.write((byte) 0x3b);
+			}
 			case VPCMPGTB -> {
 				encodeVex2Prefix(wb, inst);
 				wb.write((byte) 0x64);
@@ -1797,6 +1801,18 @@ public final class InstructionEncoder {
 				} else {
 					encodeVex2Prefix(wb, inst);
 					wb.write((byte) 0x74);
+				}
+			}
+			case VPCMPEQD -> {
+				if (inst.firstOperand() instanceof MaskRegister
+						&& inst.secondOperand() instanceof Register
+						&& inst.thirdOperand() instanceof IndirectOperand) {
+					encodeEvexPrefix(wb, inst);
+					wb.write((byte) 0x1f);
+					lastByte = (byte) 0x00;
+				} else {
+					encodeVex2Prefix(wb, inst);
+					wb.write((byte) 0x76);
 				}
 			}
 			case VPCMPNEQB -> {
@@ -1987,7 +2003,7 @@ public final class InstructionEncoder {
 	private static byte getVex3OpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
 			case VPXOR, VMOVDQU, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD, KUNPCKDQ -> (byte) 0b01;
-			case VPBROADCASTB, VPBROADCASTD, SARX, BZHI, VPSHUFB -> (byte) 0b10;
+			case VPBROADCASTB, VPBROADCASTD, SARX, BZHI, VPSHUFB, VPMINUD -> (byte) 0b10;
 			case VPCMPISTRI, VPALIGNR -> (byte) 0b11;
 			default -> throw new IllegalArgumentException(String.format("Unknown VEX3 opcode map for %s.", opcode));
 		};
@@ -2003,8 +2019,10 @@ public final class InstructionEncoder {
 					VPANDN,
 					VPSUBB,
 					VPMINUB,
+					VPMINUD,
 					VPMOVMSKB,
 					VPCMPEQB,
+					VPCMPEQD,
 					VPCMPNEQB,
 					VPCMPGTB,
 					VMOVD,
@@ -2128,7 +2146,7 @@ public final class InstructionEncoder {
 		return switch (opcode) {
 			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB -> (byte) 0b010;
-			case VPCMPNEQUB, VPCMPEQB, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
+			case VPCMPNEQUB, VPCMPEQB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
 			default -> (byte) 0b000;
 		};
 	}

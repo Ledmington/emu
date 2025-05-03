@@ -65,10 +65,6 @@ public final class Instruction {
 		this.op4 = fourthOperand;
 	}
 
-	public Instruction(final Opcode opcode, final MaskRegister destinationMask, final Operand op1, final Operand op2) {
-		this(null, opcode, destinationMask, op1, op2, null, null);
-	}
-
 	/**
 	 * Creates an instruction with a prefix and two operands (like REP MOVS BYTE PTR ES:[EDI],BYTE PTR DS:[ESI]).
 	 *
@@ -96,15 +92,6 @@ public final class Instruction {
 	public Instruction(
 			final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
 		this(null, opcode, null, firstOperand, secondOperand, thirdOperand, null);
-	}
-
-	public Instruction(
-			final Opcode opcode,
-			final MaskRegister destinationMask,
-			final Operand firstOperand,
-			final Operand secondOperand,
-			final Operand thirdOperand) {
-		this(null, opcode, destinationMask, firstOperand, secondOperand, thirdOperand, null);
 	}
 
 	public Instruction(
