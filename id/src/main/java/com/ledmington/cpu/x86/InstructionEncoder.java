@@ -320,12 +320,9 @@ public final class InstructionEncoder {
 			case STI -> wb.write((byte) 0xfb);
 			case CLD -> wb.write((byte) 0xfc);
 			case STD -> wb.write((byte) 0xfd);
-			case DEC -> wb.write((byte) 0xff);
 			case SYSCALL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x05);
 			case UD2 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x0b);
-			case SETG -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x9f);
 			case CPUID -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xa2);
-			case BSWAP -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xcc);
 			case XGETBV -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd0);
 			case XTEST -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x01, (byte) 0xd6);
 			case ENDBR64 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
@@ -937,7 +934,6 @@ public final class InstructionEncoder {
 					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0x10 : (byte) 0x11);
 				}
 			}
-			case DEC -> wb.write((byte) 0xfe);
 			case AND -> {
 				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x24);
@@ -976,10 +972,7 @@ public final class InstructionEncoder {
 					}
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register r) {
-					wb.write(
-							(r instanceof Register8)
-									? (io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0x20 : (byte) 0x23)
-									: (byte) 0x21);
+					wb.write((byte) 0x21);
 
 					if (isIpAndOffset(io)) {
 						wb.write((byte) 0x05);
@@ -1960,30 +1953,6 @@ public final class InstructionEncoder {
 				&& Registers.requiresEvexExtension(r);
 	}
 
-	private static boolean isFirstRnEE(final Instruction inst) {
-		return inst.hasFirstOperand()
-				&& inst.firstOperand() instanceof final Register r
-				&& !Registers.requiresEvexExtension(r);
-	}
-
-	private static boolean isSecondRnEE(final Instruction inst) {
-		return inst.hasSecondOperand()
-				&& inst.secondOperand() instanceof final Register r
-				&& !Registers.requiresEvexExtension(r);
-	}
-
-	private static boolean isFirstMnS(final Instruction inst) {
-		return inst.hasFirstOperand()
-				&& inst.firstOperand() instanceof final IndirectOperand io
-				&& !isSimpleIndirectOperand(io);
-	}
-
-	private static boolean isSecondMnS(final Instruction inst) {
-		return inst.hasSecondOperand()
-				&& inst.secondOperand() instanceof final IndirectOperand io
-				&& !isSimpleIndirectOperand(io);
-	}
-
 	private static boolean requiresVex2Prefix(final Instruction inst) {
 		if (inst.hasDestinationMask()
 				|| (inst.getNumOperands() >= 3 && (countExtensions(inst) >= 2 || countEvexExtensions(inst) > 0))) {
@@ -1991,7 +1960,6 @@ public final class InstructionEncoder {
 		}
 		return switch (inst.opcode()) {
 			case VPXOR, VPMINUB, VPCMPGTB, VPOR, VPAND, VPANDN, VPSUBB, VPMOVMSKB, VZEROALL -> true;
-			case VMOVQ -> (isFirstRnEE(inst) && isSecondMnS(inst)) || (isFirstMnS(inst) && isSecondRnEE(inst));
 			case VPCMPEQB ->
 				!(isFirstR(inst)
 						&& inst.thirdOperand() instanceof final IndirectOperand io
@@ -2065,11 +2033,6 @@ public final class InstructionEncoder {
 		}
 		return switch (inst.opcode()) {
 			case SARX, BZHI, VPSHUFB, VPBROADCASTB, VPBROADCASTD, VPMINUD, VPANDN, KORD, KUNPCKDQ, KORTESTD -> true;
-			case VMOVQ ->
-				inst.hasSecondOperand()
-						&& ((inst.secondOperand() instanceof Register r && !Registers.requiresEvexExtension(r))
-								|| (inst.secondOperand() instanceof final IndirectOperand io
-										&& isSimpleIndirectOperand(io)));
 			case VPCMPEQB ->
 				(isFirstR(inst) && !isFirstMask(inst))
 						&& isSecondR(inst)
@@ -2086,13 +2049,6 @@ public final class InstructionEncoder {
 	private static boolean requiresEvexPrefix(final Instruction inst) {
 		return switch (inst.opcode()) {
 			case VPTESTMB, VPORQ, VPXORQ, VMOVNTDQ, VMOVDQU8, VMOVDQU64, VMOVUPS, VPBROADCASTB, VPBROADCASTD -> true;
-			case VMOVQ ->
-				(inst.hasFirstOperand()
-								&& inst.firstOperand() instanceof final Register r1
-								&& Registers.requiresEvexExtension(r1))
-						|| (inst.hasSecondOperand()
-								&& inst.secondOperand() instanceof final Register r2
-								&& Registers.requiresEvexExtension(r2));
 			case VPCMPEQB ->
 				isFirstMask(inst)
 						&& (inst.hasSecondOperand()
