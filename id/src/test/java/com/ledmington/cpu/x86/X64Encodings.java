@@ -5841,6 +5841,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SHL, SIL, one), "shl sil,0x01", "40 d0 e6"),
 				test(new Instruction(Opcode.SHL, SPL, one), "shl spl,0x01", "40 d0 e4"),
 				//  Imul
+				test(new Instruction(Opcode.IMUL, RDX), "imul rdx", "48 f7 ea"),
 				test(new Instruction(Opcode.IMUL, EAX, EBX, bimm), "imul eax,ebx,0x12", "6b c3 12"),
 				test(
 						new Instruction(Opcode.IMUL, RDX, R8, new Immediate(0x00000600)),
@@ -7298,6 +7299,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.PUNPCKLDQ, XMM3, XMM9), "punpckldq xmm3,xmm9", "66 41 0f 62 d9"),
 				// Punpcklwd
 				test(new Instruction(Opcode.PUNPCKLWD, XMM1, XMM1), "punpcklwd xmm1,xmm1", "66 0f 61 c9"),
+				// Punpckhdq
+				test(new Instruction(Opcode.PUNPCKHDQ, XMM0, XMM0), "punpckhdq xmm0,xmm0", "66 0f 6a c0"),
 				//  Setae
 				test(
 						new Instruction(
@@ -9613,6 +9616,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpminud ymm2,ymm1,YMMWORD PTR [rdi+0x21]",
 						"c4 e2 75 3b 57 21"),
+				test(
+						new Instruction(
+								Opcode.VPMINUD,
+								YMM18,
+								YMM17,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x05)
+										.build()),
+						"vpminud ymm18,ymm17,YMMWORD PTR [rdi+0xa0]",
+						"62 e2 75 20 3b 57 05"),
 				// Vpmovmskb
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb
@@ -10368,7 +10383,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.op(K0)
 								.build(),
 						"kunpckdq k0,k1,k0",
-						"c4 e1 f4 4b c0"));
+						"c4 e1 f4 4b c0"),
+				// Kunpckbw
+				test(
+						Instruction.builder()
+								.opcode(Opcode.KUNPCKBW)
+								.op(K0)
+								.op(K1)
+								.op(K0)
+								.build(),
+						"kunpckbw k0,k1,k0",
+						"c5 f5 4b c0"));
 	}
 
 	//

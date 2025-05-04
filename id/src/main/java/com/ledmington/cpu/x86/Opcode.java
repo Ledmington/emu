@@ -273,6 +273,9 @@ public enum Opcode {
 	KORTESTD,
 
 	/** Unpack for Mask Registers. */
+	KUNPCKBW,
+
+	/** Unpack for Mask Registers. */
 	KUNPCKDQ,
 
 	/** Load status flags into AH register. */
@@ -508,6 +511,9 @@ public enum Opcode {
 
 	/** Subtract packed word integers. */
 	PSUBW,
+
+	/** Unpack high data. */
+	PUNPCKHDQ,
 
 	/** Unpack high data. */
 	PUNPCKHQDQ,

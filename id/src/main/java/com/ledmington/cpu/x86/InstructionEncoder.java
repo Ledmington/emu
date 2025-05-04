@@ -115,13 +115,14 @@ public final class InstructionEncoder {
 		if (op instanceof final IndirectOperand io) {
 			final Opcode code = inst.opcode();
 			final boolean requiresExplicitPointerSize = code != Opcode.LEA && code != Opcode.LDDQU;
-			final Optional<Integer> compressedDisplacement = ((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB)
-							&& inst.firstOperand() instanceof final Register r1
-							&& Registers.requiresEvexExtension(r1)
-							&& inst.secondOperand() instanceof final Register r2
-							&& Registers.requiresEvexExtension(r2))
-					? Optional.of(32)
-					: Optional.empty();
+			final Optional<Integer> compressedDisplacement =
+					((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB || code == Opcode.VPMINUD)
+									&& inst.firstOperand() instanceof final Register r1
+									&& Registers.requiresEvexExtension(r1)
+									&& inst.secondOperand() instanceof final Register r2
+									&& Registers.requiresEvexExtension(r2))
+							? Optional.of(32)
+							: Optional.empty();
 			return io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement);
 		}
 		return op.toIntelSyntax();
@@ -253,7 +254,8 @@ public final class InstructionEncoder {
 			return Prefix.EVEX;
 		}
 		return switch (inst.opcode()) {
-			case VPOR, VPAND, VZEROALL, VPMOVMSKB, VMOVD, VPCMPGTB, VPSUBB, VPSLLDQ, VPSRLDQ, KMOVD -> Prefix.VEX2;
+			case VPOR, VPAND, VZEROALL, VPMOVMSKB, VMOVD, VPCMPGTB, VPSUBB, VPSLLDQ, VPSRLDQ, KMOVD, KUNPCKBW ->
+				Prefix.VEX2;
 			case VPMINUD, SARX, BZHI, VPCMPISTRI, VPSHUFB, KMOVQ, VPALIGNR, KORTESTD, KORD, KUNPCKDQ -> Prefix.VEX3;
 			case VPXORQ, VMOVUPS, VMOVDQU8, VMOVDQU64, VBROADCASTSS, VMOVAPS, VPCMPNEQUB -> Prefix.EVEX;
 			case VPXOR -> countExtensions(inst) >= 2 ? Prefix.VEX3 : Prefix.VEX2;
@@ -480,6 +482,10 @@ public final class InstructionEncoder {
 				wb.write((byte) 0xf7);
 				reg = (byte) 0b011;
 			}
+			case IMUL -> {
+				wb.write((byte) 0xf7);
+				reg = (byte) 0b101;
+			}
 			case SETB, SETO, SETNO, SETAE, SETE, SETNE, SETBE, SETA, SETL, SETGE, SETLE, SETG ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, or((byte) 0x90, SET_OPCODES.get(inst.opcode())));
 			case INC, DEC -> {
@@ -591,6 +597,7 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.PUNPCKLBW)
 						|| (inst.opcode() == Opcode.PUNPCKHQDQ)
 						|| (inst.opcode() == Opcode.PUNPCKLWD)
+						|| (inst.opcode() == Opcode.PUNPCKHDQ)
 						|| (inst.opcode() == Opcode.MOVHPD)
 						|| (inst.opcode() == Opcode.PXOR && isFirstXMM(inst))
 						|| (inst.opcode() == Opcode.POR && isFirstXMM(inst))
@@ -1156,6 +1163,7 @@ public final class InstructionEncoder {
 			case PUNPCKLBW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x60);
 			case PUNPCKLWD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x61);
 			case PUNPCKLDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x62);
+			case PUNPCKHDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6a);
 			case PUNPCKLQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6c);
 			case PUNPCKHQDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6d);
 			case MOVABS -> {
@@ -1516,37 +1524,35 @@ public final class InstructionEncoder {
 				&& !(inst.opcode() == Opcode.FLD)) {
 			rex = or(rex, (byte) 0b1000);
 		}
-		if ((inst.opcode() == Opcode.CMP && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.MOV && hasExtendedSecondRegister(inst))
+		if ((inst.opcode() == Opcode.CMP && isSecondER(inst))
+				|| (inst.opcode() == Opcode.MOV && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVSXD && hasExtendedFirstRegister(inst))
 				|| (isConditionalMove(inst.opcode()) && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.LEA && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.MOVZX && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.ADD && hasExtendedFirstRegister(inst) && isSecondM(inst))
-				|| (inst.opcode() == Opcode.ADD && isFirstM(inst) && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.ADD
-						&& inst.firstOperand() instanceof Register
-						&& hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.AND && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.ADD && isFirstM(inst) && isSecondER(inst))
+				|| (inst.opcode() == Opcode.ADD && inst.firstOperand() instanceof Register && isSecondER(inst))
+				|| (inst.opcode() == Opcode.AND && isSecondER(inst))
 				|| (inst.opcode() == Opcode.SUB && hasExtendedFirstRegister(inst) && isSecondM(inst))
-				|| (inst.opcode() == Opcode.SUB && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.SBB && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.OR && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.TEST && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.MOVUPS && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.SUB && isSecondER(inst))
+				|| (inst.opcode() == Opcode.SBB && isSecondER(inst))
+				|| (inst.opcode() == Opcode.OR && isSecondER(inst))
+				|| (inst.opcode() == Opcode.TEST && isSecondER(inst))
+				|| (inst.opcode() == Opcode.MOVUPS && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVSD && hasExtendedFirstRegister(inst))
-				|| (inst.opcode() == Opcode.XCHG && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.CMPXCHG && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.BTC && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.BTR && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.BTS && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.XCHG && isSecondER(inst))
+				|| (inst.opcode() == Opcode.CMPXCHG && isSecondER(inst))
+				|| (inst.opcode() == Opcode.BTC && isSecondER(inst))
+				|| (inst.opcode() == Opcode.BTR && isSecondER(inst))
+				|| (inst.opcode() == Opcode.BTS && isSecondER(inst))
 				|| (inst.opcode() == Opcode.CVTSI2SD && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.DIVSD && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.ADDSD && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.XORPS && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.UCOMISD && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.UCOMISS && hasExtendedFirstRegister(inst))
-				|| (inst.opcode() == Opcode.XADD && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.XADD && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVDQA && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.MOVDQU && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.PCMPGTB && hasExtendedFirstRegister(inst))
@@ -1554,7 +1560,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.IMUL && hasExtendedFirstRegister(inst))) {
 			rex = or(rex, (byte) 0b0100);
 		}
-		if ((inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
+		if ((inst.opcode() == Opcode.IMUL && inst.hasSecondOperand() && hasExtendedIndex(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.MOV && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.MOV && hasExtendedIndex(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.NOP && hasExtendedFirstIndex(inst))
@@ -1575,7 +1581,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.PADDQ && hasExtendedIndex(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.PSUBQ && hasExtendedIndex(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.SUB && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.IMUL && hasExtendedIndex(inst.secondOperand()))
+				|| (inst.opcode() == Opcode.IMUL && inst.hasSecondOperand() && hasExtendedIndex(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.CALL && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.DIV && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.NEG && hasExtendedFirstIndex(inst))
@@ -1601,13 +1607,13 @@ public final class InstructionEncoder {
 		if ((isShift && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.MOV && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.MOV && hasExtendedFirstRegister(inst))
-				|| (inst.opcode() == Opcode.MOVSXD && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.MOVSXD && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVSXD && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.CMP && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.CMP && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.OR && hasExtendedBase(inst.secondOperand()))
-				|| (isConditionalMove(inst.opcode()) && hasExtendedSecondRegister(inst))
+				|| (isConditionalMove(inst.opcode()) && isSecondER(inst))
 				|| (isConditionalMove(inst.opcode()) && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.ADD && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.ADD
@@ -1637,34 +1643,34 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof Immediate)
 				|| (inst.opcode() == Opcode.TEST && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.TEST && hasExtendedFirstRegister(inst))
-				|| (inst.opcode() == Opcode.MOVQ && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.MOVQ && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVQ && hasExtendedBase(inst.secondOperand()))
-				|| (inst.opcode() == Opcode.MOVDQA && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PUNPCKLQDQ && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PUNPCKLDQ && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PUNPCKHQDQ && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.MOVDQA && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PUNPCKLQDQ && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PUNPCKLDQ && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PUNPCKHQDQ && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVUPS && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.MOVSD && hasExtendedBase(inst.secondOperand()))
-				|| (inst.opcode() == Opcode.PXOR && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.POR && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PAND && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PADDQ && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PSUBB && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PSUBW && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PSUBD && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PSUBQ && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.PXOR && isSecondER(inst))
+				|| (inst.opcode() == Opcode.POR && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PAND && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PADDQ && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PSUBB && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PSUBW && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PSUBD && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PSUBQ && isSecondER(inst))
 				|| (inst.opcode() == Opcode.XCHG && hasExtendedFirstRegister(inst))
-				|| (inst.opcode() == Opcode.DIVSD && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.ADDSD && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.XORPS && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PCMPEQB && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PCMPEQW && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.PCMPEQD && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.DIVSD && isSecondER(inst))
+				|| (inst.opcode() == Opcode.ADDSD && isSecondER(inst))
+				|| (inst.opcode() == Opcode.XORPS && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PCMPEQB && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PCMPEQW && isSecondER(inst))
+				|| (inst.opcode() == Opcode.PCMPEQD && isSecondER(inst))
 				|| (inst.opcode() == Opcode.MOVD && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.ROR && hasExtendedFirstRegister(inst))
-				|| (inst.opcode() == Opcode.MOVZX && hasExtendedSecondRegister(inst))
-				|| (inst.opcode() == Opcode.IMUL && hasExtendedBase(inst.secondOperand()))
-				|| (inst.opcode() == Opcode.IMUL && hasExtendedSecondRegister(inst))
+				|| (inst.opcode() == Opcode.MOVZX && isSecondER(inst))
+				|| (inst.opcode() == Opcode.IMUL && inst.hasSecondOperand() && hasExtendedBase(inst.secondOperand()))
+				|| (inst.opcode() == Opcode.IMUL && isSecondER(inst))
 				|| (inst.opcode() == Opcode.CALL && hasExtendedFirstRegister(inst))
 				|| (inst.opcode() == Opcode.CALL && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.JMP && hasExtendedFirstRegister(inst))
@@ -1719,6 +1725,12 @@ public final class InstructionEncoder {
 						&& Register8.requiresRexPrefix(r))) {
 			wb.write(rex);
 		}
+	}
+
+	private static boolean isSecondER(final Instruction inst) {
+		return inst.hasSecondOperand()
+				&& inst.secondOperand() instanceof final Register r
+				&& Registers.requiresExtension(r);
 	}
 
 	private static boolean isSecondM(final Instruction inst) {
@@ -1842,6 +1854,7 @@ public final class InstructionEncoder {
 			case VPTESTMB -> wb.write((byte) 0x26);
 			case KORD -> wb.write((byte) 0x45);
 			case KUNPCKDQ -> wb.write((byte) 0x4b);
+			case KUNPCKBW -> wb.write((byte) 0x4b);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1889,7 +1902,10 @@ public final class InstructionEncoder {
 				&& inst.secondOperand() instanceof Register
 				&& inst.thirdOperand() instanceof final Register r3) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r3));
-			if (inst.opcode() != Opcode.VPTESTMB && inst.opcode() != Opcode.KORD && inst.opcode() != Opcode.KUNPCKDQ) {
+			if (inst.opcode() != Opcode.VPTESTMB
+					&& inst.opcode() != Opcode.KORD
+					&& inst.opcode() != Opcode.KUNPCKDQ
+					&& inst.opcode() != Opcode.KUNPCKBW) {
 				wb.write(lastByte);
 			}
 		} else if (inst.firstOperand() instanceof final Register r1
@@ -2103,7 +2119,8 @@ public final class InstructionEncoder {
 					VPTERNLOGD,
 					VPTESTMB,
 					KORTESTD,
-					KORD -> (byte) 0b01;
+					KORD,
+					KUNPCKBW -> (byte) 0b01;
 			case VMOVDQU, VMOVDQU64, SARX -> (byte) 0b10;
 			case VMOVDQU8, KMOVQ, KMOVD -> (byte) 0b11;
 			case VMOVQ ->
@@ -2125,7 +2142,10 @@ public final class InstructionEncoder {
 				(inst.getNumOperands() == 3 && inst.secondOperand() instanceof final Register r)
 						? Registers.combine(Registers.requiresExtension(r), Registers.toByte(r))
 						: 0,
-				isFirstYMM(inst) || isSecondYMM(inst) || inst.opcode() == Opcode.VZEROALL,
+				isFirstYMM(inst)
+						|| isSecondYMM(inst)
+						|| inst.opcode() == Opcode.VZEROALL
+						|| inst.opcode() == Opcode.KUNPCKBW,
 				getImpliedPrefix(inst));
 	}
 
@@ -2145,7 +2165,7 @@ public final class InstructionEncoder {
 				wb,
 				!((inst.getNumOperands() == 2
 								&& ((hasExtendedFirstRegister(inst) && inst.secondOperand() instanceof Register)
-										|| (isFirstM(inst) && hasExtendedSecondRegister(inst))))
+										|| (isFirstM(inst) && isSecondER(inst))))
 						|| (inst.getNumOperands() == 3
 								&& (inst.firstOperand() instanceof final Register r
 										&& Registers.requiresExtension(r)))),
@@ -2158,8 +2178,7 @@ public final class InstructionEncoder {
 								&& ((isFirstR(inst) && hasExtendedBase(inst.secondOperand()))
 										|| (hasExtendedBase(inst.firstOperand())
 												&& inst.secondOperand() instanceof Register)
-										|| (inst.firstOperand() instanceof Register
-												&& hasExtendedSecondRegister(inst))))
+										|| (inst.firstOperand() instanceof Register && isSecondER(inst))))
 						|| (inst.getNumOperands() == 3 && (hasExtendedThirdRegister))),
 				getVex3OpcodeMap(inst.opcode()));
 
@@ -2214,7 +2233,7 @@ public final class InstructionEncoder {
 	private static byte getEvexOpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
 			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
-			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB -> (byte) 0b010;
+			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
 			case VPCMPNEQUB, VPCMPEQB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
 			default -> (byte) 0b000;
 		};
@@ -2265,7 +2284,9 @@ public final class InstructionEncoder {
 				&& inst.secondOperand() instanceof final Register r
 				&& inst.thirdOperand() instanceof IndirectOperand) {
 			rvvvv = r;
-		} else if ((inst.opcode() == Opcode.VPXORQ || inst.opcode() == Opcode.VPMINUB)
+		} else if ((inst.opcode() == Opcode.VPXORQ
+						|| inst.opcode() == Opcode.VPMINUB
+						|| inst.opcode() == Opcode.VPMINUD)
 				&& inst.getNumOperands() == 3
 				&& inst.firstOperand() instanceof Register
 				&& inst.secondOperand() instanceof final Register r

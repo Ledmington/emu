@@ -143,7 +143,7 @@ public final class InstructionDecoder {
 
 			if (args.length >= 3) {
 				final Optional<Integer> compressedDisplacement =
-						((opcode == Opcode.VPTERNLOGD || opcode == Opcode.VPMINUB)
+						((opcode == Opcode.VPTERNLOGD || opcode == Opcode.VPMINUB || opcode == Opcode.VPMINUD)
 										&& firstOperand instanceof Register r1
 										&& Registers.requiresEvexExtension(r1)
 										&& secondOperand instanceof Register r2
@@ -605,7 +605,7 @@ public final class InstructionDecoder {
 										: r)
 						.build();
 			}
-			case 0b00000100 ->
+			case 0b100 ->
 				Instruction.builder()
 						.opcode(Opcode.MUL)
 						.op(
@@ -623,7 +623,16 @@ public final class InstructionDecoder {
 														pref.rex().hasModRMRMExtension(),
 														pref.hasOperandSizeOverridePrefix()))
 						.build();
-			case 0b00000110 ->
+			case 0b101 ->
+				Instruction.builder()
+						.opcode(Opcode.IMUL)
+						.op(Registers.fromCode(
+								modrm.rm(),
+								pref.rex().isOperand64Bit(),
+								pref.rex().hasModRMRMExtension(),
+								pref.hasOperandSizeOverridePrefix()))
+						.build();
+			case 0b110 ->
 				Instruction.builder()
 						.opcode(Opcode.DIV)
 						.op(
@@ -641,7 +650,7 @@ public final class InstructionDecoder {
 														pref.rex().hasModRMRMExtension(),
 														pref.hasOperandSizeOverridePrefix()))
 						.build();
-			case 0b00000111 ->
+			case 0b111 ->
 				Instruction.builder()
 						.opcode(Opcode.IDIV)
 						.op(Registers.fromCode(
@@ -650,7 +659,7 @@ public final class InstructionDecoder {
 								pref.rex().hasModRMRMExtension(),
 								pref.hasOperandSizeOverridePrefix()))
 						.build();
-			case 0b00000001 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
+			case 0b001 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
 			default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 		};
 	}
@@ -1042,6 +1051,7 @@ public final class InstructionDecoder {
 		final byte PUNPCKLWD_OPCODE = (byte) 0x61;
 		final byte PUNPCKLDQ_OPCODE = (byte) 0x62;
 		final byte PCMPGTB_OPCODE = (byte) 0x64;
+		final byte PUNPCKHDQ_OPCODE = (byte) 0x6a;
 		final byte PUNPCKLQDQ_OPCODE = (byte) 0x6c;
 		final byte PUNPCKHQDQ_OPCODE = (byte) 0x6d;
 		final byte MOVQ_MOVD_OPCODE = (byte) 0x6e;
@@ -1971,6 +1981,14 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.PUNPCKHQDQ)
+						.op(RegisterXMM.fromByte(getByteFromReg(pref.rex(), modrm)))
+						.op(RegisterXMM.fromByte(getByteFromRM(pref, modrm)))
+						.build();
+			}
+			case PUNPCKHDQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield Instruction.builder()
+						.opcode(Opcode.PUNPCKHDQ)
 						.op(RegisterXMM.fromByte(getByteFromReg(pref.rex(), modrm)))
 						.op(RegisterXMM.fromByte(getByteFromRM(pref, modrm)))
 						.build();
@@ -3373,6 +3391,7 @@ public final class InstructionDecoder {
 
 	private static Instruction parseVex2Opcodes(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+		final byte KUNPCKBW_OPCODE = (byte) 0x4b;
 		final byte VPCMPGTB_OPCODE = (byte) 0x64;
 		final byte VMOVD_OPCODE = (byte) 0x6e;
 		final byte VMOVDQU_RYMM_M256_OPCODE = (byte) 0x6f;
@@ -3574,6 +3593,15 @@ public final class InstructionDecoder {
 				yield Instruction.builder()
 						.opcode(Opcode.KMOVD)
 						.op(Register32.fromByte(getByteFromReg(pref, modrm)))
+						.op(MaskRegister.fromByte(modrm.rm()))
+						.build();
+			}
+			case KUNPCKBW_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield Instruction.builder()
+						.opcode(Opcode.KUNPCKBW)
+						.op(MaskRegister.fromByte(getByteFromReg(vex2, modrm)))
+						.op(MaskRegister.fromByte(getByteFromV(vex2)))
 						.op(MaskRegister.fromByte(modrm.rm()))
 						.build();
 			}
@@ -3809,6 +3837,7 @@ public final class InstructionDecoder {
 		final byte VPTERNLOGD_OPCODE = (byte) 0x25;
 		final byte VPTESTMB_OPCODE = (byte) 0x26;
 		final byte VMOVAPS_OPCODE = (byte) 0x29;
+		final byte VPMINUD_OPCODE = (byte) 0x3b;
 		final byte VPCMPNEQUB_OPCODE = (byte) 0x3e;
 		final byte VPCMPEQB_OPCODE = (byte) 0x3f;
 		final byte VMOVQ_RX_M128_OPCODE = (byte) 0x6e;
@@ -4030,6 +4059,19 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.VPMINUB,
+						RegisterYMM.fromByte(or(!evex.r1() ? (byte) 0b00010000 : 0, getByteFromReg(evex, modrm))),
+						RegisterYMM.fromByte(or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex))),
+						isIndirectOperandNeeded(modrm)
+								? parseIndirectOperand(b, pref, modrm)
+										.pointer(PointerSize.YMMWORD_PTR)
+										.build()
+								: RegisterYMM.fromByte(
+										or(!evex.x() ? (byte) 0b00010000 : 0, getByteFromRM(evex, modrm))));
+			}
+			case VPMINUD_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.VPMINUD,
 						RegisterYMM.fromByte(or(!evex.r1() ? (byte) 0b00010000 : 0, getByteFromReg(evex, modrm))),
 						RegisterYMM.fromByte(or(!evex.v1() ? (byte) 0b00010000 : 0, getByteFromV(evex))),
 						isIndirectOperandNeeded(modrm)
