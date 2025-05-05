@@ -229,7 +229,8 @@ public final class InstructionDecoder {
 				// This might be a LEA-like instruction, meaning that the displacement has no explicit pointer size in
 				// front
 				// of it, so we just rewind the iterator.
-				iob.pointer(PointerSize.fromSize(previousOperand.bits()));
+				iob.pointer(
+						previousOperand == null ? PointerSize.QWORD_PTR : PointerSize.fromSize(previousOperand.bits()));
 				it.setIndex(0);
 			}
 		}
@@ -2158,7 +2159,21 @@ public final class InstructionDecoder {
 		final ModRM modrm = modrm(b);
 
 		if (isIndirectOperandNeeded(modrm)) {
-			notImplemented();
+			return switch (modrm.reg()) {
+				case (byte) 0b000 ->
+					new Instruction(
+							Opcode.FXSAVE,
+							parseIndirectOperand(b, pref, modrm)
+									.pointer(PointerSize.QWORD_PTR)
+									.build());
+				case (byte) 0b001 ->
+					new Instruction(
+							Opcode.FXRSTOR,
+							parseIndirectOperand(b, pref, modrm)
+									.pointer(PointerSize.QWORD_PTR)
+									.build());
+				default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
+			};
 		}
 
 		return switch (modrm.reg()) {
@@ -3618,6 +3633,7 @@ public final class InstructionDecoder {
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VPSHUFB_OPCODE = (byte) 0x00;
 		final byte VPALIGNR_OPCODE = (byte) 0x0f;
+		final byte VPCMPEQQ_OPCODE = (byte) 0x29;
 		final byte VPMINUD_OPCODE = (byte) 0x3b;
 		final byte KORD_OPCODE = (byte) 0x45;
 		final byte KUNPCKDQ_OPCODE = (byte) 0x4b;
@@ -3632,6 +3648,7 @@ public final class InstructionDecoder {
 		final byte KORTESTD_OPCODE = (byte) 0x98;
 		final byte VPANDN_OPCODE = (byte) 0xdf;
 		final byte VMOVDQU_M256_RYMM_OPCODE = (byte) 0x7f;
+		final byte VPMOVMSKB_OPCODE = (byte) 0xd7;
 		final byte VPXOR_OPCODE = (byte) 0xef;
 		final byte BZHI_OPCODE = (byte) 0xf5;
 		final byte SARX_OPCODE = (byte) 0xf7;
@@ -3721,6 +3738,17 @@ public final class InstructionDecoder {
 						.op(RegisterYMM.fromByte(getByteFromV(vex3)))
 						.op(parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.YMMWORD_PTR)
+								.build())
+						.build();
+			}
+			case VPCMPEQQ_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield Instruction.builder()
+						.opcode(Opcode.VPCMPEQQ)
+						.op(RegisterXMM.fromByte(getByteFromReg(vex3, modrm)))
+						.op(RegisterXMM.fromByte(getByteFromV(vex3)))
+						.op(parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.XMMWORD_PTR)
 								.build())
 						.build();
 			}
@@ -3817,6 +3845,14 @@ public final class InstructionDecoder {
 						.op(MaskRegister.fromByte(getByteFromReg(vex3, modrm)))
 						.op(MaskRegister.fromByte(getByteFromV(vex3)))
 						.op(MaskRegister.fromByte(getByteFromRM(vex3, modrm)))
+						.build();
+			}
+			case VPMOVMSKB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield Instruction.builder()
+						.opcode(Opcode.VPMOVMSKB)
+						.op(Register32.fromByte(getByteFromReg(vex3, modrm)))
+						.op(RegisterXMM.fromByte(getByteFromRM(vex3, modrm)))
 						.build();
 			}
 			default -> {

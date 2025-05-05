@@ -227,6 +227,7 @@ public final class InstructionChecker {
 	private static final Case RK_RX_M128 = new Case(OperandType.RK, OperandType.RX, OperandType.M128);
 	private static final Case RK_RY_M256 = new Case(OperandType.RK, OperandType.RY, OperandType.M256);
 	private static final Case RX_RX_RX = new Case(OperandType.RX, OperandType.RX, OperandType.RX);
+	private static final Case RX_RX_M128 = new Case(OperandType.RX, OperandType.RX, OperandType.M128);
 	private static final Case RY_RY_RY = new Case(OperandType.RY, OperandType.RY, OperandType.RY);
 	private static final Case RK_RX_RX = new Case(OperandType.RK, OperandType.RX, OperandType.RX);
 	private static final Case RK_RY_RY = new Case(OperandType.RK, OperandType.RY, OperandType.RY);
@@ -471,9 +472,10 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VMOVDQU, List.of(RY_M256, M256_RY)),
 			Map.entry(Opcode.VPMINUB, List.of(RY_RY_RY, RY_RY_M256)),
 			Map.entry(Opcode.VPMINUD, List.of(RY_RY_M256)),
-			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RY)),
+			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RX, R32_RY)),
 			Map.entry(Opcode.VPCMPEQB, List.of(RK_RX_RX, RK_RY_RY, RY_RY_M256, RK_RX_M128, RK_RY_M256)),
 			Map.entry(Opcode.VPCMPEQD, List.of(RK_RY_RY, RY_RY_M256, RK_RY_M256)),
+			Map.entry(Opcode.VPCMPEQQ, List.of(RX_RX_M128)),
 			Map.entry(Opcode.VPCMPNEQB, List.of(RK_RY_RY, RK_RY_M256)),
 			Map.entry(Opcode.VZEROALL, List.of(NOTHING)),
 			Map.entry(Opcode.VMOVQ, List.of(R64_RX, RX_M64, M64_RX)),
@@ -535,7 +537,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.KORD, List.of(RK_RK_RK)),
 			Map.entry(Opcode.TZCNT, List.of(R32_R32, R64_R64)),
 			Map.entry(Opcode.KUNPCKDQ, List.of(RK_RK_RK)),
-			Map.entry(Opcode.KUNPCKBW, List.of(RK_RK_RK)));
+			Map.entry(Opcode.KUNPCKBW, List.of(RK_RK_RK)),
+			Map.entry(Opcode.FXSAVE, List.of(M64)),
+			Map.entry(Opcode.FXRSTOR, List.of(M64)));
 
 	private InstructionChecker() {}
 

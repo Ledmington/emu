@@ -9629,6 +9629,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"vpminud ymm18,ymm17,YMMWORD PTR [rdi+0xa0]",
 						"62 e2 75 20 3b 57 05"),
 				// Vpmovmskb
+				test(new Instruction(Opcode.VPMOVMSKB, ESI, XMM8), "vpmovmskb esi,xmm8", "c4 c1 79 d7 f0"),
 				test(new Instruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb
 				test(
@@ -9727,6 +9728,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqd k0,ymm16,YMMWORD PTR [rdi]",
 						"62 f3 7d 20 1f 07 00"),
+				// Vpcmpeqq
+				test(
+						new Instruction(
+								Opcode.VPCMPEQQ,
+								XMM8,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RSP)
+										.displacement(0x300)
+										.build()),
+						"vpcmpeqq xmm8,xmm0,XMMWORD PTR [rsp+0x00000300]",
+						"c4 62 79 29 84 24 00 03 00 00"),
 				// Vpcmpneqb
 				test(
 						Instruction.builder()
@@ -10393,7 +10407,29 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.op(K0)
 								.build(),
 						"kunpckbw k0,k1,k0",
-						"c5 f5 4b c0"));
+						"c5 f5 4b c0"),
+				// Fxsave
+				test(
+						new Instruction(
+								Opcode.FXSAVE,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.displacement((byte) 0x40)
+										.build()),
+						"fxsave [rsp+0x40]",
+						"0f ae 44 24 40"),
+				// Fxrstor
+				test(
+						new Instruction(
+								Opcode.FXRSTOR,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSP)
+										.displacement((byte) 0x40)
+										.build()),
+						"fxrstor [rsp+0x40]",
+						"0f ae 4c 24 40"));
 	}
 
 	//

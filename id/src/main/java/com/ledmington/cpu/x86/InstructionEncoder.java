@@ -45,6 +45,7 @@ public final class InstructionEncoder {
 	private static final byte DOUBLE_BYTE_OPCODE_PREFIX = (byte) 0x0f;
 	private static final byte TABLE_A4_PREFIX = (byte) 0x38;
 	private static final byte TABLE_A5_PREFIX = (byte) 0x3a;
+	private static final byte OPCODE_GROUP_15_PREFIX = (byte) 0xae;
 	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
 	private static final Map<Opcode, Byte> CONDITIONAL_JUMPS_OPCODES = Map.ofEntries(
 			Map.entry(Opcode.JO, (byte) 0x00),
@@ -114,7 +115,8 @@ public final class InstructionEncoder {
 	private static String operandString(final Instruction inst, final Operand op) {
 		if (op instanceof final IndirectOperand io) {
 			final Opcode code = inst.opcode();
-			final boolean requiresExplicitPointerSize = code != Opcode.LEA && code != Opcode.LDDQU;
+			final boolean requiresExplicitPointerSize =
+					code != Opcode.LEA && code != Opcode.LDDQU && code != Opcode.FXSAVE && code != Opcode.FXRSTOR;
 			final Optional<Integer> compressedDisplacement =
 					((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB || code == Opcode.VPMINUD)
 									&& inst.firstOperand() instanceof final Register r1
@@ -254,10 +256,11 @@ public final class InstructionEncoder {
 			return Prefix.EVEX;
 		}
 		return switch (inst.opcode()) {
-			case VPOR, VPAND, VZEROALL, VPMOVMSKB, VMOVD, VPCMPGTB, VPSUBB, VPSLLDQ, VPSRLDQ, KMOVD, KUNPCKBW ->
-				Prefix.VEX2;
-			case VPMINUD, SARX, BZHI, VPCMPISTRI, VPSHUFB, KMOVQ, VPALIGNR, KORTESTD, KORD, KUNPCKDQ -> Prefix.VEX3;
+			case VPOR, VPAND, VZEROALL, VMOVD, VPCMPGTB, VPSUBB, VPSLLDQ, VPSRLDQ, KMOVD, KUNPCKBW -> Prefix.VEX2;
+			case VPMINUD, SARX, BZHI, VPCMPISTRI, VPSHUFB, KMOVQ, VPALIGNR, KORTESTD, KORD, KUNPCKDQ, VPCMPEQQ ->
+				Prefix.VEX3;
 			case VPXORQ, VMOVUPS, VMOVDQU8, VMOVDQU64, VBROADCASTSS, VMOVAPS, VPCMPNEQUB -> Prefix.EVEX;
+			case VPMOVMSKB -> isSecondER(inst) ? Prefix.VEX3 : Prefix.VEX2;
 			case VPXOR -> countExtensions(inst) >= 2 ? Prefix.VEX3 : Prefix.VEX2;
 			case VPANDN -> countExtensions(inst) >= 3 ? Prefix.VEX3 : Prefix.VEX2;
 			case VMOVNTDQ -> isSecondZ(inst) ? Prefix.EVEX : Prefix.VEX2;
@@ -517,6 +520,14 @@ public final class InstructionEncoder {
 				reg = (byte) 0b101;
 			}
 			case SLDT -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x00);
+			case FXSAVE -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, OPCODE_GROUP_15_PREFIX);
+				reg = (byte) 0b000;
+			}
+			case FXRSTOR -> {
+				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, OPCODE_GROUP_15_PREFIX);
+				reg = (byte) 0b001;
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -525,9 +536,7 @@ public final class InstructionEncoder {
 		} else if (inst.firstOperand() instanceof final IndirectOperand io) {
 			encodeModRM(
 					wb, getMod(io), reg, isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
-			if ((inst.opcode() == Opcode.CALL || inst.opcode() == Opcode.INC || inst.opcode() == Opcode.DEC)
-					&& io.hasBase()
-					&& isSP(io.getBase())) {
+			if (io.hasBase() && isSP(io.getBase())) {
 				// FIXME: this can be replaced with wb.write((byte) 0x24);
 				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
 			}
@@ -1397,7 +1406,8 @@ public final class InstructionEncoder {
 
 		// FIXME: refactor all the isIpAndOffset calls to one case down here
 		if (inst.firstOperand() instanceof final Register r1 && inst.secondOperand() instanceof final Register r2) {
-			// Most ALU operations encode the destination operand (the first one) in the r/m portion, while some
+			// Most ALU operations encode the destination operand (the first one) in the r/m
+			// portion, while some
 			// instructions like MOV encode the destination as Reg
 			// FIXME: actually, it seems to be the opposite... why?
 			if (inst.opcode() == Opcode.MOV
@@ -1521,7 +1531,9 @@ public final class InstructionEncoder {
 				&& !(inst.opcode() == Opcode.PUSH)
 				&& !(inst.opcode() == Opcode.POP)
 				&& !(inst.opcode() == Opcode.FADD)
-				&& !(inst.opcode() == Opcode.FLD)) {
+				&& !(inst.opcode() == Opcode.FLD)
+				&& !(inst.opcode() == Opcode.FXSAVE)
+				&& !(inst.opcode() == Opcode.FXRSTOR)) {
 			rex = or(rex, (byte) 0b1000);
 		}
 		if ((inst.opcode() == Opcode.CMP && isSecondER(inst))
@@ -1752,12 +1764,6 @@ public final class InstructionEncoder {
 				&& Registers.requiresExtension(io.getIndex());
 	}
 
-	private static boolean hasExtendedSecondRegister(final Instruction inst) {
-		return inst.hasSecondOperand()
-				&& inst.secondOperand() instanceof final Register r
-				&& Registers.requiresExtension(r);
-	}
-
 	private static boolean isFirstM64(final Instruction inst) {
 		return inst.hasFirstOperand()
 				&& inst.firstOperand() instanceof final IndirectOperand io
@@ -1824,6 +1830,7 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x76);
 				}
 			}
+			case VPCMPEQQ -> wb.write((byte) 0x29);
 			case VPCMPNEQB -> {
 				if (isFirstMask(inst)
 						&& inst.secondOperand() instanceof Register
@@ -1916,6 +1923,10 @@ public final class InstructionEncoder {
 					getMod(io),
 					Registers.toByte(r1),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
+			if (io.hasBase() && isSP(io.getBase())) {
+				// FIXME: this can be replaced with wb.write((byte) 0x24);
+				encodeSIB(wb, (byte) 0b00, (byte) 0b100, (byte) 0b100);
+			}
 			encodeIndirectOperand(wb, io);
 		}
 	}
@@ -2082,8 +2093,8 @@ public final class InstructionEncoder {
 
 	private static byte getVex3OpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
-			case VPXOR, VMOVDQU, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD, KUNPCKDQ -> (byte) 0b01;
-			case VPBROADCASTB, VPBROADCASTD, SARX, BZHI, VPSHUFB, VPMINUD -> (byte) 0b10;
+			case VPXOR, VMOVDQU, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD, KUNPCKDQ, VPMOVMSKB -> (byte) 0b01;
+			case VPBROADCASTB, VPBROADCASTD, SARX, BZHI, VPSHUFB, VPMINUD, VPCMPEQQ -> (byte) 0b10;
 			case VPCMPISTRI, VPALIGNR -> (byte) 0b11;
 			default -> throw new IllegalArgumentException(String.format("Unknown VEX3 opcode map for %s.", opcode));
 		};
@@ -2103,7 +2114,9 @@ public final class InstructionEncoder {
 					VPMOVMSKB,
 					VPCMPEQB,
 					VPCMPEQD,
+					VPCMPEQQ,
 					VPCMPNEQB,
+					VPCMPNEQUB,
 					VPCMPGTB,
 					VMOVD,
 					VPBROADCASTB,
@@ -2115,7 +2128,6 @@ public final class InstructionEncoder {
 					VPALIGNR,
 					VPSHUFB,
 					VBROADCASTSS,
-					VPCMPNEQUB,
 					VPTERNLOGD,
 					VPTESTMB,
 					KORTESTD,

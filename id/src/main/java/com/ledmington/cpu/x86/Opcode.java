@@ -170,6 +170,12 @@ public enum Opcode {
 	/** Wait for floating-point unit. */
 	FWAIT,
 
+	/** Restore x87 FPU and SIMD state. */
+	FXRSTOR,
+
+	/** Save x87 FPU and SIMD state. */
+	FXSAVE,
+
 	/** Halt. */
 	HLT,
 
@@ -694,6 +700,9 @@ public enum Opcode {
 
 	/** Compare packed data for equal. */
 	VPCMPEQD,
+
+	/** Compare packed data for equal. */
+	VPCMPEQQ,
 
 	/** Compare packed signed integers for greater than. */
 	VPCMPGTB,
