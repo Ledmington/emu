@@ -24,6 +24,7 @@ public final class InstructionBuilder {
 	private InstructionPrefix prefix = null;
 	private Opcode opcode = null;
 	private MaskRegister destinationMask = null;
+	private boolean destinationMaskZero = false;
 	private Operand op1 = null;
 	private Operand op2 = null;
 	private Operand op3 = null;
@@ -65,6 +66,12 @@ public final class InstructionBuilder {
 		return this;
 	}
 
+	public InstructionBuilder maskZero() {
+		assertNotBuilt();
+		this.destinationMaskZero = true;
+		return this;
+	}
+
 	public InstructionBuilder op(final Operand op) {
 		assertNotBuilt();
 		Objects.requireNonNull(op, "Null operand.");
@@ -90,7 +97,7 @@ public final class InstructionBuilder {
 		}
 
 		alreadyBuilt = true;
-		return new Instruction(prefix, opcode, destinationMask, op1, op2, op3, op4);
+		return new Instruction(prefix, opcode, destinationMask, destinationMaskZero, op1, op2, op3, op4);
 	}
 
 	@Override

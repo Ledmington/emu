@@ -140,6 +140,10 @@ public final class EvexPrefix {
 		return v;
 	}
 
+	public boolean z() {
+		return z;
+	}
+
 	public boolean l() {
 		return l;
 	}

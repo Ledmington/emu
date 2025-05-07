@@ -223,6 +223,7 @@ public final class InstructionChecker {
 	private static final Case R32_M32_I32 = new Case(OperandType.R32, OperandType.M32, OperandType.I32);
 	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
 	private static final Case R32_R32_R32 = new Case(OperandType.R32, OperandType.R32, OperandType.R32);
+	private static final Case R64_R64_R8 = new Case(OperandType.R64, OperandType.R64, OperandType.R8);
 	private static final Case R64_R64_R64 = new Case(OperandType.R64, OperandType.R64, OperandType.R64);
 	private static final Case RK_RX_M128 = new Case(OperandType.RK, OperandType.RX, OperandType.M128);
 	private static final Case RK_RY_M256 = new Case(OperandType.RK, OperandType.RY, OperandType.M256);
@@ -309,13 +310,13 @@ public final class InstructionChecker {
 					Opcode.ADD,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32,
-							R8_M8, R32_M32, R64_M64, M8_I8, M8_R8, M16_R16, M32_R32, M64_R64, M32_I8, M32_I32, M64_I8,
-							M64_I32)),
+							R8_M8, R32_M32, R64_M64, M8_I8, M8_R8, M16_R16, M16_I8, M32_R32, M64_R64, M32_I8, M32_I32,
+							M64_I8, M64_I32)),
 			Map.entry(
 					Opcode.ADC,
 					List.of(
-							R8_R8, R32_R32, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8, M32_R32,
-							M32_I8)),
+							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8,
+							M32_R32, M32_I8)),
 			Map.entry(
 					Opcode.AND,
 					List.of(
@@ -332,10 +333,12 @@ public final class InstructionChecker {
 					Opcode.SBB,
 					List.of(
 							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8,
-							M32_R32, M8_I8)),
+							M32_R32, M8_I8, M32_I8)),
 			Map.entry(Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.SHL, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
+			Map.entry(Opcode.SHLD, List.of(R64_R64_R8)),
+			Map.entry(Opcode.SHRD, List.of(R64_R64_R8)),
 			Map.entry(
 					Opcode.IMUL,
 					List.of(
@@ -358,7 +361,8 @@ public final class InstructionChecker {
 					Opcode.OR,
 					List.of(
 							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32, R8_M8, R32_M32,
-							R64_M64, M8_I8, M16_I16, M32_I8, M32_I32, M64_I8, M64_I32, M8_R8, M32_R32, M64_R64)),
+							R64_M64, M8_I8, M16_I8, M16_I16, M32_I8, M32_I32, M64_I8, M64_I32, M8_R8, M16_R16, M32_R32,
+							M64_R64)),
 			Map.entry(
 					Opcode.XOR,
 					List.of(
@@ -427,6 +431,9 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PSRLDQ, List.of(RX_I8)),
 			Map.entry(Opcode.CVTSI2SD, List.of(RX_R64, RX_R32)),
 			Map.entry(Opcode.DIVSD, List.of(RX_RX)),
+			Map.entry(Opcode.DIVPD, List.of(RX_RX)),
+			Map.entry(Opcode.DIVPS, List.of(RX_RX)),
+			Map.entry(Opcode.DIVSS, List.of(RX_RX, RX_M32)),
 			Map.entry(Opcode.ADDSD, List.of(RX_RX)),
 			Map.entry(Opcode.XORPS, List.of(RX_RX)),
 			Map.entry(Opcode.UCOMISD, List.of(RX_M64)),
@@ -471,7 +478,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.PEXTRW, List.of(R32_RMM_I8)),
 			Map.entry(Opcode.VMOVDQU, List.of(RY_M256, M256_RY)),
 			Map.entry(Opcode.VPMINUB, List.of(RY_RY_RY, RY_RY_M256)),
-			Map.entry(Opcode.VPMINUD, List.of(RY_RY_M256)),
+			Map.entry(Opcode.VPMINUD, List.of(RY_RY_RY, RY_RY_M256)),
 			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RX, R32_RY)),
 			Map.entry(Opcode.VPCMPEQB, List.of(RK_RX_RX, RK_RY_RY, RY_RY_M256, RK_RX_M128, RK_RY_M256)),
 			Map.entry(Opcode.VPCMPEQD, List.of(RK_RY_RY, RY_RY_M256, RK_RY_M256)),
@@ -539,7 +546,15 @@ public final class InstructionChecker {
 			Map.entry(Opcode.KUNPCKDQ, List.of(RK_RK_RK)),
 			Map.entry(Opcode.KUNPCKBW, List.of(RK_RK_RK)),
 			Map.entry(Opcode.FXSAVE, List.of(M64)),
-			Map.entry(Opcode.FXRSTOR, List.of(M64)));
+			Map.entry(Opcode.FXRSTOR, List.of(M64)),
+			Map.entry(Opcode.XSAVE, List.of(M64)),
+			Map.entry(Opcode.XRSTOR, List.of(M64)),
+			Map.entry(Opcode.XSAVEC, List.of(M64)),
+			Map.entry(Opcode.MOVMSKPS, List.of(R32_RX)),
+			Map.entry(Opcode.ANDPD, List.of(RX_M128)),
+			Map.entry(Opcode.XBEGIN, List.of(I32)),
+			Map.entry(Opcode.XEND, List.of(NOTHING)),
+			Map.entry(Opcode.STMXCSR, List.of(M32)));
 
 	private InstructionChecker() {}
 
@@ -557,6 +572,8 @@ public final class InstructionChecker {
 		if (inst.hasDestinationMask()) {
 			checkRegistersXYZ(inst);
 			checkNoDuplicateMask(inst);
+		} else {
+			checkNoDestinationMaskZero(inst);
 		}
 
 		if (!CASES.containsKey(inst.opcode())) {
@@ -592,6 +609,13 @@ public final class InstructionChecker {
 		}
 
 		error("'%s' is not a valid instruction.", inst.toString());
+	}
+
+	/** An x86 instruction cannot have the 'zero' modifier ("{z}") without a destination mask. */
+	private static void checkNoDestinationMaskZero(final Instruction inst) {
+		if (!inst.hasDestinationMask() && inst.hasZeroDestinationMask()) {
+			error("Zero destination mask without destination mask.");
+		}
 	}
 
 	/**

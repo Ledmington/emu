@@ -35,6 +35,9 @@ public enum Opcode {
 	/** Logical AND. */
 	AND,
 
+	/** Bitwise logical AND of packed double-precision floating-point values. */
+	ANDPD,
+
 	/** Bit scan forward. */
 	BSF,
 
@@ -140,8 +143,17 @@ public enum Opcode {
 	/** Unsigned divide. */
 	DIV,
 
+	/** Divide packed double-precision floating-point values. */
+	DIVPD,
+
+	/** Divide packed single-precision floating-point values. */
+	DIVPS,
+
 	/** Divide scalar double-precision floating-point values. */
 	DIVSD,
+
+	/** Divide scalar single-precision floating-point values. */
+	DIVSS,
 
 	/** Execute an Enclave user function of specified leaf number. */
 	ENCLU,
@@ -346,6 +358,9 @@ public enum Opcode {
 	 * memory.
 	 */
 	MOVHPS,
+
+	/** Extract packed single-precision floating-point values. */
+	MOVMSKPS,
 
 	/** Store double quadword using non-temporal hint. */
 	MOVNTDQ,
@@ -629,8 +644,14 @@ public enum Opcode {
 	/** Logical shift left. */
 	SHL,
 
+	/** Double-precision shift left. */
+	SHLD,
+
 	/** Logical shift right. */
 	SHR,
+
+	/** Double-precision shift right. */
+	SHRD,
 
 	/** Shuffles values in packed double-precision floating-point operands. */
 	SHUFPD,
@@ -652,6 +673,9 @@ public enum Opcode {
 
 	/** Store string. */
 	STOS,
+
+	/** Store MXCSR register state. */
+	STMXCSR,
 
 	/** Subtract. */
 	SUB,
@@ -800,6 +824,9 @@ public enum Opcode {
 	/** Exchange and add. */
 	XADD,
 
+	/** Transactional begin. */
+	XBEGIN,
+
 	/** Exchange. */
 	XCHG,
 
@@ -817,6 +844,15 @@ public enum Opcode {
 
 	/** Bitwise logical XOR of single-precision floating-point values. */
 	XORPS,
+
+	/** Restore processor extended states. */
+	XRSTOR,
+
+	/** Save processor extended states. */
+	XSAVE,
+
+	/** Save processor extended states with compaction. */
+	XSAVEC,
 
 	/** Set extended control register. */
 	XSETBV,
