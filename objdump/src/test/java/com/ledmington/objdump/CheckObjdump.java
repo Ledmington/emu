@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -62,7 +63,8 @@ public final class CheckObjdump {
 			final byte[] buffer = new byte[expectedBytes];
 			final int bytesRead = is.read(buffer);
 			if (bytesRead != expectedBytes) {
-				throw new RuntimeException();
+				// The file is shorter than 4 bytes
+				return false;
 			}
 			return buffer[0] == (byte) 0x7f
 					&& buffer[1] == (byte) 0x45
@@ -171,9 +173,7 @@ public final class CheckObjdump {
 	}
 
 	public static void main(final String[] args) {
-		if (args.length > 0) {
-			out.println("Arguments were passed on the command line but were not needed.");
-		}
+		Runtime.getRuntime().addShutdownHook(new Thread(out::flush));
 
 		if (isWindows) {
 			out.println("It seems that you are running on a windows machine. This test will be disabled.");
@@ -181,13 +181,51 @@ public final class CheckObjdump {
 		}
 
 		final List<Path> elfFiles;
-		try (Stream<Path> s = Files.find(
-				Path.of("/usr/bin").normalize().toAbsolutePath(),
-				1,
-				(p, bfa) -> bfa.isRegularFile() && p.toFile().length() >= 4L && isELF(p))) {
-			elfFiles = s.distinct().sorted().toList();
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
+		if (args.length > 0) {
+			elfFiles = Arrays.stream(args)
+					.map(s -> Path.of(s).normalize().toAbsolutePath())
+					.filter(p -> {
+						if (!Files.exists(p)) {
+							out.printf("File '%s' does not exist, skipping it.", p);
+							return false;
+						}
+						return true;
+					})
+					.filter(p -> {
+						if (!isELF(p)) {
+							out.printf("File '%s' is not an ELF, skipping it.", p);
+							return false;
+						}
+						return true;
+					})
+					.distinct()
+					.sorted()
+					.toList();
+		} else {
+			out.println("No arguments provided, looking for files inside /usr/bin.");
+			out.println();
+			try (Stream<Path> s =
+					Files.find(Path.of("/usr/bin").normalize().toAbsolutePath(), 1, (p, bfa) -> bfa.isRegularFile())) {
+				elfFiles = s.filter(p -> {
+							if (!Files.exists(p)) {
+								out.printf("File '%s' does not exist, skipping it.", p);
+								return false;
+							}
+							return true;
+						})
+						.filter(p -> {
+							if (!isELF(p)) {
+								out.printf("File '%s' is not an ELF, skipping it.", p);
+								return false;
+							}
+							return true;
+						})
+						.distinct()
+						.sorted()
+						.toList();
+			} catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 
 		for (int i = 0; i < elfFiles.size(); i++) {
@@ -195,5 +233,9 @@ public final class CheckObjdump {
 			out.printf(" [%d / %d] ", i, elfFiles.size());
 			test(p);
 		}
+
+		out.flush();
+		out.close();
+		System.exit(0);
 	}
 }
