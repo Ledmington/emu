@@ -59,8 +59,8 @@ jmh {
 }
 
 tasks.register('downloadELF32Manual', Download) {
-	group 'utilities'
-	description 'Downloads the ELF 32-bit file format specification in the project root directory'
+	group = 'utilities'
+	description = 'Downloads the ELF 32-bit file format specification in the project root directory'
 	src "https://refspecs.linuxfoundation.org/elf/elf.pdf"
 	dest new File(project.getRootDir(), "elf32-manual.pdf")
 	overwrite false
@@ -68,8 +68,8 @@ tasks.register('downloadELF32Manual', Download) {
 }
 
 tasks.register('downloadELF64Manual', Download) {
-	group 'utilities'
-	description 'Downloads the ELF 64-bit file format specification in the project root directory'
+	group = 'utilities'
+	description = 'Downloads the ELF 64-bit file format specification in the project root directory'
 	src "https://uclibc.org/docs/elf-64-gen.pdf"
 	dest new File(project.getRootDir(), "elf64-manual.pdf")
 	overwrite false

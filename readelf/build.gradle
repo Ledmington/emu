@@ -56,8 +56,8 @@ tasks.build.dependsOn(fatJar)
 tasks.javadoc.enabled = false
 
 tasks.register('checkReadelf', JavaExec) {
-    group 'verification'
-    description 'Checks the readelf output against the one provided by the system'
+    group = 'verification'
+    description = 'Checks the readelf output against the one provided by the system'
     dependsOn fatJar
     classpath sourceSets.test.runtimeClasspath
     mainClass = 'com.ledmington.readelf.CheckReadelf'

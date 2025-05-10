@@ -59,8 +59,8 @@ jmh {
 }
 
 tasks.register('downloadIntelManual', Download) {
-	group 'utilities'
-	description 'Downloads the Intel Software Developer Manual in the project root directory'
+	group = 'utilities'
+	description = 'Downloads the Intel Software Developer Manual in the project root directory'
 	src "https://cdrdv2-public.intel.com/812392/325462-sdm-vol-1-2abcd-3abcd-4.pdf"
 	dest new File(project.getRootDir(), "intel-developer-manual.pdf")
 	overwrite false
