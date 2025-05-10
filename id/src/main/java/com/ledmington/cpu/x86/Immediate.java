@@ -135,11 +135,15 @@ public final class Immediate implements Operand {
 
 	@Override
 	public String toIntelSyntax() {
+		return toIntelSyntax(false);
+	}
+
+	public String toIntelSyntax(final boolean shortHex) {
 		return switch (type) {
-			case BYTE -> String.format("0x%02x", BitUtils.asByte(value));
-			case SHORT -> String.format("0x%04x", BitUtils.asShort(value));
-			case INT -> String.format("0x%08x", BitUtils.asInt(value));
-			case LONG -> String.format("0x%016x", value);
+			case BYTE -> String.format(shortHex ? "0x%x" : "0x%02x", BitUtils.asByte(value));
+			case SHORT -> String.format(shortHex ? "0x%x" : "0x%04x", BitUtils.asShort(value));
+			case INT -> String.format(shortHex ? "0x%x" : "0x%08x", BitUtils.asInt(value));
+			case LONG -> String.format(shortHex ? "0x%x" : "0x%016x", value);
 		};
 	}
 

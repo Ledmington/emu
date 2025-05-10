@@ -184,7 +184,7 @@ public final class Main {
 					out.print("   ");
 				}
 			}
-			out.printf("\t%s%n", InstructionEncoder.toIntelSyntax(inst));
+			out.printf("\t%s%n", InstructionEncoder.toIntelSyntax(inst, 6, true));
 
 			if (lengthOfInstruction >= 8L) {
 				out.printf("%8x:\t", startOfSection + startOfInstruction + 7L);

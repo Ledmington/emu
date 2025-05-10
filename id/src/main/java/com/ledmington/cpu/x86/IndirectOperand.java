@@ -246,20 +246,23 @@ public final class IndirectOperand implements Operand {
 		sb.append(isDisplacementNegative() ? '-' : '+');
 	}
 
-	private void addDisplacement(final StringBuilder sb, final Optional<Integer> compressedDisplacement) {
+	private void addDisplacement(
+			final StringBuilder sb, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		switch (displacementType) {
 			case DisplacementType.SHORT -> {
+				final String fmt = shortHex ? "0x%x" : "0x%02x";
 				if (compressedDisplacement.isEmpty()) {
 					final byte x = BitUtils.asByte(displacement);
-					sb.append(String.format("0x%02x", isDisplacementNegative() ? -x : x));
+					sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
 				} else {
 					final int x = displacement * compressedDisplacement.orElseThrow();
-					sb.append(String.format("0x%02x", isDisplacementNegative() ? -x : x));
+					sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
 				}
 			}
 			case DisplacementType.LONG -> {
+				final String fmt = shortHex ? "0x%x" : "0x%08x";
 				final int x = BitUtils.asInt(displacement);
-				sb.append(String.format("0x%08x", isDisplacementNegative() ? -x : x));
+				sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
 			}
 		}
 	}
@@ -270,7 +273,8 @@ public final class IndirectOperand implements Operand {
 	 * @param addPointerSize If true, adds the pointer size.
 	 * @return The assembly representation of this instruction in Intel syntax.
 	 */
-	public String toIntelSyntax(final boolean addPointerSize, final Optional<Integer> compressedDisplacement) {
+	public String toIntelSyntax(
+			final boolean addPointerSize, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		final StringBuilder sb = new StringBuilder();
 		if (addPointerSize) {
 			sb.append(ptrSize.name().replace('_', ' ')).append(' ');
@@ -293,7 +297,7 @@ public final class IndirectOperand implements Operand {
 		}
 		if (hasDisplacement()) {
 			addDisplacementSign(sb);
-			addDisplacement(sb, compressedDisplacement);
+			addDisplacement(sb, compressedDisplacement, shortHex);
 		}
 		sb.append(']');
 		return sb.toString();
@@ -301,7 +305,7 @@ public final class IndirectOperand implements Operand {
 
 	@Override
 	public String toIntelSyntax() {
-		return toIntelSyntax(true, Optional.empty());
+		return toIntelSyntax(true, Optional.empty(), false);
 	}
 
 	@Override

@@ -114,47 +114,63 @@ public final class InstructionEncoder {
 
 	private InstructionEncoder() {}
 
-	private static String operandString(final Instruction inst, final Operand op) {
-		if (op instanceof final IndirectOperand io) {
-			final Opcode code = inst.opcode();
-			final boolean requiresExplicitPointerSize = code != Opcode.LEA
-					&& code != Opcode.LDDQU
-					&& code != Opcode.FXSAVE
-					&& code != Opcode.FXRSTOR
-					&& code != Opcode.XSAVE
-					&& code != Opcode.XRSTOR
-					&& code != Opcode.XSAVEC;
-			final Optional<Integer> compressedDisplacement =
-					((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB || code == Opcode.VPMINUD)
-									&& inst.firstOperand() instanceof final Register r1
-									&& Registers.requiresEvexExtension(r1)
-									&& inst.secondOperand() instanceof final Register r2
-									&& Registers.requiresEvexExtension(r2))
-							? Optional.of(32)
-							: Optional.empty();
-			return io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement);
-		}
-		return op.toIntelSyntax();
+	private static String operandString(final Instruction inst, final Operand op, final boolean shortHex) {
+		return switch (op) {
+			case IndirectOperand io -> {
+				final Opcode code = inst.opcode();
+				final boolean requiresExplicitPointerSize = code != Opcode.LEA
+						&& code != Opcode.LDDQU
+						&& code != Opcode.FXSAVE
+						&& code != Opcode.FXRSTOR
+						&& code != Opcode.XSAVE
+						&& code != Opcode.XRSTOR
+						&& code != Opcode.XSAVEC;
+				final Optional<Integer> compressedDisplacement =
+						((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB || code == Opcode.VPMINUD)
+										&& inst.firstOperand() instanceof final Register r1
+										&& Registers.requiresEvexExtension(r1)
+										&& inst.secondOperand() instanceof final Register r2
+										&& Registers.requiresEvexExtension(r2))
+								? Optional.of(32)
+								: Optional.empty();
+				yield io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement, shortHex);
+			}
+			case Immediate imm -> imm.toIntelSyntax(shortHex);
+			case Register r -> r.toIntelSyntax();
+			case SegmentedAddress sa -> sa.toIntelSyntax();
+			default -> throw new IllegalArgumentException(String.format("Unknown operand type: '%s'.", op));
+		};
 	}
 
 	/**
 	 * Reference obtainable through <code>objdump -Mintel-mnemonic ...</code>
 	 *
-	 * @return A String representation of this instruction with Intel syntax.
+	 * @return An unambiguous String representation of this instruction with Intel syntax.
 	 */
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public static String toIntelSyntax(final Instruction inst) {
+		return toIntelSyntax(inst, 0, false);
+	}
+
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
+	public static String toIntelSyntax(final Instruction inst, final int opcodePad, final boolean shortHex) {
 		Objects.requireNonNull(inst);
+		if (opcodePad < 0) {
+			throw new IllegalArgumentException(String.format("Invalid opcode pad value: %,d.", opcodePad));
+		}
 		InstructionChecker.check(inst);
 		final StringBuilder sb = new StringBuilder();
 		if (inst.hasPrefix()) {
 			sb.append(inst.getPrefix().name().toLowerCase(Locale.US)).append(' ');
 		}
 
-		sb.append(inst.opcode().mnemonic());
+		final String opcode = inst.opcode().mnemonic();
+		sb.append(opcode);
 
 		if (inst.hasFirstOperand()) {
-			sb.append(' ').append(operandString(inst, inst.firstOperand()));
+			if (opcode.length() < opcodePad) {
+				sb.append(" ".repeat(opcodePad - opcode.length()));
+			}
+			sb.append(' ').append(operandString(inst, inst.firstOperand(), shortHex));
 			if (inst.hasDestinationMask()) {
 				sb.append('{').append(inst.getDestinationMask().toIntelSyntax()).append('}');
 			}
@@ -162,11 +178,11 @@ public final class InstructionEncoder {
 				sb.append("{z}");
 			}
 			if (inst.hasSecondOperand()) {
-				sb.append(',').append(operandString(inst, inst.secondOperand()));
+				sb.append(',').append(operandString(inst, inst.secondOperand(), shortHex));
 				if (inst.hasThirdOperand()) {
-					sb.append(',').append(operandString(inst, inst.thirdOperand()));
+					sb.append(',').append(operandString(inst, inst.thirdOperand(), shortHex));
 					if (inst.hasFourthOperand()) {
-						sb.append(',').append(operandString(inst, inst.fourthOperand()));
+						sb.append(',').append(operandString(inst, inst.fourthOperand(), shortHex));
 					}
 				}
 			}
