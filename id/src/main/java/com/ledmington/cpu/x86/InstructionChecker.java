@@ -273,6 +273,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.JO, List.of(I8, I32)),
 			Map.entry(Opcode.JNO, List.of(I8, I32)),
 			Map.entry(Opcode.JMP, List.of(I8, I32, R16, R64, M16, M32, M64)),
+			Map.entry(Opcode.BND_JMP, List.of(M64)),
 			Map.entry(Opcode.CMOVE, List.of(R32_M32, R64_M64, R32_R32, R64_R64)),
 			Map.entry(Opcode.CMOVNE, List.of(R32_M32, R64_M64, R32_R32, R64_R64)),
 			Map.entry(Opcode.CMOVS, List.of(R32_M32, R64_M64, R64_R64, R32_R32)),

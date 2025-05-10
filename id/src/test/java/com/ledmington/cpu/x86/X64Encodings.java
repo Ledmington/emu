@@ -4354,7 +4354,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement(0x12345678)
 										.build()),
 						"jmp WORD PTR [rax+rcx*4+0x12345678]",
-						"66 ff a4 88 78 56 34 12"));
+						"66 ff a4 88 78 56 34 12"),
+				// Bnd jmp
+				test(
+						new Instruction(
+								Opcode.BND_JMP,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RIP)
+										.displacement(0x000c3fed)
+										.build()),
+						"bnd jmp QWORD PTR [rip+0x000c3fed]",
+						"f2 ff 25 ed 3f 0c 00"));
 	}
 
 	private static List<X64EncodingTestCase> cmov() {

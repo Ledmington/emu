@@ -247,7 +247,8 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.CVTSI2SD)
 						|| (inst.opcode() == Opcode.DIVSD)
 						|| (inst.opcode() == Opcode.ADDSD)
-						|| (inst.opcode() == Opcode.LDDQU))) {
+						|| (inst.opcode() == Opcode.LDDQU)
+						|| (inst.opcode() == Opcode.BND_JMP))) {
 			wb.write(InstructionPrefix.REPNZ.getCode());
 		}
 
@@ -466,6 +467,7 @@ public final class InstructionEncoder {
 							: (byte) 0b100;
 				}
 			}
+			case BND_JMP -> wb.write((byte) 0xff);
 			case IDIV, DIV, MUL -> {
 				wb.write(inst.firstOperand().bits() == 8 ? (byte) 0xf6 : (byte) 0xf7);
 				reg = DIV_MUL_REG_BYTES.get(inst.opcode());
@@ -563,6 +565,11 @@ public final class InstructionEncoder {
 		if (inst.firstOperand() instanceof final Register r) {
 			encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
 		} else if (inst.firstOperand() instanceof final IndirectOperand io) {
+			if (isIpAndOffset(io)) {
+				wb.write((byte) 0x25);
+				encodeDisplacement(wb, io);
+				return;
+			}
 			encodeModRM(
 					wb, getMod(io), reg, isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			if (io.hasBase() && isSP(io.getBase())) {
@@ -1572,6 +1579,7 @@ public final class InstructionEncoder {
 				&& !(inst.opcode() == Opcode.PSHUFW)
 				&& !(inst.opcode() == Opcode.CALL)
 				&& !(inst.opcode() == Opcode.JMP)
+				&& !(inst.opcode() == Opcode.BND_JMP)
 				&& !(inst.opcode() == Opcode.PUSH)
 				&& !(inst.opcode() == Opcode.POP)
 				&& !(inst.opcode() == Opcode.FADD)

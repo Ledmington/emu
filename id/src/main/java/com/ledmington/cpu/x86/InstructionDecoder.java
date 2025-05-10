@@ -105,6 +105,17 @@ public final class InstructionDecoder {
 			opcodeString = readUntilWhitespace(it);
 		}
 
+		if (opcodeString.equals("bnd")) {
+			final int pos = it.getIndex();
+			skipWhitespaces(it);
+			final String tmp = readUntilWhitespace(it);
+			if (tmp.equals("jmp")) {
+				opcodeString = "bnd jmp";
+			} else {
+				it.setIndex(pos);
+			}
+		}
+
 		if (!fromStringToOpcode.containsKey(opcodeString)) {
 			throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", opcodeString));
 		}
@@ -500,9 +511,8 @@ public final class InstructionDecoder {
 												: PointerSize.QWORD_PTR)
 								.build())
 						.build();
-			case 0b00000100 ->
-				Instruction.builder()
-						.opcode(Opcode.JMP)
+			case 0b00000100 -> {
+				final InstructionBuilder ib = Instruction.builder()
 						.op(
 								isIndirectOperandNeeded(modrm)
 										? parseIndirectOperand(b, pref, modrm)
@@ -515,8 +525,14 @@ public final class InstructionDecoder {
 												modrm.rm(),
 												!pref.hasAddressSizeOverridePrefix(),
 												pref.rex().hasModRMRMExtension(),
-												pref.hasOperandSizeOverridePrefix()))
-						.build();
+												pref.hasOperandSizeOverridePrefix()));
+				if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
+					ib.opcode(Opcode.BND_JMP);
+				} else {
+					ib.opcode(Opcode.JMP);
+				}
+				yield ib.build();
+			}
 			case 0b00000101 ->
 				Instruction.builder()
 						.opcode(Opcode.JMP)

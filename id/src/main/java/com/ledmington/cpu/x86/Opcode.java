@@ -38,6 +38,9 @@ public enum Opcode {
 	/** Bitwise logical AND of packed double-precision floating-point values. */
 	ANDPD,
 
+	/** Bounded jump. */
+	BND_JMP("bnd jmp"),
+
 	/** Bit scan forward. */
 	BSF,
 
@@ -860,7 +863,15 @@ public enum Opcode {
 	/** Test if in transactional execution. */
 	XTEST;
 
-	private final String mnemonicString = name().toLowerCase(Locale.US);
+	private final String mnemonicString;
+
+	Opcode() {
+		this.mnemonicString = name().toLowerCase(Locale.US);
+	}
+
+	Opcode(final String mnemonic) {
+		this.mnemonicString = mnemonic;
+	}
 
 	/**
 	 * Returns the mnemonic for this opcode.
