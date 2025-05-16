@@ -1001,6 +1001,12 @@ public final class InstructionEncoder {
 			}
 			case ADC -> {
 				if ((isFirstR(inst) || isFirstM(inst)) && inst.secondOperand() instanceof final Immediate imm) {
+					if ((inst.firstOperand() == Register32.EAX || inst.firstOperand() == Register64.RAX)
+							&& imm.bits() == 32) {
+						wb.write((byte) 0x15);
+						encodeImmediate(wb, imm);
+						return;
+					}
 					wb.write((imm.bits() == 8) ? (byte) 0x83 : (byte) 0x81);
 					reg = (byte) 0b010;
 				} else if ((isFirstR(inst) || isFirstM(inst)) && inst.secondOperand() instanceof Register) {
@@ -1062,9 +1068,11 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x35);
 					encodeImmediate(wb, imm);
 					return;
-				} else if (inst.firstOperand() instanceof final Register r
-						&& inst.secondOperand() instanceof final Immediate imm) {
-					wb.write((imm.bits() == 8) ? ((r instanceof Register8) ? (byte) 0x80 : (byte) 0x83) : (byte) 0x81);
+				} else if ((isFirstR(inst) || isFirstM(inst)) && inst.secondOperand() instanceof final Immediate imm) {
+					wb.write(
+							(imm.bits() == 8)
+									? ((inst.firstOperand().bits() == 8) ? (byte) 0x80 : (byte) 0x83)
+									: (byte) 0x81);
 					reg = (byte) 0b110;
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof Register) {
@@ -1615,7 +1623,8 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.MOVZX && isFirstER(inst))
 				|| (inst.opcode() == Opcode.ADD && isFirstER(inst) && isSecondM(inst))
 				|| (inst.opcode() == Opcode.ADD && isFirstM(inst) && isSecondER(inst))
-				|| (inst.opcode() == Opcode.ADD && inst.firstOperand() instanceof Register && isSecondER(inst))
+				|| (inst.opcode() == Opcode.ADD && isFirstR(inst) && isSecondER(inst))
+				|| (inst.opcode() == Opcode.ADC && isFirstM(inst) && isSecondER(inst))
 				|| (inst.opcode() == Opcode.AND && isSecondER(inst))
 				|| (inst.opcode() == Opcode.SUB && isFirstER(inst) && isSecondM(inst))
 				|| (inst.opcode() == Opcode.SUB && isSecondER(inst))
@@ -1703,14 +1712,16 @@ public final class InstructionEncoder {
 				|| (isConditionalMove(inst.opcode()) && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.ADD && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.ADD && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
-				|| (inst.opcode() == Opcode.ADD && isFirstER(inst) && inst.secondOperand() instanceof Register)
+				|| (inst.opcode() == Opcode.ADD && isFirstER(inst) && isSecondR(inst))
+				|| (inst.opcode() == Opcode.ADC && isFirstER(inst))
+				|| (inst.opcode() == Opcode.ADC && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.AND && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.AND && hasExtendedBase(inst.secondOperand()))
 				|| (inst.opcode() == Opcode.AND && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SUB && isFirstER(inst) && inst.secondOperand() instanceof Register)
+				|| (inst.opcode() == Opcode.SUB && isFirstER(inst) && isSecondR(inst))
 				|| (inst.opcode() == Opcode.SUB && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.SUB && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
-				|| (inst.opcode() == Opcode.SBB && isFirstER(inst) && inst.secondOperand() instanceof Register)
+				|| (inst.opcode() == Opcode.SBB && isFirstER(inst) && isSecondR(inst))
 				|| (inst.opcode() == Opcode.SBB && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
 				|| (inst.opcode() == Opcode.XOR && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
 				|| (inst.opcode() == Opcode.TEST && hasExtendedBase(inst.firstOperand()))
@@ -1784,8 +1795,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.RDRAND && isFirstER(inst))
 				|| (inst.opcode() == Opcode.RDSEED && isFirstER(inst))
 				|| (inst.opcode() == Opcode.RDSSPQ && isFirstER(inst))
-				|| (inst.opcode() == Opcode.INCSSPQ && isFirstER(inst))
-				|| (inst.opcode() == Opcode.ADC && isFirstER(inst))) {
+				|| (inst.opcode() == Opcode.INCSSPQ && isFirstER(inst))) {
 			rex = or(rex, (byte) 0b0001);
 		}
 		if (rex != DEFAULT_REX_PREFIX
