@@ -95,7 +95,19 @@ public final class InstructionChecker {
 		}
 
 		public int numOperands() {
-			return op4 != null ? 4 : (op3 != null ? 3 : (op2 != null ? 2 : (op1 != null ? 1 : 0)));
+			if (op4 != null) {
+				return 4;
+			}
+			if (op3 != null) {
+				return 3;
+			}
+			if (op2 != null) {
+				return 2;
+			}
+			if (op1 != null) {
+				return 1;
+			}
+			return 0;
 		}
 
 		public OperandType firstOperandType() {

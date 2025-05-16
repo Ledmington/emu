@@ -22,10 +22,6 @@ import java.util.Objects;
 /** High-level representation of an x86 instruction. */
 public final class Instruction {
 
-	public static InstructionBuilder builder() {
-		return new InstructionBuilder();
-	}
-
 	private final InstructionPrefix prefix;
 	private final Opcode code;
 	private final MaskRegister destinationMask;
@@ -35,7 +31,11 @@ public final class Instruction {
 	private final Operand op3;
 	private final Operand op4;
 
-	Instruction(
+	public static InstructionBuilder builder() {
+		return new InstructionBuilder();
+	}
+
+	/* default */ Instruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
 			final MaskRegister destinationMask,

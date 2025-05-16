@@ -1590,29 +1590,29 @@ public final class InstructionEncoder {
 				&& !(inst.opcode() == Opcode.PCMPEQB && isFirstMMX(inst))
 				&& !(inst.opcode() == Opcode.PCMPEQW && isFirstMMX(inst))
 				&& !(inst.opcode() == Opcode.PCMPEQD && isFirstMMX(inst))
-				&& !(inst.opcode() == Opcode.MOVD)
-				&& !(inst.opcode() == Opcode.MOVDQA)
-				&& !(inst.opcode() == Opcode.MOVDQU)
-				&& !(inst.opcode() == Opcode.MOVAPS)
-				&& !(inst.opcode() == Opcode.MOVAPD)
-				&& !(inst.opcode() == Opcode.MOVHPS)
-				&& !(inst.opcode() == Opcode.MOVHPD)
-				&& !(inst.opcode() == Opcode.VMOVQ)
-				&& !(inst.opcode() == Opcode.KMOVQ)
-				&& !(inst.opcode() == Opcode.BZHI)
-				&& !(inst.opcode() == Opcode.PSHUFW)
-				&& !(inst.opcode() == Opcode.CALL)
-				&& !(inst.opcode() == Opcode.JMP)
-				&& !(inst.opcode() == Opcode.BND_JMP)
-				&& !(inst.opcode() == Opcode.PUSH)
-				&& !(inst.opcode() == Opcode.POP)
-				&& !(inst.opcode() == Opcode.FADD)
-				&& !(inst.opcode() == Opcode.FLD)
-				&& !(inst.opcode() == Opcode.FXSAVE)
-				&& !(inst.opcode() == Opcode.FXRSTOR)
-				&& !(inst.opcode() == Opcode.XSAVE)
-				&& !(inst.opcode() == Opcode.XRSTOR)
-				&& !(inst.opcode() == Opcode.XSAVEC)) {
+				&& inst.opcode() != Opcode.MOVD
+				&& inst.opcode() != Opcode.MOVDQA
+				&& inst.opcode() != Opcode.MOVDQU
+				&& inst.opcode() != Opcode.MOVAPS
+				&& inst.opcode() != Opcode.MOVAPD
+				&& inst.opcode() != Opcode.MOVHPS
+				&& inst.opcode() != Opcode.MOVHPD
+				&& inst.opcode() != Opcode.VMOVQ
+				&& inst.opcode() != Opcode.KMOVQ
+				&& inst.opcode() != Opcode.BZHI
+				&& inst.opcode() != Opcode.PSHUFW
+				&& inst.opcode() != Opcode.CALL
+				&& inst.opcode() != Opcode.JMP
+				&& inst.opcode() != Opcode.BND_JMP
+				&& inst.opcode() != Opcode.PUSH
+				&& inst.opcode() != Opcode.POP
+				&& inst.opcode() != Opcode.FADD
+				&& inst.opcode() != Opcode.FLD
+				&& inst.opcode() != Opcode.FXSAVE
+				&& inst.opcode() != Opcode.FXRSTOR
+				&& inst.opcode() != Opcode.XSAVE
+				&& inst.opcode() != Opcode.XRSTOR
+				&& inst.opcode() != Opcode.XSAVEC) {
 			rex = or(rex, (byte) 0b1000);
 		}
 		if ((inst.opcode() == Opcode.CMP && isSecondER(inst))

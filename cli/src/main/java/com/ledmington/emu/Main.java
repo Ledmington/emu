@@ -134,9 +134,9 @@ public final class Main {
 					}
 
 					String x = args[i];
-					if (x.equals("zero")) {
+					if ("zero".equals(x)) {
 						EmulatorConstants.setMemoryInitializer(MemoryInitializer.zero());
-					} else if (x.equals("random")) {
+					} else if ("random".equals(x)) {
 						EmulatorConstants.setMemoryInitializer(MemoryInitializer.random());
 					} else {
 						if (x.startsWith("0x")) {
