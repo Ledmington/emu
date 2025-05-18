@@ -720,10 +720,21 @@ public final class InstructionDecoder {
 
 		final boolean isImmediate8Bit = opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xc1;
 		final boolean isImmediate1 = opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd1;
-
-		final Operand op2 = isImmediate8Bit ? imm8(b) : isImmediate1 ? new Immediate((byte) 1) : Register8.CL;
 		final boolean isReg8Bit =
 				opcodeFirstByte == (byte) 0xc0 || opcodeFirstByte == (byte) 0xd0 || opcodeFirstByte == (byte) 0xd2;
+
+		final Operand op1 = isReg8Bit
+				? Register8.fromByte(getByteFromRM(pref, modrm), pref.hasRexPrefix())
+				: (isIndirectOperandNeeded(modrm)
+						? parseIndirectOperand(b, pref, modrm)
+								.pointer(pref.rex().isOperand64Bit() ? PointerSize.QWORD_PTR : PointerSize.DWORD_PTR)
+								.build()
+						: Registers.fromCode(
+								modrm.rm(),
+								pref.rex().isOperand64Bit(),
+								pref.rex().hasModRMRMExtension(),
+								pref.hasOperandSizeOverridePrefix()));
+		final Operand op2 = isImmediate8Bit ? imm8(b) : isImmediate1 ? new Immediate((byte) 1) : Register8.CL;
 
 		final Opcode opcode =
 				switch (modrm.reg()) {
@@ -738,18 +749,7 @@ public final class InstructionDecoder {
 					default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 				};
 
-		return Instruction.builder()
-				.opcode(opcode)
-				.op(
-						isReg8Bit
-								? Register8.fromByte(getByteFromRM(pref, modrm), pref.hasRexPrefix())
-								: Registers.fromCode(
-										modrm.rm(),
-										pref.rex().isOperand64Bit(),
-										pref.rex().hasModRMRMExtension(),
-										pref.hasOperandSizeOverridePrefix()))
-				.op(op2)
-				.build();
+		return Instruction.builder().opcode(opcode).op(op1).op(op2).build();
 	}
 
 	private static Instruction parseExtendedOpcodeGroup1(

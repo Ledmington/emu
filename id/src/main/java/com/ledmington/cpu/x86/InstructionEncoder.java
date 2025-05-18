@@ -910,6 +910,15 @@ public final class InstructionEncoder {
 						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
 						return;
 					}
+				}
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					final boolean isImmediateOne = imm.bits() == 8 && imm.asByte() == (byte) 1;
+					wb.write(or(isImmediateOne ? (byte) 0xd0 : (byte) 0xc0, (io.bits() == 8) ? (byte) 0 : (byte) 1));
+					if (isImmediateOne) {
+						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(io.getBase()));
+						return;
+					}
 				} else if (inst.firstOperand() instanceof final Register r1
 						&& inst.secondOperand() instanceof final Register r2) {
 					wb.write(r1 instanceof Register8 ? (byte) 0xd2 : (byte) 0xd3);
@@ -1007,7 +1016,10 @@ public final class InstructionEncoder {
 						encodeImmediate(wb, imm);
 						return;
 					}
-					wb.write((imm.bits() == 8) ? (byte) 0x83 : (byte) 0x81);
+					wb.write(
+							imm.bits() == 8
+									? ((inst.firstOperand().bits() == 8) ? (byte) 0x80 : (byte) 0x83)
+									: (byte) 0x81);
 					reg = (byte) 0b010;
 				} else if ((isFirstR(inst) || isFirstM(inst)) && inst.secondOperand() instanceof Register) {
 					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0x10 : (byte) 0x11);
@@ -1347,8 +1359,12 @@ public final class InstructionEncoder {
 				reg = (byte) 0b000;
 			}
 			case ROR -> {
-				wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
-				reg = (byte) 0b001;
+				if (isFirstR8(inst) && isSecondR8(inst)) {
+					wb.write((byte) 0xd2);
+				} else {
+					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
+					reg = (byte) 0b001;
+				}
 			}
 			case RCL -> {
 				if (inst.firstOperand() instanceof final Register r && inst.secondOperand() == Register8.CL) {
@@ -1363,8 +1379,13 @@ public final class InstructionEncoder {
 			}
 			case RCR -> {
 				if (inst.firstOperand() instanceof final Register r && inst.secondOperand() == Register8.CL) {
-					wb.write((byte) 0xd2);
+					wb.write((r instanceof Register8) ? (byte) 0xd2 : (byte) 0xd3);
 					wb.write(or(shl((byte) 0b11, 6), shl((byte) 0b011, 3), Registers.toByte(r)));
+					return;
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() == Register8.CL) {
+					wb.write((io.bits() == 8) ? (byte) 0xd2 : (byte) 0xd3);
+					wb.write(or(shl((byte) 0b00, 6), shl((byte) 0b011, 3), Registers.toByte(io.getBase())));
 					return;
 				} else if (isFirstR(inst) && inst.secondOperand() instanceof Immediate) {
 					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
@@ -1488,6 +1509,7 @@ public final class InstructionEncoder {
 					|| inst.opcode() == Opcode.ADC
 					|| inst.opcode() == Opcode.AND
 					|| inst.opcode() == Opcode.OR
+					|| inst.opcode() == Opcode.ROR
 					|| inst.opcode() == Opcode.XCHG
 					|| inst.opcode() == Opcode.BT
 					|| inst.opcode() == Opcode.BTR
@@ -1555,6 +1577,14 @@ public final class InstructionEncoder {
 
 	private static boolean isFirstR(final Instruction inst) {
 		return inst.hasFirstOperand() && inst.firstOperand() instanceof Register;
+	}
+
+	private static boolean isFirstR8(Instruction inst) {
+		return inst.hasFirstOperand() && inst.firstOperand() instanceof Register8;
+	}
+
+	private static boolean isSecondR8(Instruction inst) {
+		return inst.hasSecondOperand() && inst.secondOperand() instanceof Register8;
 	}
 
 	private static boolean isConditionalMove(final Opcode opcode) {
@@ -1795,7 +1825,9 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.RDRAND && isFirstER(inst))
 				|| (inst.opcode() == Opcode.RDSEED && isFirstER(inst))
 				|| (inst.opcode() == Opcode.RDSSPQ && isFirstER(inst))
-				|| (inst.opcode() == Opcode.INCSSPQ && isFirstER(inst))) {
+				|| (inst.opcode() == Opcode.INCSSPQ && isFirstER(inst))
+				|| (inst.opcode() == Opcode.RCR && isFirstER(inst))
+				|| (inst.opcode() == Opcode.RCR && hasExtendedBase(inst.firstOperand()))) {
 			rex = or(rex, (byte) 0b0001);
 		}
 		if (rex != DEFAULT_REX_PREFIX
