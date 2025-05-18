@@ -66,3 +66,11 @@ tasks.register('downloadIntelManual', Download) {
 	overwrite false
 	acceptAnyCertificate true
 }
+
+tasks.register('fuzz', JavaExec) {
+	group = 'verification'
+	description = 'Generates random x86_64 instructions to catch unexpected errors'
+	dependsOn classes
+	classpath sourceSets.test.runtimeClasspath
+	mainClass = 'com.ledmington.cpu.x86.X86Fuzzer'
+}
