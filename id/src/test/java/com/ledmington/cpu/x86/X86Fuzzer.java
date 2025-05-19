@@ -62,6 +62,7 @@ public final class X86Fuzzer {
 
 		final long start = System.nanoTime();
 		while (visited.size() < attempts) {
+			Instruction inst = null;
 			int instructionLength = 0;
 			final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1();
 			boolean valid;
@@ -76,6 +77,7 @@ public final class X86Fuzzer {
 								"%s was decoded into %,d instructions instead of one: %s.",
 								toHex(wb), tmp.size(), tmp));
 					}
+					inst = tmp.getFirst();
 				} catch (final InvalidInstruction ii) {
 					System.out.printf(" %s : %s%n", toHex(wb), ii.getMessage());
 					return;
@@ -93,6 +95,10 @@ public final class X86Fuzzer {
 			}
 
 			visited.add(toHex(wb));
+
+			System.out.printf(
+					" %5d | %-11s : %s%n",
+					visited.size(), toHex(wb), (inst == null) ? "unknown" : InstructionEncoder.toIntelSyntax(inst));
 		}
 		final long end = System.nanoTime();
 
