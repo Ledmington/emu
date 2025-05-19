@@ -910,13 +910,17 @@ public final class InstructionEncoder {
 						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r));
 						return;
 					}
-				}
-				if (inst.firstOperand() instanceof final IndirectOperand io
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					final boolean isImmediateOne = imm.bits() == 8 && imm.asByte() == (byte) 1;
 					wb.write(or(isImmediateOne ? (byte) 0xd0 : (byte) 0xc0, (io.bits() == 8) ? (byte) 0 : (byte) 1));
 					if (isImmediateOne) {
-						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(io.getBase()));
+						encodeModRM(
+								wb,
+								getMod(io),
+								isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100,
+								reg);
+						encodeIndirectOperand(wb, io);
 						return;
 					}
 				} else if (inst.firstOperand() instanceof final Register r1
@@ -924,6 +928,18 @@ public final class InstructionEncoder {
 					wb.write(r1 instanceof Register8 ? (byte) 0xd2 : (byte) 0xd3);
 					if (r2.equals(Register8.CL)) {
 						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r1));
+					}
+					return;
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register r2) {
+					wb.write(io.bits() == 8 ? (byte) 0xd2 : (byte) 0xd3);
+					if (r2.equals(Register8.CL)) {
+						encodeModRM(
+								wb,
+								getMod(io),
+								reg,
+								isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
+						encodeIndirectOperand(wb, io);
 					}
 					return;
 				}

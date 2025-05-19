@@ -5895,6 +5895,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SHR, SI, CL), "shr si,cl", "66 d3 ee"),
 				test(new Instruction(Opcode.SHR, SIL, new Immediate((byte) 1)), "shr sil,0x01", "40 d0 ee"),
 				test(new Instruction(Opcode.SHR, SPL, new Immediate((byte) 1)), "shr spl,0x01", "40 d0 ec"),
+				test(
+						new Instruction(
+								Opcode.SHR,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.index(RCX)
+										.scale(2)
+										.displacement(-0x77a3ae45)
+										.build(),
+								CL),
+						"shr DWORD PTR [rcx*2-0x77a3ae45],cl",
+						"d3 2c 4d bb 51 5c 88"),
 				//  Sar
 				test(new Instruction(Opcode.SAR, BPL, new Immediate((byte) 1)), "sar bpl,0x01", "40 d0 fd"),
 				test(new Instruction(Opcode.SAR, BX, bimm), "sar bx,0x12", "66 c1 fb 12"),
@@ -5934,6 +5946,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SHL, SI, CL), "shl si,cl", "66 d3 e6"),
 				test(new Instruction(Opcode.SHL, SIL, one), "shl sil,0x01", "40 d0 e6"),
 				test(new Instruction(Opcode.SHL, SPL, one), "shl spl,0x01", "40 d0 e4"),
+				test(
+						new Instruction(
+								Opcode.SHL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDI)
+										.index(RDX)
+										.scale(2)
+										.displacement(-0x72993c9a)
+										.build(),
+								one),
+						"shl DWORD PTR [rdi+rdx*2-0x72993c9a],0x01",
+						"d1 a4 57 66 c3 66 8d"),
 				// Shld
 				test(new Instruction(Opcode.SHLD, RAX, R10, CL), "shld rax,r10,cl", "4c 0f a5 d0"),
 				// Shrd
@@ -6411,6 +6436,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.OR, EAX, bimm), "or eax,0x12", "83 c8 12"),
 				test(new Instruction(Opcode.OR, EAX, iimm), "or eax,0x12345678", "0d 78 56 34 12"),
 				test(new Instruction(Opcode.OR, AL, DL), "or al,dl", "08 d0"),
+				test(new Instruction(Opcode.OR, BP, AX), "or bp,ax", "66 09 c5"),
 				test(
 						new Instruction(
 								Opcode.OR,
