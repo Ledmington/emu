@@ -44,11 +44,11 @@ public enum SegmentRegister implements Register {
 	public static byte toByte(final SegmentRegister r) {
 		return switch (r) {
 			case ES -> (byte) 0x00;
-			case SS -> (byte) 0x01;
-			case DS -> (byte) 0x02;
-			case FS -> (byte) 0x03;
-			case GS -> (byte) 0x04;
-			default -> throw new IllegalArgumentException(String.format("Unknown segment register '%s'.", r));
+			case CS -> (byte) 0x01;
+			case SS -> (byte) 0x02;
+			case DS -> (byte) 0x03;
+			case FS -> (byte) 0x04;
+			case GS -> (byte) 0x05;
 		};
 	}
 

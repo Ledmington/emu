@@ -149,6 +149,7 @@ import static com.ledmington.cpu.x86.RegisterZMM.ZMM2;
 import static com.ledmington.cpu.x86.SegmentRegister.CS;
 import static com.ledmington.cpu.x86.SegmentRegister.DS;
 import static com.ledmington.cpu.x86.SegmentRegister.ES;
+import static com.ledmington.cpu.x86.SegmentRegister.GS;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -547,6 +548,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								ES),
 						"mov WORD PTR [rax],es",
 						"8c 00"),
+				test(
+						new Instruction(
+								Opcode.MOV,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RSI)
+										.displacement((byte) -0x48)
+										.build(),
+								GS),
+						"mov WORD PTR [rsi-0x48],gs",
+						"8c 6e b8"),
 				test(
 						new Instruction(
 								Opcode.MOV,
@@ -5959,6 +5971,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								one),
 						"shl DWORD PTR [rdi+rdx*2-0x72993c9a],0x01",
 						"d1 a4 57 66 c3 66 8d"),
+				test(
+						new Instruction(
+								Opcode.SHL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RSI)
+										.build(),
+								CL),
+						"shl DWORD PTR [rsi],cl",
+						"d3 26"),
 				// Shld
 				test(new Instruction(Opcode.SHLD, RAX, R10, CL), "shld rax,r10,cl", "4c 0f a5 d0"),
 				// Shrd
@@ -9441,6 +9463,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.ROR, EDI, new Immediate((byte) 0)), "ror edi,0x00", "c1 cf 00"),
 				test(new Instruction(Opcode.ROR, R15, new Immediate((byte) 0x11)), "ror r15,0x11", "49 c1 cf 11"),
 				test(new Instruction(Opcode.ROR, DL, CL), "ror dl,cl", "d2 ca"),
+				test(
+						new Instruction(
+								Opcode.ROR,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.displacement(0xf7433833)
+										.build(),
+								CL),
+						"ror DWORD PTR [rax-0x08bcc7cd],cl",
+						"d3 88 33 38 43 f7"),
 				// Rol
 				test(new Instruction(Opcode.ROL, DX, new Immediate((byte) 0x8)), "rol dx,0x08", "66 c1 c2 08"),
 				test(new Instruction(Opcode.ROL, EDI, new Immediate((byte) 0)), "rol edi,0x00", "c1 c7 00"),

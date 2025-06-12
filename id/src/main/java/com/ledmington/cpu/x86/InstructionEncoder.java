@@ -1377,6 +1377,8 @@ public final class InstructionEncoder {
 			case ROR -> {
 				if (isFirstR8(inst) && isSecondR8(inst)) {
 					wb.write((byte) 0xd2);
+				} else if (isFirstM(inst) && isSecondR(inst)) {
+					wb.write((byte) 0xd3);
 				} else {
 					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
 					reg = (byte) 0b001;

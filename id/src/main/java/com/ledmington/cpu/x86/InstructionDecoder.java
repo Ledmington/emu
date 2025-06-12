@@ -2567,6 +2567,7 @@ public final class InstructionDecoder {
 
 		final Register[] segments = {
 			SegmentRegister.ES,
+			SegmentRegister.CS,
 			SegmentRegister.SS,
 			SegmentRegister.DS,
 			SegmentRegister.FS,
