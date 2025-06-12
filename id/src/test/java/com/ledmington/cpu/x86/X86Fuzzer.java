@@ -79,7 +79,8 @@ public final class X86Fuzzer {
 					}
 					inst = tmp.getFirst();
 				} catch (final InvalidInstruction ii) {
-					System.out.printf(" %s : %s%n", toHex(wb), ii.getMessage());
+					System.out.printf(" %5d | %s : %s%n", visited.size(), toHex(wb), ii.getMessage());
+					System.exit(-1);
 					return;
 				} catch (final ArrayIndexOutOfBoundsException aioobe) {
 					// If we receive an AIOOBE, it means the instruction is not yet complete and we need to add more
@@ -107,5 +108,7 @@ public final class X86Fuzzer {
 				"Approximate throughput: %.6f inst/sec%n",
 				(double) attempts / ((double) (end - start) / 1_000_000_000.0));
 		System.out.println();
+
+		System.exit(0);
 	}
 }
