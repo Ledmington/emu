@@ -691,22 +691,38 @@ public final class InstructionDecoder {
 	private static Instruction parseExtendedOpcodeGroup11(
 			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
-
 		final ModRM modrm = new ModRM(opcodeSecondByte);
 
-		final int immediateBits = pref.hasOperandSizeOverridePrefix() ? 16 : (opcodeFirstByte == (byte) 0xc6) ? 8 : 32;
+		final boolean is8Bit = opcodeFirstByte == (byte) 0xc6;
+		final int immediateBits = pref.hasOperandSizeOverridePrefix()
+				? 16
+				: (is8Bit ? 8 : (pref.rex().isOperand64Bit() ? 64 : 32));
 
 		if (!isIndirectOperandNeeded(modrm) && modrm.reg() == (byte) 0b111 && modrm.rm() == (byte) 0b000) {
 			return new Instruction(Opcode.XBEGIN, imm32(b));
 		}
 
 		if (modrm.reg() == (byte) 0b000) {
-			return parseMOV(
-					b,
-					pref,
-					modrm,
-					immediateBits,
-					pref.rex().isOperand64Bit() ? PointerSize.QWORD_PTR : PointerSize.fromSize(immediateBits));
+			return new Instruction(
+					Opcode.MOV,
+					isIndirectOperandNeeded(modrm)
+							? parseIndirectOperand(b, pref, modrm)
+									.pointer(is8Bit ? PointerSize.BYTE_PTR : PointerSize.fromSize(immediateBits))
+									.build()
+							: (is8Bit
+									? Register8.fromByte(modrm.rm(), pref.hasRexPrefix())
+									: Registers.fromCode(
+											modrm.rm(),
+											pref.rex().isOperand64Bit(),
+											pref.rex().hasModRMRMExtension(),
+											pref.hasOperandSizeOverridePrefix())),
+					switch (immediateBits) {
+						case 8 -> imm8(b);
+						case 16 -> imm16(b);
+						case 32, 64 -> imm32(b);
+						default ->
+							throw new AssertionError(String.format("Unknown immediate bits: %,d.", immediateBits));
+					});
 		}
 
 		throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
@@ -4416,62 +4432,6 @@ public final class InstructionDecoder {
 										pref.rex().hasModRMRMExtension(),
 										pref.hasOperandSizeOverridePrefix()))
 				.build();
-	}
-
-	private static Instruction parseMOV(
-			final ReadOnlyByteBuffer b,
-			final Prefixes pref,
-			final ModRM modrm,
-			final int immediateBits,
-			final PointerSize pointerSize) {
-		final boolean hasOperandSizeOverridePrefix = pref.hasOperandSizeOverridePrefix();
-		final RexPrefix rexPrefix = pref.rex();
-		final byte rm = modrm.rm();
-
-		// Table at page 530
-		final byte mod = modrm.mod();
-		if (mod < (byte) 0b00 || mod > 0b11) {
-			throw new IllegalArgumentException(String.format("Unknown mod value: %d (0x%02x)", mod, mod));
-		}
-
-		final IndirectOperandBuilder iob = parseIndirectOperand(b, pref, modrm);
-
-		iob.pointer(pointerSize);
-
-		final Operand operand1;
-
-		if (isIndirectOperandNeeded(modrm)) {
-			operand1 = iob.build();
-		} else {
-			// indirect operand not needed, so we take the second operand without using the
-			// addressSizeOverride
-			operand1 = Registers.fromCode(
-					rm, rexPrefix.isOperand64Bit(), rexPrefix.hasModRMRMExtension(), hasOperandSizeOverridePrefix);
-		}
-
-		return switch (immediateBits) {
-			case 8 ->
-				Instruction.builder()
-						.opcode(Opcode.MOV)
-						.op(operand1)
-						.op(imm8(b))
-						.build();
-			case 16 ->
-				Instruction.builder()
-						.opcode(Opcode.MOV)
-						.op(operand1)
-						.op(imm16(b))
-						.build();
-			case 32 ->
-				Instruction.builder()
-						.opcode(Opcode.MOV)
-						.op(operand1)
-						.op(imm32(b))
-						.build();
-			default ->
-				throw new IllegalArgumentException(
-						String.format("Invalid value for immediate bits: %,d.", immediateBits));
-		};
 	}
 
 	private static boolean isBP(final Register r) {

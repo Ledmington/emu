@@ -103,10 +103,16 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.SETLE, (byte) 0x0e),
 			Map.entry(Opcode.SETG, (byte) 0x0f));
 
-	// The value for the Reg field for the shift instructions
-	private static final Map<Opcode, Byte> SHIFT_REG_BYTES = Map.ofEntries(
-			Map.entry(Opcode.SHR, (byte) 0b101), Map.entry(Opcode.SAR, (byte) 0b111), Map.entry(Opcode.SHL, (byte)
-					0b100));
+	// The value for the Reg field for the instructions of the extended opcode group 2
+	private static final Map<Opcode, Byte> GROUP2_REG_BYTES = Map.ofEntries(
+			Map.entry(Opcode.ROL, (byte) 0b000),
+			Map.entry(Opcode.ROR, (byte) 0b001),
+			Map.entry(Opcode.RCL, (byte) 0b010),
+			Map.entry(Opcode.RCR, (byte) 0b011),
+			Map.entry(Opcode.SHL, (byte) 0b100),
+			Map.entry(Opcode.SHR, (byte) 0b101),
+			// 0b110 is reserved
+			Map.entry(Opcode.SAR, (byte) 0b111));
 	// The value for the Reg field for the IDIV/DIV/MUL instructions
 	private static final Map<Opcode, Byte> DIV_MUL_REG_BYTES = Map.ofEntries(
 			Map.entry(Opcode.IDIV, (byte) 0b111), Map.entry(Opcode.DIV, (byte) 0b110), Map.entry(Opcode.MUL, (byte)
@@ -148,16 +154,19 @@ public final class InstructionEncoder {
 	 * @return An unambiguous String representation of this instruction with Intel syntax.
 	 */
 	public static String toIntelSyntax(final Instruction inst) {
-		return toIntelSyntax(inst, 0, false);
+		return toIntelSyntax(inst, true, 0, false);
 	}
 
 	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
-	public static String toIntelSyntax(final Instruction inst, final int opcodePad, final boolean shortHex) {
+	public static String toIntelSyntax(
+			final Instruction inst, final boolean checkInstructions, final int opcodePad, final boolean shortHex) {
 		Objects.requireNonNull(inst);
 		if (opcodePad < 0) {
 			throw new IllegalArgumentException(String.format("Invalid opcode pad value: %,d.", opcodePad));
 		}
-		InstructionChecker.check(inst);
+		if (checkInstructions) {
+			InstructionChecker.check(inst);
+		}
 		final StringBuilder sb = new StringBuilder();
 		if (inst.hasPrefix()) {
 			sb.append(inst.getPrefix().name().toLowerCase(Locale.US)).append(' ');
@@ -898,8 +907,8 @@ public final class InstructionEncoder {
 					reg = (byte) 0b011;
 				}
 			}
-			case SHR, SAR, SHL -> {
-				reg = SHIFT_REG_BYTES.get(inst.opcode());
+			case ROL, ROR, RCL, RCR, SHR, SAR, SHL -> {
+				reg = GROUP2_REG_BYTES.get(inst.opcode());
 				if (inst.firstOperand() instanceof final Register r
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					final boolean isImmediateOne = imm.bits() == 8 && imm.asByte() == (byte) 1;
@@ -918,8 +927,8 @@ public final class InstructionEncoder {
 						encodeModRM(
 								wb,
 								getMod(io),
-								isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100,
-								reg);
+								reg,
+								isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 						encodeIndirectOperand(wb, io);
 						return;
 					}
@@ -1370,46 +1379,6 @@ public final class InstructionEncoder {
 			case PCMPEQD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x76);
 			case BSF -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xbc);
 			case BSR -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xbd);
-			case ROL -> {
-				wb.write((byte) 0xc1);
-				reg = (byte) 0b000;
-			}
-			case ROR -> {
-				if (isFirstR8(inst) && isSecondR8(inst)) {
-					wb.write((byte) 0xd2);
-				} else if (isFirstM(inst) && isSecondR(inst)) {
-					wb.write((byte) 0xd3);
-				} else {
-					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
-					reg = (byte) 0b001;
-				}
-			}
-			case RCL -> {
-				if (inst.firstOperand() instanceof final Register r && inst.secondOperand() == Register8.CL) {
-					wb.write((r instanceof Register8) ? (byte) 0xd2 : (byte) 0xd3);
-					wb.write(or(shl((byte) 0b11, 6), shl((byte) 0b010, 3), Registers.toByte(r)));
-					return;
-				} else if (inst.firstOperand() instanceof final Register r
-						&& inst.secondOperand() instanceof Immediate) {
-					wb.write((r instanceof Register8) ? (byte) 0xc0 : (byte) 0xc1);
-					reg = (byte) 0b010;
-				}
-			}
-			case RCR -> {
-				if (inst.firstOperand() instanceof final Register r && inst.secondOperand() == Register8.CL) {
-					wb.write((r instanceof Register8) ? (byte) 0xd2 : (byte) 0xd3);
-					wb.write(or(shl((byte) 0b11, 6), shl((byte) 0b011, 3), Registers.toByte(r)));
-					return;
-				} else if (inst.firstOperand() instanceof final IndirectOperand io
-						&& inst.secondOperand() == Register8.CL) {
-					wb.write((io.bits() == 8) ? (byte) 0xd2 : (byte) 0xd3);
-					wb.write(or(shl((byte) 0b00, 6), shl((byte) 0b011, 3), Registers.toByte(io.getBase())));
-					return;
-				} else if (isFirstR(inst) && inst.secondOperand() instanceof Immediate) {
-					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0xc0 : (byte) 0xc1);
-					reg = (byte) 0b011;
-				}
-			}
 			case PMOVMSKB -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd7);
 			case MOVNTDQ -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xe7);
 			case PSLLDQ -> {
@@ -1527,7 +1496,13 @@ public final class InstructionEncoder {
 					|| inst.opcode() == Opcode.ADC
 					|| inst.opcode() == Opcode.AND
 					|| inst.opcode() == Opcode.OR
+					|| inst.opcode() == Opcode.ROL
 					|| inst.opcode() == Opcode.ROR
+					|| inst.opcode() == Opcode.RCR
+					|| inst.opcode() == Opcode.RCL
+					|| inst.opcode() == Opcode.SHL
+					|| inst.opcode() == Opcode.SHR
+					|| inst.opcode() == Opcode.SAR
 					|| inst.opcode() == Opcode.XCHG
 					|| inst.opcode() == Opcode.BT
 					|| inst.opcode() == Opcode.BTR
@@ -1595,14 +1570,6 @@ public final class InstructionEncoder {
 
 	private static boolean isFirstR(final Instruction inst) {
 		return inst.hasFirstOperand() && inst.firstOperand() instanceof Register;
-	}
-
-	private static boolean isFirstR8(Instruction inst) {
-		return inst.hasFirstOperand() && inst.firstOperand() instanceof Register8;
-	}
-
-	private static boolean isSecondR8(Instruction inst) {
-		return inst.hasSecondOperand() && inst.secondOperand() instanceof Register8;
 	}
 
 	private static boolean isConditionalMove(final Opcode opcode) {

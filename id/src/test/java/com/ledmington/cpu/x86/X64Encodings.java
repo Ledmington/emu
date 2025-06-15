@@ -599,6 +599,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.MOV, DH, bimm), "mov dh,0x12", "b6 12"),
 				test(new Instruction(Opcode.MOV, R8W, simm), "mov r8w,0x1234", "66 41 b8 34 12"),
 				test(new Instruction(Opcode.MOV, R9, iimm), "mov r9,0x12345678", "49 c7 c1 78 56 34 12"),
+				// This specific instruction is actually ambiguous and can be encoded both as b7 7c and as c6 c7 7c
+				test(new Instruction(Opcode.MOV, BH, new Immediate((byte) 0x7c)), "mov bh,0x7c", "b7 7c"),
 				test(
 						new Instruction(
 								Opcode.MOV,
@@ -9504,11 +9506,32 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								CL),
 						"rcr QWORD PTR [r11],cl",
 						"49 d3 1b"),
+				test(
+						new Instruction(
+								Opcode.RCR,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDX)
+										.build(),
+								new Immediate((byte) 0x5b)),
+						"rcr DWORD PTR [rdx],0x5b",
+						"c1 1a 5b"),
 				// Rcl
 				test(new Instruction(Opcode.RCL, CL, bimm), "rcl cl,0x12", "c0 d1 12"),
 				test(new Instruction(Opcode.RCL, EDI, new Immediate((byte) 0)), "rcl edi,0x00", "c1 d7 00"),
 				test(new Instruction(Opcode.RCL, EBX, CL), "rcl ebx,cl", "d3 d3"),
 				test(new Instruction(Opcode.RCL, AL, CL), "rcl al,cl", "d2 d0"),
+				test(
+						new Instruction(
+								Opcode.RCL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RCX)
+										.displacement(0x1b95ec1f)
+										.build(),
+								new Immediate((byte) 1)),
+						"rcl DWORD PTR [rcx+0x1b95ec1f],0x01",
+						"d1 91 1f ec 95 1b"),
 				// Pmovmskb
 				test(new Instruction(Opcode.PMOVMSKB, EDI, XMM6), "pmovmskb edi,xmm6", "66 0f d7 fe"),
 				// Pslldq
