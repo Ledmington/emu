@@ -90,16 +90,20 @@ public final class X86Fuzzer {
 				}
 			} while (!valid);
 
-			if (visited.contains(toHex(wb))) {
+			final String hex = toHex(wb);
+			if (visited.contains(hex)) {
 				// this instruction was already generated some time in the past, skip it
 				continue;
 			}
-
-			visited.add(toHex(wb));
+			visited.add(hex);
 
 			System.out.printf(
 					" %5d | %-11s : %s%n",
-					visited.size(), toHex(wb), (inst == null) ? "unknown" : InstructionEncoder.toIntelSyntax(inst));
+					visited.size(),
+					hex,
+					(inst == null)
+							? "unknown"
+							: InstructionEncoder.toIntelSyntax(inst, !containsNullRegister(inst), 0, false));
 		}
 		final long end = System.nanoTime();
 
@@ -110,5 +114,12 @@ public final class X86Fuzzer {
 		System.out.println();
 
 		System.exit(0);
+	}
+
+	private static boolean containsNullRegister(final Instruction inst) {
+		return (inst.hasFirstOperand() && inst.firstOperand() instanceof NullRegister)
+				|| (inst.hasSecondOperand() && inst.secondOperand() instanceof NullRegister)
+				|| (inst.hasThirdOperand() && inst.thirdOperand() instanceof NullRegister)
+				|| (inst.hasFourthOperand() && inst.fourthOperand() instanceof NullRegister);
 	}
 }
