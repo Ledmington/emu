@@ -438,6 +438,7 @@ public class X86Cpu implements X86Emulator {
 				}
 				rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
 			}
+			case SYSCALL -> handleSyscall();
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented.");
 			case HLT -> state = State.HALTED;
 			case NOP -> {}
@@ -448,6 +449,19 @@ public class X86Cpu implements X86Emulator {
 			default ->
 				throw new IllegalArgumentException(
 						String.format("Unknown instruction '%s'.", InstructionEncoder.toIntelSyntax(inst)));
+		}
+	}
+
+	private void handleSyscall() {
+		// Useful reference: https://filippo.io/linux-syscall-table/
+		final int sysCallCode = rf.get(Register32.EAX);
+		switch (sysCallCode) {
+			case 60 -> {
+				final long exitCode = rf.get(Register64.RDI);
+				logger.info("syscall exit %d encountered", exitCode);
+				state = State.HALTED;
+			}
+			default -> throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
 		}
 	}
 
