@@ -43,6 +43,19 @@ final class TestEmulation {
 	}
 
 	@Test
+	void doNothing2() {
+		final Path p;
+		try {
+			p = Paths.get(Objects.requireNonNull(
+							Thread.currentThread().getContextClassLoader().getResource("do_nothing.small"))
+					.toURI());
+		} catch (final URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+		assertDoesNotThrow(() -> Emu.run(p.toString()));
+	}
+
+	@Test
 	void small() {
 		final Path p;
 		try {
