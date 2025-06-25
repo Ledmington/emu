@@ -522,7 +522,7 @@ final class TestExecution {
 	@ParameterizedTest
 	@MethodSource("r16m16")
 	void lea16(final Register16 dest, final IndirectOperand src) {
-		final short address = BitUtils.asShort(X86Cpu.computeIndirectOperand((RegisterFile) cpu.getRegisters(), src));
+		final short address = BitUtils.asShort(cpu.computeIndirectOperand(src));
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
@@ -535,7 +535,7 @@ final class TestExecution {
 	@ParameterizedTest
 	@MethodSource("r32m32")
 	void lea32(final Register32 dest, final IndirectOperand src) {
-		final int address = BitUtils.asInt(X86Cpu.computeIndirectOperand((RegisterFile) cpu.getRegisters(), src));
+		final int address = BitUtils.asInt(cpu.computeIndirectOperand(src));
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
@@ -548,7 +548,7 @@ final class TestExecution {
 	@ParameterizedTest
 	@MethodSource("r64m64")
 	void lea64(final Register64 dest, final IndirectOperand src) {
-		final long address = X86Cpu.computeIndirectOperand((RegisterFile) cpu.getRegisters(), src);
+		final long address = cpu.computeIndirectOperand(src);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));

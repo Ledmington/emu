@@ -18,6 +18,9 @@
 package com.ledmington.emu;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
@@ -156,7 +159,7 @@ public class X86Cpu implements X86Emulator {
 						rf.set(RFlags.ZERO, result == 0L);
 					}
 					case IndirectOperand iop -> {
-						final long address = computeIndirectOperand(rf, iop);
+						final long address = computeIndirectOperand(iop);
 						final Register8 op2 = (Register8) inst.secondOperand();
 						final byte r1 = mem.read(address);
 						final byte r2 = rf.get(op2);
@@ -212,7 +215,7 @@ public class X86Cpu implements X86Emulator {
 						rf.set(RFlags.ZERO, result == 0L);
 					}
 					case IndirectOperand iop -> {
-						final long address = computeIndirectOperand(rf, iop);
+						final long address = computeIndirectOperand(iop);
 						final Register8 op2 = (Register8) inst.secondOperand();
 						final byte r1 = mem.read(address);
 						final byte r2 = rf.get(op2);
@@ -228,12 +231,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case SHR -> {
 				if (inst.firstOperand() instanceof final Register64 r1) {
-					final long v = rf.get(r1);
-					final byte imm = ((Immediate) inst.secondOperand()).asByte();
-					final long result = v >>> imm;
-					rf.set(r1, result);
-					rf.resetFlags();
-					rf.set(RFlags.ZERO, result == 0L);
+					op(r1, ((Immediate) inst.secondOperand()), (r, i) -> r >>> i);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SHR has %,d bits.",
@@ -241,13 +239,8 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SAR -> {
-				if (inst.firstOperand() instanceof final Register64 op1) {
-					final long r1 = rf.get(op1);
-					final byte imm = ((Immediate) inst.secondOperand()).asByte();
-					final long result = r1 >> imm;
-					rf.set(op1, result);
-					rf.resetFlags();
-					rf.set(RFlags.ZERO, result == 0L);
+				if (inst.firstOperand() instanceof final Register64 r1) {
+					op(r1, ((Immediate) inst.secondOperand()), (r, i) -> r >> i);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SAR has %,d bits.",
@@ -358,11 +351,11 @@ public class X86Cpu implements X86Emulator {
 					rf.set(op1, imm.asInt());
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register64 op2) {
-					final long address = computeIndirectOperand(rf, io);
+					final long address = computeIndirectOperand(io);
 					mem.write(address, rf.get(op2));
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					final long address = computeIndirectOperand(rf, io);
+					final long address = computeIndirectOperand(io);
 					mem.write(address, imm.asInt());
 				} else {
 					throw new IllegalArgumentException(
@@ -394,14 +387,14 @@ public class X86Cpu implements X86Emulator {
 			case LEA -> {
 				final IndirectOperand src = (IndirectOperand) inst.secondOperand();
 				if (inst.firstOperand() instanceof final Register64 dest) {
-					final long address = computeIndirectOperand(rf, src);
+					final long address = computeIndirectOperand(src);
 					rf.set(dest, address);
 				} else if (inst.firstOperand() instanceof final Register32 dest) {
-					final int address = BitUtils.asInt(computeIndirectOperand(rf, src));
+					final int address = BitUtils.asInt(computeIndirectOperand(src));
 					rf.set(dest, address);
 				} else {
 					final Register16 dest = (Register16) inst.firstOperand();
-					final short address = BitUtils.asShort(computeIndirectOperand(rf, src));
+					final short address = BitUtils.asShort(computeIndirectOperand(src));
 					rf.set(dest, address);
 				}
 			}
@@ -424,7 +417,7 @@ public class X86Cpu implements X86Emulator {
 					final long relativeAddress = getAsLongSX(imm);
 					jumpAddress = rip + relativeAddress;
 				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
-					jumpAddress = computeIndirectOperand(rf, io);
+					jumpAddress = computeIndirectOperand(io);
 				} else {
 					throw new Error();
 				}
@@ -476,6 +469,26 @@ public class X86Cpu implements X86Emulator {
 		instFetch.setPosition(instFetch.getPosition() + offset);
 	}
 
+	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
+		final long r1 = rf.get(op1);
+		final byte i = imm.asByte();
+		final long result = task.apply(r1, (long) i);
+		rf.set(op1, result);
+		rf.resetFlags();
+		rf.set(RFlags.ZERO, result == 0L);
+	}
+
+	private <X> void op(
+			final Supplier<X> readOp1,
+			final Supplier<X> readOp2,
+			final BiFunction<X, X, X> task,
+			final Consumer<X> writeResult) {
+		final X op1 = readOp1.get();
+		final X op2 = readOp2.get();
+		final X result = task.apply(op1, op2);
+		writeResult.accept(result);
+	}
+
 	private long pop() {
 		final long rsp = rf.get(Register64.RSP);
 		final long value = mem.read8(rsp);
@@ -514,7 +527,7 @@ public class X86Cpu implements X86Emulator {
 
 	/** Returns a sign-extended long */
 	private long getAsLongSX(final IndirectOperand io) {
-		final long address = computeIndirectOperand(rf, io);
+		final long address = computeIndirectOperand(io);
 		return switch (io.getPointerSize()) {
 			case PointerSize.QWORD_PTR -> mem.read8(address);
 			default ->
@@ -522,7 +535,7 @@ public class X86Cpu implements X86Emulator {
 		};
 	}
 
-	public static long computeIndirectOperand(final RegisterFile rf, final IndirectOperand io) {
+	public long computeIndirectOperand(final IndirectOperand io) {
 		final long base = io.hasBase()
 				? (io.getBase() instanceof Register64
 						? rf.get((Register64) io.getBase())
