@@ -63,7 +63,8 @@ public final class Emu {
 				EmulatorConstants.getBreakWhenReadingUninitializedMemory());
 		final X86Emulator cpu = new X86Cpu(mem, EmulatorConstants.getCheckInstruction());
 
-		ELFLoader.load(
+		final ELFLoader loader = new ELFLoader();
+		loader.load(
 				elf,
 				cpu,
 				mem,
@@ -97,6 +98,6 @@ public final class Emu {
 		}
 		cpu.execute();
 		logger.info(" ### Execution end ### ");
-		ELFLoader.unload(elf);
+		loader.unload(elf);
 	}
 }

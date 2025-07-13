@@ -18,6 +18,8 @@
 package com.ledmington.emu;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -58,7 +60,11 @@ public final class ELFLoader {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-loader");
 
-	private ELFLoader() {}
+	private record Range(long start, long end) {}
+
+	private final List<Range> memorySegments = new ArrayList<>();
+
+	public ELFLoader() {}
 
 	/**
 	 * Loads the given ELF file in the emulated memory.
@@ -70,7 +76,7 @@ public final class ELFLoader {
 	 * @param baseAddress The address where to start loading the file.
 	 * @param stackSize The size in bytes of the stack.
 	 */
-	public static void load(
+	public void load(
 			final ELF elf,
 			final X86Emulator cpu,
 			final MemoryController mem,
@@ -150,7 +156,7 @@ public final class ELFLoader {
 	 *
 	 * @param elf The file to be unloaded.
 	 */
-	public static void unload(final ELF elf) {
+	public void unload(final ELF elf) {
 		if (elf.getSectionByName(".fini_array").isPresent()) {
 			runFiniArray();
 		}
@@ -162,16 +168,16 @@ public final class ELFLoader {
 		}
 	}
 
-	private static void runFrom(final X86Emulator cpu, final long startAddress) {
+	private void runFrom(final X86Emulator cpu, final long startAddress) {
 		cpu.setInstructionPointer(startAddress);
 		cpu.execute();
 	}
 
-	private static void runPreInitArray() {
+	private void runPreInitArray() {
 		notImplemented();
 	}
 
-	private static void runInitArray(
+	private void runInitArray(
 			final ConstructorsSection initArray,
 			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
@@ -192,7 +198,7 @@ public final class ELFLoader {
 		}
 	}
 
-	private static void runInit(
+	private void runInit(
 			final BasicProgBitsSection init,
 			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
@@ -225,28 +231,28 @@ public final class ELFLoader {
 		}
 	}
 
-	private static void runCtors() {
+	private void runCtors() {
 		notImplemented();
 	}
 
-	private static void runFiniArray() {
+	private void runFiniArray() {
 		notImplemented();
 	}
 
-	private static void runFini() {
+	private void runFini() {
 		notImplemented();
 	}
 
-	private static void runDtors() {
+	private void runDtors() {
 		notImplemented();
 	}
 
 	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
-	private static void notImplemented() {
+	private void notImplemented() {
 		throw new Error("Not implemented");
 	}
 
-	private static long setupStack(final SectionTable st, final long stackSize, final MemoryController mem) {
+	private long setupStack(final SectionTable st, final long stackSize, final MemoryController mem) {
 		long highestAddress = 0L;
 		for (int i = 0; i < st.getSectionTableLength(); i++) {
 			highestAddress = Math.max(
@@ -265,7 +271,7 @@ public final class ELFLoader {
 		return highestAddress;
 	}
 
-	private static long getNumEnvBytes() {
+	private long getNumEnvBytes() {
 		long count = 0L;
 		for (final Entry<String, String> env : System.getenv().entrySet()) {
 			count += env.getKey().length() + 1L + env.getValue().length() + 1L;
@@ -273,11 +279,11 @@ public final class ELFLoader {
 		return count;
 	}
 
-	private static long align(final long value, final long alignment) {
+	private long align(final long value, final long alignment) {
 		return ((value % alignment) == 0L) ? value : ((value & (alignment - 1L)) + alignment);
 	}
 
-	private static long getNumCliBytes(final String... args) {
+	private long getNumCliBytes(final String... args) {
 		long count = 0L;
 		for (final String arg : args) {
 			count += arg.length() + 1L;
@@ -285,7 +291,7 @@ public final class ELFLoader {
 		return count;
 	}
 
-	private static Pair<Long, Long> loadCommandLineArgumentsAndEnvironmentVariables(
+	private Pair<Long, Long> loadCommandLineArgumentsAndEnvironmentVariables(
 			final MemoryController mem,
 			final long stackBase,
 			final boolean is32Bit,
@@ -371,7 +377,7 @@ public final class ELFLoader {
 		return new Pair<>(argv, envp);
 	}
 
-	private static void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {
+	private void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {
 		logger.debug("Loading ELF segments into memory");
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
@@ -385,26 +391,31 @@ public final class ELFLoader {
 			logger.debug(
 					"Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
 					start,
-					end - 1L,
+					end,
 					end - start,
 					(phte.isReadable() ? "R" : "")
 							+ (phte.isWriteable() ? "W" : "")
 							+ (phte.isExecutable() ? "X" : ""));
-			mem.setPermissions(start, end - 1L, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
+			mem.setPermissions(start, end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
+
+			memorySegments.add(new Range(start, end));
 		}
 	}
 
-	private static void loadSections(final SectionTable st, final MemoryController mem, final long baseAddress) {
+	private void loadSections(final SectionTable st, final MemoryController mem, final long baseAddress) {
 		logger.debug("Loading ELF sections into memory");
 		for (int i = 0; i < st.getSectionTableLength(); i++) {
 			final Section sec = st.getSection(i);
+			if (!sec.getHeader().getFlags().contains(SectionHeaderFlags.SHF_ALLOC)) {
+				continue;
+			}
 			if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
 				initializeSection(sec, mem, baseAddress);
 			}
 		}
 	}
 
-	private static void initializeSection(final Section sec, final MemoryController mem, final long baseAddress) {
+	private void initializeSection(final Section sec, final MemoryController mem, final long baseAddress) {
 		Objects.requireNonNull(sec);
 
 		switch (sec) {
@@ -415,6 +426,8 @@ public final class ELFLoader {
 				logger.debug(
 						"Loading section %s in memory range 0x%x-0x%x (%,d bytes)",
 						sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
+				final int segmentIndex = findSegmentIndex(startVirtualAddress, size);
+				logger.debug("Memory segment %,d", segmentIndex);
 				mem.initialize(startVirtualAddress, size, (byte) 0x00);
 			}
 			case LoadableSection ls -> {
@@ -423,6 +436,8 @@ public final class ELFLoader {
 				logger.debug(
 						"Loading section %s in memory range 0x%x-0x%x (%,d bytes)",
 						sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
+				final int segmentIndex = findSegmentIndex(startVirtualAddress, content.length);
+				logger.debug("Memory segment %,d", segmentIndex);
 				mem.initialize(startVirtualAddress, content);
 			}
 			default ->
@@ -434,5 +449,15 @@ public final class ELFLoader {
 								.map(SectionHeaderFlags::getName)
 								.collect(Collectors.joining(", "))));
 		}
+	}
+
+	private int findSegmentIndex(final long sectionStart, final long sectionSize) {
+		for (int i = 0; i < memorySegments.size(); i++) {
+			final Range segment = memorySegments.get(i);
+			if (sectionStart >= segment.start() & sectionStart + sectionSize <= segment.end()) {
+				return i;
+			}
+		}
+		throw new IllegalArgumentException("No memory segment found.");
 	}
 }

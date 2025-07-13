@@ -435,8 +435,8 @@ public final class MemoryController implements Memory {
 	 * @param values The non-null array of 8-bit values to be written.
 	 */
 	public void initialize(final long start, final byte[] values) {
-		for (long i = 0L; i < values.length; i++) {
-			mem.write(start + i, values[BitUtils.asInt(i)]);
+		for (int i = 0; i < values.length; i++) {
+			mem.write(start + i, values[i]);
 		}
 	}
 

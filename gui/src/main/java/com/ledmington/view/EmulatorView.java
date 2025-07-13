@@ -235,7 +235,8 @@ public final class EmulatorView extends Stage {
 		// TODO: implement this
 		final String[] commandLineArguments = new String[0];
 
-		ELFLoader.load(
+		final ELFLoader loader = new ELFLoader();
+		loader.load(
 				ELFParser.parse(file.toPath().toString()),
 				cpu,
 				mem,
