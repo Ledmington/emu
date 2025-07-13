@@ -52,6 +52,7 @@ public final class Main {
 		final String memoryInitializerFlag = "--mem-init";
 		final String stackSizeFlag = "--stack-size";
 		final String baseAddressFlag = "--base-address";
+		final String baseStackAddressFlag = "--base-stack-address";
 		final String baseStackValueFlag = "--base-stack-value";
 		final String shortVersionFlag = "-V";
 		final String longVersionFlag = "--version";
@@ -86,28 +87,30 @@ public final class Main {
 							" -V, --version  Prints the version of the emulator and exits.",
 							"",
 							" Memory options:",
-							" --mem-init MI          What value to initialize memory with: random (default), binary zero",
-							"                          or any hexadecimal 1-byte value (example: 0xfa).",
-							" --stack-size N         Number of bytes to allocate for the stack. Accepts only integers.",
-							"                          Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
-							"                          Default: " + EmulatorConstants.getStackSize() + " bytes ("
+							" --mem-init MI           What value to initialize memory with: random (default), binary zero",
+							"                           or any hexadecimal 1-byte value (example: 0xfa).",
+							" --stack-size N          Number of bytes to allocate for the stack. Accepts only integers.",
+							"                           Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
+							"                           Default: " + EmulatorConstants.getStackSize() + " bytes ("
 									+ EmulatorConstants.getStackSize() / 1_048_576L + " MiB).",
-							" --base-address X       Memory location where to load the executable file as hexadecimal 64-bits.",
-							"                          Default: "
+							" --base-address X        Memory location where to load the executable file as hexadecimal 64-bits.",
+							"                           Default: "
 									+ String.format("0x%x", EmulatorConstants.getBaseAddress()) + ".",
-							" --base-stack-value X   The value to put at the base of the stack (default: "
+							" --base-stack-address X  The addres of the base of the stack (default: "
+									+ String.format("0x%x", EmulatorConstants.getBaseStackAddress()) + ").",
+							" --base-stack-value X    The value to put at the base of the stack (default: "
 									+ String.format("0x%x", EmulatorConstants.getBaseStackValue()) + ").",
-							" --check-mem-perm       Breaks when the program tries to access a memory location",
-							"                          with the wrong permissions (default).",
-							" --no-check-mem-perm    Disables the above.",
-							" --check-mem-init       Breaks when reading uninitialized memory locations (default).",
-							" --no-check-mem-init    Disables the above.",
+							" --check-mem-perm        Breaks when the program tries to access a memory location",
+							"                           with the wrong permissions (default).",
+							" --no-check-mem-perm     Disables the above.",
+							" --check-mem-init        Breaks when reading uninitialized memory locations (default).",
+							" --no-check-mem-init     Disables the above.",
 							"",
 							" CPU options:",
 							" --check-instructions      Checks that disassembled instructions are correct (default).",
 							" --no-check-instructions   Disables the above.",
 							"",
-							" FILE                  The ELF executable file to emulate.",
+							" FILE                    The ELF executable file to emulate.",
 							""));
 					out.flush();
 					System.exit(0);
@@ -205,6 +208,18 @@ public final class Main {
 							? Long.parseUnsignedLong(args[i].substring(2), 16)
 							: Long.parseUnsignedLong(args[i], 16);
 					EmulatorConstants.setBaseAddress(val);
+				}
+				case baseStackAddressFlag -> {
+					i++;
+					if (i >= args.length) {
+						throw new IllegalArgumentException(
+								String.format("Expected an argument after '%s'", baseStackAddressFlag));
+					}
+
+					final long val = args[i].startsWith("0x")
+							? Long.parseUnsignedLong(args[i].substring(2), 16)
+							: Long.parseUnsignedLong(args[i], 16);
+					EmulatorConstants.setBaseStackAddress(val);
 				}
 				case baseStackValueFlag -> {
 					i++;

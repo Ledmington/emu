@@ -70,6 +70,7 @@ public final class Emu {
 				mem,
 				commandLineArguments,
 				EmulatorConstants.getBaseAddress(),
+				EmulatorConstants.getBaseStackAddress(),
 				EmulatorConstants.getStackSize(),
 				EmulatorConstants.getBaseStackValue());
 

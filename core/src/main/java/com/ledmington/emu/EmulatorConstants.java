@@ -33,8 +33,11 @@ public final class EmulatorConstants {
 	/** Base address where to load the executable file. */
 	private static long baseAddress = 0x00005a5a00000000L;
 
+	/** The default stack address. */
+	private static long baseStackAddress = 0x7fffffffe000L;
+
 	/** The default stack size. */
-	private static long stackSize = 8192L * 1024L;
+	private static long stackSize = 8L * 1024L * 1024L;
 
 	/** The value at the base of the stack. */
 	private static long baseStackValue = 0x00fafa00deadbeefL;
@@ -75,6 +78,24 @@ public final class EmulatorConstants {
 
 	public static void setBreakWhenReadingUninitializedMemory(final boolean b) {
 		breakWhenReadingUninitializedMemory = b;
+	}
+
+	/**
+	 * Changes the default stack address.
+	 *
+	 * @param newBaseStackAddress The new base stack address.
+	 */
+	public static void setBaseStackAddress(final long newBaseStackAddress) {
+		baseStackAddress = newBaseStackAddress;
+	}
+
+	/**
+	 * Returns the default base stack address.
+	 *
+	 * @return The default base stack address.
+	 */
+	public static long getBaseStackAddress() {
+		return baseStackAddress;
 	}
 
 	/**

@@ -82,14 +82,15 @@ public final class ELFLoader {
 			final MemoryController mem,
 			final String[] commandLineArguments,
 			final long baseAddress,
+			final long baseStackAddress,
 			final long stackSize,
 			final long baseStackValue) {
 		loadSegments(elf, mem, baseAddress);
 		loadSections(elf, mem, baseAddress);
-		final long highestAddress = setupStack(elf, stackSize, mem);
+		setupStack(baseStackAddress, stackSize, mem);
 
 		// We make RSP point at the last 8 bytes of allocated memory
-		final long stackPointer = highestAddress + stackSize - 8L;
+		final long stackPointer = baseStackAddress + stackSize - 8L;
 
 		// These are fake instructions to set up the stack
 		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackPointer)));
@@ -252,23 +253,16 @@ public final class ELFLoader {
 		throw new Error("Not implemented");
 	}
 
-	private long setupStack(final SectionTable st, final long stackSize, final MemoryController mem) {
-		long highestAddress = 0L;
-		for (int i = 0; i < st.getSectionTableLength(); i++) {
-			highestAddress = Math.max(
-					highestAddress,
-					st.getSection(i).getHeader().getVirtualAddress()
-							+ st.getSection(i).getHeader().getSectionSize());
+	private void setupStack(long baseStackAddress, final long stackSize, final MemoryController mem) {
+		if ((baseStackAddress & 0xfL) != 0L) {
+			baseStackAddress = (baseStackAddress + 15L) & 0xfffffffffffffff0L;
+			logger.debug("Aligning base stack address to 16-byte aligned value: 0x%x", baseStackAddress);
 		}
-
-		// Make sure that the base address is 16-byte aligned and far enough from the file
-		highestAddress = (highestAddress + 0xf000000L) & 0xfffffffffffffff0L;
 
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3e B) at 0x%016x-0x%016x",
-				stackSize, (double) stackSize, highestAddress, highestAddress + stackSize - 1L);
-		mem.setPermissions(highestAddress, highestAddress + stackSize - 1L, true, true, false);
-		return highestAddress;
+				stackSize, (double) stackSize, baseStackAddress, baseStackAddress + stackSize - 1L);
+		mem.setPermissions(baseStackAddress, baseStackAddress + stackSize - 1L, true, true, false);
 	}
 
 	private long getNumEnvBytes() {
@@ -379,6 +373,9 @@ public final class ELFLoader {
 
 	private void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {
 		logger.debug("Loading ELF segments into memory");
+
+		// NOTE: this index is not the PHTE index, this index makes sense only during loading
+		int segmentIndex = 0;
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
 			if (phte.type() != PHTEntryType.PT_LOAD) {
@@ -389,7 +386,8 @@ public final class ELFLoader {
 			final long start = baseAddress + phte.segmentVirtualAddress();
 			final long end = start + phte.segmentMemorySize();
 			logger.debug(
-					"Setting permissions of range 0x%x-0x%x (%,d bytes) to %s",
+					"Setting permissions of memory segment %,d at range 0x%x-0x%x (%,d bytes) to %s",
+					segmentIndex,
 					start,
 					end,
 					end - start,
@@ -398,6 +396,7 @@ public final class ELFLoader {
 							+ (phte.isExecutable() ? "X" : ""));
 			mem.setPermissions(start, end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
 
+			segmentIndex++;
 			memorySegments.add(new Range(start, end));
 		}
 	}
@@ -423,21 +422,23 @@ public final class ELFLoader {
 				// allocate uninitialized data blocks
 				final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
 				final long size = sec.getHeader().getSectionSize();
-				logger.debug(
-						"Loading section %s in memory range 0x%x-0x%x (%,d bytes)",
-						sec.getName(), startVirtualAddress, startVirtualAddress + size, size);
 				final int segmentIndex = findSegmentIndex(startVirtualAddress, size);
-				logger.debug("Memory segment %,d", segmentIndex);
+				logger.debug(
+						"Loading section %s in memory segment %,d at range 0x%x-0x%x (%,d bytes)",
+						sec.getName(), segmentIndex, startVirtualAddress, startVirtualAddress + size, size);
 				mem.initialize(startVirtualAddress, size, (byte) 0x00);
 			}
 			case LoadableSection ls -> {
 				final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
 				final byte[] content = ls.getLoadableContent();
-				logger.debug(
-						"Loading section %s in memory range 0x%x-0x%x (%,d bytes)",
-						sec.getName(), startVirtualAddress, startVirtualAddress + content.length, content.length);
 				final int segmentIndex = findSegmentIndex(startVirtualAddress, content.length);
-				logger.debug("Memory segment %,d", segmentIndex);
+				logger.debug(
+						"Loading section %s in memory segment %,d at range 0x%x-0x%x (%,d bytes)",
+						sec.getName(),
+						segmentIndex,
+						startVirtualAddress,
+						startVirtualAddress + content.length,
+						content.length);
 				mem.initialize(startVirtualAddress, content);
 			}
 			default ->
