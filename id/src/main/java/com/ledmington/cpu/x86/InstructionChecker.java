@@ -342,17 +342,20 @@ public final class InstructionChecker {
 					Opcode.SUB,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R16_I16, R32_I8, R32_I32, R8_I8, R64_I8, R64_I32, R8_M8,
-							R32_M32, R64_M64, M8_R8, M16_R16, M32_R32, M64_R64, M8_I8, M16_I8, M32_I8, M64_I8,
+							R32_M32, R64_M64, M8_R8, M16_R16, M32_R32, M64_R64, M8_I8, M16_I8, M32_I8, M32_I32, M64_I8,
 							M64_I32)),
 			Map.entry(
 					Opcode.SBB,
 					List.of(
 							R8_R8, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R8_M8, R32_M32, M8_R8,
-							M32_R32, M8_I8, M32_I8)),
-			Map.entry(Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8, M32_R8)),
-			Map.entry(Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8, M32_I8)),
+							M32_R32, M8_I8, M32_I8, M32_I32)),
 			Map.entry(
-					Opcode.SHL, List.of(R8_R8, R16_R8, R32_R8, R64_R8, M32_R8, R8_I8, R16_I8, R32_I8, R64_I8, M32_I8)),
+					Opcode.SHR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, R8_I8, R16_I8, R32_I8, R64_I8, M32_R8, M32_I8)),
+			Map.entry(
+					Opcode.SAR, List.of(R8_R8, R16_R8, R32_R8, R64_R8, M32_R8, R8_I8, R16_I8, R32_I8, R64_I8, M32_I8)),
+			Map.entry(
+					Opcode.SHL,
+					List.of(R8_R8, R16_R8, R32_R8, R64_R8, M32_R8, M64_R8, R8_I8, R16_I8, R32_I8, R64_I8, M32_I8)),
 			Map.entry(Opcode.SHLD, List.of(R64_R64_R8)),
 			Map.entry(Opcode.SHRD, List.of(R64_R64_R8)),
 			Map.entry(
@@ -483,7 +486,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.ROR, List.of(R8_R8, M32_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.ROL, List.of(R8_R8, R32_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.RCR, List.of(R8_R8, R32_R8, R64_R8, R8_I8, R32_I8, M32_R8, M64_R8, M32_I8)),
-			Map.entry(Opcode.RCL, List.of(R8_R8, R32_R8, M32_I8, R8_I8, R32_I8)),
+			Map.entry(Opcode.RCL, List.of(R8_R8, R32_R8, M32_R8, M32_I8, R8_I8, R32_I8)),
 			Map.entry(Opcode.PMOVMSKB, List.of(R32_RX)),
 			Map.entry(Opcode.PMINUB, List.of(RX_RX, RX_M128)),
 			Map.entry(Opcode.PMINUD, List.of(RX_M128)),
