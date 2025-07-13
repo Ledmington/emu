@@ -71,6 +71,7 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
  * "https://github.com/bminor/binutils-gdb/blob/master/binutils/readelf.c">here</a> or <a href=
  * "https://sourceware.org/git/?p=binutils-gdb.git;a=blob;f=binutils/readelf.c;h=5d1cf9c3388a9c7eebd99001963b338e60baf370;hb=refs/heads/master">here</a>.
  */
+@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class Main {
 
 	private static final PrintWriter out = System.console() != null
@@ -390,10 +391,8 @@ public final class Main {
 		}
 
 		final Optional<Section> hash = elf.getSectionByName(".hash");
-		if (displayHashSection) {
-			if (hash.isPresent()) {
-				printHashSection((HashTableSection) hash.orElseThrow());
-			}
+		if (displayHashSection && hash.isPresent()) {
+			printHashSection((HashTableSection) hash.orElseThrow());
 		}
 
 		final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
@@ -1246,7 +1245,7 @@ public final class Main {
 			final String symbolName = strtab.getString(ste.nameOffset());
 			final String sectionTableIndex = (ste.sectionTableIndex() == 0)
 					? "UND"
-					: (ste.sectionTableIndex() < 0 ? "ABS" : String.valueOf(ste.sectionTableIndex()));
+					: ste.sectionTableIndex() < 0 ? "ABS" : String.valueOf(ste.sectionTableIndex());
 
 			out.printf(
 					"  %4d: %016x %5d %-6s  %-6s %-7s  %3s ",

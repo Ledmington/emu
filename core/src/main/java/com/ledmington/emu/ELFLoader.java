@@ -60,9 +60,9 @@ public final class ELFLoader {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-loader");
 
-	private record Range(long start, long end) {}
-
 	private final List<Range> memorySegments = new ArrayList<>();
+
+	private record Range(long start, long end) {}
 
 	public ELFLoader() {}
 

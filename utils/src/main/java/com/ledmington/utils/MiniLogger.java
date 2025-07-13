@@ -260,7 +260,6 @@ public final class MiniLogger {
 	 *
 	 * @param t The Throwable to be logged.
 	 */
-	@SuppressWarnings("PMD.GuardLogStatement")
 	public void error(final Throwable t) {
 		error(t.getClass().getName());
 		if (t.getMessage() != null) {

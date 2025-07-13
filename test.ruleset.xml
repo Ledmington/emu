@@ -5,7 +5,10 @@
 		xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>Emu ruleset for testing code</description>
 
-    <rule ref="category/java/bestpractices.xml" />
+    <rule ref="category/java/bestpractices.xml">
+        <!-- Avoid reporting pedantic tests -->
+        <exclude name="UnitTestContainsTooManyAsserts" />
+    </rule>
 
     <rule ref="category/java/codestyle.xml">
         <!-- Avoid reporting variables with a short name -->
@@ -52,6 +55,8 @@
     <rule ref="category/java/errorprone.xml">
         <!-- Avoid reporting methods with the same name of a field -->
         <exclude name="AvoidFieldNameMatchingMethodName" />
+        <!-- Avoid reporting the usage of null in test setup -->
+        <exclude name="NullAssignment" />
     </rule>
 
     <rule ref="category/java/multithreading.xml" />
@@ -61,6 +66,8 @@
         <exclude name="RedundantFieldInitializer" />
         <!-- Avoid reporting "slow" string appends in tests -->
         <exclude name="UseStringBufferForStringAppends" />
+        <!-- Avoid reporting object creations in loops -->
+        <exclude name="AvoidInstantiatingObjectsInLoops" />
     </rule>
 
     <rule ref="category/java/security.xml" />

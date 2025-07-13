@@ -126,7 +126,7 @@ public final class ELFView extends BorderPane {
 					startRowIndex * (MAX_BYTES_PER_ROW + 1) + startByteIndexInRow,
 					endRowIndex * (MAX_BYTES_PER_ROW + 1) + endByteIndexInRow);
 
-			final int rowLength = 2 * MAX_BYTES_PER_ROW + (MAX_GROUPS_PER_ROW - 1) + 1;
+			final int rowLength = 2 * MAX_BYTES_PER_ROW + MAX_GROUPS_PER_ROW;
 			final int groupLength = 2 * MAX_BYTES_PER_GROUP;
 			final int startGroupIndexInRow = startByteIndexInRow / MAX_GROUPS_PER_ROW;
 			final int startByteIndexInGroup = startByteIndexInRow % MAX_BYTES_PER_GROUP;

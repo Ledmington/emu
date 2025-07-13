@@ -17,6 +17,7 @@
  */
 package com.ledmington.emu;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
@@ -280,7 +281,7 @@ final class TestExecutionWithMemory {
 		mem.setPermissions(rip, rip + (long) mainCode.length - 1L, false, false, true);
 
 		// Start the CPU
-		cpu.execute();
+		assertDoesNotThrow(cpu::execute);
 	}
 
 	@Test
@@ -323,9 +324,9 @@ final class TestExecutionWithMemory {
 		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
 		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
-		mem.setPermissions(rip, rip + (long) mainCode.length - 1L, false, false, true);
+		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
 		// Start the CPU
-		cpu.execute();
+		assertDoesNotThrow(cpu::execute);
 	}
 }

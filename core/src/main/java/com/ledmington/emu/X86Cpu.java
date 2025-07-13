@@ -231,7 +231,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case SHR -> {
 				if (inst.firstOperand() instanceof final Register64 r1) {
-					op(r1, ((Immediate) inst.secondOperand()), (r, i) -> r >>> i);
+					op(r1, (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SHR has %,d bits.",
@@ -240,7 +240,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case SAR -> {
 				if (inst.firstOperand() instanceof final Register64 r1) {
-					op(r1, ((Immediate) inst.secondOperand()), (r, i) -> r >> i);
+					op(r1, (Immediate) inst.secondOperand(), (r, i) -> r >> i);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SAR has %,d bits.",
@@ -448,13 +448,12 @@ public class X86Cpu implements X86Emulator {
 	private void handleSyscall() {
 		// Useful reference: https://filippo.io/linux-syscall-table/
 		final int sysCallCode = rf.get(Register32.EAX);
-		switch (sysCallCode) {
-			case 60 -> {
-				final long exitCode = rf.get(Register64.RDI);
-				logger.info("syscall exit %d encountered", exitCode);
-				state = State.HALTED;
-			}
-			default -> throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
+		if (sysCallCode == 60) {
+			final long exitCode = rf.get(Register64.RDI);
+			logger.info("syscall exit %d encountered", exitCode);
+			state = State.HALTED;
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
 		}
 	}
 
@@ -507,8 +506,8 @@ public class X86Cpu implements X86Emulator {
 		return switch (op) {
 			case Immediate imm -> getAsLongSX(imm);
 			case IndirectOperand io -> getAsLongSX(io);
+			case Register32 r -> rf.get(r);
 			case Register64 r -> rf.get(r);
-			case Register32 r -> (long) rf.get(r);
 			default -> throw new IllegalArgumentException(String.format("Unknown operand '%s'.", op));
 		};
 	}
@@ -528,11 +527,11 @@ public class X86Cpu implements X86Emulator {
 	/** Returns a sign-extended long */
 	private long getAsLongSX(final IndirectOperand io) {
 		final long address = computeIndirectOperand(io);
-		return switch (io.getPointerSize()) {
-			case PointerSize.QWORD_PTR -> mem.read8(address);
-			default ->
-				throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
-		};
+		if (io.getPointerSize() == PointerSize.QWORD_PTR) {
+			return mem.read8(address);
+		} else {
+			throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
+		}
 	}
 
 	public long computeIndirectOperand(final IndirectOperand io) {
