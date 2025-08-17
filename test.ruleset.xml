@@ -59,6 +59,15 @@
         <exclude name="NullAssignment" />
     </rule>
 
+    <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+        <properties>
+            <property name="maxDuplicateLiterals" value="5" />
+            <property name="minimumLength" value="3" />
+            <property name="skipAnnotations" value="true" />
+            <property name="exceptionList" value="" />
+        </properties>
+    </rule>
+
     <rule ref="category/java/multithreading.xml" />
 
     <rule ref="category/java/performance.xml">

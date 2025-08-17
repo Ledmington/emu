@@ -455,7 +455,7 @@ public final class ELFLoader {
 	private int findSegmentIndex(final long sectionStart, final long sectionSize) {
 		for (int i = 0; i < memorySegments.size(); i++) {
 			final Range segment = memorySegments.get(i);
-			if (sectionStart >= segment.start() & sectionStart + sectionSize <= segment.end()) {
+			if (sectionStart >= segment.start() && sectionStart + sectionSize <= segment.end()) {
 				return i;
 			}
 		}
