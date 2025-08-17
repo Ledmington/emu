@@ -175,30 +175,32 @@ public class X86Cpu implements X86Emulator {
 			}
 			case ADD -> {
 				switch (inst.firstOperand()) {
-					case Register8 op1 -> {
-						final byte r1 = rf.get(op1);
-						final byte r2 = rf.get((Register8) inst.secondOperand());
-						final byte result = BitUtils.asByte(r1 + r2);
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
-					}
-					case Register16 op1 -> {
-						final short r1 = rf.get(op1);
-						final short r2 = rf.get((Register16) inst.secondOperand());
-						final short result = BitUtils.asShort(r1 + r2);
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
-					}
-					case Register32 op1 -> {
-						final int r1 = rf.get(op1);
-						final int r2 = rf.get((Register32) inst.secondOperand());
-						final int result = r1 + r2;
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
-					}
+					case Register8 op1 ->
+						op(
+								() -> rf.get(op1),
+								() -> rf.get((Register8) inst.secondOperand()),
+								(a, b) -> BitUtils.asByte(a + b),
+								result -> {
+									rf.set(op1, result);
+									rf.resetFlags();
+									rf.set(RFlags.ZERO, result == 0);
+								});
+					case Register16 op1 ->
+						op(
+								() -> rf.get(op1),
+								() -> rf.get((Register16) inst.secondOperand()),
+								(a, b) -> BitUtils.asShort(a + b),
+								result -> {
+									rf.set(op1, result);
+									rf.resetFlags();
+									rf.set(RFlags.ZERO, result == 0);
+								});
+					case Register32 op1 ->
+						op(() -> rf.get(op1), () -> rf.get((Register32) inst.secondOperand()), Integer::sum, result -> {
+							rf.set(op1, result);
+							rf.resetFlags();
+							rf.set(RFlags.ZERO, result == 0);
+						});
 					case Register64 op1 -> {
 						final long r1 = rf.get(op1);
 						final long r2 =
@@ -469,14 +471,14 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
-		final long r1 = rf.get(op1);
-		final byte i = imm.asByte();
-		final long result = task.apply(r1, (long) i);
-		rf.set(op1, result);
-		rf.resetFlags();
-		rf.set(RFlags.ZERO, result == 0L);
+		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> {
+			rf.set(op1, result);
+			rf.resetFlags();
+			rf.set(RFlags.ZERO, result == 0L);
+		});
 	}
 
+	// FIXME: shouldn't this be with three types X, Y and Z to be the most general version possible?
 	private <X> void op(
 			final Supplier<X> readOp1,
 			final Supplier<X> readOp2,
