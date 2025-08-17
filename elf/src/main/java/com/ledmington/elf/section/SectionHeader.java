@@ -21,8 +21,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.ledmington.utils.HashUtils;
-
 /** This class is just a data holder. No check is performed in the constructor on the given data. */
 public final class SectionHeader {
 
@@ -180,13 +178,13 @@ public final class SectionHeader {
 		h = 31 * h + nameOffset;
 		h = 31 * h + type.hashCode();
 		h = 31 * h + flags.hashCode();
-		h = 31 * h + HashUtils.hash(virtualAddress);
-		h = 31 * h + HashUtils.hash(fileOffset);
-		h = 31 * h + HashUtils.hash(sectionSize);
+		h = 31 * h + Long.hashCode(virtualAddress);
+		h = 31 * h + Long.hashCode(fileOffset);
+		h = 31 * h + Long.hashCode(sectionSize);
 		h = 31 * h + linkedSectionIndex;
 		h = 31 * h + info;
-		h = 31 * h + HashUtils.hash(alignment);
-		h = 31 * h + HashUtils.hash(entrySize);
+		h = 31 * h + Long.hashCode(alignment);
+		h = 31 * h + Long.hashCode(entrySize);
 		return h;
 	}
 

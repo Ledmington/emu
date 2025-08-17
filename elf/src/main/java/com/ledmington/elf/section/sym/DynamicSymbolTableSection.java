@@ -23,7 +23,6 @@ import java.util.Objects;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
@@ -116,7 +115,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 		int h = 17;
 		h = 31 * h + name.hashCode();
 		h = 31 * h + header.hashCode();
-		h = 31 * h + HashUtils.hash(is32Bit);
+		h = 31 * h + Boolean.hashCode(is32Bit);
 		h = 31 * h + Arrays.hashCode(symbolTable);
 		return h;
 	}

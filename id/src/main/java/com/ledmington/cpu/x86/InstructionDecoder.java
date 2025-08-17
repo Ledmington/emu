@@ -4325,7 +4325,7 @@ public final class InstructionDecoder {
 			b.setPosition(b.getPosition() - 1);
 		}
 
-	final	Optional<Vex2Prefix> vex2;
+		final Optional<Vex2Prefix> vex2;
 		{
 			final byte vex2Byte = b.read1();
 			if (Vex2Prefix.isVEX2Prefix(vex2Byte)) {
@@ -4336,7 +4336,7 @@ public final class InstructionDecoder {
 			}
 		}
 
-	final	Optional<Vex3Prefix> vex3;
+		final Optional<Vex3Prefix> vex3;
 		{
 			final byte vex3Byte = b.read1();
 			if (Vex3Prefix.isVEX3Prefix(vex3Byte)) {

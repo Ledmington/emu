@@ -20,7 +20,6 @@ package com.ledmington.elf.section.gnu;
 import java.util.Arrays;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** An entry of the .gnu.version_d section. Usually this structure is called Elfxx_Verdef in the ELF documentation. */
@@ -163,9 +162,9 @@ public final class GnuVersionDefinitionEntry {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + HashUtils.hash(version);
-		h = 31 * h + HashUtils.hash(flags);
-		h = 31 * h + HashUtils.hash(versionIndex);
+		h = 31 * h + Short.hashCode(version);
+		h = 31 * h + Short.hashCode(flags);
+		h = 31 * h + Short.hashCode(versionIndex);
 		h = 31 * h + aux.length;
 		h = 31 + h + hash;
 		h = 31 * h + auxOffset;

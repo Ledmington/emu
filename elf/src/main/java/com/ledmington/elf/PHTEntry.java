@@ -19,8 +19,6 @@ package com.ledmington.elf;
 
 import java.util.Objects;
 
-import com.ledmington.utils.HashUtils;
-
 /**
  * An entry of an ELF Program Header Table.
  *
@@ -110,12 +108,12 @@ public record PHTEntry(
 		int h = 17;
 		h = 31 * h + type.hashCode();
 		h = 31 * h + flags;
-		h = 31 * h + HashUtils.hash(segmentOffset);
-		h = 31 * h + HashUtils.hash(segmentVirtualAddress);
-		h = 31 * h + HashUtils.hash(segmentPhysicalAddress);
-		h = 31 * h + HashUtils.hash(segmentFileSize);
-		h = 31 * h + HashUtils.hash(segmentMemorySize);
-		h = 31 * h + HashUtils.hash(alignment);
+		h = 31 * h + Long.hashCode(segmentOffset);
+		h = 31 * h + Long.hashCode(segmentVirtualAddress);
+		h = 31 * h + Long.hashCode(segmentPhysicalAddress);
+		h = 31 * h + Long.hashCode(segmentFileSize);
+		h = 31 * h + Long.hashCode(segmentMemorySize);
+		h = 31 * h + Long.hashCode(alignment);
 		return h;
 	}
 

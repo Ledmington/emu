@@ -20,7 +20,6 @@ package com.ledmington.elf.section.gnu;
 import java.util.Arrays;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
@@ -159,7 +158,7 @@ public final class GnuVersionRequirementEntry {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + HashUtils.hash(version);
+		h = 31 * h + Short.hashCode(version);
 		h = 31 * h + fileOffset;
 		h = 31 * h + auxOffset;
 		h = 31 * h + nextOffset;

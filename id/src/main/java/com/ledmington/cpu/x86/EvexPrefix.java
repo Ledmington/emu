@@ -21,7 +21,7 @@ import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.utils.BitUtils;
 
 /** The extended VEX prefix (EVEX): 0x62 + 3 bytes. */
-@SuppressWarnings({"PMD.UnusedPrivateField","PMD.AvoidFieldNameMatchingMethodName"})
+@SuppressWarnings({"PMD.UnusedPrivateField", "PMD.AvoidFieldNameMatchingMethodName"})
 public final class EvexPrefix {
 
 	private final boolean r;

@@ -261,7 +261,7 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + Arrays.hashCode(v);
-		h = 31 * h + HashUtils.hash(isLittleEndian);
+		h = 31 * h + Boolean.hashCode(isLittleEndian);
 		h = 31 * h + size;
 		h = 31 * h + position;
 		return h;

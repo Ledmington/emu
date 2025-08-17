@@ -119,9 +119,9 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + Arrays.hashCode(b);
-		h = 31 * h + HashUtils.hash(position);
-		h = 31 * h + HashUtils.hash(isLE);
-		h = 31 * h + HashUtils.hash(alignment);
+		h = 31 * h + Long.hashCode(position);
+		h = 31 * h + Boolean.hashCode(isLE);
+		h = 31 * h + Long.hashCode(alignment);
 		return h;
 	}
 

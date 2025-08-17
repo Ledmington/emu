@@ -18,7 +18,6 @@
 package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 
 /** This class represents an x86 ModR/M byte, used to represent "direct" operands in x86 instructions. */
 public final class ModRM {
@@ -90,9 +89,9 @@ public final class ModRM {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + HashUtils.hash(modByte);
-		h = 31 * h + HashUtils.hash(regByte);
-		h = 31 * h + HashUtils.hash(rmByte);
+		h = 31 * h + Byte.hashCode(modByte);
+		h = 31 * h + Byte.hashCode(regByte);
+		h = 31 * h + Byte.hashCode(rmByte);
 		return h;
 	}
 

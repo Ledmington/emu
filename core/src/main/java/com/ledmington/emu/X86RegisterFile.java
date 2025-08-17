@@ -27,7 +27,6 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.HashUtils;
 
 /** This class represents the set of registers used by an x86-64 processor during execution. */
 public final class X86RegisterFile implements RegisterFile {
@@ -319,13 +318,13 @@ public final class X86RegisterFile implements RegisterFile {
 	public int hashCode() {
 		int h = 17;
 		for (final long r : gpr) {
-			h = 31 * h + HashUtils.hash(r);
+			h = 31 * h + Long.hashCode(r);
 		}
 		for (final short s : seg) {
-			h = 31 * h + HashUtils.hash(s);
+			h = 31 * h + Short.hashCode(s);
 		}
-		h = 31 * h + HashUtils.hash(rip);
-		h = 31 * h + HashUtils.hash(rflags);
+		h = 31 * h + Long.hashCode(rip);
+		h = 31 * h + Long.hashCode(rflags);
 		return h;
 	}
 

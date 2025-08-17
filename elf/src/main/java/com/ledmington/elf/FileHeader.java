@@ -19,8 +19,6 @@ package com.ledmington.elf;
 
 import java.util.Objects;
 
-import com.ledmington.utils.HashUtils;
-
 /**
  * The header of an ELF file. This class is just a data holder. No check is performed in the constructor on the given
  * data.
@@ -113,23 +111,23 @@ public record FileHeader(
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + HashUtils.hash(is32Bit);
-		h = 31 * h + HashUtils.hash(isLittleEndian);
-		h = 31 * h + HashUtils.hash(version);
+		h = 31 * h + Boolean.hashCode(is32Bit);
+		h = 31 * h + Boolean.hashCode(isLittleEndian);
+		h = 31 * h + Byte.hashCode(version);
 		h = 31 * h + osabi.hashCode();
-		h = 31 * h + HashUtils.hash(ABIVersion);
+		h = 31 * h + Byte.hashCode(ABIVersion);
 		h = 31 * h + fileType.hashCode();
 		h = 31 * h + isa.hashCode();
-		h = 31 * h + HashUtils.hash(entryPointVirtualAddress);
-		h = 31 * h + HashUtils.hash(programHeaderTableOffset);
-		h = 31 * h + HashUtils.hash(sectionHeaderTableOffset);
+		h = 31 * h + Long.hashCode(entryPointVirtualAddress);
+		h = 31 * h + Long.hashCode(programHeaderTableOffset);
+		h = 31 * h + Long.hashCode(sectionHeaderTableOffset);
 		h = 31 * h + flags;
-		h = 31 * h + HashUtils.hash(headerSize);
-		h = 31 * h + HashUtils.hash(programHeaderTableEntrySize);
-		h = 31 * h + HashUtils.hash(numProgramHeaderTableEntries);
-		h = 31 * h + HashUtils.hash(sectionHeaderTableEntrySize);
-		h = 31 * h + HashUtils.hash(numSectionHeaderTableEntries);
-		h = 31 * h + HashUtils.hash(sectionHeaderStringTableIndex);
+		h = 31 * h + Short.hashCode(headerSize);
+		h = 31 * h + Short.hashCode(programHeaderTableEntrySize);
+		h = 31 * h + Short.hashCode(numProgramHeaderTableEntries);
+		h = 31 * h + Short.hashCode(sectionHeaderTableEntrySize);
+		h = 31 * h + Short.hashCode(numSectionHeaderTableEntries);
+		h = 31 * h + Short.hashCode(sectionHeaderStringTableIndex);
 		return h;
 	}
 
