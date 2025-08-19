@@ -92,7 +92,7 @@ public final class DynamicSection implements LoadableSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

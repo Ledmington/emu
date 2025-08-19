@@ -64,19 +64,19 @@ public final class EmulatorConstants {
 		return memoryInitializer;
 	}
 
-	public static boolean getBreakOnWrongPermissions() {
+	public static boolean shouldBreakOnWrongPermissions() {
 		return breakOnWrongPermissions;
 	}
 
-	public static void setBreakOnWrongPermissions(final boolean b) {
+	public static void shouldBreakOnWrongPermissions(final boolean b) {
 		breakOnWrongPermissions = b;
 	}
 
-	public static boolean getBreakWhenReadingUninitializedMemory() {
+	public static boolean shouldBreakWhenReadingUninitializedMemory() {
 		return breakWhenReadingUninitializedMemory;
 	}
 
-	public static void setBreakWhenReadingUninitializedMemory(final boolean b) {
+	public static void shouldBreakWhenReadingUninitializedMemory(final boolean b) {
 		breakWhenReadingUninitializedMemory = b;
 	}
 
@@ -146,11 +146,11 @@ public final class EmulatorConstants {
 		return baseStackValue;
 	}
 
-	public static boolean getCheckInstruction() {
+	public static boolean shouldCheckInstruction() {
 		return checkInstructions;
 	}
 
-	public static void setCheckInstructions(final boolean b) {
+	public static void shouldCheckInstructions(final boolean b) {
 		checkInstructions = b;
 	}
 }

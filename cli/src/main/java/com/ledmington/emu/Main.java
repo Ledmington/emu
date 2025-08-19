@@ -123,12 +123,12 @@ public final class Main {
 				case shortQuietFlag, longQuietFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 				case verboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
 				case veryVerboseFlag -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
-				case checkMemPermissionsFlag -> EmulatorConstants.setBreakOnWrongPermissions(true);
-				case noCheckMemPermissionsFlag -> EmulatorConstants.setBreakOnWrongPermissions(false);
-				case checkMemInitFlag -> EmulatorConstants.setBreakWhenReadingUninitializedMemory(true);
-				case noCheckMemInitFlag -> EmulatorConstants.setBreakWhenReadingUninitializedMemory(false);
-				case checkInstructionsFlags -> EmulatorConstants.setCheckInstructions(true);
-				case noCheckInstructionsFlags -> EmulatorConstants.setCheckInstructions(false);
+				case checkMemPermissionsFlag -> EmulatorConstants.shouldBreakOnWrongPermissions(true);
+				case noCheckMemPermissionsFlag -> EmulatorConstants.shouldBreakOnWrongPermissions(false);
+				case checkMemInitFlag -> EmulatorConstants.shouldBreakWhenReadingUninitializedMemory(true);
+				case noCheckMemInitFlag -> EmulatorConstants.shouldBreakWhenReadingUninitializedMemory(false);
+				case checkInstructionsFlags -> EmulatorConstants.shouldCheckInstructions(true);
+				case noCheckInstructionsFlags -> EmulatorConstants.shouldCheckInstructions(false);
 				case memoryInitializerFlag -> {
 					i++;
 					if (i >= args.length) {

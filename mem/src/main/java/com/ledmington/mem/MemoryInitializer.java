@@ -39,6 +39,12 @@ public interface MemoryInitializer extends Supplier<Byte> {
 		return () -> BitUtils.asByte(rng.nextInt());
 	}
 
+	/**
+	 * Initializes the memory with the given byte.
+	 *
+	 * @param v The byte to initialize the memory with.
+	 * @return A memory initializer which returns always the same byte.
+	 */
 	static MemoryInitializer of(final byte v) {
 		return () -> v;
 	}

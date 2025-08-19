@@ -59,14 +59,13 @@ public final class Emu {
 
 		final MemoryController mem = new MemoryController(
 				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
-				EmulatorConstants.getBreakOnWrongPermissions(),
-				EmulatorConstants.getBreakWhenReadingUninitializedMemory());
-		final X86Emulator cpu = new X86Cpu(mem, EmulatorConstants.getCheckInstruction());
+				EmulatorConstants.shouldBreakOnWrongPermissions(),
+				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
+		final X86Emulator cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
 
-		final ELFLoader loader = new ELFLoader();
+		final ELFLoader loader = new ELFLoader(cpu);
 		loader.load(
 				elf,
-				cpu,
 				mem,
 				commandLineArguments,
 				EmulatorConstants.getBaseAddress(),

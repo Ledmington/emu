@@ -70,7 +70,6 @@ public class X86Cpu implements X86Emulator {
 	 *
 	 * @param mem The object to be used to access the memory.
 	 */
-	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public X86Cpu(final MemoryController mem, final boolean checkInstructions) {
 		this(mem, new X86RegisterFile(), checkInstructions);
 	}

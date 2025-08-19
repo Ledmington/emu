@@ -57,20 +57,19 @@ public final class CheckReadelf {
 		}
 	}
 
+	private CheckReadelf() {}
+
 	private static boolean isELF(final Path p) {
 		try (InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
 			final int expectedBytes = 4;
 			final byte[] buffer = new byte[expectedBytes];
 			final int bytesRead = is.read(buffer);
-			if (bytesRead != expectedBytes) {
-				// The file is shorter than 4 bytes
-				return false;
-			}
-			return buffer[0] == (byte) 0x7f
+			return bytesRead == expectedBytes
+					&& buffer[0] == (byte) 0x7f
 					&& buffer[1] == (byte) 0x45
 					&& buffer[2] == (byte) 0x4c
 					&& buffer[3] == (byte) 0x46;
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

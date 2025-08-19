@@ -68,7 +68,7 @@ public final class GnuBuildIDSection implements NoteSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

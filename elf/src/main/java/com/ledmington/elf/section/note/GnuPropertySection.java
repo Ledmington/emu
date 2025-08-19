@@ -68,7 +68,7 @@ public final class GnuPropertySection implements NoteSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

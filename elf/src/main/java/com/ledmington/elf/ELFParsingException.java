@@ -15,23 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.mem.exc;
+package com.ledmington.elf;
 
 import java.io.Serial;
 
-/** Base exception for illegal memory access operations resulting from invalid permissions. */
-public sealed class InvalidPermissionsException extends IllegalMemoryAccessException
-		permits IllegalReadException, IllegalWriteException, IllegalExecutionException {
+/** This class represents a generic error occurred during parsing of an ELF file. */
+public final class ELFParsingException extends RuntimeException {
 
 	@Serial
-	private static final long serialVersionUID = -2498440532093904933L;
+	private static final long serialVersionUID = 1267945930400050378L;
 
 	/**
-	 * Constructs a new InvalidPermissionsException with the specified detail message.
+	 * Craetes a new ElfParsingException with the given message.
 	 *
-	 * @param message The detail message explaining the reason for the exception.
+	 * @param message The message of this exception.
 	 */
-	public InvalidPermissionsException(final String message) {
+	public ELFParsingException(final String message) {
 		super(message);
+	}
+
+	/**
+	 * Creates a new ElfParsingException with the given Throwable as cause.
+	 *
+	 * @param cause The cause of this exception being thrown.
+	 */
+	public ELFParsingException(final Throwable cause) {
+		super(cause);
 	}
 }

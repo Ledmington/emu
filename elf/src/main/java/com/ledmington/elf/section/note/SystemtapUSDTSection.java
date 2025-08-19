@@ -57,7 +57,7 @@ public final class SystemtapUSDTSection implements NoteSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

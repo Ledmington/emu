@@ -19,11 +19,17 @@ package com.ledmington.mem.exc;
 
 import java.io.Serial;
 
+/** Exception thrown when an attempt is made to write in a memory region that does not have write permissions. */
 public final class IllegalWriteException extends InvalidPermissionsException {
 
 	@Serial
 	private static final long serialVersionUID = -1477706744795198231L;
 
+	/**
+	 * Constructs a new IllegalWriteException with the specified detail message.
+	 *
+	 * @param message The detail message explaining the reason for the exception.
+	 */
 	public IllegalWriteException(final String message) {
 		super(message);
 	}

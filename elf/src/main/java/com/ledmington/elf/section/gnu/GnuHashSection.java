@@ -188,7 +188,7 @@ public final class GnuHashSection implements LoadableSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

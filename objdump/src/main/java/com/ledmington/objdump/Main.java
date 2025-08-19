@@ -53,10 +53,15 @@ public final class Main {
 			? System.console().writer()
 			: new PrintWriter(System.out, false, StandardCharsets.UTF_8);
 
+	private Main() {}
+
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
-		Runtime.getRuntime().addShutdownHook(new Thread(out::flush));
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			out.println();
+			out.flush();
+		}));
 
 		String filename = null;
 		boolean disassembleExecutableSections = false;
@@ -104,7 +109,7 @@ public final class Main {
 		if (disassembleExecutableSections) {
 			for (int i = 0; i < elf.getSectionTableLength(); i++) {
 				final Section s = elf.getSection(i);
-				if (!s.getHeader().getFlags().contains(SectionHeaderFlags.SHT_EXECINSTR)) {
+				if (!s.header().getFlags().contains(SectionHeaderFlags.SHT_EXECINSTR)) {
 					continue;
 				}
 
@@ -121,14 +126,14 @@ public final class Main {
 		out.printf("Disassembly of section %s:%n", s.getName());
 		out.println();
 
-		final long startOfSection = s.getHeader().getVirtualAddress();
+		final long startOfSection = s.header().getVirtualAddress();
 
 		final Map<Long, String> functionNames = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
 		if (symbolTable.isPresent()) {
 			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
 			final StringTableSection strtab =
-					(StringTableSection) st.getSection(symtab.getHeader().getLinkedSectionIndex());
+					(StringTableSection) st.getSection(symtab.header().getLinkedSectionIndex());
 
 			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
@@ -141,7 +146,7 @@ public final class Main {
 				}
 				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
 
-				if (strtab.getString(ste.nameOffset()).equals("__assert_fail_base")) {
+				if ("__assert_fail_base".equals(strtab.getString(ste.nameOffset()))) {
 					out.println(ste);
 				}
 			}
@@ -166,14 +171,7 @@ public final class Main {
 			}
 
 			final long startOfInstruction = b.getPosition();
-			final Instruction inst;
-			try {
-				inst = InstructionDecoder.fromHex(b);
-			} catch (final Throwable t) {
-				out.println();
-				out.flush();
-				throw t;
-			}
+			final Instruction inst = InstructionDecoder.fromHex(b);
 			final long endOfInstruction = b.getPosition();
 			final long lengthOfInstruction = endOfInstruction - startOfInstruction;
 			out.printf("%8x:\t", startOfSection + startOfInstruction);

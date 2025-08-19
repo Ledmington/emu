@@ -90,7 +90,7 @@ public final class DestructorsSection implements LoadableSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

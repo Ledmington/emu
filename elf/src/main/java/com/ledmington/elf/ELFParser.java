@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import com.ledmington.elf.section.BasicProgBitsSection;
 import com.ledmington.elf.section.ConstructorsSection;
@@ -74,14 +75,14 @@ public final class ELFParser {
 	public static ELF parse(final String filename) {
 		final File file = new File(filename);
 		if (!file.exists()) {
-			throw new IllegalArgumentException(String.format("File '%s' does not exist.", filename));
+			throw new ELFParsingException(String.format("File '%s' does not exist.", filename));
 		}
 
 		final byte[] bytes;
 		try {
 			bytes = Files.readAllBytes(Paths.get(filename));
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new ELFParsingException(e);
 		}
 
 		logger.info("The file '%s' is %,d bytes long", filename, bytes.length);
@@ -104,84 +105,89 @@ public final class ELFParser {
 		return new ELF(fileHeader, programHeaderTable, sectionTable);
 	}
 
+	private static void expect(final boolean condition, final Supplier<String> message) {
+		if (!condition) {
+			throw new ELFParsingException(message.get());
+		}
+	}
+
 	private static FileHeader parseFileHeader() {
 		final int magicNumber = b.read4BE();
 		final int ELF_MAGIC_NUMBER = 0x7f454c46;
-		if (magicNumber != ELF_MAGIC_NUMBER) {
-			throw new IllegalArgumentException(
-					String.format("Invalid magic number, expected 0x7f454c46 but was 0x%08x", magicNumber));
-		}
+		expect(
+				magicNumber == ELF_MAGIC_NUMBER,
+				() -> String.format("Invalid magic number, expected 0x7f454c46 but was 0x%08x", magicNumber));
 
 		final byte format = b.read1();
-		if (format != 1 && format != 2) {
-			throw new IllegalArgumentException(
-					String.format("Invalid bit format, expected 1 or 2 but was %,d (0x%02x)", format, format));
-		}
+		expect(
+				format == 1 || format == 2,
+				() -> String.format("Invalid bit format, expected 1 or 2 but was %,d (0x%02x)", format, format));
 		final boolean is32Bit = format == 1;
 
 		final byte endianness = b.read1();
-		if (endianness != 1 && endianness != 2) {
-			throw new IllegalArgumentException(
-					String.format("Invalid endianness, expected 1 or 2 but was %,d (0x%02x)", endianness, endianness));
-		}
+		expect(
+				endianness == 1 || endianness == 2,
+				() -> String.format(
+						"Invalid endianness, expected 1 or 2 but was %,d (0x%02x)", endianness, endianness));
 		final boolean isLittleEndian = endianness == 1;
 		b.setEndianness(isLittleEndian);
 
 		final byte ELFVersion = b.read1();
-		if (ELFVersion != (byte) 0x01) {
-			throw new IllegalArgumentException(
-					String.format("Invalid ELF EI_VERSION, expected 1 but was %,d (0x%02x)", ELFVersion, ELFVersion));
-		}
+		expect(
+				ELFVersion == (byte) 0x01,
+				() -> String.format("Invalid ELF EI_VERSION, expected 1 but was %,d (0x%02x)", ELFVersion, ELFVersion));
 
 		final byte osabi = b.read1();
-		if (!OSABI.isValid(osabi)) {
-			throw new IllegalArgumentException(String.format("Invalid OS ABI value, was %,d (0x%02x)", osabi, osabi));
-		}
+		expect(OSABI.isValid(osabi), () -> String.format("Invalid OS ABI value, was %,d (0x%02x)", osabi, osabi));
 
 		final byte ABIVersion = b.read1();
 
+		// 7 bytes of padding
 		for (int idx = 0; idx < 7; idx++) {
-			final byte x = b.read1();
-			if (x != (byte) 0x00) {
-				logger.warning("Byte %,d (0x%08x) of EI_PAD was not 0x00 but 0x%02x", idx, b.getPosition(), x);
-			}
+			b.read1();
 		}
 
 		final short fileType = b.read2();
-		if (!FileType.isValid(fileType)) {
-			throw new IllegalArgumentException(
-					String.format("Invalid file type value, was %,d (0x%04x)", fileType, fileType));
-		}
+		expect(
+				FileType.isValid(fileType),
+				() -> String.format("Invalid file type value, was %,d (0x%04x)", fileType, fileType));
 
 		final short isa = b.read2();
-		if (!ISA.isValid(isa)) {
-			throw new IllegalArgumentException(String.format("Invalid ISA value, was %,d (0x%04x)", isa, isa));
-		}
+		expect(ISA.isValid(isa), () -> String.format("Invalid ISA value, was %,d (0x%04x)", isa, isa));
 
 		final int ELFVersion_2 = b.read4();
 		final int currentELFVersion = 1;
-		if (ELFVersion_2 != currentELFVersion) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid ELF e_version, expected 1 but was %,d (0x%08x)", ELFVersion_2, ELFVersion_2));
-		}
-		if (BitUtils.asInt(ELFVersion) != ELFVersion_2) {
-			throw new IllegalArgumentException(String.format(
-					"ERROR: wrong ELF version, expected to be equal to EI_VERSION byte but was %,d (0x%08x)",
-					ELFVersion_2, ELFVersion_2));
-		}
+		expect(
+				ELFVersion_2 == currentELFVersion,
+				() -> String.format(
+						"Invalid ELF e_version, expected 1 but was %,d (0x%08x)", ELFVersion_2, ELFVersion_2));
+		expect(
+				BitUtils.asInt(ELFVersion) == ELFVersion_2,
+				() -> String.format(
+						"ERROR: wrong ELF version, expected to be equal to EI_VERSION byte but was %,d (0x%08x)",
+						ELFVersion_2, ELFVersion_2));
 
-		final long entryPointVirtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long PHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long SHTOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+		final long entryPointVirtualAddress;
+		final long PHTOffset;
+		final long SHTOffset;
+		if (is32Bit) {
+			entryPointVirtualAddress = BitUtils.asLong(b.read4());
+			PHTOffset = BitUtils.asLong(b.read4());
+			SHTOffset = BitUtils.asLong(b.read4());
+		} else {
+			entryPointVirtualAddress = b.read8();
+			PHTOffset = b.read8();
+			SHTOffset = b.read8();
+		}
 
 		final int flags = b.read4();
 
 		final short headerSize = b.read2();
-		if ((is32Bit && headerSize != 52) || (!is32Bit && headerSize != 64)) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid header size value, expected %,d but was %,d (0x%04x)",
-					is32Bit ? 52 : 64, headerSize, headerSize));
-		}
+		expect(
+				(is32Bit && headerSize == 52) || (!is32Bit && headerSize == 64),
+				() -> String.format(
+						"Invalid header size value, expected %,d but was %,d (0x%04x)",
+						is32Bit ? 52 : 64, headerSize, headerSize));
 
 		final short PHTEntrySize = b.read2();
 		final short nPHTEntries = b.read2();
@@ -211,36 +217,45 @@ public final class ELFParser {
 
 	private static PHTEntry parseProgramHeaderEntry(final boolean is32Bit) {
 		final int segmentType = b.read4();
-		if (!PHTEntryType.isValid(segmentType)) {
-			throw new IllegalArgumentException(
-					String.format("Invalid segment type value, was %,d (0x%08x)", segmentType, segmentType));
-		}
+		expect(
+				PHTEntryType.isValid(segmentType),
+				() -> String.format("Invalid segment type value, was %,d (0x%08x)", segmentType, segmentType));
 
-		int flags = 0;
-		if (!is32Bit) {
-			flags = b.read4();
-		}
-
-		final long segmentOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long segmentVirtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long segmentPhysicalAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long segmentSizeOnFile = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long segmentSizeInMemory = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-
+		final int flags;
+		final long segmentOffset;
+		final long segmentVirtualAddress;
+		final long segmentPhysicalAddress;
+		final long segmentSizeOnFile;
+		final long segmentSizeInMemory;
+		final long alignment;
 		if (is32Bit) {
+			segmentOffset = BitUtils.asLong(b.read4());
+			segmentVirtualAddress = BitUtils.asLong(b.read4());
+			segmentPhysicalAddress = BitUtils.asLong(b.read4());
+			segmentSizeOnFile = BitUtils.asLong(b.read4());
+			segmentSizeInMemory = BitUtils.asLong(b.read4());
 			flags = b.read4();
+			alignment = BitUtils.asLong(b.read4());
+		} else {
+			flags = b.read4();
+			segmentOffset = b.read8();
+			segmentVirtualAddress = b.read8();
+			segmentPhysicalAddress = b.read8();
+			segmentSizeOnFile = b.read8();
+			segmentSizeInMemory = b.read8();
+			alignment = b.read8();
 		}
 
-		final long alignment = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		if (alignment != 0 && Long.bitCount(alignment) != 1) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
-					alignment, alignment));
-		} else if (alignment != 0 && (segmentVirtualAddress % alignment) != (segmentOffset % alignment)) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
-					segmentVirtualAddress, alignment, segmentOffset, alignment));
-		}
+		expect(
+				alignment != 0 && Long.bitCount(alignment) == 1,
+				() -> String.format(
+						"Invalid value for alignment: expected 0 or a power of two but was %,d (0x%016x)",
+						alignment, alignment));
+		expect(
+				segmentVirtualAddress % alignment == segmentOffset % alignment,
+				() -> String.format(
+						"Invalid value for alignment: expected 0x%016x %% %,d to be equal to 0x%016x %% %,d but wasn't",
+						segmentVirtualAddress, alignment, segmentOffset, alignment));
 
 		return new PHTEntry(
 				PHTEntryType.fromCode(segmentType),
@@ -254,23 +269,45 @@ public final class ELFParser {
 	}
 
 	private static SectionHeader parseSectionHeaderEntry(final boolean is32Bit) {
-		final int nameOffset = b.read4();
-		final int type = b.read4();
-		final long flags = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long virtualAddress = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long fileOffset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final long size = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		final int linkedSectionIndex = b.read4();
-		final int sh_info = b.read4();
-
-		final long alignment = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-		if (alignment != 0 && Long.bitCount(alignment) != 1) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid value for alignment: expected a power of two but was %,d (0x%016x)",
-					alignment, alignment));
+		final int nameOffset;
+		final int type;
+		final long flags;
+		final long virtualAddress;
+		final long fileOffset;
+		final long size;
+		final int linkedSectionIndex;
+		final int sh_info;
+		final long alignment;
+		final long entrySize;
+		if (is32Bit) {
+			nameOffset = b.read4();
+			type = b.read4();
+			flags = BitUtils.asLong(b.read4());
+			virtualAddress = BitUtils.asLong(b.read4());
+			fileOffset = BitUtils.asLong(b.read4());
+			size = BitUtils.asLong(b.read4());
+			linkedSectionIndex = b.read4();
+			sh_info = b.read4();
+			alignment = BitUtils.asLong(b.read4());
+			entrySize = BitUtils.asLong(b.read4());
+		} else {
+			nameOffset = b.read4();
+			type = b.read4();
+			flags = b.read8();
+			virtualAddress = b.read8();
+			fileOffset = b.read8();
+			size = b.read8();
+			linkedSectionIndex = b.read4();
+			sh_info = b.read4();
+			alignment = b.read8();
+			entrySize = b.read8();
 		}
 
-		final long entrySize = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+		expect(
+				alignment == 0 || Long.bitCount(alignment) == 1,
+				() -> String.format(
+						"Invalid value for alignment: expected a power of two but was %,d (0x%016x)",
+						alignment, alignment));
 
 		return new SectionHeader(
 				nameOffset,
@@ -315,28 +352,43 @@ public final class ELFParser {
 		return sectionHeaderTable;
 	}
 
+	private static int findDynamicSection(final SectionHeader... sectionHeaderTable) {
+		for (int k = 0; k < sectionHeaderTable.length; k++) {
+			final SectionHeader sectionHeader = sectionHeaderTable[k];
+			final String typeName = sectionHeader.getType().getName();
+			if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
+				return k;
+			}
+		}
+		return -1;
+	}
+
 	private static Section[] parseSectionTable(final FileHeader fileHeader, final SectionHeader... sectionHeaderTable) {
 		final Section[] sectionTable = new Section[fileHeader.numSectionHeaderTableEntries()];
 
 		final int shstrndx = fileHeader.sectionHeaderStringTableIndex();
 		final int shstr_offset = (int) sectionHeaderTable[shstrndx].getFileOffset();
-		DynamicSection dynamicSection = null;
+		final DynamicSection dynamicSection;
 		sectionTable[shstrndx] = new StringTableSection(".shstrtab", sectionHeaderTable[shstrndx], b);
 		final StringTableSection shstrtab = (StringTableSection) sectionTable[shstrndx];
 
 		// Since some section may require the .dynamic section for correct parsing, we
 		// need to parse that first
-		for (int k = 0; k < sectionHeaderTable.length; k++) {
-			final SectionHeader sectionHeader = sectionHeaderTable[k];
-			final String typeName = sectionHeader.getType().getName();
-
-			if (typeName.equals(SectionHeaderType.SHT_DYNAMIC.getName())) {
-				final String name = shstrtab.getString(sectionHeader.getNameOffset());
-				logger.debug("Parsing %s (%s)", name, typeName);
-				sectionTable[k] = new DynamicSection(name, sectionHeader, b, fileHeader.is32Bit());
-				dynamicSection = (DynamicSection) sectionTable[k];
-				break;
-			}
+		final int dynamicSectionIndex = findDynamicSection(sectionHeaderTable);
+		if (dynamicSectionIndex == -1) {
+			logger.debug("No dynamic section found");
+			dynamicSection = null;
+		} else {
+			logger.debug("Found dynamic section at index %,d", dynamicSectionIndex);
+			final String dynamicSectionName =
+					shstrtab.getString(sectionHeaderTable[dynamicSectionIndex].getNameOffset());
+			logger.debug(
+					"Parsing %s (%s)",
+					dynamicSectionName,
+					sectionHeaderTable[dynamicSectionIndex].getType().getName());
+			sectionTable[dynamicSectionIndex] = new DynamicSection(
+					dynamicSectionName, sectionHeaderTable[dynamicSectionIndex], b, fileHeader.is32Bit());
+			dynamicSection = (DynamicSection) sectionTable[dynamicSectionIndex];
 		}
 
 		for (int k = 0; k < sectionHeaderTable.length; k++) {

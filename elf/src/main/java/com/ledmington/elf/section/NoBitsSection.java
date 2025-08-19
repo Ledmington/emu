@@ -42,7 +42,7 @@ public final class NoBitsSection implements Section {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

@@ -95,7 +95,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

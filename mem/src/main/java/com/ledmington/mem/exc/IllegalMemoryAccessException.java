@@ -19,12 +19,21 @@ package com.ledmington.mem.exc;
 
 import java.io.Serial;
 
+/**
+ * Base exception for illegal memory access operations. This exception is thrown when a memory access violates memory
+ * safety rules, such as accessing a region without the necessary permissions or accessing uninitialized memory.
+ */
 public sealed class IllegalMemoryAccessException extends RuntimeException
 		permits InvalidPermissionsException, AccessToUninitializedMemoryException {
 
 	@Serial
 	private static final long serialVersionUID = -8908344966805555310L;
 
+	/**
+	 * Constructs a new IllegalMemoryAccessException with the specified detail message.
+	 *
+	 * @param message The detail message explaining the reason for the exception.
+	 */
 	public IllegalMemoryAccessException(final String message) {
 		super(message);
 	}

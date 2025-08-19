@@ -27,6 +27,7 @@ import java.util.Objects;
  * href="https://github.com/bminor/binutils-gdb/blob/2b001c799977a97304311df238fe33daa9b8fa7f/include/elf/common.h">the
  * GNU binutils source code</a>.
  */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public enum GnuPropertyType {
 
 	/** Stack size. */

@@ -59,7 +59,8 @@ final class TestIndirectOperand {
 			.toList()
 			.toArray(new Register32[0]);
 
-	private static <X> X getRandomFrom(final X[] v) {
+	@SafeVarargs
+	private static <X> X getRandomFrom(final X... v) {
 		return v[rng.nextInt(0, v.length)];
 	}
 
@@ -105,9 +106,10 @@ final class TestIndirectOperand {
 	// This code generates all relevant possible combinations of indirect operands, for testing.
 	private static Stream<Arguments> correctIndirectOperands() {
 		final PointerSize[] ptr = PointerSize.values();
-		final int[] constant = new int[] {1, 2, 4, 8};
-		final Number[] displacements =
-				new Number[] {0, (byte) 0, (byte) 0x02, (byte) 0x12, (byte) 0x82, 0x123, 0x12345678, 0x82345678};
+		final int[] constant = {1, 2, 4, 8};
+		final Number[] displacements = {
+			0, (byte) 0, (byte) 0x02, (byte) 0x12, (byte) 0x82, 0x123, 0x12345678, 0x82345678
+		};
 
 		final List<Arguments> args = new ArrayList<>();
 

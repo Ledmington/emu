@@ -19,11 +19,19 @@ package com.ledmington.mem.exc;
 
 import java.io.Serial;
 
+/**
+ * Exception thrown when an attempt is made to execute code in a memory region that does not have execute permissions.
+ */
 public final class IllegalExecutionException extends InvalidPermissionsException {
 
 	@Serial
 	private static final long serialVersionUID = -3772763384309066650L;
 
+	/**
+	 * Constructs a new IllegalExecutionException with the specified detail message.
+	 *
+	 * @param message The detail message explaining the reason for the exception.
+	 */
 	public IllegalExecutionException(final String message) {
 		super(message);
 	}

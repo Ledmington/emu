@@ -73,7 +73,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

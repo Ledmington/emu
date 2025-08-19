@@ -19,11 +19,17 @@ package com.ledmington.mem.exc;
 
 import java.io.Serial;
 
+/** Exception thrown when there is an attempt to access memory that has not been initialized. */
 public final class AccessToUninitializedMemoryException extends IllegalMemoryAccessException {
 
 	@Serial
 	private static final long serialVersionUID = 2562833975489869865L;
 
+	/**
+	 * Constructs a new AccessToUninitializedMemoryException with the specified detail message.
+	 *
+	 * @param message The detail message explaining the reason for the exception.
+	 */
 	public AccessToUninitializedMemoryException(final String message) {
 		super(message);
 	}

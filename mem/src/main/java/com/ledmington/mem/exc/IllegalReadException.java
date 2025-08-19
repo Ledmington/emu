@@ -19,11 +19,17 @@ package com.ledmington.mem.exc;
 
 import java.io.Serial;
 
+/** Exception thrown when an attempt is made to read from a memory region that does not have read permissions. */
 public final class IllegalReadException extends InvalidPermissionsException {
 
 	@Serial
 	private static final long serialVersionUID = 923857280730460914L;
 
+	/**
+	 * Constructs a new IllegalReadException with the specified detail message.
+	 *
+	 * @param message The detail message explaining the reason for the exception.
+	 */
 	public IllegalReadException(final String message) {
 		super(message);
 	}

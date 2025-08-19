@@ -19,50 +19,24 @@ package com.ledmington.elf.section;
 
 import java.util.Objects;
 
-/** An ELF Null section. */
-public final class NullSection implements Section {
-
-	private final SectionHeader header;
+/**
+ * An ELF Null section.
+ *
+ * @param header The section header entry corresponding to this section.
+ */
+public record NullSection(SectionHeader header) implements Section {
 
 	/**
 	 * Creates a Null section with the given section header entry.
 	 *
-	 * @param sectionHeader The section header entry corresponding to this section.
+	 * @param header The section header entry corresponding to this section.
 	 */
-	public NullSection(final SectionHeader sectionHeader) {
-		this.header = Objects.requireNonNull(sectionHeader);
+	public NullSection {
+		Objects.requireNonNull(header);
 	}
 
 	@Override
 	public String getName() {
 		return "";
-	}
-
-	@Override
-	public SectionHeader getHeader() {
-		return header;
-	}
-
-	@Override
-	public String toString() {
-		return "NullSection(header=" + header + ")";
-	}
-
-	@Override
-	public int hashCode() {
-		int h = 17;
-		h = 31 * h + header.hashCode();
-		return h;
-	}
-
-	@Override
-	public boolean equals(final Object other) {
-		if (other == null) {
-			return false;
-		}
-		if (this == other) {
-			return true;
-		}
-		return other instanceof final NullSection ns && this.header.equals(ns.header);
 	}
 }

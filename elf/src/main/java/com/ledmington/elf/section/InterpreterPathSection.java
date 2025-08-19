@@ -66,7 +66,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

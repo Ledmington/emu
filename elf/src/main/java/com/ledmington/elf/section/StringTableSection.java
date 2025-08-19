@@ -89,7 +89,7 @@ public final class StringTableSection implements LoadableSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

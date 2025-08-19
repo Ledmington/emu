@@ -166,9 +166,24 @@ final class TestRegisters {
 	@ParameterizedTest
 	@MethodSource("registers128Bits")
 	void decodeRegisters128Bits(final byte registerCode, final boolean needsExtensions, final RegisterXMM expected) {
-		assertEquals(needsExtensions, RegisterXMM.requiresExtension(expected));
-		assertEquals(expected, RegisterXMM.fromByte(BitUtils.or(registerCode, needsExtensions ? (byte) 0x08 : 0)));
-		assertEquals(registerCode, RegisterXMM.toByte(expected));
+		assertEquals(
+				needsExtensions,
+				RegisterXMM.requiresExtension(expected),
+				() -> String.format(
+						"Expected %s to%s require the XMM extension but it did%s.",
+						expected, needsExtensions ? "" : " not", needsExtensions ? " not" : ""));
+		final byte actualCode = BitUtils.or(registerCode, needsExtensions ? (byte) 0x08 : 0);
+		final RegisterXMM actual = RegisterXMM.fromByte(actualCode);
+		assertEquals(
+				expected,
+				actual,
+				() -> String.format("Expected to decode %s from 0x%02x but was %s.", expected, actualCode, actual));
+		final byte encoded = RegisterXMM.toByte(expected);
+		assertEquals(
+				registerCode,
+				encoded,
+				() -> String.format(
+						"Expected %s to be encoded as 0x%02x but was 0x%02x.", expected, registerCode, encoded));
 	}
 
 	@Test

@@ -42,7 +42,7 @@ public final class X86_64_Unwind implements Section {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

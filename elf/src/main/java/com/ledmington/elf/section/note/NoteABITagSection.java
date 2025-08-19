@@ -67,7 +67,7 @@ public final class NoteABITagSection implements NoteSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

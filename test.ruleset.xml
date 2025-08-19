@@ -45,6 +45,12 @@
         <exclude name="TooManyMethods" />
     </rule>
 
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="30" />
+        </properties>
+    </rule>
+
     <rule ref="category/java/documentation.xml">
         <!-- Avoid reporting comments with too many lines -->
         <exclude name="CommentSize" />
@@ -68,7 +74,10 @@
         </properties>
     </rule>
 
-    <rule ref="category/java/multithreading.xml" />
+    <rule ref="category/java/multithreading.xml">
+        <!-- Avoid reporting anything related to java.lang.Thread or Executors -->
+        <exclude name="DoNotUseThreads" />
+    </rule>
 
     <rule ref="category/java/performance.xml">
         <!-- Avoid reporting redundant field initialization -->

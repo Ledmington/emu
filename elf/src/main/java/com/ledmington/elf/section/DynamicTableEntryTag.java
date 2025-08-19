@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Useful reference <a href=
  * "https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/chapter6-14428/index.html">here</a>.
  */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public enum DynamicTableEntryTag {
 
 	/** The last entry of the dynamic section has this tag. */

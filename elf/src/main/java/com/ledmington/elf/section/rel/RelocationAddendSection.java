@@ -60,13 +60,24 @@ public final class RelocationAddendSection implements LoadableSection {
 		this.relocationAddendTable = new RelocationAddendEntry[nEntries];
 
 		for (int i = 0; i < nEntries; i++) {
-			final long offset = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-			final long info = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
-			final int symbolTableIndex =
-					is32Bit ? BitUtils.asInt((info & 0x000000000000ff00L) >>> 8) : BitUtils.asInt(info >>> 32);
-			final RelocationAddendEntryType type = RelocationAddendEntryType.fromCode(
-					isa, is32Bit ? BitUtils.asInt(BitUtils.asByte(info)) : BitUtils.asInt(info));
-			final long addend = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
+			final long offset;
+			final long info;
+			final int symbolTableIndex;
+			final RelocationAddendEntryType type;
+			final long addend;
+			if (is32Bit) {
+				offset = BitUtils.asLong(b.read4());
+				info = BitUtils.asLong(b.read4());
+				symbolTableIndex = BitUtils.asInt((info & 0x000000000000ff00L) >>> 8);
+				type = RelocationAddendEntryType.fromCode(isa, BitUtils.asInt(BitUtils.asByte(info)));
+				addend = BitUtils.asLong(b.read4());
+			} else {
+				offset = b.read8();
+				info = b.read8();
+				symbolTableIndex = BitUtils.asInt(info >>> 32);
+				type = RelocationAddendEntryType.fromCode(isa, BitUtils.asInt(info));
+				addend = b.read8();
+			}
 			this.relocationAddendTable[i] = new RelocationAddendEntry(offset, symbolTableIndex, type, addend);
 		}
 	}
@@ -96,7 +107,7 @@ public final class RelocationAddendSection implements LoadableSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

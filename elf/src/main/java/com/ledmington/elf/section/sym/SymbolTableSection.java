@@ -67,7 +67,7 @@ public final class SymbolTableSection implements SymbolTable {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

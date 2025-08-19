@@ -67,7 +67,7 @@ public final class BasicNoteSection implements NoteSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

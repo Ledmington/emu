@@ -80,7 +80,7 @@ public final class RelocationSection implements Section {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

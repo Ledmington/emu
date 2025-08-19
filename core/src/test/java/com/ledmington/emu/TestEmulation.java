@@ -19,52 +19,20 @@ package com.ledmington.emu;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** End-to-end testing emulating entire executables. */
 final class TestEmulation {
 
-	@Test
-	void doNothing() {
-		final Path p;
-		try {
-			p = Paths.get(Objects.requireNonNull(
-							Thread.currentThread().getContextClassLoader().getResource("do_nothing.elf"))
-					.toURI());
-		} catch (final URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
-		assertDoesNotThrow(() -> Emu.run(p.toString()));
-	}
-
-	@Test
-	void doNothing2() {
-		final Path p;
-		try {
-			p = Paths.get(Objects.requireNonNull(
-							Thread.currentThread().getContextClassLoader().getResource("do_nothing.small"))
-					.toURI());
-		} catch (final URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
-		assertDoesNotThrow(() -> Emu.run(p.toString()));
-	}
-
-	@Test
-	void small() {
-		final Path p;
-		try {
-			p = Paths.get(Objects.requireNonNull(
-							Thread.currentThread().getContextClassLoader().getResource("small.x"))
-					.toURI());
-		} catch (final URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
-		assertDoesNotThrow(() -> Emu.run(p.toString()));
+	@ParameterizedTest
+	@ValueSource(strings = {"do_nothing.elf", "do_nothing.small", "small.x"})
+	void endToEndEmulation(final String executableName) {
+		final String path = Objects.requireNonNull(
+						Thread.currentThread().getContextClassLoader().getResource(executableName))
+				.getPath();
+		assertDoesNotThrow(() -> Emu.run(path));
 	}
 }

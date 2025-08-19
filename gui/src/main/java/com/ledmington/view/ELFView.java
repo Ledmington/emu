@@ -315,7 +315,7 @@ public final class ELFView extends BorderPane {
 			final long sectionHeaderOffset,
 			final long sectionHeaderTableEntrySize,
 			final boolean is32Bit) {
-		final SectionHeader sh = s.getHeader();
+		final SectionHeader sh = s.header();
 		final int wordSize = is32Bit ? 4 : 8;
 		final TreeItem<String> x = new TreeItem<>(s.getName().isEmpty() ? "(null)" : s.getName());
 		final TreeItem<String> shRoot =
@@ -391,7 +391,7 @@ public final class ELFView extends BorderPane {
 		root.getChildren()
 				.add(getTreeItem(
 						"Interpreter Path",
-						(int) interp.getHeader().getFileOffset(),
+						(int) interp.header().getFileOffset(),
 						interp.getInterpreterFilePath().length()));
 	}
 
@@ -399,15 +399,15 @@ public final class ELFView extends BorderPane {
 		root.getChildren()
 				.add(getTreeItem(
 						// TODO: change name
-						"Content", (int) pbs.getHeader().getFileOffset(), (int)
-								pbs.getHeader().getSectionSize()));
+						"Content", (int) pbs.header().getFileOffset(), (int)
+								pbs.header().getSectionSize()));
 	}
 
 	private void initializeDynamicSection(final TreeItem<String> root, final DynamicSection dyn, final int wordSize) {
 		final int entrySize = 2 * wordSize;
 		for (int i = 0; i < dyn.getTableLength(); i++) {
 			final DynamicTableEntry dte = dyn.getEntry(i);
-			final int entryStart = (int) dyn.getHeader().getFileOffset() + entrySize * i;
+			final int entryStart = (int) dyn.header().getFileOffset() + entrySize * i;
 			final TreeItem<String> x = getTreeItem("#" + i + ": " + dte.getTag().getName(), entryStart, entrySize);
 			x.getChildren().add(getTreeItem("tag = " + dte.getTag().getName(), entryStart, wordSize));
 			x.getChildren().add(getTreeItem("content", entryStart + wordSize, wordSize));
@@ -416,7 +416,7 @@ public final class ELFView extends BorderPane {
 	}
 
 	private void initializeNoteSection(final TreeItem<String> root, final NoteSection ns) {
-		int start = (int) ns.getHeader().getFileOffset();
+		int start = (int) ns.header().getFileOffset();
 		for (int i = 0; i < ns.getNumEntries(); i++) {
 			final NoteSectionEntry nse = ns.getEntry(i);
 			final int nameLength = nse.getName().length() + 1;
@@ -433,7 +433,7 @@ public final class ELFView extends BorderPane {
 	}
 
 	private void initializeGnuHashSection(final TreeItem<String> root, final GnuHashSection ghs, final int wordSize) {
-		final int start = (int) ghs.getHeader().getFileOffset();
+		final int start = (int) ghs.header().getFileOffset();
 		root.getChildren().add(getTreeItem("nbuckets = " + ghs.getBucketsLength(), start, 4));
 		root.getChildren().add(getTreeItem("symndx = " + ghs.getSymbolTableIndex(), start + 4, 4));
 		root.getChildren().add(getTreeItem("maskwords = " + ghs.getBloomFilterLength(), start + 4 + 4, 4));
@@ -462,7 +462,7 @@ public final class ELFView extends BorderPane {
 	}
 
 	private void initializeHashTableSection(final TreeItem<String> root, final HashTableSection hts) {
-		final int start = (int) hts.getHeader().getFileOffset();
+		final int start = (int) hts.header().getFileOffset();
 		root.getChildren().add(getTreeItem("nbuckets = " + hts.getNumBuckets(), start, 4));
 		root.getChildren().add(getTreeItem("nchain = " + hts.getNumChains(), start + 4, 4));
 
@@ -482,7 +482,7 @@ public final class ELFView extends BorderPane {
 	}
 
 	private void initializeSymbolTable(final TreeItem<String> root, final SymbolTable symtab, final boolean is32Bit) {
-		final int start = (int) symtab.getHeader().getFileOffset();
+		final int start = (int) symtab.header().getFileOffset();
 		final int wordSize = is32Bit ? 4 : 8;
 		final int entrySize = is32Bit ? (4 + 4 + 4 + 1 + 1 + 2) : (4 + 1 + 1 + 2 + 8 + 8);
 		for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
@@ -507,9 +507,9 @@ public final class ELFView extends BorderPane {
 	}
 
 	private void initializeStringTable(final TreeItem<String> root, final StringTableSection strtab) {
-		final int start = (int) strtab.getHeader().getFileOffset();
+		final int start = (int) strtab.header().getFileOffset();
 		int i = 0;
-		while (i < strtab.getHeader().getSectionSize()) {
+		while (i < strtab.header().getSectionSize()) {
 			final String s = strtab.getString(i);
 			if (!s.isEmpty()) {
 				root.getChildren().add(getTreeItem(s, start + i, s.length()));
@@ -526,7 +526,7 @@ public final class ELFView extends BorderPane {
 		}
 
 		for (int i = 0; i < cs.getNumConstructors(); i++) {
-			root.getChildren().add(getTreeItem("#" + i, (int) cs.getHeader().getFileOffset() + wordSize * i, wordSize));
+			root.getChildren().add(getTreeItem("#" + i, (int) cs.header().getFileOffset() + wordSize * i, wordSize));
 		}
 	}
 
@@ -538,7 +538,7 @@ public final class ELFView extends BorderPane {
 		}
 
 		for (int i = 0; i < ds.getNumDestructors(); i++) {
-			root.getChildren().add(getTreeItem("#" + i, (int) ds.getHeader().getFileOffset() + wordSize * i, wordSize));
+			root.getChildren().add(getTreeItem("#" + i, (int) ds.header().getFileOffset() + wordSize * i, wordSize));
 		}
 	}
 
@@ -549,7 +549,7 @@ public final class ELFView extends BorderPane {
 		}
 
 		for (int i = 0; i < gvs.getVersionsLength(); i++) {
-			root.getChildren().add(getTreeItem("#" + i, (int) gvs.getHeader().getFileOffset() + 2 * i, 2));
+			root.getChildren().add(getTreeItem("#" + i, (int) gvs.header().getFileOffset() + 2 * i, 2));
 		}
 	}
 
@@ -560,7 +560,7 @@ public final class ELFView extends BorderPane {
 			return;
 		}
 
-		int entryStart = (int) gvrs.getHeader().getFileOffset();
+		int entryStart = (int) gvrs.header().getFileOffset();
 		for (int i = 0; i < gvrs.getRequirementsLength(); i++) {
 			final GnuVersionRequirementEntry gvre = gvrs.getEntry(i);
 			root.getChildren().add(initializeGnuVersionRequirementEntry(gvre, "#" + i, entryStart));
@@ -603,7 +603,7 @@ public final class ELFView extends BorderPane {
 			return;
 		}
 
-		final int start = (int) rs.getHeader().getFileOffset();
+		final int start = (int) rs.header().getFileOffset();
 		final int entrySize = 2 * wordSize;
 		for (int i = 0; i < rs.getNumRelocationEntries(); i++) {
 			final int entryStart = start + entrySize * i;
@@ -622,7 +622,7 @@ public final class ELFView extends BorderPane {
 			return;
 		}
 
-		final int start = (int) ras.getHeader().getFileOffset();
+		final int start = (int) ras.header().getFileOffset();
 		final int entrySize = 3 * wordSize;
 		for (int i = 0; i < ras.getRelocationAddendTableLength(); i++) {
 			final int entryStart = start + entrySize * i;

@@ -32,5 +32,5 @@ public interface Section {
 	 *
 	 * @return A non-null SectionHeader.
 	 */
-	SectionHeader getHeader();
+	SectionHeader header();
 }

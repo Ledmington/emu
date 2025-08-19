@@ -60,17 +60,24 @@ public final class ELFLoader {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-loader");
 
+	private final X86Emulator cpu;
 	private final List<Range> memorySegments = new ArrayList<>();
 
 	private record Range(long start, long end) {}
 
-	public ELFLoader() {}
+	/**
+	 * Creates a new ELFLoader.
+	 *
+	 * @param cpu The CPU to be used to execute some instructions, if needed.
+	 */
+	public ELFLoader(final X86Emulator cpu) {
+		this.cpu = Objects.requireNonNull(cpu);
+	}
 
 	/**
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
-	 * @param cpu The CPU to be used to execute some instructions, if needed.
 	 * @param mem The emulated memory where to load the file.
 	 * @param commandLineArguments The arguments to pass to the program.
 	 * @param baseAddress The address where to start loading the file.
@@ -78,7 +85,6 @@ public final class ELFLoader {
 	 */
 	public void load(
 			final ELF elf,
-			final X86Emulator cpu,
 			final MemoryController mem,
 			final String[] commandLineArguments,
 			final long baseAddress,
@@ -93,62 +99,54 @@ public final class ELFLoader {
 		final long stackPointer = baseStackAddress + stackSize - 8L;
 
 		// These are fake instructions to set up the stack
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackPointer)));
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackPointer)));
+		set(Register64.RSP, stackPointer);
+		set(Register64.RBP, stackPointer);
 
 		// Since it is not possible to push a 64-bit immediate value, we need to use a register temporarily
 		{
 			final long oldValue = cpu.getRegisters().get(Register64.R15);
-			cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.R15, new Immediate(baseStackValue)));
+			set(Register64.R15, baseStackValue);
 			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
-			cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.R15, new Immediate(oldValue)));
+			set(Register64.R15, oldValue);
 		}
 
-		// Set RDI to argc
-		cpu.executeOne(new Instruction(
-				Opcode.MOVABS, Register64.RDI, new Immediate(BitUtils.asLong(commandLineArguments.length))));
+		final int argc = commandLineArguments.length;
+		set(Register64.RDI, BitUtils.asLong(argc));
 
 		final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
-				mem,
-				// highestAddress,
-				stackPointer,
-				elf.getFileHeader().is32Bit(),
-				commandLineArguments);
+				mem, stackPointer, elf.getFileHeader().is32Bit(), commandLineArguments);
 
-		// set RSI to 'argv'
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSI, new Immediate(p.first())));
-		// set RDX to 'envp'
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RDX, new Immediate(p.second())));
+		final long argv = p.first();
+		set(Register64.RSI, argv);
+
+		final long envp = p.second();
+		set(Register64.RDX, envp);
 
 		if (elf.getSectionByName(".preinit_array").isPresent()) {
 			runPreInitArray();
 		}
 
-		final Optional<Section> symtab = elf.getSectionByName(".symtab");
-		final Optional<Section> strtab = elf.getSectionByName(".strtab");
+		final SymbolTableSection symtab =
+				(SymbolTableSection) elf.getSectionByName(".symtab").orElse(null);
+		final StringTableSection strtab =
+				(StringTableSection) elf.getSectionByName(".strtab").orElse(null);
 
 		final Optional<Section> initArray = elf.getSectionByName(".init_array");
 		if (initArray.isPresent()) {
-			runInitArray(
-					(ConstructorsSection) initArray.orElseThrow(),
-					cpu,
-					baseAddress,
-					symtab.isPresent() ? (SymbolTableSection) symtab.orElseThrow() : null,
-					strtab.isPresent() ? (StringTableSection) strtab.orElseThrow() : null);
+			runInitArray((ConstructorsSection) initArray.orElseThrow(), baseAddress, symtab, strtab);
 		}
 
 		final Optional<Section> init = elf.getSectionByName(".init");
 		if (init.isPresent()) {
-			runInit(
-					(BasicProgBitsSection) init.orElseThrow(),
-					cpu,
-					baseAddress,
-					symtab.isPresent() ? (SymbolTableSection) symtab.orElseThrow() : null,
-					strtab.isPresent() ? (StringTableSection) strtab.orElseThrow() : null);
+			runInit((BasicProgBitsSection) init.orElseThrow(), baseAddress, symtab, strtab);
 		}
 		if (elf.getSectionByName(".ctors").isPresent()) {
 			runCtors();
 		}
+	}
+
+	private void set(final Register64 r, final long value) {
+		cpu.executeOne(new Instruction(Opcode.MOVABS, r, new Immediate(value)));
 	}
 
 	/**
@@ -180,7 +178,6 @@ public final class ELFLoader {
 
 	private void runInitArray(
 			final ConstructorsSection initArray,
-			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
 			final SymbolTableSection symtab,
 			final StringTableSection strtab) {
@@ -201,12 +198,11 @@ public final class ELFLoader {
 
 	private void runInit(
 			final BasicProgBitsSection init,
-			final X86Emulator cpu,
 			final long entryPointVirtualAddress,
 			final SymbolTableSection symtab,
 			final StringTableSection strtab) {
-		final long sectionStart = entryPointVirtualAddress + init.getHeader().getFileOffset();
-		final long sectionEnd = sectionStart + init.getHeader().getSectionSize();
+		final long sectionStart = entryPointVirtualAddress + init.header().getFileOffset();
+		final long sectionEnd = sectionStart + init.header().getSectionSize();
 
 		if (symtab != null) {
 			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
@@ -253,16 +249,19 @@ public final class ELFLoader {
 		throw new Error("Not implemented");
 	}
 
-	private void setupStack(long baseStackAddress, final long stackSize, final MemoryController mem) {
+	private void setupStack(final long baseStackAddress, final long stackSize, final MemoryController mem) {
+		final long alignedBaseStackAddress;
 		if ((baseStackAddress & 0xfL) != 0L) {
-			baseStackAddress = (baseStackAddress + 15L) & 0xfffffffffffffff0L;
+			alignedBaseStackAddress = (baseStackAddress + 15L) & 0xfffffffffffffff0L;
 			logger.debug("Aligning base stack address to 16-byte aligned value: 0x%x", baseStackAddress);
+		} else {
+			alignedBaseStackAddress = baseStackAddress;
 		}
 
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3e B) at 0x%016x-0x%016x",
-				stackSize, (double) stackSize, baseStackAddress, baseStackAddress + stackSize - 1L);
-		mem.setPermissions(baseStackAddress, baseStackAddress + stackSize - 1L, true, true, false);
+				stackSize, (double) stackSize, alignedBaseStackAddress, alignedBaseStackAddress + stackSize - 1L);
+		mem.setPermissions(alignedBaseStackAddress, alignedBaseStackAddress + stackSize - 1L, true, true, false);
 	}
 
 	private long getNumEnvBytes() {
@@ -405,7 +404,7 @@ public final class ELFLoader {
 		logger.debug("Loading ELF sections into memory");
 		for (int i = 0; i < st.getSectionTableLength(); i++) {
 			final Section sec = st.getSection(i);
-			if (!sec.getHeader().getFlags().contains(SectionHeaderFlags.SHF_ALLOC)) {
+			if (!sec.header().getFlags().contains(SectionHeaderFlags.SHF_ALLOC)) {
 				continue;
 			}
 			if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
@@ -420,8 +419,8 @@ public final class ELFLoader {
 		switch (sec) {
 			case NoBitsSection ignored -> {
 				// allocate uninitialized data blocks
-				final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
-				final long size = sec.getHeader().getSectionSize();
+				final long startVirtualAddress = baseAddress + sec.header().getVirtualAddress();
+				final long size = sec.header().getSectionSize();
 				final int segmentIndex = findSegmentIndex(startVirtualAddress, size);
 				logger.debug(
 						"Loading section %s in memory segment %,d at range 0x%x-0x%x (%,d bytes)",
@@ -429,7 +428,7 @@ public final class ELFLoader {
 				mem.initialize(startVirtualAddress, size, (byte) 0x00);
 			}
 			case LoadableSection ls -> {
-				final long startVirtualAddress = baseAddress + sec.getHeader().getVirtualAddress();
+				final long startVirtualAddress = baseAddress + sec.header().getVirtualAddress();
 				final byte[] content = ls.getLoadableContent();
 				final int segmentIndex = findSegmentIndex(startVirtualAddress, content.length);
 				logger.debug(
@@ -445,8 +444,8 @@ public final class ELFLoader {
 				throw new IllegalArgumentException(String.format(
 						"Don't know what to do with section '%s' of type %s and flags '%s'",
 						sec.getName(),
-						sec.getHeader().getType().getName(),
-						sec.getHeader().getFlags().stream()
+						sec.header().getType().getName(),
+						sec.header().getFlags().stream()
 								.map(SectionHeaderFlags::getName)
 								.collect(Collectors.joining(", "))));
 		}

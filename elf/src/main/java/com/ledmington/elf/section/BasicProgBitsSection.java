@@ -58,7 +58,7 @@ public final class BasicProgBitsSection implements ProgBitsSection {
 	}
 
 	@Override
-	public SectionHeader getHeader() {
+	public SectionHeader header() {
 		return header;
 	}
 

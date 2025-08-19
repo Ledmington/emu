@@ -85,6 +85,8 @@ public final class Main {
 	private static final short VERSYM_VERSION = (short) 0x7fff;
 	private static final short VERSYM_HIDDEN = (short) 0x8000;
 
+	private Main() {}
+
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
@@ -483,9 +485,9 @@ public final class Main {
 
 	private static void printStringDump(final ReadOnlyByteBuffer b, final Section s) {
 		out.printf("%nString dump of section '%s':%n", s.getName());
-		final long start = s.getHeader().getFileOffset();
+		final long start = s.header().getFileOffset();
 		b.setPosition(start);
-		final long length = s.getHeader().getSectionSize();
+		final long length = s.header().getSectionSize();
 		while (b.getPosition() - start < length) {
 			byte x = b.read1();
 			if (!isAsciiPrintable(x)) {
@@ -536,9 +538,9 @@ public final class Main {
 
 	private static void printHexDump(final ReadOnlyByteBuffer b, final Section s) {
 		out.printf("%nHex dump of section '%s':%n", s.getName());
-		final long start = s.getHeader().getFileOffset();
+		final long start = s.header().getFileOffset();
 		b.setPosition(start);
-		final long length = s.getHeader().getSectionSize();
+		final long length = s.header().getSectionSize();
 		while (b.getPosition() - start < length) {
 			final long a = b.getPosition();
 			out.printf("  0x%08x", BitUtils.asInt(a));
@@ -668,7 +670,7 @@ public final class Main {
 	}
 
 	private static void printVersionSection(final GnuVersionRequirementsSection gvrs, final SectionTable sectionTable) {
-		final SectionHeader sh = gvrs.getHeader();
+		final SectionHeader sh = gvrs.header();
 		final Section linkedSection = sectionTable.getSection(sh.getLinkedSectionIndex());
 
 		out.printf(
@@ -703,7 +705,7 @@ public final class Main {
 
 	private static void printVersionSection(
 			final GnuVersionSection gvs, final GnuVersionRequirementsSection gvrs, final SectionTable sectionTable) {
-		final SectionHeader sh = gvs.getHeader();
+		final SectionHeader sh = gvs.header();
 		final Section linkedSection = sectionTable.getSection(sh.getLinkedSectionIndex());
 
 		out.printf(
@@ -714,7 +716,7 @@ public final class Main {
 				sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
 
 		final StringTableSection stringTable = (StringTableSection)
-				sectionTable.getSection(linkedSection.getHeader().getLinkedSectionIndex());
+				sectionTable.getSection(linkedSection.header().getLinkedSectionIndex());
 
 		for (int i = 0; i < gvs.getVersionsLength(); i++) {
 			if (i % 4 == 0) {
@@ -757,7 +759,7 @@ public final class Main {
 	}
 
 	private static void printDynamicSection(final DynamicSection ds, final SectionTable sectionTable) {
-		final SectionHeader dsh = ds.getHeader();
+		final SectionHeader dsh = ds.header();
 		out.printf("Dynamic section at offset 0x%x contains %d entries:%n", dsh.getFileOffset(), ds.getTableLength());
 		out.println("  Tag        Type                         Name/Value");
 
@@ -773,7 +775,7 @@ public final class Main {
 		StringTableSection strtab = null;
 		for (int i = 0; i < sectionTable.getSectionTableLength(); i++) {
 			final Section s = sectionTable.getSection(i);
-			if (s.getHeader().getVirtualAddress() == dt_strtab_offset) {
+			if (s.header().getVirtualAddress() == dt_strtab_offset) {
 				strtab = (StringTableSection) s;
 				break;
 			}
@@ -845,14 +847,13 @@ public final class Main {
 			final GnuVersionRequirementsSection gvrs,
 			final SectionTable sectionTable,
 			final boolean is32Bit) {
-		final SectionHeader rash = ras.getHeader();
-		final boolean hasSymbolTable = ras.getHeader().getLinkedSectionIndex() != 0;
+		final SectionHeader rash = ras.header();
+		final boolean hasSymbolTable = ras.header().getLinkedSectionIndex() != 0;
 		final SymbolTable symtab = hasSymbolTable
-				? (SymbolTable) sectionTable.getSection(ras.getHeader().getLinkedSectionIndex())
+				? (SymbolTable) sectionTable.getSection(ras.header().getLinkedSectionIndex())
 				: null;
 		final StringTableSection symstrtab = hasSymbolTable
-				? (StringTableSection)
-						sectionTable.getSection(symtab.getHeader().getLinkedSectionIndex())
+				? (StringTableSection) sectionTable.getSection(symtab.header().getLinkedSectionIndex())
 				: null;
 
 		out.printf(
@@ -1080,6 +1081,7 @@ public final class Main {
 		out.print("<None>");
 	}
 
+	@SuppressWarnings("PMD.ConfusingTernary")
 	private static void printGNUProperties(final NoteSectionEntry nse) {
 		final int expectedDataSize = 4;
 		final byte[] v = new byte[nse.getDescriptionLength()];
@@ -1213,7 +1215,7 @@ public final class Main {
 
 		for (int i = 0; i < sections.getSectionTableLength(); i++) {
 			final Section s = sections.getSection(i);
-			final SectionHeader sh = s.getHeader();
+			final SectionHeader sh = s.header();
 			out.printf("  [%2d] %s%n", i, s.getName());
 			out.printf(
 					"       %-16s %016x %016x %d%n",
@@ -1238,7 +1240,7 @@ public final class Main {
 		out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), s.getSymbolTableLength());
 		out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
 		final StringTableSection strtab =
-				(StringTableSection) sectionTable.getSection(s.getHeader().getLinkedSectionIndex());
+				(StringTableSection) sectionTable.getSection(s.header().getLinkedSectionIndex());
 
 		for (int i = 0; i < s.getSymbolTableLength(); i++) {
 			final SymbolTableEntry ste = s.getSymbolTableEntry(i);
@@ -1296,7 +1298,7 @@ public final class Main {
 
 		for (int i = 0; i < sections.getSectionTableLength(); i++) {
 			final Section s = sections.getSection(i);
-			final SectionHeader sh = s.getHeader();
+			final SectionHeader sh = s.header();
 			final String name = wide ? s.getName() : addSuffixIfLonger(s.getName(), 17);
 			final String typeName = sh.getType().getName();
 			final long virtualAddress = sh.getVirtualAddress();
@@ -1426,7 +1428,7 @@ public final class Main {
 
 			for (int j = 0; j < sections.getSectionTableLength(); j++) {
 				final Section s = sections.getSection(j);
-				final SectionHeader sh = s.getHeader();
+				final SectionHeader sh = s.header();
 				final long sectionSize = sh.getSectionSize();
 				final long sectionStart = sh.getVirtualAddress();
 				final long sectionEnd = sectionStart + sectionSize;

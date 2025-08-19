@@ -52,6 +52,8 @@
 	    <exclude name="ExcessiveImports" />
         <!-- Avoid reporting classes with too many methods -->
         <exclude name="GodClass" />
+        <!-- Avoid reporting classes with too little functionality -->
+        <exclude name="DataClass" />
         <!-- Avoid reporting usage of classes from outside the package hierarchy -->
         <exclude name="LoosePackageCoupling" />
 
@@ -80,14 +82,14 @@
     <rule ref="category/java/design.xml/CyclomaticComplexity">
         <properties>
             <property name="classReportLevel" value="80" />
-            <property name="methodReportLevel" value="30" />
+            <property name="methodReportLevel" value="35" />
             <property name="cycloOptions" value="" />
         </properties>
     </rule>
     <!-- Avoid reporting methods that are "too complex" -->
     <rule ref="category/java/design.xml/NPathComplexity">
         <properties>
-            <property name="reportLevel" value="20" />
+            <property name="reportLevel" value="100" />
         </properties>
     </rule>
     <!-- Avoid reporting methods that are "too complex" -->
@@ -99,7 +101,7 @@
     <!-- Avoid reporting classes with "too many lines" -->
     <rule ref="category/java/design.xml/NcssCount">
         <properties>
-            <property name="methodReportLevel" value="60" />
+            <property name="methodReportLevel" value="100" />
             <property name="classReportLevel" value="1500" />
             <property name="ncssOptions" value="" />
         </properties>
@@ -129,6 +131,8 @@
     <rule ref="category/java/errorprone.xml">
         <!-- Avoid reporting System.exit() -->
         <exclude name="DoNotTerminateVM" />
+        <!-- Avoid reporting methods with the same name of fields -->
+        <exclude name="AvoidFieldNameMatchingMethodName" />
     </rule>
 
     <rule ref="category/java/multithreading.xml">
