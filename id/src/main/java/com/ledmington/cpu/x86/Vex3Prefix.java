@@ -20,7 +20,7 @@ package com.ledmington.cpu.x86;
 import com.ledmington.utils.BitUtils;
 
 /** The VEX3 prefix (0xc4 + 2 bytes). */
-@SuppressWarnings({"PMD.UnusedPrivateField", "PMD.AvoidFieldNameMatchingMethodName"})
+@SuppressWarnings("PMD.UnusedPrivateField")
 public final class Vex3Prefix {
 
 	private final boolean r;

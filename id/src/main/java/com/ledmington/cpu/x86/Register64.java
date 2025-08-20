@@ -103,8 +103,6 @@ public enum Register64 implements Register {
 		};
 	}
 
-	// Check https://github.com/pmd/pmd/issues/5568
-	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final Register64 r) {
 		return switch (r) {
 			case RAX, R8 -> (byte) 0x00;
@@ -119,8 +117,6 @@ public enum Register64 implements Register {
 		};
 	}
 
-	// Check https://github.com/pmd/pmd/issues/5568
-	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final Register64 r) {
 		return switch (r) {
 			case RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, RIP -> false;

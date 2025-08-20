@@ -37,6 +37,8 @@
     </rule>
 
     <rule ref="category/java/design.xml">
+        <!-- Avoid reporting classes with too many imports -->
+        <exclude name="ExcessiveImports" />
         <!-- Avoid reporting usage of classes from outside the package hierarchy -->
         <exclude name="LoosePackageCoupling" />
         <!-- Avoid reporting usage of data coming from "too far away" -->

@@ -67,15 +67,16 @@ final class TestDecoding extends X64Encodings {
 					"Expected '%s' to be encoded as '%s' but was '%s'.",
 					inst.toString(), asString(expected), asString(actual));
 			if (expected.length == actual.length) {
-				for (int i = 0; i < expected.length; i++) {
+				int i = 0;
+				for (; i < expected.length; i++) {
 					if (expected[i] != actual[i]) {
-						s = s
-								+ String.format(
-										" First different byte is at index %,d: expected 0b%s but was 0b%s.",
-										i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
 						break;
 					}
 				}
+				s = s
+						+ String.format(
+								" First different byte is at index %,d: expected 0b%s but was 0b%s.",
+								i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
 			} else {
 				s = s
 						+ String.format(

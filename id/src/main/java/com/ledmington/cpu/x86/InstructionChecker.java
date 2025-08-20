@@ -83,13 +83,15 @@ public final class InstructionChecker {
 		private final OperandType op3;
 		private final OperandType op4;
 
+		@SuppressWarnings("PMD.NullAssignment")
 		/* default */ Case(final OperandType... ot) {
 			Objects.requireNonNull(ot);
 			this.op1 = ot.length > 0 ? Objects.requireNonNull(ot[0]) : null;
 			this.op2 = ot.length > 1 ? Objects.requireNonNull(ot[1]) : null;
 			this.op3 = ot.length > 2 ? Objects.requireNonNull(ot[2]) : null;
 			this.op4 = ot.length > 3 ? Objects.requireNonNull(ot[3]) : null;
-			if (ot.length > 4) {
+			final int maxOperands = 4;
+			if (ot.length > maxOperands) {
 				throw new IllegalArgumentException("Too many operand types.");
 			}
 		}
@@ -585,7 +587,8 @@ public final class InstructionChecker {
 	public static void check(final Instruction inst) {
 		final int numOperands = inst.getNumOperands();
 
-		if (numOperands >= 2) {
+		final int minOperands = 2;
+		if (numOperands >= minOperands) {
 			checkNoMoreThanOneImmediate(inst);
 			checkNoMoreThanOneIndirect(inst);
 		}
@@ -602,30 +605,9 @@ public final class InstructionChecker {
 
 		final List<Case> cases = CASES.get(inst.opcode());
 		for (final Case c : cases) {
-			// filter out the cases with different number of operands
-			if (c.numOperands() != numOperands) {
-				continue;
+			if (c.numOperands() == numOperands && matches(c, inst)) {
+				return;
 			}
-
-			if (numOperands >= 1 && !matches(c.firstOperandType(), inst.firstOperand())) {
-				continue;
-			}
-
-			if (numOperands >= 2 && !matches(c.secondOperandType(), inst.secondOperand())) {
-				continue;
-			}
-
-			if (numOperands == 3 && !matches(c.thirdOperandType(), inst.thirdOperand())) {
-				continue;
-			}
-
-			if (numOperands == 4 && !matches(c.fourthOperandType(), inst.fourthOperand())) {
-				continue;
-			}
-
-			// we return (meaning that the instruction is correct) as soon as we find a case that matches the current
-			// instruction
-			return;
 		}
 
 		error("'%s' is not a valid instruction.", inst.toString());
@@ -747,6 +729,14 @@ public final class InstructionChecker {
 				|| (inst.hasFourthOperand() && inst.fourthOperand().equals(m))) {
 			error("The destination mask register cannot be used as an operand in the same instruction.");
 		}
+	}
+
+	private static boolean matches(final Case c, final Instruction inst) {
+		final int n = c.numOperands();
+		return (n < 1 || matches(c.firstOperandType(), inst.firstOperand()))
+				&& (n < 2 || matches(c.secondOperandType(), inst.secondOperand()))
+				&& (n < 3 || matches(c.thirdOperandType(), inst.thirdOperand()))
+				&& (n < 4 || matches(c.fourthOperandType(), inst.fourthOperand()));
 	}
 
 	private static boolean matches(final OperandType opt, final Operand op) {

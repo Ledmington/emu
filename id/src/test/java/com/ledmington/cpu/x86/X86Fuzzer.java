@@ -33,6 +33,12 @@ import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** A very simple fuzzer for x86_64 instructions. */
+@SuppressWarnings({
+	"PMD.SystemPrintln",
+	"PMD.UnnecessaryCast",
+	"PMD.AvoidLiteralsInIfCondition",
+	"PMD.CyclomaticComplexity"
+})
 public final class X86Fuzzer {
 
 	private X86Fuzzer() {}

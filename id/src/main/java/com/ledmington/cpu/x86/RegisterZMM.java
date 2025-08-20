@@ -164,8 +164,6 @@ public enum RegisterZMM implements Register {
 		};
 	}
 
-	// Check https://github.com/pmd/pmd/issues/5568
-	@SuppressWarnings("PMD.NPathComplexity")
 	public static byte toByte(final RegisterZMM r) {
 		return switch (r) {
 			case ZMM0, ZMM8, ZMM16, ZMM24 -> (byte) 0x00;
@@ -179,8 +177,6 @@ public enum RegisterZMM implements Register {
 		};
 	}
 
-	// Check https://github.com/pmd/pmd/issues/5568
-	@SuppressWarnings("PMD.NPathComplexity")
 	public static boolean requiresExtension(final RegisterZMM r) {
 		return switch (r) {
 			case ZMM0,

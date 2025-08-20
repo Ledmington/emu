@@ -161,14 +161,26 @@ import java.util.stream.Stream;
 
 import com.ledmington.utils.BitUtils;
 
+@SuppressWarnings("PMD.TooManyStaticImports")
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
-
-	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {}
 
 	private static final Immediate one = new Immediate((byte) 1);
 	private static final Immediate bimm = new Immediate((byte) 0x12);
 	private static final Immediate simm = new Immediate((short) 0x1234);
 	private static final Immediate iimm = new Immediate(0x12345678);
+
+	//
+	//  To have a reference which is a bit more usable than the Intel
+	//  Software Developer Manual, you can use this:
+	//  https://defuse.ca/online-x86-assembler.htm
+	//
+	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
+					nop(), mov(), movsxd(), cmp(), call(), jump(), cmov(), lea(), movzx(), movsx(), push(), pop(),
+					others())
+			.flatMap(Collection::stream)
+			.toList();
+
+	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {}
 
 	private static X64EncodingTestCase test(final Instruction instruction, final String intelSyntax, final String hex) {
 		final String[] splitted = hex.strip().split(" ");
@@ -10862,17 +10874,6 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"stmxcsr DWORD PTR [rsp+0x2c]",
 						"0f ae 5c 24 2c"));
 	}
-
-	//
-	//  To have a reference which is a bit more usable than the Intel
-	//  Software Developer Manual, you can use this:
-	//  https://defuse.ca/online-x86-assembler.htm
-	//
-	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
-					nop(), mov(), movsxd(), cmp(), call(), jump(), cmov(), lea(), movzx(), movsx(), push(), pop(),
-					others())
-			.flatMap(Collection::stream)
-			.toList();
 
 	private static String asString(final byte[] v) {
 		return IntStream.range(0, v.length)

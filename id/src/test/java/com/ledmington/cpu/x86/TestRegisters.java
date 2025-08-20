@@ -29,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.utils.BitUtils;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 final class TestRegisters {
 
 	private static Stream<Arguments> registers() {
@@ -95,7 +96,13 @@ final class TestRegisters {
 			final boolean hasOperandSizeOverridePrefix,
 			final Register expected) {
 		final Register actual = Registers.fromCode(registerCode, is64Bit, extension, hasOperandSizeOverridePrefix);
-		assertEquals(extension, Registers.requiresExtension(expected));
+		final boolean actualExtension = Registers.requiresExtension(expected);
+		assertEquals(
+				extension,
+				actualExtension,
+				() -> String.format(
+						"Expected %s to%s require an extension but it did%s.",
+						expected, extension ? "" : " not", actualExtension ? " not" : ""));
 		assertEquals(
 				expected,
 				actual,
@@ -135,12 +142,34 @@ final class TestRegisters {
 			final boolean needsRexPrefix,
 			final boolean needsExtension,
 			final Register8 expected) {
-		assertEquals(needsRexPrefix, Register8.requiresRexPrefix(expected));
-		assertEquals(needsExtension, Register8.requiresExtension(expected));
+		final boolean actualRexPrefix = Register8.requiresRexPrefix(expected);
+		assertEquals(
+				needsRexPrefix,
+				actualRexPrefix,
+				() -> String.format(
+						"Expected %s to%s require a REX prefix but it did%s.",
+						expected, needsRexPrefix ? "" : " not", actualRexPrefix ? " not" : ""));
+		final boolean actualExtension = Register8.requiresExtension(expected);
+		assertEquals(
+				needsExtension,
+				actualExtension,
+				() -> String.format(
+						"Expected %s to%s require an extension but it did%s.",
+						expected, needsExtension ? "" : " not", actualExtension ? " not" : ""));
+		final byte actualByte = BitUtils.or(registerCode, needsExtension ? (byte) 0x08 : 0);
+		final Register8 decoded = Register8.fromByte(actualByte, needsRexPrefix);
 		assertEquals(
 				expected,
-				Register8.fromByte(BitUtils.or(registerCode, needsExtension ? (byte) 0x08 : 0), needsRexPrefix));
-		assertEquals(registerCode, Register8.toByte(expected));
+				decoded,
+				() -> String.format(
+						"Expected %s to be decoded from 0x%02x, but it was %s.", expected, actualByte, decoded));
+		final byte actualCode = Register8.toByte(expected);
+		assertEquals(
+				registerCode,
+				actualCode,
+				() -> String.format(
+						"Expected %s to be encoded into 0x%02x, but it was 0x%02x.",
+						expected, registerCode, actualCode));
 	}
 
 	private static Stream<Arguments> registers128Bits() {

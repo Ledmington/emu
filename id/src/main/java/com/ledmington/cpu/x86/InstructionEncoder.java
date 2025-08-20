@@ -37,6 +37,7 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
  * there are the LOCK/REP/REPNE, then the CS segment override, then the address size override, then the operand size
  * override.
  */
+@SuppressWarnings("PMD.UselessParentheses")
 public final class InstructionEncoder {
 
 	private static final byte DEFAULT_REX_PREFIX = (byte) 0x40;
@@ -2102,10 +2103,10 @@ public final class InstructionEncoder {
 					if (inst.thirdOperand() instanceof final Register r && Registers.requiresEvexExtension(r)) {
 						count++;
 					}
-					if (inst.hasFourthOperand()) {
-						if (inst.fourthOperand() instanceof final Register r && Registers.requiresEvexExtension(r)) {
-							count++;
-						}
+					if (inst.hasFourthOperand()
+							&& inst.fourthOperand() instanceof final Register r
+							&& Registers.requiresEvexExtension(r)) {
+						count++;
 					}
 				}
 			}
@@ -2127,10 +2128,10 @@ public final class InstructionEncoder {
 					if (inst.thirdOperand() instanceof final Register r && Registers.requiresExtension(r)) {
 						count++;
 					}
-					if (inst.hasFourthOperand()) {
-						if (inst.fourthOperand() instanceof final Register r && Registers.requiresExtension(r)) {
-							count++;
-						}
+					if (inst.hasFourthOperand()
+							&& inst.fourthOperand() instanceof final Register r
+							&& Registers.requiresExtension(r)) {
+						count++;
 					}
 				}
 			}

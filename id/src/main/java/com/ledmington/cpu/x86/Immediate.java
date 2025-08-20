@@ -138,6 +138,7 @@ public final class Immediate implements Operand {
 		return toIntelSyntax(false);
 	}
 
+	@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 	public String toIntelSyntax(final boolean shortHex) {
 		return switch (type) {
 			case BYTE -> String.format(shortHex ? "0x%x" : "0x%02x", BitUtils.asByte(value));

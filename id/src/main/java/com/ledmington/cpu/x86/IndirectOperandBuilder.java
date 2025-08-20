@@ -19,6 +19,8 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
+import com.ledmington.utils.SuppressFBWarnings;
+
 /** This class allows an easier construction of an IndirectOperand object. */
 public final class IndirectOperandBuilder {
 
@@ -187,6 +189,7 @@ public final class IndirectOperandBuilder {
 	}
 
 	@Override
+	@SuppressFBWarnings(value = "EQ_UNUSUAL", justification = "A Builder should not be checked for equality.")
 	public boolean equals(final Object other) {
 		throw new UnsupportedOperationException();
 	}

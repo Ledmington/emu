@@ -19,6 +19,8 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
+import com.ledmington.utils.SuppressFBWarnings;
+
 public final class InstructionBuilder {
 
 	private InstructionPrefix prefix = null;
@@ -106,6 +108,7 @@ public final class InstructionBuilder {
 	}
 
 	@Override
+	@SuppressFBWarnings(value = "EQ_UNUSUAL", justification = "A Builder should not be checked for equality.")
 	public boolean equals(final Object other) {
 		throw new UnsupportedOperationException();
 	}
