@@ -6052,6 +6052,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.SHLD, RAX, R10, CL), "shld rax,r10,cl", "4c 0f a5 d0"),
 				// Shrd
 				test(new Instruction(Opcode.SHRD, RAX, R10, CL), "shrd rax,r10,cl", "4c 0f ad d0"),
+				test(
+						new Instruction(Opcode.SHRD, RSI, RDX, new Immediate((byte) 0x01)),
+						"shrd rsi,rdx,0x01",
+						"48 0f ac d6 01"),
 				//  Imul
 				test(new Instruction(Opcode.IMUL, RDX), "imul rdx", "48 f7 ea"),
 				test(new Instruction(Opcode.IMUL, EBX), "imul ebx", "f7 eb"),
@@ -7768,6 +7772,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"setno BYTE PTR [rdx+r9*2+0x12345678]",
 						"42 0f 91 84 4a 78 56 34 12"),
 				test(new Instruction(Opcode.SETNO, AL), "setno al", "0f 91 c0"),
+				// Sets
+				test(new Instruction(Opcode.SETS, DL), "sets dl", "0f 98 c2"),
+				// Setns
+				test(new Instruction(Opcode.SETNS, DL), "setns dl", "0f 99 c2"),
 				//  Movabs
 				test(
 						new Instruction(Opcode.MOVABS, RCX, new Immediate(0x1234567812345678L)),
@@ -9542,6 +9550,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"ror DWORD PTR [rax-0x08bcc7cd],cl",
 						"d3 88 33 38 43 f7"),
 				// Rol
+				test(new Instruction(Opcode.ROL, AX, CL), "rol ax,cl", "66 d3 c0"),
 				test(new Instruction(Opcode.ROL, DX, new Immediate((byte) 0x8)), "rol dx,0x08", "66 c1 c2 08"),
 				test(new Instruction(Opcode.ROL, EDI, new Immediate((byte) 0)), "rol edi,0x00", "c1 c7 00"),
 				test(new Instruction(Opcode.ROL, RDX, new Immediate((byte) 0x11)), "rol rdx,0x11", "48 c1 c2 11"),
@@ -10410,14 +10419,22 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"c4 e3 79 63 c1 1a"),
 				// Vpslldq
 				test(
-						new Instruction(Opcode.VPSLLDQ, XMM2, XMM2, new Immediate((byte) 0x0f)),
-						"vpslldq xmm2,xmm2,0x0f",
-						"c5 e9 73 fa 0f"),
+						new Instruction(Opcode.VPSLLDQ, XMM2, XMM3, new Immediate((byte) 0x0f)),
+						"vpslldq xmm2,xmm3,0x0f",
+						"c5 e9 73 fb 0f"),
+				test(
+						new Instruction(Opcode.VPSLLDQ, XMM3, XMM2, new Immediate((byte) 0x0f)),
+						"vpslldq xmm3,xmm2,0x0f",
+						"c5 e1 73 fa 0f"),
 				// Vpsrldq
 				test(
-						new Instruction(Opcode.VPSRLDQ, XMM2, XMM2, new Immediate((byte) 0x0f)),
-						"vpsrldq xmm2,xmm2,0x0f",
-						"c5 e9 73 d2 0f"),
+						new Instruction(Opcode.VPSRLDQ, XMM2, XMM3, new Immediate((byte) 0x0f)),
+						"vpsrldq xmm2,xmm3,0x0f",
+						"c5 e9 73 db 0f"),
+				test(
+						new Instruction(Opcode.VPSRLDQ, XMM3, XMM2, new Immediate((byte) 0x0f)),
+						"vpsrldq xmm3,xmm2,0x0f",
+						"c5 e1 73 da 0f"),
 				// Vpalignr
 				test(
 						new Instruction(

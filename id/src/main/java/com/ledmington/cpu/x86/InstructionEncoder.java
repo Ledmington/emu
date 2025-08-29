@@ -99,6 +99,8 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.SETNE, (byte) 0x05),
 			Map.entry(Opcode.SETBE, (byte) 0x06),
 			Map.entry(Opcode.SETA, (byte) 0x07),
+			Map.entry(Opcode.SETS, (byte) 0x08),
+			Map.entry(Opcode.SETNS, (byte) 0x09),
 			Map.entry(Opcode.SETL, (byte) 0x0c),
 			Map.entry(Opcode.SETGE, (byte) 0x0d),
 			Map.entry(Opcode.SETLE, (byte) 0x0e),
@@ -529,7 +531,7 @@ public final class InstructionEncoder {
 				wb.write((byte) 0xf7);
 				reg = (byte) 0b101;
 			}
-			case SETB, SETO, SETNO, SETAE, SETE, SETNE, SETBE, SETA, SETL, SETGE, SETLE, SETG ->
+			case SETB, SETO, SETNO, SETAE, SETE, SETNE, SETBE, SETA, SETS, SETNS, SETL, SETGE, SETLE, SETG ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, or((byte) 0x90, SET_OPCODES.get(inst.opcode())));
 			case INC, DEC -> {
 				if (inst.firstOperand().bits() == 8) {
@@ -1696,18 +1698,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.CALL && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.DIV && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.NEG && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETAE && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETNE && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETE && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETA && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETB && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETBE && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETLE && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETL && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETG && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETGE && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETO && hasExtendedFirstIndex(inst))
-				|| (inst.opcode() == Opcode.SETNO && hasExtendedFirstIndex(inst))
+				|| (isSetOpcode(inst.opcode()) && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.PREFETCHNTA && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.PREFETCHT0 && hasExtendedFirstIndex(inst))
 				|| (inst.opcode() == Opcode.PREFETCHT1 && hasExtendedFirstIndex(inst))
@@ -1783,18 +1774,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.MUL && isFirstER(inst))
 				|| (inst.opcode() == Opcode.NOT && isFirstER(inst))
 				|| (inst.opcode() == Opcode.NEG && hasExtendedBase(inst.firstOperand()))
-				|| (inst.opcode() == Opcode.SETAE && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETNE && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETE && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETA && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETB && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETBE && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETLE && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETL && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETG && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETGE && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETO && isFirstER(inst))
-				|| (inst.opcode() == Opcode.SETNO && isFirstER(inst))
+				|| (isSetOpcode(inst.opcode()) && isFirstER(inst))
 				|| (inst.opcode() == Opcode.INC && isFirstER(inst))
 				|| (inst.opcode() == Opcode.INC && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.DEC && isFirstER(inst))
@@ -1825,6 +1805,10 @@ public final class InstructionEncoder {
 						&& Register8.requiresRexPrefix(r))) {
 			wb.write(rex);
 		}
+	}
+
+	private static boolean isSetOpcode(final Opcode opcode) {
+		return SET_OPCODES.containsKey(opcode);
 	}
 
 	private static boolean isSecondER(final Instruction inst) {
@@ -1939,7 +1923,7 @@ public final class InstructionEncoder {
 			}
 			case VPSRLDQ -> {
 				wb.write((byte) 0x73);
-				reg = (byte) 0b010;
+				reg = (byte) 0b011;
 			}
 			case VPSHUFB -> wb.write((byte) 0x00);
 			case VPCMPNEQUB -> {
@@ -1951,7 +1935,14 @@ public final class InstructionEncoder {
 			case KUNPCKDQ -> wb.write((byte) 0x4b);
 			case KUNPCKBW -> wb.write((byte) 0x4b);
 			case SHLD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xa5);
-			case SHRD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xad);
+			case SHRD -> {
+				if (inst.thirdOperand() instanceof Register8) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xad);
+				} else {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xac);
+					reg = Registers.toByte((Register) inst.secondOperand());
+				}
+			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
 
@@ -1959,7 +1950,13 @@ public final class InstructionEncoder {
 				&& inst.secondOperand() instanceof final Register r2
 				&& inst.thirdOperand() instanceof final Immediate imm) {
 			if (reg != -1) {
-				encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r2));
+				encodeModRM(
+						wb,
+						(byte) 0b11,
+						reg,
+						(inst.opcode() == Opcode.VPSRLDQ || inst.opcode() == Opcode.VPSLLDQ)
+								? Registers.toByte(r2)
+								: Registers.toByte(r1));
 			} else {
 				encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 			}
@@ -2242,12 +2239,19 @@ public final class InstructionEncoder {
 	private static void encodeVex2Prefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		wb.write((byte) 0xc5);
 
+		byte v = 0;
+		if (inst.getNumOperands() == 3
+				&& (inst.opcode() == Opcode.VPSRLDQ || inst.opcode() == Opcode.VPSLLDQ)
+				&& inst.firstOperand() instanceof final Register r) {
+			v = Registers.combine(Registers.requiresExtension(r), Registers.toByte(r));
+		} else if (inst.getNumOperands() == 3 && inst.secondOperand() instanceof final Register r) {
+			v = Registers.combine(Registers.requiresExtension(r), Registers.toByte(r));
+		}
+
 		encodeVex2Byte(
 				wb,
 				!(isFirstER(inst) || (inst.hasFirstOperand() && hasExtendedBase(inst.firstOperand()))),
-				(inst.getNumOperands() == 3 && inst.secondOperand() instanceof final Register r)
-						? Registers.combine(Registers.requiresExtension(r), Registers.toByte(r))
-						: 0,
+				v,
 				isFirstYMM(inst)
 						|| isSecondYMM(inst)
 						|| inst.opcode() == Opcode.VZEROALL

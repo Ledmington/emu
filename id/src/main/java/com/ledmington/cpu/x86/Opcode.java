@@ -638,8 +638,14 @@ public enum Opcode {
 	/** Set byte if not overflow. */
 	SETNO,
 
+	/** Set byte if not signed. */
+	SETNS,
+
 	/** Set byte if overflow. */
 	SETO,
+
+	/** Set byte if signed. */
+	SETS,
 
 	/** Store fence. */
 	SFENCE,

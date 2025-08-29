@@ -1135,6 +1135,8 @@ public final class InstructionDecoder {
 		final byte SETNE_OPCODE = (byte) 0x95;
 		final byte SETBE_OPCODE = (byte) 0x96;
 		final byte SETA_OPCODE = (byte) 0x97;
+		final byte SETS_OPCODE = (byte) 0x98;
+		final byte SETNS_OPCODE = (byte) 0x99;
 		final byte SETL_OPCODE = (byte) 0x9c;
 		final byte SETGE_OPCODE = (byte) 0x9d;
 		final byte SETLE_OPCODE = (byte) 0x9e;
@@ -1143,7 +1145,8 @@ public final class InstructionDecoder {
 		final byte BT_M32_R32_OPCODE = (byte) 0xa3;
 		final byte SHLD_OPCODE = (byte) 0xa5;
 		final byte BTS_M32_R32_OPCODE = (byte) 0xab;
-		final byte SHRD_OPCODE = (byte) 0xad;
+		final byte SHRD_R_R_IMM_OPCODE = (byte) 0xac;
+		final byte SHRD_R_R_CL_OPCODE = (byte) 0xad;
 		final byte GROUP15_OPCODE = (byte) 0xae;
 		final byte IMUL_OPCODE = (byte) 0xaf;
 		final byte XCHG_M8_R8_OPCODE = (byte) 0xb0;
@@ -1214,8 +1217,8 @@ public final class InstructionDecoder {
 			Opcode.SETNE,
 			Opcode.SETBE,
 			Opcode.SETA,
-			null,
-			null,
+			Opcode.SETS,
+			Opcode.SETNS,
 			null,
 			null,
 			Opcode.SETL,
@@ -1328,6 +1331,8 @@ public final class InstructionDecoder {
 					SETNE_OPCODE,
 					SETBE_OPCODE,
 					SETA_OPCODE,
+					SETS_OPCODE,
+					SETNS_OPCODE,
 					SETL_OPCODE,
 					SETGE_OPCODE,
 					SETG_OPCODE -> {
@@ -1481,7 +1486,15 @@ public final class InstructionDecoder {
 						Register64.fromByte(getByteFromReg(pref.rex(), modrm)),
 						Register8.CL);
 			}
-			case SHRD_OPCODE -> {
+			case SHRD_R_R_IMM_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield new Instruction(
+						Opcode.SHRD,
+						Register64.fromByte(getByteFromRM(pref, modrm)),
+						Register64.fromByte(getByteFromReg(pref.rex(), modrm)),
+						imm8(b));
+			}
+			case SHRD_R_R_CL_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield new Instruction(
 						Opcode.SHRD,
@@ -3728,7 +3741,7 @@ public final class InstructionDecoder {
 			case VPSxLDQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
-						.opcode(modrm.reg() == (byte) 0b010 ? Opcode.VPSRLDQ : Opcode.VPSLLDQ)
+						.opcode(modrm.reg() == (byte) 0b111 ? Opcode.VPSLLDQ : Opcode.VPSRLDQ)
 						.op(RegisterXMM.fromByte(getByteFromV(vex2)))
 						.op(RegisterXMM.fromByte(modrm.rm()))
 						.op(imm8(b))
