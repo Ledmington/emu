@@ -372,8 +372,8 @@ public final class Main {
 			if (dynsym.isPresent()) {
 				printSymbolTable(
 						(DynamicSymbolTableSection) dynsym.orElseThrow(),
-						(GnuVersionSection) gv.orElseThrow(),
-						(GnuVersionRequirementsSection) gvr.orElseThrow(),
+						(GnuVersionSection) gv.orElse(null),
+						(GnuVersionRequirementsSection) gvr.orElse(null),
 						elf);
 			}
 		}
@@ -386,8 +386,8 @@ public final class Main {
 			if (symtab.isPresent() && gv.isPresent()) {
 				printSymbolTable(
 						(SymbolTableSection) symtab.orElseThrow(),
-						(GnuVersionSection) gv.orElseThrow(),
-						(GnuVersionRequirementsSection) gvr.orElseThrow(),
+						(GnuVersionSection) gv.orElse(null),
+						(GnuVersionRequirementsSection) gvr.orElse(null),
 						elf);
 			}
 		}
@@ -399,19 +399,12 @@ public final class Main {
 
 		final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
 		if (displayGnuHashSection) {
-			if (displayHashSection && hash.isPresent()) {
-				out.println();
-			}
 			if (gnuhash.isPresent()) {
 				printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
 			}
 		}
 
 		if (displayVersionSections) {
-			if (displayGnuHashSection && gnuhash.isPresent()) {
-				out.println();
-			}
-
 			if (gv.isEmpty() && gvr.isEmpty()) {
 				out.println("No version information found in this file.");
 			} else {
@@ -428,9 +421,6 @@ public final class Main {
 		}
 
 		if (displayNoteSections) {
-			if (displayVersionSections) {
-				out.println();
-			}
 			boolean first = true;
 			for (int i = 0; i < elf.getSectionTableLength(); i++) {
 				final Section s = elf.getSection(i);
@@ -575,6 +565,10 @@ public final class Main {
 	}
 
 	private static void printHashSection(final HashTableSection s) {
+		if (s.getNumBuckets() == 0) {
+			return;
+		}
+
 		out.printf("Histogram for bucket list length (total of %d buckets):%n", s.getNumBuckets());
 		out.println(" Length  Number     % of total  Coverage");
 
@@ -624,6 +618,10 @@ public final class Main {
 	private static void printGnuHashSection(final GnuHashSection s) {
 		final int nGnuBuckets = s.getBucketsLength();
 
+		if (nGnuBuckets <= 1) {
+			return;
+		}
+
 		out.printf("Histogram for `%s' bucket list length (total of %d buckets):%n", s.getName(), nGnuBuckets);
 		out.println(" Length  Number     % of total  Coverage");
 
@@ -656,16 +654,13 @@ public final class Main {
 			counts[BitUtils.asInt(lengths[BitUtils.asInt(hn)])]++;
 		}
 
-		if (nGnuBuckets > 0) {
-			long nzero_counts = 0L;
-			out.printf("      0  %-10d (%5.1f%%)%n", counts[0], counts[0] * 100.0 / nGnuBuckets);
-			for (long j = 1L; j <= maxLength; j++) {
-				final long cj = counts[BitUtils.asInt(j)];
-				nzero_counts += cj * j;
-				out.printf(
-						"%7d  %-10d (%5.1f%%)    %5.1f%%%n",
-						j, cj, cj * 100.0 / nGnuBuckets, nzero_counts * 100.0 / nsyms);
-			}
+		long nzero_counts = 0L;
+		out.printf("      0  %-10d (%5.1f%%)%n", counts[0], counts[0] * 100.0 / nGnuBuckets);
+		for (long j = 1L; j <= maxLength; j++) {
+			final long cj = counts[BitUtils.asInt(j)];
+			nzero_counts += cj * j;
+			out.printf(
+					"%7d  %-10d (%5.1f%%)    %5.1f%%%n", j, cj, cj * 100.0 / nGnuBuckets, nzero_counts * 100.0 / nsyms);
 		}
 	}
 
@@ -816,12 +811,15 @@ public final class Main {
 					|| dte.getTag() == DynamicTableEntryTag.DT_VERDEF
 					|| dte.getTag() == DynamicTableEntryTag.DT_VERNEED
 					|| dte.getTag() == DynamicTableEntryTag.DT_VERSYM
+					|| dte.getTag() == DynamicTableEntryTag.DT_SYMBOLIC
 					|| dte.getTag() == DynamicTableEntryTag.DT_NULL) {
 				out.printf("0x%x%n", content);
 			} else if (dte.getTag() == DynamicTableEntryTag.DT_PLTREL) {
 				out.println("RELA");
 			} else if (dte.getTag() == DynamicTableEntryTag.DT_FLAGS) {
 				out.println("BIND_NOW");
+			} else if (dte.getTag() == DynamicTableEntryTag.DT_BIND_NOW) {
+				out.println();
 			} else if (dte.getTag() == DynamicTableEntryTag.DT_FLAGS_1) {
 				out.println("Flags: NOW PIE");
 			} else if (dte.getTag() == DynamicTableEntryTag.DT_VERDEFNUM
@@ -1237,7 +1235,9 @@ public final class Main {
 			final GnuVersionSection gvs,
 			final GnuVersionRequirementsSection gvrs,
 			final SectionTable sectionTable) {
-		out.printf("Symbol table '%s' contains %d entries:%n", s.getName(), s.getSymbolTableLength());
+		out.printf(
+				"Symbol table '%s' contains %d %s:%n",
+				s.getName(), s.getSymbolTableLength(), s.getSymbolTableLength() == 1 ? "entry" : "entries");
 		out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
 		final StringTableSection strtab =
 				(StringTableSection) sectionTable.getSection(s.header().getLinkedSectionIndex());
@@ -1259,8 +1259,8 @@ public final class Main {
 					ste.visibility().getName(),
 					sectionTableIndex);
 
-			final short v = (i < gvs.getVersionsLength()) ? gvs.getVersion(i) : -1;
-			final int versionNameOffset = gvrs.getVersionNameOffset(v);
+			final short v = (gvs != null && i < gvs.getVersionsLength()) ? gvs.getVersion(i) : -1;
+			final int versionNameOffset = gvrs != null ? gvrs.getVersionNameOffset(v) : -1;
 			String prefix = symbolName;
 			String suffix = "";
 			if (versionNameOffset != -1) {
