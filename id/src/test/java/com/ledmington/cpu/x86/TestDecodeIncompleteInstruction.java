@@ -30,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 final class TestDecodeIncompleteInstruction extends X64Encodings {
 
 	private static Stream<Arguments> incompleteInstructions() {

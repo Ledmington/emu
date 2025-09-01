@@ -27,6 +27,7 @@ import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.AvoidLiteralsInIfCondition"})
 public final class Main {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("emu");
@@ -96,7 +97,7 @@ public final class Main {
 							" --base-address X        Memory location where to load the executable file as hexadecimal 64-bits.",
 							"                           Default: "
 									+ String.format("0x%x", EmulatorConstants.getBaseAddress()) + ".",
-							" --base-stack-address X  The addres of the base of the stack (default: "
+							" --base-stack-address X  The address of the base of the stack (default: "
 									+ String.format("0x%x", EmulatorConstants.getBaseStackAddress()) + ").",
 							" --base-stack-value X    The value to put at the base of the stack (default: "
 									+ String.format("0x%x", EmulatorConstants.getBaseStackValue()) + ").",

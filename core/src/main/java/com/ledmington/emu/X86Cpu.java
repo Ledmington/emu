@@ -118,30 +118,10 @@ public class X86Cpu implements X86Emulator {
 		switch (inst.opcode()) {
 			case SUB -> {
 				switch (inst.firstOperand()) {
-					case Register8 op1 -> {
-						final byte r1 = rf.get(op1);
-						final byte r2 = rf.get((Register8) inst.secondOperand());
-						final byte result = BitUtils.asByte(r1 - r2);
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == (byte) 0);
-					}
-					case Register16 op1 -> {
-						final short r1 = rf.get(op1);
-						final short r2 = rf.get((Register16) inst.secondOperand());
-						final short result = BitUtils.asShort(r1 - r2);
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == (short) 0);
-					}
-					case Register32 op1 -> {
-						final int r1 = rf.get(op1);
-						final int r2 = rf.get((Register32) inst.secondOperand());
-						final int result = r1 - r2;
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
-					}
+					case Register8 op1 -> op(op1, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a - b));
+					case Register16 op1 ->
+						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a - b));
+					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b);
 					case Register64 op1 -> {
 						final long r1 = rf.get(op1);
 						final long r2 =
@@ -174,32 +154,10 @@ public class X86Cpu implements X86Emulator {
 			}
 			case ADD -> {
 				switch (inst.firstOperand()) {
-					case Register8 op1 ->
-						op(
-								() -> rf.get(op1),
-								() -> rf.get((Register8) inst.secondOperand()),
-								(a, b) -> BitUtils.asByte(a + b),
-								result -> {
-									rf.set(op1, result);
-									rf.resetFlags();
-									rf.set(RFlags.ZERO, result == 0);
-								});
+					case Register8 op1 -> op(op1, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a + b));
 					case Register16 op1 ->
-						op(
-								() -> rf.get(op1),
-								() -> rf.get((Register16) inst.secondOperand()),
-								(a, b) -> BitUtils.asShort(a + b),
-								result -> {
-									rf.set(op1, result);
-									rf.resetFlags();
-									rf.set(RFlags.ZERO, result == 0);
-								});
-					case Register32 op1 ->
-						op(() -> rf.get(op1), () -> rf.get((Register32) inst.secondOperand()), Integer::sum, result -> {
-							rf.set(op1, result);
-							rf.resetFlags();
-							rf.set(RFlags.ZERO, result == 0);
-						});
+						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a + b));
+					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), Integer::sum);
 					case Register64 op1 -> {
 						final long r1 = rf.get(op1);
 						final long r2 =
@@ -403,10 +361,8 @@ public class X86Cpu implements X86Emulator {
 				// This points to the instruction right next to 'CALL ...'
 				final long rip = rf.get(Register64.RIP);
 
-				// Push the return address (the position of the next instruction) on top of the
-				// stack.
-				// This little subroutine may be replaced entirely by a PUSH instruction and a
-				// MOV
+				// Push the return address (the position of the next instruction) on top of the stack.
+				// This little subroutine may be replaced entirely by a PUSH instruction and a MOV
 				final long oldStackPointer = rf.get(Register64.RSP);
 				final long newStackPointer = oldStackPointer - 8L;
 				rf.set(Register64.RSP, newStackPointer);
@@ -420,7 +376,7 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
 					jumpAddress = computeIndirectOperand(io);
 				} else {
-					throw new Error();
+					throw new IllegalStateException();
 				}
 
 				rf.set(Register64.RIP, jumpAddress);
@@ -449,7 +405,8 @@ public class X86Cpu implements X86Emulator {
 	private void handleSyscall() {
 		// Useful reference: https://filippo.io/linux-syscall-table/
 		final int sysCallCode = rf.get(Register32.EAX);
-		if (sysCallCode == 60) {
+		final int sysCallExitCode = 60;
+		if (sysCallCode == sysCallExitCode) {
 			final long exitCode = rf.get(Register64.RDI);
 			logger.info("syscall exit %d encountered", exitCode);
 			state = State.HALTED;
@@ -467,6 +424,30 @@ public class X86Cpu implements X86Emulator {
 
 	private void jumpTo(final long offset) {
 		instFetch.setPosition(instFetch.getPosition() + offset);
+	}
+
+	private void op(final Register8 op1, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
+			rf.set(op1, result);
+			rf.resetFlags();
+			rf.set(RFlags.ZERO, result == (byte) 0);
+		});
+	}
+
+	private void op(final Register16 op1, final Register16 op2, final BiFunction<Short, Short, Short> task) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
+			rf.set(op1, result);
+			rf.resetFlags();
+			rf.set(RFlags.ZERO, result == (short) 0);
+		});
+	}
+
+	private void op(final Register32 op1, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
+			rf.set(op1, result);
+			rf.resetFlags();
+			rf.set(RFlags.ZERO, result == 0);
+		});
 	}
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {

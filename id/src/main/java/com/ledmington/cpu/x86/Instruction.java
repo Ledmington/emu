@@ -200,6 +200,26 @@ public final class Instruction {
 		return hasDestinationMask() && destinationMaskZero;
 	}
 
+	public boolean hasOperand(final int index) {
+		return switch (index) {
+			case 0 -> hasFirstOperand();
+			case 1 -> hasSecondOperand();
+			case 2 -> hasThirdOperand();
+			case 3 -> hasFourthOperand();
+			default -> throw new IllegalArgumentException(String.format("No operand at index %,d.", index));
+		};
+	}
+
+	public Operand operand(final int index) {
+		return switch (index) {
+			case 0 -> firstOperand();
+			case 1 -> secondOperand();
+			case 2 -> thirdOperand();
+			case 3 -> fourthOperand();
+			default -> throw new IllegalArgumentException(String.format("No operand at index %,d.", index));
+		};
+	}
+
 	public boolean hasFirstOperand() {
 		return op1 != null;
 	}

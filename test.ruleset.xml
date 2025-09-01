@@ -45,12 +45,12 @@
         <exclude name="LawOfDemeter" />
         <!-- Avoid reporting big test files -->
         <exclude name="TooManyMethods" />
-    </rule>
-
-    <rule ref="category/java/design.xml/CognitiveComplexity">
-        <properties>
-            <property name="reportLevel" value="30" />
-        </properties>
+        <!-- Avoid reporting methods that are "too complex" -->
+        <exclude name="CognitiveComplexity" />
+        <!-- Avoid reporting methods that are "too complex" -->
+        <exclude name="CyclomaticComplexity" />
+        <!-- Avoid reporting methods that are "too complex" -->
+        <exclude name="NPathComplexity" />
     </rule>
 
     <rule ref="category/java/documentation.xml">

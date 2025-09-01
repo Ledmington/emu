@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
+@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckReadelf {
 
 	private static final PrintWriter out = System.console() != null
@@ -52,7 +53,7 @@ public final class CheckReadelf {
 					.normalize()
 					.toAbsolutePath()
 					.toString();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}

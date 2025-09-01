@@ -251,11 +251,12 @@ public final class ELFLoader {
 
 	private void setupStack(final long baseStackAddress, final long stackSize, final MemoryController mem) {
 		final long alignedBaseStackAddress;
-		if ((baseStackAddress & 0xfL) != 0L) {
+		final boolean isAligned = (baseStackAddress & 0xfL) == 0L;
+		if (isAligned) {
+			alignedBaseStackAddress = baseStackAddress;
+		} else {
 			alignedBaseStackAddress = (baseStackAddress + 15L) & 0xfffffffffffffff0L;
 			logger.debug("Aligning base stack address to 16-byte aligned value: 0x%x", baseStackAddress);
-		} else {
-			alignedBaseStackAddress = baseStackAddress;
 		}
 
 		logger.debug(

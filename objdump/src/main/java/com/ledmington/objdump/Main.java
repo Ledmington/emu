@@ -121,6 +121,7 @@ public final class Main {
 		System.exit(0);
 	}
 
+	@SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidLiteralsInIfCondition"})
 	private static void disassembleSection(final SectionTable st, final int sectionIndex) {
 		final Section s = st.getSection(sectionIndex);
 		out.printf("Disassembly of section %s:%n", s.getName());
@@ -128,29 +129,7 @@ public final class Main {
 
 		final long startOfSection = s.header().getVirtualAddress();
 
-		final Map<Long, String> functionNames = new HashMap<>();
-		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
-		if (symbolTable.isPresent()) {
-			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
-			final StringTableSection strtab =
-					(StringTableSection) st.getSection(symtab.header().getLinkedSectionIndex());
-
-			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
-				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
-				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
-				final boolean isGlobal = ste.info().getBinding() == SymbolTableEntryBinding.STB_GLOBAL;
-				final boolean isHidden = ste.visibility() == SymbolTableEntryVisibility.STV_HIDDEN;
-				final boolean isInThisSection = ste.sectionTableIndex() == sectionIndex;
-				if (!(isFunction && (isGlobal || isHidden) && isInThisSection)) {
-					continue;
-				}
-				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
-
-				if ("__assert_fail_base".equals(strtab.getString(ste.nameOffset()))) {
-					out.println(ste);
-				}
-			}
-		}
+		final Map<Long, String> functionNames = findFunctionNames(st, sectionIndex);
 
 		final boolean hasNoFunctions = functionNames.isEmpty();
 		if (hasNoFunctions) {
@@ -198,6 +177,29 @@ public final class Main {
 		}
 
 		out.println();
+	}
+
+	private static Map<Long, String> findFunctionNames(final SectionTable st, final int sectionIndex) {
+		final Map<Long, String> functionNames = new HashMap<>();
+		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
+		if (symbolTable.isPresent()) {
+			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
+			final StringTableSection strtab =
+					(StringTableSection) st.getSection(symtab.header().getLinkedSectionIndex());
+
+			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
+				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
+				final boolean isGlobal = ste.info().getBinding() == SymbolTableEntryBinding.STB_GLOBAL;
+				final boolean isHidden = ste.visibility() == SymbolTableEntryVisibility.STV_HIDDEN;
+				final boolean isInThisSection = ste.sectionTableIndex() == sectionIndex;
+				if (!(isFunction && (isGlobal || isHidden) && isInThisSection)) {
+					continue;
+				}
+				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
+			}
+		}
+		return functionNames;
 	}
 
 	private static void printHelp() {

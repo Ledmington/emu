@@ -22,8 +22,10 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -1081,7 +1083,6 @@ public final class Main {
 
 	@SuppressWarnings("PMD.ConfusingTernary")
 	private static void printGNUProperties(final NoteSectionEntry nse) {
-		final int expectedDataSize = 4;
 		final byte[] v = new byte[nse.getDescriptionLength()];
 		for (int i = 0; i < v.length; i++) {
 			v[i] = nse.getDescriptionByte(i);
@@ -1095,88 +1096,45 @@ public final class Main {
 			final GnuPropertyType type = GnuPropertyType.fromCode(code);
 			final int datasz = robb.read4();
 			switch (type) {
-				case GNU_PROPERTY_X86_ISA_1_USED -> {
-					final long expectedBytes = 8L;
-					if (robb.getPosition() > expectedBytes) {
-						out.print(wide ? "" : "\t");
-					}
-					out.print("x86 ISA used: ");
-					if (datasz != expectedDataSize) {
-						corruptLength(datasz);
-					} else {
-						final int bitmask = robb.read4();
-						if (bitmask == 0) {
-							none();
-						}
-						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
-								.map(GnuPropertyType::getDescription)
-								.collect(Collectors.joining(", ")));
-					}
-					out.println();
-				}
-				case GNU_PROPERTY_X86_ISA_1_NEEDED -> {
-					final long expectedBytes = 8L;
-					if (robb.getPosition() > expectedBytes) {
-						out.print(wide ? "" : "\t");
-					}
-					out.print("x86 ISA needed: ");
-					if (datasz != expectedDataSize) {
-						corruptLength(datasz);
-					} else {
-						final int bitmask = robb.read4();
-						if (bitmask == 0) {
-							none();
-						}
-						out.print(GnuPropertyType.decodeX86ISA(bitmask).stream()
-								.map(GnuPropertyType::getDescription)
-								.collect(Collectors.joining(", ")));
-					}
-					out.println();
-				}
-				case GNU_PROPERTY_X86_FEATURE_1_AND -> {
-					final long expectedBytes = 8L;
-					if (robb.getPosition() > expectedBytes) {
-						out.print(wide ? "" : "\t");
-					}
-					out.print("x86 feature: ");
-					if (datasz != expectedDataSize) {
-						corruptLength(datasz);
-					} else {
-						final int bitmask = robb.read4();
-						if (bitmask == 0) {
-							none();
-						}
-						out.print(GnuPropertyType.decodeX86ISAFeature1(bitmask).stream()
-								.map(GnuPropertyType::getDescription)
-								.collect(Collectors.joining(", ")));
-					}
-					out.print(wide ? ", " : "\n");
-				}
-				case GNU_PROPERTY_X86_FEATURE_2_USED -> {
-					final long expectedBytes = 8L;
-					if (robb.getPosition() > expectedBytes) {
-						out.print(wide ? "" : "\t");
-					}
-					out.print("x86 feature: ");
-					if (datasz != expectedDataSize) {
-						corruptLength(datasz);
-					} else {
-						final int bitmask = robb.read4();
-						if (bitmask == 0) {
-							none();
-						}
-						out.print(GnuPropertyType.decodeX86ISAFeature2(bitmask).stream()
-								.map(GnuPropertyType::getDescription)
-								.collect(Collectors.joining(", ")));
-					}
-					out.print(wide ? ", " : "\n");
-				}
+				case GNU_PROPERTY_X86_ISA_1_USED ->
+					printBoh(robb, datasz, "x86 ISA used: ", GnuPropertyType::decodeX86ISA);
+				case GNU_PROPERTY_X86_ISA_1_NEEDED ->
+					printBoh(robb, datasz, "x86 ISA needed: ", GnuPropertyType::decodeX86ISA);
+				case GNU_PROPERTY_X86_FEATURE_1_AND ->
+					printBoh(robb, datasz, "x86 feature: ", GnuPropertyType::decodeX86ISAFeature1);
+				case GNU_PROPERTY_X86_FEATURE_2_USED ->
+					printBoh(robb, datasz, "x86 feature: ", GnuPropertyType::decodeX86ISAFeature2);
 				default -> throw new IllegalArgumentException(String.format("Unknown GNU property type '%s'.", type));
 			}
 
 			// skipping 4 bytes for alignment
 			robb.read4();
 		}
+	}
+
+	private static void printBoh(
+			final ReadOnlyByteBuffer robb,
+			final int datasz,
+			final String header,
+			final Function<Integer, List<GnuPropertyType>> decoder) {
+		final long expectedBytes = 8L;
+		if (robb.getPosition() > expectedBytes) {
+			out.print(wide ? "" : "\t");
+		}
+		out.print(header);
+		final int expectedDataSize = 4;
+		if (datasz != expectedDataSize) {
+			corruptLength(datasz);
+		} else {
+			final int bitmask = robb.read4();
+			if (bitmask == 0) {
+				none();
+			}
+			out.print(decoder.apply(bitmask).stream()
+					.map(GnuPropertyType::getDescription)
+					.collect(Collectors.joining(", ")));
+		}
+		out.println();
 	}
 
 	private static void printGNUABITag(final NoteSectionEntry nse) {

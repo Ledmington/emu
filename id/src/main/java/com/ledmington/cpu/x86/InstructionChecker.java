@@ -659,18 +659,12 @@ public final class InstructionChecker {
 		}
 
 		int count = 0;
-		if (inst.hasFirstOperand() && inst.firstOperand() instanceof IndirectOperand) {
-			count++;
+		for (int i = 0; i < 4; i++) {
+			if (inst.hasOperand(i) && inst.operand(i) instanceof IndirectOperand) {
+				count++;
+			}
 		}
-		if (inst.hasSecondOperand() && inst.secondOperand() instanceof IndirectOperand) {
-			count++;
-		}
-		if (inst.hasThirdOperand() && inst.thirdOperand() instanceof IndirectOperand) {
-			count++;
-		}
-		if (inst.hasFourthOperand() && inst.fourthOperand() instanceof IndirectOperand) {
-			count++;
-		}
+
 		if (count > 1) {
 			error("No instruction can have more than 1 indirect operand.");
 		}

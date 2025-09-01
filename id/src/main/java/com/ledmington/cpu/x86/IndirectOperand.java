@@ -96,6 +96,7 @@ public final class IndirectOperand implements Operand {
 		};
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	/* default */ IndirectOperand(
 			final PointerSize ptrSize,
 			final SegmentRegister segment,

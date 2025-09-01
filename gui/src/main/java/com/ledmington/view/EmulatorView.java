@@ -135,7 +135,7 @@ public final class EmulatorView extends Stage {
 				final Label rl = LabelFactory.getDefaultLabel("0x" + "0".repeat(16));
 				rl.setTooltip(TooltipFactory.getDefaultTooltip("Click to see the memory at [" + r.name() + "]"));
 				final long maxMemoryBytes =
-						(long) AppConstants.getMaxMemoryLines() * (long) AppConstants.getMemoryBytesPerLine();
+						(long) AppConstants.getMaxMemoryLines() * AppConstants.getMemoryBytesPerLine();
 				rl.setOnMouseClicked(e -> updateMemory(cpu.getRegisters().get(r) - maxMemoryBytes / 2L));
 				registerPane.add(rl, 1, row);
 				regLabels.put(r, rl);

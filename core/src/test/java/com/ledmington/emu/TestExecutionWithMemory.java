@@ -270,7 +270,7 @@ final class TestExecutionWithMemory {
 		final long functionAddress = rip + BitUtils.asLong(offset);
 		final byte[] functionCode = InstructionEncoder.toHex(new Instruction(Opcode.RET));
 		mem.initialize(functionAddress, functionCode);
-		mem.setPermissions(functionAddress, functionAddress + (long) functionCode.length - 1L, false, false, true);
+		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
@@ -278,7 +278,7 @@ final class TestExecutionWithMemory {
 		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
 		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
-		mem.setPermissions(rip, rip + (long) mainCode.length - 1L, false, false, true);
+		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
 		// Start the CPU
 		assertDoesNotThrow(cpu::execute);
