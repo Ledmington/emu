@@ -1,0 +1,18 @@
+plugins {
+	id 'java-library'
+	id 'info.solidsoft.pitest' version '1.15.0'
+}
+
+dependencies {}
+
+pitest {
+	targetClasses.set(['com.ledmington.cmdline.*'])
+	targetTests.set(['com.ledmington.cmdline.*'])
+	pitestVersion = '1.20.1'
+	junit5PluginVersion = '1.2.2'
+	threads = 4
+	outputFormats.set(['XML', 'HTML'])
+	useClasspathFile = true     // useful with bigger projects on Windows
+	verbose = true
+	timestampedReports = false
+}
