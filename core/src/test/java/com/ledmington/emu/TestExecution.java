@@ -46,6 +46,7 @@ import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 final class TestExecution {
 
 	private static final RandomGenerator rng =

@@ -312,14 +312,14 @@ public final class Instruction {
 	@Override
 	public int hashCode() {
 		int h = 17;
-		h = 31 * h + (prefix == null ? 0 : prefix.hashCode());
+		h = 31 * h + Objects.hashCode(prefix);
 		h = 31 * h + code.hashCode();
-		h = 31 * h + (destinationMask == null ? 0 : destinationMask.hashCode());
+		h = 31 * h + Objects.hashCode(destinationMask);
 		h = 31 * h + (destinationMaskZero ? 1 : 0);
-		h = 31 * h + (op1 == null ? 0 : op1.hashCode());
-		h = 31 * h + (op2 == null ? 0 : op2.hashCode());
-		h = 31 * h + (op3 == null ? 0 : op3.hashCode());
-		h = 31 * h + (op4 == null ? 0 : op4.hashCode());
+		h = 31 * h + Objects.hashCode(op1);
+		h = 31 * h + Objects.hashCode(op2);
+		h = 31 * h + Objects.hashCode(op3);
+		h = 31 * h + Objects.hashCode(op4);
 		return h;
 	}
 

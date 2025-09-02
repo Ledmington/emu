@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public final class TestParser {
+final class TestParser {
 	@Test
 	void booleanOption() {
 		final CommandLineParser p = CommandLineParser.builder()
 				.addBoolean("test", "This is a testing option.")
 				.build();
-		assertTrue(p.parse(new String[] {"--test"}).get("test").asBoolean());
-		assertFalse(p.parse(new String[] {"--no-test"}).get("test").asBoolean());
+		assertTrue(p.parse("--test").get("test").asBoolean(), "Expected to parse '--test' but didn't.");
+		assertFalse(p.parse("--no-test").get("test").asBoolean(), "Expected to parse '--no-test' but didn't.");
 	}
 }

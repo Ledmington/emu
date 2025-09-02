@@ -400,10 +400,8 @@ public final class Main {
 		}
 
 		final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
-		if (displayGnuHashSection) {
-			if (gnuhash.isPresent()) {
-				printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
-			}
+		if (displayGnuHashSection && gnuhash.isPresent()) {
+			printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
 		}
 
 		if (displayVersionSections) {
@@ -1081,7 +1079,6 @@ public final class Main {
 		out.print("<None>");
 	}
 
-	@SuppressWarnings("PMD.ConfusingTernary")
 	private static void printGNUProperties(final NoteSectionEntry nse) {
 		final byte[] v = new byte[nse.getDescriptionLength()];
 		for (int i = 0; i < v.length; i++) {
@@ -1123,9 +1120,7 @@ public final class Main {
 		}
 		out.print(header);
 		final int expectedDataSize = 4;
-		if (datasz != expectedDataSize) {
-			corruptLength(datasz);
-		} else {
+		if (datasz == expectedDataSize) {
 			final int bitmask = robb.read4();
 			if (bitmask == 0) {
 				none();
@@ -1133,6 +1128,8 @@ public final class Main {
 			out.print(decoder.apply(bitmask).stream()
 					.map(GnuPropertyType::getDescription)
 					.collect(Collectors.joining(", ")));
+		} else {
+			corruptLength(datasz);
 		}
 		out.println();
 	}
@@ -1188,6 +1185,7 @@ public final class Main {
 		}
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static void printSymbolTable(
 			final SymbolTable s,
 			final GnuVersionSection gvs,
@@ -1240,6 +1238,7 @@ public final class Main {
 		}
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static void printSectionHeaders(final SectionTable sections, final FileHeader fh) {
 		if (wide) {
 			out.println(String.join(

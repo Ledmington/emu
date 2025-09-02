@@ -30,17 +30,16 @@ public final class CommandLineParser {
 		return new CommandLineParserBuilder();
 	}
 
-	CommandLineParser(final List<CommandLineArgument> arguments) {
+	/* default */ CommandLineParser(final List<CommandLineArgument> arguments) {
 		this.arguments = Objects.requireNonNull(arguments);
 	}
 
+	@SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
 	public Map<String, ParsingResult> parse(final String... commandLine) {
 		final Map<String, ParsingResult> result = new HashMap<>();
-		for (int i = 0; i < commandLine.length; i++) {
-			final String arg = commandLine[i];
-
-			for (int j = 0; j < arguments.size(); j++) {
-				if (arguments.get(i) instanceof final BooleanArgument ba) {
+		for (final String arg : commandLine) {
+			for (final CommandLineArgument cla : arguments) {
+				if (cla instanceof final BooleanArgument ba) {
 					if (arg.equals("--" + ba.longName())) {
 						result.put(ba.longName(), new BooleanResult(true));
 					} else if (arg.equals("--no-" + ba.longName())) {

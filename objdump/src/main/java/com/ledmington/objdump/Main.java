@@ -121,7 +121,7 @@ public final class Main {
 		System.exit(0);
 	}
 
-	@SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidLiteralsInIfCondition"})
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	private static void disassembleSection(final SectionTable st, final int sectionIndex) {
 		final Section s = st.getSection(sectionIndex);
 		out.printf("Disassembly of section %s:%n", s.getName());
@@ -179,6 +179,7 @@ public final class Main {
 		out.println();
 	}
 
+	@SuppressWarnings("PMD.UseConcurrentHashMap")
 	private static Map<Long, String> findFunctionNames(final SectionTable st, final int sectionIndex) {
 		final Map<Long, String> functionNames = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");

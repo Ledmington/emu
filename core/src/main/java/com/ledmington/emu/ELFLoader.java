@@ -48,6 +48,7 @@ import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.Pair;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /**
  * Loads an ELF into memory and sets it up for execution.
@@ -70,6 +71,7 @@ public final class ELFLoader {
 	 *
 	 * @param cpu The CPU to be used to execute some instructions, if needed.
 	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need these objects as they are.")
 	public ELFLoader(final X86Emulator cpu) {
 		this.cpu = Objects.requireNonNull(cpu);
 	}

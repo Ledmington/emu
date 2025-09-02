@@ -37,7 +37,8 @@ public final class Main {
 
 	private Main() {}
 
-	@SuppressWarnings("PMD.AvoidCatchingThrowable")
+	@SuppressWarnings({"PMD.AvoidCatchingThrowable", "PMD.NcssCount",  "PMD.CyclomaticComplexity"
+	})
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
@@ -88,7 +89,7 @@ public final class Main {
 							" -V, --version  Prints the version of the emulator and exits.",
 							"",
 							" Memory options:",
-							" --mem-init MI           What value to initialize memory with: random (default), binary zero",
+							" --mem-init MI           What value to initialize memory with: random (default), zero",
 							"                           or any hexadecimal 1-byte value (example: 0xfa).",
 							" --stack-size N          Number of bytes to allocate for the stack. Accepts only integers.",
 							"                           Can accept different forms like '1KB', '2MiB', '3Gb', '4Tib'.",
@@ -157,44 +158,13 @@ public final class Main {
 								String.format("Expected an argument after '%s'", stackSizeFlag));
 					}
 
-					String s = args[i];
+					final String s = args[i];
 					if (s.chars().allMatch(Character::isDigit)) {
 						EmulatorConstants.setStackSize(Long.parseLong(s));
 						continue;
 					}
 
-					int k = 0;
-					long bytes = 0L;
-					while (k < s.length() && Character.isDigit(s.charAt(k))) {
-						final long idx = s.charAt(k) - '0';
-						bytes = bytes * 10L + idx;
-						k++;
-					}
-
-					s = s.substring(k);
-
-					bytes = switch (s) {
-						case "B" -> bytes;
-						case "KB" -> bytes * 1_000L;
-						case "MB" -> bytes * 1_000_000L;
-						case "GB" -> bytes * 1_000_000_000L;
-						case "TB" -> bytes * 1_000_000_000_000L;
-						case "KiB" -> bytes * 1_024L;
-						case "MiB" -> bytes * 1_024L * 1_024L;
-						case "GiB" -> bytes * 1_024L * 1_024L * 1_024L;
-						case "TiB" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L;
-						case "b" -> bytes / 8L;
-						case "Kb" -> bytes * 1_000L / 8L;
-						case "Mb" -> bytes * 1_000_000L / 8L;
-						case "Gb" -> bytes * 1_000_000_000L / 8L;
-						case "Tb" -> bytes * 1_000_000_000_000L / 8L;
-						case "Kib" -> bytes * 1_024L / 8L;
-						case "Mib" -> bytes * 1_024L * 1_024L / 8L;
-						case "Gib" -> bytes * 1_024L * 1_024L * 1_024L / 8L;
-						case "Tib" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L / 8L;
-						default ->
-							throw new IllegalArgumentException(String.format("Invalid stack size '%s'", args[i]));
-					};
+					final long bytes = parseBytes(s);
 
 					EmulatorConstants.setStackSize(bytes);
 				}
@@ -205,9 +175,8 @@ public final class Main {
 								String.format("Expected an argument after '%s'", baseAddressFlag));
 					}
 
-					final long val = args[i].startsWith("0x")
-							? Long.parseUnsignedLong(args[i].substring(2), 16)
-							: Long.parseUnsignedLong(args[i], 16);
+					final long val =
+							Long.parseUnsignedLong(args[i].startsWith("0x") ? args[i].substring(2) : args[i], 16);
 					EmulatorConstants.setBaseAddress(val);
 				}
 				case baseStackAddressFlag -> {
@@ -217,9 +186,8 @@ public final class Main {
 								String.format("Expected an argument after '%s'", baseStackAddressFlag));
 					}
 
-					final long val = args[i].startsWith("0x")
-							? Long.parseUnsignedLong(args[i].substring(2), 16)
-							: Long.parseUnsignedLong(args[i], 16);
+					final long val =
+							Long.parseUnsignedLong(args[i].startsWith("0x") ? args[i].substring(2) : args[i], 16);
 					EmulatorConstants.setBaseStackAddress(val);
 				}
 				case baseStackValueFlag -> {
@@ -229,9 +197,8 @@ public final class Main {
 								String.format("Expected an argument after '%s'", baseStackValueFlag));
 					}
 
-					final long val = args[i].startsWith("0x")
-							? Long.parseUnsignedLong(args[i].substring(2), 16)
-							: Long.parseUnsignedLong(args[i], 16);
+					final long val =
+							Long.parseUnsignedLong(args[i].startsWith("0x") ? args[i].substring(2) : args[i], 16);
 					EmulatorConstants.setBaseStackValue(val);
 				}
 				default -> {
@@ -269,5 +236,38 @@ public final class Main {
 			System.exit(-1);
 		}
 		out.flush();
+	}
+
+	private static long parseBytes(final String arg) {
+		long bytes = 0L;
+		int i = 0;
+		for (; i < arg.length() && Character.isDigit(arg.charAt(i)); i++) {
+			final long idx = arg.charAt(i) - '0';
+			bytes = bytes * 10L + idx;
+		}
+
+		final String s = arg.substring(i);
+
+		return switch (s) {
+			case "B" -> bytes;
+			case "KB" -> bytes * 1_000L;
+			case "MB" -> bytes * 1_000_000L;
+			case "GB" -> bytes * 1_000_000_000L;
+			case "TB" -> bytes * 1_000_000_000_000L;
+			case "KiB" -> bytes * 1_024L;
+			case "MiB" -> bytes * 1_024L * 1_024L;
+			case "GiB" -> bytes * 1_024L * 1_024L * 1_024L;
+			case "TiB" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L;
+			case "b" -> bytes / 8L;
+			case "Kb" -> bytes * 1_000L / 8L;
+			case "Mb" -> bytes * 1_000_000L / 8L;
+			case "Gb" -> bytes * 1_000_000_000L / 8L;
+			case "Tb" -> bytes * 1_000_000_000_000L / 8L;
+			case "Kib" -> bytes * 1_024L / 8L;
+			case "Mib" -> bytes * 1_024L * 1_024L / 8L;
+			case "Gib" -> bytes * 1_024L * 1_024L * 1_024L / 8L;
+			case "Tib" -> bytes * 1_024L * 1_024L * 1_024L * 1_024L / 8L;
+			default -> throw new IllegalArgumentException(String.format("Invalid stack size '%s'", arg));
+		};
 	}
 }

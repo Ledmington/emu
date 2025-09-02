@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
+@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckObjdump {
 
 	private static final PrintWriter out = System.console() != null

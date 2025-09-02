@@ -74,6 +74,7 @@ public class X86Cpu implements X86Emulator {
 		this(mem, new X86RegisterFile(), checkInstructions);
 	}
 
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need these objects as they are.")
 	public X86Cpu(final MemoryController mem, final RegisterFile rf, final boolean checkInstructions) {
 		this.mem = Objects.requireNonNull(mem);
 		this.instFetch = new InstructionFetcher(mem, rf);

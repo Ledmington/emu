@@ -37,6 +37,7 @@ import com.ledmington.utils.BitUtils;
  *
  * <p>[index * scale + displacement]
  */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public final class IndirectOperand implements Operand {
 
 	private final PointerSize ptrSize;
@@ -57,43 +58,7 @@ public final class IndirectOperand implements Operand {
 	}
 
 	private static boolean isValidRegister(final Register r) {
-		return switch (r) {
-			case Register32.EAX,
-					Register32.EBX,
-					Register32.ECX,
-					Register32.EDX,
-					Register32.ESI,
-					Register32.EDI,
-					Register32.EBP,
-					Register32.ESP,
-					Register32.R8D,
-					Register32.R9D,
-					Register32.R10D,
-					Register32.R11D,
-					Register32.R12D,
-					Register32.R13D,
-					Register32.R14D,
-					Register32.R15D,
-					Register32.EIP,
-					Register64.RAX,
-					Register64.RBX,
-					Register64.RCX,
-					Register64.RDX,
-					Register64.RSI,
-					Register64.RDI,
-					Register64.RBP,
-					Register64.RSP,
-					Register64.R8,
-					Register64.R9,
-					Register64.R10,
-					Register64.R11,
-					Register64.R12,
-					Register64.R13,
-					Register64.R14,
-					Register64.R15,
-					Register64.RIP -> true;
-			default -> false;
-		};
+		return r instanceof Register32 || r instanceof Register64;
 	}
 
 	@SuppressWarnings("PMD.NPathComplexity")

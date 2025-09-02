@@ -17,6 +17,7 @@
  */
 package com.ledmington.cmdline;
 
+@SuppressWarnings("PMD.ImplicitFunctionalInterface")
 public interface ParsingResult {
 	boolean asBoolean();
 }
