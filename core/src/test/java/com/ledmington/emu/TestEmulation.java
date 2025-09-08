@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import java.io.File;
 import java.util.Objects;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,10 +29,15 @@ import org.junit.jupiter.params.provider.ValueSource;
 final class TestEmulation {
 
 	@ParameterizedTest
-	@ValueSource(strings = {"do_nothing.elf", "do_nothing.small", "small.x"})
+	@ValueSource(strings = {"do_nothing.static", "do_nothing.dynamic", "small.x"})
 	void endToEndEmulation(final String executableName) {
 		final String path = Objects.requireNonNull(
-						Thread.currentThread().getContextClassLoader().getResource(executableName))
+						Thread.currentThread()
+								.getContextClassLoader()
+								.getResource(String.join(File.separator, "generated", executableName)),
+						() -> String.format(
+								"File '%s' not found: did you forget to run './gradlew :core:generateE2ETestFiles'?",
+								executableName))
 				.getPath();
 		assertDoesNotThrow(() -> Emu.run(path));
 	}
