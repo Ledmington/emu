@@ -5,3 +5,5 @@ bin/
 build/
 
 *.pdf
+
+core/src/test/resources/generated/

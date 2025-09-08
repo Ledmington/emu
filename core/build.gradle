@@ -21,3 +21,10 @@ pitest {
 	verbose = true
 	timestampedReports = false
 }
+
+tasks.register('generateEndToEndTestFiles', JavaExec) {
+    group = 'verification'
+    description = 'Generates the executable files for end-to-end testing'
+    classpath sourceSets.test.runtimeClasspath
+    mainClass = 'com.ledmington.emu.GenerateE2ETestFiles'
+}
