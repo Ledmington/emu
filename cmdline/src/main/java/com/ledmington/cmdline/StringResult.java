@@ -17,14 +17,9 @@
  */
 package com.ledmington.cmdline;
 
-@SuppressWarnings("PMD.ImplicitFunctionalInterface")
-public interface ParsingResult {
-
-	default boolean asBoolean() {
-		throw new UnsupportedOperationException("Not a boolean result.");
-	}
-
-	default String asString() {
-		throw new UnsupportedOperationException("Not a string result.");
+public record StringResult(String value) implements ParsingResult {
+	@Override
+	public String asString() {
+		return value;
 	}
 }

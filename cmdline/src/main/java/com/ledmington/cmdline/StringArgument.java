@@ -19,10 +19,9 @@ package com.ledmington.cmdline;
 
 import java.util.Objects;
 
-public record BooleanArgument(String shortName, String longName, String description, boolean defaultValue)
+public record StringArgument(String shortName, String longName, String description, String defaultValue)
 		implements CommandLineArgument {
-
-	public BooleanArgument {
+	public StringArgument {
 		if (shortName == null && longName == null) {
 			throw new IllegalArgumentException("At least one of shortName and longName must not be null.");
 		}

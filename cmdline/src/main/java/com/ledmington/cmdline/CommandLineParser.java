@@ -37,17 +37,57 @@ public final class CommandLineParser {
 	@SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
 	public Map<String, ParsingResult> parse(final String... commandLine) {
 		final Map<String, ParsingResult> result = new HashMap<>();
-		for (final String arg : commandLine) {
-			for (final CommandLineArgument cla : arguments) {
-				if (cla instanceof final BooleanArgument ba) {
-					if (arg.equals("--" + ba.longName())) {
-						result.put(ba.longName(), new BooleanResult(true));
-					} else if (arg.equals("--no-" + ba.longName())) {
-						result.put(ba.longName(), new BooleanResult(false));
+
+		// Load default values
+		for (final CommandLineArgument cla : arguments) {
+			switch (cla) {
+				case BooleanArgument ba -> {
+					if (ba.hasShortName()) {
+						result.put(ba.shortName(), new BooleanResult(ba.defaultValue()));
 					}
+					if (ba.hasLongName()) {
+						result.put(ba.longName(), new BooleanResult(ba.defaultValue()));
+					}
+				}
+				case StringArgument sa -> {
+					if (sa.hasShortName()) {
+						result.put(sa.shortName(), new StringResult(sa.defaultValue()));
+					}
+					if (sa.hasLongName()) {
+						result.put(sa.longName(), new StringResult(sa.defaultValue()));
+					}
+				}
+				default ->
+					throw new IllegalArgumentException(String.format("Unknown command line argument: '%s'", cla));
+			}
+		}
+
+		for (int i = 0; i < commandLine.length; i++) {
+			final String arg = commandLine[i];
+			for (final CommandLineArgument cla : arguments) {
+				switch (cla) {
+					case BooleanArgument ba -> {
+						if (ba.hasShortName() && arg.equals("-" + ba.shortName())) {
+							result.put(ba.shortName(), new BooleanResult(!ba.defaultValue()));
+						}
+						if (ba.hasLongName() && arg.equals("--" + ba.longName())) {
+							result.put(ba.longName(), new BooleanResult(!ba.defaultValue()));
+						}
+					}
+					case StringArgument sa -> {
+						if (sa.hasShortName() && arg.equals("-" + sa.shortName())) {
+							result.put(sa.shortName(), new StringResult(commandLine[++i]));
+						}
+						if (sa.hasLongName() && arg.equals("--" + sa.longName())) {
+							result.put(sa.longName(), new StringResult(commandLine[++i]));
+						}
+					}
+					default ->
+						throw new IllegalArgumentException(String.format("Unknown command line argument: '%s'", cla));
 				}
 			}
 		}
+
 		return result;
 	}
 }

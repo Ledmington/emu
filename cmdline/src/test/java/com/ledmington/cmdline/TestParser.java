@@ -17,18 +17,49 @@
  */
 package com.ledmington.cmdline;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 final class TestParser {
 	@Test
-	void booleanOption() {
+	void booleanOptionLongName() {
 		final CommandLineParser p = CommandLineParser.builder()
-				.addBoolean("test", "This is a testing option.")
+				.addBoolean(null, "test", "This is a testing option.", true)
 				.build();
-		assertTrue(p.parse("--test").get("test").asBoolean(), "Expected to parse '--test' but didn't.");
-		assertFalse(p.parse("--no-test").get("test").asBoolean(), "Expected to parse '--no-test' but didn't.");
+		assertTrue(p.parse().get("test").asBoolean(), "Expected to parse '' as true but didn't.");
+		assertFalse(p.parse("--test").get("test").asBoolean(), "Expected to parse '--test' as false but didn't.");
+	}
+
+	@Test
+	void booleanOptionShortName() {
+		final CommandLineParser p = CommandLineParser.builder()
+				.addBoolean("test", null, "This is a testing option.", true)
+				.build();
+		assertTrue(p.parse().get("test").asBoolean(), "Expected to parse '' as true but didn't.");
+		assertFalse(p.parse("-test").get("test").asBoolean(), "Expected to parse '-test' as false but didn't.");
+	}
+
+	@Test
+	void stringOption() {
+		final CommandLineParser p = CommandLineParser.builder()
+				.addString("test", null, "This is a testing option.", "default")
+				.build();
+		assertEquals("default", p.parse().get("test").asString(), "Expected to parse '' as 'default' but didn't.");
+		assertEquals(
+				"hello",
+				p.parse("-test", "hello").get("test").asString(),
+				"Expected to parse '-test hello' as 'hello' but didn't.");
+		assertEquals(
+				"hello",
+				p.parse("-test=hello").get("test").asString(),
+				"Expected to parse '-test=hello' as 'hello' but didn't.");
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> p.parse("-test"),
+				"Expected to not be able to parse '-test' but it did.");
 	}
 }

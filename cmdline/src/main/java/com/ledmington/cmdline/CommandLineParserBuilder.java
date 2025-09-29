@@ -26,8 +26,15 @@ public final class CommandLineParserBuilder {
 
 	public CommandLineParserBuilder() {}
 
-	public CommandLineParserBuilder addBoolean(final String longName, final String description) {
-		arguments.add(new BooleanArgument(longName, description));
+	public CommandLineParserBuilder addBoolean(
+			final String shortName, final String longName, final String description, final boolean defaultValue) {
+		arguments.add(new BooleanArgument(shortName, longName, description, defaultValue));
+		return this;
+	}
+
+	public CommandLineParserBuilder addString(
+			final String shortName, final String longName, final String description, final String defaultValue) {
+		arguments.add(new StringArgument(shortName, longName, description, defaultValue));
 		return this;
 	}
 
