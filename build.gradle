@@ -25,7 +25,7 @@ ext.appNameLowerCase = appName.toLowerCase(Locale.US)
 ext.junitVersion = '5.13.1'
 ext.junitLauncherVersion = '1.13.1'
 ext.jacocoVersion = '0.8.12'
-ext.pmdVersion = '7.15.0'
+ext.pmdVersion = '7.17.0'
 ext.spotbugsVersion = '4.9.3'
 ext.palantirVersion = '2.75.0'
 // End tunables
