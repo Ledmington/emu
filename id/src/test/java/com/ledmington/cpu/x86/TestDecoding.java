@@ -89,7 +89,7 @@ final class TestDecoding extends X64Encodings {
 	@ParameterizedTest
 	@MethodSource("instAndHex")
 	void fromHex(final Instruction expected, final byte[] hex) {
-		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length);
+		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
 		assertEquals(
 				1,
 				inst.size(),
@@ -104,13 +104,13 @@ final class TestDecoding extends X64Encodings {
 	}
 
 	private static Stream<Arguments> onlyHex() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.hex()));
+		return X64_ENCODINGS.stream().map(x -> Arguments.of((Object) x.hex()));
 	}
 
 	@ParameterizedTest
 	@MethodSource("onlyHex")
 	void checkFromHex(final byte[] hex) {
-		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length);
+		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
 		assertEquals(
 				1,
 				inst.size(),

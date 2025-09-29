@@ -62,6 +62,6 @@ public class Decoding {
 
 	@Benchmark
 	public void parse(final Blackhole bh) {
-		bh.consume(InstructionDecoder.fromHex(instructionBytes, instructionBytes.length));
+		bh.consume(InstructionDecoder.fromHex(instructionBytes, instructionBytes.length, false));
 	}
 }

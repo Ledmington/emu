@@ -351,11 +351,13 @@ public final class InstructionDecoder {
 		return iob.build();
 	}
 
-	public static List<Instruction> fromHex(final byte[] bytes, final int nBytesToDecode) {
-		return fromHex(new ReadOnlyByteBufferV1(bytes, true, 1), nBytesToDecode);
+	public static List<Instruction> fromHex(
+			final byte[] bytes, final int nBytesToDecode, final boolean checkInstructions) {
+		return fromHex(new ReadOnlyByteBufferV1(bytes, true, 1), nBytesToDecode, checkInstructions);
 	}
 
-	public static List<Instruction> fromHex(final ReadOnlyByteBuffer b, final int nBytesToDecode) {
+	public static List<Instruction> fromHex(
+			final ReadOnlyByteBuffer b, final int nBytesToDecode, final boolean checkInstructions) {
 		if (nBytesToDecode < 0) {
 			throw new IllegalArgumentException(String.format("Negative bytes: %,d.", nBytesToDecode));
 		}
@@ -377,7 +379,9 @@ public final class InstructionDecoder {
 								.collect(Collectors.joining(" ")),
 						InstructionEncoder.toIntelSyntax(inst));
 			}
-			InstructionChecker.check(inst);
+			if (checkInstructions) {
+				InstructionChecker.check(inst);
+			}
 			instructions.add(inst);
 		}
 

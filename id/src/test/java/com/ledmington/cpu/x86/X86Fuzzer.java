@@ -78,7 +78,7 @@ public final class X86Fuzzer {
 			valid = true;
 			wb.write(BitUtils.asByte(RNG.nextInt()));
 			try {
-				final List<Instruction> tmp = InstructionDecoder.fromHex(wb.array(), wb.array().length);
+				final List<Instruction> tmp = InstructionDecoder.fromHex(wb.array(), wb.array().length, true);
 				if (tmp.size() != 1) {
 					throw new AssertionError(String.format(
 							"%s was decoded into %,d instructions instead of one: %s.",
@@ -89,10 +89,8 @@ public final class X86Fuzzer {
 				// If we receive an AIOOBE, it means the instruction is not yet complete and we need to add more bytes
 				valid = false;
 			} catch (final InvalidInstruction e) {
-				if (!containsNullRegister(inst)) {
-					print(99999, toHex(wb.array()), "InvalidInstruction");
-					throw e;
-				}
+				print(99999, toHex(wb.array()), "InvalidInstruction");
+				throw e;
 			}
 		} while (!valid);
 		return inst;
