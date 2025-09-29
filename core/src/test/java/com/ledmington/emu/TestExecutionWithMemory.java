@@ -268,15 +268,15 @@ final class TestExecutionWithMemory {
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
 		final int offset = rng.nextInt();
 		final long functionAddress = rip + BitUtils.asLong(offset);
-		final byte[] functionCode = InstructionEncoder.toHex(new Instruction(Opcode.RET));
+		final byte[] functionCode = InstructionEncoder.toHex(true, new Instruction(Opcode.RET));
 		mem.initialize(functionAddress, functionCode);
 		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
-				InstructionEncoder.toHex(new Instruction(Opcode.CALL, new Immediate(0))).length;
+				InstructionEncoder.toHex(true, new Instruction(Opcode.CALL, new Immediate(0))).length;
 		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
-		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
+		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new Instruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
 		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
@@ -302,6 +302,7 @@ final class TestExecutionWithMemory {
 		final int offset = Math.abs(rng.nextInt());
 		final long functionAddress = rip + BitUtils.asLong(offset);
 		final byte[] functionCode = InstructionEncoder.toHex(
+				true,
 				// code adapted from this one: https://godbolt.org/z/W8Kjj6Woz
 				new Instruction(Opcode.PUSH, Register64.RBP),
 				new Instruction(Opcode.MOV, Register64.RBP, Register64.RSP),
@@ -320,9 +321,9 @@ final class TestExecutionWithMemory {
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
-				InstructionEncoder.toHex(new Instruction(Opcode.CALL, new Immediate(0))).length;
+				InstructionEncoder.toHex(new Instruction(Opcode.CALL, new Immediate(0)), true).length;
 		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
-		final byte[] mainCode = InstructionEncoder.toHex(callInstruction, new Instruction(Opcode.HLT));
+		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new Instruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
 		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
