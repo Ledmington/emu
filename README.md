@@ -4,6 +4,7 @@
 The project is divided as follows:
 - `cli` : the actual executable emulator (CLI version)
 - `gui` : the emulator + ELF viewer (GUI version)
+- `emudb` : a command-line debugger (like GNU's `gdb`)
 - `core` : the core components of the emulator
 - `cmdline` : a collection of utilities to parse command-line arguments
 - `readelf` : a utility executable to mimic the behavior of GNU's `readelf`

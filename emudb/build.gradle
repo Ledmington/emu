@@ -1,0 +1,59 @@
+plugins {
+	id 'application'
+}
+
+// utility function
+static def path(final String ...s) {
+	return String.join(File.separator, s)
+}
+
+String emudbVersion = "0.1.0"
+String fatJarBaseName = "${appNameLowerCase}-emudb-${emudbVersion}"
+String fatJarName = "${fatJarBaseName}.jar"
+String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "libs", "${fatJarName}")
+String mainClassName = "${basePackage}.emudb.Main"
+
+dependencies {
+    implementation project(':core')
+    implementation project(':elf')
+    implementation project(':utils')
+
+    implementation 'org.jline:jline:3.30.6'
+}
+
+application {
+	mainClass = mainClassName
+}
+
+run {
+	args = []
+	jvmArgs = []
+}
+
+tasks.register('fatJar', Jar) {
+	group = 'distribution'
+	description = 'Builds the fat jar of the application'
+	from sourceSets.main.output
+	dependsOn configurations.runtimeClasspath
+	from {
+		configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+	}
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+	manifest {
+		archiveBaseName = appNameLowerCase
+		attributes(
+				// "Implementation-Title": "Gradle",
+				"Implementation-Version": "${emudbVersion}",
+				"Main-Class": "$mainClassName"
+		)
+	}
+	archiveBaseName = "${fatJarBaseName}"
+
+	doLast {
+		printf "The fat jar is %s\n", fatJarPath
+		printf "Fat jar size: %.3f MB\n", new File(fatJarPath).length() / 1_000_000L
+	}
+}
+
+tasks.build.dependsOn(fatJar)
+tasks.javadoc.enabled = false
