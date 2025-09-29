@@ -41,13 +41,72 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
 })
 public final class X86Fuzzer {
 
+	private static final String GRAY = "\u001b[90m";
+	private static final String YELLOW = "\u001b[33m";
+	private static final String PURPLE = "\u001b[95m";
+	private static final String RESET = "\u001b[0m";
+
+	private static final long SEED =
+			7279067358462458113L; // RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
+	private static final RandomGenerator RNG =
+			RandomGeneratorFactory.getDefault().create(SEED);
+
 	private X86Fuzzer() {}
 
-	private static String toHex(final WriteOnlyByteBuffer wb) {
-		final byte[] v = wb.array();
-		return IntStream.range(0, v.length)
-				.mapToObj(i -> String.format("%02x", v[i]))
+	private static String toHex(final byte[] b) {
+		return IntStream.range(0, b.length)
+				.mapToObj(i -> String.format("%02x", b[i]))
 				.collect(Collectors.joining(" "));
+	}
+
+	private static void print(final int id, final String hex, final String message) {
+		System.out.printf(" %s%5d%s | %s%-17s%s : %s%n", GRAY, id, RESET, PURPLE, hex, RESET, message);
+	}
+
+	private static boolean containsNullRegister(final Instruction inst) {
+		return (inst.hasFirstOperand() && inst.firstOperand() instanceof NullRegister)
+				|| (inst.hasSecondOperand() && inst.secondOperand() instanceof NullRegister)
+				|| (inst.hasThirdOperand() && inst.thirdOperand() instanceof NullRegister)
+				|| (inst.hasFourthOperand() && inst.fourthOperand() instanceof NullRegister);
+	}
+
+	private static Instruction generateRandomInstruction() {
+		Instruction inst = null;
+		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1();
+		boolean valid;
+		do {
+			valid = true;
+			wb.write(BitUtils.asByte(RNG.nextInt()));
+			try {
+				final List<Instruction> tmp = InstructionDecoder.fromHex(wb.array(), wb.array().length);
+				if (tmp.size() != 1) {
+					throw new AssertionError(String.format(
+							"%s was decoded into %,d instructions instead of one: %s.",
+							toHex(wb.array()), tmp.size(), tmp));
+				}
+				inst = tmp.getFirst();
+			} catch (final ArrayIndexOutOfBoundsException aioobe) {
+				// If we receive an AIOOBE, it means the instruction is not yet complete and we need to add more bytes
+				valid = false;
+			} catch (final InvalidInstruction e) {
+				if (!containsNullRegister(inst)) {
+					print(99999, toHex(wb.array()), "InvalidInstruction");
+					throw e;
+				}
+			}
+		} while (!valid);
+		return inst;
+	}
+
+	private static Instruction generateRandomCorrectInstruction() {
+		while (true) {
+			try {
+				return generateRandomInstruction();
+			} catch (final DecodingException e) {
+				// a DecodingException means that the generated instruction is complete but not correct,
+				// so we start over
+			}
+		}
 	}
 
 	public static void main(final String[] args) {
@@ -57,10 +116,7 @@ public final class X86Fuzzer {
 			System.out.println("Ignoring command-line arguments.");
 		}
 
-		final long seed =
-				RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
-		final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(seed);
-		System.out.printf("Seed: %d%n", seed);
+		System.out.printf("Seed: %dL (0x%016xL)%n", SEED, SEED);
 
 		final int attempts = 1000;
 		System.out.printf("Generating %,d random instructions.%n", attempts);
@@ -68,47 +124,20 @@ public final class X86Fuzzer {
 
 		final long start = System.nanoTime();
 		while (visited.size() < attempts) {
-			Instruction inst = null;
-			int instructionLength = 0;
-			final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1();
-			boolean valid;
-			do {
-				valid = true;
-				wb.write(BitUtils.asByte(rng.nextInt()));
-				instructionLength++;
-				try {
-					final List<Instruction> tmp = InstructionDecoder.fromHex(wb.array(), instructionLength);
-					if (tmp.size() != 1) {
-						throw new AssertionError(String.format(
-								"%s was decoded into %,d instructions instead of one: %s.",
-								toHex(wb), tmp.size(), tmp));
-					}
-					inst = tmp.getFirst();
-				} catch (final InvalidInstruction ii) {
-					System.out.printf(" %5d | %s : %s%n", visited.size(), toHex(wb), ii.getMessage());
-					System.exit(-1);
-					return;
-				} catch (final ArrayIndexOutOfBoundsException aioobe) {
-					// If we receive an AIOOBE, it means the instruction is not yet complete and we need to add more
-					// bytes
-					valid = false;
-				} catch (final DecodingException ignored) {
-				}
-			} while (!valid);
+			final Instruction inst = generateRandomCorrectInstruction();
 
-			final String hex = toHex(wb);
+			final String hex = toHex(InstructionEncoder.toHex(inst));
 			if (visited.contains(hex)) {
 				// this instruction was already generated some time in the past, skip it
 				continue;
 			}
 			visited.add(hex);
 
-			System.out.printf(
-					" %5d | %-11s : %s%n",
+			print(
 					visited.size(),
 					hex,
 					(inst == null)
-							? "unknown"
+							? (YELLOW + "unknown" + RESET)
 							: InstructionEncoder.toIntelSyntax(inst, !containsNullRegister(inst), 0, false));
 		}
 		final long end = System.nanoTime();
@@ -120,12 +149,5 @@ public final class X86Fuzzer {
 		System.out.println();
 
 		System.exit(0);
-	}
-
-	private static boolean containsNullRegister(final Instruction inst) {
-		return (inst.hasFirstOperand() && inst.firstOperand() instanceof NullRegister)
-				|| (inst.hasSecondOperand() && inst.secondOperand() instanceof NullRegister)
-				|| (inst.hasThirdOperand() && inst.thirdOperand() instanceof NullRegister)
-				|| (inst.hasFourthOperand() && inst.fourthOperand() instanceof NullRegister);
 	}
 }
