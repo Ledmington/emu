@@ -5268,6 +5268,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new Instruction(
 								Opcode.ADD,
 								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0x392732d0)
+										.build(),
+								new Immediate(0xd58dc00e)),
+						"add DWORD PTR [rip+0x392732d0],0xd58dc00e",
+						"81 05 d0 32 27 39 0e c0 8d d5"),
+				test(
+						new Instruction(
+								Opcode.ADD,
+								IndirectOperand.builder()
 										.pointer(WORD_PTR)
 										.base(RAX)
 										.index(RBX)
@@ -5309,6 +5320,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								new Immediate((byte) 0x1)),
 						"add WORD PTR [rdx+rax*2],0x01",
 						"66 83 04 42 01"),
+				test(
+						new Instruction(
+								Opcode.ADD,
+								IndirectOperand.builder()
+										.pointer(BYTE_PTR)
+										.base(RIP)
+										.displacement(0xb4bd3961)
+										.build(),
+								CL),
+						"add BYTE PTR [rip-0x4b42c69f],cl",
+						"00 0d 61 39 bd b4"),
 				test(new Instruction(Opcode.ADD, AL, new Immediate((byte) 0x99)), "add al,0x99", "04 99"),
 				test(new Instruction(Opcode.ADD, AX, simm), "add ax,0x1234", "66 05 34 12"),
 				test(new Instruction(Opcode.ADD, AX, bimm), "add ax,0x12", "66 83 c0 12"),
@@ -6574,6 +6596,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"or dl,BYTE PTR [r12]",
 						"41 0a 14 24"),
+				test(
+						new Instruction(
+								Opcode.OR,
+								BP,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RCX)
+										.index(RDI)
+										.scale(2)
+										.displacement((byte) 0x1e)
+										.build()),
+						"or bp,WORD PTR [rcx+rdi*2+0x1e]",
+						"66 0b 6c 79 1e"),
 				test(new Instruction(Opcode.OR, EDI, bimm), "or edi,0x12", "83 cf 12"),
 				test(new Instruction(Opcode.OR, RAX, bimm), "or rax,0x12", "48 83 c8 12"),
 				test(new Instruction(Opcode.OR, RAX, iimm), "or rax,0x12345678", "48 0d 78 56 34 12"),
@@ -8634,6 +8669,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new Instruction(Opcode.XCHG, RSI, RAX), "xchg rsi,rax", "48 96"),
 				test(new Instruction(Opcode.XCHG, RSP, RAX), "xchg rsp,rax", "48 94"),
 				test(new Instruction(Opcode.XCHG, SI, DI), "xchg si,di", "66 87 fe"),
+				test(
+						new Instruction(
+								Opcode.XCHG,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0x2be08cf6)
+										.build(),
+								ESP),
+						"xchg DWORD PTR [rip+0x2be08cf6],esp",
+						"87 25 f6 8c e0 2b"),
 				//
 				test(
 						new Instruction(
@@ -9570,11 +9616,33 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								CL),
 						"ror DWORD PTR [rax-0x08bcc7cd],cl",
 						"d3 88 33 38 43 f7"),
+				test(
+						new Instruction(
+								Opcode.ROR,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RSI)
+										.displacement((byte) -0x43)
+										.build(),
+								new Immediate((byte) 0x5f)),
+						"ror DWORD PTR [rsi-0x43],0x5f",
+						"c1 4e bd 5f"),
 				// Rol
 				test(new Instruction(Opcode.ROL, AX, CL), "rol ax,cl", "66 d3 c0"),
 				test(new Instruction(Opcode.ROL, DX, new Immediate((byte) 0x8)), "rol dx,0x08", "66 c1 c2 08"),
 				test(new Instruction(Opcode.ROL, EDI, new Immediate((byte) 0)), "rol edi,0x00", "c1 c7 00"),
 				test(new Instruction(Opcode.ROL, RDX, new Immediate((byte) 0x11)), "rol rdx,0x11", "48 c1 c2 11"),
+				test(
+						new Instruction(
+								Opcode.ROL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RIP)
+										.displacement(0xd9b1a0e9)
+										.build(),
+								one),
+						"rol DWORD PTR [rip-0x264e5f17],0x01",
+						"d1 05 e9 a0 b1 d9"),
 				// Rcr
 				test(new Instruction(Opcode.RCR, EDI, new Immediate((byte) 0)), "rcr edi,0x00", "c1 df 00"),
 				test(new Instruction(Opcode.RCR, BL, bimm), "rcr bl,0x12", "c0 db 12"),

@@ -825,7 +825,6 @@ public final class InstructionEncoder {
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(io.getPointerSize() == PointerSize.BYTE_PTR ? (byte) 0xc6 : (byte) 0xc7);
-					reg = (byte) 0b000;
 
 					if (isIpAndOffset(io)) {
 						wb.write((byte) 0x05);
@@ -928,6 +927,11 @@ public final class InstructionEncoder {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					final boolean isImmediateOne = imm.bits() == 8 && imm.asByte() == (byte) 1;
 					wb.write(or(isImmediateOne ? (byte) 0xd0 : (byte) 0xc0, (io.bits() == 8) ? (byte) 0 : (byte) 1));
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x05);
+						wb.write(asInt(io.getDisplacement()));
+						return;
+					}
 					if (isImmediateOne) {
 						encodeModRM(
 								wb,
@@ -1029,13 +1033,27 @@ public final class InstructionEncoder {
 				} else if ((isFirstM(inst) || inst.firstOperand() instanceof Register)
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
-					reg = (byte) 0b000;
 				} else if (inst.firstOperand() instanceof final Register r && isSecondM(inst)) {
 					wb.write((r instanceof Register8) ? (byte) 0x02 : (byte) 0x03);
 				} else if (isFirstR(inst) && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x01);
-				} else if (isFirstM(inst) && inst.secondOperand() instanceof final Register r) {
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register r) {
 					wb.write((r instanceof Register8) ? (byte) 0x00 : (byte) 0x01);
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x0d);
+						wb.write(asInt(io.getDisplacement()));
+						return;
+					}
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x05);
+						wb.write(asInt(io.getDisplacement()));
+						encodeImmediate(wb, imm);
+						return;
+					}
 				}
 			}
 			case ADC -> {
@@ -1347,6 +1365,14 @@ public final class InstructionEncoder {
 								|| inst.secondOperand() == Register64.RAX)) {
 					wb.write(asByte((byte) 0x90 + Registers.toByte(r)));
 					return;
+				} else if (inst.firstOperand() instanceof final IndirectOperand io && isSecondR(inst)) {
+					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0x86 : (byte) 0x87);
+
+					if (isIpAndOffset(io)) {
+						wb.write((byte) 0x25);
+						wb.write(asInt(io.getDisplacement()));
+						return;
+					}
 				} else {
 					wb.write((inst.firstOperand().bits() == 8) ? (byte) 0x86 : (byte) 0x87);
 				}

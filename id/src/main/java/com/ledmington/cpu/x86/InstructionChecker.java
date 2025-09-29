@@ -383,8 +383,8 @@ public final class InstructionChecker {
 					Opcode.OR,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32, R8_M8,
-							R32_M32, R64_M64, M8_I8, M16_I8, M16_I16, M32_I8, M32_I32, M64_I8, M64_I32, M8_R8, M16_R16,
-							M32_R32, M64_R64)),
+							R16_M16, R32_M32, R64_M64, M8_I8, M16_I8, M16_I16, M32_I8, M32_I32, M64_I8, M64_I32, M8_R8,
+							M16_R16, M32_R32, M64_R64)),
 			Map.entry(
 					Opcode.XOR,
 					List.of(
@@ -487,8 +487,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.SYSCALL, List.of(NO_ARGS)),
 			Map.entry(Opcode.BSR, List.of(R32_R32, R64_R64, R32_M32, R64_M64)),
 			Map.entry(Opcode.BSF, List.of(R32_R32, R64_R64)),
-			Map.entry(Opcode.ROR, List.of(R8_R8, M32_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
-			Map.entry(Opcode.ROL, List.of(R8_R8, R16_R8, R32_R8, R8_I8, R16_I8, R32_I8, R64_I8)),
+			Map.entry(Opcode.ROR, List.of(R8_R8, M32_R8, M32_I8, R8_I8, R16_I8, R32_I8, R64_I8)),
+			Map.entry(Opcode.ROL, List.of(R8_R8, R16_R8, R32_R8, M32_I8, R8_I8, R16_I8, R32_I8, R64_I8)),
 			Map.entry(Opcode.RCR, List.of(R8_R8, R32_R8, R64_R8, R8_I8, R32_I8, M32_R8, M64_R8, M32_I8)),
 			Map.entry(Opcode.RCL, List.of(R8_R8, R32_R8, M32_R8, M32_I8, R8_I8, R32_I8)),
 			Map.entry(Opcode.PMOVMSKB, List.of(R32_RX)),
