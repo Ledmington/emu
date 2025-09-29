@@ -6371,6 +6371,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"mul QWORD PTR [rbp-0x00000868]",
 						"48 f7 a5 98 f7 ff ff"),
+				test(
+						new Instruction(
+								Opcode.MUL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RSI)
+										.index(RSI)
+										.scale(1)
+										.build()),
+						"mul DWORD PTR [rsi+rsi*1]",
+						"f7 24 36"),
 				//  Or
 				test(
 						new Instruction(
@@ -6622,6 +6633,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								ECX),
 						"xor DWORD PTR [rcx],ecx",
 						"31 09"),
+				test(
+						new Instruction(
+								Opcode.XOR,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(R10)
+										.build(),
+								RBP),
+						"xor QWORD PTR [r10],rbp",
+						"49 31 2a"),
 				test(
 						new Instruction(
 								Opcode.XOR,

@@ -1730,6 +1730,7 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.SUB && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
 				|| (inst.opcode() == Opcode.SBB && isFirstER(inst) && isSecondR(inst))
 				|| (inst.opcode() == Opcode.SBB && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
+				|| (inst.opcode() == Opcode.XOR && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.XOR && isFirstER(inst) && inst.secondOperand() instanceof Immediate)
 				|| (inst.opcode() == Opcode.TEST && hasExtendedBase(inst.firstOperand()))
 				|| (inst.opcode() == Opcode.TEST && isFirstER(inst))

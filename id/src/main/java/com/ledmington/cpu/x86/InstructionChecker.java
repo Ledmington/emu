@@ -378,7 +378,7 @@ public final class InstructionChecker {
 							R64_M64_I32)),
 			Map.entry(Opcode.IDIV, List.of(R32, R64)),
 			Map.entry(Opcode.DIV, List.of(R8, R16, R32, R64, M8, M16, M32, M64)),
-			Map.entry(Opcode.MUL, List.of(R8, R16, R32, R64, M8, M64)),
+			Map.entry(Opcode.MUL, List.of(R8, R16, R32, R64, M8, M32, M64)),
 			Map.entry(
 					Opcode.OR,
 					List.of(
@@ -389,7 +389,7 @@ public final class InstructionChecker {
 					Opcode.XOR,
 					List.of(
 							R8_R8, R16_R16, R32_R32, R64_R64, R8_I8, R16_I16, R32_I8, R32_I32, R64_I8, R64_I32, M8_R8,
-							M32_R32, R8_M8, R32_M32, R64_M64, M8_I8, M32_I8, M32_I32)),
+							M32_R32, M64_R64, R8_M8, R32_M32, R64_M64, M8_I8, M32_I8, M32_I32)),
 			Map.entry(Opcode.NOT, List.of(R16, R32, R64)),
 			Map.entry(Opcode.NEG, List.of(R32, R64, M32, M64)),
 			Map.entry(
