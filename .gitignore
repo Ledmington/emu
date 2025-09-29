@@ -6,4 +6,5 @@ build/
 
 *.pdf
 
-core/src/test/resources/generated/
+core/src/test/resources/generated/*
+!core/src/test/resources/generated/.gitkeep
