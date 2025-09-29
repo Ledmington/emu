@@ -203,23 +203,25 @@ public final class InstructionEncoder {
 		return sb.toString();
 	}
 
-	public static byte[] toHex(final Instruction... code) {
+	public static byte[] toHex(final boolean check, final Instruction... code) {
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
 		for (final Instruction inst : code) {
-			toHex(wb, inst);
+			toHex(wb, inst, check);
 		}
 		return wb.array();
 	}
 
-	public static byte[] toHex(final Instruction inst) {
+	public static byte[] toHex(final Instruction inst, final boolean check) {
 		Objects.requireNonNull(inst);
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
-		toHex(wb, inst);
+		toHex(wb, inst, check);
 		return wb.array();
 	}
 
-	private static void toHex(final WriteOnlyByteBuffer wb, final Instruction inst) {
-		InstructionChecker.check(inst);
+	private static void toHex(final WriteOnlyByteBuffer wb, final Instruction inst, final boolean check) {
+		if (check) {
+			InstructionChecker.check(inst);
+		}
 
 		encodePrefixes(wb, inst);
 

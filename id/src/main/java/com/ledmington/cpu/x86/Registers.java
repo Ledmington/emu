@@ -67,6 +67,7 @@ public final class Registers {
 			case RegisterZMM rzmm -> RegisterZMM.toByte(rzmm);
 			case MaskRegister rk -> MaskRegister.toByte(rk);
 			case SegmentRegister sr -> SegmentRegister.toByte(sr);
+			case NullRegister ignored -> (byte) 0x06; // also 0x07 is a NullRegister
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}
@@ -83,6 +84,7 @@ public final class Registers {
 			case RegisterZMM rzmm -> RegisterZMM.requiresExtension(rzmm);
 			case MaskRegister ignored -> false;
 			case SegmentRegister ignored -> false;
+			case NullRegister ignored -> false;
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}

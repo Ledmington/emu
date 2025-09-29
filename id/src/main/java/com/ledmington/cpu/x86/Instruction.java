@@ -315,7 +315,7 @@ public final class Instruction {
 		h = 31 * h + Objects.hashCode(prefix);
 		h = 31 * h + code.hashCode();
 		h = 31 * h + Objects.hashCode(destinationMask);
-		h = 31 * h + (destinationMaskZero ? 1 : 0);
+		h = 31 * h + Boolean.hashCode(destinationMaskZero);
 		h = 31 * h + Objects.hashCode(op1);
 		h = 31 * h + Objects.hashCode(op2);
 		h = 31 * h + Objects.hashCode(op3);

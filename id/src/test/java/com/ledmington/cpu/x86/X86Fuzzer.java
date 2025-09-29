@@ -78,19 +78,25 @@ public final class X86Fuzzer {
 			valid = true;
 			wb.write(BitUtils.asByte(RNG.nextInt()));
 			try {
-				final List<Instruction> tmp = InstructionDecoder.fromHex(wb.array(), wb.array().length, true);
+				final List<Instruction> tmp = InstructionDecoder.fromHex(wb.array(), wb.array().length, false);
 				if (tmp.size() != 1) {
 					throw new AssertionError(String.format(
 							"%s was decoded into %,d instructions instead of one: %s.",
 							toHex(wb.array()), tmp.size(), tmp));
 				}
 				inst = tmp.getFirst();
+
+				try {
+					InstructionChecker.check(inst);
+				} catch (final InvalidInstruction e) {
+					if (!containsNullRegister(inst)) {
+						print(99999, toHex(wb.array()), "InvalidInstruction");
+						throw e;
+					}
+				}
 			} catch (final ArrayIndexOutOfBoundsException aioobe) {
 				// If we receive an AIOOBE, it means the instruction is not yet complete and we need to add more bytes
 				valid = false;
-			} catch (final InvalidInstruction e) {
-				print(99999, toHex(wb.array()), "InvalidInstruction");
-				throw e;
 			}
 		} while (!valid);
 		return inst;
@@ -118,18 +124,24 @@ public final class X86Fuzzer {
 
 		final int attempts = 1000;
 		System.out.printf("Generating %,d random instructions.%n", attempts);
-		final Set<String> visited = new HashSet<>();
+		final Set<Instruction> visited = new HashSet<>();
 
 		final long start = System.nanoTime();
 		while (visited.size() < attempts) {
 			final Instruction inst = generateRandomCorrectInstruction();
-
-			final String hex = toHex(InstructionEncoder.toHex(inst));
-			if (visited.contains(hex)) {
+			if (visited.contains(inst)) {
 				// this instruction was already generated some time in the past, skip it
 				continue;
 			}
-			visited.add(hex);
+			visited.add(inst);
+
+			final String hex;
+			try {
+				hex = toHex(InstructionEncoder.toHex(inst, false));
+			} catch (final IllegalArgumentException e) {
+				print(99999, "??", InstructionEncoder.toIntelSyntax(inst) + " (IllegalArgument)");
+				throw e;
+			}
 
 			print(
 					visited.size(),

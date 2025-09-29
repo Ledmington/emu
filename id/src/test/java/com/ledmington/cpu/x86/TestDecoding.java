@@ -61,7 +61,7 @@ final class TestDecoding extends X64Encodings {
 	@ParameterizedTest
 	@MethodSource("instAndHex")
 	void toHex(final Instruction inst, final byte[] expected) {
-		final byte[] actual = InstructionEncoder.toHex(inst);
+		final byte[] actual = InstructionEncoder.toHex(inst, true);
 		assertArrayEquals(expected, actual, () -> {
 			String s = String.format(
 					"Expected '%s' to be encoded as '%s' but was '%s'.",

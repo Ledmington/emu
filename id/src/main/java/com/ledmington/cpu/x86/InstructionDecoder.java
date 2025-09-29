@@ -377,7 +377,7 @@ public final class InstructionDecoder {
 						IntStream.range(0, (int) codeLen)
 								.mapToObj(i -> String.format("%02x", b.read1()))
 								.collect(Collectors.joining(" ")),
-						InstructionEncoder.toIntelSyntax(inst));
+						InstructionEncoder.toIntelSyntax(inst, checkInstructions, 0, false));
 			}
 			if (checkInstructions) {
 				InstructionChecker.check(inst);
