@@ -19,10 +19,23 @@ package com.ledmington.emudb;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
-import com.ledmington.emu.Emu;
+import com.ledmington.elf.ELFParser;
+import com.ledmington.emu.ELFLoader;
+import com.ledmington.emu.EmulatorConstants;
+import com.ledmington.emu.X86Cpu;
+import com.ledmington.emu.X86Emulator;
+import com.ledmington.emu.X86RegisterFile;
+import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.MemoryInitializer;
+import com.ledmington.mem.RandomAccessMemory;
 
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -33,8 +46,143 @@ import org.jline.terminal.TerminalBuilder;
 public final class EmuDB {
 
 	private ELF currentFile = null;
+	private RandomAccessMemory ram = null;
+	private MemoryController mem = null;
+	private X86RegisterFile registerFile = null;
+	private X86Emulator cpu = null;
+
+	private final Map<String, Command> commands = Map.of(
+			"quit",
+			new Command("Terminates the debugger", ignored -> System.exit(0)),
+			"help",
+			new Command("Prints this message", ignored -> printHelp()),
+			"run",
+			new Command("Executes a file", this::runFile),
+			"mem",
+			new Command("Shows the content of the memory", this::showMemory),
+			"regs",
+			new Command("Shows the content of the register file", ignored -> showRegisters()));
 
 	public EmuDB() {}
+
+	private void printHelp() {
+		for (final Map.Entry<String, Command> e : commands.entrySet()) {
+			System.out.printf(
+					"\u001b[1m%s\u001b[0m -- %s%n", e.getKey(), e.getValue().description());
+		}
+	}
+
+	private void showRegisters() {
+		if (this.registerFile == null) {
+			System.out.println("You have not loaded a file. Try 'run'.");
+			return;
+		}
+		for (final Register64 r : Register64.values()) {
+			final long regValue = this.registerFile.get(r);
+			System.out.printf("%3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
+		}
+	}
+
+	private void showMemory(final String[] args) {
+		if (this.mem == null) {
+			System.out.println("You have not loaded a file. Try 'run'.");
+			return;
+		}
+		if (args.length == 0) {
+			System.out.println("Command 'mem' expects an address.");
+			return;
+		}
+
+		final String addressString = args[0];
+		final long address;
+		if (addressString.startsWith("0x")) {
+			address = Long.parseLong(addressString.substring(2), 16);
+		} else {
+			address = Long.parseLong(addressString, 10);
+		}
+
+		final int numBytesPerRow = 16;
+		final int numRowsBefore = 5;
+		final int numRowsAfter = 5;
+		final long actualStartAddress = (address / numBytesPerRow - numRowsBefore) * numBytesPerRow;
+		final long numTotalBytes = (numRowsBefore + numRowsAfter + 1) * numBytesPerRow;
+		for (int i = 0; i < numTotalBytes; i++) {
+			final long currentAddress = actualStartAddress + i;
+			if (i % numBytesPerRow == 0) {
+				System.out.printf("0x%016x:", currentAddress);
+			}
+			if (mem.isInitialized(currentAddress)) {
+				System.out.printf(" %02x", this.mem.read(currentAddress));
+			} else {
+				System.out.print(" xx");
+			}
+			if (i % numBytesPerRow == numBytesPerRow - 1) {
+				System.out.println();
+			}
+		}
+	}
+
+	private void runFile(final String[] args) {
+		if (args.length == 0) {
+			System.out.println("Command 'run' expects the path of a file.");
+			return;
+		}
+		final Path filepath = Path.of(args[0]).normalize().toAbsolutePath();
+		final String[] arguments = Arrays.copyOfRange(args, 1, args.length);
+		this.currentFile = ELFParser.parse(String.valueOf(filepath));
+		this.ram = new RandomAccessMemory(MemoryInitializer.random());
+		// Proper memory controller for execution
+		final MemoryController mc = new MemoryController(
+				this.ram,
+				EmulatorConstants.shouldBreakOnWrongPermissions(),
+				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
+		// Memory controller used directly by the debugger
+		this.mem = new MemoryController(this.ram, false, false);
+		this.registerFile = new X86RegisterFile();
+		this.cpu = new X86Cpu(mc, this.registerFile, EmulatorConstants.shouldCheckInstruction());
+		final ELFLoader loader = new ELFLoader(this.cpu);
+		loader.load(
+				this.currentFile,
+				mc,
+				arguments,
+				EmulatorConstants.getBaseAddress(),
+				EmulatorConstants.getBaseStackAddress(),
+				EmulatorConstants.getStackSize(),
+				EmulatorConstants.getBaseStackValue());
+
+		// TODO: actually run the file here
+	}
+
+	private int levenshteinDistance(final String a, final String b) {
+		final int m = a.length();
+		final int n = b.length();
+
+		if (m == 0) {
+			return n;
+		}
+		if (n == 0) {
+			return m;
+		}
+
+		final int[][] dp = new int[m + 1][n + 1];
+
+		for (int i = 0; i <= m; i++) {
+			dp[i][0] = i;
+		}
+		for (int j = 0; j <= n; j++) {
+			dp[0][j] = j;
+		}
+
+		// Fill the matrix
+		for (int i = 1; i <= m; i++) {
+			for (int j = 1; j <= n; j++) {
+				final int cost = (a.charAt(i - 1) == b.charAt(j - 1)) ? 0 : 1;
+				dp[i][j] = Math.min(Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+			}
+		}
+
+		return dp[m][n];
+	}
 
 	public void run() {
 		final Terminal terminal;
@@ -55,20 +203,21 @@ public final class EmuDB {
 				continue;
 			}
 
-			if (line.equals("quit")) {
-				System.exit(0);
-				return;
-			}
-			if (line.equals("help")) {
-				System.out.println(" help -- Prints this message");
-				System.out.println(" quit -- Terminates the debugger");
-				System.out.println(" run FILENAME -- Executes FILENAME");
-				continue;
-			}
-
 			final String[] splitted = line.split(" +");
-			if (splitted[0].equals("run")) {
-				Emu.run(String.valueOf(Path.of(splitted[1]).normalize().toAbsolutePath()));
+			final String command = splitted[0];
+			final String[] commandArguments = Arrays.copyOfRange(splitted, 1, splitted.length);
+			if (commands.containsKey(command)) {
+				commands.get(command).command().accept(commandArguments);
+			} else {
+				System.out.printf("Command '%s' not found. Try 'help'.%n", command);
+				final List<String> similarCommands = commands.keySet().stream()
+						.filter(c -> levenshteinDistance(c, command) == 1)
+						.toList();
+				if (!similarCommands.isEmpty()) {
+					System.out.printf(
+							"Maybe you meant one of these: %s.%n",
+							similarCommands.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")));
+				}
 			}
 		}
 	}

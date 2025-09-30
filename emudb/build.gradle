@@ -16,6 +16,8 @@ String mainClassName = "${basePackage}.emudb.Main"
 dependencies {
     implementation project(':core')
     implementation project(':elf')
+    implementation project(':mem')
+    implementation project(':id')
     implementation project(':utils')
 
     implementation 'org.jline:jline:3.30.6'
