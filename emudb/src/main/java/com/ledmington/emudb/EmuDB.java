@@ -20,6 +20,7 @@ package com.ledmington.emudb;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -27,14 +28,11 @@ import java.util.stream.Collectors;
 
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFParser;
-import com.ledmington.emu.ELFLoader;
-import com.ledmington.emu.EmulatorConstants;
-import com.ledmington.emu.X86Cpu;
+import com.ledmington.emu.Emu;
+import com.ledmington.emu.RFlags;
 import com.ledmington.emu.X86Emulator;
 import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
 
 import org.jline.reader.LineReader;
@@ -45,6 +43,7 @@ import org.jline.terminal.TerminalBuilder;
 
 public final class EmuDB {
 
+	private Emu emu = null;
 	private ELF currentFile = null;
 	private RandomAccessMemory ram = null;
 	private MemoryController mem = null;
@@ -56,6 +55,8 @@ public final class EmuDB {
 			new Command("Terminates the debugger", ignored -> System.exit(0)),
 			"help",
 			new Command("Prints this message", ignored -> printHelp()),
+			"load",
+			new Command("Loads a file", this::loadFile),
 			"run",
 			new Command("Executes a file", this::runFile),
 			"mem",
@@ -79,8 +80,15 @@ public final class EmuDB {
 		}
 		for (final Register64 r : Register64.values()) {
 			final long regValue = this.registerFile.get(r);
-			System.out.printf("%3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
+			System.out.printf(" %-3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
 		}
+		System.out.printf(
+				" RFLAGS : %s%n",
+				Arrays.stream(RFlags.values())
+						.sorted(Comparator.comparing(RFlags::bit))
+						.filter(x -> this.registerFile.isSet(x))
+						.map(x -> " " + x.getSymbol())
+						.toList());
 	}
 
 	private void showMemory(final String[] args) {
@@ -95,10 +103,17 @@ public final class EmuDB {
 
 		final String addressString = args[0];
 		final long address;
-		if (addressString.startsWith("0x")) {
-			address = Long.parseLong(addressString.substring(2), 16);
-		} else {
-			address = Long.parseLong(addressString, 10);
+		try {
+			if (addressString.startsWith("0x")) {
+				address = Long.parseLong(addressString.substring(2), 16);
+			} else {
+				address = Long.parseLong(addressString, 10);
+			}
+		} catch (final NumberFormatException e) {
+			System.out.printf(
+					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
+					addressString);
+			return;
 		}
 
 		final int numBytesPerRow = 16;
@@ -111,11 +126,9 @@ public final class EmuDB {
 			if (i % numBytesPerRow == 0) {
 				System.out.printf("0x%016x:", currentAddress);
 			}
-			if (mem.isInitialized(currentAddress)) {
-				System.out.printf(" %02x", this.mem.read(currentAddress));
-			} else {
-				System.out.print(" xx");
-			}
+			final String s =
+					mem.isInitialized(currentAddress) ? String.format("%02x", this.mem.read(currentAddress)) : "xx";
+			System.out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
 			if (i % numBytesPerRow == numBytesPerRow - 1) {
 				System.out.println();
 			}
@@ -123,12 +136,33 @@ public final class EmuDB {
 	}
 
 	private void runFile(final String[] args) {
+		if (this.currentFile == null) {
+			if (args.length == 0) {
+				System.out.println("Command 'run' expects the path of a file.");
+				return;
+			}
+
+			final Path filepath = Path.of(args[0]).normalize().toAbsolutePath();
+			final String[] arguments = Arrays.copyOfRange(args, 1, args.length);
+			loadFile(String.valueOf(filepath), arguments);
+		}
+
+		this.emu.run();
+	}
+
+	private void loadFile(final String[] args) {
 		if (args.length == 0) {
-			System.out.println("Command 'run' expects the path of a file.");
+			System.out.println("Command 'load' expects the path of a file.");
 			return;
 		}
-		final Path filepath = Path.of(args[0]).normalize().toAbsolutePath();
-		final String[] arguments = Arrays.copyOfRange(args, 1, args.length);
+
+		loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
+	}
+
+	private void loadFile(final String filepath, final String[] arguments) {
+		this.emu = new Emu();
+		this.emu.load(filepath, arguments);
+		/*
 		this.currentFile = ELFParser.parse(String.valueOf(filepath));
 		this.ram = new RandomAccessMemory(MemoryInitializer.random());
 		// Proper memory controller for execution
@@ -150,7 +184,8 @@ public final class EmuDB {
 				EmulatorConstants.getStackSize(),
 				EmulatorConstants.getBaseStackValue());
 
-		// TODO: actually run the file here
+		final FileHeader fh = this.currentFile.getFileHeader();
+		this.cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());*/
 	}
 
 	private int levenshteinDistance(final String a, final String b) {

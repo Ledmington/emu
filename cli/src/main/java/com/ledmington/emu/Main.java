@@ -228,7 +228,8 @@ public final class Main {
 						.collect(Collectors.joining(" ")));
 
 		try {
-			Emu.run(filename, innerArgs);
+			final Emu emu = new Emu();
+			emu.loadRunAndUnload(filename, innerArgs);
 		} catch (final Throwable t) {
 			logger.error(t);
 			out.flush();

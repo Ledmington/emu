@@ -37,13 +37,32 @@ public final class Emu {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
-	private Emu() {}
+	private final MemoryController mem;
+	private final X86Emulator cpu;
+	private ELF elf = null;
+	private long entryPointVirtualAddress = 0L;
+	private ELFLoader loader = null;
 
-	public static void run(final String filename, final String... commandLineArguments) {
-		final ELF elf = ELFParser.parse(filename);
+	public Emu() {
+		this.mem = new MemoryController(
+				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
+				EmulatorConstants.shouldBreakOnWrongPermissions(),
+				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
+		this.cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
+	}
+
+	public void loadRunAndUnload(final String filename, final String... commandLineArguments) {
+		load(filename, commandLineArguments);
+		run();
+		unload();
+	}
+
+	public void load(final String filename, final String... commandLineArguments) {
+		this.elf = ELFParser.parse(filename);
 		logger.info("ELF file parsed successfully");
 
 		final FileHeader fh = elf.getFileHeader();
+		this.entryPointVirtualAddress = fh.entryPointVirtualAddress();
 
 		final FileType type = fh.fileType();
 		if (type != FileType.ET_EXEC && type != FileType.ET_DYN) {
@@ -57,13 +76,7 @@ public final class Emu {
 					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
-		final MemoryController mem = new MemoryController(
-				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
-				EmulatorConstants.shouldBreakOnWrongPermissions(),
-				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
-		final X86Emulator cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
-
-		final ELFLoader loader = new ELFLoader(cpu);
+		this.loader = new ELFLoader(cpu);
 		loader.load(
 				elf,
 				mem,
@@ -73,8 +86,11 @@ public final class Emu {
 				EmulatorConstants.getStackSize(),
 				EmulatorConstants.getBaseStackValue());
 
+		cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + entryPointVirtualAddress);
+	}
+
+	public void run() {
 		cpu.turnOn();
-		cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());
 
 		logger.info(" ### Execution start ### ");
 		{
@@ -86,7 +102,7 @@ public final class Emu {
 				final Optional<String> entryPointFunction = IntStream.range(0, symtab.getSymbolTableLength())
 						.mapToObj(symtab::getSymbolTableEntry)
 						.filter(ste -> ste.info().getType() == SymbolTableEntryType.STT_FUNC
-								&& ste.value() == fh.entryPointVirtualAddress())
+								&& ste.value() == entryPointVirtualAddress)
 						.map(ste -> strtab.getString(ste.nameOffset()))
 						.findFirst();
 				if (entryPointFunction.isPresent()) {
@@ -98,6 +114,9 @@ public final class Emu {
 		}
 		cpu.execute();
 		logger.info(" ### Execution end ### ");
+	}
+
+	public void unload() {
 		loader.unload(elf);
 	}
 }

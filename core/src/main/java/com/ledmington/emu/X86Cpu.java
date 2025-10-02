@@ -55,7 +55,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private final RegisterFile rf;
-	private final MemoryController mem;
+	private final MemoryController mem; // TODO: can we remove dependency on mem?
 	private final InstructionFetcher instFetch;
 	private final boolean checkInstructions;
 
