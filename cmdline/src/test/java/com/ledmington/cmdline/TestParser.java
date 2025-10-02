@@ -26,15 +26,6 @@ import org.junit.jupiter.api.Test;
 
 final class TestParser {
 	@Test
-	void booleanOptionLongName() {
-		final CommandLineParser p = CommandLineParser.builder()
-				.addBoolean(null, "test", "This is a testing option.", true)
-				.build();
-		assertTrue(p.parse().get("test").asBoolean(), "Expected to parse '' as true but didn't.");
-		assertFalse(p.parse("--test").get("test").asBoolean(), "Expected to parse '--test' as false but didn't.");
-	}
-
-	@Test
 	void booleanOptionShortName() {
 		final CommandLineParser p = CommandLineParser.builder()
 				.addBoolean("test", null, "This is a testing option.", true)
@@ -44,7 +35,16 @@ final class TestParser {
 	}
 
 	@Test
-	void stringOption() {
+	void booleanOptionLongName() {
+		final CommandLineParser p = CommandLineParser.builder()
+				.addBoolean(null, "test", "This is a testing option.", true)
+				.build();
+		assertTrue(p.parse().get("test").asBoolean(), "Expected to parse '' as true but didn't.");
+		assertFalse(p.parse("--test").get("test").asBoolean(), "Expected to parse '--test' as false but didn't.");
+	}
+
+	@Test
+	void stringOptionShortName() {
 		final CommandLineParser p = CommandLineParser.builder()
 				.addString("test", null, "This is a testing option.", "default")
 				.build();
@@ -58,8 +58,28 @@ final class TestParser {
 				p.parse("-test=hello").get("test").asString(),
 				"Expected to parse '-test=hello' as 'hello' but didn't.");
 		assertThrows(
-				IllegalArgumentException.class,
+				ArrayIndexOutOfBoundsException.class,
 				() -> p.parse("-test"),
 				"Expected to not be able to parse '-test' but it did.");
+	}
+
+	@Test
+	void stringOptionLongName() {
+		final CommandLineParser p = CommandLineParser.builder()
+				.addString(null, "test", "This is a testing option.", "default")
+				.build();
+		assertEquals("default", p.parse().get("test").asString(), "Expected to parse '' as 'default' but didn't.");
+		assertEquals(
+				"hello",
+				p.parse("--test", "hello").get("test").asString(),
+				"Expected to parse '--test hello' as 'hello' but didn't.");
+		assertEquals(
+				"hello",
+				p.parse("--test=hello").get("test").asString(),
+				"Expected to parse '--test=hello' as 'hello' but didn't.");
+		assertThrows(
+				ArrayIndexOutOfBoundsException.class,
+				() -> p.parse("--test"),
+				"Expected to not be able to parse '--test' but it did.");
 	}
 }

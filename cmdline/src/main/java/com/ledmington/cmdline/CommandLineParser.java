@@ -75,11 +75,21 @@ public final class CommandLineParser {
 						}
 					}
 					case StringArgument sa -> {
-						if (sa.hasShortName() && arg.equals("-" + sa.shortName())) {
-							result.put(sa.shortName(), new StringResult(commandLine[++i]));
+						final String argumentName;
+						final String argumentValue;
+						if (arg.contains("=")) {
+							final int idx = arg.indexOf('=');
+							argumentName = arg.substring(0, idx);
+							argumentValue = arg.substring(idx + 1);
+						} else {
+							argumentName = arg;
+							argumentValue = commandLine[++i];
 						}
-						if (sa.hasLongName() && arg.equals("--" + sa.longName())) {
-							result.put(sa.longName(), new StringResult(commandLine[++i]));
+						if (sa.hasShortName() && argumentName.equals("-" + sa.shortName())) {
+							result.put(sa.shortName(), new StringResult(argumentValue));
+						}
+						if (sa.hasLongName() && argumentName.equals("--" + sa.longName())) {
+							result.put(sa.longName(), new StringResult(argumentValue));
 						}
 					}
 					default ->
