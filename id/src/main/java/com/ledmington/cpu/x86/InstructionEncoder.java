@@ -1030,8 +1030,7 @@ public final class InstructionEncoder {
 					wb.write((byte) 0x05);
 					encodeImmediate(wb, imm);
 					return;
-				} else if ((isFirstM(inst) || inst.firstOperand() instanceof Register)
-						&& inst.secondOperand() instanceof final Immediate imm) {
+				} else if (isFirstR(inst) && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write(imm.bits() == 8 ? (byte) 0x83 : (byte) 0x81);
 				} else if (inst.firstOperand() instanceof final Register r && isSecondM(inst)) {
 					wb.write((r instanceof Register8) ? (byte) 0x02 : (byte) 0x03);
