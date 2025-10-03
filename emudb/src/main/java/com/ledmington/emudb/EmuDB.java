@@ -28,12 +28,19 @@ import java.util.stream.Collectors;
 
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
+import com.ledmington.elf.ELFParser;
+import com.ledmington.elf.FileHeader;
+import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.Emu;
+import com.ledmington.emu.EmulatorConstants;
 import com.ledmington.emu.RFlags;
+import com.ledmington.emu.X86Cpu;
 import com.ledmington.emu.X86Emulator;
 import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.utils.MiniLogger;
 
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -42,6 +49,8 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 public final class EmuDB {
+
+	private static final MiniLogger logger = MiniLogger.getLogger("emudb");
 
 	private Emu emu = null;
 	private ELF currentFile = null;
@@ -162,7 +171,7 @@ public final class EmuDB {
 	private void loadFile(final String filepath, final String[] arguments) {
 		this.emu = new Emu();
 		this.emu.load(filepath, arguments);
-		/*
+
 		this.currentFile = ELFParser.parse(String.valueOf(filepath));
 		this.ram = new RandomAccessMemory(MemoryInitializer.random());
 		// Proper memory controller for execution
@@ -185,7 +194,7 @@ public final class EmuDB {
 				EmulatorConstants.getBaseStackValue());
 
 		final FileHeader fh = this.currentFile.getFileHeader();
-		this.cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());*/
+		this.cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());
 	}
 
 	private int levenshteinDistance(final String a, final String b) {
@@ -219,7 +228,7 @@ public final class EmuDB {
 		return dp[m][n];
 	}
 
-	public void run() {
+	private void runInteractively() {
 		final Terminal terminal;
 		try {
 			terminal = TerminalBuilder.builder().system(true).build();
@@ -255,5 +264,12 @@ public final class EmuDB {
 				}
 			}
 		}
+	}
+
+	public void run(final String[] args) {
+		if (args.length > 0) {
+			this.loadFile(args);
+		}
+		runInteractively();
 	}
 }

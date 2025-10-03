@@ -17,15 +17,36 @@
  */
 package com.ledmington.emudb;
 
+import java.util.Arrays;
+
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
 
 	private Main() {}
 
-	public static void main(final String[] args) {
+	public static void main(String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
+
+		int i = 0;
+		loop:
+		for (; i < args.length; i++) {
+			final String arg = args[i];
+			switch (arg) {
+				case "-q", "--quiet" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
+				case "-v", "--verbose" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
+				case "-vv", "--very-verbose" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);
+				default -> {
+					break loop;
+				}
+			}
+		}
+
+		if (i > 0) {
+			args = Arrays.copyOfRange(args, i, args.length);
+		}
+
 		final EmuDB debugger = new EmuDB();
-		debugger.run();
+		debugger.run(args);
 	}
 }
