@@ -88,7 +88,9 @@ public final class EmuDB {
 			"asm",
 			new Command("Shows the assembly at the current position", this::showAsm),
 			"break",
-			new Command("Sets up a breakpoint at the given function", this::setBreakpoint));
+			new Command("Sets up a breakpoint at the given function", this::setBreakpoint),
+			"where",
+			new Command("Shows the stack", ignored -> showStack()));
 
 	public EmuDB() {}
 
@@ -96,6 +98,34 @@ public final class EmuDB {
 		for (final Map.Entry<String, Command> e : commands.entrySet()) {
 			System.out.printf(
 					"\u001b[1m%s\u001b[0m -- %s%n", e.getKey(), e.getValue().description());
+		}
+	}
+
+	private void showStack() {
+		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
+		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
+		final boolean hasDebugInfo = symbolTable.isPresent() && stringTable.isPresent();
+
+		final long baseStackValue = EmulatorConstants.getBaseStackValue();
+		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
+		for (int stackLevel = 0; rbp != baseStackValue; stackLevel++) {
+			System.out.printf("#%2d 0x%016x", stackLevel, rbp);
+			if (hasDebugInfo) {
+				final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
+				final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
+				long finalRbp = rbp;
+				final Optional<SymbolTableEntry> entry = IntStream.range(0, symtab.getSymbolTableLength())
+						.mapToObj(symtab::getSymbolTableEntry)
+						.filter(e -> e.info().getType() == SymbolTableEntryType.STT_FUNC
+								&& e.value() + EmulatorConstants.getBaseAddress() == finalRbp)
+						.findFirst();
+				if (entry.isPresent()) {
+					System.out.printf(
+							" in %s", strtab.getString(entry.orElseThrow().nameOffset()));
+				}
+			}
+			System.out.println();
+			rbp = this.context.memory().read8(rbp);
 		}
 	}
 
