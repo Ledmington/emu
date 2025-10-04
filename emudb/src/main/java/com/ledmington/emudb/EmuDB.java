@@ -257,12 +257,12 @@ public final class EmuDB {
 			System.out.printf(" %-3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
 		}
 		System.out.printf(
-				" RFLAGS : %s%n",
+				" RFLAGS : [ %s ]%n",
 				Arrays.stream(RFlags.values())
 						.sorted(Comparator.comparing(RFlags::bit))
 						.filter(rf::isSet)
-						.map(x -> " " + x.getSymbol())
-						.toList());
+						.map(RFlags::getSymbol)
+						.collect(Collectors.joining(" ")));
 	}
 
 	private void showMemory(final String[] args) {
@@ -333,10 +333,32 @@ public final class EmuDB {
 		}
 
 		try {
-			this.emu.run();
+			// this.emu.run();
+			this.context.cpu().turnOn();
+			while (true) {
+				final Optional<Integer> breakpointIndex = checkBreakpoints();
+				if (breakpointIndex.isEmpty()) {
+					this.context.cpu().executeOne();
+				} else {
+					final Breakpoint b = this.breakpoints.get(breakpointIndex.orElseThrow());
+					System.out.printf(
+							"Hit breakpoint %,d at 0x%x '%s'%n", breakpointIndex.orElseThrow(), b.address(), b.name());
+					break;
+				}
+			}
 		} catch (final IllegalMemoryAccessException e) {
 			System.out.println(e);
 		}
+	}
+
+	private Optional<Integer> checkBreakpoints() {
+		final long here = this.context.cpu().getRegisters().get(Register64.RIP);
+		for (int i = 0; i < this.breakpoints.size(); i++) {
+			if (EmulatorConstants.getBaseAddress() + this.breakpoints.get(i).address() == here) {
+				return Optional.of(i);
+			}
+		}
+		return Optional.empty();
 	}
 
 	private ExecutionContext createDefaultExecutionContext() {
@@ -362,8 +384,7 @@ public final class EmuDB {
 		}
 
 		this.context = createDefaultExecutionContext();
-
-		// ...
+		this.breakpoints.clear();
 	}
 
 	private void loadFile(final String[] args) {
