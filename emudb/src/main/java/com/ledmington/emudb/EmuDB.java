@@ -17,25 +17,6 @@
  */
 package com.ledmington.emudb;
 
-import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionEncoder;
-import com.ledmington.cpu.x86.Register64;
-import com.ledmington.elf.ELF;
-import com.ledmington.elf.ELFParser;
-import com.ledmington.elf.FileHeader;
-import com.ledmington.emu.ELFLoader;
-import com.ledmington.emu.Emu;
-import com.ledmington.emu.EmulatorConstants;
-import com.ledmington.emu.RFlags;
-import com.ledmington.emu.X86Cpu;
-import com.ledmington.emu.X86Emulator;
-import com.ledmington.emu.X86RegisterFile;
-import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.MemoryInitializer;
-import com.ledmington.mem.RandomAccessMemory;
-import com.ledmington.mem.exc.IllegalMemoryAccessException;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -45,6 +26,28 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.x86.InstructionEncoder;
+import com.ledmington.cpu.x86.Register64;
+import com.ledmington.elf.ELF;
+import com.ledmington.elf.FileHeader;
+import com.ledmington.emu.ELFLoader;
+import com.ledmington.emu.Emu;
+import com.ledmington.emu.EmulatorConstants;
+import com.ledmington.emu.ExecutionContext;
+import com.ledmington.emu.ImmutableRegisterFile;
+import com.ledmington.emu.RFlags;
+import com.ledmington.emu.X86Cpu;
+import com.ledmington.emu.X86RegisterFile;
+import com.ledmington.mem.Memory;
+import com.ledmington.mem.MemoryController;
+import com.ledmington.mem.MemoryInitializer;
+import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.mem.exc.IllegalMemoryAccessException;
+import com.ledmington.utils.ReadOnlyByteBuffer;
+
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
@@ -54,11 +57,9 @@ import org.jline.terminal.TerminalBuilder;
 public final class EmuDB {
 
 	private Emu emu = null;
-	private ELF currentFile = null;
-	private RandomAccessMemory ram = null;
-	private MemoryController mem = null;
-	private X86RegisterFile registerFile = null;
-	private X86Emulator cpu = null;
+	private ExecutionContext context = null;
+	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
+	private ELFLoader loader = null; // TODO: should we put this into ExecutionContext, too?
 
 	private final Map<String, Command> commands = Map.of(
 			"quit",
@@ -69,6 +70,8 @@ public final class EmuDB {
 			new Command("Loads a file", this::loadFile),
 			"run",
 			new Command("Executes a file", this::runFile),
+			"restart",
+			new Command("Stop current execution and starts from the beginning", ignored -> restart()),
 			"mem",
 			new Command("Shows the content of the memory", this::showMemory),
 			"regs",
@@ -92,7 +95,7 @@ public final class EmuDB {
 		}
 
 		if (args.length == 0) {
-			showAssemblyAt(this.registerFile.get(Register64.RIP));
+			showAssemblyAt(this.context.cpu().getRegisters().get(Register64.RIP));
 			return;
 		}
 
@@ -146,7 +149,7 @@ public final class EmuDB {
 
 			@Override
 			public byte read() {
-				return mem.read(position);
+				return context.memory().read(position);
 			}
 		};
 		for (int i = 0; i < maxInstructions; i++) {
@@ -157,25 +160,28 @@ public final class EmuDB {
 	}
 
 	private void showRegisters() {
-		if (this.registerFile == null) {
+		if (hasNotLoadedFile()) {
 			System.out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
+
+		final ImmutableRegisterFile rf = this.context.cpu().getRegisters();
+
 		for (final Register64 r : Register64.values()) {
-			final long regValue = this.registerFile.get(r);
+			final long regValue = rf.get(r);
 			System.out.printf(" %-3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
 		}
 		System.out.printf(
 				" RFLAGS : %s%n",
 				Arrays.stream(RFlags.values())
 						.sorted(Comparator.comparing(RFlags::bit))
-						.filter(x -> this.registerFile.isSet(x))
+						.filter(rf::isSet)
 						.map(x -> " " + x.getSymbol())
 						.toList());
 	}
 
 	private void showMemory(final String[] args) {
-		if (this.mem == null) {
+		if (hasNotLoadedFile()) {
 			System.out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
@@ -193,6 +199,8 @@ public final class EmuDB {
 		}
 		final long address = parsed.orElseThrow();
 
+		final Memory mem = context.memory();
+
 		final int numBytesPerRow = 16;
 		final int numRowsBefore = 5;
 		final int numRowsAfter = 5;
@@ -203,13 +211,16 @@ public final class EmuDB {
 			if (i % numBytesPerRow == 0) {
 				System.out.printf("0x%016x:", currentAddress);
 			}
-			final String s =
-					mem.isInitialized(currentAddress) ? String.format("%02x", this.mem.read(currentAddress)) : "xx";
+			final String s = mem.isInitialized(currentAddress) ? String.format("%02x", mem.read(currentAddress)) : "xx";
 			System.out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
 			if (i % numBytesPerRow == numBytesPerRow - 1) {
 				System.out.println();
 			}
 		}
+	}
+
+	private boolean hasNotLoadedFile() {
+		return this.context == null;
 	}
 
 	private Optional<Long> parseAddress(final String arg) {
@@ -225,7 +236,7 @@ public final class EmuDB {
 	}
 
 	private void runFile(final String[] args) {
-		if (this.currentFile == null) {
+		if (hasNotLoadedFile()) {
 			if (args.length == 0) {
 				System.out.println("Command 'run' expects the path of a file.");
 				return;
@@ -243,6 +254,31 @@ public final class EmuDB {
 		}
 	}
 
+	private ExecutionContext createDefaultExecutionContext() {
+		final RandomAccessMemory ram = new RandomAccessMemory(MemoryInitializer.random());
+		// Proper memory controller for execution (checks permissions)
+		final MemoryController mc = new MemoryController(
+				ram,
+				EmulatorConstants.shouldBreakOnWrongPermissions(),
+				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
+		// Memory controller used directly by the debugger (does not check permissions)
+		final MemoryController mem = new MemoryController(ram, false, false);
+		final X86Cpu cpu = new X86Cpu(mc, new X86RegisterFile(), EmulatorConstants.shouldCheckInstruction());
+
+		this.loader = new ELFLoader(cpu, mc);
+
+		return new ExecutionContext(cpu, mem);
+	}
+
+	private void restart() {
+		if (hasNotLoadedFile()) {
+			System.out.println("No execution to restart. Try 'run' first.");
+			return;
+		}
+
+		this.context = createDefaultExecutionContext();
+	}
+
 	private void loadFile(final String[] args) {
 		if (args.length == 0) {
 			System.out.println("Command 'load' expects the path of a file.");
@@ -256,21 +292,10 @@ public final class EmuDB {
 		this.emu = new Emu();
 		this.emu.load(filepath, arguments);
 
-		this.currentFile = ELFParser.parse(String.valueOf(filepath));
-		this.ram = new RandomAccessMemory(MemoryInitializer.random());
-		// Proper memory controller for execution
-		final MemoryController mc = new MemoryController(
-				this.ram,
-				EmulatorConstants.shouldBreakOnWrongPermissions(),
-				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
-		// Memory controller used directly by the debugger
-		this.mem = new MemoryController(this.ram, false, false);
-		this.registerFile = new X86RegisterFile();
-		this.cpu = new X86Cpu(mc, this.registerFile, EmulatorConstants.shouldCheckInstruction());
-		final ELFLoader loader = new ELFLoader(this.cpu);
+		this.context = createDefaultExecutionContext();
+
 		loader.load(
 				this.currentFile,
-				mc,
 				arguments,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),
@@ -278,7 +303,7 @@ public final class EmuDB {
 				EmulatorConstants.getBaseStackValue());
 
 		final FileHeader fh = this.currentFile.getFileHeader();
-		this.cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());
+		this.context.cpu().setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());
 	}
 
 	private int levenshteinDistance(final String a, final String b) {

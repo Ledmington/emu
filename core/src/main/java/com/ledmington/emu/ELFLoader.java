@@ -62,6 +62,7 @@ public final class ELFLoader {
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-loader");
 
 	private final X86Emulator cpu;
+	private final MemoryController mem;
 	private final List<Range> memorySegments = new ArrayList<>();
 
 	private record Range(long start, long end) {}
@@ -70,32 +71,32 @@ public final class ELFLoader {
 	 * Creates a new ELFLoader.
 	 *
 	 * @param cpu The CPU to be used to execute some instructions, if needed.
+	 * @param mem The emulated memory where to load the file.
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need these objects as they are.")
-	public ELFLoader(final X86Emulator cpu) {
-		this.cpu = Objects.requireNonNull(cpu);
+	public ELFLoader(final X86Emulator cpu, final MemoryController mem) {
+		this.cpu = Objects.requireNonNull(cpu, "Null cpu.");
+		this.mem = Objects.requireNonNull(mem, "Null memory.");
 	}
 
 	/**
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
-	 * @param mem The emulated memory where to load the file.
 	 * @param commandLineArguments The arguments to pass to the program.
 	 * @param baseAddress The address where to start loading the file.
 	 * @param stackSize The size in bytes of the stack.
 	 */
 	public void load(
 			final ELF elf,
-			final MemoryController mem,
 			final String[] commandLineArguments,
 			final long baseAddress,
 			final long baseStackAddress,
 			final long stackSize,
 			final long baseStackValue) {
-		loadSegments(elf, mem, baseAddress);
-		loadSections(elf, mem, baseAddress);
-		setupStack(baseStackAddress, stackSize, mem);
+		loadSegments(elf, baseAddress);
+		loadSections(elf, baseAddress);
+		setupStack(baseStackAddress, stackSize);
 
 		// We make RSP point at the last 8 bytes of allocated memory
 		final long stackPointer = baseStackAddress + stackSize - 8L;
@@ -116,7 +117,7 @@ public final class ELFLoader {
 		set(Register64.RDI, BitUtils.asLong(argc));
 
 		final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
-				mem, stackPointer, elf.getFileHeader().is32Bit(), commandLineArguments);
+				stackPointer, elf.getFileHeader().is32Bit(), commandLineArguments);
 
 		final long argv = p.first();
 		set(Register64.RSI, argv);
@@ -251,7 +252,7 @@ public final class ELFLoader {
 		throw new Error("Not implemented");
 	}
 
-	private void setupStack(final long baseStackAddress, final long stackSize, final MemoryController mem) {
+	private void setupStack(final long baseStackAddress, final long stackSize) {
 		final long alignedBaseStackAddress;
 		final boolean isAligned = (baseStackAddress & 0xfL) == 0L;
 		if (isAligned) {
@@ -288,10 +289,7 @@ public final class ELFLoader {
 	}
 
 	private Pair<Long, Long> loadCommandLineArgumentsAndEnvironmentVariables(
-			final MemoryController mem,
-			final long stackBase,
-			final boolean is32Bit,
-			final String... commandLineArguments) {
+			final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		final long wordSize = is32Bit ? 4L : 8L;
 
 		final long totalEnvBytes = getNumEnvBytes();
@@ -373,7 +371,7 @@ public final class ELFLoader {
 		return new Pair<>(argv, envp);
 	}
 
-	private void loadSegments(final ProgramHeaderTable pht, final MemoryController mem, final long baseAddress) {
+	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {
 		logger.debug("Loading ELF segments into memory");
 
 		// NOTE: this index is not the PHTE index, this index makes sense only during loading
@@ -403,7 +401,7 @@ public final class ELFLoader {
 		}
 	}
 
-	private void loadSections(final SectionTable st, final MemoryController mem, final long baseAddress) {
+	private void loadSections(final SectionTable st, final long baseAddress) {
 		logger.debug("Loading ELF sections into memory");
 		for (int i = 0; i < st.getSectionTableLength(); i++) {
 			final Section sec = st.getSection(i);
@@ -411,12 +409,12 @@ public final class ELFLoader {
 				continue;
 			}
 			if (sec instanceof NoBitsSection || sec instanceof LoadableSection) {
-				initializeSection(sec, mem, baseAddress);
+				initializeSection(sec, baseAddress);
 			}
 		}
 	}
 
-	private void initializeSection(final Section sec, final MemoryController mem, final long baseAddress) {
+	private void initializeSection(final Section sec, final long baseAddress) {
 		Objects.requireNonNull(sec);
 
 		switch (sec) {

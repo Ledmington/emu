@@ -34,6 +34,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -55,7 +56,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private final RegisterFile rf;
-	private final MemoryController mem; // TODO: can we remove dependency on mem?
+	private final Memory mem; // TODO: can we remove dependency on mem?
 	private final InstructionFetcher instFetch;
 	private final boolean checkInstructions;
 

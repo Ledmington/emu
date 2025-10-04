@@ -37,6 +37,7 @@ public final class Emu {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
+	// TODO: should we add ExecutionContext here, too?
 	private final MemoryController mem;
 	private final X86Emulator cpu;
 	private ELF elf = null;
@@ -76,10 +77,9 @@ public final class Emu {
 					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
-		this.loader = new ELFLoader(cpu);
+		this.loader = new ELFLoader(cpu, mem);
 		loader.load(
 				elf,
-				mem,
 				commandLineArguments,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),

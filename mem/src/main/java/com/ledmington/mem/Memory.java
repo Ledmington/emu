@@ -17,6 +17,8 @@
  */
 package com.ledmington.mem;
 
+import com.ledmington.utils.BitUtils;
+
 /**
  * A common interface for emulated RAMs, caches and hard drives.
  *
@@ -32,6 +34,20 @@ public interface Memory {
 	 */
 	byte read(long address);
 
+	default long read8(final long address) {
+		// Little-endian
+		long x = 0x0000000000000000L;
+		x |= BitUtils.asLong(read(address));
+		x |= (BitUtils.asLong(read(address + 1L)) << 8);
+		x |= (BitUtils.asLong(read(address + 2L)) << 16);
+		x |= (BitUtils.asLong(read(address + 3L)) << 24);
+		x |= (BitUtils.asLong(read(address + 4L)) << 32);
+		x |= (BitUtils.asLong(read(address + 5L)) << 40);
+		x |= (BitUtils.asLong(read(address + 6L)) << 48);
+		x |= (BitUtils.asLong(read(address + 7L)) << 56);
+		return x;
+	}
+
 	/**
 	 * Writes the given byte word at the given address, overwriting any value previously stored at that location.
 	 *
@@ -39,6 +55,16 @@ public interface Memory {
 	 * @param value The value to write.
 	 */
 	void write(long address, byte value);
+
+	default void write(final long address, final byte[] values) {
+		for (int i = 0; i < values.length; i++) {
+			write(address + i, values[i]);
+		}
+	}
+
+	default void write(final long address, final long value) {
+		write(address, BitUtils.asBEBytes(value));
+	}
 
 	/**
 	 * Checks whether the given address is initialized or not. A memory address is said to be initialized if it has been
