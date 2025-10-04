@@ -41,10 +41,15 @@ public final class Emu {
 	private final ExecutionContext context;
 	private ELF elf = null;
 	private long entryPointVirtualAddress = 0L;
-	private ELFLoader loader = null;
+	private final ELFLoader loader; // TODO: should we place this inside ExecutionContext, too?
+
+	public Emu(final ExecutionContext context, final ELFLoader loader) {
+		this.context = Objects.requireNonNull(context, "Null context.");
+		this.loader = Objects.requireNonNull(loader, "Null loader.");
+	}
 
 	public Emu(final ExecutionContext context) {
-		this.context = Objects.requireNonNull(context, "Null context.");
+		this(context, new ELFLoader(context.cpu(), (MemoryController) context.memory()));
 	}
 
 	// The safest-but-slowest execution configuration
@@ -82,7 +87,6 @@ public final class Emu {
 					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
-		this.loader = new ELFLoader(this.context.cpu(), (MemoryController) this.context.memory());
 		loader.load(
 				elf,
 				commandLineArguments,

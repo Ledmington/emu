@@ -32,6 +32,7 @@ import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
+import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
 import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.Emu;
@@ -277,6 +278,8 @@ public final class EmuDB {
 		}
 
 		this.context = createDefaultExecutionContext();
+
+		// ...
 	}
 
 	private void loadFile(final String[] args) {
@@ -289,9 +292,11 @@ public final class EmuDB {
 	}
 
 	private void loadFile(final String filepath, final String[] arguments) {
+		this.currentFile = ELFParser.parse(filepath);
+
 		this.context = createDefaultExecutionContext();
 
-		this.emu = new Emu(this.context);
+		this.emu = new Emu(this.context, this.loader);
 		this.emu.load(filepath, arguments);
 
 		loader.load(
