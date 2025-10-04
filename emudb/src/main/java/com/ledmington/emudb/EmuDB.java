@@ -17,15 +17,6 @@
  */
 package com.ledmington.emudb;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
@@ -43,9 +34,17 @@ import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
-import com.ledmington.utils.MiniLogger;
+import com.ledmington.mem.exc.IllegalMemoryAccessException;
 import com.ledmington.utils.ReadOnlyByteBuffer;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
@@ -53,8 +52,6 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 public final class EmuDB {
-
-	private static final MiniLogger logger = MiniLogger.getLogger("emudb");
 
 	private Emu emu = null;
 	private ELF currentFile = null;
@@ -99,20 +96,14 @@ public final class EmuDB {
 			return;
 		}
 
-		final String addressString = args[0];
-		final long address;
-		try {
-			if (addressString.startsWith("0x")) {
-				address = Long.parseLong(addressString.substring(2), 16);
-			} else {
-				address = Long.parseLong(addressString, 10);
-			}
-		} catch (final NumberFormatException e) {
+		final Optional<Long> parsed = parseAddress(args[0]);
+		if (parsed.isEmpty()) {
 			System.out.printf(
 					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
-					addressString);
+					args[0]);
 			return;
 		}
+		final long address = parsed.orElseThrow();
 
 		showAssemblyAt(address);
 	}
@@ -193,20 +184,14 @@ public final class EmuDB {
 			return;
 		}
 
-		final String addressString = args[0];
-		final long address;
-		try {
-			if (addressString.startsWith("0x")) {
-				address = Long.parseLong(addressString.substring(2), 16);
-			} else {
-				address = Long.parseLong(addressString, 10);
-			}
-		} catch (final NumberFormatException e) {
+		final Optional<Long> parsed = parseAddress(args[0]);
+		if (parsed.isEmpty()) {
 			System.out.printf(
 					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
-					addressString);
+					args[0]);
 			return;
 		}
+		final long address = parsed.orElseThrow();
 
 		final int numBytesPerRow = 16;
 		final int numRowsBefore = 5;
@@ -227,6 +212,18 @@ public final class EmuDB {
 		}
 	}
 
+	private Optional<Long> parseAddress(final String arg) {
+		try {
+			if (arg.startsWith("0x")) {
+				return Optional.of(Long.parseLong(arg.substring(2), 16));
+			} else {
+				return Optional.of(Long.parseLong(arg, 10));
+			}
+		} catch (final NumberFormatException e) {
+			return Optional.empty();
+		}
+	}
+
 	private void runFile(final String[] args) {
 		if (this.currentFile == null) {
 			if (args.length == 0) {
@@ -239,7 +236,11 @@ public final class EmuDB {
 			loadFile(String.valueOf(filepath), arguments);
 		}
 
-		this.emu.run();
+		try {
+			this.emu.run();
+		} catch (final IllegalMemoryAccessException e) {
+			System.out.println(e);
+		}
 	}
 
 	private void loadFile(final String[] args) {
