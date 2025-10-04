@@ -26,6 +26,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
@@ -41,6 +44,7 @@ import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.ReadOnlyByteBuffer;
 
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -71,7 +75,9 @@ public final class EmuDB {
 			"mem",
 			new Command("Shows the content of the memory", this::showMemory),
 			"regs",
-			new Command("Shows the content of the register file", ignored -> showRegisters()));
+			new Command("Shows the content of the register file", ignored -> showRegisters()),
+			"asm",
+			new Command("Show the assembly at the current position", this::showAsm));
 
 	public EmuDB() {}
 
@@ -79,6 +85,83 @@ public final class EmuDB {
 		for (final Map.Entry<String, Command> e : commands.entrySet()) {
 			System.out.printf(
 					"\u001b[1m%s\u001b[0m -- %s%n", e.getKey(), e.getValue().description());
+		}
+	}
+
+	private void showAsm(final String[] args) {
+		if (this.currentFile == null) {
+			System.out.println("You have not loaded a file. Try 'run'.");
+			return;
+		}
+
+		if (args.length == 0) {
+			showAssemblyAt(this.registerFile.get(Register64.RIP));
+			return;
+		}
+
+		final String addressString = args[0];
+		final long address;
+		try {
+			if (addressString.startsWith("0x")) {
+				address = Long.parseLong(addressString.substring(2), 16);
+			} else {
+				address = Long.parseLong(addressString, 10);
+			}
+		} catch (final NumberFormatException e) {
+			System.out.printf(
+					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
+					addressString);
+			return;
+		}
+
+		showAssemblyAt(address);
+	}
+
+	private void showAssemblyAt(final long address) {
+		final int maxInstructions = 5;
+		final ReadOnlyByteBuffer bb = new ReadOnlyByteBuffer() {
+
+			private long position = address;
+
+			@Override
+			public boolean isLittleEndian() {
+				return true;
+			}
+
+			@Override
+			public void setEndianness(final boolean isLittleEndian) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void setAlignment(final long newAlignment) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public long getAlignment() {
+				return 1L;
+			}
+
+			@Override
+			public void setPosition(final long newPosition) {
+				this.position = newPosition;
+			}
+
+			@Override
+			public long getPosition() {
+				return this.position;
+			}
+
+			@Override
+			public byte read() {
+				return mem.read(position);
+			}
+		};
+		for (int i = 0; i < maxInstructions; i++) {
+			final long pos = bb.getPosition();
+			final Instruction decoded = InstructionDecoder.fromHex(bb);
+			System.out.printf("0x%016x : %s%n", pos, InstructionEncoder.toIntelSyntax(decoded));
 		}
 	}
 
