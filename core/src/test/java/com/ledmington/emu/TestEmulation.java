@@ -39,7 +39,7 @@ final class TestEmulation {
 								"File '%s' not found: did you forget to run './gradlew :core:generateE2ETestFiles'?",
 								executableName))
 				.getPath();
-		final Emu emu = new Emu();
+		final Emu emu = new Emu(Emu.getDefaultExecutionContext());
 		assertDoesNotThrow(() -> emu.loadRunAndUnload(path));
 	}
 }

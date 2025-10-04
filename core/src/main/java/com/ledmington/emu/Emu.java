@@ -17,6 +17,7 @@
  */
 package com.ledmington.emu;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -37,19 +38,23 @@ public final class Emu {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("emu");
 
-	// TODO: should we add ExecutionContext here, too?
-	private final MemoryController mem;
-	private final X86Emulator cpu;
+	private final ExecutionContext context;
 	private ELF elf = null;
 	private long entryPointVirtualAddress = 0L;
 	private ELFLoader loader = null;
 
-	public Emu() {
-		this.mem = new MemoryController(
+	public Emu(final ExecutionContext context) {
+		this.context = Objects.requireNonNull(context, "Null context.");
+	}
+
+	// The safest-but-slowest execution configuration
+	public static ExecutionContext getDefaultExecutionContext() {
+		final MemoryController mem = new MemoryController(
 				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
 				EmulatorConstants.shouldBreakOnWrongPermissions(),
 				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
-		this.cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
+		final X86Cpu cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
+		return new ExecutionContext(cpu, mem);
 	}
 
 	public void loadRunAndUnload(final String filename, final String... commandLineArguments) {
@@ -77,7 +82,7 @@ public final class Emu {
 					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
-		this.loader = new ELFLoader(cpu, mem);
+		this.loader = new ELFLoader(this.context.cpu(), (MemoryController) this.context.memory());
 		loader.load(
 				elf,
 				commandLineArguments,
@@ -86,11 +91,11 @@ public final class Emu {
 				EmulatorConstants.getStackSize(),
 				EmulatorConstants.getBaseStackValue());
 
-		cpu.setInstructionPointer(EmulatorConstants.getBaseAddress() + entryPointVirtualAddress);
+		this.context.cpu().setInstructionPointer(EmulatorConstants.getBaseAddress() + entryPointVirtualAddress);
 	}
 
 	public void run() {
-		cpu.turnOn();
+		this.context.cpu().turnOn();
 
 		logger.info(" ### Execution start ### ");
 		{
@@ -112,7 +117,7 @@ public final class Emu {
 				}
 			}
 		}
-		cpu.execute();
+		this.context.cpu().execute();
 		logger.info(" ### Execution end ### ");
 	}
 

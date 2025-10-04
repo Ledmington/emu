@@ -289,10 +289,10 @@ public final class EmuDB {
 	}
 
 	private void loadFile(final String filepath, final String[] arguments) {
-		this.emu = new Emu();
-		this.emu.load(filepath, arguments);
-
 		this.context = createDefaultExecutionContext();
+
+		this.emu = new Emu(this.context);
+		this.emu.load(filepath, arguments);
 
 		loader.load(
 				this.currentFile,
