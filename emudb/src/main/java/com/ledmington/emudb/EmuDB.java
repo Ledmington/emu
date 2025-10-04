@@ -19,6 +19,7 @@ package com.ledmington.emudb;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
@@ -34,6 +36,11 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
+import com.ledmington.elf.section.Section;
+import com.ledmington.elf.section.StringTableSection;
+import com.ledmington.elf.section.sym.SymbolTableEntry;
+import com.ledmington.elf.section.sym.SymbolTableEntryType;
+import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.emu.ELFLoader;
 import com.ledmington.emu.Emu;
 import com.ledmington.emu.EmulatorConstants;
@@ -61,6 +68,7 @@ public final class EmuDB {
 	private ExecutionContext context = null;
 	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
 	private ELFLoader loader = null; // TODO: should we put this into ExecutionContext, too?
+	private final List<Breakpoint> breakpoints = new ArrayList<>();
 
 	private final Map<String, Command> commands = Map.of(
 			"quit",
@@ -78,7 +86,9 @@ public final class EmuDB {
 			"regs",
 			new Command("Shows the content of the register file", ignored -> showRegisters()),
 			"asm",
-			new Command("Show the assembly at the current position", this::showAsm));
+			new Command("Shows the assembly at the current position", this::showAsm),
+			"break",
+			new Command("Sets up a breakpoint at the given function", this::setBreakpoint));
 
 	public EmuDB() {}
 
@@ -89,8 +99,82 @@ public final class EmuDB {
 		}
 	}
 
+	private void printBreakpoint(final int breakpointIndex) {
+		System.out.printf(
+				"Breakpoint %,d at 0x%x '%s'%n",
+				breakpointIndex,
+				breakpoints.get(breakpointIndex).address(),
+				breakpoints.get(breakpointIndex).name());
+	}
+
+	private void setBreakpoint(final String[] args) {
+		if (hasNotLoadedFile()) {
+			System.out.println("You have not loaded a file. Try 'run'.");
+			return;
+		}
+		if (args.length == 0) {
+			if (breakpoints.isEmpty()) {
+				System.out.println("No breakpoints set up.");
+			} else {
+				for (int i = 0; i < breakpoints.size(); i++) {
+					printBreakpoint(i);
+				}
+			}
+			return;
+		}
+
+		final String functionName = args[0];
+		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
+		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
+		if (symbolTable.isEmpty() || stringTable.isEmpty()) {
+			System.out.println("No debugging info present. Impossible to set up a breakpoint.");
+			return;
+		}
+
+		final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
+		final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
+		boolean found = false;
+		for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+			final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
+			if (e.info().getType() != SymbolTableEntryType.STT_FUNC) {
+				continue;
+			}
+			final String name = strtab.getString(e.nameOffset());
+			if (name.equals(functionName)) {
+				final Breakpoint b = new Breakpoint(e.value(), name);
+				final List<Integer> sameBreakpoints = new ArrayList<>();
+				for (int j = 0; j < breakpoints.size(); j++) {
+					if (breakpoints.get(j).address() == b.address()) {
+						sameBreakpoints.add(j);
+					}
+				}
+				if (!sameBreakpoints.isEmpty()) {
+					System.out.printf(
+							"Note: breakpoint%s %s are also set at 0x%x '%s'%n",
+							sameBreakpoints.size() == 1 ? "" : "s",
+							(sameBreakpoints.size() > 1
+											? IntStream.range(0, sameBreakpoints.size() - 1)
+															.mapToObj(String::valueOf)
+															.collect(Collectors.joining(", "))
+													+ " and "
+											: "")
+									+ sameBreakpoints.getLast(),
+							b.address(),
+							b.name());
+				}
+				breakpoints.add(b);
+				printBreakpoint(breakpoints.size() - 1);
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			System.out.printf("Function '%s' not defined.%n", functionName);
+		}
+	}
+
 	private void showAsm(final String[] args) {
-		if (this.currentFile == null) {
+		if (hasNotLoadedFile()) {
 			System.out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
