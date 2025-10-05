@@ -44,7 +44,7 @@ tasks.register('fatJar', Jar) {
 	manifest {
 		archiveBaseName = appNameLowerCase
 		attributes(
-				// "Implementation-Title": "Gradle",
+				"Implementation-Title": "EMU EmuDB",
 				"Implementation-Version": "${emudbVersion}",
 				"Main-Class": "$mainClassName"
 		)
