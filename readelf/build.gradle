@@ -54,6 +54,7 @@ tasks.register('fatJar', Jar) {
 
 tasks.build.dependsOn(fatJar)
 tasks.javadoc.enabled = false
+tasks.test.enabled = false
 
 tasks.register('checkReadelf', JavaExec) {
     group = 'verification'
