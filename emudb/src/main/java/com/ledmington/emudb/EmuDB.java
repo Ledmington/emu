@@ -106,26 +106,54 @@ public final class EmuDB {
 		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
 		final boolean hasDebugInfo = symbolTable.isPresent() && stringTable.isPresent();
 
+		final int maxStackLevel = 100;
+
 		final long baseStackValue = EmulatorConstants.getBaseStackValue();
+		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
+		System.out.printf("baseAddress = 0x%016x%n", EmulatorConstants.getBaseAddress());
+		System.out.printf("baseStackValue = 0x%016x%n", EmulatorConstants.getBaseStackValue());
+		System.out.printf("baseStackAddress = 0x%016x%n", EmulatorConstants.getBaseStackAddress());
+		System.out.printf("stackSize = 0x%016x%n", EmulatorConstants.getStackSize());
 		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
-		for (int stackLevel = 0; rbp != baseStackValue; stackLevel++) {
-			System.out.printf("#%2d 0x%016x", stackLevel, rbp);
+		int stackLevel = 0;
+		for (; /*rbp != baseStackValue &&*/ rbp != baseStackAddress && stackLevel < maxStackLevel; stackLevel++) {
+			System.out.printf("#%-2d 0x%016x", stackLevel, rbp);
 			if (hasDebugInfo) {
 				final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
 				final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
-				long finalRbp = rbp;
+				final long finalRBP = rbp;
 				final Optional<SymbolTableEntry> entry = IntStream.range(0, symtab.getSymbolTableLength())
 						.mapToObj(symtab::getSymbolTableEntry)
 						.filter(e -> e.info().getType() == SymbolTableEntryType.STT_FUNC
-								&& e.value() + EmulatorConstants.getBaseAddress() == finalRbp)
+								&& e.value() /*+ EmulatorConstants.getBaseAddress()*/ == finalRBP)
 						.findFirst();
 				if (entry.isPresent()) {
 					System.out.printf(
-							" in %s", strtab.getString(entry.orElseThrow().nameOffset()));
+							" in %s%n", strtab.getString(entry.orElseThrow().nameOffset()));
 				}
+				{
+					for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+						final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
+						if (e.info().getType() == SymbolTableEntryType.STT_FUNC
+								&& e.value() == (rbp - 0x0000_8000_0000_0000L)) {
+							System.out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
+						}
+					}
+				}
+			} else {
+				System.out.print(" in ??%n");
 			}
-			System.out.println();
-			rbp = this.context.memory().read8(rbp);
+
+			final long nextRbp = this.context.memory().read8(rbp);
+			if (nextRbp <= rbp) {
+				System.out.println("<Invalid frame or corrupted stack>");
+				break;
+			}
+			rbp = nextRbp;
+		}
+
+		if (stackLevel >= maxStackLevel) {
+			System.out.println("<Max stack size reached>");
 		}
 	}
 

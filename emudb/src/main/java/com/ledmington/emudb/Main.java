@@ -19,6 +19,7 @@ package com.ledmington.emudb;
 
 import java.util.Arrays;
 
+import com.ledmington.emu.EmulatorConstants;
 import com.ledmington.utils.MiniLogger;
 
 public final class Main {
@@ -45,6 +46,9 @@ public final class Main {
 		if (i > 0) {
 			args = Arrays.copyOfRange(args, i, args.length);
 		}
+
+		// TODO: does this need to be here?
+		EmulatorConstants.setBaseStackValue(0L);
 
 		final EmuDB debugger = new EmuDB();
 		debugger.run(args);
