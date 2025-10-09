@@ -59,6 +59,7 @@ import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.utils.MiniLogger;
 
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class EmulatorView extends Stage {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("emu-gui");
@@ -274,6 +275,7 @@ public final class EmulatorView extends Stage {
 		});
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void updateCode() {
 		final RegisterFile regFile = (RegisterFile) cpu.getRegisters();
 		final StringBuilder sb = new StringBuilder();

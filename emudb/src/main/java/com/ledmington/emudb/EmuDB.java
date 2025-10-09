@@ -62,10 +62,10 @@ import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-@SuppressWarnings("PMD.SystemPrintln")
+@SuppressWarnings({"PMD.SystemPrintln", "PMD.CyclomaticComplexity", "PMD.AvoidInstantiatingObjectsInLoops"})
 public final class EmuDB {
 
-	private Emu emu = null;
+	private String[] savedArguments = null;
 	private ExecutionContext context = null;
 	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
 	private ELFLoader loader = null; // TODO: should we put this into ExecutionContext, too?
@@ -109,7 +109,7 @@ public final class EmuDB {
 
 		final int maxStackLevel = 100;
 
-		final long baseStackValue = EmulatorConstants.getBaseStackValue();
+		// final long baseStackValue = EmulatorConstants.getBaseStackValue();
 		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
 		System.out.printf("baseAddress = 0x%016x%n", EmulatorConstants.getBaseAddress());
 		System.out.printf("baseStackValue = 0x%016x%n", EmulatorConstants.getBaseStackValue());
@@ -166,7 +166,7 @@ public final class EmuDB {
 				breakpoints.get(breakpointIndex).name());
 	}
 
-	private void setBreakpoint(final String[] args) {
+	private void setBreakpoint(final String... args) {
 		if (hasNotLoadedFile()) {
 			System.out.println("You have not loaded a file. Try 'run'.");
 			return;
@@ -392,7 +392,6 @@ public final class EmuDB {
 		}
 
 		try {
-			// this.emu.run();
 			this.context.cpu().turnOn();
 			while (true) {
 				final Optional<Integer> breakpointIndex = checkBreakpoints();
@@ -442,8 +441,9 @@ public final class EmuDB {
 			return;
 		}
 
-		this.context = createDefaultExecutionContext();
 		this.breakpoints.clear();
+
+		this.loadFile(savedArguments);
 	}
 
 	private void loadFile(final String... args) {
@@ -451,6 +451,8 @@ public final class EmuDB {
 			System.out.println("Command 'load' expects the path of a file.");
 			return;
 		}
+
+		this.savedArguments = args;
 
 		loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
 	}
@@ -460,8 +462,8 @@ public final class EmuDB {
 
 		this.context = createDefaultExecutionContext();
 
-		this.emu = new Emu(this.context, this.loader);
-		this.emu.load(filepath, arguments);
+		final Emu emu = new Emu(this.context, this.loader);
+		emu.load(filepath, arguments);
 
 		loader.load(
 				this.currentFile,
@@ -509,8 +511,9 @@ public final class EmuDB {
 		return prev[n];
 	}
 
+	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 	private void runInteractively() {
-		try (final Terminal terminal = TerminalBuilder.builder().system(true).build()) {
+		try (Terminal terminal = TerminalBuilder.builder().system(true).build()) {
 			final LineReader reader =
 					LineReaderBuilder.builder().terminal(terminal).build();
 			while (true) {
@@ -546,7 +549,7 @@ public final class EmuDB {
 		}
 	}
 
-	public void run(final String[] args) {
+	public void run(final String... args) {
 		if (args.length > 0) {
 			this.loadFile(args);
 		}

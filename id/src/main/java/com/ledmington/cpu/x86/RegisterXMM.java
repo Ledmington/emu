@@ -20,6 +20,7 @@ package com.ledmington.cpu.x86;
 import java.util.Locale;
 
 /** An x86 128-bit general-purpose register. */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public enum RegisterXMM implements Register {
 
 	/** The register XMM0. */

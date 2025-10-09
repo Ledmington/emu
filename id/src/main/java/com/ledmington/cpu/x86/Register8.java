@@ -20,6 +20,7 @@ package com.ledmington.cpu.x86;
 import java.util.Locale;
 
 /** An x86 8-bit general-purpose register. */
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public enum Register8 implements Register {
 
 	/** The register AL. */

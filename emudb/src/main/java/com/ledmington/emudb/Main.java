@@ -26,7 +26,7 @@ public final class Main {
 
 	private Main() {}
 
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 
 		int i = 0;
@@ -43,14 +43,12 @@ public final class Main {
 			}
 		}
 
-		if (i > 0) {
-			args = Arrays.copyOfRange(args, i, args.length);
-		}
+		final String[] arguments = (i > 0) ? Arrays.copyOfRange(args, i, args.length) : args;
 
 		// TODO: does this need to be here?
 		EmulatorConstants.setBaseStackValue(0L);
 
 		final EmuDB debugger = new EmuDB();
-		debugger.run(args);
+		debugger.run(arguments);
 	}
 }

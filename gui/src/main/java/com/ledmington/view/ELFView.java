@@ -63,6 +63,7 @@ import com.ledmington.elf.section.rel.RelocationAddendSection;
 import com.ledmington.elf.section.rel.RelocationSection;
 import com.ledmington.elf.section.sym.SymbolTable;
 
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects"})
 public final class ELFView extends BorderPane {
 
 	// TODO: move these into settings
