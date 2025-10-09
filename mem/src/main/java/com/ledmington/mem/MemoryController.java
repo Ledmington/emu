@@ -342,6 +342,7 @@ public final class MemoryController implements Memory {
 	 * @param address The address to start reading from.
 	 * @return A 64-bit value read.
 	 */
+	@Override
 	public long read8(final long address) {
 		checkRead(address, 8);
 		checkInitialized(address, 8);
@@ -405,6 +406,7 @@ public final class MemoryController implements Memory {
 	 * @param address The memory location where to write.
 	 * @param value The 64-bit value to write.
 	 */
+	@Override
 	public void write(final long address, final long value) {
 		checkWrite(address, 8);
 		initialize(address, BitUtils.asBEBytes(value));

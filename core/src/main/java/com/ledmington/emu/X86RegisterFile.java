@@ -88,6 +88,7 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void set(final Register8 r, final byte v) {
 		switch (r) {
 			case AL -> gpr[0] = (gpr[0] & 0xffffffffffffff00L) | BitUtils.asLong(v);
@@ -148,6 +149,7 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void set(final SegmentRegister r, final short v) {
 		switch (r) {
 			case CS -> seg[0] = v;
@@ -160,6 +162,7 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void set(final Register16 r, final short v) {
 		switch (r) {
 			case AX -> gpr[0] = (gpr[0] & 0xffffffffff0000L) | BitUtils.asLong(v);
@@ -206,6 +209,7 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void set(final Register32 r, final int v) {
 		switch (r) {
 			case EAX -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | BitUtils.asLong(v);
@@ -252,6 +256,7 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void set(final Register64 r, final long v) {
 		switch (r) {
 			case RAX -> gpr[0] = v;

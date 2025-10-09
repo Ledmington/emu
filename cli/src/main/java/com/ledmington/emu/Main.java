@@ -37,7 +37,8 @@ public final class Main {
 
 	private Main() {}
 
-	@SuppressWarnings({"PMD.AvoidCatchingThrowable", "PMD.NcssCount", "PMD.CyclomaticComplexity"})
+	@SuppressWarnings({"PMD.AvoidCatchingThrowable", "PMD.NcssCount", "PMD.CyclomaticComplexity", "PMD.NPathComplexity"
+	})
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.WARNING);
 

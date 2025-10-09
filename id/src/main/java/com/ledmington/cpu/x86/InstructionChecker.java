@@ -626,6 +626,7 @@ public final class InstructionChecker {
 	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
 	 * more than one immediate value (except ENTER).
 	 */
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	private static void checkNoMoreThanOneImmediate(final Instruction inst) {
 		if (inst.opcode() == Opcode.ENTER) {
 			return;
@@ -653,6 +654,7 @@ public final class InstructionChecker {
 	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
 	 * more than one indirect operand (except MOVS and CMPS).
 	 */
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	private static void checkNoMoreThanOneIndirect(final Instruction inst) {
 		if (inst.opcode() == Opcode.MOVS || inst.opcode() == Opcode.CMPS) {
 			return;
@@ -684,6 +686,7 @@ public final class InstructionChecker {
 	 * When using a mask register on the destination operand, at least one of the operands must be an XMM, YMM or ZMM
 	 * register or an indirect operand with XMMWORD, YMMWORD or ZMMWORD pointer size.
 	 */
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	private static void checkRegistersXYZ(final Instruction inst) {
 		if (!inst.hasDestinationMask()) {
 			return;
@@ -710,6 +713,7 @@ public final class InstructionChecker {
 	}
 
 	/** When using a destination mask, the mask register cannot be used as an operand. */
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	private static void checkNoDuplicateMask(final Instruction inst) {
 		if (!inst.hasDestinationMask()) {
 			return;

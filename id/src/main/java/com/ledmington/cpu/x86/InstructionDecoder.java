@@ -51,6 +51,7 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
  * Instruction opcodes: Appendix A. (pag. 2839)
  */
+@SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.NPathComplexity", "PMD.UselessParentheses"})
 public final class InstructionDecoder {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-asm");

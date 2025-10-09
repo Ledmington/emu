@@ -34,7 +34,12 @@ public final class CommandLineParser {
 		this.arguments = Objects.requireNonNull(arguments);
 	}
 
-	@SuppressWarnings({"PMD.UseConcurrentHashMap", "PMD.AvoidInstantiatingObjectsInLoops"})
+	@SuppressWarnings({
+		"PMD.UseConcurrentHashMap",
+		"PMD.AvoidInstantiatingObjectsInLoops",
+		"PMD.AssignmentInOperand",
+		"PMD.AvoidReassigningLoopVariables"
+	})
 	public Map<String, ParsingResult> parse(final String... commandLine) {
 		final Map<String, ParsingResult> result = new HashMap<>();
 

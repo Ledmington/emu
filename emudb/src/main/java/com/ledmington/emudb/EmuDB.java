@@ -62,6 +62,7 @@ import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+@SuppressWarnings("PMD.SystemPrintln")
 public final class EmuDB {
 
 	private Emu emu = null;
@@ -231,7 +232,7 @@ public final class EmuDB {
 		}
 	}
 
-	private void showAsm(final String[] args) {
+	private void showAsm(final String... args) {
 		if (hasNotLoadedFile()) {
 			System.out.println("You have not loaded a file. Try 'run'.");
 			return;
@@ -323,7 +324,7 @@ public final class EmuDB {
 						.collect(Collectors.joining(" ")));
 	}
 
-	private void showMemory(final String[] args) {
+	private void showMemory(final String... args) {
 		if (hasNotLoadedFile()) {
 			System.out.println("You have not loaded a file. Try 'run'.");
 			return;
@@ -378,7 +379,7 @@ public final class EmuDB {
 		}
 	}
 
-	private void runFile(final String[] args) {
+	private void runFile(final String... args) {
 		if (hasNotLoadedFile()) {
 			if (args.length == 0) {
 				System.out.println("Command 'run' expects the path of a file.");
@@ -445,7 +446,7 @@ public final class EmuDB {
 		this.breakpoints.clear();
 	}
 
-	private void loadFile(final String[] args) {
+	private void loadFile(final String... args) {
 		if (args.length == 0) {
 			System.out.println("Command 'load' expects the path of a file.");
 			return;
@@ -454,7 +455,7 @@ public final class EmuDB {
 		loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
 	}
 
-	private void loadFile(final String filepath, final String[] arguments) {
+	private void loadFile(final String filepath, final String... arguments) {
 		this.currentFile = ELFParser.parse(filepath);
 
 		this.context = createDefaultExecutionContext();
@@ -509,40 +510,39 @@ public final class EmuDB {
 	}
 
 	private void runInteractively() {
-		final Terminal terminal;
-		try {
-			terminal = TerminalBuilder.builder().system(true).build();
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-		final LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-		while (true) {
-			final String line;
-			try {
-				line = reader.readLine("(emudb) ").strip().toLowerCase(Locale.US);
-			} catch (final UserInterruptException e) {
-				break;
-			}
-			if (line.isBlank()) {
-				continue;
-			}
+		try (final Terminal terminal = TerminalBuilder.builder().system(true).build()) {
+			final LineReader reader =
+					LineReaderBuilder.builder().terminal(terminal).build();
+			while (true) {
+				final String line;
+				try {
+					line = reader.readLine("(emudb) ").strip().toLowerCase(Locale.US);
+				} catch (final UserInterruptException e) {
+					break;
+				}
+				if (line.isBlank()) {
+					continue;
+				}
 
-			final String[] splitted = line.split(" +");
-			final String command = splitted[0];
-			final String[] commandArguments = Arrays.copyOfRange(splitted, 1, splitted.length);
-			if (commands.containsKey(command)) {
-				commands.get(command).command().accept(commandArguments);
-			} else {
-				System.out.printf("Command '%s' not found. Try 'help'.%n", command);
-				final List<String> similarCommands = commands.keySet().stream()
-						.filter(c -> levenshteinDistance(c, command) == 1)
-						.toList();
-				if (!similarCommands.isEmpty()) {
-					System.out.printf(
-							"Maybe you meant one of these: %s.%n",
-							similarCommands.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")));
+				final String[] splitted = line.split(" +");
+				final String command = splitted[0];
+				final String[] commandArguments = Arrays.copyOfRange(splitted, 1, splitted.length);
+				if (commands.containsKey(command)) {
+					commands.get(command).command().accept(commandArguments);
+				} else {
+					System.out.printf("Command '%s' not found. Try 'help'.%n", command);
+					final List<String> similarCommands = commands.keySet().stream()
+							.filter(c -> levenshteinDistance(c, command) == 1)
+							.toList();
+					if (!similarCommands.isEmpty()) {
+						System.out.printf(
+								"Maybe you meant one of these: %s.%n",
+								similarCommands.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")));
+					}
 				}
 			}
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 

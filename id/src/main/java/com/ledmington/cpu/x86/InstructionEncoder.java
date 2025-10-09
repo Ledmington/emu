@@ -37,7 +37,7 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
  * there are the LOCK/REP/REPNE, then the CS segment override, then the address size override, then the operand size
  * override.
  */
-@SuppressWarnings("PMD.UselessParentheses")
+@SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.NPathComplexity", "PMD.UselessParentheses"})
 public final class InstructionEncoder {
 
 	private static final byte DEFAULT_REX_PREFIX = (byte) 0x40;
