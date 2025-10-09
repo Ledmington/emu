@@ -26,7 +26,7 @@ ext.junitVersion = '6.0.0'
 ext.junitLauncherVersion = '6.0.0'
 ext.jacocoVersion = '0.8.12'
 ext.pmdVersion = '7.17.0'
-ext.spotbugsVersion = '4.9.3'
+ext.spotbugsVersion = '4.9.6'
 ext.palantirVersion = '2.77.0'
 // End tunables
 
