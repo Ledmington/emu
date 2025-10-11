@@ -31,16 +31,16 @@ public final class EmulatorConstants {
 	private static boolean breakWhenReadingUninitializedMemory = true;
 
 	/** Base address where to load the executable file. */
-	private static long baseAddress = 0x00005a5a00000000L;
+	private static long baseAddress = 0x0000_5a5a_0000_0000L;
 
 	/** The default stack address. */
-	private static long baseStackAddress = 0x7fffffffe000L;
+	private static long baseStackAddress = 0x0000_7fff_ffff_e000L;
 
 	/** The default stack size. */
 	private static long stackSize = 8L * 1024L * 1024L;
 
 	/** The value at the base of the stack. */
-	private static long baseStackValue = 0x00fafa00deadbeefL;
+	private static long baseStackValue = 0x00fa_fa00_dead_beefL;
 
 	private static boolean checkInstructions = true;
 

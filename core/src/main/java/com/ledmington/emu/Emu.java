@@ -52,13 +52,43 @@ public final class Emu {
 		this(context, new ELFLoader(context.cpu(), (MemoryController) context.memory()));
 	}
 
-	// The safest-but-slowest execution configuration
+	/**
+	 * Creates an ExecutionContext with the default values for checks and memory initialization taken from
+	 * {@link EmulatorConstants}.
+	 *
+	 * @return A new ExecutionContext.
+	 */
 	public static ExecutionContext getDefaultExecutionContext() {
 		final MemoryController mem = new MemoryController(
 				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
 				EmulatorConstants.shouldBreakOnWrongPermissions(),
 				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
 		final X86Cpu cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
+		return new ExecutionContext(cpu, mem);
+	}
+
+	/**
+	 * The safest-but-slowest execution configuration, useful for debugging. Checks are performed on memory access
+	 * permissions, on accessing uninitialized memory and on execution of invalid instructions.
+	 *
+	 * @return A new ExecutionContext.
+	 */
+	public static ExecutionContext getSafeExecutionContext() {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), true, true);
+		final X86Cpu cpu = new X86Cpu(mem, true);
+		return new ExecutionContext(cpu, mem);
+	}
+
+	/**
+	 * The fast-but-unsafe execution configuration, useful for reducing emulation time. No checks are performed.
+	 *
+	 * @return A new ExecutionContext.
+	 */
+	public static ExecutionContext getFastExecutionContext() {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), false, false);
+		final X86Cpu cpu = new X86Cpu(mem, false);
 		return new ExecutionContext(cpu, mem);
 	}
 

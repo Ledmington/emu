@@ -85,7 +85,9 @@ public final class ELFLoader {
 	 * @param elf The file to be loaded.
 	 * @param commandLineArguments The arguments to pass to the program.
 	 * @param baseAddress The address where to start loading the file.
+	 * @param baseStackAddress The address where to place the base of the stack.
 	 * @param stackSize The size in bytes of the stack.
+	 * @param baseStackValue The 64-bit value to be placed at the base of the stack.
 	 */
 	public void load(
 			final ELF elf,

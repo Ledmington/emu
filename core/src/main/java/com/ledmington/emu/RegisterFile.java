@@ -27,7 +27,7 @@ import com.ledmington.cpu.x86.SegmentRegister;
 public interface RegisterFile extends ImmutableRegisterFile {
 
 	/**
-	 * Sets the value of the given 8-bit register to given byte. This operation does not modify the other registers.
+	 * Sets the value of the given 8-bit register to the given byte. This operation does not modify the other registers.
 	 *
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
@@ -35,17 +35,16 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	void set(Register8 r, byte v);
 
 	/**
-	 * Sets the value of the given 16-bit register to given short. This operation does not modify the other registers.
+	 * Sets the value of the given 16-bit register to the given short. This operation does not modify the other
+	 * registers.
 	 *
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
 	 */
 	void set(Register16 r, short v);
 
-	void set(SegmentRegister r, short v);
-
 	/**
-	 * Sets the value of the given 32-bit register to given int. This operation does not modify the other registers.
+	 * Sets the value of the given 32-bit register to the given int. This operation does not modify the other registers.
 	 *
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
@@ -53,7 +52,8 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	void set(Register32 r, int v);
 
 	/**
-	 * Sets the value of the given 64-bit register to given long. This operation does not modify the other registers.
+	 * Sets the value of the given 64-bit register to the given long. This operation does not modify the other
+	 * registers.
 	 *
 	 * @param r The Register to be overwritten.
 	 * @param v The value to be written.
@@ -67,6 +67,15 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param v The value to be written.
 	 */
 	void set(RFlags f, boolean v);
+
+	/**
+	 * Sets the value of the given 16-bit segment register to given short. This operation does not modify the other
+	 * registers.
+	 *
+	 * @param r The SegmentRegister to be overwritten.
+	 * @param v The value to be written.
+	 */
+	void set(SegmentRegister r, short v);
 
 	/** Resets all RFLAGS. */
 	void resetFlags();
