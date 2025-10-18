@@ -1844,8 +1844,8 @@ public final class InstructionEncoder {
 						&& inst.firstOperand() instanceof final Register8 r
 						&& Register8.requiresRexPrefix(r))
 				|| (inst.hasSecondOperand()
-						&& inst.secondOperand() instanceof final Register8 r
-						&& Register8.requiresRexPrefix(r))) {
+						&& inst.secondOperand() instanceof final Register8 r2
+						&& Register8.requiresRexPrefix(r2))) {
 			wb.write(rex);
 		}
 	}
@@ -1923,6 +1923,7 @@ public final class InstructionEncoder {
 			case VPCMPGTB -> wb.write((byte) 0x64);
 			case VPCMPEQB -> {
 				if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
+					// if(((EvexPrefix)inst.getPrefix()).m())
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x00;
 				} else if (isFirstR(inst)
@@ -1953,6 +1954,15 @@ public final class InstructionEncoder {
 					encodeEvexPrefix(wb, inst);
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x04;
+				}
+			}
+			case VPCMPLTB -> {
+				if (isFirstMask(inst)
+						&& inst.secondOperand() instanceof Register
+						&& inst.thirdOperand() instanceof IndirectOperand) {
+					encodeEvexPrefix(wb, inst);
+					wb.write((byte) 0x3f);
+					lastByte = (byte) 0x01;
 				}
 			}
 			case PEXTRW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc5);
@@ -2383,13 +2393,26 @@ public final class InstructionEncoder {
 		};
 	}
 
-	private static byte getEvexOpcodeMap(final Opcode opcode) {
-		return switch (opcode) {
+	private static byte getEvexOpcodeMap(final Instruction inst) {
+		return switch (inst.opcode()) {
 			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
-			case VPCMPNEQUB, VPCMPEQB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
+			case VPCMPNEQUB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
+			case VPCMPEQB -> {
+				if (isFirstMask(inst) && isSecondR(inst) && isThirdEER(inst)) {
+					yield (byte) 0b001;
+				} else {
+					yield (byte) 0b011;
+				}
+			}
 			default -> (byte) 0b000;
 		};
+	}
+
+	private static boolean isThirdEER(final Instruction inst) {
+		return inst.hasThirdOperand()
+				&& inst.thirdOperand() instanceof final Register r
+				&& Registers.requiresEvexExtension(r);
 	}
 
 	private static void encodeEvexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
@@ -2428,7 +2451,7 @@ public final class InstructionEncoder {
 								&& (inst.thirdOperand() instanceof Register
 										|| inst.thirdOperand() instanceof IndirectOperand)
 								&& inst.fourthOperand() instanceof Immediate),
-				getEvexOpcodeMap(inst.opcode()));
+				getEvexOpcodeMap(inst));
 
 		// TODO: refactor this chain of if-elses
 		Register rvvvv = null;
