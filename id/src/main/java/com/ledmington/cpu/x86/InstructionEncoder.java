@@ -1922,7 +1922,9 @@ public final class InstructionEncoder {
 			case VPMINUD -> wb.write((byte) 0x3b);
 			case VPCMPGTB -> wb.write((byte) 0x64);
 			case VPCMPEQB -> {
-				if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
+				if (inst instanceof WeirdVpcmpeqb) {
+					wb.write((byte) 0x74);
+				} else if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x00;
 				} else if (isFirstR(inst)

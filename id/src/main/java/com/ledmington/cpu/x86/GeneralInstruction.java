@@ -239,18 +239,9 @@ public final class GeneralInstruction implements Instruction {
 		return op4;
 	}
 
-	/**
-	 * Checks whether this instruction is part of the legacy/compatibility x86 set.
-	 *
-	 * @return True if it is legacy, false otherwise.
-	 */
-	public boolean isLegacy() {
-		return code == Opcode.ENDBR32;
-	}
-
 	@Override
 	public String toString() {
-		return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
+		return "GeneralInstruction(prefix=" + prefix + ";opcode=" + code.toString()
 				+ ";mask=" + destinationMask + ";destinationMaskZero=" + destinationMaskZero
 				+ ";operands=[" + op1 + "," + op2 + "," + op3 + "," + op4 + "]"
 				+ ")";

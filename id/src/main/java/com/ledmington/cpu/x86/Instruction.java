@@ -99,4 +99,13 @@ public interface Instruction {
 		}
 		return 0;
 	}
+
+	/**
+	 * Checks whether this instruction is part of the legacy/compatibility x86 set.
+	 *
+	 * @return True if it is legacy, false otherwise.
+	 */
+	default boolean isLegacy() {
+		return opcode() == Opcode.ENDBR32;
+	}
 }
