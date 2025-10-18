@@ -20,6 +20,7 @@ package com.ledmington.cpu;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -143,9 +144,8 @@ final class TestDecoding extends X64Encodings {
 	@MethodSource("instAndIntelSyntax")
 	void fromIntelSyntax(final Instruction expected, final String intelSyntax) {
 		final Instruction actual = InstructionDecoder.fromIntelSyntax(intelSyntax);
-		assertEquals(
-				expected,
-				actual,
+		assertTrue(
+				Instructions.equals(expected, actual),
 				() -> String.format(
 						"Expected '%s' to be decoded into '%s' but was '%s'.", intelSyntax, expected, actual));
 	}

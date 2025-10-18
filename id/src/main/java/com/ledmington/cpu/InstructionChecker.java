@@ -294,6 +294,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPMINUD, List.of(RY_RY_RY, RY_RY_M256)),
 			Map.entry(Opcode.VPMOVMSKB, List.of(R32_RX, R32_RY)),
 			Map.entry(Opcode.VPCMPEQB, List.of(RK_RX_RX, RK_RY_RY, RY_RY_M256, RK_RX_M128, RK_RY_M256)),
+			Map.entry(Opcode.VPCMPLTB, List.of(RK_RY_RY)),
 			Map.entry(Opcode.VPCMPEQD, List.of(RK_RY_RY, RY_RY_M256, RK_RY_M256)),
 			Map.entry(Opcode.VPCMPEQQ, List.of(RX_RX_M128)),
 			Map.entry(Opcode.VPCMPNEQB, List.of(RK_RY_RY, RK_RY_M256)),

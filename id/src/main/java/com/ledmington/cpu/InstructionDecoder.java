@@ -4111,9 +4111,10 @@ public final class InstructionDecoder {
 		final byte VMOVAPS_OPCODE = (byte) 0x29;
 		final byte VPMINUD_OPCODE = (byte) 0x3b;
 		final byte VPCMPNEQUB_OPCODE = (byte) 0x3e;
-		final byte VPCMPEQB_OPCODE = (byte) 0x3f;
+		final byte VPCMPxxB_OPCODE = (byte) 0x3f;
 		final byte VMOVQ_RX_M128_OPCODE = (byte) 0x6e;
 		final byte VMOVDQU64_RZMM_M512_OPCODE = (byte) 0x6f;
+		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x7a;
 		final byte VPBROADCASTD_OPCODE = (byte) 0x7c;
 		final byte VMOVQ_R64_RX_OPCODE = (byte) 0x7e;
@@ -4251,7 +4252,7 @@ public final class InstructionDecoder {
 				b.read1();
 				yield tmp;
 			}
-			case VPCMPEQB_OPCODE -> {
+			case VPCMPxxB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte r1 = or(evex.v1() ? 0 : (byte) 0b00010000, getByteFromV(evex));
 				final byte r2 = or(evex.x() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm));
@@ -4267,13 +4268,34 @@ public final class InstructionDecoder {
 				if (evex.a() != (byte) 0) {
 					ib.mask(MaskRegister.fromByte(evex.a()));
 				}
-				final byte nextByte = b.read1();
-				switch (nextByte) {
+				final byte opcodeByte = b.read1();
+				switch (opcodeByte) {
 					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB);
+					case (byte) 0x01 -> ib.opcode(Opcode.VPCMPLTB);
+					case (byte) 0x02 -> ib.opcode(Opcode.VPCMPLEB);
 					case (byte) 0x04 -> ib.opcode(Opcode.VPCMPNEQB);
-					default ->
-						throw new IllegalArgumentException(
-								String.format("Unknown opcode corresponding to byte 0x%02x.", nextByte));
+					case (byte) 0x05 -> ib.opcode(Opcode.VPCMPNLTB);
+					case (byte) 0x06 -> ib.opcode(Opcode.VPCMPNLEB);
+					default -> throw new UnknownOpcode(opcodeByte);
+				}
+				yield ib.build();
+			}
+			case VPCMPEQB_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				final byte r1 = or(evex.v1() ? 0 : (byte) 0b00010000, getByteFromV(evex));
+				final byte r2 = or(evex.x() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm));
+				final InstructionBuilder ib = Instruction.builder()
+						.opcode(Opcode.VPCMPEQB)
+						.op(MaskRegister.fromByte(getByteFromReg(evex, modrm)))
+						.op(evex.l() ? RegisterYMM.fromByte(r1) : RegisterXMM.fromByte(r1))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(evex.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: (evex.l() ? RegisterYMM.fromByte(r2) : RegisterXMM.fromByte(r2)));
+				if (evex.a() != (byte) 0) {
+					ib.mask(MaskRegister.fromByte(evex.a()));
 				}
 				yield ib.build();
 			}
