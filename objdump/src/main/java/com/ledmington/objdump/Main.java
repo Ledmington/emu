@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
@@ -129,7 +130,7 @@ public final class Main {
 
 		final long startOfSection = s.header().getVirtualAddress();
 
-		final Map<Long, String> functionNames = findFunctionNames(st, sectionIndex);
+		final Map<Long, String> functionNames = findFunctionNames(st);
 
 		final boolean hasNoFunctions = functionNames.isEmpty();
 		if (hasNoFunctions) {
@@ -164,17 +165,31 @@ public final class Main {
 				}
 			}
 
-			if (isJumpWithImmediate(inst)) {
+			out.print("\t");
+
+			if (inst.opcode() == Opcode.BND_JMP) {
+				// bnd jmps and LEAs need to print the address they point to
+				final IndirectOperand io = (IndirectOperand) inst.firstOperand();
+				final long displacement = io.getDisplacement();
+				final long computedOffset = startOfSection + endOfInstruction + displacement;
+				final long gotSectionAddress =
+						st.getSectionByName(".got.plt").orElseThrow().header().getVirtualAddress();
+				out.printf(
+						"%s        # %x <_GLOBAL_OFFSET_TABLE_+0x%x>%n",
+						InstructionEncoder.toIntelSyntax(inst, true, 6, true),
+						computedOffset,
+						computedOffset - gotSectionAddress);
+			} else if (isJumpWithImmediate(inst)) {
 				// conditional jumps and 'call' instructions need to be printed differently: instead of just the
 				// immediate, we need to add it to the current IP and display the name of the function it points to.
 				final long jumpOffset = getAsLong((Immediate) inst.firstOperand());
 				final long offsetFromStartOfFunction = endOfInstruction + jumpOffset;
 				final long actualPointedAddress = startOfSection + offsetFromStartOfFunction;
 				out.printf(
-						"\t%-6s %x <%s+0x%x>%n",
+						"%-6s %x <%s+0x%x>%n",
 						inst.opcode().mnemonic(), actualPointedAddress, functionName, offsetFromStartOfFunction);
 			} else {
-				out.printf("\t%s%n", InstructionEncoder.toIntelSyntax(inst, true, 6, true));
+				out.printf("%s%n", InstructionEncoder.toIntelSyntax(inst, true, 6, true));
 			}
 
 			if (lengthOfInstruction >= 8L) {
@@ -209,12 +224,13 @@ public final class Main {
 				&& (inst.opcode() == Opcode.JMP
 						|| inst.opcode() == Opcode.JE
 						|| inst.opcode() == Opcode.JNE
-						|| inst.opcode() == Opcode.JLE)
+						|| inst.opcode() == Opcode.JLE
+						|| inst.opcode() == Opcode.CALL)
 				&& inst.firstOperand() instanceof Immediate;
 	}
 
 	@SuppressWarnings("PMD.UseConcurrentHashMap")
-	private static Map<Long, String> findFunctionNames(final SectionTable st, final int sectionIndex) {
+	private static Map<Long, String> findFunctionNames(final SectionTable st) {
 		final Map<Long, String> functionNames = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
 		if (symbolTable.isPresent()) {
@@ -227,8 +243,8 @@ public final class Main {
 				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
 				// final boolean isGlobal = ste.info().getBinding() == SymbolTableEntryBinding.STB_GLOBAL;
 				// final boolean isHidden = ste.visibility() == SymbolTableEntryVisibility.STV_HIDDEN;
-				final boolean isInThisSection = ste.sectionTableIndex() == sectionIndex;
-				if (!(isFunction /*&& (isGlobal || isHidden)*/ && isInThisSection)) {
+				// final boolean isInThisSection = ste.sectionTableIndex() == sectionIndex;
+				if (!(isFunction /*&& (isGlobal || isHidden) && isInThisSection*/)) {
 					continue;
 				}
 				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
