@@ -1092,6 +1092,7 @@ public final class InstructionDecoder {
 		final byte MOVAPx_R128_M128_OPCODE = (byte) 0x28;
 		final byte MOVAPx_M128_R128_OPCODE = (byte) 0x29;
 		final byte CVTSI2SD_OPCODE = (byte) 0x2a;
+		final byte MOVNTPS_OPCODE = (byte) 0x2b;
 		final byte UCOMISx_OPCODE = (byte) 0x2e;
 		final byte TABLE_A4_OPCODE = (byte) 0x38;
 		final byte TABLE_A5_OPCODE = (byte) 0x3a;
@@ -2169,6 +2170,16 @@ public final class InstructionDecoder {
 								pref.rex().isOperand64Bit(),
 								pref.rex().hasModRMRMExtension(),
 								pref.hasOperandSizeOverridePrefix()))
+						.build();
+			}
+			case MOVNTPS_OPCODE -> {
+				final ModRM modrm = modrm(b);
+				yield Instruction.builder()
+						.opcode(Opcode.MOVNTPS)
+						.op(parseIndirectOperand(b, pref, modrm)
+								.pointer(PointerSize.XMMWORD_PTR)
+								.build())
+						.op(RegisterXMM.fromByte(getByteFromReg(pref.rex(), modrm)))
 						.build();
 			}
 			case UCOMISx_OPCODE -> {

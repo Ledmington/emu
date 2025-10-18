@@ -1403,6 +1403,7 @@ public final class InstructionEncoder {
 				}
 			}
 			case CVTSI2SD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2a);
+			case MOVNTPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x2b);
 			case DIVSD, DIVSS, DIVPS, DIVPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x5e);
 			case ADDSD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x58);
 			case XORPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x57);

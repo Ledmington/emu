@@ -522,6 +522,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.BZHI, List.of(R32_R32_R32, R64_R64_R64)),
 			Map.entry(Opcode.MOVBE, List.of(R32_M32)),
 			Map.entry(Opcode.MOVNTDQ, List.of(M128_RX)),
+			Map.entry(Opcode.MOVNTPS, List.of(M128_RX)),
 			Map.entry(Opcode.SFENCE, List.of(NO_ARGS)),
 			Map.entry(Opcode.VMOVUPS, List.of(RZ_M512, M512_RZ)),
 			Map.entry(Opcode.VMOVDQU8, List.of(RZ_M512, M512_RZ)),

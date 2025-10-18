@@ -10370,6 +10370,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								XMM1),
 						"movntdq XMMWORD PTR [rdi],xmm1",
 						"66 0f e7 0f"),
+				// Movntps
+				test(
+						new Instruction(
+								Opcode.MOVNTPS,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x40)
+										.build(),
+								XMM4),
+						"movntps XMMWORD PTR [rdi+0x40],xmm4",
+						"0f 2b 67 40"),
 				// Sfence
 				test(new Instruction(Opcode.SFENCE), "sfence", "0f ae f8"),
 				// Lddqu

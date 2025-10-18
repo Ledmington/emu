@@ -368,6 +368,9 @@ public enum Opcode {
 	/** Store double quadword using non-temporal hint. */
 	MOVNTDQ,
 
+	/** Store packed single precision floating-point values using non-temporal hint. */
+	MOVNTPS,
+
 	/** Move quadword. */
 	MOVQ,
 
