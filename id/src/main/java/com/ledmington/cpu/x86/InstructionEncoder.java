@@ -1923,7 +1923,6 @@ public final class InstructionEncoder {
 			case VPCMPGTB -> wb.write((byte) 0x64);
 			case VPCMPEQB -> {
 				if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
-					// if(((EvexPrefix)inst.getPrefix()).m())
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x00;
 				} else if (isFirstR(inst)
@@ -2395,24 +2394,15 @@ public final class InstructionEncoder {
 
 	private static byte getEvexOpcodeMap(final Instruction inst) {
 		return switch (inst.opcode()) {
-			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
+			// 0F map (mm = 01)
+			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB, VPCMPEQB ->
+				(byte) 0b001;
+			// 0F 38 map (mm = 10)
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
-			case VPCMPNEQUB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
-			case VPCMPEQB -> {
-				if (isFirstMask(inst) && isSecondR(inst) && isThirdEER(inst)) {
-					yield (byte) 0b001;
-				} else {
-					yield (byte) 0b011;
-				}
-			}
+			// 0F 3A map (mm = 11)
+			case VPCMPNEQUB, VPCMPEQB_IMM8, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
 			default -> (byte) 0b000;
 		};
-	}
-
-	private static boolean isThirdEER(final Instruction inst) {
-		return inst.hasThirdOperand()
-				&& inst.thirdOperand() instanceof final Register r
-				&& Registers.requiresEvexExtension(r);
 	}
 
 	private static void encodeEvexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {

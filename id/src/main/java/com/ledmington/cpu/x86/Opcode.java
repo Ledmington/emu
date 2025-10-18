@@ -734,6 +734,9 @@ public enum Opcode {
 	/** Compare packed data for equal. */
 	VPCMPEQB,
 
+	/** Compare packed data for equal (variant with 8-bit immediate value). */
+	VPCMPEQB_IMM8("vpcmpeqb"),
+
 	/** Compare packed data for equal. */
 	VPCMPEQD,
 

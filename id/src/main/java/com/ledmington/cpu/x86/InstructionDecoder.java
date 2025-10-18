@@ -74,8 +74,11 @@ public final class InstructionDecoder {
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
 	private static final byte MODRM_MOD_NO_DISP = (byte) 0b11;
 	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
-	private static final Map<String, Opcode> fromStringToOpcode =
-			Arrays.stream(Opcode.values()).collect(Collectors.toUnmodifiableMap(Opcode::mnemonic, x -> x));
+	private static final Map<String, Opcode> fromStringToOpcode = Arrays.stream(Opcode.values())
+			.filter(opcode ->
+					// special case of 'vpcmpeqb' which maps to the same opcode
+					opcode != Opcode.VPCMPEQB_IMM8)
+			.collect(Collectors.toUnmodifiableMap(Opcode::mnemonic, x -> x));
 	private static final Map<String, Register> fromStringToRegister = Stream.of(
 					Arrays.stream(Register8.values()),
 					Arrays.stream(Register16.values()),
@@ -4216,7 +4219,7 @@ public final class InstructionDecoder {
 				}
 				final byte opcodeByte = b.read1();
 				switch (opcodeByte) {
-					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB);
+					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB_IMM8);
 					case (byte) 0x01 -> ib.opcode(Opcode.VPCMPLTB);
 					case (byte) 0x02 -> ib.opcode(Opcode.VPCMPLEB);
 					case (byte) 0x04 -> ib.opcode(Opcode.VPCMPNEQB);
