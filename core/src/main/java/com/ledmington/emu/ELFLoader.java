@@ -192,9 +192,9 @@ public final class ELFLoader {
 			if (symtab != null && strtab != null) {
 				final String ctorName =
 						strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
-				logger.debug("Running .init_array[%d] = %,d (0x%016x) '%s'", i, c, c, ctorName);
+				logger.debug("Running .init_array[%d] = 0x%x '%s'", i, c, ctorName);
 			} else {
-				logger.debug("Running .init_array[%d] = %,d (0x%016x)", i, c, c);
+				logger.debug("Running .init_array[%d] = 0x%x", i, c);
 			}
 			cpu.turnOn();
 			runFrom(cpu, entryPointVirtualAddress + c);
