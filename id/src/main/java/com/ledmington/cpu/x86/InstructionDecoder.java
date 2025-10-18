@@ -74,11 +74,8 @@ public final class InstructionDecoder {
 	private static final byte ADDRESS_SIZE_OVERRIDE_PREFIX = (byte) 0x67;
 	private static final byte MODRM_MOD_NO_DISP = (byte) 0b11;
 	private static final byte CS_SEGMENT_OVERRIDE_PREFIX = (byte) 0x2e;
-	private static final Map<String, Opcode> fromStringToOpcode = Arrays.stream(Opcode.values())
-			.filter(opcode ->
-					// special case of 'vpcmpeqb' which maps to the same opcode
-					opcode != Opcode.VPCMPEQB_IMM8)
-			.collect(Collectors.toUnmodifiableMap(Opcode::mnemonic, x -> x));
+	private static final Map<String, Opcode> fromStringToOpcode =
+			Arrays.stream(Opcode.values()).collect(Collectors.toUnmodifiableMap(Opcode::mnemonic, x -> x));
 	private static final Map<String, Register> fromStringToRegister = Stream.of(
 					Arrays.stream(Register8.values()),
 					Arrays.stream(Register16.values()),
@@ -721,11 +718,11 @@ public final class InstructionDecoder {
 				: (is8Bit ? 8 : (pref.rex().isOperand64Bit() ? 64 : 32));
 
 		if (!isIndirectOperandNeeded(modrm) && modrm.reg() == (byte) 0b111 && modrm.rm() == (byte) 0b000) {
-			return new Instruction(Opcode.XBEGIN, imm32(b));
+			return new GeneralInstruction(Opcode.XBEGIN, imm32(b));
 		}
 
 		if (modrm.reg() == (byte) 0b000) {
-			return new Instruction(
+			return new GeneralInstruction(
 					Opcode.MOV,
 					isIndirectOperandNeeded(modrm)
 							? parseIndirectOperand(b, pref, modrm)
@@ -1503,7 +1500,7 @@ public final class InstructionDecoder {
 
 			case SHLD_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.SHLD,
 						Register64.fromByte(getByteFromRM(pref, modrm)),
 						Register64.fromByte(getByteFromReg(pref.rex(), modrm)),
@@ -1511,7 +1508,7 @@ public final class InstructionDecoder {
 			}
 			case SHRD_R_R_IMM_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.SHRD,
 						Register64.fromByte(getByteFromRM(pref, modrm)),
 						Register64.fromByte(getByteFromReg(pref.rex(), modrm)),
@@ -1519,7 +1516,7 @@ public final class InstructionDecoder {
 			}
 			case SHRD_R_R_CL_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.SHRD,
 						Register64.fromByte(getByteFromRM(pref, modrm)),
 						Register64.fromByte(getByteFromReg(pref.rex(), modrm)),
@@ -2318,31 +2315,31 @@ public final class InstructionDecoder {
 		if (isIndirectOperandNeeded(modrm)) {
 			return switch (modrm.reg()) {
 				case (byte) 0b000 ->
-					new Instruction(
+					new GeneralInstruction(
 							Opcode.FXSAVE,
 							parseIndirectOperand(b, pref, modrm)
 									.pointer(PointerSize.QWORD_PTR)
 									.build());
 				case (byte) 0b001 ->
-					new Instruction(
+					new GeneralInstruction(
 							Opcode.FXRSTOR,
 							parseIndirectOperand(b, pref, modrm)
 									.pointer(PointerSize.QWORD_PTR)
 									.build());
 				case (byte) 0b011 ->
-					new Instruction(
+					new GeneralInstruction(
 							Opcode.STMXCSR,
 							parseIndirectOperand(b, pref, modrm)
 									.pointer(PointerSize.DWORD_PTR)
 									.build());
 				case (byte) 0b100 ->
-					new Instruction(
+					new GeneralInstruction(
 							Opcode.XSAVE,
 							parseIndirectOperand(b, pref, modrm)
 									.pointer(PointerSize.QWORD_PTR)
 									.build());
 				case (byte) 0b101 ->
-					new Instruction(
+					new GeneralInstruction(
 							Opcode.XRSTOR,
 							parseIndirectOperand(b, pref, modrm)
 									.pointer(PointerSize.QWORD_PTR)
@@ -2369,7 +2366,7 @@ public final class InstructionDecoder {
 		if (isIndirectOperandNeeded(modrm)) {
 			return switch (modrm.reg()) {
 				case (byte) 0b100 ->
-					new Instruction(
+					new GeneralInstruction(
 							Opcode.XSAVEC,
 							parseIndirectOperand(b, pref, modrm)
 									.pointer(PointerSize.QWORD_PTR)
@@ -4011,7 +4008,7 @@ public final class InstructionDecoder {
 			}
 			case KORTESTD_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.KORTESTD, MaskRegister.fromByte(modrm.reg()), MaskRegister.fromByte(modrm.rm()));
 			}
 			case KORD_OPCODE -> {
@@ -4168,14 +4165,14 @@ public final class InstructionDecoder {
 			}
 			case VMOVQ_R64_RX_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.VMOVQ,
 						Register64.fromByte(getByteFromRM(evex, modrm)),
 						RegisterXMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm))));
 			}
 			case VMOVQ_RX_M128_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.VMOVQ,
 						RegisterXMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm))),
 						parseIndirectOperand(b, pref, modrm)
@@ -4219,7 +4216,7 @@ public final class InstructionDecoder {
 				}
 				final byte opcodeByte = b.read1();
 				switch (opcodeByte) {
-					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB_IMM8);
+					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB);
 					case (byte) 0x01 -> ib.opcode(Opcode.VPCMPLTB);
 					case (byte) 0x02 -> ib.opcode(Opcode.VPCMPLEB);
 					case (byte) 0x04 -> ib.opcode(Opcode.VPCMPNEQB);
@@ -4304,7 +4301,7 @@ public final class InstructionDecoder {
 			}
 			case VPMINUB_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.VPMINUB,
 						RegisterYMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm))),
 						RegisterYMM.fromByte(or(evex.v1() ? 0 : (byte) 0b00010000, getByteFromV(evex))),
@@ -4338,7 +4335,7 @@ public final class InstructionDecoder {
 			}
 			case VPORQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new Instruction(
+				yield new GeneralInstruction(
 						Opcode.VPORQ,
 						RegisterYMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm))),
 						RegisterYMM.fromByte(or(evex.v1() ? 0 : (byte) 0b00010000, getByteFromV(evex))),

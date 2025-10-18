@@ -2395,12 +2395,18 @@ public final class InstructionEncoder {
 	private static byte getEvexOpcodeMap(final Instruction inst) {
 		return switch (inst.opcode()) {
 			// 0F map (mm = 01)
-			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB, VPCMPEQB ->
-				(byte) 0b001;
+			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
 			// 0F 38 map (mm = 10)
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
 			// 0F 3A map (mm = 11)
-			case VPCMPNEQUB, VPCMPEQB_IMM8, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
+			case VPCMPNEQUB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
+			case VPCMPEQB -> {
+				if (inst instanceof WeirdVpcmpeqb) {
+					yield (byte) 0b001;
+				} else {
+					yield (byte) 0b011;
+				}
+			}
 			default -> (byte) 0b000;
 		};
 	}

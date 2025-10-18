@@ -17,330 +17,86 @@
  */
 package com.ledmington.cpu.x86;
 
-import java.util.Objects;
-
 /** High-level representation of an x86 instruction. */
-public final class Instruction {
+public interface Instruction {
 
-	private final InstructionPrefix prefix;
-	private final Opcode code;
-	private final MaskRegister destinationMask;
-	private final boolean destinationMaskZero;
-	private final Operand op1;
-	private final Operand op2;
-	private final Operand op3;
-	private final Operand op4;
-
-	public static InstructionBuilder builder() {
+	static InstructionBuilder builder() {
 		return new InstructionBuilder();
 	}
 
-	/* default */ Instruction(
-			final InstructionPrefix prefix,
-			final Opcode opcode,
-			final MaskRegister destinationMask,
-			final boolean destinationMaskZero,
-			final Operand firstOperand,
-			final Operand secondOperand,
-			final Operand thirdOperand,
-			final Operand fourthOperand) {
-		this.prefix = prefix;
-		this.code = Objects.requireNonNull(opcode);
-		this.destinationMask = destinationMask;
-		this.destinationMaskZero = destinationMaskZero;
-		this.op1 = firstOperand;
-		if (firstOperand == null && secondOperand != null) {
-			throw new IllegalArgumentException(String.format(
-					"Cannot have an x86 instruction with a second operand (%s) but not a first.", secondOperand));
-		}
-		this.op2 = secondOperand;
-		if (thirdOperand != null && (firstOperand == null || secondOperand == null)) {
-			throw new IllegalArgumentException(String.format(
-					"Cannot have an x86 instruction with a third operand (%s) but not a first or a second.",
-					thirdOperand));
-		}
-		this.op3 = thirdOperand;
-		if (fourthOperand != null && (firstOperand == null || secondOperand == null || thirdOperand == null)) {
-			throw new IllegalArgumentException(String.format(
-					"Cannot have an x86 instruction with a fourth operand (%s) but not a first or a second or a third.",
-					fourthOperand));
-		}
-		this.op4 = fourthOperand;
-	}
+	Opcode opcode();
 
-	/**
-	 * Creates an instruction with a prefix and two operands (like REP MOVS BYTE PTR ES:[EDI],BYTE PTR DS:[ESI]).
-	 *
-	 * @param prefix The prefix of the Instruction.
-	 * @param opcode The opcode of the Instruction.
-	 * @param firstOperand The first operand of the Instruction.
-	 * @param secondOperand The second operand of the Instruction.
-	 */
-	public Instruction(
-			final InstructionPrefix prefix,
-			final Opcode opcode,
-			final Operand firstOperand,
-			final Operand secondOperand) {
-		this(prefix, opcode, null, false, firstOperand, secondOperand, null, null);
-	}
+	boolean hasFirstOperand();
 
-	/**
-	 * Creates an Instruction with 3 operands (like PSHUFD XMM0, XMM1, 0x12).
-	 *
-	 * @param opcode The opcode of the Instruction.
-	 * @param firstOperand The first operand of the Instruction.
-	 * @param secondOperand The second operand of the Instruction.
-	 * @param thirdOperand The third of the Instruction.
-	 */
-	public Instruction(
-			final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
-		this(null, opcode, null, false, firstOperand, secondOperand, thirdOperand, null);
-	}
+	boolean hasSecondOperand();
 
-	public Instruction(
-			final InstructionPrefix prefix,
-			final Opcode opcode,
-			final Operand firstOperand,
-			final Operand secondOperand,
-			final Operand thirdOperand) {
-		this(prefix, opcode, null, false, firstOperand, secondOperand, thirdOperand, null);
-	}
+	boolean hasThirdOperand();
 
-	public Instruction(
-			final Opcode opcode,
-			final Operand firstOperand,
-			final Operand secondOperand,
-			final Operand thirdOperand,
-			final Operand fourthOperand) {
-		this(null, opcode, null, false, firstOperand, secondOperand, thirdOperand, fourthOperand);
-	}
+	boolean hasFourthOperand();
 
-	/**
-	 * Creates an Instruction with two operands (like XOR EAX, EAX).
-	 *
-	 * @param opcode The opcode of the Instruction.
-	 * @param firstOperand The first operand of the Instruction.
-	 * @param secondOperand The second operand of the Instruction.
-	 */
-	public Instruction(final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
-		this(null, opcode, null, false, firstOperand, secondOperand, null, null);
-	}
-
-	public Instruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
-		this(prefix, opcode, null, false, firstOperand, null, null, null);
-	}
-
-	public Instruction(final InstructionPrefix prefix, final Opcode opcode) {
-		this(prefix, opcode, null, false, null, null, null, null);
-	}
-
-	/**
-	 * Creates an Instruction with one operand (like PUSH R9).
-	 *
-	 * @param opcode The opcode of the instruction.
-	 * @param firstOperand The only operand of this instruction.
-	 */
-	public Instruction(final Opcode opcode, final Operand firstOperand) {
-		this(null, opcode, null, false, firstOperand, null, null, null);
-	}
-
-	/**
-	 * Creates an instruction with just the opcode (like NOP or ENDBR64).
-	 *
-	 * @param opcode The opcode of the instruction.
-	 */
-	public Instruction(final Opcode opcode) {
-		this(null, opcode, null, false, null, null, null, null);
-	}
-
-	public boolean hasPrefix() {
-		return prefix != null;
-	}
-
-	public boolean hasLockPrefix() {
-		return prefix == InstructionPrefix.LOCK;
-	}
-
-	public boolean hasRepPrefix() {
-		return prefix == InstructionPrefix.REP;
-	}
-
-	public boolean hasRepnzPrefix() {
-		return prefix == InstructionPrefix.REPNZ;
-	}
-
-	public InstructionPrefix getPrefix() {
-		if (!hasPrefix()) {
-			throw new IllegalArgumentException("No prefix.");
-		}
-		return prefix;
-	}
-
-	/**
-	 * Returns the opcode of this Instruction.
-	 *
-	 * @return The opcode of this Instruction.
-	 */
-	public Opcode opcode() {
-		return code;
-	}
-
-	public boolean hasDestinationMask() {
-		return destinationMask != null;
-	}
-
-	public MaskRegister getDestinationMask() {
-		if (!hasDestinationMask()) {
-			throw new IllegalArgumentException("No destination mask.");
-		}
-		return destinationMask;
-	}
-
-	public boolean hasZeroDestinationMask() {
-		return hasDestinationMask() && destinationMaskZero;
-	}
-
-	public boolean hasOperand(final int index) {
-		return switch (index) {
+	default boolean hasOperand(final int operandIndex) {
+		return switch (operandIndex) {
 			case 0 -> hasFirstOperand();
 			case 1 -> hasSecondOperand();
 			case 2 -> hasThirdOperand();
 			case 3 -> hasFourthOperand();
-			default -> throw new IllegalArgumentException(String.format("No operand at index %,d.", index));
+			default -> throw new IllegalArgumentException(String.format("Invalid operand index: %,d.", operandIndex));
 		};
 	}
 
-	public Operand operand(final int index) {
-		return switch (index) {
+	Operand firstOperand();
+
+	Operand secondOperand();
+
+	Operand thirdOperand();
+
+	Operand fourthOperand();
+
+	default Operand operand(final int operandIndex) {
+		return switch (operandIndex) {
 			case 0 -> firstOperand();
 			case 1 -> secondOperand();
 			case 2 -> thirdOperand();
 			case 3 -> fourthOperand();
-			default -> throw new IllegalArgumentException(String.format("No operand at index %,d.", index));
+			default -> throw new IllegalArgumentException(String.format("Invalid operand index: %,d.", operandIndex));
 		};
 	}
 
-	public boolean hasFirstOperand() {
-		return op1 != null;
+	boolean hasPrefix();
+
+	InstructionPrefix getPrefix();
+
+	default boolean hasLockPrefix() {
+		return hasPrefix() && getPrefix() == InstructionPrefix.LOCK;
 	}
 
-	/**
-	 * Returns the first operand of this Instruction.
-	 *
-	 * @return The first operand.
-	 * @throws IllegalArgumentException If this instruction has no operands.
-	 */
-	public Operand firstOperand() {
-		if (!hasFirstOperand()) {
-			throw new IllegalArgumentException("No first operand.");
-		}
-		return op1;
+	default boolean hasRepPrefix() {
+		return hasPrefix() && getPrefix() == InstructionPrefix.REP;
 	}
 
-	public boolean hasSecondOperand() {
-		return op2 != null;
+	default boolean hasRepnzPrefix() {
+		return hasPrefix() && getPrefix() == InstructionPrefix.REPNZ;
 	}
 
-	/**
-	 * Returns the second operand of this Instruction.
-	 *
-	 * @return The second operand.
-	 * @throws IllegalArgumentException If this instruction has less than two operands.
-	 */
-	public Operand secondOperand() {
-		if (!hasSecondOperand()) {
-			throw new IllegalArgumentException("No second operand.");
-		}
-		return op2;
-	}
+	boolean hasDestinationMask();
 
-	public boolean hasThirdOperand() {
-		return op3 != null;
-	}
+	boolean hasZeroDestinationMask();
 
-	public Operand thirdOperand() {
-		if (!hasThirdOperand()) {
-			throw new IllegalArgumentException("No third operand.");
-		}
-		return op3;
-	}
+	MaskRegister getDestinationMask();
 
-	public boolean hasFourthOperand() {
-		return op4 != null;
-	}
-
-	public Operand fourthOperand() {
-		if (!hasFourthOperand()) {
-			throw new IllegalArgumentException("No fourth operand.");
-		}
-		return op4;
-	}
-
-	public int getNumOperands() {
-		if (op4 != null) {
+	default int getNumOperands() {
+		if (hasFourthOperand()) {
 			return 4;
 		}
-		if (op3 != null) {
+		if (hasThirdOperand()) {
 			return 3;
 		}
-		if (op2 != null) {
+		if (hasSecondOperand()) {
 			return 2;
 		}
-		if (op1 != null) {
+		if (hasFirstOperand()) {
 			return 1;
 		}
 		return 0;
-	}
-
-	/**
-	 * Checks whether this instruction is part of the legacy/compatibility x86 set.
-	 *
-	 * @return True if it is legacy, false otherwise.
-	 */
-	public boolean isLegacy() {
-		return code == Opcode.ENDBR32;
-	}
-
-	@Override
-	public String toString() {
-		return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
-				+ ";mask=" + destinationMask + ";destinationMaskZero=" + destinationMaskZero
-				+ ";operands=[" + op1 + "," + op2 + "," + op3 + "," + op4 + "]"
-				+ ")";
-	}
-
-	@Override
-	public int hashCode() {
-		int h = 17;
-		h = 31 * h + Objects.hashCode(prefix);
-		h = 31 * h + code.hashCode();
-		h = 31 * h + Objects.hashCode(destinationMask);
-		h = 31 * h + Boolean.hashCode(destinationMaskZero);
-		h = 31 * h + Objects.hashCode(op1);
-		h = 31 * h + Objects.hashCode(op2);
-		h = 31 * h + Objects.hashCode(op3);
-		h = 31 * h + Objects.hashCode(op4);
-		return h;
-	}
-
-	@Override
-	public boolean equals(final Object other) {
-		if (other == null) {
-			return false;
-		}
-		if (this == other) {
-			return true;
-		}
-		if (!(other instanceof final Instruction inst)) {
-			return false;
-		}
-		return Objects.equals(this.prefix, inst.prefix)
-				&& this.code.equals(inst.code)
-				&& Objects.equals(this.destinationMask, inst.destinationMask)
-				&& this.destinationMaskZero == inst.destinationMaskZero
-				&& Objects.equals(this.op1, inst.op1)
-				&& Objects.equals(this.op2, inst.op2)
-				&& Objects.equals(this.op3, inst.op3)
-				&& Objects.equals(this.op4, inst.op4);
 	}
 }

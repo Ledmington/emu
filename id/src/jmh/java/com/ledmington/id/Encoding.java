@@ -30,6 +30,7 @@ import org.openjdk.jmh.annotations.Timeout;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
+import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
@@ -51,7 +52,7 @@ public class Encoding {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 	}
 
-	private final Instruction inst = new Instruction(
+	private final Instruction inst = new GeneralInstruction(
 			Opcode.CMP,
 			IndirectOperand.builder()
 					.pointer(PointerSize.WORD_PTR)
