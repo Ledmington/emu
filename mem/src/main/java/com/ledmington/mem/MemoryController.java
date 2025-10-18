@@ -319,25 +319,7 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * Reads 4 contiguous bytes starting from the given address.
-	 *
-	 * @param address The address to start reading from.
-	 * @return A 32-bit value read.
-	 */
-	public int read4(final long address) {
-		checkRead(address, 4);
-		checkInitialized(address, 4);
-
-		int x = 0x00000000;
-		x |= BitUtils.asInt(mem.read(address));
-		x |= (BitUtils.asInt(mem.read(address + 1L)) << 8);
-		x |= (BitUtils.asInt(mem.read(address + 2L)) << 16);
-		x |= (BitUtils.asInt(mem.read(address + 3L)) << 24);
-		return x;
-	}
-
-	/**
-	 * Reads 8 contiguous bytes starting from the given address.
+	 * Reads 8 contiguous bytes starting from the given address (little-endian).
 	 *
 	 * @param address The address to start reading from.
 	 * @return A 64-bit value read.
@@ -401,7 +383,7 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * Writes 8 contiguous bytes at the given address.
+	 * Writes 8 contiguous bytes at the given address (little-endian).
 	 *
 	 * @param address The memory location where to write.
 	 * @param value The 64-bit value to write.
@@ -409,7 +391,7 @@ public final class MemoryController implements Memory {
 	@Override
 	public void write(final long address, final long value) {
 		checkWrite(address, 8);
-		initialize(address, BitUtils.asBEBytes(value));
+		initialize(address, BitUtils.asLEBytes(value));
 	}
 
 	@Override

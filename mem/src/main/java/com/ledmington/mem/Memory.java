@@ -34,6 +34,42 @@ public interface Memory {
 	 */
 	byte read(long address);
 
+	/**
+	 * Reads 2 contiguous bytes (little-endian) starting at the given address.
+	 *
+	 * @param address The address to read from.
+	 * @return The 2-byte value that was stored at the given address.
+	 */
+	default short read2(final long address) {
+		// Little-endian
+		short x = 0;
+		x = BitUtils.or(x, BitUtils.asShort(read(address)));
+		x = BitUtils.or(x, BitUtils.shl(BitUtils.asShort(read(address + 1L)), 8));
+		return x;
+	}
+
+	/**
+	 * Reads 4 contiguous bytes (little-endian) starting at the given address.
+	 *
+	 * @param address The address to read from.
+	 * @return The 4-byte value that was stored at the given address.
+	 */
+	default int read4(final long address) {
+		// Little-endian
+		int x = 0;
+		x |= BitUtils.asInt(read(address));
+		x |= (BitUtils.asInt(read(address + 1L)) << 8);
+		x |= (BitUtils.asInt(read(address + 2L)) << 16);
+		x |= (BitUtils.asInt(read(address + 3L)) << 24);
+		return x;
+	}
+
+	/**
+	 * Reads 8 contiguous bytes (little-endian) starting at the given address.
+	 *
+	 * @param address The address to read from.
+	 * @return The 8-byte value that was stored at the given address.
+	 */
 	default long read8(final long address) {
 		// Little-endian
 		long x = 0x0000000000000000L;
@@ -56,14 +92,46 @@ public interface Memory {
 	 */
 	void write(long address, byte value);
 
+	/**
+	 * Writes an arbitrary number of single-byte values contiguously in memory.
+	 *
+	 * @param address The address to start writing from.
+	 * @param values THe array of values to write contiguously.
+	 */
 	default void write(final long address, final byte[] values) {
 		for (int i = 0; i < values.length; i++) {
 			write(address + i, values[i]);
 		}
 	}
 
+	/**
+	 * Writes a 2-byte value at the given address (little-endian).
+	 *
+	 * @param address The address to write the value at.
+	 * @param value The value to be written.
+	 */
+	default void write(final long address, final short value) {
+		write(address, BitUtils.asLEBytes(value));
+	}
+
+	/**
+	 * Writes a 4-byte value at the given address (little-endian).
+	 *
+	 * @param address The address to write the value at.
+	 * @param value The value to be written.
+	 */
+	default void write(final long address, final int value) {
+		write(address, BitUtils.asLEBytes(value));
+	}
+
+	/**
+	 * Writes an 8-byte value at the given address (little-endian).
+	 *
+	 * @param address The address to write the value at.
+	 * @param value The value to be written.
+	 */
 	default void write(final long address, final long value) {
-		write(address, BitUtils.asBEBytes(value));
+		write(address, BitUtils.asLEBytes(value));
 	}
 
 	/**

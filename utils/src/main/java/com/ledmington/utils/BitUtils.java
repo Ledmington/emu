@@ -218,6 +218,22 @@ public final class BitUtils {
 	}
 
 	/**
+	 * Computes the bitwise OR and returns it as a short.
+	 *
+	 * @param a The first operand.
+	 * @param b The second operand.
+	 * @param others The other operands.
+	 * @return The bitwise OR as a short.
+	 */
+	public static short or(final short a, final short b, final short... others) {
+		short x = asShort(a | b);
+		for (final short y : others) {
+			x = asShort(x | y);
+		}
+		return x;
+	}
+
+	/**
 	 * Computes the bitwise XOR and returns it as a byte.
 	 *
 	 * @param a The left-hand side operand.
@@ -273,6 +289,17 @@ public final class BitUtils {
 	}
 
 	/**
+	 * Shift (logical) to the left and return as a short.
+	 *
+	 * @param s The short to be shifted.
+	 * @param x The number of bits to shift.
+	 * @return The shifted value, as a short.
+	 */
+	public static short shl(final short s, final int x) {
+		return asShort(s << x);
+	}
+
+	/**
 	 * Shift (logical) to the left and return as a long.
 	 *
 	 * @param l The long to be shifted.
@@ -283,23 +310,80 @@ public final class BitUtils {
 		return l << x;
 	}
 
+	public static byte[] asBEBytes(final byte x) {
+		throw new UnsupportedOperationException("Converting a single byte to array of big-endian bytes?");
+	}
+
+	/**
+	 * Returns the given 16-bit short as an array of 2 big-endian bytes.
+	 *
+	 * @param x The 16-bit short to be split.
+	 * @return An array of 2 big-endian bytes.
+	 */
+	public static byte[] asBEBytes(final short x) {
+		return new byte[] {asByte(x >>> 8), asByte(x)};
+	}
+
 	/**
 	 * Returns the given 32-bit integer as an array of 4 big-endian bytes.
 	 *
 	 * @param x The 32-bit integer to be split.
-	 * @return An array of 4 big endian bytes.
+	 * @return An array of 4 big-endian bytes.
 	 */
 	public static byte[] asBEBytes(final int x) {
-		return new byte[] {asByte(x), asByte(x >>> 8), asByte(x >>> 16), asByte(x >>> 24)};
+		return new byte[] {asByte(x >>> 24), asByte(x >>> 16), asByte(x >>> 8), asByte(x)};
 	}
 
 	/**
 	 * Returns the given 64-bit long as an array of 8 big-endian bytes.
 	 *
 	 * @param x The 64-bit long to be split.
-	 * @return An array of 8 big endian bytes.
+	 * @return An array of 8 big-endian bytes.
 	 */
 	public static byte[] asBEBytes(final long x) {
+		return new byte[] {
+			asByte(x >>> 56),
+			asByte(x >>> 48),
+			asByte(x >>> 40),
+			asByte(x >>> 32),
+			asByte(x >>> 24),
+			asByte(x >>> 16),
+			asByte(x >>> 8),
+			asByte(x)
+		};
+	}
+
+	public static byte[] asLEBytes(final byte x) {
+		throw new UnsupportedOperationException("Converting a single byte to array of little-endian bytes?");
+	}
+
+	/**
+	 * Returns the given 16-bit short as an array of 2 little-endian bytes.
+	 *
+	 * @param x The 16-bit short to be split.
+	 * @return An array of 2 little-endian bytes.
+	 */
+	public static byte[] asLEBytes(final short x) {
+		return new byte[] {asByte(x), asByte(x >>> 8)};
+	}
+
+	/**
+	 * Returns the given 32-bit int as an array of 4 little-endian bytes.
+	 *
+	 * @param x The 32-bit int to be split.
+	 * @return An array of 4 little-endian bytes.
+	 */
+	public static byte[] asLEBytes(final int x) {
+		return new byte[] {asByte(x), asByte(x >>> 8), asByte(x >>> 16), asByte(x >>> 24)};
+	}
+
+	/**
+	 * Returns the given 64-bit long as an array of 8 little-endian bytes.
+	 *
+	 * @param x The 64-bit long to be split.
+	 * @return An array of 8 little-endian bytes.
+	 */
+	public static byte[] asLEBytes(final long x) {
 		return new byte[] {
 			asByte(x),
 			asByte(x >>> 8),

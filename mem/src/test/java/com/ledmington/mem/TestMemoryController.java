@@ -18,28 +18,23 @@
 package com.ledmington.mem;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.random.RandomGenerator;
-import java.util.random.RandomGeneratorFactory;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.ledmington.mem.exc.IllegalReadException;
 import com.ledmington.mem.exc.IllegalWriteException;
 
-final class TestMemoryController {
+final class TestMemoryController extends TestMemory {
 
-	private static final RandomGenerator rng =
-			RandomGeneratorFactory.getDefault().create(42);
-
-	private static Stream<Arguments> randomMemoryLocations() {
-		return Stream.generate(rng::nextLong).distinct().limit(100).map(Arguments::of);
+	@Override
+	protected Memory getMemory() {
+		final MemoryController mem =
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		mem.setPermissions(Long.MIN_VALUE, Long.MAX_VALUE, true, true, false);
+		return mem;
 	}
 
 	@ParameterizedTest
@@ -52,41 +47,7 @@ final class TestMemoryController {
 		mem.setPermissions(address, address, true, true, false);
 
 		assertDoesNotThrow(() -> mem.read(address));
-		assertThrows(IllegalReadException.class, () -> mem.read4(address));
 		assertThrows(IllegalReadException.class, () -> mem.read8(address));
-	}
-
-	@ParameterizedTest
-	@MethodSource("randomMemoryLocations")
-	void multiByteRead(final long address) {
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		mem.setPermissions(address, address + 7L, true, true, false);
-		mem.write(address, (byte) 0x00);
-		mem.write(address + 1L, (byte) 0x01);
-		mem.write(address + 2L, (byte) 0x02);
-		mem.write(address + 3L, (byte) 0x03);
-		mem.write(address + 4L, (byte) 0x04);
-		mem.write(address + 5L, (byte) 0x05);
-		mem.write(address + 6L, (byte) 0x06);
-		mem.write(address + 7L, (byte) 0x07);
-		assertEquals(
-				0x0706050403020100L,
-				mem.read8(address),
-				() -> String.format("Expected 0x%016x but was 0x%016x.", 0x0706050403020100L, mem.read8(address)));
-	}
-
-	@ParameterizedTest
-	@MethodSource("randomMemoryLocations")
-	void multiByteWrite(final long address) {
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		mem.setPermissions(address, address + 7L, true, true, false);
-		mem.write(address, 0x0706050403020100L);
-		assertEquals(
-				0x0706050403020100L,
-				mem.read8(address),
-				() -> String.format("Expected 0x%016x but was 0x%016x.", 0x0706050403020100L, mem.read8(address)));
 	}
 
 	@ParameterizedTest
