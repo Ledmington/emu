@@ -135,7 +135,19 @@ public final class InstructionBuilder {
 		}
 
 		alreadyBuilt = true;
-		return new Instruction(prefix, opcode, destinationMask, destinationMaskZero, op1, op2, op3, op4);
+
+		if (prefix == null
+				&& opcode == Opcode.VPCMPEQB
+				&& destinationMask == null
+				&& !destinationMaskZero
+				&& op1 instanceof MaskRegister
+				&& op2 instanceof RegisterYMM
+				&& op3 instanceof RegisterYMM
+				&& op4 == null) {
+			return new WeirdVpcmpeqb(opcode, op1, op2, op3);
+		}
+
+		return new GeneralInstruction(prefix, opcode, destinationMask, destinationMaskZero, op1, op2, op3, op4);
 	}
 
 	@Override

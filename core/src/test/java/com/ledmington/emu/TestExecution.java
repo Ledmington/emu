@@ -32,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.IndirectOperandBuilder;
 import com.ledmington.cpu.x86.Instruction;
@@ -210,7 +211,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0L);
-		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		cpu.executeOne(new GeneralInstruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -228,7 +229,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		cpu.executeOne(new GeneralInstruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -245,8 +246,8 @@ final class TestExecution {
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
-		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+        expected.set(RFlags.SIGN, result < 0);
+        cpu.executeOne(new GeneralInstruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -264,7 +265,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
+		cpu.executeOne(new GeneralInstruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -282,7 +283,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0L);
-		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -300,7 +301,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -318,7 +319,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -336,7 +337,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -354,7 +355,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0L);
-		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -372,7 +373,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -390,7 +391,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -408,7 +409,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -426,7 +427,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0L);
-		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -444,7 +445,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -462,7 +463,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -480,7 +481,7 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
-		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -493,7 +494,7 @@ final class TestExecution {
 		final long oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(r1, oldValue2);
-		cpu.executeOne(new Instruction(Opcode.MOV, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOV, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -506,7 +507,7 @@ final class TestExecution {
 		final int oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(r1, oldValue2);
-		cpu.executeOne(new Instruction(Opcode.MOV, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOV, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -519,7 +520,7 @@ final class TestExecution {
 		final short oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(r1, oldValue2);
-		cpu.executeOne(new Instruction(Opcode.MOV, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOV, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -532,7 +533,7 @@ final class TestExecution {
 		final byte oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(r1, oldValue2);
-		cpu.executeOne(new Instruction(Opcode.MOV, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOV, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -545,7 +546,7 @@ final class TestExecution {
 		final int oldValue2 = cpu.getRegisters().get(r2);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(r1, oldValue2);
-		cpu.executeOne(new Instruction(Opcode.MOVSXD, r1, r2));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVSXD, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -558,7 +559,7 @@ final class TestExecution {
 		final short address = BitUtils.asShort(cpu.computeIndirectOperand(src));
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
-		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
+		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -571,7 +572,7 @@ final class TestExecution {
 		final int address = BitUtils.asInt(cpu.computeIndirectOperand(src));
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
-		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
+		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -584,7 +585,7 @@ final class TestExecution {
 		final long address = cpu.computeIndirectOperand(src);
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
-		cpu.executeOne(new Instruction(Opcode.LEA, dest, src));
+		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),

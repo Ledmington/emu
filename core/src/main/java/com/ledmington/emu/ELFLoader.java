@@ -25,8 +25,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.Immediate;
-import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
@@ -149,7 +149,7 @@ public final class ELFLoader {
 		// Since it is not possible to push a 64-bit immediate value, we need to use a register temporarily
 		final long oldValue = cpu.getRegisters().get(Register64.R15);
 		set(Register64.R15, value);
-		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
+		cpu.executeOne(new GeneralInstruction(Opcode.PUSH, Register64.R15));
 		set(Register64.R15, oldValue);
 	}
 
@@ -166,7 +166,7 @@ public final class ELFLoader {
 	}
 
 	private void set(final Register64 r, final long value) {
-		cpu.executeOne(new Instruction(Opcode.MOVABS, r, new Immediate(value)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r, new Immediate(value)));
 	}
 
 	/**
