@@ -40,7 +40,7 @@ public final class GenerateE2ETestFiles {
 	private static final List<String> SEARCH_DIRECTORIES =
 			switch (os) {
 				case WINDOWS ->
-					List.of(
+					java.util.List.of(
 							"C:\\MinGW\\bin",
 							"C:\\TDM-GCC-64\\bin",
 							"C:\\Program Files\\LLVM\\bin",
@@ -49,6 +49,9 @@ public final class GenerateE2ETestFiles {
 				case MACOS -> List.of("/usr/bin", "/usr/local/bin", "/opt/homebrew/bin", "/opt/local/bin");
 				case LINUX -> List.of("/usr/bin", "/usr/local/bin", "/bin", "/opt/bin");
 			};
+	private static final List<String> POSSIBLE_COMPILERS = List.of("gcc", "clang", "cc");
+	private static final List<String> POSSIBLE_ASSEMBLERS = List.of("nasm");
+	private static final List<String> POSSIBLE_LINKERS = List.of("ld", "lld");
 	private static String C_COMPILER = null;
 	private static String ASSEMBLER = null;
 	private static String LINKER = null;
@@ -68,9 +71,7 @@ public final class GenerateE2ETestFiles {
 	}
 
 	private static String findCCompiler() {
-		final List<String> compilers = List.of("gcc", "clang", "cc");
-
-		final String compilerPath = findExecutable(SEARCH_DIRECTORIES, compilers);
+		final String compilerPath = findExecutable(SEARCH_DIRECTORIES, POSSIBLE_COMPILERS);
 		if (compilerPath != null) {
 			return compilerPath;
 		}
@@ -79,7 +80,7 @@ public final class GenerateE2ETestFiles {
 		final String pathEnv = System.getenv("PATH");
 		if (pathEnv != null) {
 			final List<String> pathDirs = List.of(pathEnv.split(File.pathSeparator));
-			return findExecutable(pathDirs, compilers);
+			return findExecutable(pathDirs, POSSIBLE_COMPILERS);
 		}
 
 		return null;
@@ -107,11 +108,11 @@ public final class GenerateE2ETestFiles {
 	}
 
 	private static String findAssembler() {
-		return findExecutable(SEARCH_DIRECTORIES, List.of("nasm"));
+		return findExecutable(SEARCH_DIRECTORIES, POSSIBLE_ASSEMBLERS);
 	}
 
 	private static String findLinker() {
-		return findExecutable(SEARCH_DIRECTORIES, List.of("ld"));
+		return findExecutable(SEARCH_DIRECTORIES, POSSIBLE_LINKERS);
 	}
 
 	public static void main(final String[] args) {
@@ -123,7 +124,7 @@ public final class GenerateE2ETestFiles {
 
 		C_COMPILER = findCCompiler();
 		if (C_COMPILER == null) {
-			System.err.println("Could not find a C compiler.");
+			System.err.printf("Could not find a C compiler. Tried: %s.", String.join(", ", POSSIBLE_COMPILERS));
 			System.exit(-1);
 			return;
 		}
@@ -131,19 +132,19 @@ public final class GenerateE2ETestFiles {
 
 		ASSEMBLER = findAssembler();
 		if (ASSEMBLER == null) {
-			System.err.println("Could not find an assembler.");
+			System.err.printf("Could not find an assembler. Tried: %s.", String.join(", ", POSSIBLE_ASSEMBLERS));
 			System.exit(-1);
 			return;
 		}
-		System.out.printf("Assembler: '%s'%n", ASSEMBLER);
+		System.out.printf("Assembler : '%s'%n", ASSEMBLER);
 
 		LINKER = findLinker();
 		if (LINKER == null) {
-			System.err.println("Could not find a linker.");
+			System.err.printf("Could not find a linker. Tried: %s.", String.join(", ", POSSIBLE_LINKERS));
 			System.exit(-1);
 			return;
 		}
-		System.out.printf("Linker: '%s'%n", LINKER);
+		System.out.printf("Linker    :  '%s'%n", LINKER);
 
 		System.out.println();
 

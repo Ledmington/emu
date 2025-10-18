@@ -36,7 +36,7 @@ final class TestEmulation {
 								.getContextClassLoader()
 								.getResource(String.join(File.separator, "generated", executableName)),
 						() -> String.format(
-								"File '%s' not found: did you forget to run './gradlew :core:generateE2ETestFiles'?",
+								"File '%s' not found: did you forget to run './gradlew :core:generateEndToEndTestFiles'?",
 								executableName))
 				.getPath();
 		final Emu emu = new Emu(Emu.getDefaultExecutionContext());
