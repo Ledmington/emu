@@ -23,9 +23,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
+import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.SectionTable;
@@ -34,9 +36,7 @@ import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeaderFlags;
 import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.sym.SymbolTableEntry;
-import com.ledmington.elf.section.sym.SymbolTableEntryBinding;
 import com.ledmington.elf.section.sym.SymbolTableEntryType;
-import com.ledmington.elf.section.sym.SymbolTableEntryVisibility;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -138,15 +138,17 @@ public final class Main {
 
 		final byte[] content = ((LoadableSection) s).getLoadableContent();
 		final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(content, true, 1L);
+		String functionName = "";
 		while (b.getPosition() < content.length) {
-			if (!hasNoFunctions) {
-				final long currentPosition = startOfSection + b.getPosition();
-				if (functionNames.containsKey(currentPosition)) {
-					if (b.getPosition() > 0L) {
-						out.println();
-					}
-					out.printf("%016x <%s>:%n", currentPosition, functionNames.get(currentPosition));
+			final long currentPosition = startOfSection + b.getPosition();
+			final boolean hasFunctionName = functionNames.containsKey(currentPosition);
+
+			if (hasFunctionName) {
+				functionName = functionNames.get(currentPosition);
+				if (b.getPosition() > 0L) {
+					out.println();
 				}
+				out.printf("%016x <%s>:%n", currentPosition, functionName);
 			}
 
 			final long startOfInstruction = b.getPosition();
@@ -161,7 +163,19 @@ public final class Main {
 					out.print("   ");
 				}
 			}
-			out.printf("\t%s%n", InstructionEncoder.toIntelSyntax(inst, true, 6, true));
+
+			if (isJumpWithImmediate(inst)) {
+				// conditional jumps and 'call' instructions need to be printed differently: instead of just the
+				// immediate, we need to add it to the current IP and display the name of the function it points to.
+				final long jumpOffset = getAsLong((Immediate) inst.firstOperand());
+				final long offsetFromStartOfFunction = endOfInstruction + jumpOffset;
+				final long actualPointedAddress = startOfSection + offsetFromStartOfFunction;
+				out.printf(
+						"\t%-6s %x <%s+0x%x>%n",
+						inst.opcode().mnemonic(), actualPointedAddress, functionName, offsetFromStartOfFunction);
+			} else {
+				out.printf("\t%s%n", InstructionEncoder.toIntelSyntax(inst, true, 6, true));
+			}
 
 			if (lengthOfInstruction >= 8L) {
 				out.printf("%8x:\t", startOfSection + startOfInstruction + 7L);
@@ -179,6 +193,26 @@ public final class Main {
 		out.println();
 	}
 
+	private static long getAsLong(final Immediate imm) {
+		return switch (imm.bits()) {
+			case 8 -> imm.asByte();
+			case 16 -> imm.asShort();
+			case 32 -> imm.asInt();
+			case 64 -> imm.asLong();
+			default -> throw new IllegalArgumentException("Invalid immediate.");
+		};
+	}
+
+	private static boolean isJumpWithImmediate(final Instruction inst) {
+		return inst.hasFirstOperand()
+				&& !inst.hasSecondOperand()
+				&& (inst.opcode() == Opcode.JMP
+						|| inst.opcode() == Opcode.JE
+						|| inst.opcode() == Opcode.JNE
+						|| inst.opcode() == Opcode.JLE)
+				&& inst.firstOperand() instanceof Immediate;
+	}
+
 	@SuppressWarnings("PMD.UseConcurrentHashMap")
 	private static Map<Long, String> findFunctionNames(final SectionTable st, final int sectionIndex) {
 		final Map<Long, String> functionNames = new HashMap<>();
@@ -191,10 +225,10 @@ public final class Main {
 			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
 				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
-				final boolean isGlobal = ste.info().getBinding() == SymbolTableEntryBinding.STB_GLOBAL;
-				final boolean isHidden = ste.visibility() == SymbolTableEntryVisibility.STV_HIDDEN;
+				// final boolean isGlobal = ste.info().getBinding() == SymbolTableEntryBinding.STB_GLOBAL;
+				// final boolean isHidden = ste.visibility() == SymbolTableEntryVisibility.STV_HIDDEN;
 				final boolean isInThisSection = ste.sectionTableIndex() == sectionIndex;
-				if (!(isFunction && (isGlobal || isHidden) && isInThisSection)) {
+				if (!(isFunction /*&& (isGlobal || isHidden)*/ && isInThisSection)) {
 					continue;
 				}
 				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
