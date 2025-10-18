@@ -746,11 +746,23 @@ public enum Opcode {
 	/** Packed compare implicit length strings, return index. */
 	VPCMPISTRI,
 
+	/** Compare packed data for less than or equal. */
+	VPCMPLEB,
+
+	/** Compare packed data for less than. */
+	VPCMPLTB,
+
 	/** Compare packed data for not equal. */
 	VPCMPNEQB,
 
 	/** Compare packed byte values into mask. */
 	VPCMPNEQUB,
+
+	/** Compare packed data for not less than or equal. */
+	VPCMPNLEB,
+
+	/** Compare packed data for not less than. */
+	VPCMPNLTB,
 
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB,

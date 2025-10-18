@@ -10219,6 +10219,14 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"vpcmpeqb k0,ymm16,ymm18",
 						"62 b3 7d 20 3f c2 00"),
 				test(
+						new WeirdVpcmpeqb(Opcode.VPCMPEQB, K0, YMM16, YMM17),
+						"vpcmpeqb k0,ymm16,ymm17",
+						"62 b1 7d 20 74 c1"),
+				test(
+						new WeirdVpcmpeqb(Opcode.VPCMPEQB, K0, YMM16, YMM18),
+						"vpcmpeqb k0,ymm16,ymm18",
+						"62 b1 7d 20 74 c2"),
+				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQB)
 								.mask(K2)
@@ -10243,6 +10251,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqb k1{k2},xmm17,xmm18",
 						"62 b3 75 02 3f ca 00"),
+				// Vpcmpltb
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPLTB)
+								.op(K0)
+								.op(YMM16)
+								.op(YMM18)
+								.build(),
+						"vpcmpltb k0,ymm16,ymm18",
+						"62 b3 7d 20 3f c2 01"),
 				// Vpcmpeqd
 				test(
 						new GeneralInstruction(
