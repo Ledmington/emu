@@ -193,7 +193,7 @@ public final class GeneralInstruction implements Instruction {
 		return prefix;
 	}
 
-	@Override
+    @Override
 	public Opcode opcode() {
 		return code;
 	}
