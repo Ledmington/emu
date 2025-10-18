@@ -17,6 +17,7 @@
  */
 package com.ledmington.utils;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.random.RandomGenerator;
@@ -247,5 +248,62 @@ final class TestBitUtils {
 			final String actual = BitUtils.toBinaryString(x);
 			assertEquals(expected, actual, () -> String.format("Expected '%s' but was '%s'.", expected, actual));
 		}
+	}
+
+	@Test
+	void twoBytesBigEndian() {
+		assertArrayEquals(new byte[] {(byte) 0x12, (byte) 0x34}, BitUtils.asBEBytes((short) 0x1234));
+	}
+
+	@Test
+	void fourBytesBigEndian() {
+		assertArrayEquals(
+				new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78}, BitUtils.asBEBytes(0x12345678));
+	}
+
+	@Test
+	void eightBytesBigEndian() {
+		assertArrayEquals(
+				new byte[] {
+					(byte) 0x01,
+					(byte) 0x02,
+					(byte) 0x03,
+					(byte) 0x04,
+					(byte) 0x05,
+					(byte) 0x06,
+					(byte) 0x07,
+					(byte) 0x08,
+				},
+				BitUtils.asBEBytes(0x0102030405060708L));
+	}
+
+	@Test
+	void twoBytesLittleEndian() {
+		assertArrayEquals(new byte[] {(byte) 0x34, (byte) 0x12}, BitUtils.asLEBytes((short) 0x1234));
+	}
+
+	@Test
+	void fourBytesLittleEndian() {
+		assertArrayEquals(
+				new byte[] {
+					(byte) 0x78, (byte) 0x56, (byte) 0x34, (byte) 0x12,
+				},
+				BitUtils.asLEBytes(0x12345678));
+	}
+
+	@Test
+	void eightBytesLittleEndian() {
+		assertArrayEquals(
+				new byte[] {
+					(byte) 0x08,
+					(byte) 0x07,
+					(byte) 0x06,
+					(byte) 0x05,
+					(byte) 0x04,
+					(byte) 0x03,
+					(byte) 0x02,
+					(byte) 0x01,
+				},
+				BitUtils.asLEBytes(0x0102030405060708L));
 	}
 }

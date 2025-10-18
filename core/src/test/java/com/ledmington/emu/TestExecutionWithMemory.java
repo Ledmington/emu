@@ -104,7 +104,7 @@ final class TestExecutionWithMemory {
 		final long oldValue2 = rng.nextLong();
 		cpu.executeOne(new Instruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		final long val = rng.nextLong();
-		mem.initialize(oldValue2, BitUtils.asBEBytes(val));
+		mem.initialize(oldValue2, val);
 		mem.setPermissions(oldValue2, oldValue2 + 7L, true, false, false);
 		cpu.executeOne(new Instruction(
 				Opcode.MOV,

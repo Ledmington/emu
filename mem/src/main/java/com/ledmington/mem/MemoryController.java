@@ -412,6 +412,18 @@ public final class MemoryController implements Memory {
 		}
 	}
 
+	public void initialize(final long address, final short value) {
+		initialize(address, BitUtils.asLEBytes(value));
+	}
+
+	public void initialize(final long address, final int value) {
+		initialize(address, BitUtils.asLEBytes(value));
+	}
+
+	public void initialize(final long address, final long value) {
+		initialize(address, BitUtils.asLEBytes(value));
+	}
+
 	/**
 	 * Writes the given bytes in the memory without checking nor modifying permissions.
 	 *

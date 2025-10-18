@@ -330,8 +330,8 @@ public final class ELFLoader {
 		mem.initialize(
 				p,
 				is32Bit
-						? BitUtils.asBEBytes(commandLineArguments.length)
-						: BitUtils.asBEBytes(BitUtils.asLong(commandLineArguments.length)));
+						? BitUtils.asLEBytes(commandLineArguments.length)
+						: BitUtils.asLEBytes(BitUtils.asLong(commandLineArguments.length)));
 		p += wordSize;
 
 		// write argv pointers and contents
@@ -341,8 +341,8 @@ public final class ELFLoader {
 			mem.initialize(
 					p,
 					is32Bit
-							? BitUtils.asBEBytes(BitUtils.asInt(currentArgPointer))
-							: BitUtils.asBEBytes(currentArgPointer));
+							? BitUtils.asLEBytes(BitUtils.asInt(currentArgPointer))
+							: BitUtils.asLEBytes(currentArgPointer));
 			final byte[] argBytes = arg.getBytes(StandardCharsets.UTF_8);
 			mem.initialize(currentArgPointer, argBytes);
 			mem.initialize(currentArgPointer + BitUtils.asLong(argBytes.length), (byte) 0x00);
@@ -362,8 +362,8 @@ public final class ELFLoader {
 			mem.initialize(
 					p,
 					is32Bit
-							? BitUtils.asBEBytes(BitUtils.asInt(currentEnvPointer))
-							: BitUtils.asBEBytes(currentEnvPointer));
+							? BitUtils.asLEBytes(BitUtils.asInt(currentEnvPointer))
+							: BitUtils.asLEBytes(currentEnvPointer));
 			mem.initialize(currentEnvPointer, envBytes);
 			mem.initialize(currentEnvPointer + BitUtils.asLong(envBytes.length), (byte) 0x00);
 			currentEnvPointer += BitUtils.asLong(envBytes.length) + 1L;
