@@ -391,27 +391,27 @@ public final class Main {
 		}
 
 		if (displaySymbolTable) {
-			if (displayDynamicSymbolTable && dynsym.isPresent()) {
-				out.println();
-			}
 			final Optional<Section> symtab = elf.getSectionByName(".symtab");
-			if (symtab.isPresent() && gv.isPresent()) {
+			if (symtab.isPresent()) {
 				printSymbolTable(
 						(SymbolTableSection) symtab.orElseThrow(),
 						(GnuVersionSection) gv.orElse(null),
 						(GnuVersionRequirementsSection) gvr.orElse(null),
 						elf);
 			}
+			out.println();
 		}
 
 		final Optional<Section> hash = elf.getSectionByName(".hash");
 		if (displayHashSection && hash.isPresent()) {
 			printHashSection((HashTableSection) hash.orElseThrow());
+			out.println();
 		}
 
 		final Optional<Section> gnuhash = elf.getSectionByName(".gnu.hash");
 		if (displayGnuHashSection && gnuhash.isPresent()) {
 			printGnuHashSection((GnuHashSection) gnuhash.orElseThrow());
+			out.println();
 		}
 
 		if (displayVersionSections) {
@@ -428,6 +428,7 @@ public final class Main {
 
 				printVersionSection((GnuVersionRequirementsSection) gvr.orElseThrow(), elf);
 			}
+			out.println();
 		}
 
 		if (displayNoteSections) {
@@ -950,7 +951,7 @@ public final class Main {
 								versionNameOffset == -1 ? "" : "@" + symstrtab.getString(versionNameOffset),
 								rae.addend());
 					} else {
-						out.printf("                 %x%n", rae.addend());
+						out.printf("                   %x%n", rae.addend());
 					}
 				} else {
 					throw new IllegalArgumentException(String.format("Unknown relocation addend entry '%s'", rae));
@@ -1098,28 +1099,36 @@ public final class Main {
 		out.print("      Properties: ");
 
 		final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true, 1L);
+		final long start = robb.getPosition();
 		while (robb.getPosition() < BitUtils.asLong(nse.getDescriptionLength())) {
+			if (wide && robb.getPosition() > start) {
+				out.print(", ");
+			}
+
 			final int code = robb.read4();
 			final GnuPropertyType type = GnuPropertyType.fromCode(code);
 			final int datasz = robb.read4();
 			switch (type) {
 				case GNU_PROPERTY_X86_ISA_1_USED ->
-					printBoh(robb, datasz, "x86 ISA used: ", GnuPropertyType::decodeX86ISA);
+					printGNUPropertiesX86(robb, datasz, "x86 ISA used: ", GnuPropertyType::decodeX86ISA);
 				case GNU_PROPERTY_X86_ISA_1_NEEDED ->
-					printBoh(robb, datasz, "x86 ISA needed: ", GnuPropertyType::decodeX86ISA);
+					printGNUPropertiesX86(robb, datasz, "x86 ISA needed: ", GnuPropertyType::decodeX86ISA);
 				case GNU_PROPERTY_X86_FEATURE_1_AND ->
-					printBoh(robb, datasz, "x86 feature: ", GnuPropertyType::decodeX86ISAFeature1);
+					printGNUPropertiesX86(robb, datasz, "x86 feature: ", GnuPropertyType::decodeX86ISAFeature1);
 				case GNU_PROPERTY_X86_FEATURE_2_USED ->
-					printBoh(robb, datasz, "x86 feature: ", GnuPropertyType::decodeX86ISAFeature2);
+					printGNUPropertiesX86(robb, datasz, "x86 feature: ", GnuPropertyType::decodeX86ISAFeature2);
 				default -> throw new IllegalArgumentException(String.format("Unknown GNU property type '%s'.", type));
 			}
 
 			// skipping 4 bytes for alignment
 			robb.read4();
 		}
+		if (wide) {
+			out.println();
+		}
 	}
 
-	private static void printBoh(
+	private static void printGNUPropertiesX86(
 			final ReadOnlyByteBuffer robb,
 			final int datasz,
 			final String header,
@@ -1141,7 +1150,9 @@ public final class Main {
 		} else {
 			corruptLength(datasz);
 		}
-		out.println();
+		if (!wide) {
+			out.println();
+		}
 	}
 
 	private static void printGNUABITag(final NoteSectionEntry nse) {

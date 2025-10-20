@@ -206,30 +206,11 @@ public final class CheckReadelf {
 					.sorted()
 					.toList();
 		} else {
-			out.println("No arguments provided, looking for files inside /usr/bin.");
-			out.println();
-			try (Stream<Path> s =
-					Files.find(Path.of("/usr/bin").normalize().toAbsolutePath(), 1, (p, bfa) -> bfa.isRegularFile())) {
-				elfFiles = s.filter(p -> {
-							if (!Files.exists(p)) {
-								out.printf("File '%s' does not exist, skipping it.", p);
-								return false;
-							}
-							return true;
-						})
-						.filter(p -> {
-							if (!isELF(p)) {
-								out.printf("File '%s' is not an ELF, skipping it.", p);
-								return false;
-							}
-							return true;
-						})
-						.distinct()
-						.sorted()
-						.toList();
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
+			out.println("No arguments provided.");
+			out.flush();
+			out.close();
+			System.exit(-1);
+			return;
 		}
 
 		for (int i = 0; i < elfFiles.size(); i++) {
