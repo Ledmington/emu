@@ -192,11 +192,11 @@ public final class InstructionEncoder {
 		final String opcode = inst.opcode().mnemonic();
 		sb.append(opcode);
 
-		if (opcode.length() < opcodePad) {
-			sb.append(" ".repeat(opcodePad - opcode.length()));
-		}
-		sb.append(' ');
 		if (inst.hasFirstOperand()) {
+			if (opcode.length() < opcodePad) {
+				sb.append(" ".repeat(opcodePad - opcode.length()));
+			}
+			sb.append(' ');
 			sb.append(operandString(inst, inst.firstOperand(), shortHex));
 			if (inst.hasDestinationMask()) {
 				sb.append('{').append(inst.getDestinationMask().toIntelSyntax()).append('}');
