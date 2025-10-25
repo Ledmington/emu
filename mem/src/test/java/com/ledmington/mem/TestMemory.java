@@ -28,7 +28,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /** Base class for all implementors of {@link Memory}. */
-abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessMemory {
+abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessMemory, TestPagedMemory {
 
 	// Classes extending TestMemory must implement this method
 	protected abstract Memory getMemory();
