@@ -45,11 +45,24 @@ public class BenchPagedMemory {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 	}
 
+	private static final long startAddress = 0x1234_5678L;
+	private static final int numBytes = 1_000_000;
 	private final Memory mem = new PagedMemory(MemoryInitializer.zero());
 	private final RandomGenerator rng = RandomGeneratorFactory.getDefault().create(System.nanoTime());
 
+	public BenchPagedMemory() {
+		for (int i = 0; i < numBytes; i++) {
+			mem.write(startAddress + i, (byte) 0x99);
+		}
+	}
+
 	@Benchmark
-	public void retrieve() {
-		mem.read(rng.nextLong());
+	public void readInitializedAddress() {
+		mem.read(rng.nextLong(startAddress, startAddress + numBytes));
+	}
+
+	@Benchmark
+	public void readUninitializedAddress() {
+		mem.read(rng.nextLong(Long.MIN_VALUE, -startAddress));
 	}
 }
