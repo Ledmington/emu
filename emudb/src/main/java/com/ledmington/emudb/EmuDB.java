@@ -18,6 +18,8 @@
 package com.ledmington.emudb;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,6 +67,10 @@ import org.jline.terminal.TerminalBuilder;
 @SuppressWarnings({"PMD.SystemPrintln", "PMD.CyclomaticComplexity", "PMD.AvoidInstantiatingObjectsInLoops"})
 public final class EmuDB {
 
+	private static final PrintWriter out = System.console() == null
+			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
+			: System.console().writer();
+
 	private String[] savedArguments = null;
 	private ExecutionContext context = null;
 	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
@@ -97,8 +103,7 @@ public final class EmuDB {
 
 	private void printHelp() {
 		for (final Map.Entry<String, Command> e : commands.entrySet()) {
-			System.out.printf(
-					"\u001b[1m%s\u001b[0m -- %s%n", e.getKey(), e.getValue().description());
+			out.printf("\u001b[1m%s\u001b[0m -- %s%n", e.getKey(), e.getValue().description());
 		}
 	}
 
@@ -111,14 +116,14 @@ public final class EmuDB {
 
 		// final long baseStackValue = EmulatorConstants.getBaseStackValue();
 		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
-		System.out.printf("baseAddress = 0x%016x%n", EmulatorConstants.getBaseAddress());
-		System.out.printf("baseStackValue = 0x%016x%n", EmulatorConstants.getBaseStackValue());
-		System.out.printf("baseStackAddress = 0x%016x%n", EmulatorConstants.getBaseStackAddress());
-		System.out.printf("stackSize = 0x%016x%n", EmulatorConstants.getStackSize());
+		out.printf("baseAddress = 0x%016x%n", EmulatorConstants.getBaseAddress());
+		out.printf("baseStackValue = 0x%016x%n", EmulatorConstants.getBaseStackValue());
+		out.printf("baseStackAddress = 0x%016x%n", EmulatorConstants.getBaseStackAddress());
+		out.printf("stackSize = 0x%016x%n", EmulatorConstants.getStackSize());
 		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
 		int stackLevel = 0;
 		for (; /*rbp != baseStackValue &&*/ rbp != baseStackAddress && stackLevel < maxStackLevel; stackLevel++) {
-			System.out.printf("#%-2d 0x%016x", stackLevel, rbp);
+			out.printf("#%-2d 0x%016x", stackLevel, rbp);
 			if (hasDebugInfo) {
 				final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
 				final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
@@ -129,37 +134,36 @@ public final class EmuDB {
 								&& e.value() /*+ EmulatorConstants.getBaseAddress()*/ == finalRBP)
 						.findFirst();
 				if (entry.isPresent()) {
-					System.out.printf(
-							" in %s%n", strtab.getString(entry.orElseThrow().nameOffset()));
+					out.printf(" in %s%n", strtab.getString(entry.orElseThrow().nameOffset()));
 				}
 				{
 					for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 						final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
 						if (e.info().getType() == SymbolTableEntryType.STT_FUNC
 								&& e.value() == (rbp - 0x0000_8000_0000_0000L)) {
-							System.out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
+							out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
 						}
 					}
 				}
 			} else {
-				System.out.print(" in ??%n");
+				out.print(" in ??%n");
 			}
 
 			final long nextRbp = this.context.memory().read8(rbp);
 			if (nextRbp <= rbp) {
-				System.out.println("<Invalid frame or corrupted stack>");
+				out.println("<Invalid frame or corrupted stack>");
 				break;
 			}
 			rbp = nextRbp;
 		}
 
 		if (stackLevel >= maxStackLevel) {
-			System.out.println("<Max stack size reached>");
+			out.println("<Max stack size reached>");
 		}
 	}
 
 	private void printBreakpoint(final int breakpointIndex) {
-		System.out.printf(
+		out.printf(
 				"Breakpoint %,d at 0x%x '%s'%n",
 				breakpointIndex,
 				breakpoints.get(breakpointIndex).address(),
@@ -168,12 +172,12 @@ public final class EmuDB {
 
 	private void setBreakpoint(final String... args) {
 		if (hasNotLoadedFile()) {
-			System.out.println("You have not loaded a file. Try 'run'.");
+			out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
 		if (args.length == 0) {
 			if (breakpoints.isEmpty()) {
-				System.out.println("No breakpoints set up.");
+				out.println("No breakpoints set up.");
 			} else {
 				for (int i = 0; i < breakpoints.size(); i++) {
 					printBreakpoint(i);
@@ -186,7 +190,7 @@ public final class EmuDB {
 		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
 		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
 		if (symbolTable.isEmpty() || stringTable.isEmpty()) {
-			System.out.println("No debugging info present. Impossible to set up a breakpoint.");
+			out.println("No debugging info present. Impossible to set up a breakpoint.");
 			return;
 		}
 
@@ -208,7 +212,7 @@ public final class EmuDB {
 					}
 				}
 				if (!sameBreakpoints.isEmpty()) {
-					System.out.printf(
+					out.printf(
 							"Note: breakpoint%s %s are also set at 0x%x '%s'%n",
 							sameBreakpoints.size() == 1 ? "" : "s",
 							(sameBreakpoints.size() > 1
@@ -228,13 +232,13 @@ public final class EmuDB {
 			}
 		}
 		if (!found) {
-			System.out.printf("Function '%s' not defined.%n", functionName);
+			out.printf("Function '%s' not defined.%n", functionName);
 		}
 	}
 
 	private void showAsm(final String... args) {
 		if (hasNotLoadedFile()) {
-			System.out.println("You have not loaded a file. Try 'run'.");
+			out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
 
@@ -245,7 +249,7 @@ public final class EmuDB {
 
 		final Optional<Long> parsed = parseAddress(args[0]);
 		if (parsed.isEmpty()) {
-			System.out.printf(
+			out.printf(
 					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
 					args[0]);
 			return;
@@ -299,13 +303,13 @@ public final class EmuDB {
 		for (int i = 0; i < maxInstructions; i++) {
 			final long pos = bb.getPosition();
 			final Instruction decoded = InstructionDecoder.fromHex(bb);
-			System.out.printf("0x%016x : %s%n", pos, InstructionEncoder.toIntelSyntax(decoded));
+			out.printf("0x%016x : %s%n", pos, InstructionEncoder.toIntelSyntax(decoded));
 		}
 	}
 
 	private void showRegisters() {
 		if (hasNotLoadedFile()) {
-			System.out.println("You have not loaded a file. Try 'run'.");
+			out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
 
@@ -313,9 +317,9 @@ public final class EmuDB {
 
 		for (final Register64 r : Register64.values()) {
 			final long regValue = rf.get(r);
-			System.out.printf(" %-3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
+			out.printf(" %-3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
 		}
-		System.out.printf(
+		out.printf(
 				" RFLAGS : [ %s ]%n",
 				Arrays.stream(RFlags.values())
 						.sorted(Comparator.comparing(RFlags::bit))
@@ -326,17 +330,17 @@ public final class EmuDB {
 
 	private void showMemory(final String... args) {
 		if (hasNotLoadedFile()) {
-			System.out.println("You have not loaded a file. Try 'run'.");
+			out.println("You have not loaded a file. Try 'run'.");
 			return;
 		}
 		if (args.length == 0) {
-			System.out.println("Command 'mem' expects an address.");
+			out.println("Command 'mem' expects an address.");
 			return;
 		}
 
 		final Optional<Long> parsed = parseAddress(args[0]);
 		if (parsed.isEmpty()) {
-			System.out.printf(
+			out.printf(
 					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
 					args[0]);
 			return;
@@ -353,12 +357,12 @@ public final class EmuDB {
 		for (int i = 0; i < numTotalBytes; i++) {
 			final long currentAddress = actualStartAddress + i;
 			if (i % numBytesPerRow == 0) {
-				System.out.printf("0x%016x:", currentAddress);
+				out.printf("0x%016x:", currentAddress);
 			}
 			final String s = mem.isInitialized(currentAddress) ? String.format("%02x", mem.read(currentAddress)) : "xx";
-			System.out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
+			out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
 			if (i % numBytesPerRow == numBytesPerRow - 1) {
-				System.out.println();
+				out.println();
 			}
 		}
 	}
@@ -382,7 +386,7 @@ public final class EmuDB {
 	private void runFile(final String... args) {
 		if (hasNotLoadedFile()) {
 			if (args.length == 0) {
-				System.out.println("Command 'run' expects the path of a file.");
+				out.println("Command 'run' expects the path of a file.");
 				return;
 			}
 
@@ -399,13 +403,13 @@ public final class EmuDB {
 					this.context.cpu().executeOne();
 				} else {
 					final Breakpoint b = this.breakpoints.get(breakpointIndex.orElseThrow());
-					System.out.printf(
+					out.printf(
 							"Hit breakpoint %,d at 0x%x '%s'%n", breakpointIndex.orElseThrow(), b.address(), b.name());
 					break;
 				}
 			}
 		} catch (final IllegalMemoryAccessException e) {
-			System.out.println(e);
+			out.println(e);
 		}
 	}
 
@@ -437,7 +441,7 @@ public final class EmuDB {
 
 	private void restart() {
 		if (hasNotLoadedFile()) {
-			System.out.println("No execution to restart. Try 'run' first.");
+			out.println("No execution to restart. Try 'run' first.");
 			return;
 		}
 
@@ -448,7 +452,7 @@ public final class EmuDB {
 
 	private void loadFile(final String... args) {
 		if (args.length == 0) {
-			System.out.println("Command 'load' expects the path of a file.");
+			out.println("Command 'load' expects the path of a file.");
 			return;
 		}
 
@@ -533,12 +537,12 @@ public final class EmuDB {
 				if (commands.containsKey(command)) {
 					commands.get(command).command().accept(commandArguments);
 				} else {
-					System.out.printf("Command '%s' not found. Try 'help'.%n", command);
+					out.printf("Command '%s' not found. Try 'help'.%n", command);
 					final List<String> similarCommands = commands.keySet().stream()
 							.filter(c -> levenshteinDistance(c, command) == 1)
 							.toList();
 					if (!similarCommands.isEmpty()) {
-						System.out.printf(
+						out.printf(
 								"Maybe you meant one of these: %s.%n",
 								similarCommands.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")));
 					}
