@@ -98,14 +98,16 @@ public final class ELFLoader {
 			final long baseStackValue) {
 		loadSegments(elf, baseAddress);
 		loadSections(elf, baseAddress);
-		setupStack(baseStackAddress, stackSize);
 
-		// We make RSP point at the last 8 bytes of allocated memory
-		final long stackPointer = baseStackAddress + stackSize - 8L;
+		final long alignedBaseStackAddress = alignBaseStackAddress(baseStackAddress);
+		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
+		final long stackBottom = alignedBaseStackAddress - stackSize; // lowest address (stack limit)
+
+		setupStack(stackTop, stackBottom);
 
 		// These are fake instructions to set up the stack
-		set(Register64.RSP, stackPointer);
-		set(Register64.RBP, stackPointer);
+		set(Register64.RSP, stackTop);
+		// set(Register64.RBP, stackTop);
 
 		// Since it is not possible to push a 64-bit immediate value, we need to use a register temporarily
 		{
@@ -118,14 +120,14 @@ public final class ELFLoader {
 		final int argc = commandLineArguments.length;
 		set(Register64.RDI, BitUtils.asLong(argc));
 
-		final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
-				stackPointer, elf.getFileHeader().is32Bit(), commandLineArguments);
+		// final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
+		//		stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
 
-		final long argv = p.first();
-		set(Register64.RSI, argv);
+		// final long argv = p.first();
+		// set(Register64.RSI, argv);
 
-		final long envp = p.second();
-		set(Register64.RDX, envp);
+		// final long envp = p.second();
+		// set(Register64.RDX, envp);
 
 		if (elf.getSectionByName(".preinit_array").isPresent()) {
 			runPreInitArray();
@@ -147,6 +149,18 @@ public final class ELFLoader {
 		}
 		if (elf.getSectionByName(".ctors").isPresent()) {
 			runCtors();
+		}
+	}
+
+	/** Aligns the given address to a 16-byte boundary. */
+	private long alignBaseStackAddress(final long baseStackAddress) {
+		final boolean isAligned = (baseStackAddress & 0xFL) == 0L;
+		if (isAligned) {
+			return baseStackAddress;
+		} else {
+			final long alignedBaseStackAddress = (baseStackAddress + 15L) & 0xFFFFFFFFFFFFFFF0L;
+			logger.debug("Aligning base stack address to 16-byte boundary: 0x%x", alignedBaseStackAddress);
+			return alignedBaseStackAddress;
 		}
 	}
 
@@ -254,20 +268,14 @@ public final class ELFLoader {
 		throw new Error("Not implemented");
 	}
 
-	private void setupStack(final long baseStackAddress, final long stackSize) {
-		final long alignedBaseStackAddress;
-		final boolean isAligned = (baseStackAddress & 0xfL) == 0L;
-		if (isAligned) {
-			alignedBaseStackAddress = baseStackAddress;
-		} else {
-			alignedBaseStackAddress = (baseStackAddress + 15L) & 0xfffffffffffffff0L;
-			logger.debug("Aligning base stack address to 16-byte aligned value: 0x%x", baseStackAddress);
-		}
-
+	private void setupStack(final long stackTop, final long stackBottom) {
+		final long stackSize = stackTop - stackBottom;
 		logger.debug(
-				"Setting stack size to %,d bytes (%.3e B) at 0x%016x-0x%016x",
-				stackSize, (double) stackSize, alignedBaseStackAddress, alignedBaseStackAddress + stackSize - 1L);
-		mem.setPermissions(alignedBaseStackAddress, alignedBaseStackAddress + stackSize - 1L, true, true, false);
+				"Setting stack size to %,d bytes (%.3f MiB) at 0x%016x-0x%016x",
+				stackSize, (double) stackSize / 1_048_576.0, stackBottom, stackTop - 1L);
+		mem.setPermissions(stackBottom, stackTop - 1L, true, true, false);
+
+		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 	}
 
 	private long getNumEnvBytes() {

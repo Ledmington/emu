@@ -74,6 +74,7 @@ public final class EmuDB {
 			? new PrintWriter(System.out, false, StandardCharsets.UTF_8)
 			: System.console().writer();
 
+	private Path filepath = null;
 	private String[] savedArguments = null;
 	private ExecutionContext context = null;
 	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
@@ -81,6 +82,7 @@ public final class EmuDB {
 	private final List<Breakpoint> breakpoints = new ArrayList<>();
 	private static final String ANSI_RESET = "\u001b[0m";
 	private static final String ANSI_BOLD = "\u001b[1m";
+	private static final String ANSI_GREEN = "\u001b[32m";
 	private static final String ANSI_YELLOW = "\u001b[33m";
 	private static final String ANSI_BLUE = "\u001b[34m";
 
@@ -117,15 +119,10 @@ public final class EmuDB {
 	}
 
 	private void showStack() {
-		final int maxStackLevel = 100;
+		final int maxStackLevel = 100; // TODO: is this a sane value?
 
-		// final long baseStackValue = EmulatorConstants.getBaseStackValue();
 		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
-		out.printf("baseAddress = 0x%016x%n", EmulatorConstants.getBaseAddress());
-		out.printf("baseStackValue = 0x%016x%n", EmulatorConstants.getBaseStackValue());
-		out.printf("baseStackAddress = 0x%016x%n", EmulatorConstants.getBaseStackAddress());
-		out.printf("stackSize = 0x%016x%n", EmulatorConstants.getStackSize());
-		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
+		long rbp = this.context.cpu().getRegisters().get(Register64.RIP);
 		int stackLevel = 0;
 		for (; /*rbp != baseStackValue &&*/ rbp != baseStackAddress && stackLevel < maxStackLevel; stackLevel++) {
 			final String functionName = findFunctionName(rbp);
@@ -162,16 +159,6 @@ public final class EmuDB {
 			if (entry.isPresent()) {
 				return strtab.getString(entry.orElseThrow().nameOffset());
 			}
-
-			/*{ // TODO: remove this
-				for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
-					final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
-					if (e.info().getType() == SymbolTableEntryType.STT_FUNC
-							&& e.value() == (rbp - 0x0000_8000_0000_0000L)) {
-						out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
-					}
-				}
-			}*/
 		}
 		return "??";
 	}
@@ -395,10 +382,12 @@ public final class EmuDB {
 		final int numRowsAfter = 5;
 		final long actualStartAddress = (address / numBytesPerRow - numRowsBefore) * numBytesPerRow;
 		final long numTotalBytes = (numRowsBefore + numRowsAfter + 1) * numBytesPerRow;
+		final String addressFormatString =
+				"0x%0" + String.format("%x", actualStartAddress + numTotalBytes).length() + "x";
 		for (int i = 0; i < numTotalBytes; i++) {
 			final long currentAddress = actualStartAddress + i;
 			if (i % numBytesPerRow == 0) {
-				out.printf("0x%016x:", currentAddress);
+				out.printf("%s" + addressFormatString + "%s:", ANSI_BLUE, currentAddress, ANSI_RESET);
 			}
 			final String s = mem.isInitialized(currentAddress) ? String.format("%02x", mem.read(currentAddress)) : "xx";
 			out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
@@ -431,16 +420,22 @@ public final class EmuDB {
 				return;
 			}
 
-			final Path filepath = Path.of(args[0]).normalize().toAbsolutePath();
-			final String[] arguments = Arrays.copyOfRange(args, 1, args.length);
-			loadFile(String.valueOf(filepath), arguments);
+			loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
 		}
+
+		out.printf("Starting program: %s%s%s", ANSI_GREEN, this.filepath, ANSI_RESET);
+		for (final String arg : this.savedArguments) {
+			out.printf(" %s", arg);
+		}
+		out.println();
+		out.println();
 
 		try {
 			this.context.cpu().turnOn();
 			while (true) {
 				final Optional<Integer> breakpointIndex = checkBreakpoints();
 				if (breakpointIndex.isEmpty()) {
+					this.context.cpu().turnOn();
 					this.context.cpu().executeOne();
 				} else {
 					final Breakpoint b = this.breakpoints.get(breakpointIndex.orElseThrow());
@@ -506,18 +501,19 @@ public final class EmuDB {
 			return;
 		}
 
-		this.savedArguments = args;
-
 		loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
 	}
 
-	private void loadFile(final String filepath, final String... arguments) {
-		this.currentFile = ELFParser.parse(filepath);
+	private void loadFile(final String file, final String... arguments) {
+		this.filepath = Path.of(file).normalize().toAbsolutePath();
+		this.savedArguments = arguments;
+		System.out.println(Arrays.toString(arguments));
+		this.currentFile = ELFParser.parse(file);
 
 		this.context = createDefaultExecutionContext();
 
 		final Emu emu = new Emu(this.context, this.loader);
-		emu.load(filepath, arguments);
+		emu.load(file, arguments);
 
 		loader.load(
 				this.currentFile,
