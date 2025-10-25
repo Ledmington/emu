@@ -39,7 +39,7 @@ import com.ledmington.utils.MiniLogger;
 @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 10, time = 1, timeUnit = TimeUnit.SECONDS)
 @Timeout(time = 5)
-public class BenchMemory {
+public class BenchRandomAccessMemory {
 
 	static {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
