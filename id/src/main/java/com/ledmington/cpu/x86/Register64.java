@@ -40,11 +40,11 @@ public enum Register64 implements Register {
 	/** The register RDI. */
 	RDI,
 
-	/** The register RSP. Usually points to the top (the end) of the current stack frame. */
-	RSP,
-
 	/** The register RBP. Usually points to the base (the start) of the current stack frame. */
 	RBP,
+
+	/** The register RSP. Usually points to the top (the end) of the current stack frame. */
+	RSP,
 
 	/** The register R8. */
 	R8,
