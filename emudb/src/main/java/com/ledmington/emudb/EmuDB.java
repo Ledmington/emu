@@ -58,6 +58,7 @@ import com.ledmington.mem.RandomAccessMemory;
 import com.ledmington.mem.exc.IllegalMemoryAccessException;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
@@ -524,7 +525,7 @@ public final class EmuDB {
 				final String line;
 				try {
 					line = reader.readLine("(emudb) ").strip().toLowerCase(Locale.US);
-				} catch (final UserInterruptException e) {
+				} catch (final UserInterruptException | EndOfFileException e) {
 					break;
 				}
 				if (line.isBlank()) {
@@ -547,6 +548,8 @@ public final class EmuDB {
 								similarCommands.stream().map(s -> "'" + s + "'").collect(Collectors.joining(", ")));
 					}
 				}
+
+				out.flush();
 			}
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -554,9 +557,17 @@ public final class EmuDB {
 	}
 
 	public void run(final String... args) {
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			out.println();
+			out.flush();
+		}));
+
 		if (args.length > 0) {
 			this.loadFile(args);
 		}
 		runInteractively();
+
+		out.println();
+		out.flush();
 	}
 }
