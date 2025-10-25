@@ -56,7 +56,7 @@ import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
-import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.mem.PagedMemory;
 import com.ledmington.mem.exc.IllegalMemoryAccessException;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 
@@ -469,14 +469,14 @@ public final class EmuDB {
 	}
 
 	private ExecutionContext createDefaultExecutionContext() {
-		final RandomAccessMemory ram = new RandomAccessMemory(MemoryInitializer.random());
+		final Memory rawMem = new PagedMemory(MemoryInitializer.random());
 		// Proper memory controller for execution (checks permissions)
 		final MemoryController mc = new MemoryController(
-				ram,
+				rawMem,
 				EmulatorConstants.shouldBreakOnWrongPermissions(),
 				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
 		// Memory controller used directly by the debugger (does not check permissions)
-		final MemoryController mem = new MemoryController(ram, false, false);
+		final MemoryController mem = new MemoryController(rawMem, false, false);
 		final X86Cpu cpu = new X86Cpu(mc, new X86RegisterFile(), EmulatorConstants.shouldCheckInstruction());
 
 		this.loader = new ELFLoader(cpu, mc);

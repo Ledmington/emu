@@ -31,7 +31,7 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.mem.PagedMemory;
 import com.ledmington.utils.MiniLogger;
 
 public final class Emu {
@@ -60,7 +60,7 @@ public final class Emu {
 	 */
 	public static ExecutionContext getDefaultExecutionContext() {
 		final MemoryController mem = new MemoryController(
-				new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()),
+				new PagedMemory(EmulatorConstants.getMemoryInitializer()),
 				EmulatorConstants.shouldBreakOnWrongPermissions(),
 				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
 		final X86Cpu cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
@@ -75,7 +75,7 @@ public final class Emu {
 	 */
 	public static ExecutionContext getSafeExecutionContext() {
 		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), true, true);
+				new MemoryController(new PagedMemory(EmulatorConstants.getMemoryInitializer()), true, true);
 		final X86Cpu cpu = new X86Cpu(mem, true);
 		return new ExecutionContext(cpu, mem);
 	}
@@ -87,7 +87,7 @@ public final class Emu {
 	 */
 	public static ExecutionContext getFastExecutionContext() {
 		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), false, false);
+				new MemoryController(new PagedMemory(EmulatorConstants.getMemoryInitializer()), false, false);
 		final X86Cpu cpu = new X86Cpu(mem, false);
 		return new ExecutionContext(cpu, mem);
 	}

@@ -56,7 +56,7 @@ import com.ledmington.emu.InstructionFetcher;
 import com.ledmington.emu.RFlags;
 import com.ledmington.emu.RegisterFile;
 import com.ledmington.mem.MemoryController;
-import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.mem.PagedMemory;
 import com.ledmington.utils.MiniLogger;
 
 @SuppressWarnings("PMD.CouplingBetweenObjects")
@@ -230,7 +230,7 @@ public final class EmulatorView extends Stage {
 
 	private void loadFile(final File file) {
 		logger.info("Loading file '%s'", file.toString());
-		this.mem = new MemoryController(new RandomAccessMemory(EmulatorConstants.getMemoryInitializer()), false, false);
+		this.mem = new MemoryController(new PagedMemory(EmulatorConstants.getMemoryInitializer()), false, false);
 		this.cpu = new X86CpuAdapter(mem);
 
 		// TODO: implement this
