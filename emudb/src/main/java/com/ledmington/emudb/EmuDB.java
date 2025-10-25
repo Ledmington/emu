@@ -349,10 +349,11 @@ public final class EmuDB {
 		out.printf(
 				registerFormatString,
 				"eflags",
-				Arrays.stream(RFlags.values())
-						.mapToLong(RFlags::bit)
-						.reduce((a, b) -> (1L << a) | (1L << b))
-						.orElse(0L),
+				RFlags.defaultValue()
+						| Arrays.stream(RFlags.values())
+								.filter(rf::isSet)
+								.mapToLong(x -> 1L << x.bit())
+								.reduce(0L, (a, b) -> a | b),
 				"[ "
 						+ Arrays.stream(RFlags.values())
 								.sorted(Comparator.comparing(RFlags::bit))
