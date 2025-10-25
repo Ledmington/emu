@@ -403,11 +403,11 @@ public final class MemoryController implements Memory {
 	 * Writes the given value in the memory without checking nor modifying permissions.
 	 *
 	 * @param start The start of the address range.
-	 * @param bytes The length of the address range.
+	 * @param numBytes The length of the address range.
 	 * @param value The 8-bit value to be written in each byte.
 	 */
-	public void initialize(final long start, final long bytes, final byte value) {
-		for (long i = 0L; i < bytes; i++) {
+	public void initialize(final long start, final long numBytes, final byte value) {
+		for (long i = 0L; i < numBytes; i++) {
 			mem.write(start + i, value);
 		}
 	}
