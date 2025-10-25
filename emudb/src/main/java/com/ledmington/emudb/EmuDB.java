@@ -77,6 +77,10 @@ public final class EmuDB {
 	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
 	private ELFLoader loader = null; // TODO: should we put this into ExecutionContext, too?
 	private final List<Breakpoint> breakpoints = new ArrayList<>();
+	private static final String ANSI_RESET = "\u001b[0m";
+	private static final String ANSI_BOLD = "\u001b[1m";
+	private static final String ANSI_YELLOW = "\u001b[33m";
+	private static final String ANSI_BLUE = "\u001b[34m";
 
 	private final Map<String, Command> commands = Map.of(
 			"quit",
@@ -104,15 +108,13 @@ public final class EmuDB {
 
 	private void printHelp() {
 		for (final Map.Entry<String, Command> e : commands.entrySet()) {
-			out.printf("\u001b[1m%s\u001b[0m -- %s%n", e.getKey(), e.getValue().description());
+			out.printf(
+					"%s%s%s -- %s%n",
+					ANSI_BOLD, e.getKey(), ANSI_RESET, e.getValue().description());
 		}
 	}
 
 	private void showStack() {
-		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
-		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
-		final boolean hasDebugInfo = symbolTable.isPresent() && stringTable.isPresent();
-
 		final int maxStackLevel = 100;
 
 		// final long baseStackValue = EmulatorConstants.getBaseStackValue();
@@ -124,31 +126,10 @@ public final class EmuDB {
 		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
 		int stackLevel = 0;
 		for (; /*rbp != baseStackValue &&*/ rbp != baseStackAddress && stackLevel < maxStackLevel; stackLevel++) {
-			out.printf("#%-2d 0x%016x", stackLevel, rbp);
-			if (hasDebugInfo) {
-				final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
-				final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
-				final long finalRBP = rbp;
-				final Optional<SymbolTableEntry> entry = IntStream.range(0, symtab.getSymbolTableLength())
-						.mapToObj(symtab::getSymbolTableEntry)
-						.filter(e -> e.info().getType() == SymbolTableEntryType.STT_FUNC
-								&& e.value() /*+ EmulatorConstants.getBaseAddress()*/ == finalRBP)
-						.findFirst();
-				if (entry.isPresent()) {
-					out.printf(" in %s%n", strtab.getString(entry.orElseThrow().nameOffset()));
-				}
-				{
-					for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
-						final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
-						if (e.info().getType() == SymbolTableEntryType.STT_FUNC
-								&& e.value() == (rbp - 0x0000_8000_0000_0000L)) {
-							out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
-						}
-					}
-				}
-			} else {
-				out.print(" in ??%n");
-			}
+			final String functionName = findFunctionName(rbp);
+			out.printf(
+					"#%-2d %s0x%016x%s in %s%s%s ()%n",
+					stackLevel, ANSI_BLUE, rbp, ANSI_RESET, ANSI_YELLOW, functionName, ANSI_RESET);
 
 			final long nextRbp = this.context.memory().read8(rbp);
 			if (nextRbp <= rbp) {
@@ -161,6 +142,36 @@ public final class EmuDB {
 		if (stackLevel >= maxStackLevel) {
 			out.println("<Max stack size reached>");
 		}
+	}
+
+	private String findFunctionName(final long rbp) {
+		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
+		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
+		final boolean hasDebugInfo = symbolTable.isPresent() && stringTable.isPresent();
+
+		if (hasDebugInfo) {
+			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
+			final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
+			final Optional<SymbolTableEntry> entry = IntStream.range(0, symtab.getSymbolTableLength())
+					.mapToObj(symtab::getSymbolTableEntry)
+					.filter(e -> e.info().getType() == SymbolTableEntryType.STT_FUNC
+							&& e.value() /*+ EmulatorConstants.getBaseAddress()*/ == rbp)
+					.findFirst();
+			if (entry.isPresent()) {
+				return strtab.getString(entry.orElseThrow().nameOffset());
+			}
+
+			{ // TODO: remove this
+				for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+					final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
+					if (e.info().getType() == SymbolTableEntryType.STT_FUNC
+							&& e.value() == (rbp - 0x0000_8000_0000_0000L)) {
+						out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
+					}
+				}
+			}
+		}
+		return "??";
 	}
 
 	private void printBreakpoint(final int breakpointIndex) {
