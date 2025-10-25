@@ -163,7 +163,7 @@ public final class EmuDB {
 				return strtab.getString(entry.orElseThrow().nameOffset());
 			}
 
-			{ // TODO: remove this
+			/*{ // TODO: remove this
 				for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 					final SymbolTableEntry e = symtab.getSymbolTableEntry(i);
 					if (e.info().getType() == SymbolTableEntryType.STT_FUNC
@@ -171,17 +171,21 @@ public final class EmuDB {
 						out.printf("'%s' -> 0x%016x%n", strtab.getString(e.nameOffset()), e.value());
 					}
 				}
-			}
+			}*/
 		}
 		return "??";
 	}
 
 	private void printBreakpoint(final int breakpointIndex) {
 		out.printf(
-				"Breakpoint %,d at 0x%x '%s'%n",
+				"Breakpoint %,d at %s0x%x%s %s%s%s%n",
 				breakpointIndex,
+				ANSI_BLUE,
 				breakpoints.get(breakpointIndex).address(),
-				breakpoints.get(breakpointIndex).name());
+				ANSI_RESET,
+				ANSI_YELLOW,
+				breakpoints.get(breakpointIndex).name(),
+				ANSI_RESET);
 	}
 
 	private void setBreakpoint(final String... args) {
@@ -332,11 +336,15 @@ public final class EmuDB {
 		final ImmutableRegisterFile rf = this.context.cpu().getRegisters();
 		for (final Register64 r : Register64.values()) {
 			final long regValue = rf.get(r);
-			out.printf(
-					registerFormatString,
-					r.toIntelSyntax(),
-					regValue,
-					(r == Register64.RBP || r == Register64.RSP) ? String.format("0x%x", regValue) : regValue);
+			final String interpreted;
+			if (r == Register64.RBP || r == Register64.RSP) {
+				interpreted = String.format("0x%x", regValue);
+			} else if (r == Register64.RIP) {
+				interpreted = String.format("0x%x <%s>", regValue, findFunctionName(regValue));
+			} else {
+				interpreted = String.valueOf(regValue);
+			}
+			out.printf(registerFormatString, r.toIntelSyntax(), regValue, interpreted);
 		}
 		out.printf(
 				registerFormatString,
@@ -438,7 +446,14 @@ public final class EmuDB {
 					// set interrupt flag when hitting a breakpoint
 					((RegisterFile) this.context.cpu().getRegisters()).set(RFlags.INTERRUPT_ENABLE, true);
 					out.printf(
-							"Hit breakpoint %,d at 0x%x '%s'%n", breakpointIndex.orElseThrow(), b.address(), b.name());
+							"Breakpoint %,d, %s0x%016x%s in %s%s%s ()%n",
+							breakpointIndex.orElseThrow(),
+							ANSI_BLUE,
+							b.address(),
+							ANSI_RESET,
+							ANSI_YELLOW,
+							b.name(),
+							ANSI_RESET);
 					break;
 				}
 			}
