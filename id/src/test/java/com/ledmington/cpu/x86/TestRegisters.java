@@ -20,6 +20,7 @@ package com.ledmington.cpu.x86;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -173,35 +174,30 @@ final class TestRegisters {
 	}
 
 	private static Stream<Arguments> registers128Bits() {
-		return Stream.of(
-				Arguments.of((byte) 0x00, false, RegisterXMM.XMM0),
-				Arguments.of((byte) 0x01, false, RegisterXMM.XMM1),
-				Arguments.of((byte) 0x02, false, RegisterXMM.XMM2),
-				Arguments.of((byte) 0x03, false, RegisterXMM.XMM3),
-				Arguments.of((byte) 0x04, false, RegisterXMM.XMM4),
-				Arguments.of((byte) 0x05, false, RegisterXMM.XMM5),
-				Arguments.of((byte) 0x06, false, RegisterXMM.XMM6),
-				Arguments.of((byte) 0x07, false, RegisterXMM.XMM7),
-				Arguments.of((byte) 0x00, true, RegisterXMM.XMM8),
-				Arguments.of((byte) 0x01, true, RegisterXMM.XMM9),
-				Arguments.of((byte) 0x02, true, RegisterXMM.XMM10),
-				Arguments.of((byte) 0x03, true, RegisterXMM.XMM11),
-				Arguments.of((byte) 0x04, true, RegisterXMM.XMM12),
-				Arguments.of((byte) 0x05, true, RegisterXMM.XMM13),
-				Arguments.of((byte) 0x06, true, RegisterXMM.XMM14),
-				Arguments.of((byte) 0x07, true, RegisterXMM.XMM15));
+		return Arrays.stream(RegisterXMM.values()).map(Arguments::of);
 	}
 
 	@ParameterizedTest
 	@MethodSource("registers128Bits")
-	void decodeRegisters128Bits(final byte registerCode, final boolean needsExtensions, final RegisterXMM expected) {
+	void decodeRegisters128Bits(final RegisterXMM expected) {
+		final int registerIndex = expected.ordinal();
+		final boolean needsExtension = (registerIndex % 16) >= 8;
+		final boolean needsEvexExtension = registerIndex >= 16;
+		final byte registerCode = BitUtils.asByte(registerIndex % 8);
 		assertEquals(
-				needsExtensions,
+				needsExtension,
 				RegisterXMM.requiresExtension(expected),
 				() -> String.format(
 						"Expected %s to%s require the XMM extension but it did%s.",
-						expected, needsExtensions ? "" : " not", needsExtensions ? " not" : ""));
-		final byte actualCode = BitUtils.or(registerCode, needsExtensions ? (byte) 0x08 : 0);
+						expected, needsExtension ? "" : " not", needsExtension ? " not" : ""));
+		assertEquals(
+				needsEvexExtension,
+				RegisterXMM.requiresEvexExtension(expected),
+				() -> String.format(
+						"Expected %s to%s require the XMM EVEX extension but it did%s.",
+						expected, needsEvexExtension ? "" : " not", needsEvexExtension ? " not" : ""));
+		final byte actualCode =
+				BitUtils.or(registerCode, needsExtension ? (byte) 0x08 : 0, needsEvexExtension ? (byte) 0x10 : 0);
 		final RegisterXMM actual = RegisterXMM.fromByte(actualCode);
 		assertEquals(
 				expected,
