@@ -35,6 +35,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionDecoder;
 import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
@@ -49,6 +50,7 @@ import com.ledmington.emu.EmulatorConstants;
 import com.ledmington.emu.ExecutionContext;
 import com.ledmington.emu.ImmutableRegisterFile;
 import com.ledmington.emu.RFlags;
+import com.ledmington.emu.RegisterFile;
 import com.ledmington.emu.X86Cpu;
 import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.Memory;
@@ -325,19 +327,37 @@ public final class EmuDB {
 			return;
 		}
 
-		final ImmutableRegisterFile rf = this.context.cpu().getRegisters();
+		final String registerFormatString = "%-14s 0x%-16x  %s%n";
 
+		final ImmutableRegisterFile rf = this.context.cpu().getRegisters();
 		for (final Register64 r : Register64.values()) {
 			final long regValue = rf.get(r);
-			out.printf(" %-3s : 0x%016x (%,d)%n", r.name(), regValue, regValue);
+			out.printf(
+					registerFormatString,
+					r.toIntelSyntax(),
+					regValue,
+					(r == Register64.RBP || r == Register64.RSP) ? String.format("0x%x", regValue) : regValue);
 		}
 		out.printf(
-				" RFLAGS : [ %s ]%n",
+				registerFormatString,
+				"eflags",
 				Arrays.stream(RFlags.values())
-						.sorted(Comparator.comparing(RFlags::bit))
-						.filter(rf::isSet)
-						.map(RFlags::getSymbol)
-						.collect(Collectors.joining(" ")));
+						.mapToLong(RFlags::bit)
+						.reduce((a, b) -> (1L << a) | (1L << b))
+						.orElse(0L),
+				"[ "
+						+ Arrays.stream(RFlags.values())
+								.sorted(Comparator.comparing(RFlags::bit))
+								.filter(rf::isSet)
+								.map(RFlags::getSymbol)
+								.collect(Collectors.joining(" "))
+						+ " ]");
+
+		for (final SegmentRegister sr : SegmentRegister.values()) {
+			out.printf(registerFormatString, sr.toIntelSyntax(), rf.get(sr), rf.get(sr));
+		}
+		out.printf(registerFormatString, "fs_base", 0, 0);
+		out.printf(registerFormatString, "gs_base", 0, 0);
 	}
 
 	private void showMemory(final String... args) {
@@ -415,6 +435,8 @@ public final class EmuDB {
 					this.context.cpu().executeOne();
 				} else {
 					final Breakpoint b = this.breakpoints.get(breakpointIndex.orElseThrow());
+					// set interrupt flag when hitting a breakpoint
+					((RegisterFile) this.context.cpu().getRegisters()).set(RFlags.INTERRUPT_ENABLE, true);
 					out.printf(
 							"Hit breakpoint %,d at 0x%x '%s'%n", breakpointIndex.orElseThrow(), b.address(), b.name());
 					break;
