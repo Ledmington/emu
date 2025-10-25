@@ -249,6 +249,44 @@ final class TestRegisters {
 						"Expected %s to be encoded as 0x%02x but was 0x%02x.", expected, registerCode, encoded));
 	}
 
+	private static Stream<Arguments> registers512Bits() {
+		return Arrays.stream(RegisterZMM.values()).map(Arguments::of);
+	}
+
+	@ParameterizedTest
+	@MethodSource("registers512Bits")
+	void decodeRegisters512Bits(final RegisterZMM expected) {
+		final int registerIndex = expected.ordinal();
+		final boolean needsExtension = (registerIndex % 16) >= 8;
+		final boolean needsEvexExtension = registerIndex >= 16;
+		final byte registerCode = BitUtils.asByte(registerIndex % 8);
+		assertEquals(
+				needsExtension,
+				RegisterZMM.requiresExtension(expected),
+				() -> String.format(
+						"Expected %s to%s require the ZMM extension but it did%s.",
+						expected, needsExtension ? "" : " not", needsExtension ? " not" : ""));
+		assertEquals(
+				needsEvexExtension,
+				RegisterZMM.requiresEvexExtension(expected),
+				() -> String.format(
+						"Expected %s to%s require the ZMM EVEX extension but it did%s.",
+						expected, needsEvexExtension ? "" : " not", needsEvexExtension ? " not" : ""));
+		final byte actualCode =
+				BitUtils.or(registerCode, needsExtension ? (byte) 0x08 : 0, needsEvexExtension ? (byte) 0x10 : 0);
+		final RegisterZMM actual = RegisterZMM.fromByte(actualCode);
+		assertEquals(
+				expected,
+				actual,
+				() -> String.format("Expected to decode %s from 0x%02x but was %s.", expected, actualCode, actual));
+		final byte encoded = RegisterZMM.toByte(expected);
+		assertEquals(
+				registerCode,
+				encoded,
+				() -> String.format(
+						"Expected %s to be encoded as 0x%02x but was 0x%02x.", expected, registerCode, encoded));
+	}
+
 	@Test
 	void nullExtensionRegister8() {
 		assertThrows(NullPointerException.class, () -> Register8.requiresExtension(null));
@@ -300,7 +338,7 @@ final class TestRegisters {
 	}
 
 	@Test
-	void nullExevExtensionRegisterXMM() {
+	void nullEvexExtensionRegisterXMM() {
 		assertThrows(NullPointerException.class, () -> RegisterXMM.requiresEvexExtension(null));
 	}
 
@@ -315,13 +353,28 @@ final class TestRegisters {
 	}
 
 	@Test
-	void nullExevExtensionRegisterYMM() {
+	void nullEvexExtensionRegisterYMM() {
 		assertThrows(NullPointerException.class, () -> RegisterYMM.requiresEvexExtension(null));
 	}
 
 	@Test
 	void nullEncodeRegisterYMM() {
 		assertThrows(NullPointerException.class, () -> RegisterYMM.toByte(null));
+	}
+
+	@Test
+	void nullExtensionRegisterZMM() {
+		assertThrows(NullPointerException.class, () -> RegisterZMM.requiresExtension(null));
+	}
+
+	@Test
+	void nullEvexExtensionRegisterZMM() {
+		assertThrows(NullPointerException.class, () -> RegisterZMM.requiresEvexExtension(null));
+	}
+
+	@Test
+	void nullEncodeRegisterZMM() {
+		assertThrows(NullPointerException.class, () -> RegisterZMM.toByte(null));
 	}
 
 	@Test
