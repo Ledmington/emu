@@ -52,9 +52,6 @@ public final class GenerateE2ETestFiles {
 	private static final List<String> POSSIBLE_COMPILERS = List.of("gcc", "clang", "cc");
 	private static final List<String> POSSIBLE_ASSEMBLERS = List.of("nasm");
 	private static final List<String> POSSIBLE_LINKERS = List.of("ld", "lld");
-	private static String C_COMPILER = null;
-	private static String ASSEMBLER = null;
-	private static String LINKER = null;
 
 	private GenerateE2ETestFiles() {}
 
@@ -122,29 +119,29 @@ public final class GenerateE2ETestFiles {
 			return;
 		}
 
-		C_COMPILER = findCCompiler();
-		if (C_COMPILER == null) {
+		final String cCompiler = findCCompiler();
+		if (cCompiler == null) {
 			System.err.printf("Could not find a C compiler. Tried: %s.", String.join(", ", POSSIBLE_COMPILERS));
 			System.exit(-1);
 			return;
 		}
-		System.out.printf("C compiler: '%s'%n", C_COMPILER);
+		System.out.printf("C compiler: '%s'%n", cCompiler);
 
-		ASSEMBLER = findAssembler();
-		if (ASSEMBLER == null) {
+		final String assembler = findAssembler();
+		if (assembler == null) {
 			System.err.printf("Could not find an assembler. Tried: %s.", String.join(", ", POSSIBLE_ASSEMBLERS));
 			System.exit(-1);
 			return;
 		}
-		System.out.printf("Assembler : '%s'%n", ASSEMBLER);
+		System.out.printf("Assembler : '%s'%n", assembler);
 
-		LINKER = findLinker();
-		if (LINKER == null) {
+		final String linker = findLinker();
+		if (linker == null) {
 			System.err.printf("Could not find a linker. Tried: %s.", String.join(", ", POSSIBLE_LINKERS));
 			System.exit(-1);
 			return;
 		}
-		System.out.printf("Linker    :  '%s'%n", LINKER);
+		System.out.printf("Linker    : '%s'%n", linker);
 
 		System.out.println();
 
@@ -156,17 +153,13 @@ public final class GenerateE2ETestFiles {
 		final String smallObj = Path.of(outputDir, "small.o").toString();
 
 		run(
-				C_COMPILER,
+				cCompiler,
 				"-static",
 				doNothing,
 				"-o",
 				Path.of(outputDir, "do_nothing.static").toString());
-		run(
-				C_COMPILER,
-				doNothing,
-				"-o",
-				Path.of(outputDir, "do_nothing.dynamic").toString());
-		run(ASSEMBLER, "-felf64", small, "-o", smallObj);
-		run(LINKER, smallObj, "-o", Path.of(outputDir, "small.x").toString());
+		run(cCompiler, doNothing, "-o", Path.of(outputDir, "do_nothing.dynamic").toString());
+		run(assembler, "-felf64", small, "-o", smallObj);
+		run(linker, smallObj, "-o", Path.of(outputDir, "small.x").toString());
 	}
 }
