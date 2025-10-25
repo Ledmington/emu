@@ -41,7 +41,7 @@ public final class X86RegisterFile implements RegisterFile {
 	// instruction pointer
 	private long rip;
 
-	private long rflags = 0L;
+	private long rflags = RFlags.defaultValue();
 
 	/** Creates the register file initializing every register to 0. */
 	public X86RegisterFile() {}
@@ -290,7 +290,7 @@ public final class X86RegisterFile implements RegisterFile {
 
 	@Override
 	public void resetFlags() {
-		rflags = 0L;
+		rflags = RFlags.defaultValue();
 	}
 
 	private void set(final RFlags f) {

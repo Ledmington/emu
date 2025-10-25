@@ -68,6 +68,8 @@ public enum RFlags {
 	/** Parity Flag (PF). Status flag. */
 	PARITY(2, "PF"),
 
+	// Bit 1 is reserved and always 1
+
 	/** Carry Flag (CF). Status flag. */
 	CARRY(0, "CF");
 
@@ -95,5 +97,14 @@ public enum RFlags {
 	 */
 	public String getSymbol() {
 		return symbol;
+	}
+
+	/**
+	 * Returns the default value of RFlags, meaning the value that RFlags holds when all flags are cleared.
+	 *
+	 * @return The default value.
+	 */
+	public static long defaultValue() {
+		return 0x2L;
 	}
 }
