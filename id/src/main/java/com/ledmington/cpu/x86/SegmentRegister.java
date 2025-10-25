@@ -24,11 +24,11 @@ public enum SegmentRegister implements Register {
 	/** The segment register CS (Code Segment). */
 	CS,
 
-	/** The segment register DS (Data Segment). */
-	DS,
-
 	/** The segment register SS (Stack Segment). */
 	SS,
+
+	/** The segment register DS (Data Segment). */
+	DS,
 
 	/** The segment register ES (Extra Segment). */
 	ES,
