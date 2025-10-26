@@ -36,6 +36,7 @@ import com.ledmington.elf.ProgramHeaderTable;
 import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.BasicProgBitsSection;
 import com.ledmington.elf.section.ConstructorsSection;
+import com.ledmington.elf.section.DestructorsSection;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.NoBitsSection;
 import com.ledmington.elf.section.Section;
@@ -174,9 +175,15 @@ public final class ELFLoader {
 	 *
 	 * @param elf The file to be unloaded.
 	 */
-	public void unload(final ELF elf) {
-		if (elf.getSectionByName(".fini_array").isPresent()) {
-			runFiniArray();
+	public void unload(final ELF elf, final long baseAddress) {
+		final SymbolTableSection symtab =
+				(SymbolTableSection) elf.getSectionByName(".symtab").orElse(null);
+		final StringTableSection strtab =
+				(StringTableSection) elf.getSectionByName(".strtab").orElse(null);
+
+		final Optional<Section> finiArray = elf.getSectionByName(".fini_array");
+		if (finiArray.isPresent()) {
+			runFiniArray((DestructorsSection) finiArray.orElseThrow(), baseAddress, symtab, strtab);
 		}
 		if (elf.getSectionByName(".fini").isPresent()) {
 			runFini();
@@ -251,8 +258,24 @@ public final class ELFLoader {
 		notImplemented();
 	}
 
-	private void runFiniArray() {
-		notImplemented();
+	private void runFiniArray(
+			final DestructorsSection finiArray,
+			final long entryPointVirtualAddress,
+			final SymbolTableSection symtab,
+			final StringTableSection strtab) {
+		logger.debug("Running %,d destructor(s) from .fini_array", finiArray.getNumDestructors());
+		for (int i = 0; i < finiArray.getNumDestructors(); i++) {
+			final long c = finiArray.getDestructor(i);
+			if (symtab != null && strtab != null) {
+				final String ctorName =
+						strtab.getString(symtab.getSymbolWithValue(c).nameOffset());
+				logger.debug("Running .fini_array[%d] = 0x%x '%s'", i, c, ctorName);
+			} else {
+				logger.debug("Running .fini_array[%d] = 0x%x", i, c);
+			}
+			cpu.turnOn();
+			runFrom(cpu, entryPointVirtualAddress + c);
+		}
 	}
 
 	private void runFini() {

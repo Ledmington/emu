@@ -156,6 +156,6 @@ public final class Emu {
 	}
 
 	public void unload() {
-		loader.unload(elf);
+		loader.unload(elf, EmulatorConstants.getBaseAddress());
 	}
 }
