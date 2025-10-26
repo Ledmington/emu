@@ -185,9 +185,12 @@ public final class ELFLoader {
 		if (finiArray.isPresent()) {
 			runFiniArray((DestructorsSection) finiArray.orElseThrow(), baseAddress, symtab, strtab);
 		}
-		if (elf.getSectionByName(".fini").isPresent()) {
-			runFini();
+
+		final Optional<Section> fini = elf.getSectionByName(".fini");
+		if (fini.isPresent()) {
+			runFini((BasicProgBitsSection) fini.orElseThrow(), baseAddress, symtab, strtab);
 		}
+
 		if (elf.getSectionByName(".dtors").isPresent()) {
 			runDtors();
 		}
@@ -278,8 +281,36 @@ public final class ELFLoader {
 		}
 	}
 
-	private void runFini() {
-		notImplemented();
+	private void runFini(
+			final BasicProgBitsSection fini,
+			final long entryPointVirtualAddress,
+			final SymbolTableSection symtab,
+			final StringTableSection strtab) {
+		final long sectionStart = entryPointVirtualAddress + fini.header().getFileOffset();
+		final long sectionEnd = sectionStart + fini.header().getSectionSize();
+
+		if (symtab != null) {
+			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
+				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
+				final long start = sectionStart + ste.value();
+
+				if (ste.info().getType() == SymbolTableEntryType.STT_FUNC
+						&& start >= sectionStart
+						&& start < sectionEnd) {
+					if (strtab != null) {
+						logger.debug("Running destructor '%s' from .init", strtab.getString(ste.nameOffset()));
+					} else {
+						logger.debug("Running destructor from .init");
+					}
+					cpu.turnOn();
+					runFrom(cpu, start);
+				}
+			}
+		} else {
+			// Can we just execute everything in .fini?
+			logger.warning("Ignoring contents of .fini (for now)");
+			// runFrom(cpu, sectionStart);
+		}
 	}
 
 	private void runDtors() {
