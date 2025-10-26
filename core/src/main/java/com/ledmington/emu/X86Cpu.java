@@ -226,24 +226,16 @@ public class X86Cpu implements X86Emulator {
 			case XOR -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
-					final byte result = BitUtils.xor(rf.get(r1), rf.get(r2));
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == (byte) 0);
+					op(r1, r2, BitUtils::xor);
 				} else if (inst.firstOperand() instanceof final Register16 r1
 						&& inst.secondOperand() instanceof final Register16 r2) {
-					final short result = BitUtils.xor(rf.get(r1), rf.get(r2));
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == (short) 0);
+					op(r1, r2, BitUtils::xor);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Register32 r2) {
-					final int result = rf.get(r1) ^ rf.get(r2);
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0);
+					op(r1, r2, (a, b) -> a ^ b);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
-					final long result = rf.get(r1) ^ rf.get(r2);
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0L);
+					op(r1, r2, (a, b) -> a ^ b);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
 				}
@@ -432,31 +424,43 @@ public class X86Cpu implements X86Emulator {
 	private void op(final Register8 op1, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			rf.resetFlags();
+			// rf.resetFlags();
 			rf.set(RFlags.ZERO, result == (byte) 0);
+			rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		});
 	}
 
 	private void op(final Register16 op1, final Register16 op2, final BiFunction<Short, Short, Short> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			rf.resetFlags();
+			// rf.resetFlags();
 			rf.set(RFlags.ZERO, result == (short) 0);
+			rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		});
 	}
 
 	private void op(final Register32 op1, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			rf.resetFlags();
+			// rf.resetFlags();
 			rf.set(RFlags.ZERO, result == 0);
+			rf.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		});
+	}
+
+	private void op(final Register64 op1, final Register64 op2, final BiFunction<Long, Long, Long> task) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
+			rf.set(op1, result);
+			// rf.resetFlags();
+			rf.set(RFlags.ZERO, result == 0L);
+			rf.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		});
 	}
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
 		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> {
 			rf.set(op1, result);
-			rf.resetFlags();
+			// rf.resetFlags();
 			rf.set(RFlags.ZERO, result == 0L);
 		});
 	}
@@ -478,7 +482,8 @@ public class X86Cpu implements X86Emulator {
 		final long value = mem.read8(rsp);
 		// If we read the baseStackValue, we have exhausted the stack
 		if (value == EmulatorConstants.getBaseStackValue()) {
-			throw new StackUnderflow();
+			logger.warning("STACK UNDERFLOW");
+			// throw new StackUnderflow();
 		}
 		// the stack "grows downward"
 		rf.set(Register64.RSP, rsp + 8L);
