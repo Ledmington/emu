@@ -119,10 +119,10 @@ public final class EmuDB {
 		long rbp = this.context.cpu().getRegisters().get(Register64.RIP);
 		int stackLevel = 0;
 		for (; /*rbp != baseStackValue &&*/ rbp != baseStackAddress && stackLevel < maxStackLevel; stackLevel++) {
-			final String functionName = findFunctionName(rbp);
+			final Position pos = findFunctionName(rbp);
 			out.printf(
 					"#%-2d %s0x%016x%s in %s%s%s ()%n",
-					stackLevel, ANSI_BLUE, rbp, ANSI_RESET, ANSI_YELLOW, functionName, ANSI_RESET);
+					stackLevel, ANSI_BLUE, rbp, ANSI_RESET, ANSI_YELLOW, pos.functionName(), ANSI_RESET);
 
 			final long nextRbp = this.context.memory().read8(rbp);
 			if (nextRbp <= rbp) {
@@ -137,7 +137,23 @@ public final class EmuDB {
 		}
 	}
 
-	private String findFunctionName(final long rbp) {
+	private record Position(String functionName, long offset) {
+		Position {
+			if (functionName.isBlank()) {
+				throw new IllegalArgumentException("Empty function name.");
+			}
+			if (offset < 0L) {
+				throw new IllegalArgumentException("Negative offset.");
+			}
+		}
+
+		@Override
+		public String toString() {
+			return (offset == 0L) ? functionName : (functionName + "+" + offset);
+		}
+	}
+
+	private Position findFunctionName(final long ip) {
 		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
 		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
 		final boolean hasDebugInfo = symbolTable.isPresent() && stringTable.isPresent();
@@ -145,16 +161,24 @@ public final class EmuDB {
 		if (hasDebugInfo) {
 			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
 			final StringTableSection strtab = (StringTableSection) stringTable.orElseThrow();
-			final Optional<SymbolTableEntry> entry = IntStream.range(0, symtab.getSymbolTableLength())
+
+			final Optional<SymbolTableEntry> closestMatch = IntStream.range(0, symtab.getSymbolTableLength())
 					.mapToObj(symtab::getSymbolTableEntry)
-					.filter(e -> e.info().getType() == SymbolTableEntryType.STT_FUNC
-							&& e.value() /*+ EmulatorConstants.getBaseAddress()*/ == rbp)
-					.findFirst();
-			if (entry.isPresent()) {
-				return strtab.getString(entry.orElseThrow().nameOffset());
+					// only functions
+					.filter(e -> e.info().getType() == SymbolTableEntryType.STT_FUNC)
+					// only functions that are "before" or exactly on the instruction pointer
+					.filter(e -> e.value() <= ip)
+					// take the closest to the instruction pointer
+					.min(Comparator.comparingLong(e -> ip - e.value()));
+			if (closestMatch.isPresent()) {
+				final SymbolTableEntry e = closestMatch.orElseThrow();
+				final String name = strtab.getString(e.nameOffset());
+				final long distance = ip - e.value();
+				return new Position(name, distance);
 			}
 		}
-		return "??";
+
+		return new Position("??", 0L);
 	}
 
 	private void printBreakpoint(final int breakpointIndex) {
