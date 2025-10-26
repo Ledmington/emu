@@ -117,6 +117,12 @@ public final class ELFLoader {
 			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
 			set(Register64.R15, oldValue);
 		}
+		{
+			final long oldValue = cpu.getRegisters().get(Register64.R15);
+			set(Register64.R15, baseStackValue);
+			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
+			set(Register64.R15, oldValue);
+		}
 
 		final int argc = commandLineArguments.length;
 		set(Register64.RDI, BitUtils.asLong(argc));
