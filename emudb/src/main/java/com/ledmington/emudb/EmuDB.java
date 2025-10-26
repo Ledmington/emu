@@ -112,27 +112,53 @@ public final class EmuDB {
 		}
 	}
 
+	/** Aligns the given address to a 16-byte boundary. */
+	private long alignBaseStackAddress(final long baseStackAddress) {
+		final boolean isAligned = (baseStackAddress & 0xFL) == 0L;
+		if (isAligned) {
+			return baseStackAddress;
+		} else {
+			return (baseStackAddress + 15L) & 0xFFFFFFFFFFFFFFF0L;
+		}
+	}
+
 	private void showStack() {
-		final int maxStackLevel = 100; // TODO: is this a sane value?
+		final int maxStackTraceDepth = 100; // TODO: is this a sane value?
 
 		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
-		long rbp = this.context.cpu().getRegisters().get(Register64.RIP);
-		int stackLevel = 0;
-		for (; /*rbp != baseStackValue &&*/ rbp != baseStackAddress && stackLevel < maxStackLevel; stackLevel++) {
+		final long stackSize = EmulatorConstants.getStackSize();
+		final long baseStackValue = EmulatorConstants.getBaseStackValue();
+		final long alignedBaseStackAddress = alignBaseStackAddress(baseStackAddress);
+		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
+		final long stackBottom = alignedBaseStackAddress - stackSize; // lowest address (stack limit)
+
+		// The first stack frame to be printed is always the one at [RIP]
+		final long rip = this.context.cpu().getRegisters().get(Register64.RIP);
+		final Position initialPos = findFunctionName(rip);
+		out.printf(
+				"#%-2d %s0x%016x%s in %s%s%s ()%n",
+				0, ANSI_BLUE, rip, ANSI_RESET, ANSI_YELLOW, initialPos.functionName(), ANSI_RESET);
+
+		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
+		int stackLevel = 1;
+		for (;
+				rbp != 0L && rbp != baseStackValue && rbp != baseStackAddress && stackLevel < maxStackTraceDepth;
+				stackLevel++) {
 			final Position pos = findFunctionName(rbp);
 			out.printf(
 					"#%-2d %s0x%016x%s in %s%s%s ()%n",
 					stackLevel, ANSI_BLUE, rbp, ANSI_RESET, ANSI_YELLOW, pos.functionName(), ANSI_RESET);
 
 			final long nextRbp = this.context.memory().read8(rbp);
-			if (nextRbp <= rbp) {
-				out.println("<Invalid frame or corrupted stack>");
+			// TODO: should we check if nextRbp is aligned?
+			if (nextRbp <= rbp || nextRbp > stackTop || nextRbp < stackBottom) {
+				// out.println("<Invalid frame or corrupted stack>");
 				break;
 			}
 			rbp = nextRbp;
 		}
 
-		if (stackLevel >= maxStackLevel) {
+		if (stackLevel >= maxStackTraceDepth) {
 			out.println("<Max stack size reached>");
 		}
 	}
