@@ -478,8 +478,7 @@ public class X86Cpu implements X86Emulator {
 		final long value = mem.read8(rsp);
 		// If we read the baseStackValue, we have exhausted the stack
 		if (value == EmulatorConstants.getBaseStackValue()) {
-			logger.warning("Found the base of the stack (stack underflow), halting execution");
-			state = State.HALTED;
+			throw new StackUnderflow();
 		}
 		// the stack "grows downward"
 		rf.set(Register64.RSP, rsp + 8L);
