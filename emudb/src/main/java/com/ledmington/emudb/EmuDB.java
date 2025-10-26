@@ -80,33 +80,27 @@ public final class EmuDB {
 	private ELF currentFile = null; // TODO: should we put this into ExecutionContext, too?
 	private ELFLoader loader = null; // TODO: should we put this into ExecutionContext, too?
 	private final List<Breakpoint> breakpoints = new ArrayList<>();
+	private long lastBreakpointAddress = -1L; // last breakpoint we hit
 	private static final String ANSI_RESET = "\u001b[0m";
 	private static final String ANSI_BOLD = "\u001b[1m";
 	private static final String ANSI_GREEN = "\u001b[32m";
 	private static final String ANSI_YELLOW = "\u001b[33m";
 	private static final String ANSI_BLUE = "\u001b[34m";
 
-	private final Map<String, Command> commands = Map.of(
-			"quit",
-			new Command("Terminates the debugger", ignored -> System.exit(0)),
-			"help",
-			new Command("Prints this message", ignored -> printHelp()),
-			"load",
-			new Command("Loads a file", this::loadFile),
-			"run",
-			new Command("Executes a file", this::runFile),
-			"restart",
-			new Command("Stop current execution and starts from the beginning", ignored -> restart()),
-			"mem",
-			new Command("Shows the content of the memory", this::showMemory),
-			"regs",
-			new Command("Shows the content of the register file", ignored -> showRegisters()),
-			"asm",
-			new Command("Shows the assembly at the current position", this::showAsm),
-			"break",
-			new Command("Sets up a breakpoint at the given function", this::setBreakpoint),
-			"where",
-			new Command("Shows the stack", ignored -> showStack()));
+	private final Map<String, Command> commands = Map.ofEntries(
+			Map.entry("quit", new Command("Terminates the debugger", ignored -> System.exit(0))),
+			Map.entry("help", new Command("Prints this message", ignored -> printHelp())),
+			Map.entry("load", new Command("Loads a file", this::loadFile)),
+			Map.entry("run", new Command("Executes a file", this::runFile)),
+			Map.entry(
+					"restart",
+					new Command("Stop current execution and starts from the beginning", ignored -> restart())),
+			Map.entry("mem", new Command("Shows the content of the memory", this::showMemory)),
+			Map.entry("regs", new Command("Shows the content of the register file", ignored -> showRegisters())),
+			Map.entry("asm", new Command("Shows the assembly at the current position", this::showAsm)),
+			Map.entry("break", new Command("Sets up a breakpoint at the given function", this::setBreakpoint)),
+			Map.entry("where", new Command("Shows the stack", ignored -> showStack())),
+			Map.entry("step", new Command("Executes a single instruction", ignored -> step())));
 
 	public EmuDB() {}
 
@@ -267,7 +261,7 @@ public final class EmuDB {
 	private void showAssemblyAt(final long address) {
 		final int maxInstructions = 5;
 		final ReadOnlyByteBuffer bb = new ReadOnlyByteBuffer() {
-
+			// TODO: can we place this anonymous class somewhere else?
 			private long position = address;
 
 			@Override
@@ -413,6 +407,42 @@ public final class EmuDB {
 		}
 	}
 
+	private void step() {
+		if (hasNotLoadedFile()) {
+			out.println("No instruction to execute.");
+			return;
+		}
+
+		executeOneInstruction();
+
+		final long here = this.context.cpu().getRegisters().get(Register64.RIP);
+		out.printf("%s0x%016x%s%n", ANSI_BLUE, here, ANSI_RESET);
+	}
+
+	private boolean executeOneInstruction() {
+		final Optional<Integer> breakpointIndex = checkBreakpoints();
+		final boolean hasHitABreakpoint = breakpointIndex.isPresent();
+		if (hasHitABreakpoint) {
+			final Breakpoint b = this.breakpoints.get(breakpointIndex.orElseThrow());
+			// set interrupt flag when hitting a breakpoint
+			((RegisterFile) this.context.cpu().getRegisters()).set(RFlags.INTERRUPT_ENABLE, true);
+			out.printf(
+					"Breakpoint %,d, %s0x%016x%s in %s%s%s ()%n",
+					breakpointIndex.orElseThrow(),
+					ANSI_BLUE,
+					b.address(),
+					ANSI_RESET,
+					ANSI_YELLOW,
+					b.name(),
+					ANSI_RESET);
+		} else {
+			this.context.cpu().turnOn();
+			this.context.cpu().executeOne();
+		}
+
+		return hasHitABreakpoint;
+	}
+
 	private void runFile(final String... args) {
 		if (hasNotLoadedFile()) {
 			if (args.length == 0) {
@@ -433,23 +463,8 @@ public final class EmuDB {
 		try {
 			this.context.cpu().turnOn();
 			while (true) {
-				final Optional<Integer> breakpointIndex = checkBreakpoints();
-				if (breakpointIndex.isEmpty()) {
-					this.context.cpu().turnOn();
-					this.context.cpu().executeOne();
-				} else {
-					final Breakpoint b = this.breakpoints.get(breakpointIndex.orElseThrow());
-					// set interrupt flag when hitting a breakpoint
-					((RegisterFile) this.context.cpu().getRegisters()).set(RFlags.INTERRUPT_ENABLE, true);
-					out.printf(
-							"Breakpoint %,d, %s0x%016x%s in %s%s%s ()%n",
-							breakpointIndex.orElseThrow(),
-							ANSI_BLUE,
-							b.address(),
-							ANSI_RESET,
-							ANSI_YELLOW,
-							b.name(),
-							ANSI_RESET);
+				final boolean hasHitABreakpoint = executeOneInstruction();
+				if (hasHitABreakpoint) {
 					break;
 				}
 			}
@@ -460,11 +475,16 @@ public final class EmuDB {
 
 	private Optional<Integer> checkBreakpoints() {
 		final long here = this.context.cpu().getRegisters().get(Register64.RIP);
+		// TODO: can be optimized into a HashMap
 		for (int i = 0; i < this.breakpoints.size(); i++) {
-			if (EmulatorConstants.getBaseAddress() + this.breakpoints.get(i).address() == here) {
+			final long breakpointAddress =
+					EmulatorConstants.getBaseAddress() + this.breakpoints.get(i).address();
+			if (here == breakpointAddress && here != lastBreakpointAddress) {
+				lastBreakpointAddress = breakpointAddress;
 				return Optional.of(i);
 			}
 		}
+		lastBreakpointAddress = -1L;
 		return Optional.empty();
 	}
 
