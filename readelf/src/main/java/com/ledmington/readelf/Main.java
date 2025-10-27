@@ -293,51 +293,39 @@ public final class Main {
 
 		if (displayFileHeader) {
 			printFileHeader(filename, elf);
+			out.println();
 		}
 
 		if (displaySectionHeaders) {
-			if (displayFileHeader) {
-				out.println();
-			}
 			printSectionHeaders(elf, elf.getFileHeader());
+			out.println();
 		}
 
 		if (displaySectionDetails && !displaySectionHeaders) {
-			if (displayFileHeader) {
-				out.println();
-			}
-
 			printSectionDetails(elf);
+			out.println();
 		}
 
 		if (displaySectionGroups) {
-			if (displayFileHeader) {
-				out.println();
-			}
 			printSectionGroups();
+			out.println();
 		}
 
 		if (displayProgramHeaders) {
-			if (displaySectionGroups) {
-				out.println();
-			}
 			printProgramHeaders(elf, elf);
+			out.println();
 		}
 
 		if (displaySectionToSegmentMapping) {
-			if (displayProgramHeaders) {
-				out.println();
-			}
 			printSectionToSegmentMapping(elf, elf);
+			out.println();
 		}
 
 		if (displayDynamicSection) {
-			if (displaySectionToSegmentMapping) {
-				out.println();
-			}
 			final Optional<Section> dyn = elf.getSectionByName(".dynamic");
 			if (dyn.isPresent()) {
 				printDynamicSection((DynamicSection) dyn.orElseThrow(), elf);
+				out.println();
 			} else {
 				out.println("There is no dynamic section in this file.");
 			}
@@ -347,10 +335,6 @@ public final class Main {
 		final Optional<Section> gvr = elf.getSectionByName(GnuVersionRequirementsSection.getStandardName());
 
 		if (displayRelocationSections) {
-			if (displayDynamicSection) {
-				out.println();
-			}
-
 			final Optional<Section> reladyn = elf.getSectionByName(".rela.dyn");
 			if (reladyn.isPresent()) {
 				printRelocationSection(
@@ -359,6 +343,7 @@ public final class Main {
 						(GnuVersionRequirementsSection) gvr.orElse(null),
 						elf,
 						elf.getFileHeader().is32Bit());
+				out.println("No processor specific unwind information to decode");
 				out.println();
 			}
 
@@ -371,21 +356,19 @@ public final class Main {
 						elf,
 						elf.getFileHeader().is32Bit());
 				out.println("No processor specific unwind information to decode");
+				out.println();
 			}
 		}
 
 		final Optional<Section> dynsym = elf.getSectionByName(".dynsym");
 		if (displayDynamicSymbolTable) {
-			if (displayRelocationSections) {
-				out.println();
-			}
-
 			if (dynsym.isPresent()) {
 				printSymbolTable(
 						(DynamicSymbolTableSection) dynsym.orElseThrow(),
 						(GnuVersionSection) gv.orElse(null),
 						(GnuVersionRequirementsSection) gvr.orElse(null),
 						elf);
+				out.println();
 			}
 		}
 
@@ -397,8 +380,8 @@ public final class Main {
 						(GnuVersionSection) gv.orElse(null),
 						(GnuVersionRequirementsSection) gvr.orElse(null),
 						elf);
+				out.println();
 			}
-			out.println();
 		}
 
 		final Optional<Section> hash = elf.getSectionByName(".hash");
@@ -682,8 +665,11 @@ public final class Main {
 				"Version needs section '%s' contains %d entr%s:%n",
 				gvrs.getName(), gvrs.getRequirementsLength(), gvrs.getRequirementsLength() == 1 ? "y" : "ies");
 		out.printf(
-				" Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
-				sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
+				" Addr: 0x%016x  Offset: 0x%0" + (wide ? "8" : "6") + "x  Link: %d (%s)%n",
+				sh.getVirtualAddress(),
+				sh.getFileOffset(),
+				sh.getLinkedSectionIndex(),
+				linkedSection.getName());
 
 		final StringTableSection strtab = (StringTableSection) linkedSection;
 		int k = 0;
@@ -717,8 +703,11 @@ public final class Main {
 				"Version symbols section '%s' contains %d entr%s:%n",
 				gvs.getName(), gvs.getVersionsLength(), gvs.getVersionsLength() == 1 ? "y" : "ies");
 		out.printf(
-				" Addr: 0x%016x  Offset: 0x%06x  Link: %d (%s)%n",
-				sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
+				" Addr: 0x%016x  Offset: 0x%0" + (wide ? "8" : "6") + "x  Link: %d (%s)%n",
+				sh.getVirtualAddress(),
+				sh.getFileOffset(),
+				sh.getLinkedSectionIndex(),
+				linkedSection.getName());
 
 		final StringTableSection stringTable = (StringTableSection)
 				sectionTable.getSection(linkedSection.header().getLinkedSectionIndex());
@@ -1217,6 +1206,7 @@ public final class Main {
 		out.println("   Num:    Value          Size Type    Bind   Vis      Ndx Name");
 		final StringTableSection strtab =
 				(StringTableSection) sectionTable.getSection(s.header().getLinkedSectionIndex());
+		final boolean isDefaultSymbolTable = s.getName().equals(".symtab");
 
 		for (int i = 0; i < s.getSymbolTableLength(); i++) {
 			final SymbolTableEntry ste = s.getSymbolTableEntry(i);
@@ -1239,7 +1229,7 @@ public final class Main {
 			final int versionNameOffset = gvrs != null ? gvrs.getVersionNameOffset(v) : -1;
 			String prefix = symbolName;
 			String suffix = "";
-			if (versionNameOffset != -1) {
+			if (!isDefaultSymbolTable && versionNameOffset != -1) {
 				final String version = strtab.getString(versionNameOffset);
 				final short versionNumber = gvrs.getVersion(v);
 				suffix = "@" + version + " (" + versionNumber + ")";
