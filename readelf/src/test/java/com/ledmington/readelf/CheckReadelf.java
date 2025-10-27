@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -184,28 +183,7 @@ public final class CheckReadelf {
 			System.exit(0);
 		}
 
-		final List<Path> elfFiles;
-		if (args.length > 0) {
-			elfFiles = Arrays.stream(args)
-					.map(s -> Path.of(s).normalize().toAbsolutePath())
-					.filter(p -> {
-						if (!Files.exists(p)) {
-							out.printf("File '%s' does not exist, skipping it.", p);
-							return false;
-						}
-						return true;
-					})
-					.filter(p -> {
-						if (!isELF(p)) {
-							out.printf("File '%s' is not an ELF, skipping it.", p);
-							return false;
-						}
-						return true;
-					})
-					.distinct()
-					.sorted()
-					.toList();
-		} else {
+		if (args.length == 0) {
 			out.println("No arguments provided.");
 			out.flush();
 			out.close();
@@ -213,11 +191,26 @@ public final class CheckReadelf {
 			return;
 		}
 
+		final List<Path> elfFiles = new ArrayList<>();
+		for (final String arg : args) {
+			final Path p = Path.of(arg).normalize().toAbsolutePath();
+			if (!Files.exists(p)) {
+				out.printf("File '%s' does not exist, skipping it.%n", p);
+				continue;
+			}
+			if (!isELF(p)) {
+				out.printf("File '%s' is not an ELF, skipping it.%n", p);
+				continue;
+			}
+			elfFiles.add(p);
+		}
+
+		final int totalTasks = elfFiles.size() * 2;
 		for (int i = 0; i < elfFiles.size(); i++) {
 			final Path p = elfFiles.get(i);
-			out.printf(" [%d / %d] ", i * 2 + 1, elfFiles.size() * 2);
+			out.printf(" [%d / %d] ", i * 2 + 1, totalTasks);
 			test(p, false);
-			out.printf(" [%d / %d] ", i * 2 + 2, elfFiles.size() * 2);
+			out.printf(" [%d / %d] ", i * 2 + 2, totalTasks);
 			test(p, true);
 		}
 
