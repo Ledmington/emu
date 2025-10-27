@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -1348,7 +1347,7 @@ public final class Main {
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
 			final String type = phte.type().getName();
-			final long offset = phte.segmentOffset();
+			final long offset = phte.segmentFileOffset();
 			final long virtualAddress = phte.segmentVirtualAddress();
 			final long physicalAddress = phte.segmentPhysicalAddress();
 			final long fileSize = phte.segmentFileSize();
@@ -1392,36 +1391,88 @@ public final class Main {
 		}
 	}
 
+	private static boolean isTBSSSpecial(final SectionHeader sh, final PHTEntry phte) {
+		// special case for .tbss
+		final boolean isSectionTLS = sh.getFlags().contains(SectionHeaderFlags.SHF_TLS);
+		final boolean isSectionNoBits = sh.getType() == SectionHeaderType.SHT_NOBITS;
+		final boolean isSegmentTLS = phte.type() == PHTEntryType.PT_TLS;
+		return isSectionTLS && isSectionNoBits && !isSegmentTLS;
+	}
+
+	private static long getSectionSize(final SectionHeader sh, final PHTEntry phte) {
+		// TODO: should we move this inside Section?
+		return isTBSSSpecial(sh, phte) ? 0L : sh.getSectionSize();
+	}
+
+	private static boolean isSectionInSegment(final SectionHeader sh, final PHTEntry phte) {
+		// Adapted from https://github.com/bminor/binutils-gdb/blob/master/include/elf/internal.h#L323
+		final boolean check_vma = true;
+		final boolean strict = true;
+
+		final boolean isSectionTLS = sh.getFlags().contains(SectionHeaderFlags.SHF_TLS);
+		final boolean isSectionAllocatable = sh.getFlags().contains(SectionHeaderFlags.SHF_ALLOC);
+
+		return ((
+				// Only PT_LOAD, PT_GNU_RELRO and PT_TLS segments can contain SHF_TLS sections.
+				(isSectionTLS
+								&& (phte.type() == PHTEntryType.PT_TLS
+										|| phte.type() == PHTEntryType.PT_GNU_RELRO
+										|| phte.type() == PHTEntryType.PT_LOAD))
+						// PT_TLS segment contains only SHF_TLS sections, PT_PHDR no sections at all.
+						|| (!isSectionTLS && phte.type() != PHTEntryType.PT_TLS && phte.type() != PHTEntryType.PT_PHDR))
+				// PT_LOAD and similar segments only have SHF_ALLOC sections.
+				&& !(!isSectionAllocatable
+						&& (phte.type() == PHTEntryType.PT_LOAD
+								|| phte.type() == PHTEntryType.PT_DYNAMIC
+								|| phte.type() == PHTEntryType.PT_GNU_EH_FRAME
+								|| phte.type() == PHTEntryType.PT_GNU_STACK
+								|| phte.type() == PHTEntryType.PT_GNU_RELRO
+								|| phte.type() == PHTEntryType.PT_GNU_SFRAME
+								|| PHTEntryType.isGNUMBind(phte.type().getCode())))
+				// Any section besides one of type SHT_NOBITS must have file offsets within the segment.
+				&& (sh.getType() == SectionHeaderType.SHT_NOBITS
+						|| (sh.getFileOffset() >= phte.segmentFileOffset()
+								&& (!(strict)
+										|| (sh.getFileOffset() - phte.segmentFileOffset()
+												<= phte.segmentFileSize() - 1L))
+								&& ((sh.getFileOffset() - phte.segmentFileOffset() + getSectionSize(sh, phte))
+										<= phte.segmentFileSize())))
+				// SHF_ALLOC sections must have VMAs within the segment.
+				&& (!(check_vma)
+						|| !isSectionAllocatable
+						|| (sh.getVirtualAddress() >= phte.segmentVirtualAddress()
+								&& (!(strict)
+										|| (sh.getVirtualAddress() - phte.segmentVirtualAddress()
+												<= phte.segmentMemorySize() - 1L))
+								&& ((sh.getVirtualAddress() - phte.segmentVirtualAddress() + getSectionSize(sh, phte))
+										<= phte.segmentMemorySize())))
+				// No zero size sections at start or end of PT_DYNAMIC nor PT_NOTE.
+				&& ((phte.type() != PHTEntryType.PT_DYNAMIC && phte.type() != PHTEntryType.PT_NOTE)
+						|| sh.getSectionSize() != 0L
+						|| phte.segmentMemorySize() == 0L
+						|| ((sh.getType() == SectionHeaderType.SHT_NOBITS
+										|| (sh.getFileOffset() > phte.segmentFileOffset()
+												&& (sh.getFileOffset() - phte.segmentFileOffset()
+														< phte.segmentFileSize())))
+								&& (!isSectionAllocatable
+										|| (sh.getVirtualAddress() > phte.segmentVirtualAddress()
+												&& (sh.getVirtualAddress() - phte.segmentVirtualAddress()
+														< phte.segmentMemorySize()))))));
+	}
+
 	private static void printSectionToSegmentMapping(final ProgramHeaderTable pht, final SectionTable sections) {
-		out.println(" Section to Segment mapping:\n" + //
-				"  Segment Sections...");
+		out.println(" Section to Segment mapping:");
+		out.println("  Segment Sections...");
 
 		for (int i = 0; i < pht.getProgramHeaderTableLength(); i++) {
 			final PHTEntry phte = pht.getProgramHeader(i);
-			final long segmentStart = phte.segmentVirtualAddress();
-			final long segmentEnd = segmentStart + phte.segmentMemorySize();
-			final boolean isSegmentTLS = phte.type() == PHTEntryType.PT_TLS;
-
 			out.printf("   %02d     ", i);
 
 			for (int j = 0; j < sections.getSectionTableLength(); j++) {
 				final Section s = sections.getSection(j);
 				final SectionHeader sh = s.header();
-				final long sectionSize = sh.getSectionSize();
-				final long sectionStart = sh.getVirtualAddress();
-				final long sectionEnd = sectionStart + sectionSize;
-				final Set<SectionHeaderFlags> flags = sh.getFlags();
-				final boolean isSectionAllocatable = flags.contains(SectionHeaderFlags.SHF_ALLOC);
-				final boolean isSectionTLS = flags.contains(SectionHeaderFlags.SHF_TLS);
 
-				if (sh.getType() != SectionHeaderType.SHT_NULL
-						&& sectionStart != 0L
-						&& sectionSize != 0L
-						&& isSectionAllocatable
-						// Sections with flag TLS can be loaded only in the TLS segment
-						&& isSegmentTLS == isSectionTLS
-						&& sectionStart >= segmentStart
-						&& sectionEnd <= segmentEnd) {
+				if (!isTBSSSpecial(sh, phte) && isSectionInSegment(sh, phte)) {
 					out.printf("%s ", s.getName());
 				}
 			}
