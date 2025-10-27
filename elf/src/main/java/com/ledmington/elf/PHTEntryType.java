@@ -73,8 +73,8 @@ public enum PHTEntryType {
 	PT_GNU_EH_FRAME(0x6474e550, "GNU_EH_FRAME", "Exception handling"),
 
 	/**
-	 * The p_flags member specifies the permissions on the segment containing the stack and is used to indicate wether
-	 * the stack should be executable. The absense of this header indicates that the stack will be executable.
+	 * The p_flags member specifies the permissions on the segment containing the stack and is used to indicate whether
+	 * the stack should be executable. The absence of this header indicates that the stack will be executable.
 	 */
 	PT_GNU_STACK(0x6474e551, "GNU_STACK", "Stack executablity"),
 
@@ -85,7 +85,10 @@ public enum PHTEntryType {
 	PT_GNU_RELRO(0x6474e552, "GNU_RELRO", "Read-only after relocation"),
 
 	/** The section .note.gnu.property has this type. */
-	PT_GNU_PROPERTY(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections");
+	PT_GNU_PROPERTY(0x6474e553, "GNU_PROPERTY", ".note.gnu.property notes sections"),
+
+	/** SFrame stack trace information. */
+	PT_GNU_SFRAME(0x6474e554, "GNU_SFRAME", ".note.gnu.sframe notes sections");
 
 	private static final Map<Integer, PHTEntryType> codeToType = new ConcurrentHashMap<>();
 
@@ -109,6 +112,12 @@ public enum PHTEntryType {
 
 	private static boolean isApplicationSpecific(final int code) {
 		return (code & 0x80000000) == 0x80000000;
+	}
+
+	public static boolean isGNUMBind(final int code) {
+		final int PT_GNU_MBIND_LO = 0x6474e555;
+		final int PT_GNU_MBIND_HI = PT_GNU_MBIND_LO + 4096 - 1;
+		return code >= PT_GNU_MBIND_LO && code <= PT_GNU_MBIND_HI;
 	}
 
 	/**

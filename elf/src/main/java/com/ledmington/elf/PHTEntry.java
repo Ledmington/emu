@@ -24,7 +24,7 @@ import java.util.Objects;
  *
  * @param type The type of this entry.
  * @param flags Miscellaneous flags.
- * @param segmentOffset The segment's offset in file.
+ * @param segmentFileOffset The segment's offset in file.
  * @param segmentVirtualAddress The virtual address where to load this segment in memory.
  * @param segmentPhysicalAddress The physical address where to load this segment in memory.
  * @param segmentFileSize The size in bytes of this segment on the file.
@@ -34,7 +34,7 @@ import java.util.Objects;
 public record PHTEntry(
 		PHTEntryType type,
 		int flags,
-		long segmentOffset,
+		long segmentFileOffset,
 		long segmentVirtualAddress,
 		long segmentPhysicalAddress,
 		long segmentFileSize,
@@ -46,7 +46,7 @@ public record PHTEntry(
 	 *
 	 * @param type The type of this entry.
 	 * @param flags Miscellaneous flags.
-	 * @param segmentOffset The segment's offset in file.
+	 * @param segmentFileOffset The segment's offset in file.
 	 * @param segmentVirtualAddress The virtual address where to load this segment in memory.
 	 * @param segmentPhysicalAddress The physical address where to load this segment in memory.
 	 * @param segmentFileSize The size in bytes of this segment on the file.
@@ -94,8 +94,8 @@ public record PHTEntry(
 		return "PHTEntry(type=" + type + ";readable="
 				+ isReadable() + ";writeable="
 				+ isWriteable() + ";executable="
-				+ isExecutable() + ";segmentOffset="
-				+ segmentOffset + ";segmentVirtualAddress="
+				+ isExecutable() + ";segmentFileOffset="
+				+ segmentFileOffset + ";segmentVirtualAddress="
 				+ segmentVirtualAddress + ";segmentPhysicalAddress="
 				+ segmentPhysicalAddress + ";segmentFileSize="
 				+ segmentFileSize + ";segmentMemorySize="
@@ -108,7 +108,7 @@ public record PHTEntry(
 		int h = 17;
 		h = 31 * h + type.hashCode();
 		h = 31 * h + flags;
-		h = 31 * h + Long.hashCode(segmentOffset);
+		h = 31 * h + Long.hashCode(segmentFileOffset);
 		h = 31 * h + Long.hashCode(segmentVirtualAddress);
 		h = 31 * h + Long.hashCode(segmentPhysicalAddress);
 		h = 31 * h + Long.hashCode(segmentFileSize);
@@ -130,7 +130,7 @@ public record PHTEntry(
 		}
 		return this.type.equals(phte.type)
 				&& this.flags == phte.flags
-				&& this.segmentOffset == phte.segmentOffset
+				&& this.segmentFileOffset == phte.segmentFileOffset
 				&& this.segmentVirtualAddress == phte.segmentVirtualAddress
 				&& this.segmentPhysicalAddress == phte.segmentPhysicalAddress
 				&& this.segmentFileSize == phte.segmentFileSize

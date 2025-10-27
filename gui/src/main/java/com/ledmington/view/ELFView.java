@@ -283,7 +283,7 @@ public final class ELFView extends BorderPane {
 							k,
 							4));
 			k += 4;
-			x.getChildren().add(getTreeItem("Segment offset = " + phte.segmentOffset(), k, wordSize));
+			x.getChildren().add(getTreeItem("Segment offset = " + phte.segmentFileOffset(), k, wordSize));
 			k += wordSize;
 			x.getChildren().add(getTreeItem("Segment vaddr = " + phte.segmentVirtualAddress(), k, wordSize));
 			k += wordSize;
