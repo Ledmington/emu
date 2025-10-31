@@ -208,6 +208,7 @@ final class TestExecution {
 		final long result = oldValue1 + oldValue2;
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0L);
+		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -224,6 +225,7 @@ final class TestExecution {
 		final int result = oldValue1 + oldValue2;
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -240,6 +242,7 @@ final class TestExecution {
 		final short result = BitUtils.asShort(oldValue1 + oldValue2);
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -256,6 +259,7 @@ final class TestExecution {
 		final byte result = BitUtils.asByte(oldValue1 + oldValue2);
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -272,6 +276,7 @@ final class TestExecution {
 		final long result = oldValue1 - oldValue2;
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0L);
+		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -288,6 +293,7 @@ final class TestExecution {
 		final int result = oldValue1 - oldValue2;
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -304,6 +310,7 @@ final class TestExecution {
 		final short result = BitUtils.asShort(oldValue1 - oldValue2);
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -320,6 +327,7 @@ final class TestExecution {
 		final byte result = BitUtils.asByte(oldValue1 - oldValue2);
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -336,6 +344,7 @@ final class TestExecution {
 		final long result = oldValue1 ^ oldValue2;
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -352,6 +361,7 @@ final class TestExecution {
 		final int result = oldValue1 ^ oldValue2;
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -368,6 +378,7 @@ final class TestExecution {
 		final short result = BitUtils.xor(oldValue1, oldValue2);
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -384,6 +395,7 @@ final class TestExecution {
 		final byte result = BitUtils.xor(oldValue1, oldValue2);
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -400,6 +412,7 @@ final class TestExecution {
 		final long result = oldValue1 & oldValue2;
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0L);
+		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -416,6 +429,7 @@ final class TestExecution {
 		final int result = oldValue1 & oldValue2;
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -432,6 +446,7 @@ final class TestExecution {
 		final short result = BitUtils.and(oldValue1, oldValue2);
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -448,6 +463,7 @@ final class TestExecution {
 		final byte result = BitUtils.and(oldValue1, oldValue2);
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,

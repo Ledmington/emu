@@ -125,21 +125,7 @@ public class X86Cpu implements X86Emulator {
 					case Register16 op1 ->
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a - b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b);
-					case Register64 op1 -> {
-						final long r1 = rf.get(op1);
-						final long r2 =
-								switch (inst.secondOperand()) {
-									case Register64 op2 -> rf.get(op2);
-									case Immediate imm -> getAsLongSX(imm);
-									default ->
-										throw new IllegalArgumentException(String.format(
-												"Unknown second argument type %s.", inst.secondOperand()));
-								};
-						final long result = r1 - r2;
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0L);
-					}
+					case Register64 op1 -> op(op1, (Register64) inst.secondOperand(), (a, b) -> a - b);
 					case IndirectOperand iop -> {
 						final long address = computeIndirectOperand(iop);
 						final Register8 op2 = (Register8) inst.secondOperand();
@@ -161,21 +147,7 @@ public class X86Cpu implements X86Emulator {
 					case Register16 op1 ->
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a + b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), Integer::sum);
-					case Register64 op1 -> {
-						final long r1 = rf.get(op1);
-						final long r2 =
-								switch (inst.secondOperand()) {
-									case Register64 op2 -> rf.get(op2);
-									case Immediate imm -> getAsLongSX(imm);
-									default ->
-										throw new IllegalArgumentException(String.format(
-												"Unknown second argument type %s.", inst.secondOperand()));
-								};
-						final long result = r1 + r2;
-						rf.set(op1, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0L);
-					}
+					case Register64 op1 -> op(op1, (Register64) inst.secondOperand(), Long::sum);
 					case IndirectOperand iop -> {
 						final long address = computeIndirectOperand(iop);
 						final Register8 op2 = (Register8) inst.secondOperand();
@@ -243,24 +215,16 @@ public class X86Cpu implements X86Emulator {
 			case AND -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
-					final byte result = BitUtils.and(rf.get(r1), rf.get(r2));
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == (byte) 0);
+					op(r1, r2, BitUtils::and);
 				} else if (inst.firstOperand() instanceof final Register16 r1
 						&& inst.secondOperand() instanceof final Register16 r2) {
-					final short result = BitUtils.and(rf.get(r1), rf.get(r2));
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == (short) 0);
+					op(r1, r2, BitUtils::and);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Register32 r2) {
-					final int result = rf.get(r1) & rf.get(r2);
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0);
+					op(r1, r2, (a, b) -> a & b);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
-					final long result = rf.get(r1) & rf.get(r2);
-					rf.set(r1, result);
-					rf.set(RFlags.ZERO, result == 0L);
+					op(r1, r2, (a, b) -> a & b);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					rf.set(r1, rf.get(r1) & getAsLongSX(imm));
@@ -458,10 +422,11 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
-		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> {
+		op(() -> rf.get(op1), imm::asLong, task, result -> {
 			rf.set(op1, result);
 			// rf.resetFlags();
 			rf.set(RFlags.ZERO, result == 0L);
+			rf.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		});
 	}
 
