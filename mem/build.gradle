@@ -57,3 +57,5 @@ jmh {
     //includeTests = true // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
     //duplicateClassesStrategy = DuplicatesStrategy.FAIL // Strategy to apply when encountering duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
 }
+
+tasks.build.dependsOn(jmhJar)

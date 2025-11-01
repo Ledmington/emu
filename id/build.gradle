@@ -74,3 +74,5 @@ tasks.register('fuzz', JavaExec) {
 	classpath sourceSets.test.runtimeClasspath
 	mainClass = 'com.ledmington.cpu.x86.X86Fuzzer'
 }
+
+tasks.build.dependsOn(jmhJar)

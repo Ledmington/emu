@@ -58,6 +58,8 @@ jmh {
 	//duplicateClassesStrategy = DuplicatesStrategy.FAIL // Strategy to apply when encountering duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
 }
 
+tasks.build.dependsOn(jmhJar)
+
 tasks.register('downloadELF32Manual', Download) {
 	group = 'utilities'
 	description = 'Downloads the ELF 32-bit file format specification in the project root directory'
