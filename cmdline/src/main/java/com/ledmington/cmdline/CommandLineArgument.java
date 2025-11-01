@@ -17,14 +17,41 @@
  */
 package com.ledmington.cmdline;
 
+/** Interface representing a command-line argument with optional short and long names. */
 public interface CommandLineArgument {
+
+	/**
+	 * Checks if the argument has a short name.
+	 *
+	 * @return {@code true} if the argument has a short name, {@code false} otherwise.
+	 */
 	boolean hasShortName();
 
+	/**
+	 * Returns the short name of the argument.
+	 *
+	 * @return The short name of the argument, or {@code null} if none exists.
+	 */
 	String shortName();
 
+	/**
+	 * Checks if the argument has a long name.
+	 *
+	 * @return {@code true} if the argument has a long name, {@code false} otherwise.
+	 */
 	boolean hasLongName();
 
+	/**
+	 * Returns the long name of the argument.
+	 *
+	 * @return The long name of the argument, or {@code null} if none exists.
+	 */
 	String longName();
 
+	/**
+	 * Returns a brief description of the argument’s purpose.
+	 *
+	 * @return The description of the argument.
+	 */
 	String description();
 }

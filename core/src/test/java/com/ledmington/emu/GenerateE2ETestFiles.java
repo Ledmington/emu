@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public final class GenerateE2ETestFiles {
@@ -34,13 +35,14 @@ public final class GenerateE2ETestFiles {
 		WINDOWS
 	}
 
-	private static final OS os = System.getProperty("os.name").toLowerCase().contains("win")
-			? OS.WINDOWS
-			: (System.getProperty("os.name").toLowerCase().contains("mac") ? OS.MACOS : OS.LINUX);
+	private static final OS os =
+			System.getProperty("os.name").toLowerCase(Locale.US).contains("win")
+					? OS.WINDOWS
+					: (System.getProperty("os.name").toLowerCase(Locale.US).contains("mac") ? OS.MACOS : OS.LINUX);
 	private static final List<String> SEARCH_DIRECTORIES =
 			switch (os) {
 				case WINDOWS ->
-					java.util.List.of(
+					List.of(
 							"C:\\MinGW\\bin",
 							"C:\\TDM-GCC-64\\bin",
 							"C:\\Program Files\\LLVM\\bin",

@@ -19,9 +19,18 @@ package com.ledmington.cmdline;
 
 import java.util.Objects;
 
+/**
+ * Represents a boolean command-line argument with optional short and long names.
+ *
+ * @param shortName The short name of the argument (e.g. {@code "v"}), or {@code null} if none.
+ * @param longName The long name of the argument (e.g. {@code "verbose"}), or {@code null} if none.
+ * @param description A brief description of the argument’s purpose; must not be {@code null}.
+ * @param defaultValue The default boolean value for this argument.
+ */
 public record BooleanArgument(String shortName, String longName, String description, boolean defaultValue)
 		implements CommandLineArgument {
 
+	/** Creates a new {@code BooleanArgument} record. */
 	public BooleanArgument {
 		if (shortName == null && longName == null) {
 			throw new IllegalArgumentException("At least one of shortName and longName must not be null.");
