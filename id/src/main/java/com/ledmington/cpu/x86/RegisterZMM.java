@@ -165,6 +165,12 @@ public enum RegisterZMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link RegisterZMM}.
+	 *
+	 * @param r The ZMM register to convert.
+	 * @return The byte value representing the given ZMM register.
+	 */
 	public static byte toByte(final RegisterZMM r) {
 		return switch (r) {
 			case ZMM0, ZMM8, ZMM16, ZMM24 -> (byte) 0x00;

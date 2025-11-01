@@ -42,6 +42,12 @@ public interface ImmutableRegisterFile {
 	 */
 	short get(Register16 r);
 
+	/**
+	 * Returns the value of the given 16-bit segment register as a short.
+	 *
+	 * @param s The segment register to be read.
+	 * @return The value in the register.
+	 */
 	short get(SegmentRegister s);
 
 	/**

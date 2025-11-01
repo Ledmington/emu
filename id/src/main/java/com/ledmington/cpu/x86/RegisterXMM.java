@@ -165,6 +165,12 @@ public enum RegisterXMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link RegisterXMM}.
+	 *
+	 * @param r The XMM register to convert.
+	 * @return The byte value representing the given XMM register.
+	 */
 	public static byte toByte(final RegisterXMM r) {
 		return switch (r) {
 			case XMM0, XMM8, XMM16, XMM24 -> (byte) 0x00;

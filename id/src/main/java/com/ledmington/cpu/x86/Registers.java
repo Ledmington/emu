@@ -55,6 +55,12 @@ public final class Registers {
 						: Register32.fromByte(combine(extension, registerCode));
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link Register} by selecting the proper subclass.
+	 *
+	 * @param r The register to convert.
+	 * @return The byte value representing the given register.
+	 */
 	public static byte toByte(final Register r) {
 		return switch (r) {
 			case Register8 r8 -> Register8.toByte(r8);

@@ -447,8 +447,7 @@ public class X86Cpu implements X86Emulator {
 		final long value = mem.read8(rsp);
 		// If we read the baseStackValue, we have exhausted the stack
 		if (value == EmulatorConstants.getBaseStackValue()) {
-			logger.warning("STACK UNDERFLOW");
-			// throw new StackUnderflow();
+			throw new StackUnderflow();
 		}
 		// the stack "grows downward"
 		rf.set(Register64.RSP, rsp + 8L);
@@ -488,6 +487,12 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	/**
+	 * Computes and returns the address pointed by the given indirect operand.
+	 *
+	 * @param io The indirect operand pointing at the memory.
+	 * @return The pointed address.
+	 */
 	public long computeIndirectOperand(final IndirectOperand io) {
 		final long base = io.hasBase()
 				? (io.getBase() instanceof Register64

@@ -115,6 +115,12 @@ public enum Register8 implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link Register8}.
+	 *
+	 * @param r The 8-bit register to convert.
+	 * @return The byte value representing the given 8-bit register.
+	 */
 	public static byte toByte(final Register8 r) {
 		return switch (r) {
 			case AL, R8B -> (byte) 0x00;

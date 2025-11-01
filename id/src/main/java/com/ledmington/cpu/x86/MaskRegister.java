@@ -19,6 +19,7 @@ package com.ledmington.cpu.x86;
 
 import java.util.Locale;
 
+/** A register used to mask lanes in certain instructions in the AVX, AVX2 and AVX512 instruction sets. */
 public enum MaskRegister implements Register {
 
 	/** The mask register k0. */

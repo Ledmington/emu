@@ -25,6 +25,11 @@ public final class NullRegister implements Register {
 
 	private static final NullRegister instance = new NullRegister();
 
+	/**
+	 * Returns the only instance of NullRegister.
+	 *
+	 * @return The only instance of NullRegister.
+	 */
 	public static NullRegister getInstance() {
 		return instance;
 	}

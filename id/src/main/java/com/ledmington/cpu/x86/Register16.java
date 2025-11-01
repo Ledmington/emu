@@ -100,6 +100,12 @@ public enum Register16 implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link Register16}.
+	 *
+	 * @param r The 16-bit register to convert.
+	 * @return The byte value representing the given 16-bit register.
+	 */
 	public static byte toByte(final Register16 r) {
 		return switch (r) {
 			case AX, R8W -> (byte) 0x00;

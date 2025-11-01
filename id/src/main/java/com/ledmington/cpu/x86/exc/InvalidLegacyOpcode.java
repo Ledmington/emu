@@ -19,6 +19,7 @@ package com.ledmington.cpu.x86.exc;
 
 import java.io.Serial;
 
+/** This class represents an invalid legacy opcode which was encountered during instruction decoding. */
 public final class InvalidLegacyOpcode extends DecodingException {
 
 	@Serial

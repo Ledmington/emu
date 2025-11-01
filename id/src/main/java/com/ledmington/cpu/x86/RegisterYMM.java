@@ -165,6 +165,12 @@ public enum RegisterYMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link RegisterYMM}.
+	 *
+	 * @param r The YMM register to convert.
+	 * @return The byte value representing the given YMM register.
+	 */
 	public static byte toByte(final RegisterYMM r) {
 		return switch (r) {
 			case YMM0, YMM8, YMM16, YMM24 -> (byte) 0x00;

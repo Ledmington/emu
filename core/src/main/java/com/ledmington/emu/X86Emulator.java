@@ -23,6 +23,7 @@ import com.ledmington.cpu.x86.Opcode;
 /** Common interface to represent an x86 Emulator. */
 public interface X86Emulator {
 
+	/** Allows instructions to be executed. Usually needed to start execution again after a halt. */
 	void turnOn();
 
 	/**

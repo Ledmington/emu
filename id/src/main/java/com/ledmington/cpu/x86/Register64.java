@@ -103,6 +103,12 @@ public enum Register64 implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link Register64}.
+	 *
+	 * @param r The 64-bit register to convert.
+	 * @return The byte value representing the given 64-bit register.
+	 */
 	public static byte toByte(final Register64 r) {
 		return switch (r) {
 			case RAX, R8 -> (byte) 0x00;

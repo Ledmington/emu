@@ -19,8 +19,18 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
+/**
+ * Represents a segmented memory address in the x86 architecture, consisting of a {@link SegmentRegister} and an
+ * {@link Immediate} offset.
+ */
 public record SegmentedAddress(SegmentRegister segment, Immediate immediate) implements Operand {
 
+	/**
+	 * Creates a new {@code SegmentedAddress} with the given segment and offset.
+	 *
+	 * @param segment The segment register component.
+	 * @param immediate The immediate offset within the segment.
+	 */
 	public SegmentedAddress {
 		Objects.requireNonNull(segment);
 		Objects.requireNonNull(immediate);

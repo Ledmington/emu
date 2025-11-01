@@ -68,6 +68,12 @@ public enum RegisterMMX implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link RegisterMMX}.
+	 *
+	 * @param r The MMX register to convert.
+	 * @return The byte value representing the given MMX register.
+	 */
 	public static byte toByte(final RegisterMMX r) {
 		return switch (r) {
 			case MM0 -> (byte) 0x00;

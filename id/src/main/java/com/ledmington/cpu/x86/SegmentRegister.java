@@ -19,6 +19,7 @@ package com.ledmington.cpu.x86;
 
 import java.util.Locale;
 
+/** Represents the six segment registers available in the x86 architecture. */
 public enum SegmentRegister implements Register {
 
 	/** The segment register CS (Code Segment). */
@@ -41,6 +42,12 @@ public enum SegmentRegister implements Register {
 
 	private final String mnemonic = name().toLowerCase(Locale.US);
 
+	/**
+	 * Returns the numeric encoding of the given {@link SegmentRegister}.
+	 *
+	 * @param r The segment register to convert.
+	 * @return The byte value representing the given segment register.
+	 */
 	public static byte toByte(final SegmentRegister r) {
 		return switch (r) {
 			case ES -> (byte) 0x00;

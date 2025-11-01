@@ -21,6 +21,12 @@ import java.util.Objects;
 
 import com.ledmington.mem.Memory;
 
+/**
+ * This class contains all the information needed for the emulator to execute a file, except the file itself.
+ *
+ * @param cpu The emulated CPU to be used.
+ * @param memory The emulated memory to be used.
+ */
 public record ExecutionContext(X86Emulator cpu, Memory memory) {
 	public ExecutionContext {
 		Objects.requireNonNull(cpu, "Null cpu.");

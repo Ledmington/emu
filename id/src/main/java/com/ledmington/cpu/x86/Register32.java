@@ -103,6 +103,12 @@ public enum Register32 implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link Register32}.
+	 *
+	 * @param r The 32-bit register to convert.
+	 * @return The byte value representing the given 32-bit register.
+	 */
 	public static byte toByte(final Register32 r) {
 		return switch (r) {
 			case EAX, R8D -> (byte) 0x00;

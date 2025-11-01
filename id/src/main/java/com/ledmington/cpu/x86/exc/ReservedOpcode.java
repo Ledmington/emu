@@ -39,6 +39,13 @@ public final class ReservedOpcode extends DecodingException {
 		super(String.format("Reserved opcode 0x%02x%02x", firstByte, secondByte));
 	}
 
+	/**
+	 * Creates a ReversedOpcode runtime exception with a proper message. Some reserved opcodes are made of three bytes.
+	 *
+	 * @param firstByte The first byte of the opcode.
+	 * @param secondByte The second byte of the opcode.
+	 * @param thirdByte The third byte of the opcode.
+	 */
 	public ReservedOpcode(final byte firstByte, final byte secondByte, final byte thirdByte) {
 		super(String.format("Reserved opcode 0x%02x%02x%02x", firstByte, secondByte, thirdByte));
 	}

@@ -19,11 +19,16 @@ package com.ledmington.emu;
 
 import java.io.Serial;
 
+/**
+ * This class represents an error in which the stack was not handled correctly and the base of the stack has been
+ * popped.
+ */
 public final class StackUnderflow extends RuntimeException {
 
 	@Serial
 	private static final long serialVersionUID = -5884319071749576077L;
 
+	/** Creates a new StackUnderflow exception with a default message. */
 	public StackUnderflow() {
 		super("Base of the stack encountered.");
 	}
