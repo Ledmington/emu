@@ -71,11 +71,19 @@ public class X86Cpu implements X86Emulator {
 	 * Creates a new x86 CPU with the given memory controller.
 	 *
 	 * @param mem The object to be used to access the memory.
+	 * @param checkInstructions When enabled, checks instructions before executing them.
 	 */
 	public X86Cpu(final MemoryController mem, final boolean checkInstructions) {
 		this(mem, new X86RegisterFile(), checkInstructions);
 	}
 
+	/**
+	 * Creates a new {@link X86Cpu} with the given {@link MemoryController} and {@link RegisterFile}.
+	 *
+	 * @param mem The emulated memory.
+	 * @param rf The set of registers.
+	 * @param checkInstructions When enabled, checks instructions before executing them.
+	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need these objects as they are.")
 	public X86Cpu(final MemoryController mem, final RegisterFile rf, final boolean checkInstructions) {
 		this.mem = Objects.requireNonNull(mem);

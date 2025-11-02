@@ -28,6 +28,13 @@ import com.ledmington.mem.Memory;
  * @param memory The emulated memory to be used.
  */
 public record ExecutionContext(X86Emulator cpu, Memory memory) {
+
+	/**
+	 * Creates a new {@link ExecutionContext} with the given emulated CPU and emulated Memory.
+	 *
+	 * @param cpu The CPU to be used to execute instructions.
+	 * @param memory The memory to be used as main memory.
+	 */
 	public ExecutionContext {
 		Objects.requireNonNull(cpu, "Null cpu.");
 		Objects.requireNonNull(memory, "Null memory.");

@@ -180,6 +180,7 @@ public final class ELFLoader {
 	 * executed.
 	 *
 	 * @param elf The file to be unloaded.
+	 * @param baseAddress The address to unload the ELF file from.
 	 */
 	public void unload(final ELF elf, final long baseAddress) {
 		final SymbolTableSection symtab =

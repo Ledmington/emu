@@ -34,6 +34,7 @@ import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.PagedMemory;
 import com.ledmington.utils.MiniLogger;
 
+/** The emulator. */
 public final class Emu {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("emu");
@@ -43,11 +44,22 @@ public final class Emu {
 	private long entryPointVirtualAddress = 0L;
 	private final ELFLoader loader; // TODO: should we place this inside ExecutionContext, too?
 
+	/**
+	 * Creates a new Emu instance with the given context and the given {@link ELFLoader}.
+	 *
+	 * @param context The execution context to be used for emulation.
+	 * @param loader The loader to be used to initialize ELF files.
+	 */
 	public Emu(final ExecutionContext context, final ELFLoader loader) {
 		this.context = Objects.requireNonNull(context, "Null context.");
 		this.loader = Objects.requireNonNull(loader, "Null loader.");
 	}
 
+	/**
+	 * Creates a new Emu instance with the given context and a default {@link ELFLoader}.
+	 *
+	 * @param context The execution context to be used for emulation.
+	 */
 	public Emu(final ExecutionContext context) {
 		this(context, new ELFLoader(context.cpu(), (MemoryController) context.memory()));
 	}
@@ -92,12 +104,26 @@ public final class Emu {
 		return new ExecutionContext(cpu, mem);
 	}
 
+	/**
+	 * Loads, runs and unloads the given filename with the given arguments. This is the end-to-end workflow for
+	 * emulation.
+	 *
+	 * @param filename The name of the executable file to emulate.
+	 * @param commandLineArguments The arguments to be passed to the executable as if they were passed on the
+	 *     command-line.
+	 */
 	public void loadRunAndUnload(final String filename, final String... commandLineArguments) {
 		load(filename, commandLineArguments);
 		run();
 		unload();
 	}
 
+	/**
+	 * Loads the given file into memory with the given command-line arguments.
+	 *
+	 * @param filename The name of the file to be loaded.
+	 * @param commandLineArguments The arguments to be loaded as if they were passed on the command-line.
+	 */
 	public void load(final String filename, final String... commandLineArguments) {
 		this.elf = ELFParser.parse(filename);
 		logger.info("ELF file parsed successfully");
@@ -128,6 +154,7 @@ public final class Emu {
 		this.context.cpu().setInstructionPointer(EmulatorConstants.getBaseAddress() + entryPointVirtualAddress);
 	}
 
+	/** Executes the already-loaded ELF file. */
 	public void run() {
 		this.context.cpu().turnOn();
 
@@ -155,6 +182,7 @@ public final class Emu {
 		logger.info(" ### Execution end ### ");
 	}
 
+	/** Unloads the file from memory, deallocating all the memory it used. */
 	public void unload() {
 		loader.unload(elf, EmulatorConstants.getBaseAddress());
 	}

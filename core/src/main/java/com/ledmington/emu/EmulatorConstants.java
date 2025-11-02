@@ -24,7 +24,7 @@ import com.ledmington.mem.MemoryInitializer;
 /** A class to hold constants for the emulator execution. */
 public final class EmulatorConstants {
 
-	/** The default memory initializer */
+	/** The default memory initializer. */
 	private static MemoryInitializer memoryInitializer = MemoryInitializer.random();
 
 	private static boolean breakOnWrongPermissions = true;
@@ -44,7 +44,9 @@ public final class EmulatorConstants {
 
 	private static boolean checkInstructions = true;
 
-	private EmulatorConstants() {}
+	private EmulatorConstants() {
+		// Prevent instantiation
+	}
 
 	/**
 	 * Allows changing the memory initializer of the emulator.
@@ -56,32 +58,70 @@ public final class EmulatorConstants {
 	}
 
 	/**
-	 * Returns the default memory initializer.
+	 * Returns the current memory initializer used by the emulator.
 	 *
-	 * @return The default memory initializer.
+	 * @return The current {@link MemoryInitializer} instance.
 	 */
 	public static MemoryInitializer getMemoryInitializer() {
 		return memoryInitializer;
 	}
 
+	/**
+	 * Indicates whether the emulator should break when memory access permissions are violated.
+	 *
+	 * @return {@code true} if the emulator should break on wrong permissions, {@code false} otherwise.
+	 */
 	public static boolean shouldBreakOnWrongPermissions() {
 		return breakOnWrongPermissions;
 	}
 
+	/**
+	 * Sets whether the emulator should break when memory access permissions are violated.
+	 *
+	 * @param b {@code true} to enable breaking on permission violations; {@code false} to disable.
+	 */
 	public static void shouldBreakOnWrongPermissions(final boolean b) {
 		breakOnWrongPermissions = b;
 	}
 
+	/**
+	 * Indicates whether the emulator should break when attempting to read uninitialized memory.
+	 *
+	 * @return {@code true} if the emulator should break when reading uninitialized memory, {@code false} otherwise.
+	 */
 	public static boolean shouldBreakWhenReadingUninitializedMemory() {
 		return breakWhenReadingUninitializedMemory;
 	}
 
+	/**
+	 * Sets whether the emulator should break when attempting to read uninitialized memory.
+	 *
+	 * @param b {@code true} to enable breaking when reading uninitialized memory; {@code false} to disable.
+	 */
 	public static void shouldBreakWhenReadingUninitializedMemory(final boolean b) {
 		breakWhenReadingUninitializedMemory = b;
 	}
 
 	/**
-	 * Changes the default stack address.
+	 * Sets the base address where the emulator loads executable files.
+	 *
+	 * @param newBaseAddress The new base address.
+	 */
+	public static void setBaseAddress(final long newBaseAddress) {
+		baseAddress = newBaseAddress;
+	}
+
+	/**
+	 * Returns the base address where the emulator loads executable files.
+	 *
+	 * @return the current base address.
+	 */
+	public static long getBaseAddress() {
+		return baseAddress;
+	}
+
+	/**
+	 * Sets the base stack address used by the emulator.
 	 *
 	 * @param newBaseStackAddress The new base stack address.
 	 */
@@ -90,18 +130,18 @@ public final class EmulatorConstants {
 	}
 
 	/**
-	 * Returns the default base stack address.
+	 * Returns the base stack address used by the emulator.
 	 *
-	 * @return The default base stack address.
+	 * @return the current base stack address
 	 */
 	public static long getBaseStackAddress() {
 		return baseStackAddress;
 	}
 
 	/**
-	 * Changes the default stack size.
+	 * Sets the default stack size used by the emulator.
 	 *
-	 * @param newStackSize The new default stack size.
+	 * @param newStackSize The new stack size in bytes.
 	 */
 	public static void setStackSize(final long newStackSize) {
 		final long minStackSize = 1L;
@@ -112,44 +152,46 @@ public final class EmulatorConstants {
 	}
 
 	/**
-	 * Returns the default stack size.
+	 * Returns the current default stack size used by the emulator.
 	 *
-	 * @return The default stack size.
+	 * @return The current stack size in bytes.
 	 */
 	public static long getStackSize() {
 		return stackSize;
 	}
 
 	/**
-	 * Changes the default base address.
+	 * Sets the value to be placed at the base of the stack used by the emulator.
 	 *
-	 * @param newBaseAddress The new default base address.
+	 * @param newBaseStackValue The new base stack value.
 	 */
-	public static void setBaseAddress(final long newBaseAddress) {
-		baseAddress = newBaseAddress;
-	}
-
-	/**
-	 * Returns the default base address.
-	 *
-	 * @return The default base address.
-	 */
-	public static long getBaseAddress() {
-		return baseAddress;
-	}
-
 	public static void setBaseStackValue(final long newBaseStackValue) {
 		baseStackValue = newBaseStackValue;
 	}
 
+	/**
+	 * Returns the base stack value used by the emulator.
+	 *
+	 * @return The current base stack value.
+	 */
 	public static long getBaseStackValue() {
 		return baseStackValue;
 	}
 
+	/**
+	 * Indicates whether the emulator should perform instruction validation checks.
+	 *
+	 * @return {@code true} if instruction checks are enabled; {@code false} otherwise.
+	 */
 	public static boolean shouldCheckInstruction() {
 		return checkInstructions;
 	}
 
+	/**
+	 * Sets whether the emulator should perform instruction validation checks.
+	 *
+	 * @param b {@code true} to enable instruction checking; {@code false} to disable.
+	 */
 	public static void shouldCheckInstructions(final boolean b) {
 		checkInstructions = b;
 	}
