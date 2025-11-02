@@ -207,8 +207,7 @@ public final class InstructionEncoder {
 			if (opcode.length() < opcodePad) {
 				sb.append(" ".repeat(opcodePad - opcode.length()));
 			}
-			sb.append(' ');
-			sb.append(operandString(inst, inst.firstOperand(), shortHex));
+			sb.append(' ').append(operandString(inst, inst.firstOperand(), shortHex));
 			if (inst.hasDestinationMask()) {
 				sb.append('{').append(inst.getDestinationMask().toIntelSyntax()).append('}');
 			}
@@ -761,6 +760,7 @@ public final class InstructionEncoder {
 		return inst.hasFirstOperand() && inst.firstOperand() instanceof Register16;
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		byte reg = 0;
 		switch (inst.opcode()) {
@@ -1149,7 +1149,7 @@ public final class InstructionEncoder {
 						return;
 					}
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
-						&& inst.secondOperand() instanceof final Register r) {
+						&& inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x21);
 
 					if (isIpAndOffset(io)) {
@@ -1483,7 +1483,7 @@ public final class InstructionEncoder {
 						&& Registers.requiresEvexExtension(r)
 						&& isSecondM(inst)) {
 					wb.write((byte) 0x6e);
-				} else if (isFirstR64(inst) && inst.secondOperand() instanceof final RegisterXMM r2) {
+				} else if (isFirstR64(inst) && inst.secondOperand() instanceof RegisterXMM) {
 					wb.write((byte) 0x7e);
 				} else {
 					if (isFirstXMM(inst) && isSecondM(inst)) {
@@ -1951,10 +1951,6 @@ public final class InstructionEncoder {
 				if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x00;
-				} else if (isFirstR(inst)
-						&& inst.thirdOperand() instanceof final IndirectOperand io
-						&& !isSimpleIndirectOperand(io)) {
-					wb.write((byte) 0x74);
 				} else {
 					wb.write((byte) 0x74);
 				}
@@ -2155,6 +2151,7 @@ public final class InstructionEncoder {
 		};
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private static int countEvexExtensions(final Instruction inst) {
 		int count = 0;
 		if (inst.hasFirstOperand()) {
@@ -2180,6 +2177,7 @@ public final class InstructionEncoder {
 		return count;
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private static int countExtensions(final Instruction inst) {
 		int count = 0;
 		if (inst.hasFirstOperand()) {

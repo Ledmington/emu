@@ -241,10 +241,7 @@ public final class Main {
 			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
 				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
-				// final boolean isGlobal = ste.info().getBinding() == SymbolTableEntryBinding.STB_GLOBAL;
-				// final boolean isHidden = ste.visibility() == SymbolTableEntryVisibility.STV_HIDDEN;
-				// final boolean isInThisSection = ste.sectionTableIndex() == sectionIndex;
-				if (!(isFunction /*&& (isGlobal || isHidden) && isInThisSection*/)) {
+				if (!isFunction) {
 					continue;
 				}
 				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));

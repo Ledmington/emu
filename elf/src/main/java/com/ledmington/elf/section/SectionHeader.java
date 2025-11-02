@@ -49,6 +49,7 @@ public final class SectionHeader {
 	 * @param alignment Byte-alignment for parsing.
 	 * @param entrySize The size in bytes of each entry of this section.
 	 */
+	@SuppressWarnings("PMD.ExcessiveParameterList")
 	public SectionHeader(
 			final int nameOffset,
 			final SectionHeaderType type,

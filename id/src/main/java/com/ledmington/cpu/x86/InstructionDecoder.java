@@ -104,6 +104,7 @@ public final class InstructionDecoder {
 	 * @param input The instruction to decode.
 	 * @return The decoded instruction.
 	 */
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public static Instruction fromIntelSyntax(final String input) {
 		final CharacterIterator it = new StringCharacterIterator(input);
 

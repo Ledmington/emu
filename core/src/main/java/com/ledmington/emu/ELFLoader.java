@@ -232,6 +232,7 @@ public final class ELFLoader {
 		}
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private void runInit(
 			final BasicProgBitsSection init,
 			final long entryPointVirtualAddress,
@@ -288,6 +289,7 @@ public final class ELFLoader {
 		}
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private void runFini(
 			final BasicProgBitsSection fini,
 			final long entryPointVirtualAddress,
@@ -333,7 +335,7 @@ public final class ELFLoader {
 		final long stackSize = stackTop - stackBottom;
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3f MiB) at 0x%016x-0x%016x",
-				stackSize, (double) stackSize / 1_048_576.0, stackBottom, stackTop - 1L);
+				stackSize, stackSize / 1_048_576.0, stackBottom, stackTop - 1L);
 		mem.setPermissions(stackBottom, stackTop - 1L, true, true, false);
 
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
@@ -359,6 +361,7 @@ public final class ELFLoader {
 		return count;
 	}
 
+	@SuppressWarnings("PMD.UnusedPrivateMethod")
 	private Pair<Long, Long> loadCommandLineArgumentsAndEnvironmentVariables(
 			final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		final long wordSize = is32Bit ? 4L : 8L;

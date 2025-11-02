@@ -23,6 +23,7 @@ package com.ledmington.utils;
  * <p>Note: the existence of this class justifies a porting of the code to a more "bit-aware" language like C, C++ or
  * Rust.
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public final class BitUtils {
 
 	private BitUtils() {}

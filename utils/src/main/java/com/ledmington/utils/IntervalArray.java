@@ -93,6 +93,7 @@ public final class IntervalArray {
 	 * @param endAddress The end (inclusive) of the range.
 	 */
 	// TODO: change the end of the range to be exclusive
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public void reset(final long startAddress, final long endAddress) {
 		int i = 0;
 		while (i < blocks.size()) {

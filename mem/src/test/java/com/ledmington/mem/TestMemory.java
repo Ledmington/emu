@@ -30,11 +30,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 /** Base class for all implementors of {@link Memory}. */
 abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessMemory, TestPagedMemory {
 
-	// Classes extending TestMemory must implement this method
-	protected abstract Memory getMemory();
-
 	protected static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(42);
+
+	// Classes extending TestMemory must implement this method
+	protected abstract Memory getMemory();
 
 	protected static Stream<Arguments> randomMemoryLocations() {
 		return Stream.generate(rng::nextLong).distinct().limit(100).map(Arguments::of);

@@ -21,12 +21,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("PMD.SystemPrintln")
 public final class GenerateE2ETestFiles {
 
 	private enum OS {
@@ -38,7 +40,7 @@ public final class GenerateE2ETestFiles {
 	private static final OS os =
 			System.getProperty("os.name").toLowerCase(Locale.US).contains("win")
 					? OS.WINDOWS
-					: (System.getProperty("os.name").toLowerCase(Locale.US).contains("mac") ? OS.MACOS : OS.LINUX);
+					: System.getProperty("os.name").toLowerCase(Locale.US).contains("mac") ? OS.MACOS : OS.LINUX;
 	private static final List<String> SEARCH_DIRECTORIES =
 			switch (os) {
 				case WINDOWS ->
@@ -57,6 +59,7 @@ public final class GenerateE2ETestFiles {
 
 	private GenerateE2ETestFiles() {}
 
+	@SuppressWarnings("PMD.OnlyOneReturn")
 	private static String findExecutable(final List<String> searchDirs, final List<String> executableNames) {
 		for (final String dir : searchDirs) {
 			for (final String exec : executableNames) {
@@ -69,6 +72,7 @@ public final class GenerateE2ETestFiles {
 		return null;
 	}
 
+	@SuppressWarnings("PMD.OnlyOneReturn")
 	private static String findCCompiler() {
 		final String compilerPath = findExecutable(SEARCH_DIRECTORIES, POSSIBLE_COMPILERS);
 		if (compilerPath != null) {
@@ -85,15 +89,17 @@ public final class GenerateE2ETestFiles {
 		return null;
 	}
 
+	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 	private static void run(final String... cmd) {
 		System.out.println(Arrays.stream(cmd).map(x -> "'" + x + "'").collect(Collectors.joining(" ")));
 		try {
 			final Process proc =
 					new ProcessBuilder().command(cmd).redirectErrorStream(true).start();
 			final StringBuilder output = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
-				String line;
-				while ((line = reader.readLine()) != null) {
+			try (BufferedReader reader =
+					new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+				String line = reader.readLine();
+				for (; line != null; line = reader.readLine()) {
 					output.append(line).append('\n');
 				}
 			}
@@ -114,6 +120,7 @@ public final class GenerateE2ETestFiles {
 		return findExecutable(SEARCH_DIRECTORIES, POSSIBLE_LINKERS);
 	}
 
+	@SuppressWarnings("PMD.OnlyOneReturn")
 	public static void main(final String[] args) {
 		if (args.length != 0) {
 			System.err.println("This program does not need any command-line argument.");

@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -165,6 +166,7 @@ public final class EmuDB {
 
 	private record Position(String functionName, long offset) {
 		Position {
+			Objects.requireNonNull(functionName);
 			if (functionName.isBlank()) {
 				throw new IllegalArgumentException("Empty function name.");
 			}

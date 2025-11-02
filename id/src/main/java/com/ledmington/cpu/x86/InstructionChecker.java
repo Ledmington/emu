@@ -633,6 +633,7 @@ public final class InstructionChecker {
 	 * This is one of the few general rules of x86 which applies to all instructions. No instruction is allowed to have
 	 * more than one immediate value (except ENTER).
 	 */
+	@SuppressWarnings("PMD.NPathComplexity")
 	private static void checkNoMoreThanOneImmediate(final Instruction inst) {
 		if (inst.opcode() == Opcode.ENTER) {
 			return;

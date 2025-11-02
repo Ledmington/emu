@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -293,17 +295,26 @@ final class TestBitUtils {
 
 	@Test
 	void eightBytesLittleEndian() {
+		final byte[] expected = new byte[] {
+			(byte) 0x08, (byte) 0x07, (byte) 0x06, (byte) 0x05, (byte) 0x04, (byte) 0x03, (byte) 0x02, (byte) 0x01,
+		};
+		final long value = 0x0102030405060708L;
+		final byte[] actual = BitUtils.asLEBytes(0x0102030405060708L);
 		assertArrayEquals(
-				new byte[] {
-					(byte) 0x08,
-					(byte) 0x07,
-					(byte) 0x06,
-					(byte) 0x05,
-					(byte) 0x04,
-					(byte) 0x03,
-					(byte) 0x02,
-					(byte) 0x01,
-				},
-				BitUtils.asLEBytes(0x0102030405060708L));
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '0x%016x' to be encoded as %s but was %s.",
+						value,
+						"["
+								+ IntStream.range(0, expected.length)
+										.mapToObj(i -> String.format("%02x", expected[i]))
+										.collect(Collectors.joining(", "))
+								+ "]",
+						"["
+								+ IntStream.range(0, actual.length)
+										.mapToObj(i -> String.format("%02x", actual[i]))
+										.collect(Collectors.joining(", "))
+								+ "]"));
 	}
 }

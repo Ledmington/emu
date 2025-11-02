@@ -33,12 +33,7 @@ import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** A very simple fuzzer for x86_64 instructions. */
-@SuppressWarnings({
-	"PMD.SystemPrintln",
-	"PMD.UnnecessaryCast",
-	"PMD.AvoidLiteralsInIfCondition",
-	"PMD.CyclomaticComplexity"
-})
+@SuppressWarnings({"PMD.SystemPrintln", "PMD.UnnecessaryCast", "PMD.AvoidLiteralsInIfCondition"})
 public final class X86Fuzzer {
 
 	private static final String GRAY = "\u001b[90m";
@@ -46,8 +41,7 @@ public final class X86Fuzzer {
 	private static final String PURPLE = "\u001b[95m";
 	private static final String RESET = "\u001b[0m";
 
-	private static final long SEED =
-			7279067358462458113L; // RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
+	private static final long SEED = RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
 	private static final RandomGenerator RNG =
 			RandomGeneratorFactory.getDefault().create(SEED);
 
@@ -90,7 +84,7 @@ public final class X86Fuzzer {
 					InstructionChecker.check(inst);
 				} catch (final InvalidInstruction e) {
 					if (!containsNullRegister(inst)) {
-						print(99999, toHex(wb.array()), "InvalidInstruction");
+						print(-1, toHex(wb.array()), "InvalidInstruction");
 						throw e;
 					}
 				}
@@ -102,6 +96,7 @@ public final class X86Fuzzer {
 		return inst;
 	}
 
+	@SuppressWarnings("PMD.EmptyCatchBlock")
 	private static Instruction generateRandomCorrectInstruction() {
 		while (true) {
 			try {
@@ -139,7 +134,7 @@ public final class X86Fuzzer {
 			try {
 				hex = toHex(InstructionEncoder.toHex(inst, false));
 			} catch (final IllegalArgumentException e) {
-				print(99999, "??", InstructionEncoder.toIntelSyntax(inst) + " (IllegalArgument)");
+				print(-1, "??", InstructionEncoder.toIntelSyntax(inst) + " (IllegalArgument)");
 				throw e;
 			}
 

@@ -118,6 +118,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	@Override
+	@SuppressWarnings({"PMD.AssignmentInOperand", "PMD.NcssCount"})
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
 

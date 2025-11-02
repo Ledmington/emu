@@ -32,6 +32,11 @@ public final class PagedMemory implements Memory {
 
 	private static final long DEFAULT_PAGE_SIZE = 4096L; // 4 KiB
 
+	private final MemoryInitializer initializer;
+	private final long pageSize;
+	private final long pageSizeMask;
+	private final Map<Long, Page> pages = new ConcurrentHashMap<>();
+
 	private static final class Page {
 
 		private final byte[] bytes;
@@ -45,6 +50,7 @@ public final class PagedMemory implements Memory {
 			}
 		}
 
+		@Override
 		public String toString() {
 			return "Page(bytes="
 					+ IntStream.range(0, bytes.length)
@@ -57,6 +63,7 @@ public final class PagedMemory implements Memory {
 					+ ")";
 		}
 
+		@Override
 		public int hashCode() {
 			int h = 17;
 			h = 31 * h + Arrays.hashCode(bytes);
@@ -64,6 +71,7 @@ public final class PagedMemory implements Memory {
 			return h;
 		}
 
+		@Override
 		public boolean equals(final Object other) {
 			if (other == null) {
 				return false;
@@ -77,11 +85,6 @@ public final class PagedMemory implements Memory {
 			return Arrays.equals(this.bytes, p.bytes) && Arrays.equals(this.initialized, p.initialized);
 		}
 	}
-
-	private final MemoryInitializer initializer;
-	private final long pageSize;
-	private final long pageSizeMask;
-	private final Map<Long, Page> pages = new ConcurrentHashMap<>();
 
 	/**
 	 * Creates a new {@link PagedMemory} with the given {@link MemoryInitializer} and page size.
@@ -152,11 +155,13 @@ public final class PagedMemory implements Memory {
 		return this.pages.get(alignedAddress).initialized[Math.toIntExact(localAddress)];
 	}
 
+	@Override
 	public String toString() {
 		return "PagedMemory(initializer=" + initializer + ";pageSize=" + pageSize + ";pageSizeMask=" + pageSizeMask
 				+ ";pages=" + pages + ")";
 	}
 
+	@Override
 	public int hashCode() {
 		int h = 17;
 		h = 31 * h + initializer.hashCode();
@@ -166,6 +171,7 @@ public final class PagedMemory implements Memory {
 		return h;
 	}
 
+	@Override
 	public boolean equals(final Object other) {
 		if (other == null) {
 			return false;
