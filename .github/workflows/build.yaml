@@ -24,7 +24,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Install NASM
-        run: apt-get install -y nasm
+        run: sudo apt-get install -y nasm
 
       - name: Generate E2E test files
         run: ./gradlew --console=plain --no-daemon :core:generateEndToEndTestFiles
