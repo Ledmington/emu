@@ -114,6 +114,12 @@ public enum PHTEntryType {
 		return (code & 0x80000000) == 0x80000000;
 	}
 
+	/**
+	 * Checks if the given 32-bit code represents a GNU_MBind PHT Entry.
+	 *
+	 * @param code The code of the PHT Entry.
+	 * @return {@code true} if the given code is in the range of GNU_MBind PHT Entry types, false otherwise.
+	 */
 	public static boolean isGNUMBind(final int code) {
 		final int PT_GNU_MBIND_LO = 0x6474e555;
 		final int PT_GNU_MBIND_HI = PT_GNU_MBIND_LO + 4096 - 1;
