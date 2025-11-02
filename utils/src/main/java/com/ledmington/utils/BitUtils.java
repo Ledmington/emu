@@ -310,6 +310,12 @@ public final class BitUtils {
 		return l << x;
 	}
 
+	/**
+	 * Returns the given 8-bit byte as an array of 1 big-endian byte.
+	 *
+	 * @param x The 8-bit byte to be split.
+	 * @return An array of 1 big-endian byte.
+	 */
 	public static byte[] asBEBytes(final byte x) {
 		throw new UnsupportedOperationException("Converting a single byte to array of big-endian bytes?");
 	}
@@ -353,6 +359,12 @@ public final class BitUtils {
 		};
 	}
 
+	/**
+	 * Returns the given 8-bit byte as an array of 1 little-endian byte.
+	 *
+	 * @param x The 8-bit byte to be split.
+	 * @return An array of 1 little-endian byte.
+	 */
 	public static byte[] asLEBytes(final byte x) {
 		throw new UnsupportedOperationException("Converting a single byte to array of little-endian bytes?");
 	}
