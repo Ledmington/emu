@@ -20,18 +20,38 @@ package com.ledmington.cmdline;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A builder for {@link CommandLineParser} to ease adding arguments to be parsed. */
 public final class CommandLineParserBuilder {
 
 	private final List<CommandLineArgument> arguments = new ArrayList<>();
 
+	/** Creates a new {@link CommandLineParserBuilder}. */
 	public CommandLineParserBuilder() {}
 
+	/**
+	 * Adds a new boolean command-line argument.
+	 *
+	 * @param shortName The short name of the argument.
+	 * @param longName The long name of the argument.
+	 * @param description The description of the argument.
+	 * @param defaultValue The default value of the argument.
+	 * @return This instance of {@link CommandLineParserBuilder}.
+	 */
 	public CommandLineParserBuilder addBoolean(
 			final String shortName, final String longName, final String description, final boolean defaultValue) {
 		arguments.add(new BooleanArgument(shortName, longName, description, defaultValue));
 		return this;
 	}
 
+	/**
+	 * Adds a new String command-line argument.
+	 *
+	 * @param shortName The short name of the argument.
+	 * @param longName The long name of the argument.
+	 * @param description The description of the argument.
+	 * @param defaultValue The default value of the argument.
+	 * @return This instance of {@link CommandLineParserBuilder}.
+	 */
 	@SuppressWarnings("PMD.UseObjectForClearerAPI")
 	public CommandLineParserBuilder addString(
 			final String shortName, final String longName, final String description, final String defaultValue) {
@@ -39,6 +59,11 @@ public final class CommandLineParserBuilder {
 		return this;
 	}
 
+	/**
+	 * Creates the {@link CommandLineParser} with the given arguments.
+	 *
+	 * @return A new {@link CommandLineParser}.
+	 */
 	public CommandLineParser build() {
 		return new CommandLineParser(arguments);
 	}

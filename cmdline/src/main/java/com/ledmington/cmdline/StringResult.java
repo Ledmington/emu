@@ -17,6 +17,11 @@
  */
 package com.ledmington.cmdline;
 
+/**
+ * The result of parsing a command-line String argument.
+ *
+ * @param value The parsed String.
+ */
 public record StringResult(String value) implements ParsingResult {
 	@Override
 	public String asString() {

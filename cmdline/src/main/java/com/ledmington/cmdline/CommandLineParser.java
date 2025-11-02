@@ -22,10 +22,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/** The parser of command-line arguments. */
 public final class CommandLineParser {
 
 	private final List<CommandLineArgument> arguments;
 
+	/**
+	 * Returns a new {@link CommandLineParserBuilder} to ease adding the different types of arguments.
+	 *
+	 * @return A new {@link CommandLineParserBuilder}.
+	 */
 	public static CommandLineParserBuilder builder() {
 		return new CommandLineParserBuilder();
 	}
@@ -34,6 +40,13 @@ public final class CommandLineParser {
 		this.arguments = Objects.requireNonNull(arguments);
 	}
 
+	/**
+	 * Parses the given command-line arguments into a map of results for each argument. Default values are always
+	 * present.
+	 *
+	 * @param commandLine The list of input arguments.
+	 * @return A {@link Map} from the name of the argument used and its value.
+	 */
 	@SuppressWarnings({
 		"PMD.UseConcurrentHashMap",
 		"PMD.AvoidInstantiatingObjectsInLoops",

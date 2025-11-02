@@ -17,6 +17,11 @@
  */
 package com.ledmington.cmdline;
 
+/**
+ * The result of parsing a command-line boolean argument.
+ *
+ * @param value The parsing result.
+ */
 public record BooleanResult(boolean value) implements ParsingResult {
 	@Override
 	public boolean asBoolean() {

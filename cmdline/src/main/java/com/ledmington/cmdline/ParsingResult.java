@@ -17,12 +17,27 @@
  */
 package com.ledmington.cmdline;
 
+/** The result of parsing a given command-line argument. */
 public interface ParsingResult {
 
+	/**
+	 * Returns this ParsingResult as a boolean, if this is a boolean otherwise throws
+	 * {@link UnsupportedOperationException}.
+	 *
+	 * @return This ParsingResult as a boolean if it is a boolean.
+	 * @throws UnsupportedOperationException If this ParsingResult is not a boolean.
+	 */
 	default boolean asBoolean() {
 		throw new UnsupportedOperationException("Not a boolean result.");
 	}
 
+	/**
+	 * Returns this ParsingResult as a String, if this is a String otherwise throws
+	 * {@link UnsupportedOperationException}.
+	 *
+	 * @return This ParsingResult as a String if it is a String.
+	 * @throws UnsupportedOperationException If this ParsingResult is not a String.
+	 */
 	default String asString() {
 		throw new UnsupportedOperationException("Not a string result.");
 	}

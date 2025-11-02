@@ -19,8 +19,18 @@ package com.ledmington.cmdline;
 
 import java.util.Objects;
 
+/**
+ * Represents a String command-line argument with optional short and long names.
+ *
+ * @param shortName The short name of the argument (e.g. {@code "i"}), or {@code null} if none.
+ * @param longName The long name of the argument (e.g. {@code "input"}), or {@code null} if none.
+ * @param description A brief description of the argument’s purpose; must not be {@code null}.
+ * @param defaultValue The default String value for this argument.
+ */
 public record StringArgument(String shortName, String longName, String description, String defaultValue)
 		implements CommandLineArgument {
+
+	/** Creates a new {@code StringArgument} record. */
 	public StringArgument {
 		if (shortName == null && longName == null) {
 			throw new IllegalArgumentException("At least one of shortName and longName must not be null.");
