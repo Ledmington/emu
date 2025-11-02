@@ -26,6 +26,7 @@ jobs:
       - name: Install NASM
         run: sudo apt-get install -y nasm
 
+        # TODO: remove spotlessApply from CI
       - name: Generate E2E test files
         run: ./gradlew --console=plain --no-daemon :core:generateEndToEndTestFiles
 
