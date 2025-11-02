@@ -24,6 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * An implementation of {@link Memory} which allocates pages (contiguous blocks) of memory instead of single bytes, to
+ * optimize sequential accesses.
+ */
 public final class PagedMemory implements Memory {
 
 	private static final long DEFAULT_PAGE_SIZE = 4096L; // 4 KiB
@@ -79,6 +83,12 @@ public final class PagedMemory implements Memory {
 	private final long pageSizeMask;
 	private final Map<Long, Page> pages = new ConcurrentHashMap<>();
 
+	/**
+	 * Creates a new {@link PagedMemory} with the given {@link MemoryInitializer} and page size.
+	 *
+	 * @param initializer The initializer for unaccessed memory addresses.
+	 * @param pageSize The size of a single page to be allocated, in bytes.
+	 */
 	public PagedMemory(final MemoryInitializer initializer, final long pageSize) {
 		Objects.requireNonNull(initializer);
 		if (pageSize <= 1L || Long.bitCount(pageSize) != 1) {
@@ -90,6 +100,11 @@ public final class PagedMemory implements Memory {
 		this.pageSizeMask = -pageSize;
 	}
 
+	/**
+	 * Creates a new {@link PagedMemory} with the default page size.
+	 *
+	 * @param initializer The initializer for unaccessed memory addresses.
+	 */
 	public PagedMemory(final MemoryInitializer initializer) {
 		this(initializer, DEFAULT_PAGE_SIZE);
 	}

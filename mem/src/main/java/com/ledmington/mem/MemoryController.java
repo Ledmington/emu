@@ -412,14 +412,32 @@ public final class MemoryController implements Memory {
 		}
 	}
 
+	/**
+	 * Writes the given short in the memory, without checking nor modifying permissions, in little-endian.
+	 *
+	 * @param address The address where to write the value.
+	 * @param value The value to be written.
+	 */
 	public void initialize(final long address, final short value) {
 		initialize(address, BitUtils.asLEBytes(value));
 	}
 
+	/**
+	 * Writes the given int in the memory, without checking nor modifying permissions, in little-endian.
+	 *
+	 * @param address The address where to write the value.
+	 * @param value The value to be written.
+	 */
 	public void initialize(final long address, final int value) {
 		initialize(address, BitUtils.asLEBytes(value));
 	}
 
+	/**
+	 * Writes the given long in the memory, without checking nor modifying permissions, in little-endian.
+	 *
+	 * @param address The address where to write the value.
+	 * @param value The value to be written.
+	 */
 	public void initialize(final long address, final long value) {
 		initialize(address, BitUtils.asLEBytes(value));
 	}
