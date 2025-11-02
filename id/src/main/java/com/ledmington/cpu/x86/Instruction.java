@@ -31,6 +31,11 @@ public final class Instruction {
 	private final Operand op3;
 	private final Operand op4;
 
+	/**
+	 * Creates a new {@code InstructionBuilder} instance.
+	 *
+	 * @return A new {@code InstructionBuilder}.
+	 */
 	public static InstructionBuilder builder() {
 		return new InstructionBuilder();
 	}
@@ -69,12 +74,12 @@ public final class Instruction {
 	}
 
 	/**
-	 * Creates an instruction with a prefix and two operands (like REP MOVS BYTE PTR ES:[EDI],BYTE PTR DS:[ESI]).
+	 * Creates an instruction with a prefix and two operands (like REP MOVS BYTE PTR ES:[EDI], BYTE PTR DS:[ESI]).
 	 *
-	 * @param prefix The prefix of the Instruction.
-	 * @param opcode The opcode of the Instruction.
-	 * @param firstOperand The first operand of the Instruction.
-	 * @param secondOperand The second operand of the Instruction.
+	 * @param prefix The prefix of the instruction.
+	 * @param opcode The opcode of the instruction.
+	 * @param firstOperand The first operand of the instruction.
+	 * @param secondOperand The second operand of the instruction.
 	 */
 	public Instruction(
 			final InstructionPrefix prefix,
@@ -85,18 +90,27 @@ public final class Instruction {
 	}
 
 	/**
-	 * Creates an Instruction with 3 operands (like PSHUFD XMM0, XMM1, 0x12).
+	 * Creates an instruction with three operands (like PSHUFD XMM0, XMM1, 0x12).
 	 *
-	 * @param opcode The opcode of the Instruction.
-	 * @param firstOperand The first operand of the Instruction.
-	 * @param secondOperand The second operand of the Instruction.
-	 * @param thirdOperand The third of the Instruction.
+	 * @param opcode The opcode of the instruction.
+	 * @param firstOperand The first operand of the instruction.
+	 * @param secondOperand The second operand of the instruction.
+	 * @param thirdOperand The third operand of the instruction.
 	 */
 	public Instruction(
 			final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
 		this(null, opcode, null, false, firstOperand, secondOperand, thirdOperand, null);
 	}
 
+	/**
+	 * Creates an instruction with a prefix and three operands.
+	 *
+	 * @param prefix The prefix of the instruction.
+	 * @param opcode The opcode of the instruction.
+	 * @param firstOperand The first operand of the instruction.
+	 * @param secondOperand The second operand of the instruction.
+	 * @param thirdOperand The third operand of the instruction.
+	 */
 	public Instruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
@@ -106,6 +120,15 @@ public final class Instruction {
 		this(prefix, opcode, null, false, firstOperand, secondOperand, thirdOperand, null);
 	}
 
+	/**
+	 * Creates an instruction with four operands.
+	 *
+	 * @param opcode The opcode of the instruction.
+	 * @param firstOperand The first operand of the instruction.
+	 * @param secondOperand The second operand of the instruction.
+	 * @param thirdOperand The third operand of the instruction.
+	 * @param fourthOperand The fourth operand of the instruction.
+	 */
 	public Instruction(
 			final Opcode opcode,
 			final Operand firstOperand,
@@ -116,29 +139,42 @@ public final class Instruction {
 	}
 
 	/**
-	 * Creates an Instruction with two operands (like XOR EAX, EAX).
+	 * Creates an instruction with two operands (like XOR EAX, EAX).
 	 *
-	 * @param opcode The opcode of the Instruction.
-	 * @param firstOperand The first operand of the Instruction.
-	 * @param secondOperand The second operand of the Instruction.
+	 * @param opcode The opcode of the instruction.
+	 * @param firstOperand The first operand of the instruction.
+	 * @param secondOperand The second operand of the instruction.
 	 */
 	public Instruction(final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
 		this(null, opcode, null, false, firstOperand, secondOperand, null, null);
 	}
 
+	/**
+	 * Creates an instruction with a prefix and a single operand.
+	 *
+	 * @param prefix The prefix of the instruction.
+	 * @param opcode The opcode of the instruction.
+	 * @param firstOperand The only operand of the instruction.
+	 */
 	public Instruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
 		this(prefix, opcode, null, false, firstOperand, null, null, null);
 	}
 
+	/**
+	 * Creates an instruction with only a prefix and an opcode.
+	 *
+	 * @param prefix The prefix of the instruction.
+	 * @param opcode The opcode of the instruction.
+	 */
 	public Instruction(final InstructionPrefix prefix, final Opcode opcode) {
 		this(prefix, opcode, null, false, null, null, null, null);
 	}
 
 	/**
-	 * Creates an Instruction with one operand (like PUSH R9).
+	 * Creates an instruction with one operand (like PUSH R9).
 	 *
 	 * @param opcode The opcode of the instruction.
-	 * @param firstOperand The only operand of this instruction.
+	 * @param firstOperand The only operand of the instruction.
 	 */
 	public Instruction(final Opcode opcode, final Operand firstOperand) {
 		this(null, opcode, null, false, firstOperand, null, null, null);
@@ -153,22 +189,47 @@ public final class Instruction {
 		this(null, opcode, null, false, null, null, null, null);
 	}
 
+	/**
+	 * Checks whether this instruction has a prefix.
+	 *
+	 * @return True if this instruction has a prefix, false otherwise.
+	 */
 	public boolean hasPrefix() {
 		return prefix != null;
 	}
 
+	/**
+	 * Checks whether this instruction has a LOCK prefix.
+	 *
+	 * @return True if this instruction has a LOCK prefix, false otherwise.
+	 */
 	public boolean hasLockPrefix() {
 		return prefix == InstructionPrefix.LOCK;
 	}
 
+	/**
+	 * Checks whether this instruction has a REP prefix.
+	 *
+	 * @return True if this instruction has a REP prefix, false otherwise.
+	 */
 	public boolean hasRepPrefix() {
 		return prefix == InstructionPrefix.REP;
 	}
 
+	/**
+	 * Checks whether this instruction has a REPNZ prefix.
+	 *
+	 * @return True if this instruction has a REPNZ prefix, false otherwise.
+	 */
 	public boolean hasRepnzPrefix() {
 		return prefix == InstructionPrefix.REPNZ;
 	}
 
+	/**
+	 * Returns the prefix of this instruction.
+	 *
+	 * @return The prefix of this instruction.
+	 */
 	public InstructionPrefix getPrefix() {
 		if (!hasPrefix()) {
 			throw new IllegalArgumentException("No prefix.");
@@ -177,18 +238,28 @@ public final class Instruction {
 	}
 
 	/**
-	 * Returns the opcode of this Instruction.
+	 * Returns the opcode of this instruction.
 	 *
-	 * @return The opcode of this Instruction.
+	 * @return The opcode of this instruction.
 	 */
 	public Opcode opcode() {
 		return code;
 	}
 
+	/**
+	 * Checks whether this instruction has a destination mask.
+	 *
+	 * @return True if this instruction has a destination mask, false otherwise.
+	 */
 	public boolean hasDestinationMask() {
 		return destinationMask != null;
 	}
 
+	/**
+	 * Returns the destination mask of this instruction.
+	 *
+	 * @return The destination mask of this instruction.
+	 */
 	public MaskRegister getDestinationMask() {
 		if (!hasDestinationMask()) {
 			throw new IllegalArgumentException("No destination mask.");
@@ -196,10 +267,21 @@ public final class Instruction {
 		return destinationMask;
 	}
 
+	/**
+	 * Checks whether this instruction has a zero destination mask.
+	 *
+	 * @return True if the instruction has a zero destination mask, false otherwise.
+	 */
 	public boolean hasZeroDestinationMask() {
 		return hasDestinationMask() && destinationMaskZero;
 	}
 
+	/**
+	 * Checks whether this instruction has an operand at the given index.
+	 *
+	 * @param index The operand index (0–3).
+	 * @return True if the operand exists, false otherwise.
+	 */
 	public boolean hasOperand(final int index) {
 		return switch (index) {
 			case 0 -> hasFirstOperand();
@@ -210,6 +292,12 @@ public final class Instruction {
 		};
 	}
 
+	/**
+	 * Returns the operand at the specified index.
+	 *
+	 * @param index The operand index (0–3).
+	 * @return The operand at the specified index.
+	 */
 	public Operand operand(final int index) {
 		return switch (index) {
 			case 0 -> firstOperand();
@@ -220,15 +308,19 @@ public final class Instruction {
 		};
 	}
 
+	/**
+	 * Checks whether this instruction has a first operand.
+	 *
+	 * @return True if the first operand exists, false otherwise.
+	 */
 	public boolean hasFirstOperand() {
 		return op1 != null;
 	}
 
 	/**
-	 * Returns the first operand of this Instruction.
+	 * Returns the first operand of this instruction.
 	 *
 	 * @return The first operand.
-	 * @throws IllegalArgumentException If this instruction has no operands.
 	 */
 	public Operand firstOperand() {
 		if (!hasFirstOperand()) {
@@ -237,15 +329,19 @@ public final class Instruction {
 		return op1;
 	}
 
+	/**
+	 * Checks whether this instruction has a second operand.
+	 *
+	 * @return True if the second operand exists, false otherwise.
+	 */
 	public boolean hasSecondOperand() {
 		return op2 != null;
 	}
 
 	/**
-	 * Returns the second operand of this Instruction.
+	 * Returns the second operand of this instruction.
 	 *
 	 * @return The second operand.
-	 * @throws IllegalArgumentException If this instruction has less than two operands.
 	 */
 	public Operand secondOperand() {
 		if (!hasSecondOperand()) {
@@ -254,10 +350,20 @@ public final class Instruction {
 		return op2;
 	}
 
+	/**
+	 * Checks whether this instruction has a third operand.
+	 *
+	 * @return True if the third operand exists, false otherwise.
+	 */
 	public boolean hasThirdOperand() {
 		return op3 != null;
 	}
 
+	/**
+	 * Returns the third operand of this instruction.
+	 *
+	 * @return The third operand.
+	 */
 	public Operand thirdOperand() {
 		if (!hasThirdOperand()) {
 			throw new IllegalArgumentException("No third operand.");
@@ -265,10 +371,20 @@ public final class Instruction {
 		return op3;
 	}
 
+	/**
+	 * Checks whether this instruction has a fourth operand.
+	 *
+	 * @return True if the fourth operand exists, false otherwise.
+	 */
 	public boolean hasFourthOperand() {
 		return op4 != null;
 	}
 
+	/**
+	 * Returns the fourth operand of this instruction.
+	 *
+	 * @return The fourth operand.
+	 */
 	public Operand fourthOperand() {
 		if (!hasFourthOperand()) {
 			throw new IllegalArgumentException("No fourth operand.");
@@ -276,6 +392,11 @@ public final class Instruction {
 		return op4;
 	}
 
+	/**
+	 * Returns the number of operands in this instruction.
+	 *
+	 * @return The number of operands.
+	 */
 	public int getNumOperands() {
 		if (op4 != null) {
 			return 4;
@@ -293,14 +414,19 @@ public final class Instruction {
 	}
 
 	/**
-	 * Checks whether this instruction is part of the legacy/compatibility x86 set.
+	 * Checks whether this instruction is part of the legacy x86 set.
 	 *
-	 * @return True if it is legacy, false otherwise.
+	 * @return True if the instruction is legacy, false otherwise.
 	 */
 	public boolean isLegacy() {
 		return code == Opcode.ENDBR32;
 	}
 
+	/**
+	 * Returns a string representation of this instruction.
+	 *
+	 * @return A string representing this instruction.
+	 */
 	@Override
 	public String toString() {
 		return "Instruction(prefix=" + prefix + ";opcode=" + code.toString()
@@ -309,6 +435,11 @@ public final class Instruction {
 				+ ")";
 	}
 
+	/**
+	 * Computes the hash code for this instruction.
+	 *
+	 * @return The hash code value.
+	 */
 	@Override
 	public int hashCode() {
 		int h = 17;
@@ -323,6 +454,12 @@ public final class Instruction {
 		return h;
 	}
 
+	/**
+	 * Checks equality between this instruction and another object.
+	 *
+	 * @param other The object to compare with.
+	 * @return True if the objects are equal, false otherwise.
+	 */
 	@Override
 	public boolean equals(final Object other) {
 		if (other == null) {

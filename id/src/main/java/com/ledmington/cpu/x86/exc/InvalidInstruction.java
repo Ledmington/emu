@@ -19,12 +19,18 @@ package com.ledmington.cpu.x86.exc;
 
 import java.io.Serial;
 
+/** An exception thrown when an invalid instruction is encountered. */
 public final class InvalidInstruction extends RuntimeException {
 
 	@Serial
 	private static final long serialVersionUID = 9195004233257266304L;
 
-	public InvalidInstruction(final String msg) {
-		super(msg);
+	/**
+	 * Creates a new InvalidInstruction with the given message.
+	 *
+	 * @param message The message of the exception.
+	 */
+	public InvalidInstruction(final String message) {
+		super(message);
 	}
 }

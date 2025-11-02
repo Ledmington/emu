@@ -123,6 +123,12 @@ public enum Register64 implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register64 instance requires an extension to be properly encoded.
+	 *
+	 * @param r The 64-bit register.
+	 * @return True if the 64-bit register requires an extension.
+	 */
 	public static boolean requiresExtension(final Register64 r) {
 		return switch (r) {
 			case RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, RIP -> false;

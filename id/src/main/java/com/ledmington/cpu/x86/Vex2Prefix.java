@@ -28,10 +28,22 @@ public final class Vex2Prefix {
 	private final boolean l;
 	private final byte p;
 
+	/**
+	 * Checks whether the given byte represents a VEX2 prefix.
+	 *
+	 * @param vexByte The byte to check.
+	 * @return True if the byte is a VEX2 prefix, false otherwise.
+	 */
 	public static boolean isVEX2Prefix(final byte vexByte) {
 		return vexByte == (byte) 0xc5;
 	}
 
+	/**
+	 * Creates a {@link Vex2Prefix} instance from the given byte.
+	 *
+	 * @param b The byte containing the VEX2 prefix fields.
+	 * @return A new {@link Vex2Prefix} instance.
+	 */
 	public static Vex2Prefix of(final byte b) {
 		final boolean r = BitUtils.and(b, (byte) 0b10000000) != 0;
 		final byte v = BitUtils.shr(BitUtils.and(b, (byte) 0b01111000), 3);
@@ -54,10 +66,20 @@ public final class Vex2Prefix {
 		this.p = p;
 	}
 
+	/**
+	 * Returns the value of the R bit in this VEX2 prefix.
+	 *
+	 * @return True if the R bit is set, false otherwise.
+	 */
 	public boolean r() {
 		return r;
 	}
 
+	/**
+	 * Returns the value of the V field in this VEX2 prefix.
+	 *
+	 * @return The 4-bit V field.
+	 */
 	public byte v() {
 		return v;
 	}

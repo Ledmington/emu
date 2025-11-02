@@ -32,10 +32,23 @@ public final class Vex3Prefix {
 	private final boolean l;
 	private final byte p;
 
+	/**
+	 * Checks whether the given byte represents a VEX3 prefix.
+	 *
+	 * @param vexByte The byte to check.
+	 * @return True if the byte is a VEX3 prefix, false otherwise.
+	 */
 	public static boolean isVEX3Prefix(final byte vexByte) {
 		return vexByte == (byte) 0xc4;
 	}
 
+	/**
+	 * Creates a {@link Vex3Prefix} instance from the given bytes.
+	 *
+	 * @param firstByte The first byte of the VEX3 prefix.
+	 * @param secondByte The second byte of the VEX3 prefix.
+	 * @return A new {@link Vex3Prefix} instance.
+	 */
 	public static Vex3Prefix of(final byte firstByte, final byte secondByte) {
 		final boolean r = BitUtils.and(firstByte, (byte) 0b10000000) != (byte) 0;
 		final boolean x = BitUtils.and(firstByte, (byte) 0b01000000) != (byte) 0;
@@ -76,22 +89,47 @@ public final class Vex3Prefix {
 		this.p = p;
 	}
 
+	/**
+	 * Returns the value of the R bit in this VEX3 prefix.
+	 *
+	 * @return True if the R bit is set, false otherwise.
+	 */
 	public boolean r() {
 		return r;
 	}
 
+	/**
+	 * Returns the value of the X bit in this VEX3 prefix.
+	 *
+	 * @return True if the X bit is set, false otherwise.
+	 */
 	public boolean x() {
 		return x;
 	}
 
+	/**
+	 * Returns the value of the B bit in this VEX3 prefix.
+	 *
+	 * @return True if the B bit is set, false otherwise.
+	 */
 	public boolean b() {
 		return b;
 	}
 
+	/**
+	 * Returns the value of the W bit in this VEX3 prefix.
+	 *
+	 * @return True if the W bit is set, false otherwise.
+	 */
 	public boolean w() {
 		return w;
 	}
 
+	/**
+	 * Returns the value of the V field in this VEX3 prefix.
+	 *
+	 * @return The 4-bit V field.
+	 */
 	public byte v() {
 		return v;
 	}

@@ -134,6 +134,12 @@ public enum Register8 implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register8 instance requires an extension to be properly encoded.
+	 *
+	 * @param r The 8-bit register.
+	 * @return True if the 8-bit register requires an extension.
+	 */
 	public static boolean requiresExtension(final Register8 r) {
 		return switch (r) {
 			case AL, CL, DL, BL, CH, BPL, AH, SPL, DH, SIL, BH, DIL -> false;
@@ -141,6 +147,12 @@ public enum Register8 implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register8 instance requires a REX prefix to be properly encoded.
+	 *
+	 * @param r The 8-bit register.
+	 * @return True if the 8-bit register requires a REX prefix.
+	 */
 	public static boolean requiresRexPrefix(final Register8 r) {
 		return switch (r) {
 			case AL, CL, DL, BL, CH, AH, DH, BH, R8B, R9B, R10B, R11B, R12B, R13B, R14B, R15B -> false;

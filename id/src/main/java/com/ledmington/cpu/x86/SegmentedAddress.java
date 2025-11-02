@@ -22,6 +22,9 @@ import java.util.Objects;
 /**
  * Represents a segmented memory address in the x86 architecture, consisting of a {@link SegmentRegister} and an
  * {@link Immediate} offset.
+ *
+ * @param segment The {@link SegmentRegister} working as base offset.
+ * @param immediate The offset to be added to the segment.
  */
 public record SegmentedAddress(SegmentRegister segment, Immediate immediate) implements Operand {
 

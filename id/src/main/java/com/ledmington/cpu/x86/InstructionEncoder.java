@@ -166,14 +166,25 @@ public final class InstructionEncoder {
 	}
 
 	/**
-	 * Reference obtainable through <code>objdump -Mintel-mnemonic ...</code>
+	 * Encodes a single instruction in intel syntax. Reference obtainable through <code>objdump -Mintel-mnemonic ...
+	 * </code>
 	 *
+	 * @param inst The instruction to be encoded.
 	 * @return An unambiguous String representation of this instruction with Intel syntax.
 	 */
 	public static String toIntelSyntax(final Instruction inst) {
 		return toIntelSyntax(inst, true, 0, false);
 	}
 
+	/**
+	 * Encodes the given instruction into intel syntax representation.
+	 *
+	 * @param inst The instruction to be encoded.
+	 * @param checkInstructions When enabled, checks the instruction before encoding it.
+	 * @param opcodePad Number of spaces to pad the opcode with in the string.
+	 * @param shortHex When enabled, does not add leading zeroes to immediates and/or indirect operand displacements.
+	 * @return The input instruction encoded in intel syntax.
+	 */
 	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public static String toIntelSyntax(
 			final Instruction inst, final boolean checkInstructions, final int opcodePad, final boolean shortHex) {
@@ -218,6 +229,13 @@ public final class InstructionEncoder {
 		return sb.toString();
 	}
 
+	/**
+	 * Encodes the given instructions into raw bytes.
+	 *
+	 * @param check When enabled, each instruction is checked for validity before being encoded.
+	 * @param code The instructions to be encoded.
+	 * @return The raw bytes containing the encoded instructions.
+	 */
 	public static byte[] toHex(final boolean check, final Instruction... code) {
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
 		for (final Instruction inst : code) {
@@ -226,6 +244,13 @@ public final class InstructionEncoder {
 		return wb.array();
 	}
 
+	/**
+	 * Encodes the given instruction into raw bytes.
+	 *
+	 * @param inst The instruction to be encoded.
+	 * @param check When enabled, checks the given instruction for validity before encoding it.
+	 * @return The raw bytes containing the encoded instruction.
+	 */
 	public static byte[] toHex(final Instruction inst, final boolean check) {
 		Objects.requireNonNull(inst);
 		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);

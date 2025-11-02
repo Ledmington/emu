@@ -62,6 +62,12 @@ public final class IndirectOperandBuilder {
 		return this;
 	}
 
+	/**
+	 * Sets the segment register of this indirect operand.
+	 *
+	 * @param segmentRegister The new segment register.
+	 * @return This instance of IndirectOperandBuilder.
+	 */
 	public IndirectOperandBuilder segment(final SegmentRegister segmentRegister) {
 		assertNotBuilt();
 		if (this.segmentRegister != null) {

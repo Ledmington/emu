@@ -184,6 +184,12 @@ public enum RegisterZMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given RegisterZMM instance requires an extension to be properly encoded.
+	 *
+	 * @param r The 512-bit register.
+	 * @return True if the 512-bit register requires an extension.
+	 */
 	public static boolean requiresExtension(final RegisterZMM r) {
 		return switch (r) {
 			case ZMM0,
@@ -221,6 +227,12 @@ public enum RegisterZMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given RegisterZMM instance requires an extension to be properly encoded in the EVEX prefix.
+	 *
+	 * @param r The 512-bit register.
+	 * @return True if the 512-bit register requires an EVEX extension.
+	 */
 	public static boolean requiresEvexExtension(final RegisterZMM r) {
 		return switch (r) {
 			case ZMM0, ZMM1, ZMM2, ZMM3, ZMM4, ZMM5, ZMM6, ZMM7, ZMM8, ZMM9, ZMM10, ZMM11, ZMM12, ZMM13, ZMM14, ZMM15 ->

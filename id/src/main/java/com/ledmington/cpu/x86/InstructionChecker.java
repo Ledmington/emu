@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
 
+/** A class which checks the validity of X86 instructions. */
 @SuppressWarnings({"PMD.FieldDeclarationsShouldBeAtStartOfClass", "PMD.AvoidLiteralsInIfCondition"})
 public final class InstructionChecker {
 
@@ -587,6 +588,11 @@ public final class InstructionChecker {
 		throw new InvalidInstruction(String.format(fmt, args));
 	}
 
+	/**
+	 * Checks the given instruction for validity.
+	 *
+	 * @param inst The instruction to be checked.
+	 */
 	public static void check(final Instruction inst) {
 		final int numOperands = inst.getNumOperands();
 

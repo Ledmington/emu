@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import com.ledmington.utils.SuppressFBWarnings;
 
+/** A builder for constructing {@link Instruction} objects. */
 public final class InstructionBuilder {
 
 	private InstructionPrefix prefix = null;
@@ -33,6 +34,7 @@ public final class InstructionBuilder {
 	private Operand op4 = null;
 	private boolean alreadyBuilt = false;
 
+	/** Creates a new InstructionBuilder. */
 	public InstructionBuilder() {}
 
 	private void assertNotBuilt() {
@@ -41,6 +43,12 @@ public final class InstructionBuilder {
 		}
 	}
 
+	/**
+	 * Sets the prefix of the Instruction.
+	 *
+	 * @param prefix The prefix to set.
+	 * @return This builder.
+	 */
 	public InstructionBuilder prefix(final InstructionPrefix prefix) {
 		assertNotBuilt();
 		if (this.prefix != null) {
@@ -50,6 +58,12 @@ public final class InstructionBuilder {
 		return this;
 	}
 
+	/**
+	 * Sets the opcode of the Instruction.
+	 *
+	 * @param opcode The opcode to set.
+	 * @return This builder.
+	 */
 	public InstructionBuilder opcode(final Opcode opcode) {
 		assertNotBuilt();
 		if (this.opcode != null) {
@@ -59,6 +73,12 @@ public final class InstructionBuilder {
 		return this;
 	}
 
+	/**
+	 * Sets the destination mask register of the Instruction.
+	 *
+	 * @param mask The mask register to set.
+	 * @return This builder.
+	 */
 	public InstructionBuilder mask(final MaskRegister mask) {
 		assertNotBuilt();
 		if (this.destinationMask != null) {
@@ -68,12 +88,23 @@ public final class InstructionBuilder {
 		return this;
 	}
 
+	/**
+	 * Sets the zeroing behavior of the destination mask.
+	 *
+	 * @return This builder.
+	 */
 	public InstructionBuilder maskZero() {
 		assertNotBuilt();
 		this.destinationMaskZero = true;
 		return this;
 	}
 
+	/**
+	 * Adds an operand to the Instruction. Operands are added in order (up to four total).
+	 *
+	 * @param op The operand to add.
+	 * @return This builder.
+	 */
 	public InstructionBuilder op(final Operand op) {
 		assertNotBuilt();
 		Objects.requireNonNull(op, "Null operand.");
@@ -91,6 +122,11 @@ public final class InstructionBuilder {
 		return this;
 	}
 
+	/**
+	 * Builds the Instruction instance.
+	 *
+	 * @return The constructed Instruction.
+	 */
 	public Instruction build() {
 		assertNotBuilt();
 

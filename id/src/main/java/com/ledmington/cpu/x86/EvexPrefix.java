@@ -39,10 +39,24 @@ public final class EvexPrefix {
 	private final boolean v1;
 	private final byte a;
 
+	/**
+	 * Determines whether the given byte represents an EVEX prefix.
+	 *
+	 * @param evexByte The byte to check.
+	 * @return True if the byte equals 0x62, false otherwise.
+	 */
 	public static boolean isEvexPrefix(final byte evexByte) {
 		return evexByte == (byte) 0x62;
 	}
 
+	/**
+	 * Creates an {@link EvexPrefix} instance from the provided EVEX prefix bytes.
+	 *
+	 * @param firstByte The first byte following 0x62.
+	 * @param secondByte The second byte of the EVEX prefix.
+	 * @param thirdByte The third byte of the EVEX prefix.
+	 * @return A new {@link EvexPrefix} instance.
+	 */
 	public static EvexPrefix of(final byte firstByte, final byte secondByte, final byte thirdByte) {
 		final boolean r = BitUtils.and(firstByte, (byte) 0b10000000) != (byte) 0;
 		final boolean x = BitUtils.and(firstByte, (byte) 0b01000000) != (byte) 0;
@@ -113,46 +127,101 @@ public final class EvexPrefix {
 		this.a = a;
 	}
 
+	/**
+	 * Returns the R bit value.
+	 *
+	 * @return The R bit.
+	 */
 	public boolean r() {
 		return r;
 	}
 
+	/**
+	 * Returns the X bit value.
+	 *
+	 * @return The X bit.
+	 */
 	public boolean x() {
 		return x;
 	}
 
+	/**
+	 * Returns the B bit value.
+	 *
+	 * @return The B bit.
+	 */
 	public boolean b() {
 		return b;
 	}
 
+	/**
+	 * Returns the R' (R1) bit value.
+	 *
+	 * @return The R1 bit.
+	 */
 	public boolean r1() {
 		return r1;
 	}
 
+	/**
+	 * Returns the M field value.
+	 *
+	 * @return The M field.
+	 */
 	public byte m() {
 		return m;
 	}
 
+	/**
+	 * Returns the W bit value.
+	 *
+	 * @return The W bit.
+	 */
 	public boolean w() {
 		return w;
 	}
 
+	/**
+	 * Returns the V field value.
+	 *
+	 * @return The V field.
+	 */
 	public byte v() {
 		return v;
 	}
 
+	/**
+	 * Returns the Z bit value.
+	 *
+	 * @return The Z bit.
+	 */
 	public boolean z() {
 		return z;
 	}
 
+	/**
+	 * Returns the L bit value.
+	 *
+	 * @return The L bit.
+	 */
 	public boolean l() {
 		return l;
 	}
 
+	/**
+	 * Returns the V' (V1) bit value.
+	 *
+	 * @return The V1 bit.
+	 */
 	public boolean v1() {
 		return v1;
 	}
 
+	/**
+	 * Returns the A field value.
+	 *
+	 * @return The A field.
+	 */
 	public byte a() {
 		return a;
 	}

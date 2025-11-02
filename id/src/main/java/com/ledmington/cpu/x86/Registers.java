@@ -78,6 +78,12 @@ public final class Registers {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register instance requires an extension to be properly encoded.
+	 *
+	 * @param r The register.
+	 * @return True if the register requires an extension.
+	 */
 	public static boolean requiresExtension(final Register r) {
 		return switch (r) {
 			case Register8 r8 -> Register8.requiresExtension(r8);
@@ -95,6 +101,12 @@ public final class Registers {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register instance requires an extension to be properly encoded in the EVEX prefix.
+	 *
+	 * @param r The register.
+	 * @return True if the register requires an EVEX extension.
+	 */
 	public static boolean requiresEvexExtension(final Register r) {
 		return switch (r) {
 			case Register8 ignored -> false;

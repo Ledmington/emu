@@ -184,6 +184,12 @@ public enum RegisterYMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given RegisterYMM instance requires an extension to be properly encoded.
+	 *
+	 * @param r The 256-bit register.
+	 * @return True if the 256-bit register requires an extension.
+	 */
 	public static boolean requiresExtension(final RegisterYMM r) {
 		return switch (r) {
 			case YMM0,
@@ -221,6 +227,12 @@ public enum RegisterYMM implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given RegisterYMM instance requires an extension to be properly encoded in the EVEX prefix.
+	 *
+	 * @param r The 256-bit register.
+	 * @return True if the 256-bit register requires an EVEX extension.
+	 */
 	public static boolean requiresEvexExtension(final RegisterYMM r) {
 		return switch (r) {
 			case YMM0, YMM1, YMM2, YMM3, YMM4, YMM5, YMM6, YMM7, YMM8, YMM9, YMM10, YMM11, YMM12, YMM13, YMM14, YMM15 ->

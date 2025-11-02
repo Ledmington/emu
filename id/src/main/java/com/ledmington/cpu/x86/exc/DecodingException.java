@@ -19,11 +19,17 @@ package com.ledmington.cpu.x86.exc;
 
 import java.io.Serial;
 
+/** An exception representing a generic error which happened during instruction decoding. */
 public class DecodingException extends RuntimeException {
 
 	@Serial
 	private static final long serialVersionUID = -9133924907493926505L;
 
+	/**
+	 * Creates a new {@link DecodingException} with the given message.
+	 *
+	 * @param message The message of the exception.
+	 */
 	public DecodingException(final String message) {
 		super(message);
 	}

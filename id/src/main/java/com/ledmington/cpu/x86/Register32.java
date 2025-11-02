@@ -123,6 +123,12 @@ public enum Register32 implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register32 instance requires an extension to be properly encoded.
+	 *
+	 * @param r The 32-bit register.
+	 * @return True if the 32-bit register requires an extension.
+	 */
 	public static boolean requiresExtension(final Register32 r) {
 		return switch (r) {
 			case EAX, EBX, ECX, EDX, ESI, EDI, ESP, EBP -> false;

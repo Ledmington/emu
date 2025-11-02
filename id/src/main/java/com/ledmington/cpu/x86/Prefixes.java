@@ -29,6 +29,9 @@ import java.util.Optional;
  * @param hasRexPrefix Field which tells if the REX prefix has been used. It may seem redundant with the "rex" field but
  *     it is needed for certain 8-bit instructions.
  * @param rex The REX prefix of the instruction. In case "hasRexPrefix" is false, this field is just 0x40.
+ * @param vex2 The VEX2 prefix of the instruction.
+ * @param vex3 The VEX3 prefix of the instruction.
+ * @param evex The EVEX prefix of the instruction.
  */
 public record Prefixes(
 		Optional<InstructionPrefix> p1,

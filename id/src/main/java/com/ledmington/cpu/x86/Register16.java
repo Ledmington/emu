@@ -119,6 +119,12 @@ public enum Register16 implements Register {
 		};
 	}
 
+	/**
+	 * Returns true if the given Register16 instance requires an extension to be properly encoded.
+	 *
+	 * @param r The 16-bit register.
+	 * @return True if the 16-bit register requires an extension.
+	 */
 	public static boolean requiresExtension(final Register16 r) {
 		return switch (r) {
 			case AX, BX, CX, DX, SI, DI, SP, BP -> false;

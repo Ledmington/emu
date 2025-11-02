@@ -63,6 +63,12 @@ public enum MaskRegister implements Register {
 		return "MaskRegister(mnemonic=" + mnemonic + ")";
 	}
 
+	/**
+	 * Returns the proper MaskRegister corresponding to the given byte.
+	 *
+	 * @param b The byte with the prefix.
+	 * @return The corresponding MaskRegister.
+	 */
 	public static MaskRegister fromByte(final byte b) {
 		return switch (b) {
 			case 0x00 -> K0;
@@ -77,6 +83,12 @@ public enum MaskRegister implements Register {
 		};
 	}
 
+	/**
+	 * Returns the numeric encoding of the given {@link MaskRegister}.
+	 *
+	 * @param r The mask register to convert.
+	 * @return The byte value representing the given mask register.
+	 */
 	public static byte toByte(final MaskRegister r) {
 		return switch (r) {
 			case K0 -> (byte) 0x00;

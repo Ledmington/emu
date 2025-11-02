@@ -138,6 +138,12 @@ public final class Immediate implements Operand {
 		return toIntelSyntax(false);
 	}
 
+	/**
+	 * Returns a representation in intel syntax of this Immediate.
+	 *
+	 * @param shortHex When enabled, does not add leading zeroes.
+	 * @return This immediate in intel syntax representation.
+	 */
 	@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 	public String toIntelSyntax(final boolean shortHex) {
 		return switch (type) {

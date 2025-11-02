@@ -366,11 +366,27 @@ public final class InstructionDecoder {
 		return iob.build();
 	}
 
+	/**
+	 * Decodes the given bytes into a list of instructions, if possible.
+	 *
+	 * @param bytes The bytes to be decoded.
+	 * @param nBytesToDecode The number of bytes to decode.
+	 * @param checkInstructions When enabled, checks the instructions for validity as soon as they are decoded.
+	 * @return The list of decoded instructions.
+	 */
 	public static List<Instruction> fromHex(
 			final byte[] bytes, final int nBytesToDecode, final boolean checkInstructions) {
 		return fromHex(new ReadOnlyByteBufferV1(bytes, true, 1), nBytesToDecode, checkInstructions);
 	}
 
+	/**
+	 * Decodes the provided bytes into a list of instructions, if possible.
+	 *
+	 * @param b The byte buffer to read bytes from.
+	 * @param nBytesToDecode The number of bytes to decode.
+	 * @param checkInstructions When enabled, checks the instructions for validity as soon as they are decoded.
+	 * @return The list of decoded instructions.
+	 */
 	public static List<Instruction> fromHex(
 			final ReadOnlyByteBuffer b, final int nBytesToDecode, final boolean checkInstructions) {
 		if (nBytesToDecode < 0) {
@@ -403,6 +419,12 @@ public final class InstructionDecoder {
 		return instructions;
 	}
 
+	/**
+	 * Decodes a single instruction from the given byte buffer.
+	 *
+	 * @param b The buffer to read bytes from.
+	 * @return The decoded instruction.
+	 */
 	public static Instruction fromHex(final ReadOnlyByteBuffer b) {
 		Objects.requireNonNull(b);
 		final Prefixes pref = parsePrefixes(b);

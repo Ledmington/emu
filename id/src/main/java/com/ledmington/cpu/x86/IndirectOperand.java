@@ -125,6 +125,11 @@ public final class IndirectOperand implements Operand {
 		this.displacementType = displacementType;
 	}
 
+	/**
+	 * Returns the size of the pointer of this indirect operand.
+	 *
+	 * @return The size of the pointer.
+	 */
 	public PointerSize getPointerSize() {
 		return ptrSize;
 	}
@@ -139,14 +144,29 @@ public final class IndirectOperand implements Operand {
 		return base;
 	}
 
+	/**
+	 * Returns true if this indirect operand has a base operand.
+	 *
+	 * @return True if this indirect operand has a base, false otherwise.
+	 */
 	public boolean hasBase() {
 		return base != null;
 	}
 
+	/**
+	 * Returns true if this indirect operand has a segment register.
+	 *
+	 * @return True if this indirect operand has a segment register, false otherwise.
+	 */
 	public boolean hasSegment() {
 		return segment != null;
 	}
 
+	/**
+	 * Returns the segment register of this indirect operand.
+	 *
+	 * @return The segment register.
+	 */
 	public SegmentRegister getSegment() {
 		Objects.requireNonNull(this.segment, "No segment.");
 		return segment;
@@ -162,10 +182,20 @@ public final class IndirectOperand implements Operand {
 		return index;
 	}
 
+	/**
+	 * Returns true if this indirect operand has an index register.
+	 *
+	 * @return True if this indirect operand has an index register, false otherwise.
+	 */
 	public boolean hasIndex() {
 		return index != null;
 	}
 
+	/**
+	 * Returns true if this indirect operand has a scale.
+	 *
+	 * @return True if this indirect operand has a scale, false otherwise.
+	 */
 	public boolean hasScale() {
 		return scale != null;
 	}
@@ -179,6 +209,11 @@ public final class IndirectOperand implements Operand {
 		return scale;
 	}
 
+	/**
+	 * Returns true if this indirect operand has a displacement.
+	 *
+	 * @return True if this indirect operand has a displacement, false otherwise.
+	 */
 	public boolean hasDisplacement() {
 		return displacement != null;
 	}
@@ -192,6 +227,11 @@ public final class IndirectOperand implements Operand {
 		return displacement;
 	}
 
+	/**
+	 * Returns the type of displacement.
+	 *
+	 * @return The type of displacement.
+	 */
 	public DisplacementType getDisplacementType() {
 		if (!hasDisplacement()) {
 			throw new IllegalArgumentException("No displacement.");
@@ -237,6 +277,8 @@ public final class IndirectOperand implements Operand {
 	 * This is used to distinguish instructions like LEA which have an indirect operand but don't have the pointer size.
 	 *
 	 * @param addPointerSize If true, adds the pointer size.
+	 * @param compressedDisplacement The optional implicit displacement.
+	 * @param shortHex WHen enabled, does not add leading zeroes in the displacement.
 	 * @return The assembly representation of this instruction in Intel syntax.
 	 */
 	public String toIntelSyntax(

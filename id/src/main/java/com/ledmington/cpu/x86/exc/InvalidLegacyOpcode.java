@@ -25,7 +25,14 @@ public final class InvalidLegacyOpcode extends DecodingException {
 	@Serial
 	private static final long serialVersionUID = 721365862585867652L;
 
-	public InvalidLegacyOpcode(final byte b, final String legacyInstruction) {
-		super(String.format("Byte 0x%02x (legacy '%s' instruction) is invalid in x86_64.", b, legacyInstruction));
+	/**
+	 * Creates a new InvalidLegacyOpcode with the given byte and the corresponding legacy instruction.
+	 *
+	 * @param legacyOpcode The byte representing the legacy opcode.
+	 * @param legacyInstruction The legacy instruction which was encountered.
+	 */
+	public InvalidLegacyOpcode(final byte legacyOpcode, final String legacyInstruction) {
+		super(String.format(
+				"Byte 0x%02x (legacy '%s' instruction) is invalid in x86_64.", legacyOpcode, legacyInstruction));
 	}
 }
