@@ -130,8 +130,4 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	public boolean isSet(final RFlags f) {
 		return this.rf.isSet(f);
 	}
-
-	public X86RegisterFile getBackedRegisterFile() {
-		return (X86RegisterFile) this.rf;
-	}
 }
