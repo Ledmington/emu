@@ -164,7 +164,7 @@ final class TestBitUtils {
 				expected,
 				result,
 				() -> String.format(
-						"Expected 0x%02x >>> %,d to be 0x%02x but was 0x%02x", input, shift, expected, result));
+						"Expected 0x%02x >>> %,d to be 0x%02x but was 0x%02x.", input, shift, expected, result));
 	}
 
 	private static Stream<Arguments> ANDbytes() {
@@ -188,7 +188,7 @@ final class TestBitUtils {
 				expected,
 				result,
 				() -> String.format(
-						"Expected 0x%02x AND 0x%02x to be 0x%02x but was 0x%02x", input1, input2, expected, result));
+						"Expected 0x%02x AND 0x%02x to be 0x%02x but was 0x%02x.", input1, input2, expected, result));
 	}
 
 	private static Stream<Arguments> ORbytes() {
@@ -212,7 +212,7 @@ final class TestBitUtils {
 				expected,
 				result,
 				() -> String.format(
-						"Expected 0x%02x OR 0x%02x to be 0x%02x but was 0x%02x", input1, input2, expected, result));
+						"Expected 0x%02x OR 0x%02x to be 0x%02x but was 0x%02x.", input1, input2, expected, result));
 	}
 
 	private static Stream<Arguments> XORbytes() {
@@ -234,7 +234,7 @@ final class TestBitUtils {
 				expected,
 				result,
 				() -> String.format(
-						"Expected 0x%02x XOR 0x%02x to be 0x%02x but was 0x%02x", input1, input2, expected, result));
+						"Expected 0x%02x XOR 0x%02x to be 0x%02x but was 0x%02x.", input1, input2, expected, result));
 	}
 
 	@Test
@@ -252,50 +252,86 @@ final class TestBitUtils {
 		}
 	}
 
+	private String hexToString(final byte[] v) {
+		return "["
+				+ IntStream.range(0, v.length)
+						.mapToObj(i -> String.format("%02x", v[i]))
+						.collect(Collectors.joining(", "))
+				+ "]";
+	}
+
 	@Test
 	void twoBytesBigEndian() {
-		assertArrayEquals(new byte[] {(byte) 0x12, (byte) 0x34}, BitUtils.asBEBytes((short) 0x1234));
+		final byte[] expected = {(byte) 0x12, (byte) 0x34};
+		final short value = (short) 0x1234;
+		final byte[] actual = BitUtils.asBEBytes(value);
+		assertArrayEquals(
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '0x%04x' to be encoded as %s but was %s.",
+						value, hexToString(expected), hexToString(actual)));
 	}
 
 	@Test
 	void fourBytesBigEndian() {
+		final byte[] expected = {(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78};
+		final int value = 0x12345678;
+		final byte[] actual = BitUtils.asBEBytes(value);
 		assertArrayEquals(
-				new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78}, BitUtils.asBEBytes(0x12345678));
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '0x%08x' to be encoded as %s but was %s.",
+						value, hexToString(expected), hexToString(actual)));
 	}
 
 	@Test
 	void eightBytesBigEndian() {
+		final byte[] expected = {
+			(byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08,
+		};
+		final long value = 0x0102030405060708L;
+		final byte[] actual = BitUtils.asBEBytes(value);
 		assertArrayEquals(
-				new byte[] {
-					(byte) 0x01,
-					(byte) 0x02,
-					(byte) 0x03,
-					(byte) 0x04,
-					(byte) 0x05,
-					(byte) 0x06,
-					(byte) 0x07,
-					(byte) 0x08,
-				},
-				BitUtils.asBEBytes(0x0102030405060708L));
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '0x%016x' to be encoded as %s but was %s.",
+						value, hexToString(expected), hexToString(actual)));
 	}
 
 	@Test
 	void twoBytesLittleEndian() {
-		assertArrayEquals(new byte[] {(byte) 0x34, (byte) 0x12}, BitUtils.asLEBytes((short) 0x1234));
+		final byte[] expected = {(byte) 0x34, (byte) 0x12};
+		final short value = (short) 0x1234;
+		final byte[] actual = BitUtils.asLEBytes(value);
+		assertArrayEquals(
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '0x%04x' to be encoded as %s but was %s.",
+						value, hexToString(expected), hexToString(actual)));
 	}
 
 	@Test
 	void fourBytesLittleEndian() {
+		final byte[] expected = {
+			(byte) 0x78, (byte) 0x56, (byte) 0x34, (byte) 0x12,
+		};
+		final int value = 0x12345678;
+		final byte[] actual = BitUtils.asLEBytes(value);
 		assertArrayEquals(
-				new byte[] {
-					(byte) 0x78, (byte) 0x56, (byte) 0x34, (byte) 0x12,
-				},
-				BitUtils.asLEBytes(0x12345678));
+				expected,
+				actual,
+				() -> String.format(
+						"Expected '0x%08x' to be encoded as %s but was %s.",
+						value, hexToString(expected), hexToString(actual)));
 	}
 
 	@Test
 	void eightBytesLittleEndian() {
-		final byte[] expected = new byte[] {
+		final byte[] expected = {
 			(byte) 0x08, (byte) 0x07, (byte) 0x06, (byte) 0x05, (byte) 0x04, (byte) 0x03, (byte) 0x02, (byte) 0x01,
 		};
 		final long value = 0x0102030405060708L;
@@ -305,16 +341,6 @@ final class TestBitUtils {
 				actual,
 				() -> String.format(
 						"Expected '0x%016x' to be encoded as %s but was %s.",
-						value,
-						"["
-								+ IntStream.range(0, expected.length)
-										.mapToObj(i -> String.format("%02x", expected[i]))
-										.collect(Collectors.joining(", "))
-								+ "]",
-						"["
-								+ IntStream.range(0, actual.length)
-										.mapToObj(i -> String.format("%02x", actual[i]))
-										.collect(Collectors.joining(", "))
-								+ "]"));
+						value, hexToString(expected), hexToString(actual)));
 	}
 }
