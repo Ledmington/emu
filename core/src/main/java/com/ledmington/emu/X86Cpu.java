@@ -174,7 +174,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case SHR -> {
 				if (inst.firstOperand() instanceof final Register64 r1) {
-					op(r1, (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
+					opSX(r1, (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
 				} else {
 					throw new IllegalArgumentException(String.format(
 							"Don't know what to do when SHR has %,d bits.",
@@ -432,6 +432,15 @@ public class X86Cpu implements X86Emulator {
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
 		op(() -> rf.get(op1), imm::asLong, task, result -> {
+			rf.set(op1, result);
+			// rf.resetFlags();
+			rf.set(RFlags.ZERO, result == 0L);
+			rf.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+		});
+	}
+
+	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
+		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> {
 			rf.set(op1, result);
 			// rf.resetFlags();
 			rf.set(RFlags.ZERO, result == 0L);
