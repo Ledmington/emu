@@ -31,9 +31,11 @@ import java.util.stream.IntStream;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
+import com.ledmington.elf.FileType;
 import com.ledmington.elf.ISA;
 import com.ledmington.elf.OSABI;
 import com.ledmington.elf.PHTEntry;
+import com.ledmington.elf.PHTEntryFlags;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.ProgramHeaderTable;
 import com.ledmington.elf.SectionTable;
@@ -326,10 +328,10 @@ public final class Main {
 			final Optional<Section> dyn = elf.getSectionByName(".dynamic");
 			if (dyn.isPresent()) {
 				printDynamicSection((DynamicSection) dyn.orElseThrow(), elf);
-				out.println();
 			} else {
 				out.println("There is no dynamic section in this file.");
 			}
+			out.println();
 		}
 
 		final Optional<Section> gv = elf.getSectionByName(GnuVersionSection.getStandardName());
@@ -666,11 +668,8 @@ public final class Main {
 				"Version needs section '%s' contains %d entr%s:%n",
 				gvrs.getName(), gvrs.getRequirementsLength(), gvrs.getRequirementsLength() == 1 ? "y" : "ies");
 		out.printf(
-				" Addr: 0x%016x  Offset: 0x%0" + (wide ? "8" : "6") + "x  Link: %d (%s)%n",
-				sh.getVirtualAddress(),
-				sh.getFileOffset(),
-				sh.getLinkedSectionIndex(),
-				linkedSection.getName());
+				" Addr: 0x%016x  Offset: 0x%08x  Link: %d (%s)%n",
+				sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
 
 		final StringTableSection strtab = (StringTableSection) linkedSection;
 		int k = 0;
@@ -704,11 +703,8 @@ public final class Main {
 				"Version symbols section '%s' contains %d entr%s:%n",
 				gvs.getName(), gvs.getVersionsLength(), gvs.getVersionsLength() == 1 ? "y" : "ies");
 		out.printf(
-				" Addr: 0x%016x  Offset: 0x%0" + (wide ? "8" : "6") + "x  Link: %d (%s)%n",
-				sh.getVirtualAddress(),
-				sh.getFileOffset(),
-				sh.getLinkedSectionIndex(),
-				linkedSection.getName());
+				" Addr: 0x%016x  Offset: 0x%08x  Link: %d (%s)%n",
+				sh.getVirtualAddress(), sh.getFileOffset(), sh.getLinkedSectionIndex(), linkedSection.getName());
 
 		final StringTableSection stringTable = (StringTableSection)
 				sectionTable.getSection(linkedSection.header().getLinkedSectionIndex());
@@ -1531,7 +1527,9 @@ public final class Main {
 					case ET_REL -> "REL";
 					default -> "Unknown";
 				},
-				fh.fileType().getName());
+				fh.fileType() == FileType.ET_DYN
+						? getProperDynDescription(elf)
+						: fh.fileType().getName());
 		out.printf("  Machine:                           %s%n", fh.isa().getName());
 		out.printf("  Version:                           0x%x%n", fh.version());
 		out.printf("  Entry point address:               0x%x%n", fh.entryPointVirtualAddress());
@@ -1545,6 +1543,36 @@ public final class Main {
 		out.printf("  Number of section headers:         %d%n", fh.numSectionHeaderTableEntries());
 		out.printf("  Section header string table index: %d%n", fh.sectionHeaderStringTableIndex());
 		out.flush();
+	}
+
+	private static String getProperDynDescription(final ELF elf) {
+		final boolean hasDynamicSection = elf.getSectionByName(".dynamic").isPresent();
+		final boolean hasDynamicSegment = IntStream.range(0, elf.getProgramHeaderTableLength())
+				.mapToObj(elf::getProgramHeader)
+				.anyMatch(phte -> phte.type() == PHTEntryType.PT_DYNAMIC);
+
+		final boolean hasEntrypoint = elf.getFileHeader().entryPointVirtualAddress() != 0L;
+		final boolean hasExecutableSegment = IntStream.range(0, elf.getProgramHeaderTableLength())
+				.mapToObj(elf::getProgramHeader)
+				.anyMatch(phte ->
+						phte.type() == PHTEntryType.PT_LOAD && (phte.flags() & PHTEntryFlags.PF_X.getCode()) != 0);
+
+		final boolean isSharedObject = hasDynamicSection || hasDynamicSegment;
+		final boolean isPIE = hasEntrypoint && hasExecutableSegment;
+
+		if (isPIE) {
+			if (isSharedObject) {
+				return "Shared Object or Position-Independent Executable file";
+			} else {
+				return "Position-Independent Executable file";
+			}
+		} else {
+			if (isSharedObject) {
+				return "Shared Object";
+			} else {
+				throw new AssertionError("ET_DYN ELF is neither a shared object nor a PIE executable");
+			}
+		}
 	}
 
 	private static void printHelp() {
