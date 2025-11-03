@@ -51,6 +51,7 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
  * Instruction opcodes: Appendix A. (pag. 2839)
  */
+// FIXME: reduce these suppressions
 @SuppressWarnings({
 	"PMD.AvoidLiteralsInIfCondition",
 	"PMD.NPathComplexity",
@@ -63,7 +64,6 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 	"PMD.NcssCount",
 	"PMD.CognitiveComplexity",
 	"PMD.TooFewBranchesForSwitch",
-	"PMD.NonExhaustiveSwitch",
 	"PMD.NullAssignment"
 })
 public final class InstructionDecoder {
@@ -4236,9 +4236,13 @@ public final class InstructionDecoder {
 				if (evex.a() != (byte) 0) {
 					ib.mask(MaskRegister.fromByte(evex.a()));
 				}
-				switch (b.read1()) {
+				final byte nextByte = b.read1();
+				switch (nextByte) {
 					case (byte) 0x00 -> ib.opcode(Opcode.VPCMPEQB);
 					case (byte) 0x04 -> ib.opcode(Opcode.VPCMPNEQB);
+					default ->
+						throw new IllegalArgumentException(
+								String.format("Unknown opcode corresponding to byte 0x%02x.", nextByte));
 				}
 				yield ib.build();
 			}

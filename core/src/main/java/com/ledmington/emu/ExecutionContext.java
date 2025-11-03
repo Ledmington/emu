@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.util.Objects;
 
 import com.ledmington.mem.Memory;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /**
  * This class contains all the information needed for the emulator to execute a file, except the file itself.
@@ -27,6 +28,12 @@ import com.ledmington.mem.Memory;
  * @param cpu The emulated CPU to be used.
  * @param memory The emulated memory to be used.
  */
+@SuppressFBWarnings(
+		value = "EI_EXPOSE_REP",
+		justification = "This object is meant to be a collection of mutable objects.")
+@SuppressFBWarnings(
+		value = "EI_EXPOSE_REP2",
+		justification = "This object is meant to be a collection of mutable objects.")
 public record ExecutionContext(X86Emulator cpu, Memory memory) {
 
 	/**

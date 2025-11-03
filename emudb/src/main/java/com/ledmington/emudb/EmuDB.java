@@ -68,7 +68,12 @@ import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-@SuppressWarnings({"PMD.SystemPrintln", "PMD.CyclomaticComplexity", "PMD.AvoidInstantiatingObjectsInLoops"})
+@SuppressWarnings({
+	"PMD.SystemPrintln",
+	"PMD.CyclomaticComplexity",
+	"PMD.AvoidInstantiatingObjectsInLoops",
+	"PMD.AvoidDuplicateLiterals"
+})
 public final class EmuDB {
 
 	private static final PrintWriter out = System.console() == null
@@ -170,7 +175,8 @@ public final class EmuDB {
 			if (functionName.isBlank()) {
 				throw new IllegalArgumentException("Empty function name.");
 			}
-			if (offset < 0L) {
+			final boolean negative = offset < 0L;
+			if (negative) {
 				throw new IllegalArgumentException("Negative offset.");
 			}
 		}

@@ -122,7 +122,7 @@ public final class Main {
 		System.exit(0);
 	}
 
-	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+	@SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.NPathComplexity"})
 	private static void disassembleSection(final SectionTable st, final int sectionIndex) {
 		final Section s = st.getSection(sectionIndex);
 		out.printf("Disassembly of section %s:%n", s.getName());

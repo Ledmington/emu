@@ -41,7 +41,8 @@ public final class X86Fuzzer {
 	private static final String PURPLE = "\u001b[95m";
 	private static final String RESET = "\u001b[0m";
 
-	private static final long SEED = RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
+	private static final long SEED =
+			RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
 	private static final RandomGenerator RNG =
 			RandomGeneratorFactory.getDefault().create(SEED);
 
