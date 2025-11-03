@@ -74,33 +74,36 @@ public final class CheckReadelf {
 		}
 	}
 
-	private static List<String> run(final String... cmd) {
+	private static String run(final String... cmd) {
 		final Process process;
-		final List<String> lines = new ArrayList<>();
+		final StringBuilder output = new StringBuilder();
 		try {
 			process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
 			try (BufferedReader reader =
 					new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 				String line = reader.readLine();
 				while (line != null) {
-					lines.add(line);
+					if (!output.isEmpty()) {
+						output.append('\n');
+					}
+					output.append(line);
 					line = reader.readLine();
 				}
 			}
 			final int exitCode = process.waitFor();
 			if (exitCode != 0) {
 				out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d%n", exitCode);
-				out.println(String.join("\n", lines));
+				out.println(output);
 				out.println();
 			}
 		} catch (final IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 
-		return lines;
+		return output.toString();
 	}
 
-	private static List<String> runSystemReadelf(final Path p, final boolean wide) {
+	private static String runSystemReadelf(final Path p, final boolean wide) {
 		final String systemReadelf = "/usr/bin/readelf";
 		final String[] cmd = wide
 				? new String[] {systemReadelf, "-a", "-W", p.toString()}
@@ -108,14 +111,14 @@ public final class CheckReadelf {
 		return run(cmd);
 	}
 
-	private static List<String> runCustomReadelf(final Path p, final boolean wide) {
+	private static String runCustomReadelf(final Path p, final boolean wide) {
 		final String[] cmd = wide
 				? new String[] {"java", "-jar", fatJarPath, "-a", "-W", p.toString()}
 				: new String[] {"java", "-jar", fatJarPath, "-a", p.toString()};
 		return run(cmd);
 	}
 
-	private static void checkDiff(final List<String> expected, final List<String> actual) {
+	private static void checkDiff(final String expected, final String actual) {
 		if (expected.equals(actual)) {
 			out.println("\u001b[32mOK\u001b[0m");
 			return;
@@ -123,55 +126,32 @@ public final class CheckReadelf {
 
 		out.println("\u001b[31mERROR\u001b[0m");
 
-		final int minSize = Math.min(expected.size(), actual.size());
-		final int maxSize = Math.max(expected.size(), actual.size());
-		// 'r' stands for "Reference" and 'a' stands for "Actual"
-		final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |r| %s\u001b[47m \u001b[0m%n";
-		final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |a| %s\u001b[47m \u001b[0m%n";
-
-		// start of the different block
-		int start = -1;
-		for (int i = 0; i < minSize; i++) {
-			final String e = expected.get(i);
-			final String a = actual.get(i);
-			if (e.equals(a)) {
-				if (start != -1) {
-					out.println("----------");
-					for (int j = start; j < i; j++) {
-						final String a2 = actual.get(j);
-						out.printf(fmtActual, j, a2);
-					}
-					start = -1;
-					out.println("==========");
-				}
-			} else {
-				if (start == -1) {
-					start = i;
-					out.println("==========");
-				}
-				out.printf(fmtExpected, i, e);
-			}
+		final Path fileExpected;
+		final Path fileActual;
+		try {
+			fileExpected = Files.createTempFile("output-expected-", ".txt");
+			fileActual = Files.createTempFile("output-actual-", ".txt");
+			Files.writeString(fileExpected, expected);
+			Files.writeString(fileActual, actual);
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
 		}
 
-		if (expected.size() > minSize) {
-			for (int i = minSize; i < expected.size(); i++) {
-				final String e = expected.get(i);
-				out.printf(fmtExpected, i, e);
-			}
-		} else if (actual.size() > minSize) {
-			for (int i = minSize; i < actual.size(); i++) {
-				final String a = actual.get(i);
-				out.printf(fmtActual, i, a);
-			}
-		}
-
+		out.println(run("diff", "--unified=3", "--color=always", fileExpected.toString(), fileActual.toString()));
 		out.println();
+
+		try {
+			Files.deleteIfExists(fileExpected);
+			Files.deleteIfExists(fileActual);
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static void test(final Path p, final boolean wide) {
 		out.print(p.toString() + (wide ? " (wide)" : "") + " ... ");
-		final List<String> outputSystemReadelf = runSystemReadelf(p, wide);
-		final List<String> outputCustomReadelf = runCustomReadelf(p, wide);
+		final String outputSystemReadelf = runSystemReadelf(p, wide);
+		final String outputCustomReadelf = runCustomReadelf(p, wide);
 		checkDiff(outputSystemReadelf, outputCustomReadelf);
 	}
 
