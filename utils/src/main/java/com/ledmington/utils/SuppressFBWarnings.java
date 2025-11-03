@@ -17,6 +17,7 @@
  */
 package com.ledmington.utils;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -25,19 +26,32 @@ import java.lang.annotation.RetentionPolicy;
  * href="https://sourceforge.net/p/findbugs/feature-requests/298/#5e88">here</a>.
  */
 @Retention(RetentionPolicy.CLASS)
+@Repeatable(SuppressFBWarnings.List.class)
 public @interface SuppressFBWarnings {
-	/**
-	 * The set of SpotBugs warnings that are to be suppressed in annotated element. The value can be a bug category,
-	 * kind or pattern.
-	 *
-	 * @return The set of SpotBugs warnings to be suppressed.
-	 */
-	String[] value();
 
 	/**
-	 * Optional documentation of the reason why the warning is suppressed.
+	 * The SpotBugs warning to be suppressed in the annotated element. The value can be a bug category, kind or pattern.
+	 *
+	 * @return The SpotBugs warning to be suppressed.
+	 */
+	String value();
+
+	/**
+	 * Documentation of the reason why the warning is suppressed.
 	 *
 	 * @return The reason why the warning is suppressed.
 	 */
 	String justification();
+
+	/** Container annotation for repeatable @SuppressFBWarnings. */
+	@Retention(RetentionPolicy.CLASS)
+	@interface List {
+
+		/**
+		 * The array of {@link SuppressFBWarnings} annotations contained by this container.
+		 *
+		 * @return The array of suppressed warnings annotations.
+		 */
+		SuppressFBWarnings[] value();
+	}
 }
