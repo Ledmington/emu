@@ -30,7 +30,7 @@ import org.openjdk.jmh.annotations.Timeout;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
-import com.ledmington.cpu.x86.InstructionDecoder;
+import com.ledmington.cpu.InstructionDecoder;
 import com.ledmington.utils.MiniLogger;
 
 @State(Scope.Benchmark)

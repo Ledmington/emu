@@ -22,12 +22,12 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.ledmington.cpu.InstructionChecker;
+import com.ledmington.cpu.InstructionDecoder;
+import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionChecker;
-import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Operand;
 import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;

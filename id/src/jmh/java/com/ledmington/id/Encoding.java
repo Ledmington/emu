@@ -30,10 +30,10 @@ import org.openjdk.jmh.annotations.Timeout;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
+import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register64;

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.cpu.x86;
+package com.ledmington.cpu;
 
 import static com.ledmington.utils.BitUtils.and;
 import static com.ledmington.utils.BitUtils.asByte;
@@ -29,6 +29,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.ledmington.cpu.x86.DisplacementType;
+import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.IndirectOperand;
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionPrefix;
+import com.ledmington.cpu.x86.MaskRegister;
+import com.ledmington.cpu.x86.Opcode;
+import com.ledmington.cpu.x86.Operand;
+import com.ledmington.cpu.x86.PointerSize;
+import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.Register16;
+import com.ledmington.cpu.x86.Register32;
+import com.ledmington.cpu.x86.Register64;
+import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterMMX;
+import com.ledmington.cpu.x86.RegisterXMM;
+import com.ledmington.cpu.x86.RegisterYMM;
+import com.ledmington.cpu.x86.RegisterZMM;
+import com.ledmington.cpu.x86.Registers;
+import com.ledmington.cpu.x86.SegmentRegister;
+import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 

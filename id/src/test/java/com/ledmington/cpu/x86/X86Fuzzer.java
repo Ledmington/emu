@@ -25,6 +25,9 @@ import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.ledmington.cpu.InstructionChecker;
+import com.ledmington.cpu.InstructionDecoder;
+import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
 import com.ledmington.utils.BitUtils;

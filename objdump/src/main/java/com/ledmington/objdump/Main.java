@@ -23,11 +23,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.ledmington.cpu.InstructionDecoder;
+import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;

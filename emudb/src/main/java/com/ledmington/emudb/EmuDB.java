@@ -32,9 +32,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.ledmington.cpu.InstructionDecoder;
+import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionDecoder;
-import com.ledmington.cpu.x86.InstructionEncoder;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.elf.ELF;
