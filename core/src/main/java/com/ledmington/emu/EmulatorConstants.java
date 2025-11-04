@@ -34,13 +34,13 @@ public final class EmulatorConstants {
 	private static long baseAddress = 0L; // This is the value gdb uses, why?
 
 	/** The default stack address. */
-	private static long baseStackAddress = 0x0000_7fff_ff7f_db80L; // This is the value gdb uses, why?
+	private static long baseStackAddress = 0x0000_7fff_ffff_dc50L; // This is the value gdb uses, why?
 
 	/** The default stack size. */
 	private static long stackSize = 8L * 1024L * 1024L;
 
 	/** The value at the base of the stack. */
-	private static long baseStackValue = 1L; // This is the value gdb uses, why?
+	private static long baseStackValue = 0L; // This is the value gdb uses, why?
 
 	private static boolean checkInstructions = true;
 

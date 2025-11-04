@@ -48,7 +48,6 @@ import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.Pair;
 
 /**
  * Loads an ELF into memory and sets it up for execution.
@@ -115,18 +114,13 @@ public final class ELFLoader {
 			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
 			set(Register64.R15, oldValue);
 		}
-		{
-			final long oldValue = cpu.getRegisters().get(Register64.R15);
-			set(Register64.R15, baseStackValue);
-			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
-			set(Register64.R15, oldValue);
-		}
 
 		final int argc = commandLineArguments.length;
 		set(Register64.RDI, BitUtils.asLong(argc));
 
-		// final Pair<Long, Long> p = loadCommandLineArgumentsAndEnvironmentVariables(
-		//		stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
+		// final Pair<Long, Long> p =
+		loadCommandLineArgumentsAndEnvironmentVariables(
+				stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
 
 		// final long argv = p.first();
 		// set(Register64.RSI, argv);
@@ -360,7 +354,7 @@ public final class ELFLoader {
 	}
 
 	@SuppressWarnings("PMD.UnusedPrivateMethod")
-	private Pair<Long, Long> loadCommandLineArgumentsAndEnvironmentVariables(
+	private /*Pair<Long, Long>*/ void loadCommandLineArgumentsAndEnvironmentVariables(
 			final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		final long wordSize = is32Bit ? 4L : 8L;
 
@@ -375,25 +369,16 @@ public final class ELFLoader {
 
 		final long numEnv = BitUtils.asLong(System.getenv().size());
 
+		// after computing total sizes:
 		long p = stackBase
-				- (
-				// argc
-				wordSize
-						// argv pointers
+				- (wordSize // argc
 						+ wordSize * commandLineArguments.length
-						// null word
-						+ wordSize
-						// envp pointers
+						+ wordSize // NULL after argv
 						+ wordSize * numEnv
-						// null word
-						+ wordSize
-						// auxv structures
-						+ 2L * wordSize * numAuxvEntries
-						// null word
-						+ wordSize
-						// argv contents
+						+ wordSize // NULL after envp
+						+ 2 * wordSize * numAuxvEntries
+						+ 2 * wordSize // AT_NULL terminator
 						+ totalCliBytesAligned
-						// envp contents
 						+ totalEnvBytesAligned);
 
 		// write argc
@@ -401,46 +386,51 @@ public final class ELFLoader {
 				p,
 				is32Bit
 						? BitUtils.asLEBytes(commandLineArguments.length)
-						: BitUtils.asLEBytes(BitUtils.asLong(commandLineArguments.length)));
+						: BitUtils.asLEBytes((long) commandLineArguments.length));
 		p += wordSize;
 
-		// write argv pointers and contents
+		// write argv pointers
 		long currentArgPointer = stackBase - totalEnvBytesAligned - totalCliBytesAligned;
-		final long argv = currentArgPointer;
-		for (final String arg : commandLineArguments) {
+		for (String arg : commandLineArguments) {
 			mem.initialize(
-					p,
-					is32Bit
-							? BitUtils.asLEBytes(BitUtils.asInt(currentArgPointer))
-							: BitUtils.asLEBytes(currentArgPointer));
-			final byte[] argBytes = arg.getBytes(StandardCharsets.UTF_8);
+					p, is32Bit ? BitUtils.asLEBytes((int) currentArgPointer) : BitUtils.asLEBytes(currentArgPointer));
+
+			byte[] argBytes = arg.getBytes(StandardCharsets.UTF_8);
 			mem.initialize(currentArgPointer, argBytes);
-			mem.initialize(currentArgPointer + BitUtils.asLong(argBytes.length), (byte) 0x00);
-			currentArgPointer += BitUtils.asLong(argBytes.length) + 1L;
+			mem.initialize(currentArgPointer + argBytes.length, (byte) 0x00);
+			currentArgPointer += argBytes.length + 1;
 			p += wordSize;
 		}
 
-		// write null word
+		// NULL after argv
 		mem.initialize(p, wordSize, (byte) 0x00);
+		p += wordSize;
 
-		// write envp pointers and contents
+		// write envp pointers
 		long currentEnvPointer = stackBase - totalEnvBytesAligned;
-		final long envp = currentEnvPointer;
-		for (final Entry<String, String> env : System.getenv().entrySet()) {
-			final String envString = env.getKey() + "=" + env.getValue();
-			final byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
+		for (var e : System.getenv().entrySet()) {
+			String envString = e.getKey() + "=" + e.getValue();
+			byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
 			mem.initialize(
-					p,
-					is32Bit
-							? BitUtils.asLEBytes(BitUtils.asInt(currentEnvPointer))
-							: BitUtils.asLEBytes(currentEnvPointer));
+					p, is32Bit ? BitUtils.asLEBytes((int) currentEnvPointer) : BitUtils.asLEBytes(currentEnvPointer));
+
 			mem.initialize(currentEnvPointer, envBytes);
-			mem.initialize(currentEnvPointer + BitUtils.asLong(envBytes.length), (byte) 0x00);
-			currentEnvPointer += BitUtils.asLong(envBytes.length) + 1L;
+			mem.initialize(currentEnvPointer + envBytes.length, (byte) 0x00);
+			currentEnvPointer += envBytes.length + 1;
 			p += wordSize;
 		}
 
-		return new Pair<>(argv, envp);
+		// NULL after envp
+		mem.initialize(p, wordSize, (byte) 0x00);
+		p += wordSize;
+
+		// optional: auxv pairs
+		// ...
+
+		// AT_NULL terminator (auxv end)
+		mem.initialize(p, wordSize * 2, (byte) 0x00);
+
+		// return new Pair<>(argv, envp);
 	}
 
 	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {

@@ -585,7 +585,6 @@ public final class EmuDB {
 	private void loadFile(final String file, final String... arguments) {
 		this.filepath = Path.of(file).normalize().toAbsolutePath();
 		this.savedArguments = arguments;
-		System.out.println(Arrays.toString(arguments));
 		this.currentFile = ELFParser.parse(file);
 
 		this.context = createDefaultExecutionContext();
