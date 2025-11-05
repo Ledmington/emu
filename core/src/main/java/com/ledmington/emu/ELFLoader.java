@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -353,7 +354,6 @@ public final class ELFLoader {
 		return count;
 	}
 
-	@SuppressWarnings("PMD.UnusedPrivateMethod")
 	private /*Pair<Long, Long>*/ void loadCommandLineArgumentsAndEnvironmentVariables(
 			final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		final long wordSize = is32Bit ? 4L : 8L;
@@ -391,11 +391,11 @@ public final class ELFLoader {
 
 		// write argv pointers
 		long currentArgPointer = stackBase - totalEnvBytesAligned - totalCliBytesAligned;
-		for (String arg : commandLineArguments) {
+		for (final String arg : commandLineArguments) {
 			mem.initialize(
 					p, is32Bit ? BitUtils.asLEBytes((int) currentArgPointer) : BitUtils.asLEBytes(currentArgPointer));
 
-			byte[] argBytes = arg.getBytes(StandardCharsets.UTF_8);
+			final byte[] argBytes = arg.getBytes(StandardCharsets.UTF_8);
 			mem.initialize(currentArgPointer, argBytes);
 			mem.initialize(currentArgPointer + argBytes.length, (byte) 0x00);
 			currentArgPointer += argBytes.length + 1;
@@ -408,9 +408,9 @@ public final class ELFLoader {
 
 		// write envp pointers
 		long currentEnvPointer = stackBase - totalEnvBytesAligned;
-		for (var e : System.getenv().entrySet()) {
-			String envString = e.getKey() + "=" + e.getValue();
-			byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
+		for (final Map.Entry<String, String> e : System.getenv().entrySet()) {
+			final String envString = e.getKey() + "=" + e.getValue();
+			final byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
 			mem.initialize(
 					p, is32Bit ? BitUtils.asLEBytes((int) currentEnvPointer) : BitUtils.asLEBytes(currentEnvPointer));
 

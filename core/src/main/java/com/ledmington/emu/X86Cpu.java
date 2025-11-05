@@ -135,7 +135,16 @@ public class X86Cpu implements X86Emulator {
 					case Register16 op1 ->
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a - b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b);
-					case Register64 op1 -> op(op1, (Register64) inst.secondOperand(), (a, b) -> a - b);
+					case Register64 op1 -> {
+						switch (inst.secondOperand()) {
+							case Register64 op2 -> op(op1, op2, (a, b) -> a - b);
+							case Immediate imm -> opSX(op1, imm, (a, b) -> a - b);
+							default ->
+								throw new IllegalArgumentException(String.format(
+										"Don't know what to do with SUB, %s and %s.",
+										inst.firstOperand(), inst.secondOperand()));
+						}
+					}
 					case IndirectOperand iop ->
 						op(iop, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a - b));
 					default ->
@@ -149,7 +158,16 @@ public class X86Cpu implements X86Emulator {
 					case Register16 op1 ->
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a + b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), Integer::sum);
-					case Register64 op1 -> op(op1, (Register64) inst.secondOperand(), Long::sum);
+					case Register64 op1 -> {
+						switch (inst.secondOperand()) {
+							case Register64 op2 -> op(op1, op2, Long::sum);
+							case Immediate imm -> opSX(op1, imm, Long::sum);
+							default ->
+								throw new IllegalArgumentException(String.format(
+										"Don't know what to do with SUB, %s and %s.",
+										inst.firstOperand(), inst.secondOperand()));
+						}
+					}
 					case IndirectOperand iop ->
 						op(iop, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a + b));
 					default ->
