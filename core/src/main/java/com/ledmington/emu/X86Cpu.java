@@ -127,6 +127,7 @@ public class X86Cpu implements X86Emulator {
 		}
 
 		logger.debug(InstructionEncoder.toIntelSyntax(inst));
+
 		switch (inst.opcode()) {
 			case SUB -> {
 				switch (inst.firstOperand()) {
@@ -397,55 +398,67 @@ public class X86Cpu implements X86Emulator {
 	private void op(final Register8 op1, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			// rf.resetFlags();
-			rf.set(RFlags.ZERO, result == (byte) 0);
-			rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+			updateRFlags(result);
 		});
 	}
 
 	private void op(final Register16 op1, final Register16 op2, final BiFunction<Short, Short, Short> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			// rf.resetFlags();
-			rf.set(RFlags.ZERO, result == (short) 0);
-			rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+			updateRFlags(result);
 		});
 	}
 
 	private void op(final Register32 op1, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			// rf.resetFlags();
-			rf.set(RFlags.ZERO, result == 0);
-			rf.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+			updateRFlags(result);
 		});
 	}
 
 	private void op(final Register64 op1, final Register64 op2, final BiFunction<Long, Long, Long> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
 			rf.set(op1, result);
-			// rf.resetFlags();
-			rf.set(RFlags.ZERO, result == 0L);
-			rf.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+			updateRFlags(result);
 		});
 	}
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
 		op(() -> rf.get(op1), imm::asLong, task, result -> {
 			rf.set(op1, result);
-			// rf.resetFlags();
-			rf.set(RFlags.ZERO, result == 0L);
-			rf.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+			updateRFlags(result);
 		});
 	}
 
 	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
 		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> {
 			rf.set(op1, result);
-			// rf.resetFlags();
-			rf.set(RFlags.ZERO, result == 0L);
-			rf.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+			updateRFlags(result);
 		});
+	}
+
+	private void updateRFlags(final byte value) {
+		rf.set(RFlags.ZERO, value == (byte) 0);
+		rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(value)) % 2) == 0);
+		// TODO: add other flags
+	}
+
+	private void updateRFlags(final short value) {
+		rf.set(RFlags.ZERO, value == (short) 0);
+		rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(value)) % 2) == 0);
+		// TODO: add other flags
+	}
+
+	private void updateRFlags(final int value) {
+		rf.set(RFlags.ZERO, value == 0);
+		rf.set(RFlags.PARITY, (Integer.bitCount(value) % 2) == 0);
+		// TODO: add other flags
+	}
+
+	private void updateRFlags(final long value) {
+		rf.set(RFlags.ZERO, value == 0L);
+		rf.set(RFlags.PARITY, (Long.bitCount(value) % 2) == 0);
+		// TODO: add other flags
 	}
 
 	// FIXME: shouldn't this be with three types X, Y and Z to be the most general version possible?
