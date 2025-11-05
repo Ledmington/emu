@@ -136,16 +136,8 @@ public class X86Cpu implements X86Emulator {
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a - b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b);
 					case Register64 op1 -> op(op1, (Register64) inst.secondOperand(), (a, b) -> a - b);
-					case IndirectOperand iop -> {
-						final long address = computeIndirectOperand(iop);
-						final Register8 op2 = (Register8) inst.secondOperand();
-						final byte r1 = mem.read(address);
-						final byte r2 = rf.get(op2);
-						final byte result = BitUtils.asByte(r1 + r2);
-						mem.write(address, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == (byte) 0);
-					}
+					case IndirectOperand iop ->
+						op(iop, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a - b));
 					default ->
 						throw new IllegalArgumentException(
 								String.format("Don't know what to do with SUB and %s.", inst.firstOperand()));
@@ -158,53 +150,16 @@ public class X86Cpu implements X86Emulator {
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a + b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), Integer::sum);
 					case Register64 op1 -> op(op1, (Register64) inst.secondOperand(), Long::sum);
-					case IndirectOperand iop -> {
-						final long address = computeIndirectOperand(iop);
-						final Register8 op2 = (Register8) inst.secondOperand();
-						final byte r1 = mem.read(address);
-						final byte r2 = rf.get(op2);
-						final byte result = BitUtils.asByte(r1 + r2);
-						mem.write(address, result);
-						rf.resetFlags();
-						rf.set(RFlags.ZERO, result == 0);
-					}
+					case IndirectOperand iop ->
+						op(iop, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a + b));
 					default ->
 						throw new IllegalArgumentException(
 								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
 				}
 			}
-			case SHR -> {
-				if (inst.firstOperand() instanceof final Register64 r1) {
-					opSX(r1, (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
-				} else {
-					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SHR has %,d bits.",
-							inst.firstOperand().bits()));
-				}
-			}
-			case SAR -> {
-				if (inst.firstOperand() instanceof final Register64 r1) {
-					op(r1, (Immediate) inst.secondOperand(), (r, i) -> r >> i);
-				} else {
-					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SAR has %,d bits.",
-							inst.firstOperand().bits()));
-				}
-			}
-			case SHL -> {
-				if (inst.firstOperand() instanceof final Register64 op1) {
-					final long r1 = rf.get(op1);
-					final byte imm = rf.get((Register8) inst.secondOperand());
-					final long result = r1 << imm;
-					rf.set(op1, result);
-					rf.resetFlags();
-					rf.set(RFlags.ZERO, result == 0L);
-				} else {
-					throw new IllegalArgumentException(String.format(
-							"Don't know what to do when SHL has %,d bits.",
-							inst.firstOperand().bits()));
-				}
-			}
+			case SHR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
+			case SAR -> op((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
+			case SHL -> op((Register64) inst.firstOperand(), (Register8) inst.secondOperand(), (r, i) -> r << i);
 			case XOR -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
@@ -237,25 +192,25 @@ public class X86Cpu implements X86Emulator {
 					op(r1, r2, (a, b) -> a & b);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					rf.set(r1, rf.get(r1) & getAsLongSX(imm));
+					opSX(r1, imm, (a, b) -> a & b);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
 			}
-			case CMP -> {
-				final long a = getAsLongSX(inst.firstOperand());
-				final long b = getAsLongSX(inst.secondOperand());
-				final long result = a - b;
-				rf.resetFlags();
-				rf.set(RFlags.ZERO, result == 0L);
-				rf.set(RFlags.SIGN, result < 0L);
-			}
-			case TEST -> {
-				final long r1 = rf.get((Register64) inst.firstOperand());
-				final long r2 = rf.get((Register64) inst.secondOperand());
-				rf.resetFlags();
-				rf.set(RFlags.ZERO, (r1 & r2) == 0L);
-			}
+			case CMP ->
+				op(
+						() -> getAsLongSX(inst.firstOperand()),
+						() -> getAsLongSX(inst.secondOperand()),
+						(a, b) -> a - b,
+						result -> {},
+						true);
+			case TEST ->
+				op(
+						() -> rf.get((Register64) inst.firstOperand()),
+						() -> rf.get((Register64) inst.secondOperand()),
+						(a, b) -> a & b,
+						result -> {},
+						true);
 
 			// Jumps
 			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
@@ -395,82 +350,64 @@ public class X86Cpu implements X86Emulator {
 		instFetch.setPosition(instFetch.getPosition() + offset);
 	}
 
+	private void op(final IndirectOperand iop, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
+		final long address = computeIndirectOperand(iop);
+		op(() -> mem.read(address), () -> rf.get(op2), task, result -> mem.write(address, result), true);
+	}
+
 	private void op(final Register8 op1, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
-			rf.set(op1, result);
-			updateRFlags(result);
-		});
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
 	private void op(final Register16 op1, final Register16 op2, final BiFunction<Short, Short, Short> task) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
-			rf.set(op1, result);
-			updateRFlags(result);
-		});
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
 	private void op(final Register32 op1, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
-			rf.set(op1, result);
-			updateRFlags(result);
-		});
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
 	private void op(final Register64 op1, final Register64 op2, final BiFunction<Long, Long, Long> task) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> {
-			rf.set(op1, result);
-			updateRFlags(result);
-		});
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
+	}
+
+	private void op(final Register64 op1, final Register8 op2, final BiFunction<Long, Byte, Long> task) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
 	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
-		op(() -> rf.get(op1), imm::asLong, task, result -> {
-			rf.set(op1, result);
-			updateRFlags(result);
-		});
+		op(() -> rf.get(op1), imm::asLong, task, result -> rf.set(op1, result), true);
 	}
 
 	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
-		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> {
-			rf.set(op1, result);
-			updateRFlags(result);
-		});
+		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> rf.set(op1, result), true);
 	}
 
-	private void updateRFlags(final byte value) {
-		rf.set(RFlags.ZERO, value == (byte) 0);
-		rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(value)) % 2) == 0);
+	private <X> void updateRFlags(final X value) {
+		if (!(value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long)) {
+			throw new AssertionError(String.format("Invalid type: %s.", value.getClass()));
+		}
+		final long x = ((Number) value).longValue();
+		rf.set(RFlags.ZERO, x == 0L);
+		rf.set(RFlags.PARITY, (Long.bitCount(x) % 2) == 0);
+		// rf.set(RFlags.SIGN, x < 0L);
 		// TODO: add other flags
 	}
 
-	private void updateRFlags(final short value) {
-		rf.set(RFlags.ZERO, value == (short) 0);
-		rf.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(value)) % 2) == 0);
-		// TODO: add other flags
-	}
-
-	private void updateRFlags(final int value) {
-		rf.set(RFlags.ZERO, value == 0);
-		rf.set(RFlags.PARITY, (Integer.bitCount(value) % 2) == 0);
-		// TODO: add other flags
-	}
-
-	private void updateRFlags(final long value) {
-		rf.set(RFlags.ZERO, value == 0L);
-		rf.set(RFlags.PARITY, (Long.bitCount(value) % 2) == 0);
-		// TODO: add other flags
-	}
-
-	// FIXME: shouldn't this be with three types X, Y and Z to be the most general version possible?
-	private <X> void op(
+	/** A generic implementation of an "operation" with 2 operands. */
+	private <X, Y, Z> void op(
 			final Supplier<X> readOp1,
-			final Supplier<X> readOp2,
-			final BiFunction<X, X, X> task,
-			final Consumer<X> writeResult) {
+			final Supplier<Y> readOp2,
+			final BiFunction<X, Y, Z> task,
+			final Consumer<Z> writeResult,
+			final boolean updateFlags) {
 		final X op1 = readOp1.get();
-		final X op2 = readOp2.get();
-		final X result = task.apply(op1, op2);
+		final Y op2 = readOp2.get();
+		final Z result = task.apply(op1, op2);
 		writeResult.accept(result);
+		if (updateFlags) {
+			updateRFlags(result);
+		}
 	}
 
 	private long pop() {
