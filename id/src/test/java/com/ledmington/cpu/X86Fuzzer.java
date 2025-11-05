@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.cpu.x86;
+package com.ledmington.cpu;
 
 import java.util.HashSet;
 import java.util.List;
@@ -25,9 +25,8 @@ import java.util.random.RandomGeneratorFactory;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.ledmington.cpu.InstructionChecker;
-import com.ledmington.cpu.InstructionDecoder;
-import com.ledmington.cpu.InstructionEncoder;
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.NullRegister;
 import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
 import com.ledmington.utils.BitUtils;

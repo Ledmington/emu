@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.cpu.x86;
+package com.ledmington.cpu;
 
 import static com.ledmington.cpu.x86.MaskRegister.K0;
 import static com.ledmington.cpu.x86.MaskRegister.K1;
@@ -159,6 +159,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.IndirectOperand;
+import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.InstructionPrefix;
+import com.ledmington.cpu.x86.Opcode;
+import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.BitUtils;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
