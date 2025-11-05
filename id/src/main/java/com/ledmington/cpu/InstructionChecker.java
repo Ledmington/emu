@@ -17,9 +17,10 @@
  */
 package com.ledmington.cpu;
 
+import static com.ledmington.cpu.OperandTypeList.*;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
@@ -44,237 +45,7 @@ import com.ledmington.cpu.x86.exc.InvalidInstruction;
 @SuppressWarnings({"PMD.FieldDeclarationsShouldBeAtStartOfClass", "PMD.AvoidLiteralsInIfCondition"})
 public final class InstructionChecker {
 
-	/** Different categories of operands. Check {@link #matches} to know exactly what each one represents. */
-	private enum OperandType {
-		// TODO: since some instruction can only target AL, AX, EAX or RAX, maybe make a specific category only for
-		// those?
-		/** An 8-bit register. */
-		R8,
-		/** A 16-bit register. */
-		R16,
-		/** A 32-bit register (without EIP). */
-		R32,
-		/** A general-purpose 64-bit register (without RIP). */
-		R64,
-		/** An MMX 64-bit register. */
-		RMM,
-		/** An XMM 128-bit register. */
-		RX,
-		/** A YMM 256-bit register. */
-		RY,
-		/** A ZMM 512-bit register. */
-		RZ,
-		/** A mask register. */
-		RK,
-		/** A segment register. */
-		RS,
-		// TODO: encode also indirect operands with and without a segment register
-		/** An indirect operand with BYTE PTR size. */
-		M8,
-		/** An indirect operand with WORD PTR size. */
-		M16,
-		/** An indirect operand with DWORD PTR size. */
-		M32,
-		/** An indirect operand with QWORD PTR size. */
-		M64,
-		/** An indirect operand with XMMWORD PTR size. */
-		M128,
-		/** An indirect operand with YMMWORD PTR size. */
-		M256,
-		/** An indirect operand with ZMMWORD PTR size. */
-		M512,
-		/** An immediate value of 8 bits. */
-		I8,
-		/** An immediate value of 16 bits. */
-		I16,
-		/** An immediate value of 32 bits. */
-		I32,
-		/** An immediate value of 64 bits. */
-		I64,
-		/** A segmented address with a 64-bit immediate. */
-		S64
-	}
-
-	private static final class Case {
-		private final OperandType op1;
-		private final OperandType op2;
-		private final OperandType op3;
-		private final OperandType op4;
-
-		@SuppressWarnings("PMD.NullAssignment")
-		/* default */ Case(final OperandType... ot) {
-			Objects.requireNonNull(ot);
-			this.op1 = ot.length > 0 ? Objects.requireNonNull(ot[0]) : null;
-			this.op2 = ot.length > 1 ? Objects.requireNonNull(ot[1]) : null;
-			this.op3 = ot.length > 2 ? Objects.requireNonNull(ot[2]) : null;
-			this.op4 = ot.length > 3 ? Objects.requireNonNull(ot[3]) : null;
-			final int maxOperands = 4;
-			if (ot.length > maxOperands) {
-				throw new IllegalArgumentException("Too many operand types.");
-			}
-		}
-
-		public int numOperands() {
-			if (op4 != null) {
-				return 4;
-			}
-			if (op3 != null) {
-				return 3;
-			}
-			if (op2 != null) {
-				return 2;
-			}
-			if (op1 != null) {
-				return 1;
-			}
-			return 0;
-		}
-
-		public OperandType firstOperandType() {
-			return op1;
-		}
-
-		public OperandType secondOperandType() {
-			return op2;
-		}
-
-		public OperandType thirdOperandType() {
-			return op3;
-		}
-
-		public OperandType fourthOperandType() {
-			return op4;
-		}
-	}
-
-	// Various operand combinations
-	private static final Case NO_ARGS = new Case();
-	private static final Case R8 = new Case(OperandType.R8);
-	private static final Case R16 = new Case(OperandType.R16);
-	private static final Case R32 = new Case(OperandType.R32);
-	private static final Case R64 = new Case(OperandType.R64);
-	private static final Case M8 = new Case(OperandType.M8);
-	private static final Case M16 = new Case(OperandType.M16);
-	private static final Case M32 = new Case(OperandType.M32);
-	private static final Case M64 = new Case(OperandType.M64);
-	private static final Case I8 = new Case(OperandType.I8);
-	private static final Case I16 = new Case(OperandType.I16);
-	private static final Case I32 = new Case(OperandType.I32);
-	private static final Case I16_I8 = new Case(OperandType.I16, OperandType.I8);
-	private static final Case R8_R8 = new Case(OperandType.R8, OperandType.R8);
-	private static final Case R8_R16 = new Case(OperandType.R8, OperandType.R16);
-	private static final Case R16_R8 = new Case(OperandType.R16, OperandType.R8);
-	private static final Case R16_R16 = new Case(OperandType.R16, OperandType.R16);
-	private static final Case R16_R32 = new Case(OperandType.R16, OperandType.R32);
-	private static final Case R32_R8 = new Case(OperandType.R32, OperandType.R8);
-	private static final Case R32_R16 = new Case(OperandType.R32, OperandType.R16);
-	private static final Case R32_R32 = new Case(OperandType.R32, OperandType.R32);
-	private static final Case R32_RX = new Case(OperandType.R32, OperandType.RX);
-	private static final Case R32_RY = new Case(OperandType.R32, OperandType.RY);
-	private static final Case R64_R8 = new Case(OperandType.R64, OperandType.R8);
-	private static final Case R64_R16 = new Case(OperandType.R64, OperandType.R16);
-	private static final Case R64_R32 = new Case(OperandType.R64, OperandType.R32);
-	private static final Case R64_R64 = new Case(OperandType.R64, OperandType.R64);
-	private static final Case R64_RX = new Case(OperandType.R64, OperandType.RX);
-	private static final Case R64_RK = new Case(OperandType.R64, OperandType.RK);
-	private static final Case RMM_R32 = new Case(OperandType.RMM, OperandType.R32);
-	private static final Case RMM_R64 = new Case(OperandType.RMM, OperandType.R64);
-	private static final Case RMM_RMM = new Case(OperandType.RMM, OperandType.RMM);
-	private static final Case RX_R32 = new Case(OperandType.RX, OperandType.R32);
-	private static final Case RX_R64 = new Case(OperandType.RX, OperandType.R64);
-	private static final Case RX_RX = new Case(OperandType.RX, OperandType.RX);
-	private static final Case RY_RX = new Case(OperandType.RY, OperandType.RX);
-	private static final Case RZ_R32 = new Case(OperandType.RZ, OperandType.R32);
-	private static final Case RZ_RX = new Case(OperandType.RZ, OperandType.RX);
-	private static final Case R32_RK = new Case(OperandType.R32, OperandType.RK);
-	private static final Case RK_R32 = new Case(OperandType.RK, OperandType.R32);
-	private static final Case RK_R64 = new Case(OperandType.RK, OperandType.R64);
-	private static final Case RK_RK = new Case(OperandType.RK, OperandType.RK);
-	private static final Case R8_I8 = new Case(OperandType.R8, OperandType.I8);
-	private static final Case R16_I8 = new Case(OperandType.R16, OperandType.I8);
-	private static final Case R16_I16 = new Case(OperandType.R16, OperandType.I16);
-	private static final Case R32_I8 = new Case(OperandType.R32, OperandType.I8);
-	private static final Case R32_I32 = new Case(OperandType.R32, OperandType.I32);
-	private static final Case R64_I8 = new Case(OperandType.R64, OperandType.I8);
-	private static final Case R64_I32 = new Case(OperandType.R64, OperandType.I32);
-	private static final Case R64_I64 = new Case(OperandType.R64, OperandType.I64);
-	private static final Case RX_I8 = new Case(OperandType.RX, OperandType.I8);
-	private static final Case R8_S64 = new Case(OperandType.R8, OperandType.S64);
-	private static final Case R32_S64 = new Case(OperandType.R32, OperandType.S64);
-	private static final Case S64_R8 = new Case(OperandType.S64, OperandType.R8);
-	private static final Case S64_R32 = new Case(OperandType.S64, OperandType.R32);
-	private static final Case M8_I8 = new Case(OperandType.M8, OperandType.I8);
-	private static final Case M16_I8 = new Case(OperandType.M16, OperandType.I8);
-	private static final Case M16_I16 = new Case(OperandType.M16, OperandType.I16);
-	private static final Case M32_I8 = new Case(OperandType.M32, OperandType.I8);
-	private static final Case M32_I32 = new Case(OperandType.M32, OperandType.I32);
-	private static final Case M64_I8 = new Case(OperandType.M64, OperandType.I8);
-	private static final Case M64_I32 = new Case(OperandType.M64, OperandType.I32);
-	private static final Case M8_M8 = new Case(OperandType.M8, OperandType.M8);
-	private static final Case M16_M16 = new Case(OperandType.M16, OperandType.M16);
-	private static final Case M32_M32 = new Case(OperandType.M32, OperandType.M32);
-	private static final Case M8_R8 = new Case(OperandType.M8, OperandType.R8);
-	private static final Case M8_R16 = new Case(OperandType.M8, OperandType.R16);
-	private static final Case M16_R16 = new Case(OperandType.M16, OperandType.R16);
-	private static final Case M16_RS = new Case(OperandType.M16, OperandType.RS);
-	private static final Case M32_R8 = new Case(OperandType.M32, OperandType.R8);
-	private static final Case M32_R16 = new Case(OperandType.M32, OperandType.R16);
-	private static final Case M32_R32 = new Case(OperandType.M32, OperandType.R32);
-	private static final Case M64_R8 = new Case(OperandType.M64, OperandType.R8);
-	private static final Case M64_R64 = new Case(OperandType.M64, OperandType.R64);
-	private static final Case M64_RX = new Case(OperandType.M64, OperandType.RX);
-	private static final Case M128_RX = new Case(OperandType.M128, OperandType.RX);
-	private static final Case M256_RY = new Case(OperandType.M256, OperandType.RY);
-	private static final Case M512_RZ = new Case(OperandType.M512, OperandType.RZ);
-	private static final Case R8_M8 = new Case(OperandType.R8, OperandType.M8);
-	private static final Case R16_M8 = new Case(OperandType.R16, OperandType.M8);
-	private static final Case R16_M16 = new Case(OperandType.R16, OperandType.M16);
-	private static final Case R16_M32 = new Case(OperandType.R16, OperandType.M32);
-	private static final Case R32_M8 = new Case(OperandType.R32, OperandType.M8);
-	private static final Case R32_M16 = new Case(OperandType.R32, OperandType.M16);
-	private static final Case R32_M32 = new Case(OperandType.R32, OperandType.M32);
-	private static final Case R64_M8 = new Case(OperandType.R64, OperandType.M8);
-	private static final Case R64_M16 = new Case(OperandType.R64, OperandType.M16);
-	private static final Case R64_M32 = new Case(OperandType.R64, OperandType.M32);
-	private static final Case R64_M64 = new Case(OperandType.R64, OperandType.M64);
-	private static final Case RMM_M64 = new Case(OperandType.RMM, OperandType.M64);
-	private static final Case RX_M32 = new Case(OperandType.RX, OperandType.M32);
-	private static final Case RX_M64 = new Case(OperandType.RX, OperandType.M64);
-	private static final Case RX_M128 = new Case(OperandType.RX, OperandType.M128);
-	private static final Case RY_M256 = new Case(OperandType.RY, OperandType.M256);
-	private static final Case RZ_M512 = new Case(OperandType.RZ, OperandType.M512);
-	private static final Case RS_M16 = new Case(OperandType.RS, OperandType.M16);
-	private static final Case I8_R8 = new Case(OperandType.I8, OperandType.R8);
-	private static final Case I8_R32 = new Case(OperandType.I8, OperandType.R32);
-	private static final Case R32_R32_I8 = new Case(OperandType.R32, OperandType.R32, OperandType.I8);
-	private static final Case R32_R32_I32 = new Case(OperandType.R32, OperandType.R32, OperandType.I32);
-	private static final Case R64_R64_I32 = new Case(OperandType.R64, OperandType.R64, OperandType.I32);
-	private static final Case R32_RMM_I8 = new Case(OperandType.R32, OperandType.RMM, OperandType.I8);
-	private static final Case R64_R64_I8 = new Case(OperandType.R64, OperandType.R64, OperandType.I8);
-	private static final Case RMM_RMM_I8 = new Case(OperandType.RMM, OperandType.RMM, OperandType.I8);
-	private static final Case RX_RX_I8 = new Case(OperandType.RX, OperandType.RX, OperandType.I8);
-	private static final Case RX_M128_I8 = new Case(OperandType.RX, OperandType.M128, OperandType.I8);
-	private static final Case R32_M32_I32 = new Case(OperandType.R32, OperandType.M32, OperandType.I32);
-	private static final Case R64_M64_I32 = new Case(OperandType.R64, OperandType.M64, OperandType.I32);
-	private static final Case R32_R32_R32 = new Case(OperandType.R32, OperandType.R32, OperandType.R32);
-	private static final Case R64_R64_R8 = new Case(OperandType.R64, OperandType.R64, OperandType.R8);
-	private static final Case R64_R64_R64 = new Case(OperandType.R64, OperandType.R64, OperandType.R64);
-	private static final Case RK_RX_M128 = new Case(OperandType.RK, OperandType.RX, OperandType.M128);
-	private static final Case RK_RY_M256 = new Case(OperandType.RK, OperandType.RY, OperandType.M256);
-	private static final Case RX_RX_RX = new Case(OperandType.RX, OperandType.RX, OperandType.RX);
-	private static final Case RX_RX_M128 = new Case(OperandType.RX, OperandType.RX, OperandType.M128);
-	private static final Case RY_RY_RY = new Case(OperandType.RY, OperandType.RY, OperandType.RY);
-	private static final Case RK_RX_RX = new Case(OperandType.RK, OperandType.RX, OperandType.RX);
-	private static final Case RK_RY_RY = new Case(OperandType.RK, OperandType.RY, OperandType.RY);
-	private static final Case RK_RK_RK = new Case(OperandType.RK, OperandType.RK, OperandType.RK);
-	private static final Case RY_RY_M256 = new Case(OperandType.RY, OperandType.RY, OperandType.M256);
-	private static final Case RX_RX_M128_I8 =
-			new Case(OperandType.RX, OperandType.RX, OperandType.M128, OperandType.I8);
-	private static final Case RY_RY_M256_I8 =
-			new Case(OperandType.RY, OperandType.RY, OperandType.M256, OperandType.I8);
-	private static final Case RY_RY_RY_I8 = new Case(OperandType.RY, OperandType.RY, OperandType.RY, OperandType.I8);
-
-	private static final Map<Opcode, List<Case>> CASES = Map.<Opcode, List<Case>>ofEntries(
+	private static final Map<Opcode, List<OperandTypeList>> CASES = Map.<Opcode, List<OperandTypeList>>ofEntries(
 			Map.entry(Opcode.NOP, List.of(NO_ARGS, R16, R32, R64, M16, M32, M64)),
 			Map.entry(
 					Opcode.MOV,
@@ -629,8 +400,8 @@ public final class InstructionChecker {
 			error("Unknown opcode '%s'.", inst.opcode());
 		}
 
-		final List<Case> cases = CASES.get(inst.opcode());
-		for (final Case c : cases) {
+		final List<OperandTypeList> operandTypeLists = CASES.get(inst.opcode());
+		for (final OperandTypeList c : operandTypeLists) {
 			if (c.numOperands() == numOperands && matches(c, inst)) {
 				return;
 			}
@@ -752,7 +523,7 @@ public final class InstructionChecker {
 		}
 	}
 
-	private static boolean matches(final Case c, final Instruction inst) {
+	private static boolean matches(final OperandTypeList c, final Instruction inst) {
 		final int n = c.numOperands();
 		return (n < 1 || matches(c.firstOperandType(), inst.firstOperand()))
 				&& (n < 2 || matches(c.secondOperandType(), inst.secondOperand()))
