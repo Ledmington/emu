@@ -4544,7 +4544,7 @@ public final class InstructionDecoder {
 
 	private static IndirectOperandBuilder parseIndirectOperand(
 			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
-		final boolean baseRegisterExtension = (pref.hasRexPrefix() && pref.rex().b())
+		final boolean baseRegisterExtension = (pref.hasRexPrefix() && pref.rex().hasSIBBaseExtension())
 				|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b())
 				|| (pref.evex().isPresent() && !pref.evex().orElseThrow().b());
 		Register baseRegister =
@@ -4556,7 +4556,7 @@ public final class InstructionDecoder {
 			// SIB needed
 			sib = sib(b);
 
-			final boolean sibIndexExtension = (pref.hasRexPrefix() && pref.rex().x())
+			final boolean sibIndexExtension = (pref.hasRexPrefix() && pref.rex().hasSIBIndexExtension())
 					|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().x())
 					|| (pref.evex().isPresent() && !pref.evex().orElseThrow().x());
 

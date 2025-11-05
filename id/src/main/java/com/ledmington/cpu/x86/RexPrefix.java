@@ -19,7 +19,14 @@ package com.ledmington.cpu.x86;
 
 import com.ledmington.utils.BitUtils;
 
-/** This class represents an x86 REX prefix byte, used for extending the operands of an x86 instructions. */
+/**
+ * This class represents an x86 REX prefix byte, used for extending the operands of an x86 instructions.
+ *
+ * @param w The W bit, for specifying that an operand is 64-bit.
+ * @param r The R bit, an extension for the REG field of the ModR/M byte.
+ * @param x The X bit, an extension for the Index field of the SIB byte.
+ * @param b The B bit, an extension for the Base field of the SIB byte, the RM field of the ModR/M byte or the opcode.
+ */
 public record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 
 	private static final byte REX_PREFIX_MASK = (byte) 0b11110000;

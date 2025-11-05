@@ -401,8 +401,8 @@ public final class InstructionChecker {
 		}
 
 		final List<OperandTypeList> operandTypeLists = CASES.get(inst.opcode());
-		for (final OperandTypeList c : operandTypeLists) {
-			if (c.numOperands() == numOperands && matches(c, inst)) {
+		for (final OperandTypeList otl : operandTypeLists) {
+			if (otl.numOperands() == numOperands && matches(otl, inst)) {
 				return;
 			}
 		}
@@ -523,12 +523,12 @@ public final class InstructionChecker {
 		}
 	}
 
-	private static boolean matches(final OperandTypeList c, final Instruction inst) {
-		final int n = c.numOperands();
-		return (n < 1 || matches(c.firstOperandType(), inst.firstOperand()))
-				&& (n < 2 || matches(c.secondOperandType(), inst.secondOperand()))
-				&& (n < 3 || matches(c.thirdOperandType(), inst.thirdOperand()))
-				&& (n < 4 || matches(c.fourthOperandType(), inst.fourthOperand()));
+	private static boolean matches(final OperandTypeList otl, final Instruction inst) {
+		final int n = otl.numOperands();
+		return (n < 1 || matches(otl.firstOperandType(), inst.firstOperand()))
+				&& (n < 2 || matches(otl.secondOperandType(), inst.secondOperand()))
+				&& (n < 3 || matches(otl.thirdOperandType(), inst.thirdOperand()))
+				&& (n < 4 || matches(otl.fourthOperandType(), inst.fourthOperand()));
 	}
 
 	private static boolean matches(final OperandType opt, final Operand op) {
