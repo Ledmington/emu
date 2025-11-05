@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -108,13 +107,8 @@ public final class ELFLoader {
 		set(Register64.RSP, stackTop);
 		// set(Register64.RBP, stackTop);
 
-		// Since it is not possible to push a 64-bit immediate value, we need to use a register temporarily
-		{
-			final long oldValue = cpu.getRegisters().get(Register64.R15);
-			set(Register64.R15, baseStackValue);
-			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
-			set(Register64.R15, oldValue);
-		}
+		push(baseStackValue);
+		push(baseStackValue + 1L); // why?
 
 		final int argc = commandLineArguments.length;
 		set(Register64.RDI, BitUtils.asLong(argc));
@@ -150,6 +144,14 @@ public final class ELFLoader {
 		if (elf.getSectionByName(".ctors").isPresent()) {
 			runCtors();
 		}
+	}
+
+	private void push(final long value) {
+		// Since it is not possible to push a 64-bit immediate value, we need to use a register temporarily
+		final long oldValue = cpu.getRegisters().get(Register64.R15);
+		set(Register64.R15, value);
+		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.R15));
+		set(Register64.R15, oldValue);
 	}
 
 	/** Aligns the given address to a 16-byte boundary. */
@@ -334,10 +336,11 @@ public final class ELFLoader {
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 	}
 
-	private long getNumEnvBytes() {
+	private long getNumEnvBytes(final Map<String, String> env) {
 		long count = 0L;
-		for (final Entry<String, String> env : System.getenv().entrySet()) {
-			count += env.getKey().length() + 1L + env.getValue().length() + 1L;
+		for (final Map.Entry<String, String> envVar : env.entrySet()) {
+			// "<key>=<value>\0"
+			count += envVar.getKey().length() + 1L + envVar.getValue().length() + 1L;
 		}
 		return count;
 	}
@@ -349,6 +352,7 @@ public final class ELFLoader {
 	private long getNumCliBytes(final String... args) {
 		long count = 0L;
 		for (final String arg : args) {
+			// "<arg>\0"
 			count += arg.length() + 1L;
 		}
 		return count;
@@ -358,7 +362,10 @@ public final class ELFLoader {
 			final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		final long wordSize = is32Bit ? 4L : 8L;
 
-		final long totalEnvBytes = getNumEnvBytes();
+		final Map<String, String> environmentVariables = System.getenv();
+		final long numEnv = BitUtils.asLong(environmentVariables.size());
+
+		final long totalEnvBytes = getNumEnvBytes(environmentVariables);
 		final long totalEnvBytesAligned = align(totalEnvBytes, wordSize);
 
 		final long totalCliBytes = getNumCliBytes(commandLineArguments);
@@ -366,8 +373,6 @@ public final class ELFLoader {
 
 		// TODO: implement this
 		final long numAuxvEntries = 0L;
-
-		final long numEnv = BitUtils.asLong(System.getenv().size());
 
 		// after computing total sizes:
 		long p = stackBase
@@ -408,7 +413,7 @@ public final class ELFLoader {
 
 		// write envp pointers
 		long currentEnvPointer = stackBase - totalEnvBytesAligned;
-		for (final Map.Entry<String, String> e : System.getenv().entrySet()) {
+		for (final Map.Entry<String, String> e : environmentVariables.entrySet()) {
 			final String envString = e.getKey() + "=" + e.getValue();
 			final byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
 			mem.initialize(
