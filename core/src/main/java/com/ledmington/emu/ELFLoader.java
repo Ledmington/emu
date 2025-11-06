@@ -48,6 +48,8 @@ import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
  * Loads an ELF into memory and sets it up for execution.
@@ -81,7 +83,7 @@ public final class ELFLoader {
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
-	 * @param commandLineArguments The arguments to pass to the program.
+	 * @param commandLineArguments The arguments to pass to the program. Must include the name of the program as the first argument.
 	 * @param baseAddress The address where to start loading the file.
 	 * @param baseStackAddress The address where to place the base of the stack.
 	 * @param stackSize The size in bytes of the stack.
@@ -105,7 +107,6 @@ public final class ELFLoader {
 
 		// These are fake instructions to set up the stack
 		set(Register64.RSP, stackTop);
-		// set(Register64.RBP, stackTop);
 
 		push(baseStackValue);
 		push(baseStackValue + 1L); // why?
@@ -113,15 +114,8 @@ public final class ELFLoader {
 		final int argc = commandLineArguments.length;
 		set(Register64.RDI, BitUtils.asLong(argc));
 
-		// final Pair<Long, Long> p =
 		loadCommandLineArgumentsAndEnvironmentVariables(
-				stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
-
-		// final long argv = p.first();
-		// set(Register64.RSI, argv);
-
-		// final long envp = p.second();
-		// set(Register64.RDX, envp);
+				elf, stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
 
 		if (elf.getSectionByName(".preinit_array").isPresent()) {
 			runPreInitArray();
@@ -358,12 +352,56 @@ public final class ELFLoader {
 		return count;
 	}
 
-	private /*Pair<Long, Long>*/ void loadCommandLineArgumentsAndEnvironmentVariables(
-			final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
+	private void loadCommandLineArgumentsAndEnvironmentVariables(
+			final ELF elf, final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
+		/*
+		┌────────────────┐
+		│      argc      │ ◄─── RSP
+		├────────────────┤
+		│     argv[0]    │ ───────────────┐
+		├────────────────┤                │
+		│     argv[1]    │ ───────────────┼─┐
+		├────────────────┤                │ │
+		│      ...       │                │ │
+		├────────────────┤                │ │
+		│      NULL      │ argv[argc]     │ │
+		├────────────────┤                │ │
+		│     envp[0]    │ ───────────────┼─┼─┐
+		├────────────────┤                │ │ │
+		│     envp[1]    │ ───────────────┼─┼─┼─┐
+		├────────────────┤                │ │ │ │
+		│      ...       │                │ │ │ │
+		├────────────────┤                │ │ │ │
+		│      NULL      │ envp[envc]     │ │ │ │
+		├────────────────┤                │ │ │ │
+		│ auxv[0].a_type │                │ │ │ │
+		├────────────────┤                │ │ │ │
+		│ auxv[0].a_val  │                │ │ │ │
+		├────────────────┤                │ │ │ │
+		│      ...       │                │ │ │ │
+		├────────────────┤                │ │ │ │
+		│    AT_NULL     │ auxv[n].a_type │ │ │ │
+		├────────────────┤                │ │ │ │
+		│"program_name\0"│ ◄──────────────┘ │ │ │
+		├────────────────┤                  │ │ │
+		│"arg1\0"        │ ◄────────────────┘ │ │
+		├────────────────┤                    │ │
+		│"VAR1=value1\0" │ ◄──────────────────┘ │
+		├────────────────┤                      │
+		│"VAR2=value2\0" │ ◄────────────────────┘
+		├────────────────┤
+		│...             │
+		└────────────────┘
+
+		Helper program: https://godbolt.org/z/z1ccPYrWd
+		 */
+
 		final long wordSize = is32Bit ? 4L : 8L;
 
+        final long argc = commandLineArguments.length;
+
 		final Map<String, String> environmentVariables = System.getenv();
-		final long numEnv = BitUtils.asLong(environmentVariables.size());
+		final long envc = BitUtils.asLong(environmentVariables.size());
 
 		final long totalEnvBytes = getNumEnvBytes(environmentVariables);
 		final long totalEnvBytesAligned = align(totalEnvBytes, wordSize);
@@ -371,15 +409,15 @@ public final class ELFLoader {
 		final long totalCliBytes = getNumCliBytes(commandLineArguments);
 		final long totalCliBytesAligned = align(totalCliBytes, wordSize);
 
-		// TODO: implement this
-		final long numAuxvEntries = 0L;
+		final List<AuxiliaryEntry> auxv = getAuxiliaryVector(elf);
+		final long numAuxvEntries = auxv.size();
 
 		// after computing total sizes:
 		long p = stackBase
 				- (wordSize // argc
 						+ wordSize * commandLineArguments.length
 						+ wordSize // NULL after argv
-						+ wordSize * numEnv
+						+ wordSize * envc
 						+ wordSize // NULL after envp
 						+ 2 * wordSize * numAuxvEntries
 						+ 2 * wordSize // AT_NULL terminator
@@ -430,12 +468,24 @@ public final class ELFLoader {
 		p += wordSize;
 
 		// optional: auxv pairs
-		// ...
+		for (final AuxiliaryEntry ae : auxv) {
+			mem.initialize(p, ae.type().getCode());
+			p += wordSize;
+			mem.initialize(p, ae.type().getCode());
+			p += wordSize;
+		}
 
 		// AT_NULL terminator (auxv end)
 		mem.initialize(p, wordSize * 2, (byte) 0x00);
+	}
 
-		// return new Pair<>(argv, envp);
+	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {
+		return List.of(
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_PHNUM, elf.getProgramHeaderTableLength()),
+				new AuxiliaryEntry(
+						AuxiliaryEntryType.AT_PHDR, elf.getFileHeader().programHeaderTableOffset()),
+				new AuxiliaryEntry(
+						AuxiliaryEntryType.AT_PHENT, elf.getFileHeader().programHeaderTableEntrySize()));
 	}
 
 	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {
