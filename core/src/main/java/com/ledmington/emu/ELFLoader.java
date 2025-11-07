@@ -83,7 +83,8 @@ public final class ELFLoader {
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
-	 * @param commandLineArguments The arguments to pass to the program. Must include the name of the program as the first argument.
+	 * @param commandLineArguments The arguments to pass to the program. Must include the name of the program as the
+	 *     first argument.
 	 * @param baseAddress The address where to start loading the file.
 	 * @param baseStackAddress The address where to place the base of the stack.
 	 * @param stackSize The size in bytes of the stack.
@@ -108,6 +109,7 @@ public final class ELFLoader {
 		// These are fake instructions to set up the stack
 		set(Register64.RSP, stackTop);
 
+		// Do we *actually* need to do this?
 		push(baseStackValue);
 		push(baseStackValue + 1L); // why?
 
@@ -330,28 +332,6 @@ public final class ELFLoader {
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 	}
 
-	private long getNumEnvBytes(final Map<String, String> env) {
-		long count = 0L;
-		for (final Map.Entry<String, String> envVar : env.entrySet()) {
-			// "<key>=<value>\0"
-			count += envVar.getKey().length() + 1L + envVar.getValue().length() + 1L;
-		}
-		return count;
-	}
-
-	private long align(final long value, final long alignment) {
-		return ((value % alignment) == 0L) ? value : ((value & (alignment - 1L)) + alignment);
-	}
-
-	private long getNumCliBytes(final String... args) {
-		long count = 0L;
-		for (final String arg : args) {
-			// "<arg>\0"
-			count += arg.length() + 1L;
-		}
-		return count;
-	}
-
 	private void loadCommandLineArgumentsAndEnvironmentVariables(
 			final ELF elf, final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		/*
@@ -398,85 +378,75 @@ public final class ELFLoader {
 
 		final long wordSize = is32Bit ? 4L : 8L;
 
-        final long argc = commandLineArguments.length;
+		final long argc = commandLineArguments.length;
+
+		if (argc == 0) {
+			throw new AssertionError("Program name missing as first command-line argument.");
+		}
 
 		final Map<String, String> environmentVariables = System.getenv();
 		final long envc = BitUtils.asLong(environmentVariables.size());
 
-		final long totalEnvBytes = getNumEnvBytes(environmentVariables);
-		final long totalEnvBytesAligned = align(totalEnvBytes, wordSize);
-
-		final long totalCliBytes = getNumCliBytes(commandLineArguments);
-		final long totalCliBytesAligned = align(totalCliBytes, wordSize);
-
 		final List<AuxiliaryEntry> auxv = getAuxiliaryVector(elf);
 		final long numAuxvEntries = auxv.size();
 
-		// after computing total sizes:
-		long p = stackBase
-				- (wordSize // argc
-						+ wordSize * commandLineArguments.length
-						+ wordSize // NULL after argv
-						+ wordSize * envc
-						+ wordSize // NULL after envp
-						+ 2 * wordSize * numAuxvEntries
-						+ 2 * wordSize // AT_NULL terminator
-						+ totalCliBytesAligned
-						+ totalEnvBytesAligned);
+		long stringsOffset = stackBase
+				+ wordSize
+						* (1 // argc
+								+ commandLineArguments.length // argv
+								+ 1 // NULL
+								+ envc // envp
+								+ 1 // NULL
+								+ 2 * numAuxvEntries // auxv
+								+ 2 // auxv[n]
+						);
 
-		// write argc
-		mem.initialize(
-				p,
-				is32Bit
-						? BitUtils.asLEBytes(commandLineArguments.length)
-						: BitUtils.asLEBytes((long) commandLineArguments.length));
-		p += wordSize;
+		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(true);
+		final StringBuilder sb = new StringBuilder();
 
-		// write argv pointers
-		long currentArgPointer = stackBase - totalEnvBytesAligned - totalCliBytesAligned;
-		for (final String arg : commandLineArguments) {
-			mem.initialize(
-					p, is32Bit ? BitUtils.asLEBytes((int) currentArgPointer) : BitUtils.asLEBytes(currentArgPointer));
+		if (is32Bit) {
+			// TODO
+			notImplemented();
+		} else {
+			wb.write(argc);
+			for (final String arg : commandLineArguments) {
+				wb.write(stringsOffset);
+				sb.append(arg).append('\0');
+				stringsOffset += (arg.length() + 1);
+			}
+			wb.write(0L); // argv[argc]
 
-			final byte[] argBytes = arg.getBytes(StandardCharsets.UTF_8);
-			mem.initialize(currentArgPointer, argBytes);
-			mem.initialize(currentArgPointer + argBytes.length, (byte) 0x00);
-			currentArgPointer += argBytes.length + 1;
-			p += wordSize;
+			for (final Map.Entry<String, String> env : environmentVariables.entrySet()) {
+				wb.write(stringsOffset);
+				sb.append(env.getKey()).append('=').append(env.getValue()).append('\0');
+				stringsOffset += (env.getKey().length() + 1 + env.getValue().length() + 1);
+			}
+			wb.write(0L); // envp[envc]
+
+			for (final AuxiliaryEntry ae : auxv) {
+				wb.write(ae.type().getCode());
+				wb.write(ae.value());
+			}
+			// auxv[n]
+			wb.write(AuxiliaryEntryType.AT_NULL.getCode());
+			wb.write(0L);
+
+			// Align strings to wordSize
+			while ((sb.length() % wordSize) != 0) {
+				sb.append('\0');
+			}
+
+			// Dump strings at the end
+			wb.write(sb.toString().getBytes(StandardCharsets.UTF_8));
 		}
 
-		// NULL after argv
-		mem.initialize(p, wordSize, (byte) 0x00);
-		p += wordSize;
+		final byte[] content = wb.array();
 
-		// write envp pointers
-		long currentEnvPointer = stackBase - totalEnvBytesAligned;
-		for (final Map.Entry<String, String> e : environmentVariables.entrySet()) {
-			final String envString = e.getKey() + "=" + e.getValue();
-			final byte[] envBytes = envString.getBytes(StandardCharsets.UTF_8);
-			mem.initialize(
-					p, is32Bit ? BitUtils.asLEBytes((int) currentEnvPointer) : BitUtils.asLEBytes(currentEnvPointer));
-
-			mem.initialize(currentEnvPointer, envBytes);
-			mem.initialize(currentEnvPointer + envBytes.length, (byte) 0x00);
-			currentEnvPointer += envBytes.length + 1;
-			p += wordSize;
+		if ((content.length % wordSize) != 0) {
+			throw new AssertionError("Content on the stack is not word-aligned.");
 		}
 
-		// NULL after envp
-		mem.initialize(p, wordSize, (byte) 0x00);
-		p += wordSize;
-
-		// optional: auxv pairs
-		for (final AuxiliaryEntry ae : auxv) {
-			mem.initialize(p, ae.type().getCode());
-			p += wordSize;
-			mem.initialize(p, ae.type().getCode());
-			p += wordSize;
-		}
-
-		// AT_NULL terminator (auxv end)
-		mem.initialize(p, wordSize * 2, (byte) 0x00);
+		mem.initialize(stackBase, content);
 	}
 
 	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {
