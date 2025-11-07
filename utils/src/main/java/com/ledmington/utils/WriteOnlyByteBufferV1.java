@@ -40,14 +40,14 @@ public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
 		this.isLittleEndian = isLittleEndian;
 	}
 
-    /**
-     * Creates an empty WriteOnlyByteBuffer with a default capacity and the given endianness.
-     *
-     * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
-     */
-    public WriteOnlyByteBufferV1( final boolean isLittleEndian) {
-      this(DEFAULT_CAPACITY,isLittleEndian);
-    }
+	/**
+	 * Creates an empty WriteOnlyByteBuffer with a default capacity and the given endianness.
+	 *
+	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
+	 */
+	public WriteOnlyByteBufferV1(final boolean isLittleEndian) {
+		this(DEFAULT_CAPACITY, isLittleEndian);
+	}
 
 	/**
 	 * Creates a big-endian WriteOnlyByteBuffer with the given capacity. It is equivalent to calling {@code new
