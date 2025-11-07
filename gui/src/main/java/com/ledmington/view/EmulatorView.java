@@ -234,12 +234,12 @@ public final class EmulatorView extends Stage {
 		this.cpu = new X86CpuAdapter(mem);
 
 		// TODO: implement this
-		final String[] commandLineArguments = new String[0];
+		final String[] args = new String[] {file.toString()};
 
 		final ELFLoader loader = new ELFLoader(cpu, mem);
 		loader.load(
 				ELFParser.parse(file.toPath().toString()),
-				commandLineArguments,
+				args,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),
 				EmulatorConstants.getStackSize(),

@@ -582,23 +582,15 @@ public final class EmuDB {
 		loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
 	}
 
-	private void loadFile(final String file, final String... arguments) {
-		this.filepath = Path.of(file).normalize().toAbsolutePath();
-		this.savedArguments = arguments;
-		this.currentFile = ELFParser.parse(file);
+	private void loadFile(final String filename, final String... commandLineArguments) {
+		this.filepath = Path.of(filename).normalize().toAbsolutePath();
+		this.savedArguments = commandLineArguments;
+		this.currentFile = ELFParser.parse(filename);
 
 		this.context = createDefaultExecutionContext();
 
 		final Emu emu = new Emu(this.context, this.loader);
-		emu.load(file, arguments);
-
-		loader.load(
-				this.currentFile,
-				arguments,
-				EmulatorConstants.getBaseAddress(),
-				EmulatorConstants.getBaseStackAddress(),
-				EmulatorConstants.getStackSize(),
-				EmulatorConstants.getBaseStackValue());
+		emu.load(filename, commandLineArguments);
 
 		final FileHeader fh = this.currentFile.getFileHeader();
 		this.context.cpu().setInstructionPointer(EmulatorConstants.getBaseAddress() + fh.entryPointVirtualAddress());
@@ -662,7 +654,7 @@ public final class EmuDB {
 				} else {
 					out.printf("Command '%s' not found. Try 'help'.%n", command);
 					final List<String> similarCommands = commands.keySet().stream()
-							.filter(c -> levenshteinDistance(c, command) == 1)
+							.filter(c -> levenshteinDistance(c, command) <= 2)
 							.toList();
 					if (!similarCommands.isEmpty()) {
 						out.printf(

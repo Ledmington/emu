@@ -17,9 +17,11 @@
  */
 package com.ledmington.emu;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
@@ -143,9 +145,14 @@ public final class Emu {
 					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
 		}
 
+		// Add again the filename as first command-line argument
+		final String[] args = Stream.concat(Stream.of(filename), Arrays.stream(commandLineArguments))
+				.toList()
+				.toArray(new String[0]);
+
 		loader.load(
 				elf,
-				commandLineArguments,
+				args,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),
 				EmulatorConstants.getStackSize(),
