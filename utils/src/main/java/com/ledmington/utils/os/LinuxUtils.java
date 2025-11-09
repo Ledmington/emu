@@ -19,25 +19,28 @@ package com.ledmington.utils.os;
 
 import com.ledmington.utils.ProcessUtils;
 
+/** Linux-specific implementation of OSUtils. */
 public final class LinuxUtils implements OSUtils {
 
+	LinuxUtils() {}
+
 	@Override
-	public int getUID() {
+	public int getUserID() {
 		return Integer.parseInt(ProcessUtils.run("id", "-u"));
 	}
 
 	@Override
-	public int getEffectiveUID() {
+	public int getEffectiveUserID() {
 		return Integer.parseInt(ProcessUtils.run("id", "-u", "-r"));
 	}
 
 	@Override
-	public int getGID() {
+	public int getGroupID() {
 		return Integer.parseInt(ProcessUtils.run("id", "-g"));
 	}
 
 	@Override
-	public int getEffectiveGID() {
+	public int getEffectiveGroupID() {
 		return Integer.parseInt(ProcessUtils.run("id", "-g", "-r"));
 	}
 }

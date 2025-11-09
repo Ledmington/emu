@@ -22,13 +22,27 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+/** A collection of common utilities to handle processes. */
 public final class ProcessUtils {
 
 	private ProcessUtils() {}
 
+	/**
+	 * Runs the given command in a process, without stdin, capturing its stdout and stderr and checking if the exit code
+	 * is 0.
+	 *
+	 * @param cmd The command to be executed.
+	 * @return The mixed stdout and stderr of the process.
+	 */
 	public static String run(final String... cmd) {
+		Objects.requireNonNull(cmd, "Null command.");
+		if (cmd.length == 0) {
+			throw new IllegalArgumentException("Empty command.");
+		}
+
 		final Process process;
 		final StringBuilder output = new StringBuilder();
 		try {

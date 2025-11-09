@@ -17,4 +17,10 @@
  */
 package com.ledmington.emu;
 
+/**
+ * An entry of the <code>auxv</code> vector.
+ *
+ * @param type The type of the entry.
+ * @param value The value of the entry.
+ */
 public record AuxiliaryEntry(AuxiliaryEntryType type, long value) {}

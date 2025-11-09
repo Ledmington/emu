@@ -19,21 +19,42 @@ package com.ledmington.utils.os;
 
 import java.util.Locale;
 
+/** A collection of common utilities about OS-specific information. */
 // TODO: find a better name
 public interface OSUtils {
 
+	/** True if the OS this emulator is currently running on Windows, false otherwise. */
 	boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
 
-	static OSUtils getInstance() {
-		// TODO: add MacOS
-		return IS_WINDOWS ? new WindowsUtils() : new LinuxUtils();
-	}
+	/** The immutable singleton instance of OSUtils. */
+	// TODO: add MacOS
+	OSUtils INSTANCE = IS_WINDOWS ? new WindowsUtils() : new LinuxUtils();
 
-	int getUID();
+	/**
+	 * Returns the real user ID (UID) of the process owner.
+	 *
+	 * @return The real user ID (UID) of the process owner.
+	 */
+	int getUserID();
 
-	int getEffectiveUID();
+	/**
+	 * Returns the effective user ID (EUID) of the process owner.
+	 *
+	 * @return The effective user ID (EUID) of the process owner.
+	 */
+	int getEffectiveUserID();
 
-	int getGID();
+	/**
+	 * Returns the real group ID (GID) of the process owner.
+	 *
+	 * @return The real group ID (GID) of the process owner.
+	 */
+	int getGroupID();
 
-	int getEffectiveGID();
+	/**
+	 * Returns the effective group ID (EGID) of the process owner.
+	 *
+	 * @return The effective group ID (EGID) of the process owner.
+	 */
+	int getEffectiveGroupID();
 }

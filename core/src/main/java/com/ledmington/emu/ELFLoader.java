@@ -59,6 +59,7 @@ import com.ledmington.utils.os.OSUtils;
  * href="https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779" >here</a> and <a
  * href="https://gitlab.com/x86-psABIs/x86-64-ABI">here</a>.
  */
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class ELFLoader {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-loader");
@@ -378,8 +379,6 @@ public final class ELFLoader {
 		Helper program: https://godbolt.org/z/z1ccPYrWd
 		 */
 
-		final long wordSize = is32Bit ? 4L : 8L;
-
 		final long argc = commandLineArguments.length;
 
 		if (argc == 0) {
@@ -391,6 +390,8 @@ public final class ELFLoader {
 
 		final List<AuxiliaryEntry> auxv = getAuxiliaryVector(elf);
 		final long numAuxvEntries = auxv.size();
+
+		final long wordSize = is32Bit ? 4L : 8L;
 
 		long stringsOffset = stackBase
 				+ wordSize
@@ -452,17 +453,17 @@ public final class ELFLoader {
 	}
 
 	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {
-		final OSUtils os = OSUtils.getInstance();
+		final OSUtils os = OSUtils.INSTANCE;
 		return List.of(
 				new AuxiliaryEntry(AuxiliaryEntryType.AT_PHNUM, elf.getProgramHeaderTableLength()),
 				new AuxiliaryEntry(
 						AuxiliaryEntryType.AT_PHDR, elf.getFileHeader().programHeaderTableOffset()),
 				new AuxiliaryEntry(
 						AuxiliaryEntryType.AT_PHENT, elf.getFileHeader().programHeaderTableEntrySize()),
-				new AuxiliaryEntry(AuxiliaryEntryType.AT_UID, os.getUID()),
-				new AuxiliaryEntry(AuxiliaryEntryType.AT_EUID, os.getEffectiveUID()),
-				new AuxiliaryEntry(AuxiliaryEntryType.AT_GID, os.getGID()),
-				new AuxiliaryEntry(AuxiliaryEntryType.AT_EGID, os.getEffectiveGID()));
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_UID, os.getUserID()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_EUID, os.getEffectiveUserID()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_GID, os.getGroupID()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_EGID, os.getEffectiveGroupID()));
 	}
 
 	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {

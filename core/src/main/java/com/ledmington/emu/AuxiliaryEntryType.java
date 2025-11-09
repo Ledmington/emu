@@ -99,12 +99,17 @@ public enum AuxiliaryEntryType {
 	private final long code;
 
 	AuxiliaryEntryType(final long code) {
-		if (code < 0L || code > 31L) {
+		if (code < 0L || (code > 26L && code < 31L) || code > 31L) {
 			throw new IllegalArgumentException(String.format("Invalid code: %,d.", code));
 		}
 		this.code = code;
 	}
 
+	/**
+	 * Returns the code of this type.
+	 *
+	 * @return The code of this type.
+	 */
 	public long getCode() {
 		return code;
 	}

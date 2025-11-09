@@ -17,25 +17,28 @@
  */
 package com.ledmington.utils.os;
 
+/** Windows-specific implementation of OSUtils. */
 public final class WindowsUtils implements OSUtils {
 
+	WindowsUtils() {}
+
 	@Override
-	public int getUID() {
+	public int getUserID() {
 		throw new UnsupportedOperationException("Not implemented.");
 	}
 
 	@Override
-	public int getEffectiveUID() {
+	public int getEffectiveUserID() {
 		throw new UnsupportedOperationException("Not implemented.");
 	}
 
 	@Override
-	public int getGID() {
+	public int getGroupID() {
 		throw new UnsupportedOperationException("Not implemented.");
 	}
 
 	@Override
-	public int getEffectiveGID() {
+	public int getEffectiveGroupID() {
 		throw new UnsupportedOperationException("Not implemented.");
 	}
 }

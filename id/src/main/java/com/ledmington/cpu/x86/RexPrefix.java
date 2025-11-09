@@ -46,6 +46,7 @@ public record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 * Creates a REX prefix object by parsing the given byte.
 	 *
 	 * @param b The byte to be parsed.
+	 * @return A proper RexPrefix instance corresponding to the given byte.
 	 */
 	public static RexPrefix of(final byte b) {
 		if (!isREXPrefix(b)) {

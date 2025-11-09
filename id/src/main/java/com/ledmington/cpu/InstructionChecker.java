@@ -42,7 +42,7 @@ import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
 
 /** A class which checks the validity of X86 instructions. */
-@SuppressWarnings({"PMD.FieldDeclarationsShouldBeAtStartOfClass", "PMD.AvoidLiteralsInIfCondition"})
+@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 public final class InstructionChecker {
 
 	private static final Map<Opcode, List<OperandTypeList>> CASES = Map.<Opcode, List<OperandTypeList>>ofEntries(

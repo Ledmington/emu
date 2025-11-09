@@ -17,19 +17,41 @@
  */
 package com.ledmington.utils;
 
+/** A collection of common utilities regarding terminal interaction. */
 public final class TerminalUtils {
 
 	private TerminalUtils() {}
 
+	/** The character sequence to reset terminal colors and decorations to the default state. */
 	public static final String ANSI_RESET = "\u001b[0m";
+
+	/** The character sequence to set/reset boldness. */
 	public static final String ANSI_BOLD = "\u001b[1m";
+
+	/** The character sequence to set/reset foreground color red. */
 	public static final String ANSI_RED = "\u001b[31m";
+
+	/** The character sequence to set/reset foreground color green. */
 	public static final String ANSI_GREEN = "\u001b[32m";
+
+	/** The character sequence to set/reset foreground color yellow. */
 	public static final String ANSI_YELLOW = "\u001b[33m";
+
+	/** The character sequence to set/reset foreground color blue. */
 	public static final String ANSI_BLUE = "\u001b[34m";
+
+	/** The character sequence to set/reset foreground color magenta. */
 	public static final String ANSI_MAGENTA = "\u001b[35m";
+
+	/** The character sequence to set/reset foreground color cyan. */
 	public static final String ANSI_CYAN = "\u001b[36m";
+
+	/** The character sequence to set/reset foreground color white. */
 	public static final String ANSI_WHITE = "\u001b[37m";
+
+	/** The character sequence to set/reset foreground color gray. */
 	public static final String ANSI_GRAY = "\u001b[90m";
+
+	/** The character sequence to set/reset foreground color purple. */
 	public static final String ANSI_PURPLE = "\u001b[95m";
 }

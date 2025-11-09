@@ -431,7 +431,6 @@ public class X86Cpu implements X86Emulator {
 	private long pop() {
 		final long rsp = rf.get(Register64.RSP);
 		final long value = mem.read8(rsp);
-		System.out.printf("Value at [0x%016x] = 0x%016x%n", rsp, value);
 		// If we read the baseStackValue, we have exhausted the stack
 		if (value == EmulatorConstants.getBaseStackValue()) {
 			throw new StackUnderflow();

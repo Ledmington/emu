@@ -20,6 +20,7 @@ package com.ledmington.cpu;
 import java.util.Objects;
 
 /** All possible operand type combinations. */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public enum OperandTypeList {
 
 	/** The 'list of operands' corresponding to no operands. */
@@ -493,6 +494,11 @@ public enum OperandTypeList {
 		}
 	}
 
+	/**
+	 * Returns the number of operand types.
+	 *
+	 * @return The number of operand types.
+	 */
 	public int numOperands() {
 		if (op4 != null) {
 			return 4;
