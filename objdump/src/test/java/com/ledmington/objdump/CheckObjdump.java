@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -51,7 +51,7 @@ public final class CheckObjdump {
 					.normalize()
 					.toAbsolutePath()
 					.toString();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -73,115 +73,83 @@ public final class CheckObjdump {
 		}
 	}
 
-	private static List<String> runSystemObjdump(final Path p) {
+	private static String runSystemObjdump(final Path p) {
 		final String systemObjdump = "/usr/bin/objdump";
 		final String[] cmd = {systemObjdump, "-d", "-Mintel", p.toString()};
-		return List.of(ProcessUtils.run(cmd).split("\n"));
+		return ProcessUtils.run(cmd);
 	}
 
-	private static List<String> runCustomObjdump(final Path p) {
+	private static String runCustomObjdump(final Path p) {
 		final String[] cmd = {"java", "-jar", fatJarPath, "-d", p.toString()};
-		return List.of(ProcessUtils.run(cmd).split("\n"));
+		return ProcessUtils.run(cmd);
 	}
 
-	private static void checkDiff(final List<String> expected, final List<String> actual) {
+	private static void checkDiff(final String expected, final String actual) {
 		if (expected.equals(actual)) {
 			out.println(TerminalUtils.ANSI_GREEN + "OK" + TerminalUtils.ANSI_RESET);
 			return;
 		}
 
-		out.println(TerminalUtils.ANSI_RED + "OK" + TerminalUtils.ANSI_RESET);
+		out.println(TerminalUtils.ANSI_RED + "ERROR" + TerminalUtils.ANSI_RESET);
 
-		final int minSize = Math.min(expected.size(), actual.size());
-		final int maxSize = Math.max(expected.size(), actual.size());
-		// 'r' stands for "Reference" and 'a' stands for "Actual"
-		final String fmtExpected = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |r| %s\u001b[47m \u001b[0m%n";
-		final String fmtActual = " %" + (1 + (int) Math.ceil(Math.log10(maxSize))) + "d |a| %s\u001b[47m \u001b[0m%n";
-
-		// start of the different block
-		int start = -1;
-		for (int i = 0; i < minSize; i++) {
-			final String e = expected.get(i);
-			final String a = actual.get(i);
-			if (e.equals(a)) {
-				if (start != -1) {
-					out.println("----------");
-					for (int j = start; j < i; j++) {
-						final String a2 = actual.get(j);
-						out.printf(fmtActual, j, a2);
-					}
-					start = -1;
-					out.println("==========");
-				}
-			} else {
-				if (start == -1) {
-					start = i;
-					out.println("==========");
-				}
-				out.printf(fmtExpected, i, e);
-			}
+		final Path fileExpected;
+		final Path fileActual;
+		try {
+			fileExpected = Files.createTempFile("output-expected-", ".txt");
+			fileActual = Files.createTempFile("output-actual-", ".txt");
+			Files.writeString(fileExpected, expected);
+			Files.writeString(fileActual, actual);
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
 		}
 
-		if (expected.size() > minSize) {
-			for (int i = minSize; i < expected.size(); i++) {
-				final String e = expected.get(i);
-				out.printf(fmtExpected, i, e);
-			}
-		} else if (actual.size() > minSize) {
-			for (int i = minSize; i < actual.size(); i++) {
-				final String a = actual.get(i);
-				out.printf(fmtActual, i, a);
-			}
-		}
-
+		out.println(ProcessUtils.run(
+				"diff", "--unified=3", "--color=always", fileExpected.toString(), fileActual.toString()));
 		out.println();
+
+		try {
+			Files.deleteIfExists(fileExpected);
+			Files.deleteIfExists(fileActual);
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static void test(final Path p) {
 		out.print(p.toString() + " ... ");
-		final List<String> outputSystemObjdump = runSystemObjdump(p);
-		final List<String> outputCustomObjdump = runCustomObjdump(p);
+		final String outputSystemObjdump = runSystemObjdump(p);
+		final String outputCustomObjdump = runCustomObjdump(p);
 		checkDiff(outputSystemObjdump, outputCustomObjdump);
 	}
 
 	public static void main(final String[] args) {
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			out.println();
-			out.flush();
-		}));
+		Runtime.getRuntime().addShutdownHook(new Thread(out::flush));
 
 		if (OSUtils.IS_WINDOWS) {
 			out.println("It seems that you are running on a windows machine. This test will be disabled.");
 			System.exit(0);
 		}
 
-		final List<Path> elfFiles;
-		if (args.length > 0) {
-			elfFiles = Arrays.stream(args)
-					.map(s -> Path.of(s).normalize().toAbsolutePath())
-					.filter(p -> {
-						if (!Files.exists(p)) {
-							out.printf("File '%s' does not exist, skipping it.%n", p);
-							return false;
-						}
-						return true;
-					})
-					.filter(p -> {
-						if (!isELF(p)) {
-							out.printf("File '%s' is not an ELF, skipping it.%n", p);
-							return false;
-						}
-						return true;
-					})
-					.distinct()
-					.sorted()
-					.toList();
-		} else {
+		if (args.length == 0) {
 			out.println("No arguments provided.");
 			out.flush();
 			out.close();
 			System.exit(-1);
 			return;
+		}
+
+		final List<Path> elfFiles = new ArrayList<>();
+		for (final String arg : args) {
+			final Path p = Path.of(arg).normalize().toAbsolutePath();
+			if (!Files.exists(p)) {
+				out.printf("File '%s' does not exist, skipping it.%n", p);
+				continue;
+			}
+			if (!isELF(p)) {
+				out.printf("File '%s' is not an ELF, skipping it.%n", p);
+				continue;
+			}
+			elfFiles.add(p);
 		}
 
 		for (int i = 0; i < elfFiles.size(); i++) {
