@@ -17,21 +17,20 @@
  */
 package com.ledmington.objdump;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
+
+import com.ledmington.utils.ProcessUtils;
 
 @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckObjdump {
@@ -75,41 +74,15 @@ public final class CheckObjdump {
 		}
 	}
 
-	private static List<String> run(final String... cmd) {
-		final Process process;
-		final List<String> lines = new ArrayList<>();
-		try {
-			process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-			try (BufferedReader reader =
-					new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-				String line = reader.readLine();
-				while (line != null) {
-					lines.add(line);
-					line = reader.readLine();
-				}
-			}
-			final int exitCode = process.waitFor();
-			if (exitCode != 0) {
-				out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d%n", exitCode);
-				out.println(String.join("\n", lines));
-				out.println();
-			}
-		} catch (final IOException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		return lines;
-	}
-
 	private static List<String> runSystemObjdump(final Path p) {
 		final String systemObjdump = "/usr/bin/objdump";
 		final String[] cmd = {systemObjdump, "-d", "-Mintel", p.toString()};
-		return run(cmd);
+		return List.of(ProcessUtils.run(cmd).split("\n"));
 	}
 
 	private static List<String> runCustomObjdump(final Path p) {
 		final String[] cmd = {"java", "-jar", fatJarPath, "-d", p.toString()};
-		return run(cmd);
+		return List.of(ProcessUtils.run(cmd).split("\n"));
 	}
 
 	private static void checkDiff(final List<String> expected, final List<String> actual) {

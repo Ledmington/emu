@@ -17,10 +17,8 @@
  */
 package com.ledmington.readelf;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -31,6 +29,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
+
+import com.ledmington.utils.ProcessUtils;
 
 @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckReadelf {
@@ -74,48 +74,19 @@ public final class CheckReadelf {
 		}
 	}
 
-	private static String run(final String... cmd) {
-		final Process process;
-		final StringBuilder output = new StringBuilder();
-		try {
-			process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-			try (BufferedReader reader =
-					new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-				String line = reader.readLine();
-				while (line != null) {
-					if (!output.isEmpty()) {
-						output.append('\n');
-					}
-					output.append(line);
-					line = reader.readLine();
-				}
-			}
-			final int exitCode = process.waitFor();
-			if (exitCode != 0) {
-				out.printf(" \u001b[31mERROR\u001b[0m: exit code = %d%n", exitCode);
-				out.println(output);
-				out.println();
-			}
-		} catch (final IOException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		return output.toString();
-	}
-
 	private static String runSystemReadelf(final Path p, final boolean wide) {
 		final String systemReadelf = "/usr/bin/readelf";
 		final String[] cmd = wide
 				? new String[] {systemReadelf, "-a", "-W", p.toString()}
 				: new String[] {systemReadelf, "-a", p.toString()};
-		return run(cmd);
+		return ProcessUtils.run(cmd);
 	}
 
 	private static String runCustomReadelf(final Path p, final boolean wide) {
 		final String[] cmd = wide
 				? new String[] {"java", "-jar", fatJarPath, "-a", "-W", p.toString()}
 				: new String[] {"java", "-jar", fatJarPath, "-a", p.toString()};
-		return run(cmd);
+		return ProcessUtils.run(cmd);
 	}
 
 	private static void checkDiff(final String expected, final String actual) {
@@ -137,7 +108,8 @@ public final class CheckReadelf {
 			throw new RuntimeException(e);
 		}
 
-		out.println(run("diff", "--unified=3", "--color=always", fileExpected.toString(), fileActual.toString()));
+		out.println(ProcessUtils.run(
+				"diff", "--unified=3", "--color=always", fileExpected.toString(), fileActual.toString()));
 		out.println();
 
 		try {

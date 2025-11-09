@@ -45,6 +45,7 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.sym.SymbolTableEntry;
 import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
+import com.ledmington.emu.os.OSUtils;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -450,12 +451,17 @@ public final class ELFLoader {
 	}
 
 	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {
+		final OSUtils os = OSUtils.getInstance();
 		return List.of(
 				new AuxiliaryEntry(AuxiliaryEntryType.AT_PHNUM, elf.getProgramHeaderTableLength()),
 				new AuxiliaryEntry(
 						AuxiliaryEntryType.AT_PHDR, elf.getFileHeader().programHeaderTableOffset()),
 				new AuxiliaryEntry(
-						AuxiliaryEntryType.AT_PHENT, elf.getFileHeader().programHeaderTableEntrySize()));
+						AuxiliaryEntryType.AT_PHENT, elf.getFileHeader().programHeaderTableEntrySize()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_UID, os.getUID()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_EUID, os.getEffectiveUID()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_GID, os.getGID()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_EGID, os.getEffectiveGID()));
 	}
 
 	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {
