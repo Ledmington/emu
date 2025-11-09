@@ -27,11 +27,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Stream;
 
 import com.ledmington.utils.ProcessUtils;
 import com.ledmington.utils.TerminalUtils;
+import com.ledmington.utils.os.OSUtils;
 
 @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckObjdump {
@@ -39,8 +39,6 @@ public final class CheckObjdump {
 	private static final PrintWriter out = System.console() != null
 			? System.console().writer()
 			: new PrintWriter(System.out, false, StandardCharsets.UTF_8);
-	private static final boolean isWindows =
-			System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
 	private static final String fatJarPath;
 
 	static {
@@ -152,7 +150,7 @@ public final class CheckObjdump {
 			out.flush();
 		}));
 
-		if (isWindows) {
+		if (OSUtils.IS_WINDOWS) {
 			out.println("It seems that you are running on a windows machine. This test will be disabled.");
 			System.exit(0);
 		}

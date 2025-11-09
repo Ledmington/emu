@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu.os;
+package com.ledmington.utils.os;
 
 public final class WindowsUtils implements OSUtils {
 

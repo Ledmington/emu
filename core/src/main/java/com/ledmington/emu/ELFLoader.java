@@ -45,12 +45,12 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.sym.SymbolTableEntry;
 import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
-import com.ledmington.emu.os.OSUtils;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.os.OSUtils;
 
 /**
  * Loads an ELF into memory and sets it up for execution.

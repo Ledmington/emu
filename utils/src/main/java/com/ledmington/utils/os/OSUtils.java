@@ -15,18 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.ledmington.emu.os;
+package com.ledmington.utils.os;
 
 import java.util.Locale;
 
 // TODO: find a better name
 public interface OSUtils {
 
+	boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
+
 	static OSUtils getInstance() {
-		final boolean isWindows =
-				System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
 		// TODO: add MacOS
-		return isWindows ? new WindowsUtils() : new LinuxUtils();
+		return IS_WINDOWS ? new WindowsUtils() : new LinuxUtils();
 	}
 
 	int getUID();
