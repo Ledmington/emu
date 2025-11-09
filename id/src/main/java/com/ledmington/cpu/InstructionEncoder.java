@@ -50,6 +50,7 @@ import com.ledmington.cpu.x86.RegisterZMM;
 import com.ledmington.cpu.x86.Registers;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.cpu.x86.SegmentedAddress;
+import com.ledmington.cpu.x86.WeirdVpcmpeqb;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
