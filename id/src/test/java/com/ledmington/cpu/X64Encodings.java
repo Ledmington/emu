@@ -166,6 +166,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
+import com.ledmington.cpu.x86.WeirdVpcmpeqb;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.SuppressFBWarnings;
 
