@@ -22,7 +22,7 @@ import com.ledmington.utils.ProcessUtils;
 /** Linux-specific implementation of OSUtils. */
 public final class LinuxUtils implements OSUtils {
 
-	LinuxUtils() {}
+	/* default */ LinuxUtils() {}
 
 	@Override
 	public int getUserID() {

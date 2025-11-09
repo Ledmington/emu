@@ -18,9 +18,10 @@
 package com.ledmington.utils.os;
 
 /** Windows-specific implementation of OSUtils. */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public final class WindowsUtils implements OSUtils {
 
-	WindowsUtils() {}
+	/* default */ WindowsUtils() {}
 
 	@Override
 	public int getUserID() {

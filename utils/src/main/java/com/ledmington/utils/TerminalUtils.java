@@ -20,8 +20,6 @@ package com.ledmington.utils;
 /** A collection of common utilities regarding terminal interaction. */
 public final class TerminalUtils {
 
-	private TerminalUtils() {}
-
 	/** The character sequence to reset terminal colors and decorations to the default state. */
 	public static final String ANSI_RESET = "\u001b[0m";
 
@@ -54,4 +52,6 @@ public final class TerminalUtils {
 
 	/** The character sequence to set/reset foreground color purple. */
 	public static final String ANSI_PURPLE = "\u001b[95m";
+
+	private TerminalUtils() {}
 }

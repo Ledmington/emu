@@ -499,6 +499,12 @@ public enum OperandTypeList {
 		return this.opt.length;
 	}
 
+	/**
+	 * Returns the i-th operand type.
+	 *
+	 * @param idx The index of the operand type.
+	 * @return The i-th operand type.
+	 */
 	public OperandType operandType(final int idx) {
 		return this.opt[idx];
 	}

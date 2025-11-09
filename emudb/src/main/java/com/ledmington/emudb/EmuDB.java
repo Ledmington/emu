@@ -70,10 +70,10 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 @SuppressWarnings({
-	"PMD.SystemPrintln",
 	"PMD.CyclomaticComplexity",
 	"PMD.AvoidInstantiatingObjectsInLoops",
-	"PMD.AvoidDuplicateLiterals"
+	"PMD.AvoidDuplicateLiterals",
+	"PMD.CouplingBetweenObjects"
 })
 public final class EmuDB {
 

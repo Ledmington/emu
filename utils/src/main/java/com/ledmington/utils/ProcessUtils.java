@@ -37,6 +37,7 @@ public final class ProcessUtils {
 	 * @param cmd The command to be executed.
 	 * @return The mixed stdout and stderr of the process.
 	 */
+	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 	public static String run(final String... cmd) {
 		Objects.requireNonNull(cmd, "Null command.");
 		if (cmd.length == 0) {

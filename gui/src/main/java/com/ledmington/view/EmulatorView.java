@@ -234,7 +234,7 @@ public final class EmulatorView extends Stage {
 		this.cpu = new X86CpuAdapter(mem);
 
 		// TODO: implement this
-		final String[] args = new String[] {file.toString()};
+		final String[] args = {file.toString()};
 
 		final ELFLoader loader = new ELFLoader(cpu, mem);
 		loader.load(
