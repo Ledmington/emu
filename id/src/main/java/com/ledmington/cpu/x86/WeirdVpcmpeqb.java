@@ -20,7 +20,7 @@ package com.ledmington.cpu.x86;
 /**
  * This specific class represents the specific case of: 'vpcmpeqb k0,ymm16,ymm17' when encoded as '62 b1 7d 20 74 c1'.
  */
-record WeirdVpcmpeqb(Opcode opcode, Operand firstOperand, Operand secondOperand, Operand thirdOperand)
+public record WeirdVpcmpeqb(Opcode opcode, Operand firstOperand, Operand secondOperand, Operand thirdOperand)
 		implements Instruction {
 
 	@Override

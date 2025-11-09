@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.Instructions;
 import com.ledmington.utils.BitUtils;
 
 final class TestDecoding extends X64Encodings {
