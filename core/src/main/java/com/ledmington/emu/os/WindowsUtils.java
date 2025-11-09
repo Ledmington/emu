@@ -17,27 +17,25 @@
  */
 package com.ledmington.emu.os;
 
-import com.ledmington.utils.ProcessUtils;
-
-public final class LinuxOSUtils implements OSUtils {
+public final class WindowsUtils implements OSUtils {
 
 	@Override
 	public int getUID() {
-		return Integer.parseInt(ProcessUtils.run("id", "-u"));
+		throw new UnsupportedOperationException("Not implemented.");
 	}
 
 	@Override
 	public int getEffectiveUID() {
-		return Integer.parseInt(ProcessUtils.run("id", "-u", "-r"));
+		throw new UnsupportedOperationException("Not implemented.");
 	}
 
 	@Override
 	public int getGID() {
-		return Integer.parseInt(ProcessUtils.run("id", "-g"));
+		throw new UnsupportedOperationException("Not implemented.");
 	}
 
 	@Override
 	public int getEffectiveGID() {
-		return Integer.parseInt(ProcessUtils.run("id", "-g", "-r"));
+		throw new UnsupportedOperationException("Not implemented.");
 	}
 }

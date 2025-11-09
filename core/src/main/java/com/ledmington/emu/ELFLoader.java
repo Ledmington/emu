@@ -111,8 +111,9 @@ public final class ELFLoader {
 		set(Register64.RSP, stackTop);
 
 		// Do we *actually* need to do this?
-		push(baseStackValue);
-		push(baseStackValue + 1L); // why?
+		push(BitUtils.asLong(commandLineArguments.length));
+		// push(baseStackValue);
+		// push(baseStackValue + 1L); // why?
 
 		final int argc = commandLineArguments.length;
 		set(Register64.RDI, BitUtils.asLong(argc));

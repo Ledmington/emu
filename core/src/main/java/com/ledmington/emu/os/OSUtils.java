@@ -26,7 +26,7 @@ public interface OSUtils {
 		final boolean isWindows =
 				System.getProperty("os.name").toLowerCase(Locale.US).contains("windows");
 		// TODO: add MacOS
-		return isWindows ? new WindowsOSUtils() : new LinuxOSUtils();
+		return isWindows ? new WindowsUtils() : new LinuxUtils();
 	}
 
 	int getUID();
