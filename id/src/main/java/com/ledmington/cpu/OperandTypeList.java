@@ -476,21 +476,17 @@ public enum OperandTypeList {
 	 */
 	RY_RY_RY_I8(OperandType.RY, OperandType.RY, OperandType.RY, OperandType.I8);
 
-	private final OperandType op1;
-	private final OperandType op2;
-	private final OperandType op3;
-	private final OperandType op4;
+	private final OperandType[] opt;
 
-	@SuppressWarnings("PMD.NullAssignment")
 	/* default */ OperandTypeList(final OperandType... ot) {
 		Objects.requireNonNull(ot);
-		this.op1 = ot.length > 0 ? Objects.requireNonNull(ot[0]) : null;
-		this.op2 = ot.length > 1 ? Objects.requireNonNull(ot[1]) : null;
-		this.op3 = ot.length > 2 ? Objects.requireNonNull(ot[2]) : null;
-		this.op4 = ot.length > 3 ? Objects.requireNonNull(ot[3]) : null;
 		final int maxOperands = 4;
 		if (ot.length > maxOperands) {
 			throw new IllegalArgumentException("Too many operand types.");
+		}
+		this.opt = new OperandType[ot.length];
+		for (int i = 0; i < ot.length; i++) {
+			this.opt[i] = Objects.requireNonNull(ot[i], "Null operand type.");
 		}
 	}
 
@@ -500,34 +496,10 @@ public enum OperandTypeList {
 	 * @return The number of operand types.
 	 */
 	public int numOperands() {
-		if (op4 != null) {
-			return 4;
-		}
-		if (op3 != null) {
-			return 3;
-		}
-		if (op2 != null) {
-			return 2;
-		}
-		if (op1 != null) {
-			return 1;
-		}
-		return 0;
+		return this.opt.length;
 	}
 
-	public OperandType firstOperandType() {
-		return op1;
-	}
-
-	public OperandType secondOperandType() {
-		return op2;
-	}
-
-	public OperandType thirdOperandType() {
-		return op3;
-	}
-
-	public OperandType fourthOperandType() {
-		return op4;
+	public OperandType operandType(final int idx) {
+		return this.opt[idx];
 	}
 }

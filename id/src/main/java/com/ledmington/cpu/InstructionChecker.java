@@ -525,10 +525,12 @@ public final class InstructionChecker {
 
 	private static boolean matches(final OperandTypeList otl, final Instruction inst) {
 		final int n = otl.numOperands();
-		return (n < 1 || matches(otl.firstOperandType(), inst.firstOperand()))
-				&& (n < 2 || matches(otl.secondOperandType(), inst.secondOperand()))
-				&& (n < 3 || matches(otl.thirdOperandType(), inst.thirdOperand()))
-				&& (n < 4 || matches(otl.fourthOperandType(), inst.fourthOperand()));
+		for (int i = 0; i < n; i++) {
+			if (!matches(otl.operandType(i), inst.operand(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static boolean matches(final OperandType opt, final Operand op) {
