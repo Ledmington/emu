@@ -27,6 +27,7 @@ import com.ledmington.mem.exc.IllegalWriteException;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.IntervalArray;
 import com.ledmington.utils.SuppressFBWarnings;
+import com.ledmington.utils.TerminalUtils;
 
 /** This is the part of the memory which implements read-write-execute permissions. */
 public final class MemoryController implements Memory {
@@ -82,16 +83,6 @@ public final class MemoryController implements Memory {
 	}
 
 	private String reportIllegalAccess(final String message, final long address, final int length) {
-		final String reset = "\u001b[0m";
-		final String bold = "\u001b[1m";
-		final String red = "\u001b[31m";
-		final String green = "\u001b[32m";
-		final String yellow = "\u001b[33m";
-		final String blue = "\u001b[34m";
-		final String magenta = "\u001b[35m";
-		final String cyan = "\u001b[36m";
-		final String white = "\u001b[37m";
-
 		final long linesAround = 5;
 		final long bytesPerLine = 16;
 
@@ -101,70 +92,70 @@ public final class MemoryController implements Memory {
 		final StringBuilder sb = new StringBuilder(256);
 
 		sb.append("\nLegend:\n ")
-				.append(white)
+				.append(TerminalUtils.ANSI_WHITE)
 				.append("Uninitialized=xx")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(red)
+				.append(TerminalUtils.ANSI_RED)
 				.append("Readable")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(green)
+				.append(TerminalUtils.ANSI_GREEN)
 				.append("Writable")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(blue)
+				.append(TerminalUtils.ANSI_BLUE)
 				.append("Executable")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(yellow)
+				.append(TerminalUtils.ANSI_YELLOW)
 				.append("Read-Write")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(magenta)
+				.append(TerminalUtils.ANSI_MAGENTA)
 				.append("Read-Execute")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(cyan)
+				.append(TerminalUtils.ANSI_CYAN)
 				.append("Write-Execute")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
-				.append(white)
+				.append(TerminalUtils.ANSI_WHITE)
 				.append("Read-Write-Execute")
-				.append(reset)
+				.append(TerminalUtils.ANSI_RESET)
 				.append("\n\n");
 
 		final Consumer<Long> printer = x -> {
 			final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
 			sb.append(x == address ? '[' : ' ');
 			if (x >= address && x < address + length) {
-				sb.append(bold);
+				sb.append(TerminalUtils.ANSI_BOLD);
 			}
 			final boolean r = canRead(x);
 			final boolean w = canWrite(x);
 			final boolean e = canExecute(x);
 			if (r && !w && !e) {
-				sb.append(red);
+				sb.append(TerminalUtils.ANSI_RED);
 			}
 			if (!r && w && !e) {
-				sb.append(green);
+				sb.append(TerminalUtils.ANSI_GREEN);
 			}
 			if (!r && !w && e) {
-				sb.append(blue);
+				sb.append(TerminalUtils.ANSI_BLUE);
 			}
 			if (r && w && !e) {
-				sb.append(yellow);
+				sb.append(TerminalUtils.ANSI_YELLOW);
 			}
 			if (r && !w && e) {
-				sb.append(magenta);
+				sb.append(TerminalUtils.ANSI_MAGENTA);
 			}
 			if (!r && w && e) {
-				sb.append(cyan);
+				sb.append(TerminalUtils.ANSI_CYAN);
 			}
 			if (r && w && e) {
-				sb.append(white);
+				sb.append(TerminalUtils.ANSI_WHITE);
 			}
-			sb.append(s).append(reset).append(x == (address + length - 1) ? ']' : ' ');
+			sb.append(s).append(TerminalUtils.ANSI_RESET).append(x == (address + length - 1) ? ']' : ' ');
 		};
 
 		// print column headers

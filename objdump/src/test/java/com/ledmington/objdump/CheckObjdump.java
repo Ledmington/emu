@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 import com.ledmington.utils.ProcessUtils;
+import com.ledmington.utils.TerminalUtils;
 
 @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckObjdump {
@@ -87,11 +88,11 @@ public final class CheckObjdump {
 
 	private static void checkDiff(final List<String> expected, final List<String> actual) {
 		if (expected.equals(actual)) {
-			out.println("\u001b[32mOK\u001b[0m");
+			out.println(TerminalUtils.ANSI_GREEN + "OK" + TerminalUtils.ANSI_RESET);
 			return;
 		}
 
-		out.println("\u001b[31mERROR\u001b[0m");
+		out.println(TerminalUtils.ANSI_RED + "OK" + TerminalUtils.ANSI_RESET);
 
 		final int minSize = Math.min(expected.size(), actual.size());
 		final int maxSize = Math.max(expected.size(), actual.size());

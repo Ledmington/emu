@@ -112,10 +112,10 @@ public final class MiniLogger {
 
 		final String color =
 				switch (tag) {
-					case DEBUG -> "\u001b[37m"; // white
-					case INFO -> "\u001b[36m"; // cyan
-					case WARNING -> "\u001b[33m"; // yellow
-					case ERROR -> "\u001b[31m"; // red
+					case DEBUG -> TerminalUtils.ANSI_WHITE;
+					case INFO -> TerminalUtils.ANSI_CYAN;
+					case WARNING -> TerminalUtils.ANSI_YELLOW;
+					case ERROR -> TerminalUtils.ANSI_RED;
 				};
 
 		return '['
@@ -127,8 +127,10 @@ public final class MiniLogger {
 				+ '['
 				+ loggerName
 				+ ']'
-				+ '[' + color
-				+ tag.name() + "\u001b[0m"
+				+ '['
+				+ color
+				+ tag.name()
+				+ TerminalUtils.ANSI_RESET
 				+ ']';
 	}
 

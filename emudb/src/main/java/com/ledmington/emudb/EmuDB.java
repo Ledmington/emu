@@ -60,6 +60,7 @@ import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.PagedMemory;
 import com.ledmington.mem.exc.IllegalMemoryAccessException;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.TerminalUtils;
 
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -87,11 +88,6 @@ public final class EmuDB {
 	private ELFLoader loader = null; // TODO: should we put this into ExecutionContext, too?
 	private final List<Breakpoint> breakpoints = new ArrayList<>();
 	private long lastBreakpointAddress = -1L; // last breakpoint we hit
-	private static final String ANSI_RESET = "\u001b[0m";
-	private static final String ANSI_BOLD = "\u001b[1m";
-	private static final String ANSI_GREEN = "\u001b[32m";
-	private static final String ANSI_YELLOW = "\u001b[33m";
-	private static final String ANSI_BLUE = "\u001b[34m";
 
 	private final Map<String, Command> commands = Map.ofEntries(
 			Map.entry("quit", new Command("Terminates the debugger", ignored -> System.exit(0))),
@@ -114,7 +110,10 @@ public final class EmuDB {
 		for (final Map.Entry<String, Command> e : commands.entrySet()) {
 			out.printf(
 					"%s%s%s -- %s%n",
-					ANSI_BOLD, e.getKey(), ANSI_RESET, e.getValue().description());
+					TerminalUtils.ANSI_BOLD,
+					e.getKey(),
+					TerminalUtils.ANSI_RESET,
+					e.getValue().description());
 		}
 	}
 
@@ -143,7 +142,13 @@ public final class EmuDB {
 		final Position initialPos = findFunctionName(rip);
 		out.printf(
 				"#%-2d %s0x%016x%s in %s%s%s ()%n",
-				0, ANSI_BLUE, rip, ANSI_RESET, ANSI_YELLOW, initialPos.functionName(), ANSI_RESET);
+				0,
+				TerminalUtils.ANSI_BLUE,
+				rip,
+				TerminalUtils.ANSI_RESET,
+				TerminalUtils.ANSI_YELLOW,
+				initialPos.functionName(),
+				TerminalUtils.ANSI_RESET);
 
 		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
 		int stackLevel = 1;
@@ -153,7 +158,13 @@ public final class EmuDB {
 			final Position pos = findFunctionName(rbp);
 			out.printf(
 					"#%-2d %s0x%016x%s in %s%s%s ()%n",
-					stackLevel, ANSI_BLUE, rbp, ANSI_RESET, ANSI_YELLOW, pos.functionName(), ANSI_RESET);
+					stackLevel,
+					TerminalUtils.ANSI_BLUE,
+					rbp,
+					TerminalUtils.ANSI_RESET,
+					TerminalUtils.ANSI_YELLOW,
+					pos.functionName(),
+					TerminalUtils.ANSI_RESET);
 
 			final long nextRbp = this.context.memory().read8(rbp);
 			// TODO: should we check if nextRbp is aligned?
@@ -219,12 +230,12 @@ public final class EmuDB {
 		out.printf(
 				"Breakpoint %,d at %s0x%x%s %s%s%s%n",
 				breakpointIndex,
-				ANSI_BLUE,
+				TerminalUtils.ANSI_BLUE,
 				breakpoints.get(breakpointIndex).address(),
-				ANSI_RESET,
-				ANSI_YELLOW,
+				TerminalUtils.ANSI_RESET,
+				TerminalUtils.ANSI_YELLOW,
 				breakpoints.get(breakpointIndex).name(),
-				ANSI_RESET);
+				TerminalUtils.ANSI_RESET);
 	}
 
 	private void setBreakpoint(final String... args) {
@@ -439,7 +450,11 @@ public final class EmuDB {
 		for (int i = 0; i < numTotalBytes; i++) {
 			final long currentAddress = actualStartAddress + i;
 			if (i % numBytesPerRow == 0) {
-				out.printf("%s" + addressFormatString + "%s:", ANSI_BLUE, currentAddress, ANSI_RESET);
+				out.printf(
+						"%s" + addressFormatString + "%s:",
+						TerminalUtils.ANSI_BLUE,
+						currentAddress,
+						TerminalUtils.ANSI_RESET);
 			}
 			final String s = mem.isInitialized(currentAddress) ? String.format("%02x", mem.read(currentAddress)) : "xx";
 			out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
@@ -474,7 +489,7 @@ public final class EmuDB {
 		executeOneInstruction();
 
 		final long here = this.context.cpu().getRegisters().get(Register64.RIP);
-		out.printf("%s0x%016x%s%n", ANSI_BLUE, here, ANSI_RESET);
+		out.printf("%s0x%016x%s%n", TerminalUtils.ANSI_BLUE, here, TerminalUtils.ANSI_RESET);
 	}
 
 	private boolean executeOneInstruction() {
@@ -487,12 +502,12 @@ public final class EmuDB {
 			out.printf(
 					"Breakpoint %,d, %s0x%016x%s in %s%s%s ()%n",
 					breakpointIndex.orElseThrow(),
-					ANSI_BLUE,
+					TerminalUtils.ANSI_BLUE,
 					b.address(),
-					ANSI_RESET,
-					ANSI_YELLOW,
+					TerminalUtils.ANSI_RESET,
+					TerminalUtils.ANSI_YELLOW,
 					b.name(),
-					ANSI_RESET);
+					TerminalUtils.ANSI_RESET);
 		} else {
 			this.context.cpu().turnOn();
 			this.context.cpu().executeOne();
@@ -511,7 +526,7 @@ public final class EmuDB {
 			loadFile(args[0], Arrays.copyOfRange(args, 1, args.length));
 		}
 
-		out.printf("Starting program: %s%s%s", ANSI_GREEN, this.filepath, ANSI_RESET);
+		out.printf("Starting program: %s%s%s", TerminalUtils.ANSI_GREEN, this.filepath, TerminalUtils.ANSI_RESET);
 		for (final String arg : this.savedArguments) {
 			out.printf(" %s", arg);
 		}

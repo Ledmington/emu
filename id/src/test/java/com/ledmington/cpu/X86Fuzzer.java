@@ -31,17 +31,13 @@ import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
+import com.ledmington.utils.TerminalUtils;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** A very simple fuzzer for x86_64 instructions. */
 @SuppressWarnings({"PMD.SystemPrintln", "PMD.UnnecessaryCast", "PMD.AvoidLiteralsInIfCondition"})
 public final class X86Fuzzer {
-
-	private static final String GRAY = "\u001b[90m";
-	private static final String YELLOW = "\u001b[33m";
-	private static final String PURPLE = "\u001b[95m";
-	private static final String RESET = "\u001b[0m";
 
 	private static final long SEED =
 			RandomGeneratorFactory.getDefault().create(System.nanoTime()).nextLong();
@@ -57,7 +53,15 @@ public final class X86Fuzzer {
 	}
 
 	private static void print(final int id, final String hex, final String message) {
-		System.out.printf(" %s%5d%s | %s%-17s%s : %s%n", GRAY, id, RESET, PURPLE, hex, RESET, message);
+		System.out.printf(
+				" %s%5d%s | %s%-17s%s : %s%n",
+				TerminalUtils.ANSI_GRAY,
+				id,
+				TerminalUtils.ANSI_RESET,
+				TerminalUtils.ANSI_PURPLE,
+				hex,
+				TerminalUtils.ANSI_RESET,
+				message);
 	}
 
 	private static boolean containsNullRegister(final Instruction inst) {
@@ -145,7 +149,7 @@ public final class X86Fuzzer {
 					visited.size(),
 					hex,
 					(inst == null)
-							? (YELLOW + "unknown" + RESET)
+							? (TerminalUtils.ANSI_YELLOW + "unknown" + TerminalUtils.ANSI_RESET)
 							: InstructionEncoder.toIntelSyntax(inst, !containsNullRegister(inst), 0, false));
 		}
 		final long end = System.nanoTime();

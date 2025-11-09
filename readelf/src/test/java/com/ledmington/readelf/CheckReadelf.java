@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 import com.ledmington.utils.ProcessUtils;
+import com.ledmington.utils.TerminalUtils;
 
 @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 public final class CheckReadelf {
@@ -91,11 +92,11 @@ public final class CheckReadelf {
 
 	private static void checkDiff(final String expected, final String actual) {
 		if (expected.equals(actual)) {
-			out.println("\u001b[32mOK\u001b[0m");
+			out.println(TerminalUtils.ANSI_GREEN + "OK" + TerminalUtils.ANSI_RESET);
 			return;
 		}
 
-		out.println("\u001b[31mERROR\u001b[0m");
+		out.println(TerminalUtils.ANSI_RED + "ERROR" + TerminalUtils.ANSI_RESET);
 
 		final Path fileExpected;
 		final Path fileActual;
