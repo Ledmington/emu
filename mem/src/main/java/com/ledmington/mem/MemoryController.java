@@ -19,6 +19,7 @@ package com.ledmington.mem;
 
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.ledmington.mem.exc.AccessToUninitializedMemoryException;
 import com.ledmington.mem.exc.IllegalExecutionException;
@@ -82,7 +83,12 @@ public final class MemoryController implements Memory {
 		return executableAddresses.get(address);
 	}
 
-	private String reportIllegalAccess(final String message, final long address, final int length) {
+	private String reportIllegalAccess(
+			final String message,
+			final long address,
+			final int length,
+			final String propertyName,
+			final Predicate<Long> allowed) {
 		final long linesAround = 5;
 		final long bytesPerLine = 16;
 
@@ -97,63 +103,27 @@ public final class MemoryController implements Memory {
 				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
 				.append(TerminalUtils.ANSI_RED)
-				.append("Readable")
-				.append(TerminalUtils.ANSI_RESET)
-				.append(' ')
-				.append(TerminalUtils.ANSI_GREEN)
-				.append("Writable")
-				.append(TerminalUtils.ANSI_RESET)
-				.append(' ')
-				.append(TerminalUtils.ANSI_BLUE)
-				.append("Executable")
-				.append(TerminalUtils.ANSI_RESET)
-				.append(' ')
-				.append(TerminalUtils.ANSI_YELLOW)
-				.append("Read-Write")
-				.append(TerminalUtils.ANSI_RESET)
-				.append(' ')
-				.append(TerminalUtils.ANSI_MAGENTA)
-				.append("Read-Execute")
-				.append(TerminalUtils.ANSI_RESET)
-				.append(' ')
-				.append(TerminalUtils.ANSI_CYAN)
-				.append("Write-Execute")
+				.append("Not-")
+				.append(propertyName)
 				.append(TerminalUtils.ANSI_RESET)
 				.append(' ')
 				.append(TerminalUtils.ANSI_WHITE)
-				.append("Read-Write-Execute")
+				.append(propertyName)
 				.append(TerminalUtils.ANSI_RESET)
 				.append("\n\n");
 
 		final Consumer<Long> printer = x -> {
 			final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
 			sb.append(x == address ? '[' : ' ');
+
+            // Print the bytes accessed in bold
 			if (x >= address && x < address + length) {
 				sb.append(TerminalUtils.ANSI_BOLD);
 			}
-			final boolean r = canRead(x);
-			final boolean w = canWrite(x);
-			final boolean e = canExecute(x);
-			if (r && !w && !e) {
-				sb.append(TerminalUtils.ANSI_RED);
-			}
-			if (!r && w && !e) {
-				sb.append(TerminalUtils.ANSI_GREEN);
-			}
-			if (!r && !w && e) {
-				sb.append(TerminalUtils.ANSI_BLUE);
-			}
-			if (r && w && !e) {
-				sb.append(TerminalUtils.ANSI_YELLOW);
-			}
-			if (r && !w && e) {
-				sb.append(TerminalUtils.ANSI_MAGENTA);
-			}
-			if (!r && w && e) {
-				sb.append(TerminalUtils.ANSI_CYAN);
-			}
-			if (r && w && e) {
+			if (allowed.test(x)) {
 				sb.append(TerminalUtils.ANSI_WHITE);
+			} else {
+				sb.append(TerminalUtils.ANSI_RED);
 			}
 			sb.append(s).append(TerminalUtils.ANSI_RESET).append(x == (address + length - 1) ? ']' : ' ');
 		};
@@ -208,17 +178,21 @@ public final class MemoryController implements Memory {
 						"Attempted %d-byte read at%s non-readable address 0x%x",
 						length, isInitialized(address) ? "" : " uninitialized", address),
 				address,
-				length));
+				length,
+				"Readable",
+				readableAddresses::get));
 	}
 
-	private void reportIllegalExecution(final long address, final int length) {
-		checkLength(length);
+	private void reportIllegalExecution(final long address) {
+		checkLength(1);
 		throw new IllegalExecutionException(reportIllegalAccess(
 				String.format(
-						"Attempted %d-byte execution at%s non-executable address 0x%x",
-						length, isInitialized(address) ? "" : " uninitialized", address),
+						"Attempted 1-byte execution at%s non-executable address 0x%x",
+						isInitialized(address) ? "" : " uninitialized", address),
 				address,
-				length));
+				1,
+				"Executable",
+				executableAddresses::get));
 	}
 
 	private void reportIllegalWrite(final long address, final int length) {
@@ -228,7 +202,9 @@ public final class MemoryController implements Memory {
 						"Attempted %d-byte write at%s non-writable address 0x%x",
 						length, isInitialized(address) ? "" : " uninitialized", address),
 				address,
-				length));
+				length,
+				"Writable",
+				writableAddresses::get));
 	}
 
 	private void reportAccessToUninitialized(final long address, final int length) {
@@ -236,7 +212,9 @@ public final class MemoryController implements Memory {
 		throw new AccessToUninitializedMemoryException(reportIllegalAccess(
 				String.format("Attempted %d-byte access at uninitialized address 0x%x", length, address),
 				address,
-				length));
+				length,
+				"Initialized",
+				mem::isInitialized));
 	}
 
 	/**
@@ -319,13 +297,13 @@ public final class MemoryController implements Memory {
 		return x;
 	}
 
-	private void checkExecute(final long address, final int length) {
+	private void checkExecute(final long address) {
 		if (!breakOnWrongPermissions) {
 			return;
 		}
-		for (int i = 0; i < length; i++) {
+		for (int i = 0; i < 1; i++) {
 			if (!canExecute(address + i)) {
-				reportIllegalExecution(address, length);
+				reportIllegalExecution(address);
 			}
 		}
 	}
@@ -337,7 +315,7 @@ public final class MemoryController implements Memory {
 	 * @return The instruction byte at the given address.
 	 */
 	public byte readCode(final long address) {
-		checkExecute(address, 1);
+		checkExecute(address);
 		checkInitialized(address, 1);
 		return mem.read(address);
 	}
