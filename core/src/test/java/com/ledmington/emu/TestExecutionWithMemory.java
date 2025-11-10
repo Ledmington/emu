@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.ledmington.cpu.InstructionEncoder;
+import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
@@ -78,11 +79,11 @@ final class TestExecutionWithMemory {
 	void movMem64R64(final Register64 r1, final Register64 r2) {
 		final long oldValue1 = rng.nextLong();
 		final long oldValue2 = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOVABS, r1, new Immediate(oldValue1)));
-		cpu.executeOne(new Instruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r1, new Immediate(oldValue1)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		mem.initialize(oldValue1, 8L, (byte) 0x00);
 		mem.setPermissions(oldValue1, oldValue1 + 7L, false, true, false);
-		cpu.executeOne(new Instruction(
+		cpu.executeOne(new GeneralInstruction(
 				Opcode.MOV,
 				IndirectOperand.builder()
 						.pointer(PointerSize.QWORD_PTR)
@@ -102,11 +103,11 @@ final class TestExecutionWithMemory {
 	@MethodSource("pairs64")
 	void movR64Mem64(final Register64 r1, final Register64 r2) {
 		final long oldValue2 = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		final long val = rng.nextLong();
 		mem.initialize(oldValue2, val);
 		mem.setPermissions(oldValue2, oldValue2 + 7L, true, false, false);
-		cpu.executeOne(new Instruction(
+		cpu.executeOne(new GeneralInstruction(
 				Opcode.MOV,
 				r1,
 				IndirectOperand.builder()
@@ -124,12 +125,12 @@ final class TestExecutionWithMemory {
 	void push() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base - 8L, base, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 		mem.write(base - 8L, 0L);
 		final long val = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RAX, new Immediate(val)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(val)));
 
-		cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+		cpu.executeOne(new GeneralInstruction(Opcode.PUSH, Register64.RAX));
 
 		final long newRSP = base - 8L;
 		assertEquals(
@@ -148,11 +149,11 @@ final class TestExecutionWithMemory {
 	void pop() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base, base + 7L, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 		final long val = rng.nextLong();
 		mem.write(base, val);
 
-		cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+		cpu.executeOne(new GeneralInstruction(Opcode.POP, Register64.RAX));
 
 		final long newRSP = base + 8L;
 		assertEquals(
@@ -181,7 +182,7 @@ final class TestExecutionWithMemory {
 
 		// Setup stack at random location
 		final long base = rng.nextLong();
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 
 		// Doing n pushes of random values
 		for (int i = 0; i < n; i++) {
@@ -189,7 +190,7 @@ final class TestExecutionWithMemory {
 			mem.setPermissions(base - 8L * (i + 1), base - 8L * i, true, true, false);
 
 			// mov RAX,val
-			cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RAX, new Immediate(values[i])));
+			cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(values[i])));
 
 			final int finalI = i;
 
@@ -202,7 +203,7 @@ final class TestExecutionWithMemory {
 							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
 
 			// push RAX
-			cpu.executeOne(new Instruction(Opcode.PUSH, Register64.RAX));
+			cpu.executeOne(new GeneralInstruction(Opcode.PUSH, Register64.RAX));
 
 			// After each push, RSP must be equal to the new base
 			assertEquals(
@@ -226,7 +227,7 @@ final class TestExecutionWithMemory {
 							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
 
 			// pop RAX
-			cpu.executeOne(new Instruction(Opcode.POP, Register64.RAX));
+			cpu.executeOne(new GeneralInstruction(Opcode.POP, Register64.RAX));
 
 			// After each pop, RSP must be equal to the old base
 			assertEquals(
@@ -258,7 +259,7 @@ final class TestExecutionWithMemory {
 		// Setup stack at random location (8-byte aligned)
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
 		mem.setPermissions(stackBase, stackBase, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
@@ -268,15 +269,16 @@ final class TestExecutionWithMemory {
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
 		final int offset = rng.nextInt();
 		final long functionAddress = rip + BitUtils.asLong(offset);
-		final byte[] functionCode = InstructionEncoder.toHex(true, new Instruction(Opcode.RET));
+		final byte[] functionCode = InstructionEncoder.toHex(true, new GeneralInstruction(Opcode.RET));
 		mem.initialize(functionAddress, functionCode);
 		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
-				InstructionEncoder.toHex(true, new Instruction(Opcode.CALL, new Immediate(0))).length;
-		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
-		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new Instruction(Opcode.HLT));
+				InstructionEncoder.toHex(true, new GeneralInstruction(Opcode.CALL, new Immediate(0))).length;
+		final Instruction callInstruction =
+				new GeneralInstruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
+		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new GeneralInstruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
 		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
@@ -290,8 +292,8 @@ final class TestExecutionWithMemory {
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
 		mem.initialize(stackBase - 16L - 4L, stackBase, (byte) 0);
 		mem.setPermissions(stackBase - 16L - 4L, stackBase, true, true, false);
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
-		cpu.executeOne(new Instruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackBase)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
@@ -304,9 +306,9 @@ final class TestExecutionWithMemory {
 		final byte[] functionCode = InstructionEncoder.toHex(
 				true,
 				// code adapted from this one: https://godbolt.org/z/W8Kjj6Woz
-				new Instruction(Opcode.PUSH, Register64.RBP),
-				new Instruction(Opcode.MOV, Register64.RBP, Register64.RSP),
-				new Instruction(
+				new GeneralInstruction(Opcode.PUSH, Register64.RBP),
+				new GeneralInstruction(Opcode.MOV, Register64.RBP, Register64.RSP),
+				new GeneralInstruction(
 						Opcode.MOV,
 						IndirectOperand.builder()
 								.pointer(PointerSize.DWORD_PTR)
@@ -314,16 +316,17 @@ final class TestExecutionWithMemory {
 								.displacement((byte) -4)
 								.build(),
 						new Immediate(rng.nextInt())),
-				new Instruction(Opcode.POP, Register64.RBP),
-				new Instruction(Opcode.RET));
+				new GeneralInstruction(Opcode.POP, Register64.RBP),
+				new GeneralInstruction(Opcode.RET));
 		mem.initialize(functionAddress, functionCode);
 		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
 		final int callInstructionLength =
-				InstructionEncoder.toHex(new Instruction(Opcode.CALL, new Immediate(0)), true).length;
-		final Instruction callInstruction = new Instruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
-		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new Instruction(Opcode.HLT));
+				InstructionEncoder.toHex(new GeneralInstruction(Opcode.CALL, new Immediate(0)), true).length;
+		final Instruction callInstruction =
+				new GeneralInstruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
+		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new GeneralInstruction(Opcode.HLT));
 		mem.initialize(rip, mainCode);
 		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
 
