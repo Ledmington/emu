@@ -261,23 +261,9 @@ public final class MemoryController implements Memory {
 					startBlockAddress, endBlockAddress));
 		}
 
-		if (readable) {
-			readableAddresses.set(startBlockAddress, endBlockAddress);
-		} else {
-			readableAddresses.reset(startBlockAddress, endBlockAddress);
-		}
-
-		if (writeable) {
-			writableAddresses.set(startBlockAddress, endBlockAddress);
-		} else {
-			writableAddresses.reset(startBlockAddress, endBlockAddress);
-		}
-
-		if (executable) {
-			executableAddresses.set(startBlockAddress, endBlockAddress);
-		} else {
-			executableAddresses.reset(startBlockAddress, endBlockAddress);
-		}
+		readableAddresses.set(startBlockAddress, endBlockAddress, readable);
+		writableAddresses.set(startBlockAddress, endBlockAddress, writeable);
+		executableAddresses.set(startBlockAddress, endBlockAddress, executable);
 	}
 
 	private void checkRead(final long address, final int length) {

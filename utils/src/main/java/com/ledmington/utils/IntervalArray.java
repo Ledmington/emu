@@ -75,6 +75,23 @@ public final class IntervalArray {
 	}
 
 	/**
+	 * Sets the boolean values in the given range to value. Equivalent to calling {@code value ? set(start, end) :
+	 * reset(start, end)}.
+	 *
+	 * @param startAddress The start (inclusive) of the range.
+	 * @param endAddress The end (inclusive) of the range.
+	 * @param value The value to set the values in the range to.
+	 */
+	// TODO: change the end of the range to be exclusive
+	public void set(final long startAddress, final long endAddress, final boolean value) {
+		if (value) {
+			set(startAddress, endAddress);
+		} else {
+			reset(startAddress, endAddress);
+		}
+	}
+
+	/**
 	 * Sets the boolean values in the given range to true. Does not throw exceptions in case it is already true.
 	 *
 	 * @param startAddress The start (inclusive) of the range.
@@ -99,7 +116,6 @@ public final class IntervalArray {
 		while (i < blocks.size()) {
 			final Block curr = blocks.get(i);
 			if (curr.start() <= startAddress) {
-
 				if (curr.end() >= endAddress) {
 					// the given range fits entirely in this block
 					blocks.remove(i);
