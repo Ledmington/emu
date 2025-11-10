@@ -118,7 +118,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	@Override
-	@SuppressWarnings({"PMD.AssignmentInOperand", "PMD.NcssCount"})
+	@SuppressWarnings({"PMD.AssignmentInOperand", "PMD.NcssCount", "PMD.CognitiveComplexity"})
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
 
@@ -176,7 +176,7 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SHR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
-			case SAR -> op((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
+			case SAR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
 			case SHL -> op((Register64) inst.firstOperand(), (Register8) inst.secondOperand(), (r, i) -> r << i);
 			case XOR -> {
 				if (inst.firstOperand() instanceof final Register8 r1
@@ -252,6 +252,18 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					rf.set(op1, imm.asInt());
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register8 op2) {
+					final long address = computeIndirectOperand(io);
+					mem.write(address, rf.get(op2));
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register16 op2) {
+					final long address = computeIndirectOperand(io);
+					mem.write(address, rf.get(op2));
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register32 op2) {
+					final long address = computeIndirectOperand(io);
+					mem.write(address, rf.get(op2));
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register64 op2) {
 					final long address = computeIndirectOperand(io);
 					mem.write(address, rf.get(op2));
@@ -266,6 +278,7 @@ public class X86Cpu implements X86Emulator {
 			}
 			case MOVABS -> rf.set((Register64) inst.firstOperand(), ((Immediate) inst.secondOperand()).asLong());
 			case MOVSXD -> rf.set((Register64) inst.firstOperand(), getAsLongSX(inst.secondOperand()));
+			case MOVZX -> rf.set((Register32) inst.firstOperand(), getAsIntZX(inst.secondOperand()));
 			case STOS -> {
 				if (inst.hasRepPrefix()
 						&& inst.firstOperand() instanceof IndirectOperand io
@@ -327,7 +340,6 @@ public class X86Cpu implements X86Emulator {
 
 				final long jumpAddress;
 				if (inst.firstOperand() instanceof final Immediate imm) {
-					// TODO: check this (should modify stack pointers?)
 					final long relativeAddress = getAsLongSX(imm);
 					jumpAddress = rip + relativeAddress;
 				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
@@ -339,6 +351,9 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RIP, jumpAddress);
 			}
 			case RET -> rf.set(Register64.RIP, pop());
+			case LEAVE -> {
+				// TODO: what should we do here?
+			}
 			case CMOVNE -> {
 				if (rf.isSet(RFlags.ZERO)) {
 					return;
@@ -408,10 +423,6 @@ public class X86Cpu implements X86Emulator {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
-	private void op(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
-		op(() -> rf.get(op1), imm::asLong, task, result -> rf.set(op1, result), true);
-	}
-
 	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
 		op(
 				() -> rf.get(op1),
@@ -473,7 +484,25 @@ public class X86Cpu implements X86Emulator {
 		return value;
 	}
 
-	/** Returns a sign-extended long */
+	/** Returns a zero-extends integer. */
+	private int getAsIntZX(final Operand op) {
+		return switch (op) {
+			case IndirectOperand io -> getAsIntZX(io);
+			case Register32 r -> rf.get(r);
+			default -> throw new IllegalArgumentException(String.format("Unknown operand '%s'.", op));
+		};
+	}
+
+	private int getAsIntZX(final IndirectOperand io) {
+		final long address = computeIndirectOperand(io);
+		if (io.getPointerSize() == PointerSize.WORD_PTR) {
+			return mem.read4(address);
+		} else {
+			throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
+		}
+	}
+
+	/** Returns a sign-extended long. */
 	private long getAsLongSX(final Operand op) {
 		return switch (op) {
 			case Immediate imm -> getAsLongSX(imm);
@@ -484,7 +513,7 @@ public class X86Cpu implements X86Emulator {
 		};
 	}
 
-	/** Returns a sign-extended long */
+	/** Returns a sign-extended long. */
 	@SuppressWarnings("PMD.UnnecessaryCast")
 	private long getAsLongSX(final Immediate imm) {
 		return switch (imm.bits()) {
@@ -496,7 +525,7 @@ public class X86Cpu implements X86Emulator {
 		};
 	}
 
-	/** Returns a sign-extended long */
+	/** Returns a sign-extended long. */
 	private long getAsLongSX(final IndirectOperand io) {
 		final long address = computeIndirectOperand(io);
 		if (io.getPointerSize() == PointerSize.QWORD_PTR) {
