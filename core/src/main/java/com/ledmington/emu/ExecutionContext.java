@@ -28,6 +28,8 @@ import com.ledmington.utils.SuppressFBWarnings;
  * @param cpu The emulated CPU to be used.
  * @param memory The emulated memory to be used.
  */
+// FIXME: this is ugly
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 @SuppressFBWarnings(
 		value = "EI_EXPOSE_REP",
 		justification = "This object is meant to be a collection of mutable objects.")
@@ -42,8 +44,35 @@ public record ExecutionContext(X86Emulator cpu, Memory memory) {
 	 * @param cpu The CPU to be used to execute instructions.
 	 * @param memory The memory to be used as main memory.
 	 */
+	@SuppressFBWarnings(
+			value = "EI_EXPOSE_REP2",
+			justification = "This object is meant to be a collection of mutable objects.")
 	public ExecutionContext {
 		Objects.requireNonNull(cpu, "Null cpu.");
 		Objects.requireNonNull(memory, "Null memory.");
+	}
+
+	/**
+	 * Returns the contained X86Emulator.
+	 *
+	 * @return The contained X86Emulator.
+	 */
+	@SuppressFBWarnings(
+			value = "EI_EXPOSE_REP",
+			justification = "This object is meant to be a collection of mutable objects.")
+	public X86Emulator cpu() {
+		return cpu;
+	}
+
+	/**
+	 * Returns the contained Memory.
+	 *
+	 * @return The contained Memory.
+	 */
+	@SuppressFBWarnings(
+			value = "EI_EXPOSE_REP",
+			justification = "This object is meant to be a collection of mutable objects.")
+	public Memory memory() {
+		return memory;
 	}
 }

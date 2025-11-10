@@ -166,6 +166,7 @@ import com.ledmington.cpu.x86.InstructionPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.SuppressFBWarnings;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
@@ -186,7 +187,14 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			.flatMap(Collection::stream)
 			.toList();
 
-	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {}
+	// FIXME: this is ugly
+	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {
+		@SuppressWarnings("PMD.MethodReturnsInternalArray")
+		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object as is it is for now.")
+		public byte[] hex() {
+			return hex;
+		}
+	}
 
 	private static X64EncodingTestCase test(final Instruction instruction, final String intelSyntax, final String hex) {
 		final String[] splitted = hex.strip().split(" ");
