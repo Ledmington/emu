@@ -234,6 +234,7 @@ public class X86Cpu implements X86Emulator {
 			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
 			case JE -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.ZERO));
 			case JNE -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.ZERO));
+			case JA -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO));
 
 			case MOV -> {
 				if (inst.firstOperand() instanceof Register64 r) {
@@ -265,6 +266,29 @@ public class X86Cpu implements X86Emulator {
 			}
 			case MOVABS -> rf.set((Register64) inst.firstOperand(), ((Immediate) inst.secondOperand()).asLong());
 			case MOVSXD -> rf.set((Register64) inst.firstOperand(), getAsLongSX(inst.secondOperand()));
+			case STOS -> {
+				if (inst.hasRepPrefix()
+						&& inst.firstOperand() instanceof IndirectOperand io
+						&& inst.secondOperand() instanceof Register64 r2) {
+					final boolean direction = rf.isSet(RFlags.DIRECTION);
+					final long increment =
+							(direction ? -1 : 1) * io.getPointerSize().bits() / 8;
+					final long rax = rf.get(r2);
+					long rcx = rf.get(Register64.RCX);
+					long rdi = rf.get(Register64.RDI);
+
+					while (rcx != 0) {
+						mem.write(rdi, rax);
+						rdi += increment;
+						rcx--;
+					}
+
+					rf.set(Register64.RDI, rdi);
+					rf.set(Register64.RCX, rcx);
+				} else {
+					throw new UnsupportedOperationException("Not implemented.");
+				}
+			}
 			case PUSH -> {
 				final long value =
 						switch (inst.firstOperand()) {
