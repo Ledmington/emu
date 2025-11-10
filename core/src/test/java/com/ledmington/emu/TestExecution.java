@@ -35,7 +35,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.IndirectOperandBuilder;
-import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register16;
@@ -246,8 +245,8 @@ final class TestExecution {
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
-        expected.set(RFlags.SIGN, result < 0);
-        cpu.executeOne(new GeneralInstruction(Opcode.ADD, a, b));
+		expected.set(RFlags.SIGN, result < 0);
+		cpu.executeOne(new GeneralInstruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
