@@ -275,11 +275,7 @@ public class X86Cpu implements X86Emulator {
 										String.format("Unexpected argument '%s'.", inst.firstOperand()));
 						};
 
-				final long rsp = rf.get(Register64.RSP);
-				// the stack "grows downward"
-				final long newRSP = rsp - 8L;
-				rf.set(Register64.RSP, newRSP);
-				mem.write(newRSP, value);
+				push(value);
 			}
 			case POP -> {
 				final Register64 dest = (Register64) inst.firstOperand();
@@ -303,12 +299,7 @@ public class X86Cpu implements X86Emulator {
 				// This points to the instruction right next to 'CALL ...'
 				final long rip = rf.get(Register64.RIP);
 
-				// Push the return address (the position of the next instruction) on top of the stack.
-				// This little subroutine may be replaced entirely by a PUSH instruction and a MOV
-				final long oldStackPointer = rf.get(Register64.RSP);
-				final long newStackPointer = oldStackPointer - 8L;
-				rf.set(Register64.RSP, newStackPointer);
-				mem.write(newStackPointer, rip);
+				push(rip);
 
 				final long jumpAddress;
 				if (inst.firstOperand() instanceof final Immediate imm) {
@@ -398,7 +389,17 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
-		op(() -> rf.get(op1), () -> (long) imm.asByte(), task, result -> rf.set(op1, result), true);
+		op(
+				() -> rf.get(op1),
+				// FIXME: ugly
+				switch (imm.bits()) {
+					case 8 -> () -> (long) imm.asByte();
+					case 32 -> () -> (long) imm.asInt();
+					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
+				},
+				task,
+				result -> rf.set(op1, result),
+				true);
 	}
 
 	private <X> void updateRFlags(final X value) {
@@ -426,6 +427,14 @@ public class X86Cpu implements X86Emulator {
 		if (updateFlags) {
 			updateRFlags(result);
 		}
+	}
+
+	private void push(final long value) {
+		final long oldStackPointer = rf.get(Register64.RSP);
+		// The stack "grows downward"
+		final long newStackPointer = oldStackPointer - 8L;
+		rf.set(Register64.RSP, newStackPointer);
+		mem.write(newStackPointer, value);
 	}
 
 	private long pop() {
