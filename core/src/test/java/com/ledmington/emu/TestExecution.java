@@ -209,6 +209,7 @@ final class TestExecution {
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0L);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -226,6 +227,7 @@ final class TestExecution {
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -243,6 +245,7 @@ final class TestExecution {
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -260,6 +263,7 @@ final class TestExecution {
 		expected.set(a, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -277,6 +281,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0L);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -294,6 +299,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -311,6 +317,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -328,6 +335,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -345,6 +353,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0L);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -362,6 +371,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -379,6 +389,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -396,6 +407,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.XOR, r1, r2));
 		assertEquals(
 				expected,
@@ -413,6 +425,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0L);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -430,6 +443,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -447,6 +461,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,
@@ -464,6 +479,7 @@ final class TestExecution {
 		expected.set(r1, result);
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
 		cpu.executeOne(new Instruction(Opcode.AND, r1, r2));
 		assertEquals(
 				expected,

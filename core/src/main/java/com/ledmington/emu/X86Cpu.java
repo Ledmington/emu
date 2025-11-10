@@ -408,7 +408,7 @@ public class X86Cpu implements X86Emulator {
 		final long x = ((Number) value).longValue();
 		rf.set(RFlags.ZERO, x == 0L);
 		rf.set(RFlags.PARITY, (Long.bitCount(x) % 2) == 0);
-		// rf.set(RFlags.SIGN, x < 0L);
+		rf.set(RFlags.SIGN, x < 0L);
 		// TODO: add other flags
 	}
 
