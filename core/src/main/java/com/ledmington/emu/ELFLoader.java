@@ -338,6 +338,7 @@ public final class ELFLoader {
 	private void loadCommandLineArgumentsAndEnvironmentVariables(
 			final ELF elf, final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
 		/*
+		low address
 		┌────────────────┐
 		│      argc      │ ◄─── RSP
 		├────────────────┤
@@ -375,6 +376,7 @@ public final class ELFLoader {
 		├────────────────┤
 		│...             │
 		└────────────────┘
+			high address
 
 		Helper program: https://godbolt.org/z/z1ccPYrWd
 		 */
@@ -450,6 +452,9 @@ public final class ELFLoader {
 		}
 
 		mem.initialize(stackBase, content);
+
+		// TODO: setting the stack's permissions, again?
+		mem.setPermissions(stackBase, stackBase + content.length, true, true, false);
 	}
 
 	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {

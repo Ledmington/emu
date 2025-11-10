@@ -116,7 +116,7 @@ public final class MemoryController implements Memory {
 			final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
 			sb.append(x == address ? '[' : ' ');
 
-            // Print the bytes accessed in bold
+			// Print the bytes accessed in bold
 			if (x >= address && x < address + length) {
 				sb.append(TerminalUtils.ANSI_BOLD);
 			}
