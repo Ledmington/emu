@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -154,7 +155,12 @@ public class X86Cpu implements X86Emulator {
 			}
 			case ADD -> {
 				switch (inst.firstOperand()) {
-					case Register8 op1 -> op(op1, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a + b));
+					case Register8 op1 ->
+						op(
+								op1,
+								(Register8) inst.secondOperand(),
+								(a, b) -> BitUtils.asByte(a + b),
+								(a, b) -> MathUtils.willCarry(a, b));
 					case Register16 op1 ->
 						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a + b));
 					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), Integer::sum);
@@ -404,7 +410,15 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private void op(final Register8 op1, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, (a, b) -> false);
+	}
+
+	private void op(
+			final Register8 op1,
+			final Register8 op2,
+			final BiFunction<Byte, Byte, Byte> task,
+			final BiPredicate<Byte, Byte> shouldSetCarryFlag) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
 	}
 
 	private void op(final Register16 op1, final Register16 op2, final BiFunction<Short, Short, Short> task) {
@@ -437,7 +451,7 @@ public class X86Cpu implements X86Emulator {
 				true);
 	}
 
-	private <X> void updateRFlags(final X value) {
+	private <X> void updateRFlags(final X value, final boolean carryFlag) {
 		if (!(value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long)) {
 			throw new AssertionError(String.format("Invalid type: %s.", value.getClass()));
 		}
@@ -445,10 +459,10 @@ public class X86Cpu implements X86Emulator {
 		rf.set(RFlags.ZERO, x == 0L);
 		rf.set(RFlags.PARITY, (Long.bitCount(x) % 2) == 0);
 		rf.set(RFlags.SIGN, x < 0L);
+		rf.set(RFlags.CARRY, carryFlag);
 		// TODO: add other flags
 	}
 
-	/** A generic implementation of an "operation" with 2 operands. */
 	private <X, Y, Z> void op(
 			final Supplier<X> readOp1,
 			final Supplier<Y> readOp2,
@@ -460,7 +474,23 @@ public class X86Cpu implements X86Emulator {
 		final Z result = task.apply(op1, op2);
 		writeResult.accept(result);
 		if (updateFlags) {
-			updateRFlags(result);
+			updateRFlags(result, false);
+		}
+	}
+
+	private <X, Y, Z> void op(
+			final Supplier<X> readOp1,
+			final Supplier<Y> readOp2,
+			final BiFunction<X, Y, Z> task,
+			final Consumer<Z> writeResult,
+			final boolean updateFlags,
+			final BiPredicate<X, Y> shouldSetCarryFlag) {
+		final X op1 = readOp1.get();
+		final Y op2 = readOp2.get();
+		final Z result = task.apply(op1, op2);
+		writeResult.accept(result);
+		if (updateFlags) {
+			updateRFlags(result, shouldSetCarryFlag.test(op1, op2));
 		}
 	}
 
