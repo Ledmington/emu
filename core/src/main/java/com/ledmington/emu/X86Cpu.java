@@ -160,13 +160,18 @@ public class X86Cpu implements X86Emulator {
 								op1,
 								(Register8) inst.secondOperand(),
 								(a, b) -> BitUtils.asByte(a + b),
-								(a, b) -> MathUtils.willCarry(a, b));
+								MathUtils::willCarry);
 					case Register16 op1 ->
-						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a + b));
-					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), Integer::sum);
+						op(
+								op1,
+								(Register16) inst.secondOperand(),
+								(a, b) -> BitUtils.asShort(a + b),
+								MathUtils::willCarry);
+					case Register32 op1 ->
+						op(op1, (Register32) inst.secondOperand(), Integer::sum, MathUtils::willCarry);
 					case Register64 op1 -> {
 						switch (inst.secondOperand()) {
-							case Register64 op2 -> op(op1, op2, Long::sum);
+							case Register64 op2 -> op(op1, op2, Long::sum, MathUtils::willCarry);
 							case Immediate imm -> opSX(op1, imm, Long::sum);
 							default ->
 								throw new IllegalArgumentException(String.format(
@@ -425,12 +430,36 @@ public class X86Cpu implements X86Emulator {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
+	private void op(
+			final Register16 op1,
+			final Register16 op2,
+			final BiFunction<Short, Short, Short> task,
+			final BiPredicate<Short, Short> shouldSetCarryFlag) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
+	}
+
 	private void op(final Register32 op1, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
+	private void op(
+			final Register32 op1,
+			final Register32 op2,
+			final BiFunction<Integer, Integer, Integer> task,
+			final BiPredicate<Integer, Integer> shouldSetCarryFlag) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
+	}
+
 	private void op(final Register64 op1, final Register64 op2, final BiFunction<Long, Long, Long> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
+	}
+
+	private void op(
+			final Register64 op1,
+			final Register64 op2,
+			final BiFunction<Long, Long, Long> task,
+			final BiPredicate<Long, Long> shouldSetCarryFlag) {
+		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
 	}
 
 	private void op(final Register64 op1, final Register8 op2, final BiFunction<Long, Byte, Long> task) {

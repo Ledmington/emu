@@ -17,13 +17,41 @@
  */
 package com.ledmington.emu;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+
 import com.ledmington.utils.BitUtils;
 
 public final class MathUtils {
 
+	private static final int UINT8_MAX = 0x000000ff;
+	private static final int UINT16_MAX = 0x0000ffff;
+	private static final long UINT32_MAX = 0x0000_0000_ffff_ffffL;
+	private static final BigInteger UINT64_MAX = new BigInteger("ffffffffffffffff", 16);
+
 	private MathUtils() {}
 
 	public static boolean willCarry(final byte a, final byte b) {
-		return ((BitUtils.asInt(a) + BitUtils.asInt(b)) & 0x00000100) > 0;
+		// FIXME: can't we do it without actually adding?
+		return (BitUtils.asInt(a) + BitUtils.asInt(b)) > UINT8_MAX;
+	}
+
+	public static boolean willCarry(final short a, final short b) {
+		// FIXME: can't we do it without actually adding?
+		return (BitUtils.asInt(a) + BitUtils.asInt(b)) > UINT16_MAX;
+	}
+
+	public static boolean willCarry(final int a, final int b) {
+		// FIXME: can't we do it without actually adding?
+		return (BitUtils.asLong(a) + BitUtils.asLong(b)) > UINT32_MAX;
+	}
+
+	private static BigInteger toUnsignedBigInteger(final long value) {
+		return new BigInteger(1, ByteBuffer.allocate(8).putLong(value).array());
+	}
+
+	public static boolean willCarry(final long a, final long b) {
+		// FIXME: can't we do it without actually adding (and without using BigInteger)?
+		return toUnsignedBigInteger(a).add(toUnsignedBigInteger(b)).compareTo(UINT64_MAX) > 0;
 	}
 }
