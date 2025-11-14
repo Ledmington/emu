@@ -31,17 +31,19 @@ public final class MathUtils {
 
 	private MathUtils() {}
 
-	public static boolean willCarry(final byte a, final byte b) {
+	// Unsigned Addition Carry
+
+	public static boolean willCarryAdd(final byte a, final byte b) {
 		// FIXME: can't we do it without actually adding?
 		return (BitUtils.asInt(a) + BitUtils.asInt(b)) > UINT8_MAX;
 	}
 
-	public static boolean willCarry(final short a, final short b) {
+	public static boolean willCarryAdd(final short a, final short b) {
 		// FIXME: can't we do it without actually adding?
 		return (BitUtils.asInt(a) + BitUtils.asInt(b)) > UINT16_MAX;
 	}
 
-	public static boolean willCarry(final int a, final int b) {
+	public static boolean willCarryAdd(final int a, final int b) {
 		// FIXME: can't we do it without actually adding?
 		return (BitUtils.asLong(a) + BitUtils.asLong(b)) > UINT32_MAX;
 	}
@@ -50,8 +52,27 @@ public final class MathUtils {
 		return new BigInteger(1, ByteBuffer.allocate(8).putLong(value).array());
 	}
 
-	public static boolean willCarry(final long a, final long b) {
+	public static boolean willCarryAdd(final long a, final long b) {
 		// FIXME: can't we do it without actually adding (and without using BigInteger)?
 		return toUnsignedBigInteger(a).add(toUnsignedBigInteger(b)).compareTo(UINT64_MAX) > 0;
+	}
+
+	// Unsigned Subtraction Borrow
+
+	public static boolean willCarrySub(final byte a, final byte b) {
+		return BitUtils.asInt(a) < BitUtils.asInt(b);
+	}
+
+	public static boolean willCarrySub(final short a, final short b) {
+		return BitUtils.asInt(a) < BitUtils.asInt(b);
+	}
+
+	public static boolean willCarrySub(final int a, final int b) {
+		return BitUtils.asLong(a) < BitUtils.asLong(b);
+	}
+
+	public static boolean willCarrySub(final long a, final long b) {
+		// Unsigned 64-bit compare using BigInteger, consistent with your willCarrySum(long,...)
+		return toUnsignedBigInteger(a).compareTo(toUnsignedBigInteger(b)) < 0;
 	}
 }

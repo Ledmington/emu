@@ -25,42 +25,86 @@ import org.junit.jupiter.api.Test;
 public final class TestMathUtils {
 	@Test
 	void byteCarry() {
-		assertTrue(MathUtils.willCarry((byte) 200, (byte) 100));
+		assertTrue(MathUtils.willCarryAdd((byte) 200, (byte) 100));
 	}
 
 	@Test
 	void byteNoCarry() {
-		assertFalse(MathUtils.willCarry((byte) 1, (byte) 2));
+		assertFalse(MathUtils.willCarryAdd((byte) 1, (byte) 2));
 	}
 
 	@Test
 	void shortCarry() {
-		assertTrue(MathUtils.willCarry((short) 60_000, (short) 50_000));
+		assertTrue(MathUtils.willCarryAdd((short) 60_000, (short) 50_000));
 	}
 
 	@Test
 	void shortNoCarry() {
-		assertFalse(MathUtils.willCarry((short) 1, (short) 2));
+		assertFalse(MathUtils.willCarryAdd((short) 1, (short) 2));
 	}
 
 	@Test
 	void intCarry() {
-		assertTrue(MathUtils.willCarry((int) 3_000_000_000L, (int) 3_000_000_000L));
+		assertTrue(MathUtils.willCarryAdd((int) 3_000_000_000L, (int) 3_000_000_000L));
 	}
 
 	@Test
 	void intNoCarry() {
-		assertFalse(MathUtils.willCarry(1, 2));
+		assertFalse(MathUtils.willCarryAdd(1, 2));
 	}
 
 	@Test
 	void longCarry() {
-		assertTrue(MathUtils.willCarry(
+		assertTrue(MathUtils.willCarryAdd(
 				Long.parseUnsignedLong("10000000000000000000"), Long.parseUnsignedLong("10000000000000000000")));
 	}
 
 	@Test
 	void longNoCarry() {
-		assertFalse(MathUtils.willCarry(1L, 2L));
+		assertFalse(MathUtils.willCarryAdd(1L, 2L));
+	}
+
+	@Test
+	void byteBorrow() {
+		assertTrue(MathUtils.willCarrySub((byte) 50, (byte) 100));
+	}
+
+	@Test
+	void byteNoBorrow() {
+		assertFalse(MathUtils.willCarrySub((byte) 100, (byte) 50));
+	}
+
+	@Test
+	void shortBorrow() {
+		assertTrue(MathUtils.willCarrySub((short) 10_000, (short) 50_000));
+	}
+
+	@Test
+	void shortNoBorrow() {
+		assertFalse(MathUtils.willCarrySub((short) 50_000, (short) 10_000));
+	}
+
+	@Test
+	void intBorrow() {
+		assertTrue(MathUtils.willCarrySub((int) 1_000_000_000L, (int) 3_000_000_000L));
+	}
+
+	@Test
+	void intNoBorrow() {
+		assertFalse(MathUtils.willCarrySub(3_000_000_000L, 1_000_000_000L));
+	}
+
+	@Test
+	void longBorrow() {
+		long a = Long.parseUnsignedLong("10000000000000000000");
+		long b = Long.parseUnsignedLong("F000000000000000", 16); // much larger
+		assertTrue(MathUtils.willCarrySub(a, b));
+	}
+
+	@Test
+	void longNoBorrow() {
+		long a = Long.parseUnsignedLong("F000000000000000", 16);
+		long b = Long.parseUnsignedLong("10000000000000000000");
+		assertFalse(MathUtils.willCarrySub(a, b));
 	}
 }

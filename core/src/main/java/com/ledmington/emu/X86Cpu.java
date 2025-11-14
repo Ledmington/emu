@@ -132,13 +132,23 @@ public class X86Cpu implements X86Emulator {
 		switch (inst.opcode()) {
 			case SUB -> {
 				switch (inst.firstOperand()) {
-					case Register8 op1 -> op(op1, (Register8) inst.secondOperand(), (a, b) -> BitUtils.asByte(a - b));
+					case Register8 op1 ->
+						op(
+								op1,
+								(Register8) inst.secondOperand(),
+								(a, b) -> BitUtils.asByte(a - b),
+								MathUtils::willCarrySub);
 					case Register16 op1 ->
-						op(op1, (Register16) inst.secondOperand(), (a, b) -> BitUtils.asShort(a - b));
-					case Register32 op1 -> op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b);
+						op(
+								op1,
+								(Register16) inst.secondOperand(),
+								(a, b) -> BitUtils.asShort(a - b),
+								MathUtils::willCarrySub);
+					case Register32 op1 ->
+						op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b, MathUtils::willCarrySub);
 					case Register64 op1 -> {
 						switch (inst.secondOperand()) {
-							case Register64 op2 -> op(op1, op2, (a, b) -> a - b);
+							case Register64 op2 -> op(op1, op2, (a, b) -> a - b, MathUtils::willCarrySub);
 							case Immediate imm -> opSX(op1, imm, (a, b) -> a - b);
 							default ->
 								throw new IllegalArgumentException(String.format(
@@ -160,18 +170,18 @@ public class X86Cpu implements X86Emulator {
 								op1,
 								(Register8) inst.secondOperand(),
 								(a, b) -> BitUtils.asByte(a + b),
-								MathUtils::willCarry);
+								MathUtils::willCarryAdd);
 					case Register16 op1 ->
 						op(
 								op1,
 								(Register16) inst.secondOperand(),
 								(a, b) -> BitUtils.asShort(a + b),
-								MathUtils::willCarry);
+								MathUtils::willCarryAdd);
 					case Register32 op1 ->
-						op(op1, (Register32) inst.secondOperand(), Integer::sum, MathUtils::willCarry);
+						op(op1, (Register32) inst.secondOperand(), Integer::sum, MathUtils::willCarryAdd);
 					case Register64 op1 -> {
 						switch (inst.secondOperand()) {
-							case Register64 op2 -> op(op1, op2, Long::sum, MathUtils::willCarry);
+							case Register64 op2 -> op(op1, op2, Long::sum, MathUtils::willCarryAdd);
 							case Immediate imm -> opSX(op1, imm, Long::sum);
 							default ->
 								throw new IllegalArgumentException(String.format(
