@@ -339,7 +339,7 @@ public final class EmuDB {
 				final Instruction decoded = InstructionDecoder.fromHex(bb);
 				str = InstructionEncoder.toIntelSyntax(decoded);
 			} catch (final DecodingException e) {
-				str = "<unknown>";
+				str = "<unknown: " + e.getMessage() + ">";
 			}
 			out.printf("0x%016x : %s%n", pos, str);
 		}
