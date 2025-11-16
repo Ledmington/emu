@@ -261,13 +261,17 @@ public class X86Cpu implements X86Emulator {
 						true,
 						MathUtils::willCarrySub,
 						MathUtils::willOverflowSub);
-			case TEST ->
-				op(
-						() -> rf.get((Register64) inst.firstOperand()),
-						() -> rf.get((Register64) inst.secondOperand()),
-						(a, b) -> a & b,
-						result -> {},
-						true);
+			case TEST -> {
+				if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
+					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
+					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
+				}
+			}
 
 			// Jumps
 			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
@@ -333,6 +337,10 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					final long address = computeIndirectOperand(io);
 					mem.write(address, imm.asInt());
+				} else if (inst.firstOperand() instanceof final Register32 op1
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					final long address = computeIndirectOperand(io);
+					rf.set(op1, mem.read4(address));
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'.", inst.secondOperand()));
