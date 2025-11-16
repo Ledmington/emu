@@ -555,7 +555,7 @@ public final class EmuDB {
 
 		this.breakpoints.clear();
 
-		this.loadFile(savedArguments);
+		this.loadFile(this.filepath.toString(), this.savedArguments);
 	}
 
 	private void loadFile(final String... args) {
