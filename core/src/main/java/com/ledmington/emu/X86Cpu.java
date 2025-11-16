@@ -258,7 +258,9 @@ public class X86Cpu implements X86Emulator {
 						() -> getAsLongSX(inst.secondOperand()),
 						(a, b) -> a - b,
 						result -> {},
-						true);
+						true,
+						MathUtils::willCarrySub,
+						MathUtils::willOverflowSub);
 			case TEST ->
 				op(
 						() -> rf.get((Register64) inst.firstOperand()),
