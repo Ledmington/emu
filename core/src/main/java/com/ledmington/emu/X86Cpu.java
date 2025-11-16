@@ -253,9 +253,32 @@ public class X86Cpu implements X86Emulator {
 
 			// Jumps
 			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
-			case JE -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.ZERO));
-			case JNE -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.ZERO));
-			case JA -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO));
+			case JE /*, JZ */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.ZERO));
+			case JNE /*, JNZ */ -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.ZERO));
+			case JA /*, JNBE */ ->
+				jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO));
+			case JBE /*, JNA */ ->
+				jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO));
+			case JAE /*, JNB, JNC  */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.CARRY));
+			case JB /*, JNAE, JC*/ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.CARRY));
+			case JP /*, JPE */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.PARITY));
+			case JNP /*, JPO */ -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.PARITY));
+			case JG /*, JNLE */ ->
+				jumpToIf(
+						getAsLongSX(inst.firstOperand()),
+						!rf.isSet(RFlags.ZERO) && rf.isSet(RFlags.SIGN) == rf.isSet(RFlags.OVERFLOW));
+			case JGE /*, JNL */ ->
+				jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.SIGN) == rf.isSet(RFlags.OVERFLOW));
+			case JL /*, JNGE */ ->
+				jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.SIGN) != rf.isSet(RFlags.OVERFLOW));
+			case JLE /*, JNG */ ->
+				jumpToIf(
+						getAsLongSX(inst.firstOperand()),
+						rf.isSet(RFlags.ZERO) || rf.isSet(RFlags.SIGN) != rf.isSet(RFlags.OVERFLOW));
+			case JS -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.SIGN));
+			case JNS -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.SIGN));
+			case JO -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.OVERFLOW));
+			case JNO -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.OVERFLOW));
 
 			case MOV -> {
 				if (inst.firstOperand() instanceof Register64 r) {
