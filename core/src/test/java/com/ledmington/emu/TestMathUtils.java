@@ -107,4 +107,44 @@ public final class TestMathUtils {
 		long b = Long.parseUnsignedLong("10000000000000000000");
 		assertFalse(MathUtils.willCarrySub(a, b));
 	}
+
+	@Test
+	void byteOverflowSub() {
+		assertTrue(MathUtils.willOverflowSub((byte) -128, (byte) 1));
+	}
+
+	@Test
+	void byteNoOverflowSub() {
+		assertFalse(MathUtils.willOverflowSub((byte) 50, (byte) 20));
+	}
+
+	@Test
+	void shortOverflowSub() {
+		assertTrue(MathUtils.willOverflowSub((short) -32768, (short) 1));
+	}
+
+	@Test
+	void shortNoOverflowSub() {
+		assertFalse(MathUtils.willOverflowSub((short) 5000, (short) 2000));
+	}
+
+	@Test
+	void intOverflowSub() {
+		assertTrue(MathUtils.willOverflowSub(Integer.MIN_VALUE, 1));
+	}
+
+	@Test
+	void intNoOverflowSub() {
+		assertFalse(MathUtils.willOverflowSub(10_000, 2_000));
+	}
+
+	@Test
+	void longOverflowSub() {
+		assertTrue(MathUtils.willOverflowSub(Long.MIN_VALUE, 1L));
+	}
+
+	@Test
+	void longNoOverflowSub() {
+		assertFalse(MathUtils.willOverflowSub(1000L, 500L));
+	}
 }

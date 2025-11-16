@@ -137,18 +137,26 @@ public class X86Cpu implements X86Emulator {
 								op1,
 								(Register8) inst.secondOperand(),
 								(a, b) -> BitUtils.asByte(a - b),
-								MathUtils::willCarrySub);
+								MathUtils::willCarrySub,
+								MathUtils::willOverflowSub);
 					case Register16 op1 ->
 						op(
 								op1,
 								(Register16) inst.secondOperand(),
 								(a, b) -> BitUtils.asShort(a - b),
-								MathUtils::willCarrySub);
+								MathUtils::willCarrySub,
+								MathUtils::willOverflowSub);
 					case Register32 op1 ->
-						op(op1, (Register32) inst.secondOperand(), (a, b) -> a - b, MathUtils::willCarrySub);
+						op(
+								op1,
+								(Register32) inst.secondOperand(),
+								(a, b) -> a - b,
+								MathUtils::willCarrySub,
+								MathUtils::willOverflowSub);
 					case Register64 op1 -> {
 						switch (inst.secondOperand()) {
-							case Register64 op2 -> op(op1, op2, (a, b) -> a - b, MathUtils::willCarrySub);
+							case Register64 op2 ->
+								op(op1, op2, (a, b) -> a - b, MathUtils::willCarrySub, MathUtils::willOverflowSub);
 							case Immediate imm -> opSX(op1, imm, (a, b) -> a - b);
 							default ->
 								throw new IllegalArgumentException(String.format(
@@ -170,18 +178,26 @@ public class X86Cpu implements X86Emulator {
 								op1,
 								(Register8) inst.secondOperand(),
 								(a, b) -> BitUtils.asByte(a + b),
-								MathUtils::willCarryAdd);
+								MathUtils::willCarryAdd,
+								MathUtils::willOverflowAdd);
 					case Register16 op1 ->
 						op(
 								op1,
 								(Register16) inst.secondOperand(),
 								(a, b) -> BitUtils.asShort(a + b),
-								MathUtils::willCarryAdd);
+								MathUtils::willCarryAdd,
+								MathUtils::willOverflowAdd);
 					case Register32 op1 ->
-						op(op1, (Register32) inst.secondOperand(), Integer::sum, MathUtils::willCarryAdd);
+						op(
+								op1,
+								(Register32) inst.secondOperand(),
+								Integer::sum,
+								MathUtils::willCarryAdd,
+								MathUtils::willOverflowAdd);
 					case Register64 op1 -> {
 						switch (inst.secondOperand()) {
-							case Register64 op2 -> op(op1, op2, Long::sum, MathUtils::willCarryAdd);
+							case Register64 op2 ->
+								op(op1, op2, Long::sum, MathUtils::willCarryAdd, MathUtils::willOverflowAdd);
 							case Immediate imm -> opSX(op1, imm, Long::sum);
 							default ->
 								throw new IllegalArgumentException(String.format(
@@ -448,15 +464,30 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private void op(final Register8 op1, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, (a, b) -> false);
+		op(
+				() -> rf.get(op1),
+				() -> rf.get(op2),
+				task,
+				result -> rf.set(op1, result),
+				true,
+				(a, b) -> false,
+				(a, b) -> false);
 	}
 
 	private void op(
 			final Register8 op1,
 			final Register8 op2,
 			final BiFunction<Byte, Byte, Byte> task,
-			final BiPredicate<Byte, Byte> shouldSetCarryFlag) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
+			final BiPredicate<Byte, Byte> shouldSetCarryFlag,
+			final BiPredicate<Byte, Byte> shouldSetOverflowFlag) {
+		op(
+				() -> rf.get(op1),
+				() -> rf.get(op2),
+				task,
+				result -> rf.set(op1, result),
+				true,
+				shouldSetCarryFlag,
+				shouldSetOverflowFlag);
 	}
 
 	private void op(final Register16 op1, final Register16 op2, final BiFunction<Short, Short, Short> task) {
@@ -467,8 +498,16 @@ public class X86Cpu implements X86Emulator {
 			final Register16 op1,
 			final Register16 op2,
 			final BiFunction<Short, Short, Short> task,
-			final BiPredicate<Short, Short> shouldSetCarryFlag) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
+			final BiPredicate<Short, Short> shouldSetCarryFlag,
+			final BiPredicate<Short, Short> shouldSetOverflowFlag) {
+		op(
+				() -> rf.get(op1),
+				() -> rf.get(op2),
+				task,
+				result -> rf.set(op1, result),
+				true,
+				shouldSetCarryFlag,
+				shouldSetOverflowFlag);
 	}
 
 	private void op(final Register32 op1, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
@@ -479,8 +518,16 @@ public class X86Cpu implements X86Emulator {
 			final Register32 op1,
 			final Register32 op2,
 			final BiFunction<Integer, Integer, Integer> task,
-			final BiPredicate<Integer, Integer> shouldSetCarryFlag) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
+			final BiPredicate<Integer, Integer> shouldSetCarryFlag,
+			final BiPredicate<Integer, Integer> shouldSetOverflowFlag) {
+		op(
+				() -> rf.get(op1),
+				() -> rf.get(op2),
+				task,
+				result -> rf.set(op1, result),
+				true,
+				shouldSetCarryFlag,
+				shouldSetOverflowFlag);
 	}
 
 	private void op(final Register64 op1, final Register64 op2, final BiFunction<Long, Long, Long> task) {
@@ -491,8 +538,16 @@ public class X86Cpu implements X86Emulator {
 			final Register64 op1,
 			final Register64 op2,
 			final BiFunction<Long, Long, Long> task,
-			final BiPredicate<Long, Long> shouldSetCarryFlag) {
-		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true, shouldSetCarryFlag);
+			final BiPredicate<Long, Long> shouldSetCarryFlag,
+			final BiPredicate<Long, Long> shouldSetOverflowFlag) {
+		op(
+				() -> rf.get(op1),
+				() -> rf.get(op2),
+				task,
+				result -> rf.set(op1, result),
+				true,
+				shouldSetCarryFlag,
+				shouldSetOverflowFlag);
 	}
 
 	private void op(final Register64 op1, final Register8 op2, final BiFunction<Long, Byte, Long> task) {
@@ -513,7 +568,7 @@ public class X86Cpu implements X86Emulator {
 				true);
 	}
 
-	private <X> void updateRFlags(final X value, final boolean carryFlag) {
+	private <X> void updateRFlags(final X value, final boolean carryFlag, final boolean overflowFlag) {
 		if (!(value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long)) {
 			throw new AssertionError(String.format("Invalid type: %s.", value.getClass()));
 		}
@@ -522,6 +577,7 @@ public class X86Cpu implements X86Emulator {
 		rf.set(RFlags.PARITY, (Long.bitCount(x) % 2) == 0);
 		rf.set(RFlags.SIGN, x < 0L);
 		rf.set(RFlags.CARRY, carryFlag);
+		rf.set(RFlags.OVERFLOW, overflowFlag);
 		// TODO: add other flags
 	}
 
@@ -536,7 +592,7 @@ public class X86Cpu implements X86Emulator {
 		final Z result = task.apply(op1, op2);
 		writeResult.accept(result);
 		if (updateFlags) {
-			updateRFlags(result, false);
+			updateRFlags(result, false, false);
 		}
 	}
 
@@ -546,13 +602,14 @@ public class X86Cpu implements X86Emulator {
 			final BiFunction<X, Y, Z> task,
 			final Consumer<Z> writeResult,
 			final boolean updateFlags,
-			final BiPredicate<X, Y> shouldSetCarryFlag) {
+			final BiPredicate<X, Y> shouldSetCarryFlag,
+			final BiPredicate<X, Y> shouldSetOverflowFlag) {
 		final X op1 = readOp1.get();
 		final Y op2 = readOp2.get();
 		final Z result = task.apply(op1, op2);
 		writeResult.accept(result);
 		if (updateFlags) {
-			updateRFlags(result, shouldSetCarryFlag.test(op1, op2));
+			updateRFlags(result, shouldSetCarryFlag.test(op1, op2), shouldSetOverflowFlag.test(op1, op2));
 		}
 	}
 

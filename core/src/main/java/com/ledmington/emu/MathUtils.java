@@ -75,4 +75,48 @@ public final class MathUtils {
 		// Unsigned 64-bit compare using BigInteger, consistent with your willCarrySum(long,...)
 		return toUnsignedBigInteger(a).compareTo(toUnsignedBigInteger(b)) < 0;
 	}
+
+	// Signed Addition Overflow
+
+	public static boolean willOverflowAdd(final byte a, final byte b) {
+		final int r = (byte) ((int) a + (int) b);
+		return (((int) a ^ r) & ((int) b ^ r)) < 0;
+	}
+
+	public static boolean willOverflowAdd(final short a, final short b) {
+		final int r = (short) ((int) a + (int) b);
+		return (((int) a ^ r) & ((int) b ^ r)) < 0;
+	}
+
+	public static boolean willOverflowAdd(final int a, final int b) {
+		final int r = a + b;
+		return ((a ^ r) & (b ^ r)) < 0;
+	}
+
+	public static boolean willOverflowAdd(final long a, final long b) {
+		final long r = a + b;
+		return ((a ^ r) & (b ^ r)) < 0L;
+	}
+
+	// Signed Subtraction Overflow
+
+	public static boolean willOverflowSub(final byte a, final byte b) {
+		final int r = (byte) ((int) a - (int) b);
+		return (((int) a ^ (int) b) & ((int) a ^ r)) < 0;
+	}
+
+	public static boolean willOverflowSub(final short a, final short b) {
+		final int r = (short) ((int) a - (int) b);
+		return (((int) a ^ (int) b) & ((int) a ^ r)) < 0;
+	}
+
+	public static boolean willOverflowSub(final int a, final int b) {
+		final int r = a - b;
+		return ((a ^ b) & (a ^ r)) < 0;
+	}
+
+	public static boolean willOverflowSub(final long a, final long b) {
+		final long r = a - b;
+		return ((a ^ b) & (a ^ r)) < 0L;
+	}
 }
