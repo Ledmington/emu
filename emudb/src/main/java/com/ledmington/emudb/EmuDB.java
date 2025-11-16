@@ -330,45 +330,7 @@ public final class EmuDB {
 
 	private void showAssemblyAt(final long address) {
 		final int maxInstructions = 5;
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBuffer() {
-			// TODO: can we place this anonymous class somewhere else?
-			private long position = address;
-
-			@Override
-			public boolean isLittleEndian() {
-				return true;
-			}
-
-			@Override
-			public void setEndianness(final boolean isLittleEndian) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public void setAlignment(final long newAlignment) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public long getAlignment() {
-				return 1L;
-			}
-
-			@Override
-			public void setPosition(final long newPosition) {
-				this.position = newPosition;
-			}
-
-			@Override
-			public long getPosition() {
-				return this.position;
-			}
-
-			@Override
-			public byte read() {
-				return context.memory().read(position);
-			}
-		};
+		final ReadOnlyByteBuffer bb = new MemoryByteBuffer(address, context.memory());
 
 		for (int i = 0; i < maxInstructions; i++) {
 			final long pos = bb.getPosition();
