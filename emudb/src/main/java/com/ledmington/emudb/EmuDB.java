@@ -37,6 +37,7 @@ import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.SegmentRegister;
+import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
 import com.ledmington.elf.FileHeader;
@@ -368,10 +369,17 @@ public final class EmuDB {
 				return context.memory().read(position);
 			}
 		};
+
 		for (int i = 0; i < maxInstructions; i++) {
 			final long pos = bb.getPosition();
-			final Instruction decoded = InstructionDecoder.fromHex(bb);
-			out.printf("0x%016x : %s%n", pos, InstructionEncoder.toIntelSyntax(decoded));
+			String str;
+			try {
+				final Instruction decoded = InstructionDecoder.fromHex(bb);
+				str = InstructionEncoder.toIntelSyntax(decoded);
+			} catch (final DecodingException e) {
+				str = "<unknown>";
+			}
+			out.printf("0x%016x : %s%n", pos, str);
 		}
 	}
 
