@@ -414,7 +414,8 @@ public class X86Cpu implements X86Emulator {
 			}
 			case RET -> rf.set(Register64.RIP, pop());
 			case LEAVE -> {
-				// TODO: what should we do here?
+				rf.set(Register64.RSP, rf.get(Register64.RBP));
+				rf.set(Register64.RBP, pop());
 			}
 			case CMOVNE -> {
 				if (rf.isSet(RFlags.ZERO)) {
@@ -615,6 +616,7 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	/** Pushes the given value on top of the stack and updates RSP. */
 	private void push(final long value) {
 		final long oldStackPointer = rf.get(Register64.RSP);
 		// The stack "grows downward"
@@ -623,6 +625,7 @@ public class X86Cpu implements X86Emulator {
 		mem.write(newStackPointer, value);
 	}
 
+	/** Pops the value pointed by the top of the stack and returns it. */
 	private long pop() {
 		final long rsp = rf.get(Register64.RSP);
 		final long value = mem.read8(rsp);
