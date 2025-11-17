@@ -211,6 +211,7 @@ final class TestExecution {
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0L);
 		expected.set(RFlags.CARRY, MathUtils.willCarryAdd(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowAdd(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -230,6 +231,7 @@ final class TestExecution {
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
 		expected.set(RFlags.CARRY, MathUtils.willCarryAdd(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowAdd(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -249,6 +251,7 @@ final class TestExecution {
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
 		expected.set(RFlags.CARRY, MathUtils.willCarryAdd(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowAdd(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -268,6 +271,7 @@ final class TestExecution {
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
 		expected.set(RFlags.CARRY, MathUtils.willCarryAdd(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowAdd(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.ADD, a, b));
 		assertEquals(
 				expected,
@@ -286,6 +290,8 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0L);
 		expected.set(RFlags.PARITY, (Long.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0L);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySub(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSub(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -304,6 +310,8 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySub(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSub(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -322,6 +330,8 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySub(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSub(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
@@ -340,6 +350,8 @@ final class TestExecution {
 		expected.set(RFlags.ZERO, result == 0);
 		expected.set(RFlags.PARITY, (Integer.bitCount(BitUtils.asInt(result)) % 2) == 0);
 		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySub(oldValue1, oldValue2));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSub(oldValue1, oldValue2));
 		cpu.executeOne(new Instruction(Opcode.SUB, r1, r2));
 		assertEquals(
 				expected,
