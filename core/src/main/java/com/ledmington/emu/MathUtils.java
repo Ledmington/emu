@@ -142,8 +142,8 @@ public final class MathUtils {
 	 * @return True if the addition produces a signed overflow.
 	 */
 	public static boolean willOverflowAdd(final byte a, final byte b) {
-		final int r = (byte) ((int) a + (int) b);
-		return (((int) a ^ r) & ((int) b ^ r)) < 0;
+		final int r = (byte) (a + b);
+		return ((a ^ r) & (b ^ r)) < 0;
 	}
 
 	/**
@@ -154,8 +154,8 @@ public final class MathUtils {
 	 * @return True if the addition produces a signed overflow.
 	 */
 	public static boolean willOverflowAdd(final short a, final short b) {
-		final int r = (short) ((int) a + (int) b);
-		return (((int) a ^ r) & ((int) b ^ r)) < 0;
+		final int r = (short) (a + b);
+		return ((a ^ r) & (b ^ r)) < 0;
 	}
 
 	/**
@@ -192,8 +192,8 @@ public final class MathUtils {
 	 * @return True if the subtraction produces a signed overflow.
 	 */
 	public static boolean willOverflowSub(final byte a, final byte b) {
-		final int r = (byte) ((int) a - (int) b);
-		return (((int) a ^ (int) b) & ((int) a ^ r)) < 0;
+		final int r = (byte) (a - b);
+		return ((a ^ b) & (a ^ r)) < 0;
 	}
 
 	/**
@@ -204,8 +204,8 @@ public final class MathUtils {
 	 * @return True if the subtraction produces a signed overflow.
 	 */
 	public static boolean willOverflowSub(final short a, final short b) {
-		final int r = (short) ((int) a - (int) b);
-		return (((int) a ^ (int) b) & ((int) a ^ r)) < 0;
+		final int r = (short) (a - b);
+		return ((a ^ b) & (a ^ r)) < 0;
 	}
 
 	/**
