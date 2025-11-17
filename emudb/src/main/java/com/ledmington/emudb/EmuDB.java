@@ -59,7 +59,6 @@ import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.PagedMemory;
-import com.ledmington.mem.exc.IllegalMemoryAccessException;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.TerminalUtils;
 
@@ -511,7 +510,7 @@ public final class EmuDB {
 					break;
 				}
 			}
-		} catch (final IllegalMemoryAccessException e) {
+		} catch (final RuntimeException e) {
 			out.println(e);
 		}
 	}
