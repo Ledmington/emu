@@ -21,12 +21,14 @@ import java.util.Objects;
 
 import com.ledmington.mem.Memory;
 import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.SuppressFBWarnings;
 
 public final class MemoryByteBuffer implements ReadOnlyByteBuffer {
 
 	private long position;
 	private final Memory memory;
 
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public MemoryByteBuffer(final long initialPosition, final Memory memory) {
 		this.position = initialPosition;
 		this.memory = Objects.requireNonNull(memory);
