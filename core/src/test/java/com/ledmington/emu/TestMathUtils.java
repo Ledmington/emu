@@ -22,129 +22,220 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-public final class TestMathUtils {
+final class TestMathUtils {
 	@Test
 	void byteCarry() {
-		assertTrue(MathUtils.willCarryAdd((byte) 200, (byte) 100));
+		final byte a = (byte) 200;
+		final byte b = (byte) 100;
+		assertTrue(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%02x + 0x%02x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void byteNoCarry() {
-		assertFalse(MathUtils.willCarryAdd((byte) 1, (byte) 2));
+		final byte a = (byte) 1;
+		final byte b = (byte) 2;
+		assertFalse(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%02x + 0x%02x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void shortCarry() {
-		assertTrue(MathUtils.willCarryAdd((short) 60_000, (short) 50_000));
+		final short a = (short) 50_000;
+		final short b = (short) 60_000;
+		assertTrue(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%04x + 0x%04x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void shortNoCarry() {
-		assertFalse(MathUtils.willCarryAdd((short) 1, (short) 2));
+		final short a = (short) 1;
+		final short b = (short) 2;
+		assertFalse(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%04x + 0x%04x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void intCarry() {
-		assertTrue(MathUtils.willCarryAdd((int) 3_000_000_000L, (int) 3_000_000_000L));
+		final int a = (int) 3_000_000_000L;
+		final int b = (int) 3_000_000_000L;
+		assertTrue(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%08x + 0x%08x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void intNoCarry() {
-		assertFalse(MathUtils.willCarryAdd(1, 2));
+		final int a = 1;
+		final int b = 2;
+		assertFalse(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%08x + 0x%08x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void longCarry() {
-		assertTrue(MathUtils.willCarryAdd(
-				Long.parseUnsignedLong("10000000000000000000"), Long.parseUnsignedLong("10000000000000000000")));
+		final long a = Long.parseUnsignedLong("10000000000000000000");
+		final long b = Long.parseUnsignedLong("10000000000000000000");
+		assertTrue(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%016x + 0x%016x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void longNoCarry() {
-		assertFalse(MathUtils.willCarryAdd(1L, 2L));
+		final long a = 1L;
+		final long b = 2L;
+		assertFalse(
+				MathUtils.willCarryAdd(a, b),
+				() -> String.format("Expected 0x%016x + 0x%016x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void byteBorrow() {
-		assertTrue(MathUtils.willCarrySub((byte) 50, (byte) 100));
+		final byte a = (byte) 50;
+		final byte b = (byte) 100;
+		assertTrue(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%02x - 0x%02x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void byteNoBorrow() {
-		assertFalse(MathUtils.willCarrySub((byte) 100, (byte) 50));
+		final byte a = (byte) 100;
+		final byte b = (byte) 50;
+		assertFalse(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%02x - 0x%02x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void shortBorrow() {
-		assertTrue(MathUtils.willCarrySub((short) 10_000, (short) 50_000));
+		final short a = (short) 10_000;
+		final short b = (short) 50_000;
+		assertTrue(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%04x - 0x%04x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void shortNoBorrow() {
-		assertFalse(MathUtils.willCarrySub((short) 50_000, (short) 10_000));
+		final short a = (short) 50_000;
+		final short b = (short) 10_000;
+		assertFalse(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%04x - 0x%04x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void intBorrow() {
-		assertTrue(MathUtils.willCarrySub((int) 1_000_000_000L, (int) 3_000_000_000L));
+		final int a = (int) 1_000_000_000L;
+		final int b = (int) 3_000_000_000L;
+		assertTrue(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%08x - 0x%08x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void intNoBorrow() {
-		assertFalse(MathUtils.willCarrySub(3_000_000_000L, 1_000_000_000L));
+		final int a = (int) 3_000_000_000L;
+		final int b = (int) 1_000_000_000L;
+		assertFalse(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%08x - 0x%08x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void longBorrow() {
-		long a = Long.parseUnsignedLong("10000000000000000000");
-		long b = Long.parseUnsignedLong("F000000000000000", 16); // much larger
-		assertTrue(MathUtils.willCarrySub(a, b));
+		final long a = Long.parseUnsignedLong("10000000000000000000");
+		final long b = Long.parseUnsignedLong("F000000000000000", 16);
+		assertTrue(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%016x - 0x%016x to carry but id did not.", a, b));
 	}
 
 	@Test
 	void longNoBorrow() {
-		long a = Long.parseUnsignedLong("F000000000000000", 16);
-		long b = Long.parseUnsignedLong("10000000000000000000");
-		assertFalse(MathUtils.willCarrySub(a, b));
+		final long a = Long.parseUnsignedLong("F000000000000000", 16);
+		final long b = Long.parseUnsignedLong("10000000000000000000");
+		assertFalse(
+				MathUtils.willCarrySub(a, b),
+				() -> String.format("Expected 0x%016x - 0x%016x to not carry but id did.", a, b));
 	}
 
 	@Test
 	void byteOverflowSub() {
-		assertTrue(MathUtils.willOverflowSub((byte) -128, (byte) 1));
+		final byte a = (byte) -128;
+		final byte b = (byte) 1;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%02x - 0x%02x to overflow but it did not.", a, b));
 	}
 
 	@Test
 	void byteNoOverflowSub() {
-		assertFalse(MathUtils.willOverflowSub((byte) 50, (byte) 20));
+		final byte a = (byte) 50;
+		final byte b = (byte) 20;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%02x - 0x%02x to not overflow but it did.", a, b));
 	}
 
 	@Test
 	void shortOverflowSub() {
-		assertTrue(MathUtils.willOverflowSub((short) -32768, (short) 1));
+		final short a = (short) -32_768;
+		final short b = (short) 1;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%04x - 0x%04x to overflow but it did not.", a, b));
 	}
 
 	@Test
 	void shortNoOverflowSub() {
-		assertFalse(MathUtils.willOverflowSub((short) 5000, (short) 2000));
+		final short a = (short) 5000;
+		final short b = (short) 2000;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%04x - 0x%04x to not overflow but it did.", a, b));
 	}
 
 	@Test
 	void intOverflowSub() {
-		assertTrue(MathUtils.willOverflowSub(Integer.MIN_VALUE, 1));
+		final int a = Integer.MIN_VALUE;
+		final int b = 1;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%08x - 0x%08x to overflow but it did not.", a, b));
 	}
 
 	@Test
 	void intNoOverflowSub() {
-		assertFalse(MathUtils.willOverflowSub(10_000, 2_000));
+		final int a = 10_000;
+		final int b = 2_000;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%08x - 0x%08x to not overflow but it did.", a, b));
 	}
 
 	@Test
 	void longOverflowSub() {
-		assertTrue(MathUtils.willOverflowSub(Long.MIN_VALUE, 1L));
+		final long a = Long.MAX_VALUE;
+		final long b = 1L;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%016x - 0x%016x to overflow but it did not.", a, b));
 	}
 
 	@Test
 	void longNoOverflowSub() {
-		assertFalse(MathUtils.willOverflowSub(1000L, 500L));
+		final long a = 1_000L;
+		final long b = 500L;
+		assertTrue(
+				MathUtils.willOverflowSub(a, b),
+				() -> String.format("Expected 0x%016x - 0x%016x to not overflow but it did.", a, b));
 	}
 }
