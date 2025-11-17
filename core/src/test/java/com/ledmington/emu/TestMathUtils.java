@@ -180,7 +180,7 @@ final class TestMathUtils {
 	void byteNoOverflowSub() {
 		final byte a = (byte) 50;
 		final byte b = (byte) 20;
-		assertTrue(
+		assertFalse(
 				MathUtils.willOverflowSub(a, b),
 				() -> String.format("Expected 0x%02x - 0x%02x to not overflow but it did.", a, b));
 	}
@@ -198,7 +198,7 @@ final class TestMathUtils {
 	void shortNoOverflowSub() {
 		final short a = (short) 5000;
 		final short b = (short) 2000;
-		assertTrue(
+		assertFalse(
 				MathUtils.willOverflowSub(a, b),
 				() -> String.format("Expected 0x%04x - 0x%04x to not overflow but it did.", a, b));
 	}
@@ -216,14 +216,14 @@ final class TestMathUtils {
 	void intNoOverflowSub() {
 		final int a = 10_000;
 		final int b = 2_000;
-		assertTrue(
+		assertFalse(
 				MathUtils.willOverflowSub(a, b),
 				() -> String.format("Expected 0x%08x - 0x%08x to not overflow but it did.", a, b));
 	}
 
 	@Test
 	void longOverflowSub() {
-		final long a = Long.MAX_VALUE;
+		final long a = Long.MIN_VALUE;
 		final long b = 1L;
 		assertTrue(
 				MathUtils.willOverflowSub(a, b),
@@ -234,7 +234,7 @@ final class TestMathUtils {
 	void longNoOverflowSub() {
 		final long a = 1_000L;
 		final long b = 500L;
-		assertTrue(
+		assertFalse(
 				MathUtils.willOverflowSub(a, b),
 				() -> String.format("Expected 0x%016x - 0x%016x to not overflow but it did.", a, b));
 	}
