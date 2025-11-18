@@ -135,7 +135,7 @@ public final class InstructionBuilder {
 		}
 
 		alreadyBuilt = true;
-		return new Instruction(prefix, opcode, destinationMask, destinationMaskZero, op1, op2, op3, op4);
+		return new GeneralInstruction(prefix, opcode, destinationMask, destinationMaskZero, op1, op2, op3, op4);
 	}
 
 	@Override
