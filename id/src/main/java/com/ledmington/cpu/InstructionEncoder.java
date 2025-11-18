@@ -413,6 +413,18 @@ public final class InstructionEncoder {
 				&& Registers.requiresEvexExtension(r);
 	}
 
+	private static boolean isThirdEER(final Instruction inst) {
+		return inst.hasThirdOperand()
+				&& inst.thirdOperand() instanceof final Register r
+				&& Registers.requiresEvexExtension(r);
+	}
+
+	private static boolean isFourthEER(final Instruction inst) {
+		return inst.hasFourthOperand()
+				&& inst.fourthOperand() instanceof final Register r
+				&& Registers.requiresEvexExtension(r);
+	}
+
 	private static void encodeZeroOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		// TODO: refactor this into a map
 		switch (inst.opcode()) {
@@ -1323,10 +1335,9 @@ public final class InstructionEncoder {
 				}
 			}
 			case MOVAPS, MOVAPD -> {
-				if (isFirstXMM(inst) && inst.secondOperand() instanceof RegisterXMM) {
+				if (isFirstXMM(inst) && isSecondXMM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x28);
-				} else if (inst.firstOperand() instanceof final IndirectOperand io
-						&& inst.secondOperand() instanceof RegisterXMM) {
+				} else if (inst.firstOperand() instanceof final IndirectOperand io && isSecondXMM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x29);
 
 					if (isIpAndOffset(io)) {
@@ -1347,7 +1358,7 @@ public final class InstructionEncoder {
 			case MOVQ -> {
 				if ((isFirstXMM(inst) || isFirstMMX(inst)) && isSecondR64(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6e);
-				} else if (isFirstM(inst) && inst.secondOperand() instanceof RegisterXMM) {
+				} else if (isFirstM(inst) && isSecondXMM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xd6);
 				} else if (isFirstXMM(inst) && isSecondM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x7e);
@@ -1357,7 +1368,7 @@ public final class InstructionEncoder {
 			}
 			case MOVD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x6e);
 			case MOVHPS -> {
-				if (isFirstM(inst) && inst.secondOperand() instanceof RegisterXMM) {
+				if (isFirstM(inst) && isSecondXMM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x17);
 				} else if (isFirstXMM(inst) && isSecondM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x16);
@@ -1410,7 +1421,7 @@ public final class InstructionEncoder {
 				}
 			}
 			case MOVUPS -> {
-				if (isFirstM(inst) && inst.secondOperand() instanceof RegisterXMM) {
+				if (isFirstM(inst) && isSecondXMM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x11);
 				} else if (isFirstXMM(inst) && isSecondM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
@@ -1511,16 +1522,14 @@ public final class InstructionEncoder {
 			}
 			case VPMOVMSKB -> wb.write((byte) 0xd7);
 			case VMOVQ -> {
-				if (inst.firstOperand() instanceof final RegisterXMM r
-						&& Registers.requiresEvexExtension(r)
-						&& isSecondM(inst)) {
+				if ((isFirstXMM(inst) && isFirstEER(inst)) && isSecondM(inst)) {
 					wb.write((byte) 0x6e);
-				} else if (isFirstR64(inst) && inst.secondOperand() instanceof RegisterXMM) {
+				} else if (isFirstR64(inst) && isSecondXMM(inst)) {
 					wb.write((byte) 0x7e);
 				} else {
 					if (isFirstXMM(inst) && isSecondM(inst)) {
 						wb.write((byte) 0x7e);
-					} else if (isFirstM(inst) && inst.secondOperand() instanceof RegisterXMM) {
+					} else if (isFirstM(inst) && isSecondXMM(inst)) {
 						wb.write((byte) 0xd6);
 					}
 				}
@@ -1897,15 +1906,21 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.RCR && hasExtendedBase(inst.firstOperand()))) {
 			rex = or(rex, (byte) 0b0001);
 		}
-		if (rex != DEFAULT_REX_PREFIX
-				|| (inst.hasFirstOperand()
-						&& inst.firstOperand() instanceof final Register8 r
-						&& Register8.requiresRexPrefix(r))
-				|| (inst.hasSecondOperand()
-						&& inst.secondOperand() instanceof final Register8 r
-						&& Register8.requiresRexPrefix(r))) {
+		if (rex != DEFAULT_REX_PREFIX || isFirstRexR8(inst) || isSecondRexR8(inst)) {
 			wb.write(rex);
 		}
+	}
+
+	private static boolean isSecondRexR8(final Instruction inst) {
+		return inst.hasSecondOperand()
+				&& inst.secondOperand() instanceof final Register8 r
+				&& Register8.requiresRexPrefix(r);
+	}
+
+	private static boolean isFirstRexR8(final Instruction inst) {
+		return inst.hasFirstOperand()
+				&& inst.firstOperand() instanceof final Register8 r
+				&& Register8.requiresRexPrefix(r);
 	}
 
 	private static boolean isSetOpcode(final Opcode opcode) {
@@ -1915,6 +1930,18 @@ public final class InstructionEncoder {
 	private static boolean isSecondER(final Instruction inst) {
 		return inst.hasSecondOperand()
 				&& inst.secondOperand() instanceof final Register r
+				&& Registers.requiresExtension(r);
+	}
+
+	private static boolean isThirdER(final Instruction inst) {
+		return inst.hasThirdOperand()
+				&& inst.thirdOperand() instanceof final Register r
+				&& Registers.requiresExtension(r);
+	}
+
+	private static boolean isFourthER(final Instruction inst) {
+		return inst.hasFourthOperand()
+				&& inst.fourthOperand() instanceof final Register r
 				&& Registers.requiresExtension(r);
 	}
 
@@ -1988,9 +2015,7 @@ public final class InstructionEncoder {
 				}
 			}
 			case VPCMPEQD -> {
-				if (isFirstMask(inst)
-						&& inst.secondOperand() instanceof Register
-						&& inst.thirdOperand() instanceof IndirectOperand) {
+				if (isFirstMask(inst) && isSecondR(inst) && isThirdM(inst)) {
 					encodeEvexPrefix(wb, inst);
 					wb.write((byte) 0x1f);
 					lastByte = (byte) 0x00;
@@ -2001,9 +2026,7 @@ public final class InstructionEncoder {
 			}
 			case VPCMPEQQ -> wb.write((byte) 0x29);
 			case VPCMPNEQB -> {
-				if (isFirstMask(inst)
-						&& inst.secondOperand() instanceof Register
-						&& inst.thirdOperand() instanceof IndirectOperand) {
+				if (isFirstMask(inst) && isSecondR(inst) && inst.thirdOperand() instanceof IndirectOperand) {
 					encodeEvexPrefix(wb, inst);
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x04;
@@ -2071,16 +2094,16 @@ public final class InstructionEncoder {
 		} else if ((inst.opcode() == Opcode.SARX || inst.opcode() == Opcode.BZHI)
 				&& inst.firstOperand() instanceof final Register r1
 				&& inst.secondOperand() instanceof final Register r2
-				&& inst.thirdOperand() instanceof Register) {
+				&& isThirdR(inst)) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r2));
 		} else if ((requiresVex2Prefix(inst) || requiresVex3Prefix(inst) || requiresEvexPrefix(inst))
 				&& inst.firstOperand() instanceof final Register r1
 				&& !(isFirstMask(inst))
-				&& inst.secondOperand() instanceof Register
+				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final Register r3) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r3));
 		} else if (inst.firstOperand() instanceof final MaskRegister r1
-				&& inst.secondOperand() instanceof Register
+				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final IndirectOperand io) {
 			encodeModRM(
 					wb,
@@ -2090,7 +2113,7 @@ public final class InstructionEncoder {
 			encodeIndirectOperand(wb, io);
 			wb.write(lastByte);
 		} else if (inst.firstOperand() instanceof final MaskRegister r1
-				&& inst.secondOperand() instanceof Register
+				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final Register r3) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r3));
 			if (inst.opcode() != Opcode.VPTESTMB
@@ -2100,7 +2123,7 @@ public final class InstructionEncoder {
 				wb.write(lastByte);
 			}
 		} else if (inst.firstOperand() instanceof final Register r1
-				&& inst.secondOperand() instanceof Register
+				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final IndirectOperand io) {
 			encodeModRM(
 					wb,
@@ -2143,7 +2166,7 @@ public final class InstructionEncoder {
 		}
 
 		if (inst.firstOperand() instanceof final Register r1
-				&& inst.secondOperand() instanceof Register
+				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final IndirectOperand io
 				&& inst.fourthOperand() instanceof final Immediate imm) {
 			encodeModRM(
@@ -2154,7 +2177,7 @@ public final class InstructionEncoder {
 			encodeIndirectOperand(wb, io);
 			encodeImmediate(wb, imm);
 		} else if (inst.firstOperand() instanceof final Register r1
-				&& inst.secondOperand() instanceof Register
+				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final Register r3
 				&& inst.fourthOperand() instanceof final Immediate imm) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r3));
@@ -2183,54 +2206,36 @@ public final class InstructionEncoder {
 		};
 	}
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private static int countEvexExtensions(final Instruction inst) {
 		int count = 0;
-		if (inst.hasFirstOperand()) {
-			if (inst.firstOperand() instanceof final Register r && Registers.requiresEvexExtension(r)) {
-				count++;
-			}
-			if (inst.hasSecondOperand()) {
-				if (inst.secondOperand() instanceof final Register r && Registers.requiresEvexExtension(r)) {
-					count++;
-				}
-				if (inst.hasThirdOperand()) {
-					if (inst.thirdOperand() instanceof final Register r && Registers.requiresEvexExtension(r)) {
-						count++;
-					}
-					if (inst.hasFourthOperand()
-							&& inst.fourthOperand() instanceof final Register r
-							&& Registers.requiresEvexExtension(r)) {
-						count++;
-					}
-				}
-			}
+		if (isFirstEER(inst)) {
+			count++;
+		}
+		if (isSecondEER(inst)) {
+			count++;
+		}
+		if (isThirdEER(inst)) {
+			count++;
+		}
+		if (isFourthEER(inst)) {
+			count++;
 		}
 		return count;
 	}
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private static int countExtensions(final Instruction inst) {
 		int count = 0;
-		if (inst.hasFirstOperand()) {
-			if (inst.firstOperand() instanceof final Register r && Registers.requiresExtension(r)) {
-				count++;
-			}
-			if (inst.hasSecondOperand()) {
-				if (inst.secondOperand() instanceof final Register r && Registers.requiresExtension(r)) {
-					count++;
-				}
-				if (inst.hasThirdOperand()) {
-					if (inst.thirdOperand() instanceof final Register r && Registers.requiresExtension(r)) {
-						count++;
-					}
-					if (inst.hasFourthOperand()
-							&& inst.fourthOperand() instanceof final Register r
-							&& Registers.requiresExtension(r)) {
-						count++;
-					}
-				}
-			}
+		if (isFirstER(inst)) {
+			count++;
+		}
+		if (isSecondER(inst)) {
+			count++;
+		}
+		if (isThirdER(inst)) {
+			count++;
+		}
+		if (isFourthER(inst)) {
+			count++;
 		}
 		return count;
 	}
@@ -2239,13 +2244,7 @@ public final class InstructionEncoder {
 		if (isFirstZ(inst)) {
 			return false;
 		}
-		if (inst.getNumOperands() >= 3
-				&& inst.firstOperand() instanceof final Register r1
-				&& Registers.requiresExtension(r1)
-				&& inst.secondOperand() instanceof final Register r2
-				&& Registers.requiresExtension(r2)
-				&& inst.thirdOperand() instanceof final Register r3
-				&& Registers.requiresExtension(r3)) {
+		if (inst.getNumOperands() >= 3 && isFirstER(inst) && isSecondER(inst) && isThirdER(inst)) {
 			return true;
 		}
 		return switch (inst.opcode()) {
@@ -2266,17 +2265,8 @@ public final class InstructionEncoder {
 	private static boolean requiresEvexPrefix(final Instruction inst) {
 		return switch (inst.opcode()) {
 			case VPTESTMB, VPORQ, VPXORQ, VMOVNTDQ, VMOVDQU8, VMOVDQU64, VMOVUPS, VPBROADCASTB, VPBROADCASTD -> true;
-			case VPCMPEQB ->
-				isFirstMask(inst)
-						&& (inst.hasSecondOperand()
-								&& inst.secondOperand() instanceof final Register r
-								&& Registers.requiresEvexExtension(r))
-						&& (isThirdM(inst) || isThirdR(inst));
-			case VPMINUB ->
-				inst.firstOperand() instanceof final Register r1
-						&& Registers.requiresEvexExtension(r1)
-						&& inst.secondOperand() instanceof final Register r2
-						&& Registers.requiresEvexExtension(r2);
+			case VPCMPEQB -> isFirstMask(inst) && isSecondEER(inst) && (isThirdM(inst) || isThirdR(inst));
+			case VPMINUB -> isFirstEER(inst) && isSecondEER(inst);
 			default -> false;
 		};
 	}
@@ -2366,28 +2356,21 @@ public final class InstructionEncoder {
 	private static void encodeVex3Prefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		wb.write((byte) 0xc4);
 
-		final boolean hasExtendedThirdRegister = inst.hasThirdOperand()
-				&& inst.thirdOperand() instanceof final Register r
-				&& Registers.requiresExtension(r);
+		final boolean hasExtendedThirdRegister = isThirdER(inst);
 
 		encodeVex3FirstByte(
 				wb,
 				!((inst.getNumOperands() == 2
-								&& ((isFirstER(inst) && inst.secondOperand() instanceof Register)
-										|| (isFirstM(inst) && isSecondER(inst))))
-						|| (inst.getNumOperands() == 3
-								&& (inst.firstOperand() instanceof final Register r
-										&& Registers.requiresExtension(r)))),
+								&& ((isFirstER(inst) && isSecondR(inst)) || (isFirstM(inst) && isSecondER(inst))))
+						|| (inst.getNumOperands() == 3 && isFirstER(inst))),
 				!((inst.getNumOperands() == 2
-								&& ((hasExtendedFirstIndex(inst) && inst.secondOperand() instanceof Register)
-										|| (inst.firstOperand() instanceof Register
-												&& hasExtendedIndex(inst.secondOperand()))))
+								&& ((hasExtendedFirstIndex(inst) && isSecondR(inst))
+										|| (isFirstR(inst) && hasExtendedIndex(inst.secondOperand()))))
 						|| (inst.getNumOperands() == 3 && hasExtendedIndex(inst.thirdOperand()))),
 				!((inst.getNumOperands() == 2
 								&& ((isFirstR(inst) && hasExtendedBase(inst.secondOperand()))
-										|| (hasExtendedBase(inst.firstOperand())
-												&& inst.secondOperand() instanceof Register)
-										|| (inst.firstOperand() instanceof Register && isSecondER(inst))))
+										|| (hasExtendedBase(inst.firstOperand()) && isSecondR(inst))
+										|| (isFirstR(inst) && isSecondER(inst))))
 						|| (inst.getNumOperands() == 3 && (hasExtendedThirdRegister))),
 				getVex3OpcodeMap(inst.opcode()));
 
@@ -2453,36 +2436,19 @@ public final class InstructionEncoder {
 
 		encodeEvexFirstByte(
 				wb,
-				(inst.getNumOperands() == 3
-								&& inst.firstOperand() instanceof final Register r1
-								&& Registers.requiresExtension(r1))
-						|| (inst.getNumOperands() == 2
-								&& inst.secondOperand() instanceof final Register r2
-								&& Registers.requiresExtension(r2)),
-				inst.hasThirdOperand()
-						&& inst.thirdOperand() instanceof final Register r
-						&& Registers.requiresEvexExtension(r),
+				(inst.getNumOperands() == 3 && isFirstER(inst)) || (inst.getNumOperands() == 2 && isSecondER(inst)),
+				isThirdEER(inst),
 				false,
-				(inst.getNumOperands() == 2
-								&& inst.firstOperand() instanceof final Register r
-								&& Registers.requiresEvexExtension(r)
-								&& (inst.secondOperand() instanceof Register || isSecondM(inst)))
-						|| (inst.getNumOperands() == 2
-								&& (inst.firstOperand() instanceof Register || isFirstM(inst))
-								&& inst.secondOperand() instanceof final Register r2
-								&& Registers.requiresEvexExtension(r2))
+				(inst.getNumOperands() == 2 && isFirstEER(inst) && (isSecondR(inst) || isSecondM(inst)))
+						|| (inst.getNumOperands() == 2 && (isFirstR(inst) || isFirstM(inst)) && isSecondEER(inst))
 						|| (inst.getNumOperands() == 3
-								&& inst.firstOperand() instanceof final Register r
-								&& Registers.requiresEvexExtension(r)
-								&& inst.secondOperand() instanceof Register
-								&& (inst.thirdOperand() instanceof Register
-										|| inst.thirdOperand() instanceof IndirectOperand))
+								&& isFirstEER(inst)
+								&& isSecondR(inst)
+								&& (isThirdR(inst) || isThirdM(inst)))
 						|| (inst.getNumOperands() == 4
-								&& inst.firstOperand() instanceof final Register r
-								&& Registers.requiresEvexExtension(r)
-								&& inst.secondOperand() instanceof Register
-								&& (inst.thirdOperand() instanceof Register
-										|| inst.thirdOperand() instanceof IndirectOperand)
+								&& isFirstEER(inst)
+								&& isSecondR(inst)
+								&& (isThirdR(inst) || isThirdM(inst))
 								&& inst.fourthOperand() instanceof Immediate),
 				getEvexOpcodeMap(inst.opcode()));
 
@@ -2491,43 +2457,43 @@ public final class InstructionEncoder {
 		if (inst.getNumOperands() == 3
 				&& isFirstMask(inst)
 				&& inst.secondOperand() instanceof final Register r
-				&& inst.thirdOperand() instanceof IndirectOperand) {
+				&& isThirdM(inst)) {
 			rvvvv = r;
 		} else if ((inst.opcode() == Opcode.VPXORQ
 						|| inst.opcode() == Opcode.VPMINUB
 						|| inst.opcode() == Opcode.VPMINUD)
 				&& inst.getNumOperands() == 3
-				&& inst.firstOperand() instanceof Register
+				&& isFirstR(inst)
 				&& inst.secondOperand() instanceof final Register r
-				&& inst.thirdOperand() instanceof IndirectOperand) {
+				&& isThirdM(inst)) {
 			rvvvv = r;
 		} else if (inst.getNumOperands() == 3
 				&& inst.firstOperand() instanceof final Register r
-				&& inst.secondOperand() instanceof Register
-				&& inst.thirdOperand() instanceof IndirectOperand) {
+				&& isSecondR(inst)
+				&& isThirdM(inst)) {
 			rvvvv = r;
 		} else if (inst.getNumOperands() == 3
-				&& inst.firstOperand() instanceof Register
+				&& isFirstR(inst)
 				&& inst.secondOperand() instanceof final Register r
-				&& inst.thirdOperand() instanceof Register) {
+				&& isThirdR(inst)) {
 			rvvvv = r;
 		} else if (inst.opcode() == Opcode.VPTERNLOGD
 				&& inst.getNumOperands() == 4
-				&& inst.firstOperand() instanceof Register
+				&& isFirstR(inst)
 				&& inst.secondOperand() instanceof final Register r
-				&& inst.thirdOperand() instanceof IndirectOperand
+				&& isThirdM(inst)
 				&& inst.fourthOperand() instanceof Immediate) {
 			rvvvv = r;
 		} else if (inst.getNumOperands() == 4
 				&& inst.firstOperand() instanceof final Register r
-				&& inst.secondOperand() instanceof Register
-				&& inst.thirdOperand() instanceof IndirectOperand
+				&& isSecondR(inst)
+				&& isThirdM(inst)
 				&& inst.fourthOperand() instanceof Immediate) {
 			rvvvv = r;
 		} else if (inst.getNumOperands() == 4
-				&& inst.firstOperand() instanceof Register
+				&& isFirstR(inst)
 				&& inst.secondOperand() instanceof final Register r
-				&& inst.thirdOperand() instanceof Register
+				&& isThirdR(inst)
 				&& inst.fourthOperand() instanceof Immediate) {
 			rvvvv = r;
 		}
@@ -2542,7 +2508,7 @@ public final class InstructionEncoder {
 		encodeEvexThirdByte(
 				wb,
 				inst.hasDestinationMask() && inst.hasZeroDestinationMask(),
-				inst.firstOperand() instanceof RegisterZMM || inst.secondOperand() instanceof RegisterZMM,
+				isFirstZ(inst) || isSecondZ(inst),
 				isFirstYMM(inst) || isSecondYMM(inst),
 				false,
 				rvvvv != null && Registers.requiresEvexExtension(rvvvv),
