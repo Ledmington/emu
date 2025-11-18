@@ -19,6 +19,7 @@ package com.ledmington.cpu.x86;
 
 import java.util.Objects;
 
+/** Most general implementation of an x86 instruction. */
 public final class GeneralInstruction implements Instruction {
 
 	private final InstructionPrefix prefix;
@@ -85,13 +86,22 @@ public final class GeneralInstruction implements Instruction {
 	 * @param opcode The opcode of the Instruction.
 	 * @param firstOperand The first operand of the Instruction.
 	 * @param secondOperand The second operand of the Instruction.
-	 * @param thirdOperand The third of the Instruction.
+	 * @param thirdOperand The third operand of the Instruction.
 	 */
 	public GeneralInstruction(
 			final Opcode opcode, final Operand firstOperand, final Operand secondOperand, final Operand thirdOperand) {
 		this(null, opcode, null, false, firstOperand, secondOperand, thirdOperand, null);
 	}
 
+	/**
+	 * Creates an Instruction with a prefix and 3 operands.
+	 *
+	 * @param prefix The prefix of the Instruction.
+	 * @param opcode The opcode of the Instruction.
+	 * @param firstOperand The first operand of the Instruction.
+	 * @param secondOperand The second operand of the Instruction.
+	 * @param thirdOperand The third operand of the Instruction.
+	 */
 	public GeneralInstruction(
 			final InstructionPrefix prefix,
 			final Opcode opcode,
@@ -101,6 +111,15 @@ public final class GeneralInstruction implements Instruction {
 		this(prefix, opcode, null, false, firstOperand, secondOperand, thirdOperand, null);
 	}
 
+	/**
+	 * Creates an Instruction with 4 operands.
+	 *
+	 * @param opcode The opcode of the Instruction.
+	 * @param firstOperand The first operand of the Instruction.
+	 * @param secondOperand The second operand of the Instruction.
+	 * @param thirdOperand The third operand of the Instruction.
+	 * @param fourthOperand The fourth operand of the Instruction.
+	 */
 	public GeneralInstruction(
 			final Opcode opcode,
 			final Operand firstOperand,
@@ -121,10 +140,23 @@ public final class GeneralInstruction implements Instruction {
 		this(null, opcode, null, false, firstOperand, secondOperand, null, null);
 	}
 
+	/**
+	 * Creates an Instruction with a prefix and one operands.
+	 *
+	 * @param prefix The prefix of the Instruction.
+	 * @param opcode The opcode of the Instruction.
+	 * @param firstOperand The first operand of the Instruction.
+	 */
 	public GeneralInstruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
 		this(prefix, opcode, null, false, firstOperand, null, null, null);
 	}
 
+	/**
+	 * Creates an Instruction with a prefix and no operands.
+	 *
+	 * @param prefix The prefix of the Instruction.
+	 * @param opcode The opcode of the Instruction.
+	 */
 	public GeneralInstruction(final InstructionPrefix prefix, final Opcode opcode) {
 		this(prefix, opcode, null, false, null, null, null, null);
 	}

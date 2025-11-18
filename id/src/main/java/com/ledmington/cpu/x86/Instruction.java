@@ -20,6 +20,11 @@ package com.ledmington.cpu.x86;
 /** High-level representation of an x86 instruction. */
 public interface Instruction {
 
+	/**
+	 * Returns a new instance of InstructionBuilder.
+	 *
+	 * @return A new instance of InstructionBuilder.
+	 */
 	static InstructionBuilder builder() {
 		return new InstructionBuilder();
 	}
