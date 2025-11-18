@@ -568,12 +568,15 @@ public class X86Cpu implements X86Emulator {
 	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
 		op(
 				() -> rf.get(op1),
+				// TODO: until https://github.com/pmd/pmd/issues/6237 gets fixed, we cannot return lambdas from switch
+				// expressions
 				// FIXME: ugly
-				switch (imm.bits()) {
-					case 8 -> () -> (long) imm.asByte();
-					case 32 -> () -> (long) imm.asInt();
-					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
-				},
+				() -> (long)
+						switch (imm.bits()) {
+							case 8 -> imm.asByte();
+							case 32 -> imm.asInt();
+							default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
+						},
 				task,
 				result -> rf.set(op1, result),
 				true);
