@@ -485,6 +485,7 @@ public final class EmuDB {
 		return hasHitABreakpoint;
 	}
 
+	@SuppressWarnings("PMD.AvoidCatchingGenericException")
 	private void runFile(final String... args) {
 		if (hasNotLoadedFile()) {
 			if (args.length == 0) {
