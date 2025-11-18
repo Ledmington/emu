@@ -114,10 +114,17 @@ public final class Main {
 					continue;
 				}
 
-				disassembleSection(elf, i);
+				try {
+					disassembleSection(elf, i);
+				} catch (final Throwable t) {
+					out.println();
+					out.flush();
+					throw t;
+				}
 			}
 		}
 
+		out.println();
 		out.flush();
 		System.exit(0);
 	}
