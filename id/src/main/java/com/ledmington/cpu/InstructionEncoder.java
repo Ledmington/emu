@@ -198,6 +198,17 @@ public final class InstructionEncoder {
 	}
 
 	/**
+	 * Encodes a single instruction in intel syntax.
+	 *
+	 * @param inst The instruction to be encoded.
+	 * @param checkInstructions When enabled, checks the instruction before encoding it.
+	 * @return An unambiguous String representation of this instruction with Intel syntax.
+	 */
+	public static String toIntelSyntax(final Instruction inst, final boolean checkInstructions) {
+		return toIntelSyntax(inst, checkInstructions, 0, false);
+	}
+
+	/**
 	 * Encodes the given instruction into intel syntax representation.
 	 *
 	 * @param inst The instruction to be encoded.

@@ -127,7 +127,7 @@ public class X86Cpu implements X86Emulator {
 			InstructionChecker.check(inst);
 		}
 
-		logger.debug(InstructionEncoder.toIntelSyntax(inst));
+		logger.debug(InstructionEncoder.toIntelSyntax(inst, checkInstructions));
 
 		switch (inst.opcode()) {
 			case SUB -> {
