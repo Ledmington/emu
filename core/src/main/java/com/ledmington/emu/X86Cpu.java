@@ -436,6 +436,18 @@ public class X86Cpu implements X86Emulator {
 				logger.error("Illegal instruction.");
 				state = State.HALTED;
 			}
+			case CPUID -> {
+				// CPUID uses only 32-bit registers
+				final int eax = rf.get(Register32.EAX);
+				if (eax == 0) {
+					rf.set(Register32.EAX, 0); // maximum standard leaf supported
+					rf.set(Register32.EBX, 0x47656e75); // 'Genu'
+					rf.set(Register32.ECX, 0x696e6549); // 'ineI'
+					rf.set(Register32.EDX, 0x6e74656c); // 'ntel'
+				} else {
+					throw new IllegalArgumentException(String.format("Unknown CPUID leaf %d.", eax));
+				}
+			}
 			default ->
 				throw new IllegalArgumentException(
 						String.format("Unknown instruction '%s'.", InstructionEncoder.toIntelSyntax(inst)));

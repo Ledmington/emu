@@ -40,7 +40,7 @@ public final class EmulatorConstants {
 	private static long stackSize = 8L * 1024L * 1024L;
 
 	/** The value at the base of the stack. */
-    // TODO: do we actually need this?
+	// TODO: do we actually need this?
 	private static long baseStackValue = 0L; // This is the value gdb uses, why?
 
 	private static boolean checkInstructions = true;
