@@ -384,10 +384,7 @@ public class X86Cpu implements X86Emulator {
 
 				push(value);
 			}
-			case POP -> {
-				final Register64 dest = (Register64) inst.firstOperand();
-				rf.set(dest, pop());
-			}
+			case POP -> popInto((Register64) inst.firstOperand());
 			case LEA -> {
 				final IndirectOperand src = (IndirectOperand) inst.secondOperand();
 				if (inst.firstOperand() instanceof final Register64 dest) {
@@ -420,10 +417,10 @@ public class X86Cpu implements X86Emulator {
 
 				rf.set(Register64.RIP, jumpAddress);
 			}
-			case RET -> rf.set(Register64.RIP, pop());
+			case RET -> popInto(Register64.RIP);
 			case LEAVE -> {
 				rf.set(Register64.RSP, rf.get(Register64.RBP));
-				rf.set(Register64.RBP, pop());
+				popInto(Register64.RBP);
 			}
 			case CMOVNE -> {
 				if (rf.isSet(RFlags.ZERO)) {
@@ -443,6 +440,10 @@ public class X86Cpu implements X86Emulator {
 				throw new IllegalArgumentException(
 						String.format("Unknown instruction '%s'.", InstructionEncoder.toIntelSyntax(inst)));
 		}
+	}
+
+	private void popInto(final Register64 reg) {
+		rf.set(reg, pop());
 	}
 
 	private void handleSyscall() {
@@ -640,13 +641,32 @@ public class X86Cpu implements X86Emulator {
 	private long pop() {
 		final long rsp = rf.get(Register64.RSP);
 		final long value = mem.read8(rsp);
-		// If we read the baseStackValue, we have exhausted the stack
-		if (value == EmulatorConstants.getBaseStackValue()) {
+		final long newRSP = rsp + 8L;
+
+		final long alignedBaseStackAddress = alignBaseStackAddress(EmulatorConstants.getBaseStackAddress());
+		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
+		final long stackBottom =
+				alignedBaseStackAddress - EmulatorConstants.getStackSize(); // lowest address (stack limit)
+
+		if (newRSP < stackBottom || newRSP > stackTop) {
 			throw new StackUnderflow();
 		}
+
 		// the stack "grows downward"
-		rf.set(Register64.RSP, rsp + 8L);
+		rf.set(Register64.RSP, newRSP);
 		return value;
+	}
+
+	/** Aligns the given address to a 16-byte boundary. */
+	private long alignBaseStackAddress(final long baseStackAddress) {
+		final boolean isAligned = (baseStackAddress & 0xFL) == 0L;
+		if (isAligned) {
+			return baseStackAddress;
+		} else {
+			final long alignedBaseStackAddress = (baseStackAddress + 15L) & 0xFFFFFFFFFFFFFFF0L;
+			logger.debug("Aligning base stack address to 16-byte boundary: 0x%x", alignedBaseStackAddress);
+			return alignedBaseStackAddress;
+		}
 	}
 
 	/** Returns a zero-extends integer. */
