@@ -35,6 +35,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.emu.config.CPUConfig;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
@@ -61,6 +62,7 @@ public class X86Cpu implements X86Emulator {
 	private final Memory mem; // TODO: can we remove dependency on mem?
 	private final InstructionFetcher instFetch;
 	private final boolean checkInstructions;
+	private final CPUConfig cpuConfig = CPUConfig.GENERIC_INTEL;
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -212,7 +214,15 @@ public class X86Cpu implements X86Emulator {
 								String.format("Don't know what to do with ADD and %s.", inst.firstOperand()));
 				}
 			}
-			case SHR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >>> i);
+			case SHR -> {
+				if (inst.firstOperand() instanceof final Register32 r) {
+					opSX(r, (Immediate) inst.secondOperand(), (x, i) -> x >>> i);
+				} else if (inst.firstOperand() instanceof final Register64 r) {
+					opSX(r, (Immediate) inst.secondOperand(), (x, i) -> x >>> i);
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+				}
+			}
 			case SAR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
 			case SHL -> op((Register64) inst.firstOperand(), (Register8) inst.secondOperand(), (r, i) -> r << i);
 			case XOR -> {
@@ -245,6 +255,9 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a & b);
+				} else if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r1, imm, (a, b) -> a & b);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					opSX(r1, imm, (a, b) -> a & b);
@@ -465,14 +478,16 @@ public class X86Cpu implements X86Emulator {
 			case CPUID -> {
 				// CPUID uses only 32-bit registers
 				final int eax = rf.get(Register32.EAX);
-				if (eax == 0) {
-					rf.set(Register32.EAX, 0); // maximum standard leaf supported
-					rf.set(Register32.EBX, 0x47656e75); // 'Genu'
-					rf.set(Register32.ECX, 0x696e6549); // 'ineI'
-					rf.set(Register32.EDX, 0x6e74656c); // 'ntel'
-				} else {
+				if (eax < 0 || eax > cpuConfig.getMaxSupportedStandardLeaf()) {
 					throw new IllegalArgumentException(String.format("Unknown CPUID leaf %d.", eax));
 				}
+
+				final int[] values = new int[4];
+				cpuConfig.setLeafValues(eax, values);
+				rf.set(Register32.EAX, values[0]);
+				rf.set(Register32.EBX, values[1]);
+				rf.set(Register32.ECX, values[2]);
+				rf.set(Register32.EDX, values[3]);
 			}
 			default ->
 				throw new IllegalArgumentException(
@@ -627,6 +642,22 @@ public class X86Cpu implements X86Emulator {
 							case 32 -> imm.asInt();
 							default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
 						},
+				task,
+				result -> rf.set(op1, result),
+				true);
+	}
+
+	private void opSX(final Register32 op1, final Immediate imm, final BiFunction<Integer, Integer, Integer> task) {
+		op(
+				() -> rf.get(op1),
+				// TODO: until https://github.com/pmd/pmd/issues/6237 gets fixed, we cannot return lambdas from switch
+				// expressions
+				// FIXME: ugly
+				() -> switch (imm.bits()) {
+					case 8 -> (int) imm.asByte();
+					case 32 -> imm.asInt();
+					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
+				},
 				task,
 				result -> rf.set(op1, result),
 				true);
