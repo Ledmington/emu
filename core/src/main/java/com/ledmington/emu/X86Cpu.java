@@ -281,7 +281,7 @@ public class X86Cpu implements X86Emulator {
 				jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO));
 			case JBE /*, JNA */ ->
 				jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO));
-			case JAE /*, JNB, JNC  */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.CARRY));
+			case JAE /*, JNB, JNC  */ -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.CARRY));
 			case JB /*, JNAE, JC*/ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.CARRY));
 			case JP /*, JPE */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.PARITY));
 			case JNP /*, JPO */ -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.PARITY));
@@ -301,6 +301,26 @@ public class X86Cpu implements X86Emulator {
 			case JNS -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.SIGN));
 			case JO -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.OVERFLOW));
 			case JNO -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.OVERFLOW));
+
+			// Compare and set byte
+			case SETE /*, SETZ */ -> setIf(inst.firstOperand(), rf.isSet(RFlags.ZERO));
+			case SETNE /*, SETNZ */ -> setIf(inst.firstOperand(), !rf.isSet(RFlags.ZERO));
+			case SETA /*, SETNBE */ -> setIf(inst.firstOperand(), !rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO));
+			case SETBE /*, SETNA */ -> setIf(inst.firstOperand(), rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO));
+			case SETAE /*, SETNB, SETNC */ -> setIf(inst.firstOperand(), !rf.isSet(RFlags.CARRY));
+			case SETB /*, SETNAE, SETC */ -> setIf(inst.firstOperand(), rf.isSet(RFlags.CARRY));
+			case SETG /*, SETNLE */ ->
+				setIf(
+						inst.firstOperand(),
+						!rf.isSet(RFlags.ZERO) && rf.isSet(RFlags.SIGN) == rf.isSet(RFlags.OVERFLOW));
+			case SETGE /*, SETNL */ -> setIf(inst.firstOperand(), rf.isSet(RFlags.SIGN) == rf.isSet(RFlags.OVERFLOW));
+			case SETL /*, SETNGE */ -> setIf(inst.firstOperand(), rf.isSet(RFlags.SIGN) != rf.isSet(RFlags.OVERFLOW));
+			case SETLE /*, SETNG */ ->
+				setIf(inst.firstOperand(), rf.isSet(RFlags.ZERO) || rf.isSet(RFlags.SIGN) != rf.isSet(RFlags.OVERFLOW));
+			case SETS -> setIf(inst.firstOperand(), rf.isSet(RFlags.SIGN));
+			case SETNS -> setIf(inst.firstOperand(), !rf.isSet(RFlags.SIGN));
+			case SETO -> setIf(inst.firstOperand(), rf.isSet(RFlags.OVERFLOW));
+			case SETNO -> setIf(inst.firstOperand(), !rf.isSet(RFlags.OVERFLOW));
 
 			case MOV -> {
 				if (inst.firstOperand() instanceof Register64 r) {
@@ -468,6 +488,17 @@ public class X86Cpu implements X86Emulator {
 			state = State.HALTED;
 		} else {
 			throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
+		}
+	}
+
+	private void setIf(final Operand operand, final boolean condition) {
+		final byte value = condition ? (byte) 1 : (byte) 0;
+		if (operand instanceof final Register8 r) {
+			rf.set(r, value);
+		} else if (operand instanceof final IndirectOperand io && io.getPointerSize() == PointerSize.BYTE_PTR) {
+			mem.write(computeIndirectOperand(io), value);
+		} else {
+			throw new IllegalArgumentException(String.format("Don't know what to do with SETcc and %s.", operand));
 		}
 	}
 
