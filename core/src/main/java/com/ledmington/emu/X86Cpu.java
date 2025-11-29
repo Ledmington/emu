@@ -262,11 +262,17 @@ public class X86Cpu implements X86Emulator {
 						MathUtils::willCarrySub,
 						MathUtils::willOverflowSub);
 			case TEST -> {
-				if (inst.firstOperand() instanceof final Register64 r1
-						&& inst.secondOperand() instanceof final Register64 r2) {
-					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
+				if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
+					op(() -> rf.get(r1), () -> rf.get(r2), BitUtils::and, result -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register16 r1
+						&& inst.secondOperand() instanceof final Register16 r2) {
+					op(() -> rf.get(r1), () -> rf.get(r2), BitUtils::and, result -> {}, true);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Register32 r2) {
+					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
