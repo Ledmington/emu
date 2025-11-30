@@ -26,6 +26,8 @@ import java.util.Objects;
  */
 public final class CPUConfig {
 
+	private static final int VALUES_FOR_EACH_LEAF = 4;
+
 	/** The CPU config of a generic Intel processor. */
 	public static final CPUConfig GENERIC_INTEL = new CPUConfig(new int[][] {
 		{
@@ -39,11 +41,11 @@ public final class CPUConfig {
 
 	private final int[][] leaves;
 
-	private CPUConfig(final int[][] leaves) {
+	private CPUConfig(final int[]... leaves) {
 		Objects.requireNonNull(leaves);
 		for (final int[] leaf : leaves) {
 			Objects.requireNonNull(leaf);
-			if (leaf.length != 4) {
+			if (leaf.length != VALUES_FOR_EACH_LEAF) {
 				throw new AssertionError();
 			}
 		}
@@ -65,10 +67,10 @@ public final class CPUConfig {
 	 * @param eax The value of eax, meaning the requested leaf.
 	 * @param values The pre-allocated array of values (must be of length 4) where to place the result.
 	 */
-	public void setLeafValues(final int eax, final int[] values) {
-		if (values.length != 4) {
+	public void setLeafValues(final int eax, final int... values) {
+		if (values.length != VALUES_FOR_EACH_LEAF) {
 			throw new IllegalArgumentException();
 		}
-		System.arraycopy(this.leaves[eax], 0, values, 0, 4);
+		System.arraycopy(this.leaves[eax], 0, values, 0, VALUES_FOR_EACH_LEAF);
 	}
 }

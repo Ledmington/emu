@@ -353,7 +353,7 @@ public final class IndirectOperand implements Operand {
 		if (!(other instanceof final IndirectOperand io)) {
 			return false;
 		}
-		return this.ptrSize.equals(io.ptrSize)
+		return this.ptrSize == io.ptrSize
 				&& Objects.equals(this.segment, io.segment)
 				&& Objects.equals(this.base, io.base)
 				&& Objects.equals(this.scale, io.scale)

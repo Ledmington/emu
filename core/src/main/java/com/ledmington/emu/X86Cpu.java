@@ -43,7 +43,8 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.SuppressFBWarnings;
 
 /** Emulator of an x86 CPU. */
-@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects"})
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects", "PMD.TooManyMethods"
+})
 public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
@@ -62,7 +63,7 @@ public class X86Cpu implements X86Emulator {
 	private final Memory mem; // TODO: can we remove dependency on mem?
 	private final InstructionFetcher instFetch;
 	private final boolean checkInstructions;
-	private final CPUConfig cpuConfig = CPUConfig.GENERIC_INTEL;
+	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -121,7 +122,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	@Override
-	@SuppressWarnings({"PMD.AssignmentInOperand", "PMD.NcssCount", "PMD.CognitiveComplexity"})
+	@SuppressWarnings({"PMD.NcssCount", "PMD.CognitiveComplexity"})
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
 
@@ -478,12 +479,12 @@ public class X86Cpu implements X86Emulator {
 			case CPUID -> {
 				// CPUID uses only 32-bit registers
 				final int eax = rf.get(Register32.EAX);
-				if (eax < 0 || eax > cpuConfig.getMaxSupportedStandardLeaf()) {
+				if (eax < 0 || eax > CPU_CONFIG.getMaxSupportedStandardLeaf()) {
 					throw new IllegalArgumentException(String.format("Unknown CPUID leaf %d.", eax));
 				}
 
 				final int[] values = new int[4];
-				cpuConfig.setLeafValues(eax, values);
+				CPU_CONFIG.setLeafValues(eax, values);
 				rf.set(Register32.EAX, values[0]);
 				rf.set(Register32.EBX, values[1]);
 				rf.set(Register32.ECX, values[2]);

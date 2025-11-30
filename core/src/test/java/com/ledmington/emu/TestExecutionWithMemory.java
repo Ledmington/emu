@@ -68,9 +68,9 @@ final class TestExecutionWithMemory {
 
 	private static Stream<Arguments> pairs64() {
 		return Arrays.stream(Register64.values())
-				.filter(r -> !r.equals(Register64.RIP))
+				.filter(r -> r != Register64.RIP)
 				.flatMap(r -> Arrays.stream(Register64.values())
-						.filter(x -> !x.equals(r) && !x.equals(Register64.RIP))
+						.filter(x -> x != r && x != Register64.RIP)
 						.map(x -> Arguments.of(r, x)));
 	}
 

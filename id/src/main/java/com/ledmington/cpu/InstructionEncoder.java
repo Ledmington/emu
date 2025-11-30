@@ -1028,14 +1028,14 @@ public final class InstructionEncoder {
 				} else if (inst.firstOperand() instanceof final Register r1
 						&& inst.secondOperand() instanceof final Register r2) {
 					wb.write(r1 instanceof Register8 ? (byte) 0xd2 : (byte) 0xd3);
-					if (r2.equals(Register8.CL)) {
+					if (r2 == Register8.CL) {
 						encodeModRM(wb, (byte) 0b11, reg, Registers.toByte(r1));
 					}
 					return;
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register r2) {
 					wb.write(io.bits() == 8 ? (byte) 0xd2 : (byte) 0xd3);
-					if (r2.equals(Register8.CL)) {
+					if (r2 == Register8.CL) {
 						encodeModRM(
 								wb,
 								getMod(io),
@@ -1048,14 +1048,14 @@ public final class InstructionEncoder {
 			}
 			case IMUL -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xaf);
 			case OR -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
+				if (inst.firstOperand() == Register8.AL && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x0c);
 					encodeImmediate(wb, imm);
 					return;
 				} else if (inst.secondOperand() instanceof final Immediate imm
-						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
-								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
-								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
+						&& ((inst.firstOperand() == Register16.AX && imm.bits() == 16)
+								|| (inst.firstOperand() == Register32.EAX && imm.bits() == 32)
+								|| (inst.firstOperand() == Register64.RAX && imm.bits() == 32))) {
 					wb.write((byte) 0x0d);
 					encodeImmediate(wb, imm);
 					return;
@@ -1103,14 +1103,14 @@ public final class InstructionEncoder {
 			case MOVSX ->
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, inst.secondOperand().bits() == 8 ? (byte) 0xbe : (byte) 0xbf);
 			case ADD -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
+				if (inst.firstOperand() == Register8.AL && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x04);
 					encodeImmediate(wb, imm);
 					return;
 				} else if (inst.secondOperand() instanceof final Immediate imm
-						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
-								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
-								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
+						&& ((inst.firstOperand() == Register16.AX && imm.bits() == 16)
+								|| (inst.firstOperand() == Register32.EAX && imm.bits() == 32)
+								|| (inst.firstOperand() == Register64.RAX && imm.bits() == 32))) {
 					wb.write((byte) 0x05);
 					encodeImmediate(wb, imm);
 					return;
@@ -1157,14 +1157,14 @@ public final class InstructionEncoder {
 				}
 			}
 			case AND -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
+				if (inst.firstOperand() == Register8.AL && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0x24);
 					encodeImmediate(wb, imm);
 					return;
 				} else if (inst.secondOperand() instanceof final Immediate imm
-						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
-								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
-								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
+						&& ((inst.firstOperand() == Register16.AX && imm.bits() == 16)
+								|| (inst.firstOperand() == Register32.EAX && imm.bits() == 32)
+								|| (inst.firstOperand() == Register64.RAX && imm.bits() == 32))) {
 					wb.write((byte) 0x25);
 					encodeImmediate(wb, imm);
 					return;
@@ -1205,9 +1205,9 @@ public final class InstructionEncoder {
 			}
 			case XOR -> {
 				if (inst.secondOperand() instanceof final Immediate imm
-						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
-								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
-								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
+						&& ((inst.firstOperand() == Register16.AX && imm.bits() == 16)
+								|| (inst.firstOperand() == Register32.EAX && imm.bits() == 32)
+								|| (inst.firstOperand() == Register64.RAX && imm.bits() == 32))) {
 					wb.write((byte) 0x35);
 					encodeImmediate(wb, imm);
 					return;
@@ -1225,14 +1225,14 @@ public final class InstructionEncoder {
 				}
 			}
 			case TEST -> {
-				if (inst.firstOperand().equals(Register8.AL) && inst.secondOperand() instanceof final Immediate imm) {
+				if (inst.firstOperand() == Register8.AL && inst.secondOperand() instanceof final Immediate imm) {
 					wb.write((byte) 0xa8);
 					encodeImmediate(wb, imm);
 					return;
 				} else if (inst.secondOperand() instanceof final Immediate imm
-						&& ((inst.firstOperand().equals(Register16.AX) && imm.bits() == 16)
-								|| (inst.firstOperand().equals(Register32.EAX) && imm.bits() == 32)
-								|| (inst.firstOperand().equals(Register64.RAX) && imm.bits() == 32))) {
+						&& ((inst.firstOperand() == Register16.AX && imm.bits() == 16)
+								|| (inst.firstOperand() == Register32.EAX && imm.bits() == 32)
+								|| (inst.firstOperand() == Register64.RAX && imm.bits() == 32))) {
 					wb.write((byte) 0xa9);
 					encodeImmediate(wb, imm);
 					return;
@@ -2137,7 +2137,7 @@ public final class InstructionEncoder {
 			encodeIndirectOperand(wb, io);
 		} else if (inst.firstOperand() instanceof final Register r1
 				&& inst.secondOperand() instanceof final Register r2
-				&& inst.thirdOperand().equals(Register8.CL)) {
+				&& inst.thirdOperand() == Register8.CL) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r2), Registers.toByte(r1));
 		}
 	}

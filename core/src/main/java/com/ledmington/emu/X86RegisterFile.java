@@ -29,7 +29,7 @@ import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 
 /** This class represents the set of registers used by an x86-64 processor during execution. */
-@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AssignmentInOperand"})
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public final class X86RegisterFile implements RegisterFile {
 
 	// General-purpose registers

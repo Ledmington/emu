@@ -58,7 +58,7 @@ public final class DynamicSection implements LoadableSection {
 			final long tag = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 			final long content = is32Bit ? BitUtils.asLong(b.read4()) : b.read8();
 			tmp.add(new DynamicTableEntry(tag, content));
-			if (tmp.getLast().getTag().equals(DynamicTableEntryTag.DT_NULL)) {
+			if (tmp.getLast().getTag() == DynamicTableEntryTag.DT_NULL) {
 				break;
 			}
 			i++;

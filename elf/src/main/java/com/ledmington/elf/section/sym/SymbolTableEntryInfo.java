@@ -97,6 +97,6 @@ public final class SymbolTableEntryInfo {
 		if (!(other instanceof final SymbolTableEntryInfo stei)) {
 			return false;
 		}
-		return this.bind.equals(stei.bind) && this.type.equals(stei.type);
+		return this.bind == stei.bind && this.type == stei.type;
 	}
 }

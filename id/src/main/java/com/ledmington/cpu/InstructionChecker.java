@@ -515,10 +515,10 @@ public final class InstructionChecker {
 		}
 
 		final MaskRegister m = inst.getDestinationMask();
-		if (inst.firstOperand().equals(m)
-				|| (inst.hasSecondOperand() && inst.secondOperand().equals(m))
-				|| (inst.hasThirdOperand() && inst.thirdOperand().equals(m))
-				|| (inst.hasFourthOperand() && inst.fourthOperand().equals(m))) {
+		if (inst.firstOperand() == m
+				|| (inst.hasSecondOperand() && inst.secondOperand() == m)
+				|| (inst.hasThirdOperand() && inst.thirdOperand() == m)
+				|| (inst.hasFourthOperand() && inst.fourthOperand() == m)) {
 			error("The destination mask register cannot be used as an operand in the same instruction.");
 		}
 	}
@@ -537,8 +537,8 @@ public final class InstructionChecker {
 		return switch (opt) {
 			case R8 -> op instanceof Register8;
 			case R16 -> op instanceof Register16;
-			case R32 -> op instanceof final Register32 r && !r.equals(Register32.EIP);
-			case R64 -> op instanceof final Register64 r && !r.equals(Register64.RIP);
+			case R32 -> op instanceof final Register32 r && r != Register32.EIP;
+			case R64 -> op instanceof final Register64 r && r != Register64.RIP;
 			case RMM -> op instanceof RegisterMMX;
 			case RX -> op instanceof RegisterXMM;
 			case RY -> op instanceof RegisterYMM;

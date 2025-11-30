@@ -201,7 +201,7 @@ public final class SectionHeader {
 			return false;
 		}
 		return this.nameOffset == sh.nameOffset
-				&& this.type.equals(sh.type)
+				&& this.type == sh.type
 				&& this.flags.equals(sh.flags)
 				&& this.virtualAddress == sh.virtualAddress
 				&& this.fileOffset == sh.fileOffset

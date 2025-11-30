@@ -302,7 +302,7 @@ public final class GeneralInstruction implements Instruction {
 			return false;
 		}
 		return Objects.equals(this.prefix, inst.prefix)
-				&& this.code.equals(inst.code)
+				&& this.code == inst.code
 				&& Objects.equals(this.destinationMask, inst.destinationMask)
 				&& this.destinationMaskZero == inst.destinationMaskZero
 				&& Objects.equals(this.op1, inst.op1)

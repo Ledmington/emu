@@ -125,16 +125,26 @@ public record PHTEntry(
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof final PHTEntry phte)) {
+		if (!(other
+				instanceof
+				PHTEntry(
+						final PHTEntryType type1,
+						final int flags1,
+						final long fileOffset,
+						final long virtualAddress,
+						final long physicalAddress,
+						final long fileSize,
+						final long memorySize,
+						final long alignment1))) {
 			return false;
 		}
-		return this.type.equals(phte.type)
-				&& this.flags == phte.flags
-				&& this.segmentFileOffset == phte.segmentFileOffset
-				&& this.segmentVirtualAddress == phte.segmentVirtualAddress
-				&& this.segmentPhysicalAddress == phte.segmentPhysicalAddress
-				&& this.segmentFileSize == phte.segmentFileSize
-				&& this.segmentMemorySize == phte.segmentMemorySize
-				&& this.alignment == phte.alignment;
+		return this.type == type1
+				&& this.flags == flags1
+				&& this.segmentFileOffset == fileOffset
+				&& this.segmentVirtualAddress == virtualAddress
+				&& this.segmentPhysicalAddress == physicalAddress
+				&& this.segmentFileSize == fileSize
+				&& this.segmentMemorySize == memorySize
+				&& this.alignment == alignment1;
 	}
 }

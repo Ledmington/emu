@@ -129,8 +129,6 @@ public final class NoteSectionEntry {
 		if (!(other instanceof final NoteSectionEntry nse)) {
 			return false;
 		}
-		return this.name.equals(nse.name)
-				&& Arrays.equals(this.description, nse.description)
-				&& this.type.equals(nse.type);
+		return this.name.equals(nse.name) && Arrays.equals(this.description, nse.description) && this.type == nse.type;
 	}
 }

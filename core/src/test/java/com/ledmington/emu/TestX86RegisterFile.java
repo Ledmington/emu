@@ -165,7 +165,7 @@ final class TestX86RegisterFile {
 		regFile.set(r, x);
 
 		for (final Register8 other : ALL_8_BIT_REGISTERS) {
-			if (r.equals(other)) {
+			if (r == other) {
 				continue;
 			}
 			assertEquals(
@@ -206,7 +206,7 @@ final class TestX86RegisterFile {
 		regFile.set(r, x);
 
 		for (final Register16 other : ALL_16_BIT_REGISTERS) {
-			if (r.equals(other)) {
+			if (r == other) {
 				continue;
 			}
 			assertEquals(
@@ -247,7 +247,7 @@ final class TestX86RegisterFile {
 		regFile.set(r, x);
 
 		for (final Register32 other : ALL_32_BIT_REGISTERS) {
-			if (r.equals(other)) {
+			if (r == other) {
 				continue;
 			}
 			assertEquals(
@@ -288,7 +288,7 @@ final class TestX86RegisterFile {
 		regFile.set(r, x);
 
 		for (final Register64 other : ALL_64_BIT_REGISTERS) {
-			if (r.equals(other)) {
+			if (r == other) {
 				continue;
 			}
 			assertEquals(
@@ -330,7 +330,7 @@ final class TestX86RegisterFile {
 		regFile.set(r, x);
 
 		for (final SegmentRegister other : ALL_SEGMENT_REGISTERS) {
-			if (r.equals(other)) {
+			if (r == other) {
 				continue;
 			}
 			assertEquals(
@@ -356,7 +356,7 @@ final class TestX86RegisterFile {
 		regFile.set(f, true);
 
 		for (final RFlags other : RFlags.values()) {
-			if (f.equals(other)) {
+			if (f == other) {
 				continue;
 			}
 			assertFalse(regFile.isSet(other), () -> String.format("Expected flag %s to be not set but wasn't", other));
