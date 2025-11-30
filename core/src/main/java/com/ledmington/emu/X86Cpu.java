@@ -729,6 +729,7 @@ public class X86Cpu implements X86Emulator {
 		final long stackBottom =
 				alignedBaseStackAddress - EmulatorConstants.getStackSize(); // lowest address (stack limit)
 
+		// TODO: do we need to check the new RSP value or the current one?
 		if (newRSP < stackBottom || newRSP > stackTop) {
 			throw new StackUnderflow();
 		}
