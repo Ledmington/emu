@@ -218,30 +218,30 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * Sets the given permissions of the contiguous block of memory starting at {@code startBlockAddress} (inclusive)
-	 * and ending at {@code endBlockAddress} (exclusive).
+	 * Sets the given permissions of the contiguous block of memory starting at {@code startAddressInclusive}
+	 * (inclusive) and ending at {@code endAddressExclusive} (exclusive).
 	 *
-	 * @param startBlockAddress The start (inclusive) of the memory block.
-	 * @param endBlockAddress The end (exclusive) of the memory block.
+	 * @param startAddressInclusive The start (inclusive) of the memory block.
+	 * @param endAddressExclusive The end (exclusive) of the memory block.
 	 * @param readable If this block should be readable.
 	 * @param writeable If this block should be writeable.
 	 * @param executable If this block should be executable (i.e. containing code).
 	 */
 	public void setPermissions(
-			final long startBlockAddress,
-			final long endBlockAddress,
+			final long startAddressInclusive,
+			final long endAddressExclusive,
 			final boolean readable,
 			final boolean writeable,
 			final boolean executable) {
-		if (endBlockAddress < startBlockAddress) {
+		if (endAddressExclusive < startAddressInclusive) {
 			throw new IllegalArgumentException(String.format(
-					"Invalid endBlockAddress (0x%016x) was less than startBlockAddress (0x%016x).",
-					startBlockAddress, endBlockAddress));
+					"Invalid endAddressExclusive (0x%016x) was less than startAddressInclusive (0x%016x).",
+					startAddressInclusive, endAddressExclusive));
 		}
 
-		readableAddresses.set(startBlockAddress, endBlockAddress, readable);
-		writableAddresses.set(startBlockAddress, endBlockAddress, writeable);
-		executableAddresses.set(startBlockAddress, endBlockAddress, executable);
+		readableAddresses.set(startAddressInclusive, endAddressExclusive, readable);
+		writableAddresses.set(startAddressInclusive, endAddressExclusive, writeable);
+		executableAddresses.set(startAddressInclusive, endAddressExclusive, executable);
 	}
 
 	private void checkRead(final long address, final int length) {

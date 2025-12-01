@@ -50,6 +50,11 @@ final class TestExecutionWithMemory {
 
 	private static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(42);
+
+	/** Length of a CALL instruction with a 32-bit offset (5 bytes). */
+	private static final int CALL_INSTRUCTION_LENGTH =
+			InstructionEncoder.toHex(true, new GeneralInstruction(Opcode.CALL, new Immediate(0))).length;
+
 	private MemoryController mem = null;
 	private X86Cpu cpu = null;
 
@@ -254,6 +259,12 @@ final class TestExecutionWithMemory {
 						base, cpu.getRegisters().get(Register64.RSP)));
 	}
 
+	private void writeFunction(final long functionAddress, final Instruction... code) {
+		final byte[] functionCode = InstructionEncoder.toHex(true, code);
+		mem.initialize(functionAddress, functionCode);
+		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
+	}
+
 	@Test
 	void callAndReturn() {
 		// Setup stack at random location (8-byte aligned)
@@ -265,22 +276,17 @@ final class TestExecutionWithMemory {
 		final long rip = rng.nextLong();
 		cpu.setInstructionPointer(rip);
 
-		// Write an empty function somewhere in memory (only RET instruction)
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
 		final int offset = rng.nextInt();
 		final long functionAddress = rip + BitUtils.asLong(offset);
-		final byte[] functionCode = InstructionEncoder.toHex(true, new GeneralInstruction(Opcode.RET));
-		mem.initialize(functionAddress, functionCode);
-		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
+		// Write an empty function somewhere in memory (only RET instruction)
+		writeFunction(functionAddress, new GeneralInstruction(Opcode.RET));
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
-		final int callInstructionLength =
-				InstructionEncoder.toHex(true, new GeneralInstruction(Opcode.CALL, new Immediate(0))).length;
-		final Instruction callInstruction =
-				new GeneralInstruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
-		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new GeneralInstruction(Opcode.HLT));
-		mem.initialize(rip, mainCode);
-		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
+		writeFunction(
+				rip,
+				new GeneralInstruction(Opcode.CALL, new Immediate(offset - CALL_INSTRUCTION_LENGTH)),
+				new GeneralInstruction(Opcode.HLT));
 
 		// Start the CPU
 		assertDoesNotThrow(cpu::execute);
@@ -299,12 +305,13 @@ final class TestExecutionWithMemory {
 		final long rip = rng.nextLong();
 		cpu.setInstructionPointer(rip);
 
-		// Write a function which just allocates a variable
 		// Ensure that the offset between RIP and the function fits in a 32-bit immediate
 		final int offset = Math.abs(rng.nextInt());
 		final long functionAddress = rip + BitUtils.asLong(offset);
-		final byte[] functionCode = InstructionEncoder.toHex(
-				true,
+
+		// Write a function which just allocates a variable
+		writeFunction(
+				functionAddress,
 				// code adapted from this one: https://godbolt.org/z/W8Kjj6Woz
 				new GeneralInstruction(Opcode.PUSH, Register64.RBP),
 				new GeneralInstruction(Opcode.MOV, Register64.RBP, Register64.RSP),
@@ -316,19 +323,15 @@ final class TestExecutionWithMemory {
 								.displacement((byte) -4)
 								.build(),
 						new Immediate(rng.nextInt())),
+				new GeneralInstruction(Opcode.NOP),
 				new GeneralInstruction(Opcode.POP, Register64.RBP),
 				new GeneralInstruction(Opcode.RET));
-		mem.initialize(functionAddress, functionCode);
-		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
 
 		// Write the code to be executed at RIP (just a CALL to the function and a HLT)
-		final int callInstructionLength =
-				InstructionEncoder.toHex(new GeneralInstruction(Opcode.CALL, new Immediate(0)), true).length;
-		final Instruction callInstruction =
-				new GeneralInstruction(Opcode.CALL, new Immediate(offset - callInstructionLength));
-		final byte[] mainCode = InstructionEncoder.toHex(true, callInstruction, new GeneralInstruction(Opcode.HLT));
-		mem.initialize(rip, mainCode);
-		mem.setPermissions(rip, rip + mainCode.length - 1L, false, false, true);
+		writeFunction(
+				rip,
+				new GeneralInstruction(Opcode.CALL, new Immediate(offset - CALL_INSTRUCTION_LENGTH)),
+				new GeneralInstruction(Opcode.HLT));
 
 		// Start the CPU
 		assertDoesNotThrow(cpu::execute);
