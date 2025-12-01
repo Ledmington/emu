@@ -32,8 +32,7 @@ final class TestMemoryController extends TestMemory {
 	@Override
 	protected Memory getMemory() {
 		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		mem.setPermissions(Long.MIN_VALUE, Long.MAX_VALUE, true, true, false);
+				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true, true, true, false);
 		return mem;
 	}
 
@@ -44,7 +43,7 @@ final class TestMemoryController extends TestMemory {
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, false);
 
 		// Setting permissions only to the first byte
-		mem.setPermissions(address, address, true, true, false);
+		mem.setPermissions(address, 1L, true, true, false);
 
 		assertDoesNotThrow(() -> mem.read(address));
 		assertThrows(IllegalReadException.class, () -> mem.read8(address));
@@ -52,22 +51,22 @@ final class TestMemoryController extends TestMemory {
 
 	@ParameterizedTest
 	@ValueSource(longs = {0L, 1L, 2L, 3L, 4L, 5L, 6L})
-	void unalignedMultiByteRead(final long offset) {
+	void unalignedMultiByteRead(final long numBytes) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
 		final long address = rng.nextLong();
-		mem.setPermissions(address, address + offset, true, false, false);
+		mem.setPermissions(address, numBytes, true, false, false);
 		mem.initialize(address, 8, (byte) 0x00);
 		assertThrows(IllegalReadException.class, () -> mem.read8(address));
 	}
 
 	@ParameterizedTest
 	@ValueSource(longs = {0L, 1L, 2L, 3L, 4L, 5L, 6L})
-	void unalignedMultiByteWrite(final long offset) {
+	void unalignedMultiByteWrite(final long numBytes) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
 		final long address = rng.nextLong();
-		mem.setPermissions(address, address + offset, false, true, false);
+		mem.setPermissions(address, numBytes, false, true, false);
 		mem.initialize(address, 8, (byte) 0x00);
 		assertThrows(IllegalWriteException.class, () -> mem.write(address, 0L));
 	}

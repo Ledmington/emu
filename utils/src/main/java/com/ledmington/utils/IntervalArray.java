@@ -23,6 +23,7 @@ import java.util.List;
 
 /** A class to contain a list of ranges of boolean values. */
 // TODO: this can be optimized into a segment tree.
+@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 public final class IntervalArray {
 
 	/**
@@ -127,7 +128,6 @@ public final class IntervalArray {
 	 * @param start The starting address of the range.
 	 * @param numBytes The number of consecutive values to be set to false.
 	 */
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	public void reset(final long start, final long numBytes) {
 		if (numBytes < 0L) {
 			throw new IllegalArgumentException("Negative number of bytes.");
@@ -143,6 +143,7 @@ public final class IntervalArray {
 		sortAndMerge();
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private void doReset(final long start, final long numBytes) {
 		final long end = start + numBytes - 1L;
 		int i = 0;
