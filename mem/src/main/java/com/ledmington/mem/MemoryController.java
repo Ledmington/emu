@@ -34,11 +34,11 @@ import com.ledmington.utils.TerminalUtils;
 public final class MemoryController implements Memory {
 
 	private final Memory mem;
-	private final IntervalArray readableAddresses = new IntervalArray();
-	private final IntervalArray writableAddresses = new IntervalArray();
-	private final IntervalArray executableAddresses = new IntervalArray();
+	private final IntervalArray readableAddresses;
+	private final IntervalArray writableAddresses;
+	private final IntervalArray executableAddresses;
 
-	// TODO: this seems like a poor design choice
+	// FIXME: this seems like a poor design choice
 	private final boolean breakOnWrongPermissions;
 	private final boolean breakWhenReadingUninitializedMemory;
 
@@ -55,10 +55,33 @@ public final class MemoryController implements Memory {
 	public MemoryController(
 			final Memory memory,
 			final boolean breakOnWrongPermissions,
-			final boolean breakWhenReadingUninitializedMemory) {
+			final boolean breakWhenReadingUninitializedMemory,
+			final boolean defaultReadable,
+			final boolean defaultWritable,
+			final boolean defaultExecutable) {
 		this.mem = Objects.requireNonNull(memory);
 		this.breakOnWrongPermissions = breakOnWrongPermissions;
 		this.breakWhenReadingUninitializedMemory = breakWhenReadingUninitializedMemory;
+		this.readableAddresses = new IntervalArray(defaultReadable);
+		this.writableAddresses = new IntervalArray(defaultWritable);
+		this.executableAddresses = new IntervalArray(defaultExecutable);
+	}
+
+	/**
+	 * Creates a MemoryController with the given initializer.
+	 *
+	 * @param memory The Memory object to wrap with permission checking.
+	 * @param breakOnWrongPermissions Decides whether this controller should throw an exception when accessing memory
+	 *     with the wrong permissions.
+	 * @param breakWhenReadingUninitializedMemory Decides whether this controller should throw an exception when reading
+	 *     uninitialized memory.
+	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
+	public MemoryController(
+			final Memory memory,
+			final boolean breakOnWrongPermissions,
+			final boolean breakWhenReadingUninitializedMemory) {
+		this(memory, breakOnWrongPermissions, breakWhenReadingUninitializedMemory, false, false, false);
 	}
 
 	/**
@@ -68,7 +91,7 @@ public final class MemoryController implements Memory {
 	 * @param memory The Memory object to wrap with permission checking.
 	 */
 	public MemoryController(final Memory memory) {
-		this(memory, true, true);
+		this(memory, true, true, false, false, false);
 	}
 
 	private boolean canRead(final long address) {
@@ -218,30 +241,31 @@ public final class MemoryController implements Memory {
 	}
 
 	/**
-	 * Sets the given permissions of the contiguous block of memory starting at {@code startAddressInclusive}
-	 * (inclusive) and ending at {@code endAddressExclusive} (exclusive).
+	 * Sets the given permissions of the contiguous block of memory starting at {@code start} long {@code numBytes}
+	 * bytes.
 	 *
-	 * @param startAddressInclusive The start (inclusive) of the memory block.
-	 * @param endAddressExclusive The end (exclusive) of the memory block.
+	 * @param start The starting address of the memory block.
+	 * @param numBytes The number of bytes of the memory block.
 	 * @param readable If this block should be readable.
 	 * @param writeable If this block should be writeable.
 	 * @param executable If this block should be executable (i.e. containing code).
 	 */
 	public void setPermissions(
-			final long startAddressInclusive,
-			final long endAddressExclusive,
+			final long start,
+			final long numBytes,
 			final boolean readable,
 			final boolean writeable,
 			final boolean executable) {
-		if (endAddressExclusive < startAddressInclusive) {
-			throw new IllegalArgumentException(String.format(
-					"Invalid endAddressExclusive (0x%016x) was less than startAddressInclusive (0x%016x).",
-					startAddressInclusive, endAddressExclusive));
+		if (numBytes < 0L) {
+			throw new IllegalArgumentException("Negative number of bytes.");
+		}
+		if (numBytes == 0L) {
+			return;
 		}
 
-		readableAddresses.set(startAddressInclusive, endAddressExclusive, readable);
-		writableAddresses.set(startAddressInclusive, endAddressExclusive, writeable);
-		executableAddresses.set(startAddressInclusive, endAddressExclusive, executable);
+		readableAddresses.set(start, numBytes, readable);
+		writableAddresses.set(start, numBytes, writeable);
+		executableAddresses.set(start, numBytes, executable);
 	}
 
 	private void checkRead(final long address, final int length) {

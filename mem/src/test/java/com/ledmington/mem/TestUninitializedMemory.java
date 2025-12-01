@@ -41,8 +41,7 @@ final class TestUninitializedMemory {
 	@BeforeEach
 	public void setup() {
 		// Creating a memory controller with all permissions on the whole range, but without initialising anything
-		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		mem.setPermissions(Long.MIN_VALUE, Long.MAX_VALUE, true, true, true);
+		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true, true, true, true);
 	}
 
 	@Test

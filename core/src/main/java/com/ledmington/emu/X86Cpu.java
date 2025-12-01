@@ -721,8 +721,6 @@ public class X86Cpu implements X86Emulator {
 	/** Pops the value pointed by the top of the stack and returns it. */
 	private long pop() {
 		final long rsp = rf.get(Register64.RSP);
-		final long value = mem.read8(rsp);
-		final long newRSP = rsp + 8L;
 
 		final long alignedBaseStackAddress = alignBaseStackAddress(EmulatorConstants.getBaseStackAddress());
 		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
@@ -730,13 +728,19 @@ public class X86Cpu implements X86Emulator {
 				alignedBaseStackAddress - EmulatorConstants.getStackSize(); // lowest address (stack limit)
 
 		// TODO: do we need to check the new RSP value or the current one?
-		if (newRSP < stackBottom) {
+		if (rsp < stackBottom) {
 			throw new StackUnderflow();
-		} else if (newRSP > stackTop) {
+		}
+
+		final long value = mem.read8(rsp);
+
+		// the stack "grows downward"
+		final long newRSP = rsp + 8L;
+
+		if (newRSP > stackTop) {
 			throw new StackOverflow();
 		}
 
-		// the stack "grows downward"
 		rf.set(Register64.RSP, newRSP);
 		return value;
 	}

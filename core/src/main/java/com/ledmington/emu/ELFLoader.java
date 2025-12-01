@@ -328,7 +328,7 @@ public final class ELFLoader {
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3f MiB) at 0x%016x-0x%016x",
 				stackSize, stackSize / 1_048_576.0, stackBottom, stackTop - 1L);
-		mem.setPermissions(stackBottom, stackTop - 1L, true, true, false);
+		mem.setPermissions(stackBottom, stackSize, true, true, false);
 
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 	}
@@ -451,8 +451,8 @@ public final class ELFLoader {
 
 		mem.initialize(stackBase, content);
 
-		// TODO: setting the stack's permissions, again?
-		mem.setPermissions(stackBase, stackBase + content.length, true, true, false);
+		// FIXME: setting the stack's permissions, again?
+		mem.setPermissions(stackBase, content.length, true, true, false);
 	}
 
 	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {

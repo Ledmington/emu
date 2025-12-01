@@ -87,7 +87,7 @@ final class TestExecutionWithMemory {
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r1, new Immediate(oldValue1)));
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		mem.initialize(oldValue1, 8L, (byte) 0x00);
-		mem.setPermissions(oldValue1, oldValue1 + 7L, false, true, false);
+		mem.setPermissions(oldValue1, 8L, false, true, false);
 		cpu.executeOne(new GeneralInstruction(
 				Opcode.MOV,
 				IndirectOperand.builder()
@@ -95,7 +95,7 @@ final class TestExecutionWithMemory {
 						.base(r1)
 						.build(),
 				r2));
-		mem.setPermissions(oldValue1, oldValue1 + 7L, true, false, false);
+		mem.setPermissions(oldValue1, 8L, true, false, false);
 		final long x = mem.read8(oldValue1);
 		assertEquals(
 				oldValue2,
@@ -111,7 +111,7 @@ final class TestExecutionWithMemory {
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
 		final long val = rng.nextLong();
 		mem.initialize(oldValue2, val);
-		mem.setPermissions(oldValue2, oldValue2 + 7L, true, false, false);
+		mem.setPermissions(oldValue2, 8L, true, false, false);
 		cpu.executeOne(new GeneralInstruction(
 				Opcode.MOV,
 				r1,
@@ -153,7 +153,7 @@ final class TestExecutionWithMemory {
 	@Test
 	void pop() {
 		final long base = rng.nextLong();
-		mem.setPermissions(base, base + 7L, true, true, false);
+		mem.setPermissions(base, 8L, true, true, false);
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
 		final long val = rng.nextLong();
 		mem.write(base, val);
@@ -192,7 +192,7 @@ final class TestExecutionWithMemory {
 		// Doing n pushes of random values
 		for (int i = 0; i < n; i++) {
 			// Set memory to readable and writable
-			mem.setPermissions(base - 8L * (i + 1), base - 8L * i, true, true, false);
+			mem.setPermissions(base - 8L * (i + 1), 8L, true, true, false);
 
 			// mov RAX,val
 			cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(values[i])));
@@ -262,14 +262,14 @@ final class TestExecutionWithMemory {
 	private void writeFunction(final long functionAddress, final Instruction... code) {
 		final byte[] functionCode = InstructionEncoder.toHex(true, code);
 		mem.initialize(functionAddress, functionCode);
-		mem.setPermissions(functionAddress, functionAddress + functionCode.length - 1L, false, false, true);
+		mem.setPermissions(functionAddress, functionCode.length, false, false, true);
 	}
 
 	@Test
 	void callAndReturn() {
 		// Setup stack at random location (8-byte aligned)
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
-		mem.setPermissions(stackBase, stackBase, true, true, false);
+		mem.setPermissions(stackBase, 8L, true, true, false);
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
 
 		// Setup RIP at random location
@@ -296,8 +296,8 @@ final class TestExecutionWithMemory {
 	void callAllocateAndReturn() {
 		// Setup stack at random location (8-byte aligned)
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
-		mem.initialize(stackBase - 16L - 4L, stackBase, (byte) 0);
-		mem.setPermissions(stackBase - 16L - 4L, stackBase, true, true, false);
+		mem.initialize(stackBase - 16L - 4L, 20L, (byte) 0);
+		mem.setPermissions(stackBase - 16L - 4L, 20L, true, true, false);
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackBase)));
 
