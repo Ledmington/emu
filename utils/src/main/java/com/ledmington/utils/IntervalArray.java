@@ -25,6 +25,10 @@ import java.util.List;
 // TODO: this can be optimized into a segment tree.
 public final class IntervalArray {
 
+	/**
+	 * The list of contiguous blocks of "set" values, meaning that a block represents a contiguous region of
+	 * {@code true} values.
+	 */
 	private final List<Block> blocks = new ArrayList<>();
 
 	private record Block(long start, long end) {
@@ -34,10 +38,34 @@ public final class IntervalArray {
 						String.format("Invalid start (0x%016x) and end (0x016%x) of a block.", start, end));
 			}
 		}
+
+		/**
+		 * Checks whether this block contains the given index/position. The block boundaries are both inclusive.
+		 *
+		 * @param index The index to be checked.
+		 * @return True if this block contains the given index, false otherwise.
+		 */
+		public boolean contains(final long index) {
+			return index >= start && index <= end;
+		}
 	}
 
-	/** Creates an empty IntervalArray. */
-	public IntervalArray() {}
+	/**
+	 * Creates a new IntervalArray.
+	 *
+	 * @param defaultValue If true, creates a "full" array (meaning that all values are set to {@code true}), otherwise
+	 *     creates an "empty" array (with all values set to {@code false}).
+	 */
+	public IntervalArray(final boolean defaultValue) {
+		if (defaultValue) {
+			blocks.add(new Block(Long.MIN_VALUE, Long.MAX_VALUE));
+		}
+	}
+
+	/** Creates an empty IntervalArray. Equivalent to {@code new IntervalArray(false)}. */
+	public IntervalArray() {
+		this(false);
+	}
 
 	/**
 	 * Returns the value stored at the given address.
@@ -46,13 +74,107 @@ public final class IntervalArray {
 	 * @return True is the value is present, false otherwise.
 	 */
 	public boolean get(final long address) {
-		// TODO: can be optimized in a binary search
+		// TODO: can be optimized in a binary search, since we keep the array sorted
 		for (final Block b : blocks) {
-			if (address >= b.start() && address <= b.end()) {
+			if (b.contains(address)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Sets the boolean values in the given range to value. Equivalent to calling {@code value ? set(start, numBytes) :
+	 * reset(start, numBytes)}.
+	 *
+	 * @param start The starting address of the range.
+	 * @param numBytes The number of consecutive values to be set to the given value.
+	 * @param value The value to set the values in the range to.
+	 */
+	public void set(final long start, final long numBytes, final boolean value) {
+		if (numBytes < 0L) {
+			throw new IllegalArgumentException("Negative number of bytes.");
+		}
+		if (numBytes == 0L) {
+			return;
+		}
+		if (value) {
+			doSet(start, numBytes);
+		} else {
+			doReset(start, numBytes);
+		}
+	}
+
+	/**
+	 * Sets the boolean values in the given range to true. Does not throw exceptions in case it is already true.
+	 *
+	 * @param start The starting address of the range.
+	 * @param numBytes The number of consecutive values to be set to true.
+	 */
+	public void set(final long start, final long numBytes) {
+		if (numBytes < 0L) {
+			throw new IllegalArgumentException("Negative number of bytes.");
+		}
+		if (numBytes == 0L) {
+			return;
+		}
+		doSet(start, numBytes);
+	}
+
+	/**
+	 * Sets the boolean values in the given range to false. Does not throw exceptions in case it is already false.
+	 *
+	 * @param start The starting address of the range.
+	 * @param numBytes The number of consecutive values to be set to false.
+	 */
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
+	public void reset(final long start, final long numBytes) {
+		if (numBytes < 0L) {
+			throw new IllegalArgumentException("Negative number of bytes.");
+		}
+		if (numBytes == 0L) {
+			return;
+		}
+		doReset(start, numBytes);
+	}
+
+	private void doSet(final long start, final long numBytes) {
+		blocks.add(new Block(start, start + numBytes - 1L));
+		sortAndMerge();
+	}
+
+	private void doReset(final long start, final long numBytes) {
+		final long end = start + numBytes - 1L;
+		int i = 0;
+		while (i < blocks.size()) {
+			final Block curr = blocks.get(i);
+			if (curr.start() <= start) {
+				if (curr.end() >= end) {
+					// the given range fits entirely in this block
+					blocks.remove(i);
+					if (start > curr.start()) {
+						blocks.add(i, new Block(curr.start(), start - 1));
+					}
+					if (curr.end() > end) {
+						blocks.add(i + 1, new Block(end + 1, curr.end()));
+					}
+				} else {
+					// the given range takes up only the right "half" of this block
+					blocks.set(i, new Block(curr.start(), start - 1));
+				}
+				i++;
+			} else {
+				if (curr.end() >= end) {
+					// the given range takes up only the left "half" of this block
+					blocks.set(i, new Block(end + 1, curr.end()));
+					i++;
+				} else {
+					// the given range completely contains this block
+					blocks.remove(i);
+				}
+			}
+		}
+		sortAndMerge();
 	}
 
 	private void sortAndMerge() {
@@ -63,85 +185,19 @@ public final class IntervalArray {
 		while (i < blocks.size() - 1) {
 			final Block curr = blocks.get(i);
 			final Block next = blocks.get(i + 1);
+
+			// we do not use .contains() here because that would not account for a block completely contained within the
+			// previous one
 			if (curr.end() >= next.start()) {
 				// overlapping
 				blocks.remove(i);
 				blocks.remove(i);
 				blocks.add(i, new Block(curr.start(), next.end()));
 			} else {
+				// we increment i only when the i-th block does not overlap with the (i+1)-th block
 				i++;
 			}
 		}
-	}
-
-	/**
-	 * Sets the boolean values in the given range to value. Equivalent to calling {@code value ? set(start, end) :
-	 * reset(start, end)}.
-	 *
-	 * @param startAddress The start (inclusive) of the range.
-	 * @param endAddress The end (inclusive) of the range.
-	 * @param value The value to set the values in the range to.
-	 */
-	// TODO: change the end of the range to be exclusive
-	public void set(final long startAddress, final long endAddress, final boolean value) {
-		if (value) {
-			set(startAddress, endAddress);
-		} else {
-			reset(startAddress, endAddress);
-		}
-	}
-
-	/**
-	 * Sets the boolean values in the given range to true. Does not throw exceptions in case it is already true.
-	 *
-	 * @param startAddress The start (inclusive) of the range.
-	 * @param endAddress The end (inclusive) of the range.
-	 */
-	// TODO: change the end of the range to be exclusive
-	public void set(final long startAddress, final long endAddress) {
-		blocks.add(new Block(startAddress, endAddress));
-		sortAndMerge();
-	}
-
-	/**
-	 * Sets the boolean values in the given range to false. Does not throw exceptions in case it is already false.
-	 *
-	 * @param startAddress The start (inclusive) of the range.
-	 * @param endAddress The end (inclusive) of the range.
-	 */
-	// TODO: change the end of the range to be exclusive
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
-	public void reset(final long startAddress, final long endAddress) {
-		int i = 0;
-		while (i < blocks.size()) {
-			final Block curr = blocks.get(i);
-			if (curr.start() <= startAddress) {
-				if (curr.end() >= endAddress) {
-					// the given range fits entirely in this block
-					blocks.remove(i);
-					if (startAddress > curr.start()) {
-						blocks.add(i, new Block(curr.start(), startAddress - 1));
-					}
-					if (curr.end() > endAddress) {
-						blocks.add(i + 1, new Block(endAddress + 1, curr.end()));
-					}
-				} else {
-					// the given range takes up only the right "half" of this block
-					blocks.set(i, new Block(curr.start(), startAddress - 1));
-				}
-				i++;
-			} else {
-				if (curr.end() >= endAddress) {
-					// the given range takes up only the left "half" of this block
-					blocks.set(i, new Block(endAddress + 1, curr.end()));
-					i++;
-				} else {
-					// the given range completely contains this block
-					blocks.remove(i);
-				}
-			}
-		}
-		sortAndMerge();
 	}
 
 	@Override
