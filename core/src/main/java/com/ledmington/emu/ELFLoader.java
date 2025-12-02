@@ -100,9 +100,8 @@ public final class ELFLoader {
 		loadSegments(elf, baseAddress);
 		loadSections(elf, baseAddress);
 
-		final long alignedBaseStackAddress = alignBaseStackAddress(baseStackAddress);
-		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
-		final long stackBottom = alignedBaseStackAddress - stackSize; // lowest address (stack limit)
+		final long stackTop = alignAddress(baseStackAddress); // highest address (initial RSP)
+		final long stackBottom = stackTop - stackSize; // lowest address (stack limit)
 
 		setupStack(stackTop, stackBottom);
 
@@ -151,15 +150,18 @@ public final class ELFLoader {
 		set(Register64.R15, oldValue);
 	}
 
-	/** Aligns the given address to a 16-byte boundary. */
-	private long alignBaseStackAddress(final long baseStackAddress) {
-		final boolean isAligned = (baseStackAddress & 0xFL) == 0L;
+	/**
+	 * Aligns the given address to a 16-byte boundary.
+	 *
+	 * @param address The address to align.
+	 * @return The same address aligned to a 16-byte boundary.
+	 */
+	public static long alignAddress(final long address) {
+		final boolean isAligned = (address & 0xFL) == 0L;
 		if (isAligned) {
-			return baseStackAddress;
+			return address;
 		} else {
-			final long alignedBaseStackAddress = (baseStackAddress + 15L) & 0xFFFFFFFFFFFFFFF0L;
-			logger.debug("Aligning base stack address to 16-byte boundary: 0x%x", alignedBaseStackAddress);
-			return alignedBaseStackAddress;
+			return (address + 15L) & 0xFFFFFFFFFFFFFFF0L;
 		}
 	}
 
@@ -329,7 +331,6 @@ public final class ELFLoader {
 				"Setting stack size to %,d bytes (%.3f MiB) at 0x%016x-0x%016x",
 				stackSize, stackSize / 1_048_576.0, stackBottom, stackTop - 1L);
 		mem.setPermissions(stackBottom, stackSize, true, true, false);
-
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 	}
 

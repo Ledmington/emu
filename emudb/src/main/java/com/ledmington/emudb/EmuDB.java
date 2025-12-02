@@ -117,25 +117,14 @@ public final class EmuDB {
 		}
 	}
 
-	/** Aligns the given address to a 16-byte boundary. */
-	private long alignBaseStackAddress(final long baseStackAddress) {
-		final boolean isAligned = (baseStackAddress & 0xFL) == 0L;
-		if (isAligned) {
-			return baseStackAddress;
-		} else {
-			return (baseStackAddress + 15L) & 0xFFFFFFFFFFFFFFF0L;
-		}
-	}
-
 	private void showStack() {
 		final int maxStackTraceDepth = 100; // TODO: is this a sane value?
 
 		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
 		final long stackSize = EmulatorConstants.getStackSize();
 		final long baseStackValue = EmulatorConstants.getBaseStackValue();
-		final long alignedBaseStackAddress = alignBaseStackAddress(baseStackAddress);
-		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
-		final long stackBottom = alignedBaseStackAddress - stackSize; // lowest address (stack limit)
+		final long stackTop = ELFLoader.alignAddress(baseStackAddress); // highest address (initial RSP)
+		final long stackBottom = stackTop - stackSize; // lowest address (stack limit)
 
 		// The first stack frame to be printed is always the one at [RIP]
 		final long rip = this.context.cpu().getRegisters().get(Register64.RIP);

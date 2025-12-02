@@ -66,7 +66,7 @@ public class X86Cpu implements X86Emulator {
 	private final boolean checkInstructions;
 
 	/** Highest address (initial RSP). */
-	private final long stackTop = alignBaseStackAddress(EmulatorConstants.getBaseStackAddress());
+	private final long stackTop = ELFLoader.alignAddress(EmulatorConstants.getBaseStackAddress());
 
 	/** Lowest address (stack limit). */
 	private final long stackBottom = stackTop + EmulatorConstants.getStackSize();
@@ -756,18 +756,6 @@ public class X86Cpu implements X86Emulator {
 
 		rf.set(Register64.RSP, newRSP);
 		return value;
-	}
-
-	/** Aligns the given address to a 16-byte boundary. */
-	private long alignBaseStackAddress(final long baseStackAddress) {
-		final boolean isAligned = (baseStackAddress & 0xFL) == 0L;
-		if (isAligned) {
-			return baseStackAddress;
-		} else {
-			final long alignedBaseStackAddress = (baseStackAddress + 15L) & 0xFFFFFFFFFFFFFFF0L;
-			logger.debug("Aligning base stack address to 16-byte boundary: 0x%x", alignedBaseStackAddress);
-			return alignedBaseStackAddress;
-		}
 	}
 
 	/** Returns a zero-extends integer. */
