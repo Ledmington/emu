@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.random.RandomGenerator;
@@ -151,6 +152,28 @@ final class TestExecutionWithMemory {
 	}
 
 	@Test
+	void pushOnFullStack() {
+		final long base = rng.nextLong();
+		mem.setPermissions(base - 8L, base, true, true, false);
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		mem.write(base - 8L, 0L);
+		final long val = rng.nextLong();
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(val)));
+		final long stackSize = EmulatorConstants.getStackSize();
+		final long maxStackValues = stackSize / 8L;
+		final Instruction push = new GeneralInstruction(Opcode.PUSH, Register64.RAX);
+		for (long i = 0L; i < maxStackValues - 1L; i++) {
+			cpu.executeOne(push);
+		}
+		assertThrows(
+				StackOverflow.class,
+				() -> cpu.executeOne(push),
+				() -> String.format(
+						"Expected executing '%s' on a full stack to produce a stack overflow but it did not.",
+						InstructionEncoder.toIntelSyntax(push, false)));
+	}
+
+	@Test
 	void pop() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base, 8L, true, true, false);
@@ -173,6 +196,22 @@ final class TestExecutionWithMemory {
 				() -> String.format(
 						"Expected 0x%016x but was 0x%016x.",
 						newRSP, cpu.getRegisters().get(Register64.RSP)));
+	}
+
+	@Test
+	void popOnEmptyStack() {
+		final long base = rng.nextLong();
+		mem.setPermissions(base, 8L, true, true, false);
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		final long val = rng.nextLong();
+		mem.write(base, val);
+		final Instruction pop = new GeneralInstruction(Opcode.POP, Register64.RAX);
+		assertThrows(
+				StackUnderflow.class,
+				() -> cpu.executeOne(pop),
+				() -> String.format(
+						"Expected executing '%s' on an empty stack to produce a stack underflow but it did not.",
+						InstructionEncoder.toIntelSyntax(pop, false)));
 	}
 
 	@ParameterizedTest
