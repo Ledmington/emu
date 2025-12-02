@@ -48,6 +48,7 @@ import com.ledmington.utils.SuppressFBWarnings;
 public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
+	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
 
 	/** The state of the CPU. */
 	protected enum State {
@@ -63,7 +64,12 @@ public class X86Cpu implements X86Emulator {
 	private final Memory mem; // TODO: can we remove dependency on mem?
 	private final InstructionFetcher instFetch;
 	private final boolean checkInstructions;
-	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
+
+	/** Highest address (initial RSP). */
+	private final long stackTop = alignBaseStackAddress(EmulatorConstants.getBaseStackAddress());
+
+	/** Lowest address (stack limit). */
+	private final long stackBottom = stackTop + EmulatorConstants.getStackSize();
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -709,26 +715,37 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
-	/** Pushes the given value on top of the stack and updates RSP. */
+	/**
+	 * Pushes the given value on top of the stack and updates RSP.
+	 *
+	 * @param value The 64-bit value to be placed on top of the stack
+	 * @throws StackOverflow When pushing over the max stack size.
+	 */
 	private void push(final long value) {
-		final long oldStackPointer = rf.get(Register64.RSP);
-		// The stack "grows downward"
-		final long newStackPointer = oldStackPointer - 8L;
-		rf.set(Register64.RSP, newStackPointer);
-		mem.write(newStackPointer, value);
-	}
-
-	/** Pops the value pointed by the top of the stack and returns it. */
-	private long pop() {
 		final long rsp = rf.get(Register64.RSP);
 
-		final long alignedBaseStackAddress = alignBaseStackAddress(EmulatorConstants.getBaseStackAddress());
-		final long stackTop = alignedBaseStackAddress; // highest address (initial RSP)
-		final long stackBottom =
-				alignedBaseStackAddress - EmulatorConstants.getStackSize(); // lowest address (stack limit)
+		// The stack "grows downward"
+		final long newRSP = rsp - 8L;
 
-		// TODO: do we need to check the new RSP value or the current one?
-		if (rsp < stackBottom) {
+		if (newRSP < stackBottom) {
+			throw new StackOverflow();
+		}
+
+		rf.set(Register64.RSP, newRSP);
+		mem.write(newRSP, value);
+	}
+
+	/**
+	 * Pops the value pointed by the top of the stack and returns it.
+	 *
+	 * @return The value pointed by RSP before the pop.
+	 * @throws StackUnderflow When popping from the base of the stack.
+	 */
+	private long pop() {
+		// TODO: do we need to update RBP?
+		final long rsp = rf.get(Register64.RSP);
+
+		if (rsp > stackTop) {
 			throw new StackUnderflow();
 		}
 
@@ -736,10 +753,6 @@ public class X86Cpu implements X86Emulator {
 
 		// the stack "grows downward"
 		final long newRSP = rsp + 8L;
-
-		if (newRSP > stackTop) {
-			throw new StackOverflow();
-		}
 
 		rf.set(Register64.RSP, newRSP);
 		return value;
