@@ -18,7 +18,6 @@
 package com.ledmington.utils;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /** A class to contain a list of ranges of boolean values. */
@@ -34,7 +33,7 @@ public final class IntervalArray {
 
 	private record Block(long start, long end) {
 		private Block {
-			if (end < start) {
+			if (Long.compareUnsigned(end, start) < 0) {
 				throw new IllegalArgumentException(
 						String.format("Invalid start (0x%016x) and end (0x016%x) of a block.", start, end));
 			}
@@ -47,7 +46,7 @@ public final class IntervalArray {
 		 * @return True if this block contains the given index, false otherwise.
 		 */
 		public boolean contains(final long index) {
-			return index >= start && index <= end;
+			return Long.compareUnsigned(index, start) >= 0 && Long.compareUnsigned(index, end) <= 0;
 		}
 	}
 
@@ -145,18 +144,22 @@ public final class IntervalArray {
 
 	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private void doReset(final long start, final long numBytes) {
-		final long end = start + numBytes - 1L;
+		final long end = start + numBytes - 1L; // inclusive
 		int i = 0;
 		while (i < blocks.size()) {
 			final Block curr = blocks.get(i);
-			if (curr.start() <= start) {
-				if (curr.end() >= end) {
+
+			final boolean isBeforeStart = Long.compareUnsigned(curr.start(), start) <= 0;
+			final boolean isAfterEnd = Long.compareUnsigned(curr.end(), end) >= 0;
+
+			if (isBeforeStart) {
+				if (isAfterEnd) {
 					// the given range fits entirely in this block
 					blocks.remove(i);
-					if (start > curr.start()) {
+					if (Long.compareUnsigned(start, curr.start()) > 0) {
 						blocks.add(i, new Block(curr.start(), start - 1));
 					}
-					if (curr.end() > end) {
+					if (Long.compareUnsigned(curr.end(), end) > 0) {
 						blocks.add(i + 1, new Block(end + 1, curr.end()));
 					}
 				} else {
@@ -165,7 +168,7 @@ public final class IntervalArray {
 				}
 				i++;
 			} else {
-				if (curr.end() >= end) {
+				if (isAfterEnd) {
 					// the given range takes up only the left "half" of this block
 					blocks.set(i, new Block(end + 1, curr.end()));
 					i++;
@@ -180,7 +183,7 @@ public final class IntervalArray {
 
 	private void sortAndMerge() {
 		// sorting by the starting address is sufficient
-		blocks.sort(Comparator.comparingLong(Block::start));
+		blocks.sort((a, b) -> Long.compareUnsigned(a.start(), b.start()));
 
 		int i = 0;
 		while (i < blocks.size() - 1) {
@@ -189,7 +192,7 @@ public final class IntervalArray {
 
 			// we do not use .contains() here because that would not account for a block completely contained within the
 			// previous one
-			if (curr.end() >= next.start()) {
+			if (Long.compareUnsigned(curr.end(), next.start()) >= 0) {
 				// overlapping
 				blocks.remove(i);
 				blocks.remove(i);

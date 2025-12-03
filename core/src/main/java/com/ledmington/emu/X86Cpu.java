@@ -727,7 +727,7 @@ public class X86Cpu implements X86Emulator {
 		// The stack "grows downward"
 		final long newRSP = rsp - 8L;
 
-		if (newRSP < stackBottom) {
+		if (Long.compareUnsigned(newRSP, stackBottom) < 0) {
 			throw new StackOverflow();
 		}
 
@@ -745,7 +745,7 @@ public class X86Cpu implements X86Emulator {
 		// TODO: do we need to update RBP?
 		final long rsp = rf.get(Register64.RSP);
 
-		if (rsp > stackTop) {
+		if (Long.compareUnsigned(rsp, stackTop) > 0) {
 			throw new StackUnderflow();
 		}
 

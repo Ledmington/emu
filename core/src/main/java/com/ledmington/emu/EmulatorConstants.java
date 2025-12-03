@@ -36,7 +36,7 @@ public final class EmulatorConstants {
 	/** The default stack address. */
 	private static long baseStackAddress = 0x0000_7fff_ffff_dc50L; // This is the value gdb uses, why?
 
-	/** The default stack size. */
+	/** The default stack size (in bytes). */
 	private static long stackSize = 8L * 1024L * 1024L;
 
 	/** The value at the base of the stack. */
@@ -147,7 +147,7 @@ public final class EmulatorConstants {
 	public static void setStackSize(final long newStackSize) {
 		final long minStackSize = 1L;
 		if (newStackSize < minStackSize) {
-			throw new IllegalArgumentException("Stack size must be at least 1");
+			throw new IllegalArgumentException("Stack size must be at least 1.");
 		}
 		stackSize = newStackSize;
 	}

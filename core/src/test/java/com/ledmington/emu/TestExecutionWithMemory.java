@@ -44,7 +44,7 @@ import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
-import com.ledmington.mem.RandomAccessMemory;
+import com.ledmington.mem.PagedMemory;
 import com.ledmington.utils.BitUtils;
 
 final class TestExecutionWithMemory {
@@ -62,7 +62,7 @@ final class TestExecutionWithMemory {
 	@BeforeEach
 	void setup() {
 		final DebuggingX86RegisterFile rf = new DebuggingX86RegisterFile(rng);
-		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
+		mem = new MemoryController(new PagedMemory(MemoryInitializer.random()), true, true);
 		cpu = new X86Cpu(mem, rf, true);
 	}
 
@@ -80,13 +80,17 @@ final class TestExecutionWithMemory {
 						.map(x -> Arguments.of(r, x)));
 	}
 
+	private void set(final Register64 r, final long value) {
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r, new Immediate(value)));
+	}
+
 	@ParameterizedTest
 	@MethodSource("pairs64")
 	void movMem64R64(final Register64 r1, final Register64 r2) {
 		final long oldValue1 = rng.nextLong();
 		final long oldValue2 = rng.nextLong();
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r1, new Immediate(oldValue1)));
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
+		set(r1, oldValue1);
+		set(r2, oldValue2);
 		mem.initialize(oldValue1, 8L, (byte) 0x00);
 		mem.setPermissions(oldValue1, 8L, false, true, false);
 		cpu.executeOne(new GeneralInstruction(
@@ -109,7 +113,7 @@ final class TestExecutionWithMemory {
 	@MethodSource("pairs64")
 	void movR64Mem64(final Register64 r1, final Register64 r2) {
 		final long oldValue2 = rng.nextLong();
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r2, new Immediate(oldValue2)));
+		set(r2, oldValue2);
 		final long val = rng.nextLong();
 		mem.initialize(oldValue2, val);
 		mem.setPermissions(oldValue2, 8L, true, false, false);
@@ -131,10 +135,10 @@ final class TestExecutionWithMemory {
 	void push() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base - 8L, base, true, true, false);
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		set(Register64.RSP, base);
 		mem.write(base - 8L, 0L);
 		final long val = rng.nextLong();
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(val)));
+		set(Register64.RAX, val);
 
 		cpu.executeOne(new GeneralInstruction(Opcode.PUSH, Register64.RAX));
 
@@ -153,15 +157,18 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void pushOnFullStack() {
-		final long base = rng.nextLong();
-		mem.setPermissions(base - 8L, base, true, true, false);
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
-		mem.write(base - 8L, 0L);
+		final long stackSize = 1024L;
+		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackBottom = stackTop - stackSize;
+
+		set(Register64.RSP, stackTop);
+		mem.setPermissions(stackBottom, stackSize, true, true, false);
+		mem.initialize(stackBottom, stackSize, (byte) 0x00);
+
 		final long val = rng.nextLong();
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(val)));
-		final long stackSize = EmulatorConstants.getStackSize();
-		final long maxStackValues = stackSize / 8L;
+		set(Register64.RAX, val);
 		final Instruction push = new GeneralInstruction(Opcode.PUSH, Register64.RAX);
+		final long maxStackValues = stackSize / 8L;
 		for (long i = 0L; i < maxStackValues - 1L; i++) {
 			cpu.executeOne(push);
 		}
@@ -177,7 +184,7 @@ final class TestExecutionWithMemory {
 	void pop() {
 		final long base = rng.nextLong();
 		mem.setPermissions(base, 8L, true, true, false);
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		set(Register64.RSP, base);
 		final long val = rng.nextLong();
 		mem.write(base, val);
 
@@ -200,11 +207,14 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void popOnEmptyStack() {
-		final long base = rng.nextLong();
-		mem.setPermissions(base, 8L, true, true, false);
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
-		final long val = rng.nextLong();
-		mem.write(base, val);
+		final long stackSize = 1024L;
+		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackBottom = stackTop - stackSize;
+
+		set(Register64.RSP, stackTop);
+		mem.setPermissions(stackBottom, stackSize, true, true, false);
+		mem.initialize(stackBottom, stackSize, (byte) 0x00);
+
 		final Instruction pop = new GeneralInstruction(Opcode.POP, Register64.RAX);
 		assertThrows(
 				StackUnderflow.class,
@@ -226,15 +236,14 @@ final class TestExecutionWithMemory {
 
 		// Setup stack at random location
 		final long base = rng.nextLong();
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(base)));
+		set(Register64.RSP, base);
 
 		// Doing n pushes of random values
 		for (int i = 0; i < n; i++) {
 			// Set memory to readable and writable
 			mem.setPermissions(base - 8L * (i + 1), 8L, true, true, false);
 
-			// mov RAX,val
-			cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RAX, new Immediate(values[i])));
+			set(Register64.RAX, values[i]);
 
 			final int finalI = i;
 
@@ -309,7 +318,7 @@ final class TestExecutionWithMemory {
 		// Setup stack at random location (8-byte aligned)
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
 		mem.setPermissions(stackBase, 8L, true, true, false);
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
+		set(Register64.RSP, stackBase);
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
@@ -337,8 +346,8 @@ final class TestExecutionWithMemory {
 		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
 		mem.initialize(stackBase - 16L - 4L, 20L, (byte) 0);
 		mem.setPermissions(stackBase - 16L - 4L, 20L, true, true, false);
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RSP, new Immediate(stackBase)));
-		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, Register64.RBP, new Immediate(stackBase)));
+		set(Register64.RSP, stackBase);
+		set(Register64.RBP, stackBase);
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
