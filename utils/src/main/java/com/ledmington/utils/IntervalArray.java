@@ -35,7 +35,7 @@ public final class IntervalArray {
 		private Block {
 			if (Long.compareUnsigned(end, start) < 0) {
 				throw new IllegalArgumentException(
-						String.format("Invalid start (0x%016x) and end (0x016%x) of a block.", start, end));
+						String.format("Invalid start (0x%016x) and end (0x%016x) of a block.", start, end));
 			}
 		}
 
@@ -58,7 +58,7 @@ public final class IntervalArray {
 	 */
 	public IntervalArray(final boolean defaultValue) {
 		if (defaultValue) {
-			blocks.add(new Block(Long.MIN_VALUE, Long.MAX_VALUE));
+			blocks.add(new Block(0x0000_0000_0000_0000L, 0xffff_ffff_ffff_ffffL));
 		}
 	}
 
@@ -142,42 +142,100 @@ public final class IntervalArray {
 		sortAndMerge();
 	}
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void doReset(final long start, final long numBytes) {
 		final long end = start + numBytes - 1L; // inclusive
+
 		int i = 0;
 		while (i < blocks.size()) {
-			final Block curr = blocks.get(i);
+			final Block currentBlock = blocks.get(i);
 
-			final boolean isBeforeStart = Long.compareUnsigned(curr.start(), start) <= 0;
-			final boolean isAfterEnd = Long.compareUnsigned(curr.end(), end) >= 0;
+			final boolean isStartBeforeBlockStart = Long.compareUnsigned(start, currentBlock.start()) < 0;
+			final boolean isStartBeforeBlockEnd = Long.compareUnsigned(start, currentBlock.end()) <= 0;
+			final boolean isEndBeforeBlockStart = Long.compareUnsigned(end, currentBlock.start()) < 0;
+			final boolean isEndBeforeBlockEnd = Long.compareUnsigned(end, currentBlock.end()) <= 0;
+			final boolean isEndInsideBlock = currentBlock.contains(end);
+			final boolean isStartInsideBlock = currentBlock.contains(start);
 
-			if (isBeforeStart) {
-				if (isAfterEnd) {
-					// the given range fits entirely in this block
-					blocks.remove(i);
-					if (Long.compareUnsigned(start, curr.start()) > 0) {
-						blocks.add(i, new Block(curr.start(), start - 1));
-					}
-					if (Long.compareUnsigned(curr.end(), end) > 0) {
-						blocks.add(i + 1, new Block(end + 1, curr.end()));
-					}
-				} else {
-					// the given range takes up only the right "half" of this block
-					blocks.set(i, new Block(curr.start(), start - 1));
-				}
+			if (isEndBeforeBlockStart) {
+				/*
+				 * ┌────────┐
+				 * │newBlock│
+				 * └────────┘
+				 *               ┌────────────┐
+				 *               │currentBlock│
+				 *               └────────────┘
+				 */
 				i++;
-			} else {
-				if (isAfterEnd) {
-					// the given range takes up only the left "half" of this block
-					blocks.set(i, new Block(end + 1, curr.end()));
+			} else if (isStartBeforeBlockStart && isEndInsideBlock) {
+				/*
+				 * ┌────────┐
+				 * │newBlock│
+				 * └────────┘
+				 *       ┌────────────┐
+				 *       │currentBlock│
+				 *       └────────────┘
+				 */
+				blocks.set(i, new Block(end + 1L, currentBlock.end()));
+				i++; // TODO: can we return here?
+			} else if (isStartBeforeBlockStart && !isEndBeforeBlockEnd) {
+				/*
+				 * ┌──────────────────────┐
+				 * │      newBlock        │
+				 * └──────────────────────┘
+				 *      ┌────────────┐
+				 *      │currentBlock│
+				 *      └────────────┘
+				 */
+				blocks.remove(i);
+				// we do not increment i here
+			} else if (isStartInsideBlock && isEndInsideBlock) {
+				/*
+				 *        ┌────────┐
+				 *        │newBlock│
+				 *        └────────┘
+				 * ┌────────────────────────┐
+				 * │      currentBlock      │
+				 * └────────────────────────┘
+				 */
+				blocks.remove(i);
+				if (start != currentBlock.start()) {
+					final Block left = new Block(currentBlock.start(), start - 1L);
+					blocks.add(i, left);
 					i++;
-				} else {
-					// the given range completely contains this block
-					blocks.remove(i);
 				}
+				if (end != currentBlock.end()) {
+					final Block right = new Block(end + 1L, currentBlock.end());
+					blocks.add(i, right);
+					i++;
+				}
+				// TODO: can we return here?
+			} else if (isStartInsideBlock && !isEndBeforeBlockEnd) {
+				/*
+				 *          ┌────────┐
+				 *          │newBlock│
+				 *          └────────┘
+				 * ┌────────────┐
+				 * │currentBlock│
+				 * └────────────┘
+				 */
+				blocks.set(i, new Block(currentBlock.start(), start - 1L));
+				i++;
+			} else if (!isStartBeforeBlockEnd) {
+				/*
+				 *                  ┌────────┐
+				 *                  │newBlock│
+				 *                  └────────┘
+				 * ┌────────────┐
+				 * │currentBlock│
+				 * └────────────┘
+				 */
+				i++;
 			}
 		}
+
+		// TODO: with careful handling of each case, this call should not be needed because we can assume that the list
+		// of blocks is always sorted
 		sortAndMerge();
 	}
 
