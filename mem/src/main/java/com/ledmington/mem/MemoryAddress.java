@@ -19,6 +19,10 @@ package com.ledmington.mem;
 
 /** A 64-bit memory address. */
 public record MemoryAddress(long address) implements Comparable<MemoryAddress> {
+	public MemoryAddress plus(final long offset) {
+		return new MemoryAddress(address + offset);
+	}
+
 	@Override
 	public int compareTo(final MemoryAddress other) {
 		return Long.compareUnsigned(address, other.address);
