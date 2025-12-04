@@ -31,9 +31,7 @@ final class TestMemoryController extends TestMemory {
 
 	@Override
 	protected Memory getMemory() {
-		final MemoryController mem =
-				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true, true, true, false);
-		return mem;
+		return new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true, true, true, false);
 	}
 
 	@ParameterizedTest

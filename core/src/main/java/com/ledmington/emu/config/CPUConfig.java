@@ -24,20 +24,20 @@ import java.util.Objects;
  * href="https://github.com/util-linux/util-linux/blob/master/sys-utils/lscpu.c">here</a>. Useful program: <a
  * href="https://godbolt.org/z/1z5fj9M8f">here</a>.
  */
+// TODO: can this be an enum with some factory methods?
 public final class CPUConfig {
 
 	private static final int VALUES_FOR_EACH_LEAF = 4;
 
 	/** The CPU config of a generic Intel processor. */
-	public static final CPUConfig GENERIC_INTEL = new CPUConfig(new int[][] {
-		{
-			1,
-			0x47656e75, // 'Genu'
-			0x696e6549, // 'ineI'
-			0x6e74656c, // 'ntel'
-		},
-		{0x000406f1, 0x01020800, 0xfffa3203, 0x178bfbff}
-	});
+	public static final CPUConfig GENERIC_INTEL = new CPUConfig(
+			new int[] {
+				1,
+				0x47656e75, // 'Genu'
+				0x696e6549, // 'ineI'
+				0x6e74656c, // 'ntel'
+			},
+			new int[] {0x000406f1, 0x01020800, 0xfffa3203, 0x178bfbff});
 
 	private final int[][] leaves;
 

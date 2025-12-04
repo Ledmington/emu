@@ -50,6 +50,10 @@ public final class MemoryController implements Memory {
 	 *     with the wrong permissions.
 	 * @param breakWhenReadingUninitializedMemory Decides whether this controller should throw an exception when reading
 	 *     uninitialized memory.
+	 * @param defaultReadable Default read permissions for the whole memory: true for readable, false otherwise.
+	 * @param defaultWritable Default write permissions for the whole memory: true for writable, false otherwise.
+	 * @param defaultExecutable Default execution permissions for the whole memory: true for executable, false
+	 *     otherwise.
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public MemoryController(
@@ -76,7 +80,6 @@ public final class MemoryController implements Memory {
 	 * @param breakWhenReadingUninitializedMemory Decides whether this controller should throw an exception when reading
 	 *     uninitialized memory.
 	 */
-	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need this object as it is.")
 	public MemoryController(
 			final Memory memory,
 			final boolean breakOnWrongPermissions,
@@ -250,6 +253,7 @@ public final class MemoryController implements Memory {
 	 * @param writeable If this block should be writeable.
 	 * @param executable If this block should be executable (i.e. containing code).
 	 */
+	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	public void setPermissions(
 			final long start,
 			final long numBytes,

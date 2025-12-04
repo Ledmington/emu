@@ -43,8 +43,7 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.SuppressFBWarnings;
 
 /** Emulator of an x86 CPU. */
-@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects", "PMD.TooManyMethods"
-})
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects"})
 public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");

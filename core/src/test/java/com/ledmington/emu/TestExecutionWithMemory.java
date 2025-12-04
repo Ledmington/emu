@@ -170,7 +170,11 @@ final class TestExecutionWithMemory {
 		final Instruction push = new GeneralInstruction(Opcode.PUSH, Register64.RAX);
 		final long maxStackValues = stackSize / 8L;
 		for (long i = 0L; i < maxStackValues - 1L; i++) {
-			cpu.executeOne(push);
+			assertDoesNotThrow(
+					() -> cpu.executeOne(push),
+					() -> String.format(
+							"Expected executing '%s' on a non-full stack to work fine but it did not.",
+							InstructionEncoder.toIntelSyntax(push, false)));
 		}
 		assertThrows(
 				StackOverflow.class,
