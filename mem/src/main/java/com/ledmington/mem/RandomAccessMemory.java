@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RandomAccessMemory implements Memory {
 
 	private final MemoryInitializer init;
-	private final Map<Long, Byte> m = new ConcurrentHashMap<>();
+	private final Map<MemoryAddress, Byte> m = new ConcurrentHashMap<>();
 
 	/**
 	 * Creates a RAM with the given memory initializer.
@@ -37,17 +37,17 @@ public final class RandomAccessMemory implements Memory {
 	}
 
 	@Override
-	public byte read(final long address) {
+	public byte read(final MemoryAddress address) {
 		return isInitialized(address) ? m.get(address) : init.get();
 	}
 
 	@Override
-	public void write(final long address, final byte value) {
+	public void write(final MemoryAddress address, final byte value) {
 		m.put(address, value);
 	}
 
 	@Override
-	public boolean isInitialized(final long address) {
+	public boolean isInitialized(final MemoryAddress address) {
 		return m.containsKey(address);
 	}
 

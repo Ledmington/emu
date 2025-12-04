@@ -32,7 +32,7 @@ public interface Memory {
 	 * @param address The address to read from.
 	 * @return The byte word contained at the given address.
 	 */
-	byte read(long address);
+	byte read(MemoryAddress address);
 
 	/**
 	 * Reads 2 contiguous bytes (little-endian) starting at the given address.
@@ -40,11 +40,11 @@ public interface Memory {
 	 * @param address The address to read from.
 	 * @return The 2-byte value that was stored at the given address.
 	 */
-	default short read2(final long address) {
+	default short read2(final MemoryAddress address) {
 		// Little-endian
 		short x = 0;
 		x = BitUtils.or(x, BitUtils.asShort(read(address)));
-		x = BitUtils.or(x, BitUtils.shl(BitUtils.asShort(read(address + 1L)), 8));
+		x = BitUtils.or(x, BitUtils.shl(BitUtils.asShort(read(address.plus(1L))), 8));
 		return x;
 	}
 
@@ -54,13 +54,13 @@ public interface Memory {
 	 * @param address The address to read from.
 	 * @return The 4-byte value that was stored at the given address.
 	 */
-	default int read4(final long address) {
+	default int read4(final MemoryAddress address) {
 		// Little-endian
 		int x = 0;
 		x |= BitUtils.asInt(read(address));
-		x |= (BitUtils.asInt(read(address + 1L)) << 8);
-		x |= (BitUtils.asInt(read(address + 2L)) << 16);
-		x |= (BitUtils.asInt(read(address + 3L)) << 24);
+		x |= (BitUtils.asInt(read(address.plus(1L))) << 8);
+		x |= (BitUtils.asInt(read(address.plus(2L))) << 16);
+		x |= (BitUtils.asInt(read(address.plus(3L))) << 24);
 		return x;
 	}
 
@@ -70,17 +70,17 @@ public interface Memory {
 	 * @param address The address to read from.
 	 * @return The 8-byte value that was stored at the given address.
 	 */
-	default long read8(final long address) {
+	default long read8(final MemoryAddress address) {
 		// Little-endian
 		long x = 0x0000000000000000L;
 		x |= BitUtils.asLong(read(address));
-		x |= (BitUtils.asLong(read(address + 1L)) << 8);
-		x |= (BitUtils.asLong(read(address + 2L)) << 16);
-		x |= (BitUtils.asLong(read(address + 3L)) << 24);
-		x |= (BitUtils.asLong(read(address + 4L)) << 32);
-		x |= (BitUtils.asLong(read(address + 5L)) << 40);
-		x |= (BitUtils.asLong(read(address + 6L)) << 48);
-		x |= (BitUtils.asLong(read(address + 7L)) << 56);
+		x |= (BitUtils.asLong(read(address.plus(1L))) << 8);
+		x |= (BitUtils.asLong(read(address.plus(2L))) << 16);
+		x |= (BitUtils.asLong(read(address.plus(3L))) << 24);
+		x |= (BitUtils.asLong(read(address.plus(4L))) << 32);
+		x |= (BitUtils.asLong(read(address.plus(5L))) << 40);
+		x |= (BitUtils.asLong(read(address.plus(6L))) << 48);
+		x |= (BitUtils.asLong(read(address.plus(7L))) << 56);
 		return x;
 	}
 
@@ -90,7 +90,7 @@ public interface Memory {
 	 * @param address The address to write at.
 	 * @param value The value to write.
 	 */
-	void write(long address, byte value);
+	void write(MemoryAddress address, byte value);
 
 	/**
 	 * Writes an arbitrary number of single-byte values contiguously in memory.
@@ -98,9 +98,9 @@ public interface Memory {
 	 * @param address The address to start writing from.
 	 * @param values THe array of values to write contiguously.
 	 */
-	default void write(final long address, final byte[] values) {
+	default void write(final MemoryAddress address, final byte[] values) {
 		for (int i = 0; i < values.length; i++) {
-			write(address + i, values[i]);
+			write(address.plus(i), values[i]);
 		}
 	}
 
@@ -110,7 +110,7 @@ public interface Memory {
 	 * @param address The address to write the value at.
 	 * @param value The value to be written.
 	 */
-	default void write(final long address, final short value) {
+	default void write(final MemoryAddress address, final short value) {
 		write(address, BitUtils.asLEBytes(value));
 	}
 
@@ -120,7 +120,7 @@ public interface Memory {
 	 * @param address The address to write the value at.
 	 * @param value The value to be written.
 	 */
-	default void write(final long address, final int value) {
+	default void write(final MemoryAddress address, final int value) {
 		write(address, BitUtils.asLEBytes(value));
 	}
 
@@ -130,7 +130,7 @@ public interface Memory {
 	 * @param address The address to write the value at.
 	 * @param value The value to be written.
 	 */
-	default void write(final long address, final long value) {
+	default void write(final MemoryAddress address, final long value) {
 		write(address, BitUtils.asLEBytes(value));
 	}
 
@@ -141,5 +141,5 @@ public interface Memory {
 	 * @param address The address to be checked.
 	 * @return True if it is initialized, false otherwise.
 	 */
-	boolean isInitialized(long address);
+	boolean isInitialized(MemoryAddress address);
 }

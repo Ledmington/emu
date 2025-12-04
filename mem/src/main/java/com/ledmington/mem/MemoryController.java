@@ -97,16 +97,16 @@ public final class MemoryController implements Memory {
 		this(memory, true, true, false, false, false);
 	}
 
-	private boolean canRead(final long address) {
-		return readableAddresses.get(address);
+	private boolean canRead(final MemoryAddress address) {
+		return readableAddresses.get(address.address());
 	}
 
-	private boolean canWrite(final long address) {
-		return writableAddresses.get(address);
+	private boolean canWrite(final MemoryAddress address) {
+		return writableAddresses.get(address.address());
 	}
 
-	private boolean canExecute(final long address) {
-		return executableAddresses.get(address);
+	private boolean canExecute(final MemoryAddress address) {
+		return executableAddresses.get(address.address());
 	}
 
 	private String reportIllegalAccess(
@@ -255,7 +255,7 @@ public final class MemoryController implements Memory {
 	 */
 	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	public void setPermissions(
-			final long start,
+			final MemoryAddress start,
 			final long numBytes,
 			final boolean readable,
 			final boolean writeable,
@@ -295,7 +295,7 @@ public final class MemoryController implements Memory {
 	}
 
 	@Override
-	public byte read(final long address) {
+	public byte read(final MemoryAddress address) {
 		checkRead(address, 1);
 		checkInitialized(address, 1);
 		return this.mem.read(address);
@@ -308,7 +308,7 @@ public final class MemoryController implements Memory {
 	 * @return A 64-bit value read.
 	 */
 	@Override
-	public long read8(final long address) {
+	public long read8(final MemoryAddress address) {
 		checkRead(address, 8);
 		checkInitialized(address, 8);
 
@@ -342,7 +342,7 @@ public final class MemoryController implements Memory {
 	 * @param address The 64-bit address to read the instructions from.
 	 * @return The instruction byte at the given address.
 	 */
-	public byte readCode(final long address) {
+	public byte readCode(final MemoryAddress address) {
 		checkExecute(address);
 		checkInitialized(address, 1);
 		return mem.read(address);
@@ -360,7 +360,7 @@ public final class MemoryController implements Memory {
 	}
 
 	@Override
-	public void write(final long address, final byte value) {
+	public void write(final MemoryAddress address, final byte value) {
 		checkWrite(address, 1);
 		mem.write(address, value);
 	}
@@ -372,7 +372,7 @@ public final class MemoryController implements Memory {
 	 * @param value The 64-bit value to write.
 	 */
 	@Override
-	public void write(final long address, final long value) {
+	public void write(final MemoryAddress address, final long value) {
 		checkWrite(address, 8);
 		initialize(address, BitUtils.asLEBytes(value));
 	}
