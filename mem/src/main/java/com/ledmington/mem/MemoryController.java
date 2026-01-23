@@ -97,29 +97,30 @@ public final class MemoryController implements Memory {
 		this(memory, true, true, false, false, false);
 	}
 
-	private boolean canRead(final long address) {
-		return readableAddresses.get(address);
+	private boolean canRead(final MemoryAddress address) {
+		return readableAddresses.get(address.address());
 	}
 
-	private boolean canWrite(final long address) {
-		return writableAddresses.get(address);
+	private boolean canWrite(final MemoryAddress address) {
+		return writableAddresses.get(address.address());
 	}
 
-	private boolean canExecute(final long address) {
-		return executableAddresses.get(address);
+	private boolean canExecute(final MemoryAddress address) {
+		return executableAddresses.get(address.address());
 	}
 
 	private String reportIllegalAccess(
 			final String message,
-			final long address,
+			final MemoryAddress address,
 			final int length,
 			final String propertyName,
-			final Predicate<Long> allowed) {
+			final Predicate<MemoryAddress> allowed) {
 		final long linesAround = 5;
 		final long bytesPerLine = 16;
 
 		// The start of the given range must be in the middle 16-bytes aligned line
-		final long startAddress = address / bytesPerLine * bytesPerLine - bytesPerLine * linesAround;
+		final MemoryAddress startAddress =
+				new MemoryAddress(address.address() / bytesPerLine * bytesPerLine - bytesPerLine * linesAround);
 
 		final StringBuilder sb = new StringBuilder(256);
 
@@ -138,12 +139,12 @@ public final class MemoryController implements Memory {
 				.append(TerminalUtils.ANSI_RESET)
 				.append("\n\n");
 
-		final Consumer<Long> printer = x -> {
+		final Consumer<MemoryAddress> printer = x -> {
 			final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
 			sb.append(x == address ? '[' : ' ');
 
 			// Print the bytes accessed in bold
-			if (x >= address && x < address + length) {
+			if (x.compareTo(address) >= 0 && x.compareTo(address.plus(length)) < 0) {
 				sb.append(TerminalUtils.ANSI_BOLD);
 			}
 			if (allowed.test(x)) {
@@ -151,7 +152,7 @@ public final class MemoryController implements Memory {
 			} else {
 				sb.append(TerminalUtils.ANSI_RED);
 			}
-			sb.append(s).append(TerminalUtils.ANSI_RESET).append(x == (address + length - 1) ? ']' : ' ');
+			sb.append(s).append(TerminalUtils.ANSI_RESET).append(x.equals(address.plus(length - 1)) ? ']' : ' ');
 		};
 
 		// print column headers
@@ -159,27 +160,31 @@ public final class MemoryController implements Memory {
 
 		// print lines before
 		for (long r = 0L; r < linesAround; r++) {
-			sb.append(String.format(" 0x%016x: ", startAddress + (r * bytesPerLine)));
+			sb.append(String.format(
+					" 0x%016x: ", startAddress.plus(r * bytesPerLine).address()));
 			for (long i = 0L; i < bytesPerLine; i++) {
-				final long x = startAddress + (r * bytesPerLine) + i;
+				final MemoryAddress x = startAddress.plus((r * bytesPerLine) + i);
 				printer.accept(x);
 			}
 			sb.append('\n');
 		}
 
 		// print line with the given address
-		sb.append(String.format(" 0x%016x: ", startAddress + (linesAround * bytesPerLine)));
+		sb.append(String.format(
+				" 0x%016x: ", startAddress.plus(linesAround * bytesPerLine).address()));
 		for (long i = 0L; i < bytesPerLine; i++) {
-			final long x = startAddress + (linesAround * bytesPerLine) + i;
+			final MemoryAddress x = startAddress.plus((linesAround * bytesPerLine) + i);
 			printer.accept(x);
 		}
 		sb.append('\n');
 
 		// print lines after
 		for (long r = 0L; r < linesAround; r++) {
-			sb.append(String.format(" 0x%016x: ", startAddress + ((linesAround + 1 + r) * bytesPerLine)));
+			sb.append(String.format(
+					" 0x%016x: ",
+					startAddress.plus((linesAround + 1 + r) * bytesPerLine).address()));
 			for (long i = 0L; i < bytesPerLine; i++) {
-				final long x = startAddress + ((linesAround + 1 + r) * bytesPerLine) + i;
+				final MemoryAddress x = startAddress.plus(((linesAround + 1 + r) * bytesPerLine) + i);
 				printer.accept(x);
 			}
 			sb.append('\n');
@@ -197,46 +202,46 @@ public final class MemoryController implements Memory {
 		}
 	}
 
-	private void reportIllegalRead(final long address, final int length) {
+	private void reportIllegalRead(final MemoryAddress address, final int length) {
 		checkLength(length);
 		throw new IllegalReadException(reportIllegalAccess(
 				String.format(
 						"Attempted %d-byte read at%s non-readable address 0x%x",
-						length, isInitialized(address) ? "" : " uninitialized", address),
+						length, isInitialized(address) ? "" : " uninitialized", address.address()),
 				address,
 				length,
 				"Readable",
-				readableAddresses::get));
+				x -> readableAddresses.get(x.address())));
 	}
 
-	private void reportIllegalExecution(final long address) {
+	private void reportIllegalExecution(final MemoryAddress address) {
 		checkLength(1);
 		throw new IllegalExecutionException(reportIllegalAccess(
 				String.format(
 						"Attempted 1-byte execution at%s non-executable address 0x%x",
-						isInitialized(address) ? "" : " uninitialized", address),
+						isInitialized(address) ? "" : " uninitialized", address.address()),
 				address,
 				1,
 				"Executable",
-				executableAddresses::get));
+				x -> executableAddresses.get(x.address())));
 	}
 
-	private void reportIllegalWrite(final long address, final int length) {
+	private void reportIllegalWrite(final MemoryAddress address, final int length) {
 		checkLength(length);
 		throw new IllegalWriteException(reportIllegalAccess(
 				String.format(
 						"Attempted %d-byte write at%s non-writable address 0x%x",
-						length, isInitialized(address) ? "" : " uninitialized", address),
+						length, isInitialized(address) ? "" : " uninitialized", address.address()),
 				address,
 				length,
 				"Writable",
-				writableAddresses::get));
+				x -> writableAddresses.get(x.address())));
 	}
 
-	private void reportAccessToUninitialized(final long address, final int length) {
+	private void reportAccessToUninitialized(final MemoryAddress address, final int length) {
 		checkLength(length);
 		throw new AccessToUninitializedMemoryException(reportIllegalAccess(
-				String.format("Attempted %d-byte access at uninitialized address 0x%x", length, address),
+				String.format("Attempted %d-byte access at uninitialized address 0x%x", length, address.address()),
 				address,
 				length,
 				"Initialized",
@@ -255,7 +260,7 @@ public final class MemoryController implements Memory {
 	 */
 	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	public void setPermissions(
-			final long start,
+			final MemoryAddress start,
 			final long numBytes,
 			final boolean readable,
 			final boolean writeable,
@@ -267,35 +272,35 @@ public final class MemoryController implements Memory {
 			return;
 		}
 
-		readableAddresses.set(start, numBytes, readable);
-		writableAddresses.set(start, numBytes, writeable);
-		executableAddresses.set(start, numBytes, executable);
+		readableAddresses.set(start.address(), numBytes, readable);
+		writableAddresses.set(start.address(), numBytes, writeable);
+		executableAddresses.set(start.address(), numBytes, executable);
 	}
 
-	private void checkRead(final long address, final int length) {
+	private void checkRead(final MemoryAddress address, final int length) {
 		if (!breakOnWrongPermissions) {
 			return;
 		}
 		for (int i = 0; i < length; i++) {
-			if (!canRead(address + i)) {
+			if (!canRead(address.plus(i))) {
 				reportIllegalRead(address, length);
 			}
 		}
 	}
 
-	private void checkInitialized(final long address, final int length) {
+	private void checkInitialized(final MemoryAddress address, final int length) {
 		if (!breakWhenReadingUninitializedMemory) {
 			return;
 		}
 		for (int i = 0; i < length; i++) {
-			if (!isInitialized(address + i)) {
+			if (!isInitialized(address.plus(i))) {
 				reportAccessToUninitialized(address, length);
 			}
 		}
 	}
 
 	@Override
-	public byte read(final long address) {
+	public byte read(final MemoryAddress address) {
 		checkRead(address, 1);
 		checkInitialized(address, 1);
 		return this.mem.read(address);
@@ -308,29 +313,29 @@ public final class MemoryController implements Memory {
 	 * @return A 64-bit value read.
 	 */
 	@Override
-	public long read8(final long address) {
+	public long read8(final MemoryAddress address) {
 		checkRead(address, 8);
 		checkInitialized(address, 8);
 
 		// Little-endian
 		long x = 0x0000000000000000L;
 		x |= BitUtils.asLong(mem.read(address));
-		x |= (BitUtils.asLong(mem.read(address + 1L)) << 8);
-		x |= (BitUtils.asLong(mem.read(address + 2L)) << 16);
-		x |= (BitUtils.asLong(mem.read(address + 3L)) << 24);
-		x |= (BitUtils.asLong(mem.read(address + 4L)) << 32);
-		x |= (BitUtils.asLong(mem.read(address + 5L)) << 40);
-		x |= (BitUtils.asLong(mem.read(address + 6L)) << 48);
-		x |= (BitUtils.asLong(mem.read(address + 7L)) << 56);
+		x |= (BitUtils.asLong(mem.read(address.plus(1L))) << 8);
+		x |= (BitUtils.asLong(mem.read(address.plus(2L))) << 16);
+		x |= (BitUtils.asLong(mem.read(address.plus(3L))) << 24);
+		x |= (BitUtils.asLong(mem.read(address.plus(4L))) << 32);
+		x |= (BitUtils.asLong(mem.read(address.plus(5L))) << 40);
+		x |= (BitUtils.asLong(mem.read(address.plus(6L))) << 48);
+		x |= (BitUtils.asLong(mem.read(address.plus(7L))) << 56);
 		return x;
 	}
 
-	private void checkExecute(final long address) {
+	private void checkExecute(final MemoryAddress address) {
 		if (!breakOnWrongPermissions) {
 			return;
 		}
 		for (int i = 0; i < 1; i++) {
-			if (!canExecute(address + i)) {
+			if (!canExecute(address.plus(i))) {
 				reportIllegalExecution(address);
 			}
 		}
@@ -342,25 +347,25 @@ public final class MemoryController implements Memory {
 	 * @param address The 64-bit address to read the instructions from.
 	 * @return The instruction byte at the given address.
 	 */
-	public byte readCode(final long address) {
+	public byte readCode(final MemoryAddress address) {
 		checkExecute(address);
 		checkInitialized(address, 1);
 		return mem.read(address);
 	}
 
-	private void checkWrite(final long address, final int length) {
+	private void checkWrite(final MemoryAddress address, final int length) {
 		if (!breakOnWrongPermissions) {
 			return;
 		}
 		for (int i = 0; i < length; i++) {
-			if (!canWrite(address + i)) {
+			if (!canWrite(address.plus(i))) {
 				reportIllegalWrite(address, length);
 			}
 		}
 	}
 
 	@Override
-	public void write(final long address, final byte value) {
+	public void write(final MemoryAddress address, final byte value) {
 		checkWrite(address, 1);
 		mem.write(address, value);
 	}
@@ -372,13 +377,13 @@ public final class MemoryController implements Memory {
 	 * @param value The 64-bit value to write.
 	 */
 	@Override
-	public void write(final long address, final long value) {
+	public void write(final MemoryAddress address, final long value) {
 		checkWrite(address, 8);
 		initialize(address, BitUtils.asLEBytes(value));
 	}
 
 	@Override
-	public boolean isInitialized(final long address) {
+	public boolean isInitialized(final MemoryAddress address) {
 		return mem.isInitialized(address);
 	}
 
@@ -389,9 +394,9 @@ public final class MemoryController implements Memory {
 	 * @param numBytes The length of the address range.
 	 * @param value The 8-bit value to be written in each byte.
 	 */
-	public void initialize(final long start, final long numBytes, final byte value) {
+	public void initialize(final MemoryAddress start, final long numBytes, final byte value) {
 		for (long i = 0L; i < numBytes; i++) {
-			mem.write(start + i, value);
+			mem.write(start.plus(i), value);
 		}
 	}
 
@@ -401,7 +406,7 @@ public final class MemoryController implements Memory {
 	 * @param address The address where to write the value.
 	 * @param value The value to be written.
 	 */
-	public void initialize(final long address, final short value) {
+	public void initialize(final MemoryAddress address, final short value) {
 		initialize(address, BitUtils.asLEBytes(value));
 	}
 
@@ -411,7 +416,7 @@ public final class MemoryController implements Memory {
 	 * @param address The address where to write the value.
 	 * @param value The value to be written.
 	 */
-	public void initialize(final long address, final int value) {
+	public void initialize(final MemoryAddress address, final int value) {
 		initialize(address, BitUtils.asLEBytes(value));
 	}
 
@@ -421,7 +426,7 @@ public final class MemoryController implements Memory {
 	 * @param address The address where to write the value.
 	 * @param value The value to be written.
 	 */
-	public void initialize(final long address, final long value) {
+	public void initialize(final MemoryAddress address, final long value) {
 		initialize(address, BitUtils.asLEBytes(value));
 	}
 
@@ -431,9 +436,9 @@ public final class MemoryController implements Memory {
 	 * @param start The start of the address range.
 	 * @param values The non-null array of 8-bit values to be written.
 	 */
-	public void initialize(final long start, final byte[] values) {
+	public void initialize(final MemoryAddress start, final byte[] values) {
 		for (int i = 0; i < values.length; i++) {
-			mem.write(start + i, values[i]);
+			mem.write(start.plus(i), values[i]);
 		}
 	}
 
@@ -443,7 +448,7 @@ public final class MemoryController implements Memory {
 	 * @param address The address where to write the value.
 	 * @param value The value to be written.
 	 */
-	public void initialize(final long address, final byte value) {
+	public void initialize(final MemoryAddress address, final byte value) {
 		mem.write(address, value);
 	}
 
