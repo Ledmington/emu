@@ -107,13 +107,19 @@ public final class X86CpuBuilder {
 	 */
 	public X86CpuBuilder stackSize(final long stackSize) {
 		assertNotAlreadyBuilt();
-		if (stackSize < 1L) {
+		final long minAllowedStackSize = 1L;
+		if (stackSize < minAllowedStackSize) {
 			throw new IllegalArgumentException(String.format("Invalid stack size: %,d B.", stackSize));
 		}
 		this.stackSize = stackSize;
 		return this;
 	}
 
+	/**
+	 * Creates a new X86Cpu by passing the proper parameters.
+	 *
+	 * @return A new X86Cpu with the given parameters.
+	 */
 	public X86Cpu build() {
 		if (alreadyBuilt) {
 			throw new IllegalStateException("Cannot build the same X86CpuBuilder twice.");

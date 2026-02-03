@@ -43,20 +43,12 @@ import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.SuppressFBWarnings;
 
 /** Emulator of an x86 CPU. */
-@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects"})
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.CouplingBetweenObjects", "PMD.TooManyMethods"
+})
 public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
-
-	/**
-	 * Returns a new X86CpuBuilder to easily create a new X86Cpu instance.
-	 *
-	 * @return A new X86CpuBuilder.
-	 */
-	public static X86CpuBuilder builder() {
-		return new X86CpuBuilder();
-	}
 
 	/** The state of the CPU. */
 	protected enum State {
@@ -86,6 +78,15 @@ public class X86Cpu implements X86Emulator {
 	protected State state = State.RUNNING;
 
 	/**
+	 * Returns a new X86CpuBuilder to easily create a new X86Cpu instance.
+	 *
+	 * @return A new X86CpuBuilder.
+	 */
+	public static X86CpuBuilder builder() {
+		return new X86CpuBuilder();
+	}
+
+	/**
 	 * Creates a new {@link X86Cpu} with the given parameters.
 	 *
 	 * @param mem The emulated memory.
@@ -104,7 +105,8 @@ public class X86Cpu implements X86Emulator {
 			final long stackSize) {
 		Objects.requireNonNull(mem);
 		Objects.requireNonNull(rf);
-		if (stackSize < 1L) {
+		final long minAllowedStackSize = 1L;
+		if (stackSize < minAllowedStackSize) {
 			throw new IllegalArgumentException(String.format("Invalid stack size: %,d B.", stackSize));
 		}
 		this.mem = mem;
