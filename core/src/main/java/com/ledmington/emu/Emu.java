@@ -77,7 +77,10 @@ public final class Emu {
 				new PagedMemory(EmulatorConstants.getMemoryInitializer()),
 				EmulatorConstants.shouldBreakOnWrongPermissions(),
 				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
-		final X86Cpu cpu = new X86Cpu(mem, EmulatorConstants.shouldCheckInstruction());
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.checkInstructions(EmulatorConstants.shouldCheckInstruction())
+				.build();
 		return new ExecutionContext(cpu, mem);
 	}
 
@@ -90,7 +93,7 @@ public final class Emu {
 	public static ExecutionContext getSafeExecutionContext() {
 		final MemoryController mem =
 				new MemoryController(new PagedMemory(EmulatorConstants.getMemoryInitializer()), true, true);
-		final X86Cpu cpu = new X86Cpu(mem, true);
+		final X86Cpu cpu = X86Cpu.builder().memory(mem).checkInstructions().build();
 		return new ExecutionContext(cpu, mem);
 	}
 
@@ -102,7 +105,7 @@ public final class Emu {
 	public static ExecutionContext getFastExecutionContext() {
 		final MemoryController mem =
 				new MemoryController(new PagedMemory(EmulatorConstants.getMemoryInitializer()), false, false);
-		final X86Cpu cpu = new X86Cpu(mem, false);
+		final X86Cpu cpu = X86Cpu.builder().memory(mem).build();
 		return new ExecutionContext(cpu, mem);
 	}
 

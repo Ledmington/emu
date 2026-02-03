@@ -49,6 +49,15 @@ public class X86Cpu implements X86Emulator {
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
 
+	/**
+	 * Returns a new X86CpuBuilder to easily create a new X86Cpu instance.
+	 *
+	 * @return A new X86CpuBuilder.
+	 */
+	public static X86CpuBuilder builder() {
+		return new X86CpuBuilder();
+	}
+
 	/** The state of the CPU. */
 	protected enum State {
 
@@ -65,10 +74,10 @@ public class X86Cpu implements X86Emulator {
 	private final boolean checkInstructions;
 
 	/** Highest address (initial RSP). */
-	private final long stackTop = ELFLoader.alignAddress(EmulatorConstants.getBaseStackAddress());
+	private final long stackTop;
 
 	/** Lowest address (stack limit). */
-	private final long stackBottom = stackTop + EmulatorConstants.getStackSize();
+	private final long stackBottom;
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -77,28 +86,33 @@ public class X86Cpu implements X86Emulator {
 	protected State state = State.RUNNING;
 
 	/**
-	 * Creates a new x86 CPU with the given memory controller.
-	 *
-	 * @param mem The object to be used to access the memory.
-	 * @param checkInstructions When enabled, checks instructions before executing them.
-	 */
-	public X86Cpu(final MemoryController mem, final boolean checkInstructions) {
-		this(mem, new X86RegisterFile(), checkInstructions);
-	}
-
-	/**
-	 * Creates a new {@link X86Cpu} with the given {@link MemoryController} and {@link RegisterFile}.
+	 * Creates a new {@link X86Cpu} with the given parameters.
 	 *
 	 * @param mem The emulated memory.
 	 * @param rf The set of registers.
 	 * @param checkInstructions When enabled, checks instructions before executing them.
+	 * @param stackTop The memory address where the stack starts, meaning the address on which the first <code>PUSH
+	 *     </code> will write.
+	 * @param stackSize The size of the stack in bytes.
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "At the moment we need these objects as they are.")
-	public X86Cpu(final MemoryController mem, final RegisterFile rf, final boolean checkInstructions) {
-		this.mem = Objects.requireNonNull(mem);
+	public X86Cpu(
+			final MemoryController mem,
+			final RegisterFile rf,
+			final boolean checkInstructions,
+			final long stackTop,
+			final long stackSize) {
+		Objects.requireNonNull(mem);
+		Objects.requireNonNull(rf);
+		if (stackSize < 1L) {
+			throw new IllegalArgumentException(String.format("Invalid stack size: %,d B.", stackSize));
+		}
+		this.mem = mem;
 		this.instFetch = new InstructionFetcher(mem, rf);
-		this.rf = Objects.requireNonNull(rf);
+		this.rf = rf;
 		this.checkInstructions = checkInstructions;
+		this.stackTop = ELFLoader.alignAddress(stackTop);
+		this.stackBottom = this.stackTop - stackSize;
 	}
 
 	@Override
@@ -736,7 +750,6 @@ public class X86Cpu implements X86Emulator {
 	 * @throws StackUnderflow When popping from the base of the stack.
 	 */
 	private long pop() {
-		// TODO: do we need to update RBP?
 		final long rsp = rf.get(Register64.RSP);
 
 		if (Long.compareUnsigned(rsp, stackTop) > 0) {
@@ -745,7 +758,7 @@ public class X86Cpu implements X86Emulator {
 
 		final long value = mem.read8(rsp);
 
-		// the stack "grows downward"
+		// the stack "grows downward", so it "pops upward"
 		final long newRSP = rsp + 8L;
 
 		rf.set(Register64.RSP, newRSP);

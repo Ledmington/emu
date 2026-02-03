@@ -54,7 +54,6 @@ import com.ledmington.emu.ImmutableRegisterFile;
 import com.ledmington.emu.RFlags;
 import com.ledmington.emu.RegisterFile;
 import com.ledmington.emu.X86Cpu;
-import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
@@ -529,7 +528,10 @@ public final class EmuDB {
 				EmulatorConstants.shouldBreakWhenReadingUninitializedMemory());
 		// Memory controller used directly by the debugger (does not check permissions)
 		final MemoryController mem = new MemoryController(rawMem, false, false);
-		final X86Cpu cpu = new X86Cpu(mc, new X86RegisterFile(), EmulatorConstants.shouldCheckInstruction());
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mc)
+				.checkInstructions(EmulatorConstants.shouldCheckInstruction())
+				.build();
 
 		this.loader = new ELFLoader(cpu, mc);
 

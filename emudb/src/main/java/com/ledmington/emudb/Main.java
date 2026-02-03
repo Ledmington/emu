@@ -33,6 +33,27 @@ public final class Main {
 		for (; i < args.length; i++) {
 			final String arg = args[i];
 			switch (arg) {
+				case "-h", "--help" -> {
+					System.out.println(String.join(
+							"\n",
+							"",
+							" emudb - CPU emulator debugger",
+							"",
+							" Usage: emudb [OPTIONS] FILE",
+							"",
+							" Command line options:",
+							"",
+							" General options:",
+							" -h, --help            Shows this help message and exits.",
+							" -q, --quiet           Only errors are reported.",
+							" -v, --verbose         Errors, warnings and info messages are reported.",
+							" -vv, --very-verbose   All messages are reported.",
+							"",
+							" FILE                  The ELF executable file to emulate.",
+							""));
+					System.exit(0);
+					return;
+				}
 				case "-q", "--quiet" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 				case "-v", "--verbose" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.INFO);
 				case "-vv", "--very-verbose" -> MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.DEBUG);

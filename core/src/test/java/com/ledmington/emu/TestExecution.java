@@ -128,8 +128,8 @@ final class TestExecution {
 
 	@BeforeEach
 	void setup() {
-		cpu = new X86Cpu(
-				new MemoryController(new Memory() {
+		cpu = X86Cpu.builder()
+				.memory(new MemoryController(new Memory() {
 					@Override
 					public byte read(final long address) {
 						throw new UnsupportedOperationException(String.format("Attempted read at 0x%016x", address));
@@ -146,8 +146,9 @@ final class TestExecution {
 						throw new UnsupportedOperationException(
 								String.format("Attempted initialization check at 0x%016x", address));
 					}
-				}),
-				true);
+				}))
+				.checkInstructions()
+				.build();
 
 		final RegisterFile rf = (RegisterFile) cpu.getRegisters();
 

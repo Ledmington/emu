@@ -56,20 +56,19 @@ final class TestExecutionWithMemory {
 	private static final int CALL_INSTRUCTION_LENGTH =
 			InstructionEncoder.toHex(true, new GeneralInstruction(Opcode.CALL, new Immediate(0))).length;
 
+	private RegisterFile rf = null;
 	private MemoryController mem = null;
-	private X86Cpu cpu = null;
 
 	@BeforeEach
 	void setup() {
-		final DebuggingX86RegisterFile rf = new DebuggingX86RegisterFile(rng);
+		rf = new DebuggingX86RegisterFile(rng);
 		mem = new MemoryController(new PagedMemory(MemoryInitializer.random()), true, true);
-		cpu = new X86Cpu(mem, rf, true);
 	}
 
 	@AfterEach
 	void teardown() {
+		rf = null;
 		mem = null;
-		cpu = null;
 	}
 
 	private static Stream<Arguments> pairs64() {
@@ -80,17 +79,22 @@ final class TestExecutionWithMemory {
 						.map(x -> Arguments.of(r, x)));
 	}
 
-	private void set(final Register64 r, final long value) {
+	private void set(final X86Cpu cpu, final Register64 r, final long value) {
 		cpu.executeOne(new GeneralInstruction(Opcode.MOVABS, r, new Immediate(value)));
 	}
 
 	@ParameterizedTest
 	@MethodSource("pairs64")
 	void movMem64R64(final Register64 r1, final Register64 r2) {
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.build();
 		final long oldValue1 = rng.nextLong();
 		final long oldValue2 = rng.nextLong();
-		set(r1, oldValue1);
-		set(r2, oldValue2);
+		set(cpu, r1, oldValue1);
+		set(cpu, r2, oldValue2);
 		mem.initialize(oldValue1, 8L, (byte) 0x00);
 		mem.setPermissions(oldValue1, 8L, false, true, false);
 		cpu.executeOne(new GeneralInstruction(
@@ -112,8 +116,13 @@ final class TestExecutionWithMemory {
 	@ParameterizedTest
 	@MethodSource("pairs64")
 	void movR64Mem64(final Register64 r1, final Register64 r2) {
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.build();
 		final long oldValue2 = rng.nextLong();
-		set(r2, oldValue2);
+		set(cpu, r2, oldValue2);
 		final long val = rng.nextLong();
 		mem.initialize(oldValue2, val);
 		mem.setPermissions(oldValue2, 8L, true, false, false);
@@ -133,12 +142,18 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void push() {
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.build();
+
 		final long base = rng.nextLong();
 		mem.setPermissions(base - 8L, base, true, true, false);
-		set(Register64.RSP, base);
+		set(cpu, Register64.RSP, base);
 		mem.write(base - 8L, 0L);
 		final long val = rng.nextLong();
-		set(Register64.RAX, val);
+		set(cpu, Register64.RAX, val);
 
 		cpu.executeOne(new GeneralInstruction(Opcode.PUSH, Register64.RAX));
 
@@ -157,19 +172,27 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void pushOnFullStack() {
-		final long stackSize = 1024L;
 		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackSize = 1024L;
 		final long stackBottom = stackTop - stackSize;
 
-		set(Register64.RSP, stackTop);
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.stackTop(stackTop)
+				.stackSize(stackSize)
+				.build();
+
+		set(cpu, Register64.RSP, stackTop);
 		mem.setPermissions(stackBottom, stackSize, true, true, false);
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 
 		final long val = rng.nextLong();
-		set(Register64.RAX, val);
+		set(cpu, Register64.RAX, val);
 		final Instruction push = new GeneralInstruction(Opcode.PUSH, Register64.RAX);
 		final long maxStackValues = stackSize / 8L;
-		for (long i = 0L; i < maxStackValues - 1L; i++) {
+		for (long i = 0L; i < maxStackValues; i++) {
 			assertDoesNotThrow(
 					() -> cpu.executeOne(push),
 					() -> String.format(
@@ -186,36 +209,48 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void pop() {
-		final long base = rng.nextLong();
-		mem.setPermissions(base, 8L, true, true, false);
-		set(Register64.RSP, base);
+		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackSize = 8L;
+
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.stackTop(stackTop)
+				.stackSize(stackSize)
+				.build();
+
+		mem.setPermissions(stackTop, stackSize, true, true, false);
+		set(cpu, Register64.RSP, stackTop);
 		final long val = rng.nextLong();
-		mem.write(base, val);
+		mem.write(stackTop, val);
 
 		cpu.executeOne(new GeneralInstruction(Opcode.POP, Register64.RAX));
 
-		final long newRSP = base + 8L;
+		final long rax = cpu.getRegisters().get(Register64.RAX);
+		assertEquals(val, rax, () -> String.format("Expected RAX to be 0x%016x but was 0x%016x.", val, rax));
+
+		final long expectedRSP = stackTop + 8L;
+		final long actualRSP = cpu.getRegisters().get(Register64.RSP);
 		assertEquals(
-				val,
-				cpu.getRegisters().get(Register64.RAX),
-				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
-						val, cpu.getRegisters().get(Register64.RAX)));
-		assertEquals(
-				newRSP,
-				cpu.getRegisters().get(Register64.RSP),
-				() -> String.format(
-						"Expected 0x%016x but was 0x%016x.",
-						newRSP, cpu.getRegisters().get(Register64.RSP)));
+				expectedRSP,
+				actualRSP,
+				() -> String.format("Expected RSP to be 0x%016x but was 0x%016x.", expectedRSP, actualRSP));
 	}
 
 	@Test
 	void popOnEmptyStack() {
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.build();
+
 		final long stackSize = 1024L;
 		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
 		final long stackBottom = stackTop - stackSize;
 
-		set(Register64.RSP, stackTop);
+		set(cpu, Register64.RSP, stackTop);
 		mem.setPermissions(stackBottom, stackSize, true, true, false);
 		mem.initialize(stackBottom, stackSize, (byte) 0x00);
 
@@ -231,68 +266,81 @@ final class TestExecutionWithMemory {
 	@ParameterizedTest
 	@ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9})
 	void pushAndPop(final int n) {
-
 		// Init random values
 		final long[] values = new long[n];
 		for (int i = 0; i < n; i++) {
 			values[i] = rng.nextLong();
 		}
 
+		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackSize = n * 8L;
+
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.stackTop(stackTop)
+				.stackSize(stackSize)
+				.build();
+
 		// Setup stack at random location
-		final long base = rng.nextLong();
-		set(Register64.RSP, base);
+		set(cpu, Register64.RSP, stackTop);
 
 		// Doing n pushes of random values
 		for (int i = 0; i < n; i++) {
 			// Set memory to readable and writable
-			mem.setPermissions(base - 8L * (i + 1), 8L, true, true, false);
+			mem.setPermissions(stackTop - 8L * (i + 1), 8L, true, true, false);
 
-			set(Register64.RAX, values[i]);
+			set(cpu, Register64.RAX, values[i]);
 
 			final int finalI = i;
 
-			// Before each push, RSP must be equal to the old base
+			// Before each push, RSP must be equal to the old stackTop
 			assertEquals(
-					base - 8L * i,
+					stackTop - 8L * i,
 					cpu.getRegisters().get(Register64.RSP),
 					() -> String.format(
 							"Before %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
+							finalI, stackTop - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
 
 			// push RAX
 			cpu.executeOne(new GeneralInstruction(Opcode.PUSH, Register64.RAX));
 
-			// After each push, RSP must be equal to the new base
+			// After each push, RSP must be equal to the new stackTop
 			assertEquals(
-					base - 8L * (i + 1),
+					stackTop - 8L * (i + 1),
 					cpu.getRegisters().get(Register64.RSP),
 					() -> String.format(
 							"After %,d-th PUSH, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
+							finalI,
+							stackTop - 8L * (finalI + 1),
+							cpu.getRegisters().get(Register64.RSP)));
 		}
 
 		// Doing n pops (in reverse) checking the random values
 		for (int i = n - 1; i >= 0; i--) {
 			final int finalI = i;
 
-			// Before each pop, RSP must be equal to the new base
+			// Before each pop, RSP must be equal to the new stackTop
 			assertEquals(
-					base - 8L * (i + 1),
+					stackTop - 8L * (i + 1),
 					cpu.getRegisters().get(Register64.RSP),
 					() -> String.format(
 							"Before %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * (finalI + 1), cpu.getRegisters().get(Register64.RSP)));
+							finalI,
+							stackTop - 8L * (finalI + 1),
+							cpu.getRegisters().get(Register64.RSP)));
 
 			// pop RAX
 			cpu.executeOne(new GeneralInstruction(Opcode.POP, Register64.RAX));
 
-			// After each pop, RSP must be equal to the old base
+			// After each pop, RSP must be equal to the old stackTop
 			assertEquals(
-					base - 8L * i,
+					stackTop - 8L * i,
 					cpu.getRegisters().get(Register64.RSP),
 					() -> String.format(
 							"After %,d-th POP, expected RSP to be 0x%016x but was 0x%016x.",
-							finalI, base - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
+							finalI, stackTop - 8L * finalI, cpu.getRegisters().get(Register64.RSP)));
 
 			assertEquals(
 					values[i],
@@ -302,13 +350,13 @@ final class TestExecutionWithMemory {
 							finalI, values[finalI], cpu.getRegisters().get(Register64.RAX)));
 		}
 
-		// At the end RSP must be equal to the initial base value
+		// At the end RSP must be equal to the initial stackTop value
 		assertEquals(
-				base,
+				stackTop,
 				cpu.getRegisters().get(Register64.RSP),
 				() -> String.format(
 						"At the end, expected RSP to be 0x%016x but was 0x%016x.",
-						base, cpu.getRegisters().get(Register64.RSP)));
+						stackTop, cpu.getRegisters().get(Register64.RSP)));
 	}
 
 	private void writeFunction(final long functionAddress, final Instruction... code) {
@@ -319,10 +367,20 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void callAndReturn() {
-		// Setup stack at random location (8-byte aligned)
-		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
-		mem.setPermissions(stackBase, 8L, true, true, false);
-		set(Register64.RSP, stackBase);
+		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackSize = 8L;
+		final long stackBottom = stackTop - stackSize;
+
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.stackTop(stackTop)
+				.stackSize(stackSize)
+				.build();
+
+		mem.setPermissions(stackBottom, stackSize, true, true, false);
+		set(cpu, Register64.RSP, stackTop);
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();
@@ -346,12 +404,22 @@ final class TestExecutionWithMemory {
 
 	@Test
 	void callAllocateAndReturn() {
-		// Setup stack at random location (8-byte aligned)
-		final long stackBase = rng.nextLong() & 0xfffffffffffffff0L;
-		mem.initialize(stackBase - 16L - 4L, 20L, (byte) 0);
-		mem.setPermissions(stackBase - 16L - 4L, 20L, true, true, false);
-		set(Register64.RSP, stackBase);
-		set(Register64.RBP, stackBase);
+		final long stackTop = ELFLoader.alignAddress(rng.nextLong());
+		final long stackSize = 20L;
+		final long stackBottom = stackTop - stackSize;
+
+		final X86Cpu cpu = X86Cpu.builder()
+				.memory(mem)
+				.registerFile(rf)
+				.checkInstructions()
+				.stackTop(stackTop)
+				.stackSize(stackSize)
+				.build();
+
+		mem.initialize(stackBottom, stackSize, (byte) 0);
+		mem.setPermissions(stackBottom, stackSize, true, true, false);
+		set(cpu, Register64.RSP, stackTop);
+		set(cpu, Register64.RBP, stackTop);
 
 		// Setup RIP at random location
 		final long rip = rng.nextLong();

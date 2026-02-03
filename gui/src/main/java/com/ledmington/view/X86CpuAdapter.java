@@ -21,7 +21,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.emu.EmulatorConstants;
 import com.ledmington.emu.X86Cpu;
+import com.ledmington.emu.X86RegisterFile;
 import com.ledmington.mem.MemoryController;
 
 // TODO: refactor avoiding inheritance (and avoiding two queues)
@@ -31,7 +33,12 @@ public final class X86CpuAdapter extends X86Cpu {
 	private final BlockingQueue<Object> executionCompleted = new ArrayBlockingQueue<>(1);
 
 	public X86CpuAdapter(final MemoryController mem) {
-		super(mem, true);
+		super(
+				mem,
+				new X86RegisterFile(),
+				true,
+				EmulatorConstants.getBaseStackAddress(),
+				EmulatorConstants.getStackSize());
 	}
 
 	private void waitToStartExecution() {

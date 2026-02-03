@@ -120,6 +120,7 @@ public final class Main {
 							""));
 					out.flush();
 					System.exit(0);
+					return;
 				}
 				case shortVersionFlag, longVersionFlag -> {
 					out.print(String.join("\n", "", " emu - CPU emulator", " v0.1.0", ""));
