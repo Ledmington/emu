@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.util.Objects;
 
 import com.ledmington.mem.MemoryController;
+import com.ledmington.utils.SuppressFBWarnings;
 
 /** A builder class for the {@link X86Cpu}. */
 public final class X86CpuBuilder {
@@ -46,6 +47,9 @@ public final class X86CpuBuilder {
 	 * @param mem The MemoryController to be used.
 	 * @return This instance of X86CpuBuilder.
 	 */
+	@SuppressFBWarnings(
+			value = "EI_EXPORE_REP2",
+			justification = "A MemoryController is designed to be externally modifiable.")
 	public X86CpuBuilder memory(final MemoryController mem) {
 		assertNotAlreadyBuilt();
 		this.mem = Objects.requireNonNull(mem);
@@ -58,6 +62,9 @@ public final class X86CpuBuilder {
 	 * @param rf The RegisterFile to be used.
 	 * @return This instance of X86CpuBuilder.
 	 */
+	@SuppressFBWarnings(
+			value = "EI_EXPORE_REP2",
+			justification = "A RegisterFile is designed to be externally modifiable.")
 	public X86CpuBuilder registerFile(final RegisterFile rf) {
 		assertNotAlreadyBuilt();
 		this.rf = Objects.requireNonNull(rf);
