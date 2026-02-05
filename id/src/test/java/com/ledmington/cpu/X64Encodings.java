@@ -166,6 +166,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
+import com.ledmington.cpu.x86.WeirdVpcmpeqb;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.SuppressFBWarnings;
 
@@ -191,7 +192,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	// FIXME: this is ugly
 	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {
 		@SuppressWarnings("PMD.MethodReturnsInternalArray")
-		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object as is it is for now.")
+		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object is needed it is for now.")
 		public byte[] hex() {
 			return hex;
 		}
@@ -10214,10 +10215,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.opcode(Opcode.VPCMPEQB)
 								.op(K0)
 								.op(YMM16)
-								.op(YMM18)
+								.op(YMM19)
 								.build(),
-						"vpcmpeqb k0,ymm16,ymm18",
-						"62 b3 7d 20 3f c2 00"),
+						"vpcmpeqb k0,ymm16,ymm19",
+						"62 b3 7d 20 3f c3 00"),
+				test(new WeirdVpcmpeqb(K0, YMM16, YMM17), "vpcmpeqb k0,ymm16,ymm17", "62 b1 7d 20 74 c1"),
+				test(new WeirdVpcmpeqb(K0, YMM16, YMM18), "vpcmpeqb k0,ymm16,ymm18", "62 b1 7d 20 74 c2"),
 				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQB)
@@ -10243,6 +10246,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqb k1{k2},xmm17,xmm18",
 						"62 b3 75 02 3f ca 00"),
+				// Vpcmpltb
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPLTB)
+								.op(K0)
+								.op(YMM16)
+								.op(YMM18)
+								.build(),
+						"vpcmpltb k0,ymm16,ymm18",
+						"62 b3 7d 20 3f c2 01"),
 				// Vpcmpeqd
 				test(
 						new GeneralInstruction(
