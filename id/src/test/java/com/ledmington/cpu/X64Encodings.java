@@ -192,7 +192,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	// FIXME: this is ugly
 	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {
 		@SuppressWarnings("PMD.MethodReturnsInternalArray")
-		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object as is it is for now.")
+		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object is needed it is for now.")
 		public byte[] hex() {
 			return hex;
 		}
@@ -10215,18 +10215,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.opcode(Opcode.VPCMPEQB)
 								.op(K0)
 								.op(YMM16)
-								.op(YMM18)
+								.op(YMM19)
 								.build(),
-						"vpcmpeqb k0,ymm16,ymm18",
-						"62 b3 7d 20 3f c2 00"),
-				test(
-						new WeirdVpcmpeqb(Opcode.VPCMPEQB, K0, YMM16, YMM17),
-						"vpcmpeqb k0,ymm16,ymm17",
-						"62 b1 7d 20 74 c1"),
-				test(
-						new WeirdVpcmpeqb(Opcode.VPCMPEQB, K0, YMM16, YMM18),
-						"vpcmpeqb k0,ymm16,ymm18",
-						"62 b1 7d 20 74 c2"),
+						"vpcmpeqb k0,ymm16,ymm19",
+						"62 b3 7d 20 3f c3 00"),
+				test(new WeirdVpcmpeqb(K0, YMM16, YMM17), "vpcmpeqb k0,ymm16,ymm17", "62 b1 7d 20 74 c1"),
+				test(new WeirdVpcmpeqb(K0, YMM16, YMM18), "vpcmpeqb k0,ymm16,ymm18", "62 b1 7d 20 74 c2"),
 				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQB)

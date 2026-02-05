@@ -144,7 +144,7 @@ public final class InstructionBuilder {
 				&& op2 instanceof RegisterYMM
 				&& op3 instanceof RegisterYMM
 				&& op4 == null) {
-			return new WeirdVpcmpeqb(opcode, op1, op2, op3);
+			return new WeirdVpcmpeqb(op1, op2, op3);
 		}
 
 		return new GeneralInstruction(prefix, opcode, destinationMask, destinationMaskZero, op1, op2, op3, op4);
