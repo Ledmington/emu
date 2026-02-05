@@ -27,11 +27,11 @@ public final class Instructions {
 	/**
 	 * Returns true if the given instructions are <i>effectively equal</i>, meaning that the type of the class
 	 * implementing {@link Instruction} may not be the same. This method is, therefore, slightly different from
-	 * {@link Instruction#equals(Object)}.
+	 * {@link Object#equals(Object)}.
 	 *
 	 * @param a An Instruction.
-	 * @param b An Instruction to be compared with a for equality.
-	 * @return true if the arguments are equal to each other and false otherwise
+	 * @param b An Instruction to be compared with <code>a</code> for equality.
+	 * @return True if the arguments are equal to each other, false otherwise
 	 */
 	public static boolean equals(final Instruction a, final Instruction b) {
 		Objects.requireNonNull(a);
