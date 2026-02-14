@@ -35,7 +35,7 @@ public final class PagedMemory implements Memory {
 	private final MemoryInitializer initializer;
 	private final long pageSize;
 	private final long pageSizeMask;
-	private final Map<Long, Page> pages = new ConcurrentHashMap<>();
+	private final Map<MemoryAddress, Page> pages = new ConcurrentHashMap<>();
 
 	private static final class Page {
 
@@ -113,46 +113,46 @@ public final class PagedMemory implements Memory {
 	}
 
 	/** Returns the given address aligned to a page size boundary. */
-	private long getAlignedAddress(final long address) {
-		return address & this.pageSizeMask;
+	private MemoryAddress getAlignedAddress(final MemoryAddress address) {
+		return new MemoryAddress(address.address() & this.pageSizeMask);
 	}
 
 	/** Returns the given address localized inside a page. */
-	private long getLocalAddress(final long address) {
-		return address & (~this.pageSizeMask);
+	private MemoryAddress getLocalAddress(final MemoryAddress address) {
+		return new MemoryAddress(address.address() & (~this.pageSizeMask));
 	}
 
 	@Override
-	public byte read(final long address) {
+	public byte read(final MemoryAddress address) {
 		// TODO: add overloaded versions of read2, read4 and read8
-		final long alignedAddress = getAlignedAddress(address);
+		final MemoryAddress alignedAddress = getAlignedAddress(address);
 		if (!this.pages.containsKey(alignedAddress)) {
 			return this.initializer.get();
 		}
-		final long localAddress = getLocalAddress(address);
-		return this.pages.get(alignedAddress).bytes[Math.toIntExact(localAddress)];
+		final MemoryAddress localAddress = getLocalAddress(address);
+		return this.pages.get(alignedAddress).bytes[Math.toIntExact(localAddress.address())];
 	}
 
 	@Override
-	public void write(final long address, final byte value) {
+	public void write(final MemoryAddress address, final byte value) {
 		// TODO: add overloaded versions of write2, write4, write8 and writeN
-		final long alignedAddress = getAlignedAddress(address);
+		final MemoryAddress alignedAddress = getAlignedAddress(address);
 		if (!this.pages.containsKey(alignedAddress)) {
 			this.pages.put(alignedAddress, new Page(pageSize, initializer));
 		}
-		final long localAddress = getLocalAddress(address);
-		this.pages.get(alignedAddress).initialized[Math.toIntExact(localAddress)] = true;
-		this.pages.get(alignedAddress).bytes[Math.toIntExact(localAddress)] = value;
+		final MemoryAddress localAddress = getLocalAddress(address);
+		this.pages.get(alignedAddress).initialized[Math.toIntExact(localAddress.address())] = true;
+		this.pages.get(alignedAddress).bytes[Math.toIntExact(localAddress.address())] = value;
 	}
 
 	@Override
-	public boolean isInitialized(final long address) {
-		final long alignedAddress = getAlignedAddress(address);
+	public boolean isInitialized(final MemoryAddress address) {
+		final MemoryAddress alignedAddress = getAlignedAddress(address);
 		if (!this.pages.containsKey(alignedAddress)) {
 			return false;
 		}
-		final long localAddress = getLocalAddress(address);
-		return this.pages.get(alignedAddress).initialized[Math.toIntExact(localAddress)];
+		final MemoryAddress localAddress = getLocalAddress(address);
+		return this.pages.get(alignedAddress).initialized[Math.toIntExact(localAddress.address())];
 	}
 
 	@Override
