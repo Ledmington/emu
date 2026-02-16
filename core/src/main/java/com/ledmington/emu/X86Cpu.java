@@ -767,7 +767,7 @@ public class X86Cpu implements X86Emulator {
 		return value;
 	}
 
-	/** Returns a zero-extends integer. */
+	/** Returns a zero-extended 32-bit integer. */
 	private int getAsIntZX(final Operand op) {
 		return switch (op) {
 			case IndirectOperand io -> getAsIntZX(io);
@@ -778,11 +778,12 @@ public class X86Cpu implements X86Emulator {
 
 	private int getAsIntZX(final IndirectOperand io) {
 		final long address = computeIndirectOperand(io);
-		if (io.getPointerSize() == PointerSize.WORD_PTR) {
-			return mem.read4(address);
-		} else {
-			throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
-		}
+		return switch (io.getPointerSize()) {
+			case BYTE_PTR -> BitUtils.asInt(mem.read(address));
+			case WORD_PTR -> BitUtils.asInt(mem.read2(address));
+			default ->
+				throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
+		};
 	}
 
 	/** Returns a sign-extended long. */
