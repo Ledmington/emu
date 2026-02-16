@@ -35,6 +35,25 @@ jmh {
 	duplicateClassesStrategy = DuplicatesStrategy.INCLUDE
 }
 
+tasks.register("jmhDryRun", JavaExec) {
+	group = "verification"
+	description = "JMH dry-run (runs benchmarks only 1 time)."
+	dependsOn jmhJar
+	mainClass = "-jar"
+	systemProperty "jmh.ignoreLock", "true"
+	args = [
+		tasks.named("jmhJar").get().archiveFile.get().asFile.absolutePath,
+		"com.ledmington.id.*",
+		"-f", "1",
+		"-wi", "0",
+		"-i", "1",
+		"-rf", "TEXT"
+	]
+}
+
+tasks.build.dependsOn(jmhJar)
+tasks.build.dependsOn(jmhDryRun)
+
 tasks.register('downloadIntelManual', Download) {
 	group = 'utilities'
 	description = 'Downloads the Intel Software Developer Manual in the project root directory'
@@ -51,5 +70,3 @@ tasks.register('fuzz', JavaExec) {
 	classpath sourceSets.test.runtimeClasspath
 	mainClass = 'com.ledmington.cpu.x86.X86Fuzzer'
 }
-
-tasks.build.dependsOn(jmhJar)

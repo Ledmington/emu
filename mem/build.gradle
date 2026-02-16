@@ -35,4 +35,21 @@ jmh {
     duplicateClassesStrategy = DuplicatesStrategy.INCLUDE
 }
 
+tasks.register("jmhDryRun", JavaExec) {
+    group = "verification"
+    description = "JMH dry-run (runs benchmarks only 1 time)."
+    dependsOn jmhJar
+    mainClass = "-jar"
+    systemProperty "jmh.ignoreLock", "true"
+    args = [
+        tasks.named("jmhJar").get().archiveFile.get().asFile.absolutePath,
+        "com.ledmington.mem.*",
+        "-f", "1",
+        "-wi", "0",
+        "-i", "1",
+        "-rf", "TEXT"
+    ]
+}
+
 tasks.build.dependsOn(jmhJar)
+tasks.build.dependsOn(jmhDryRun)
