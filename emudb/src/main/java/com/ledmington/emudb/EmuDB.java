@@ -121,7 +121,6 @@ public final class EmuDB {
 
 		final long baseStackAddress = EmulatorConstants.getBaseStackAddress();
 		final long stackSize = EmulatorConstants.getStackSize();
-		final long baseStackValue = EmulatorConstants.getBaseStackValue();
 		final long stackTop = ELFLoader.alignAddress(baseStackAddress); // highest address (initial RSP)
 		final long stackBottom = stackTop - stackSize; // lowest address (stack limit)
 
@@ -140,9 +139,7 @@ public final class EmuDB {
 
 		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
 		int stackLevel = 1;
-		for (;
-				rbp != 0L && rbp != baseStackValue && rbp != baseStackAddress && stackLevel < maxStackTraceDepth;
-				stackLevel++) {
+		for (; rbp != 0L && rbp != baseStackAddress && stackLevel < maxStackTraceDepth; stackLevel++) {
 			final Position pos = findFunctionName(rbp);
 			out.printf(
 					"#%-2d %s0x%016x%s in %s%s%s ()%n",

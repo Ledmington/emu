@@ -242,7 +242,8 @@ public final class EmulatorView extends Stage {
 				args,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),
-				EmulatorConstants.getStackSize());
+				EmulatorConstants.getStackSize(),
+				EmulatorConstants.getBaseStackValue());
 
 		updateRegisters();
 		updateCode();

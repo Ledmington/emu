@@ -25,8 +25,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.ledmington.cpu.InstructionEncoder;
 import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.Immediate;
+import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.elf.ELF;
@@ -90,13 +92,15 @@ public final class ELFLoader {
 	 * @param baseAddress The address where to start loading the file.
 	 * @param baseStackAddress The address where to place the base of the stack.
 	 * @param stackSize The size in bytes of the stack.
+	 * @param baseStackValue The value to place at the base of the stack.
 	 */
 	public void load(
 			final ELF elf,
 			final String[] commandLineArguments,
 			final long baseAddress,
 			final long baseStackAddress,
-			final long stackSize) {
+			final long stackSize,
+			final long baseStackValue) {
 		loadSegments(elf, baseAddress);
 		loadSections(elf, baseAddress);
 
@@ -108,18 +112,35 @@ public final class ELFLoader {
 		// These are fake instructions to set up the stack
 		set(Register64.RSP, stackTop);
 
-		// Do we *actually* need to do this?
-		push(BitUtils.asLong(commandLineArguments.length));
-		// push(baseStackValue);
-		// push(baseStackValue + 1L); // why?
-
 		final int argc = commandLineArguments.length;
+
+		// Do we *actually* need to do this?
+		push(BitUtils.asLong(argc));
+
 		set(Register64.RDI, BitUtils.asLong(argc));
 
 		loadCommandLineArgumentsAndEnvironmentVariables(
 				elf, stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
 
-		if (elf.getSectionByName(".preinit_array").isPresent()) {
+		final boolean hasPreInitArray = elf.getSectionByName(".preinit_array").isPresent();
+		final Optional<Section> initArray = elf.getSectionByName(".init_array");
+		final boolean hasInitArray = initArray.isPresent();
+		final Optional<Section> init = elf.getSectionByName(".init");
+		final boolean hasInit = init.isPresent();
+		final boolean hasCtors = elf.getSectionByName(".ctors").isPresent();
+
+		if (hasPreInitArray || hasInit || hasInitArray || hasCtors) {
+			/*
+			If we need to execute some initializers/constructors from .init/.init_array or similar, we need to push something onto the stack, because these special functions do not have a parent. To do so, we push a default value (usually 0x0) on the stack as the return address of these functions and we write a HLT instruction at the memory location pointed by the base stack value.
+			 */
+			final Instruction halt = new GeneralInstruction(Opcode.HLT);
+			final byte[] haltEncoded = InstructionEncoder.toHex(halt, true);
+			mem.setPermissions(baseStackValue, haltEncoded.length, false, false, true);
+			mem.initialize(baseStackValue, haltEncoded);
+			push(baseStackValue);
+		}
+
+		if (hasPreInitArray) {
 			runPreInitArray();
 		}
 
@@ -128,16 +149,14 @@ public final class ELFLoader {
 		final StringTableSection strtab =
 				(StringTableSection) elf.getSectionByName(".strtab").orElse(null);
 
-		final Optional<Section> initArray = elf.getSectionByName(".init_array");
-		if (initArray.isPresent()) {
+		if (hasInitArray) {
 			runInitArray((ConstructorsSection) initArray.orElseThrow(), baseAddress, symtab, strtab);
 		}
 
-		final Optional<Section> init = elf.getSectionByName(".init");
-		if (init.isPresent()) {
+		if (hasInit) {
 			runInit((BasicProgBitsSection) init.orElseThrow(), baseAddress, symtab, strtab);
 		}
-		if (elf.getSectionByName(".ctors").isPresent()) {
+		if (hasCtors) {
 			runCtors();
 		}
 	}

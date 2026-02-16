@@ -158,7 +158,8 @@ public final class Emu {
 				args,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),
-				EmulatorConstants.getStackSize());
+				EmulatorConstants.getStackSize(),
+				EmulatorConstants.getBaseStackValue());
 
 		this.context.cpu().setInstructionPointer(EmulatorConstants.getBaseAddress() + entryPointVirtualAddress);
 	}
