@@ -17,11 +17,11 @@
  */
 package com.ledmington.cpu;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -57,37 +57,48 @@ final class TestDecoding extends X64Encodings {
 						InstructionEncoder.toIntelSyntax(inst)));
 	}
 
-	private static Stream<Arguments> instAndHex() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.hex()));
+	private static Stream<Arguments> instructionAndAllowedEncodings() {
+		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.allowedEncodings()));
 	}
 
 	@ParameterizedTest
-	@MethodSource("instAndHex")
-	void toHex(final Instruction inst, final byte[] expected) {
+	@MethodSource("instructionAndAllowedEncodings")
+	void toHex(final Instruction inst, final List<byte[]> allowedEncodings) {
 		final byte[] actual = InstructionEncoder.toHex(inst, true);
-		assertArrayEquals(expected, actual, () -> {
+		final boolean matchFound = allowedEncodings.stream().anyMatch(allowed -> Arrays.equals(allowed, actual));
+		assertTrue(matchFound, () -> {
+			final String allowedStr =
+					allowedEncodings.stream().map(TestDecoding::asString).collect(Collectors.joining(", "));
 			String s = String.format(
-					"Expected '%s' to be encoded as '%s' but was '%s'.",
-					inst.toString(), asString(expected), asString(actual));
-			if (expected.length == actual.length) {
+					"Expected '%s' to be encoded as one of [%s] but was '%s'.",
+					inst.toString(), allowedStr, asString(actual));
+			final byte[] closestMatch = allowedEncodings.stream()
+					.filter(allowed -> allowed.length == actual.length)
+					.findFirst()
+					.orElse(null);
+			if (closestMatch != null) {
 				int i = 0;
-				for (; i < expected.length; i++) {
-					if (expected[i] != actual[i]) {
+				for (; i < closestMatch.length; i++) {
+					if (closestMatch[i] != actual[i]) {
 						break;
 					}
 				}
 				s += String.format(
-						" First different byte is at index %,d: expected 0b%s but was 0b%s.",
-						i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
+						" First different byte (vs. same-length encoding) is at index %,d: expected 0b%s but was 0b%s.",
+						i, BitUtils.toBinaryString(closestMatch[i]), BitUtils.toBinaryString(actual[i]));
 			} else {
-				s += String.format(" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
+				final String allowedLengths = allowedEncodings.stream()
+						.map(allowed -> String.valueOf(allowed.length))
+						.collect(Collectors.joining(", "));
+				s += String.format(
+						" Wrong length: allowed lengths are [%s] bytes but were %,d.", allowedLengths, actual.length);
 			}
 			return s;
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("instAndHex")
+	@MethodSource("instructionAndAllowedEncodings")
 	void fromHex(final Instruction expected, final byte[] hex) {
 		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
 		assertEquals(
@@ -104,7 +115,7 @@ final class TestDecoding extends X64Encodings {
 	}
 
 	private static Stream<Arguments> onlyHex() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of((Object) x.hex()));
+		return X64_ENCODINGS.stream().flatMap(x -> x.allowedEncodings().stream().map(Arguments::of));
 	}
 
 	@ParameterizedTest

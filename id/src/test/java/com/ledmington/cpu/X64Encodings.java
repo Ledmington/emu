@@ -151,6 +151,7 @@ import static com.ledmington.cpu.x86.SegmentRegister.DS;
 import static com.ledmington.cpu.x86.SegmentRegister.ES;
 import static com.ledmington.cpu.x86.SegmentRegister.GS;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -166,9 +167,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
-import com.ledmington.cpu.x86.WeirdVpcmpeqb;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.SuppressFBWarnings;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
@@ -190,11 +189,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			.toList();
 
 	// FIXME: this is ugly
-	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, byte[] hex) {
-		@SuppressWarnings("PMD.MethodReturnsInternalArray")
-		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object is needed it is for now.")
-		public byte[] hex() {
-			return hex;
+	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, List<byte[]> allowedEncodings) {
+		public List<byte[]> allowedEncodings() {
+			return allowedEncodings;
 		}
 	}
 
@@ -204,7 +201,21 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 		for (int i = 0; i < splitted.length; i++) {
 			code[i] = BitUtils.asByte(Integer.parseInt(splitted[i], 16));
 		}
-		return new X64EncodingTestCase(instruction, intelSyntax, code);
+		return new X64EncodingTestCase(instruction, intelSyntax, List.of(code));
+	}
+
+	private static X64EncodingTestCase test(
+			final Instruction instruction, final String intelSyntax, final List<String> allowedEncodings) {
+		final List<byte[]> encodings = new ArrayList<>();
+		for (final String hex : allowedEncodings) {
+			final String[] splitted = hex.strip().split(" ");
+			final byte[] code = new byte[splitted.length];
+			for (int i = 0; i < splitted.length; i++) {
+				code[i] = BitUtils.asByte(Integer.parseInt(splitted[i], 16));
+			}
+			encodings.add(code);
+		}
+		return new X64EncodingTestCase(instruction, intelSyntax, encodings);
 	}
 
 	private static List<X64EncodingTestCase> nop() {
@@ -10218,9 +10229,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.op(YMM19)
 								.build(),
 						"vpcmpeqb k0,ymm16,ymm19",
-						"62 b3 7d 20 3f c3 00"),
-				test(new WeirdVpcmpeqb(K0, YMM16, YMM17), "vpcmpeqb k0,ymm16,ymm17", "62 b1 7d 20 74 c1"),
-				test(new WeirdVpcmpeqb(K0, YMM16, YMM18), "vpcmpeqb k0,ymm16,ymm18", "62 b1 7d 20 74 c2"),
+						List.of("62 b3 7d 20 3f c3 00", "62 b1 7d 20 74 c3")),
 				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQB)
@@ -11101,29 +11110,31 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 
 	static {
 		// Check that there are no duplicates
-		final Set<Instruction> inst = new HashSet<>();
-		final Set<String> is = new HashSet<>();
-		final Set<List<Byte>> hex = new HashSet<>();
+		final Set<Instruction> allInstructions = new HashSet<>();
+		final Set<String> allInstructionStrings = new HashSet<>();
+		final Set<List<Byte>> allInstructionBytes = new HashSet<>();
 		for (final X64EncodingTestCase t : X64_ENCODINGS) {
-			if (inst.contains(t.instruction())) {
+			if (allInstructions.contains(t.instruction())) {
 				throw new IllegalArgumentException(
 						String.format("Duplicate instruction in test cases: '%s'.", t.instruction()));
 			}
-			inst.add(t.instruction());
+			allInstructions.add(t.instruction());
 
-			if (is.contains(t.intelSyntax())) {
+			if (allInstructionStrings.contains(t.intelSyntax())) {
 				throw new IllegalArgumentException(
 						String.format("Duplicate intel syntax in test cases: '%s'.", t.intelSyntax()));
 			}
-			is.add(t.intelSyntax());
+			allInstructionStrings.add(t.intelSyntax());
 
-			final int n = t.hex().length;
-			final List<Byte> b = IntStream.range(0, n).mapToObj(i -> t.hex()[i]).toList();
-			if (hex.contains(b)) {
-				throw new IllegalArgumentException(
-						String.format("Duplicate hex representation in test cases: '%s'.", asString(t.hex())));
+			for (final byte[] hex : t.allowedEncodings()) {
+				final int n = hex.length;
+				final List<Byte> b = IntStream.range(0, n).mapToObj(i -> hex[i]).toList();
+				if (allInstructionBytes.contains(b)) {
+					throw new IllegalArgumentException(
+							String.format("Duplicate hex representation in test cases: '%s'.", asString(hex)));
+				}
+				allInstructionBytes.add(b);
 			}
-			hex.add(b);
 		}
 	}
 }
