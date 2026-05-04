@@ -237,7 +237,7 @@ public final class InstructionEncoder {
 
 		if (inst.hasFirstOperand()) {
 			if (opcode.length() < opcodePad) {
-				sb.append(" ".repeat(opcodePad - opcode.length()));
+				sb.repeat(" ", opcodePad - opcode.length());
 			}
 			sb.append(' ').append(operandString(inst, inst.firstOperand(), shortHex));
 			if (inst.hasDestinationMask()) {
@@ -382,7 +382,7 @@ public final class InstructionEncoder {
 						? Prefix.EVEX
 						: ((isFirstMS(inst) || isSecondM(inst)) ? Prefix.VEX2 : Prefix.VEX3);
 			case VPMINUB -> countEvexExtensions(inst) > 0 ? Prefix.EVEX : Prefix.VEX2;
-			case VPCMPEQB ->
+			case VPCMPEQB, VPCMPEQD, VPCMPNEQB ->
 				(isFirstMask(inst) && isSecondEER(inst) && isThirdM(inst))
 						? Prefix.EVEX
 						: (isThirdMS(inst) ? Prefix.VEX2 : Prefix.VEX3);
@@ -2016,20 +2016,23 @@ public final class InstructionEncoder {
 			}
 			case VPCMPEQD -> {
 				if (isFirstMask(inst) && isSecondR(inst) && isThirdM(inst)) {
-					encodeEvexPrefix(wb, inst);
 					wb.write((byte) 0x1f);
 					lastByte = (byte) 0x00;
 				} else {
-					encodeVex2Prefix(wb, inst);
 					wb.write((byte) 0x76);
 				}
 			}
 			case VPCMPEQQ -> wb.write((byte) 0x29);
 			case VPCMPNEQB -> {
 				if (isFirstMask(inst) && isSecondR(inst) && inst.thirdOperand() instanceof IndirectOperand) {
-					encodeEvexPrefix(wb, inst);
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x04;
+				}
+			}
+			case VPCMPLTB -> {
+				if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
+					wb.write((byte) 0x3f);
+					lastByte = (byte) 0x01;
 				}
 			}
 			case PEXTRW -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xc5);
@@ -2297,6 +2300,7 @@ public final class InstructionEncoder {
 					VPCMPEQQ,
 					VPCMPNEQB,
 					VPCMPNEQUB,
+					VPCMPLTB,
 					VPCMPGTB,
 					VMOVD,
 					VPBROADCASTB,
@@ -2422,11 +2426,14 @@ public final class InstructionEncoder {
 		};
 	}
 
-	private static byte getEvexOpcodeMap(final Opcode opcode) {
-		return switch (opcode) {
+	private static byte getEvexOpcodeMap(final Instruction inst) {
+		return switch (inst.opcode()) {
+			// 0F map (mm = 01)
 			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
+			// 0F 38 map (mm = 10)
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
-			case VPCMPNEQUB, VPCMPEQB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
+			// 0F 3A map (mm = 11)
+			case VPCMPNEQUB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD, VPCMPEQB, VPCMPLTB -> (byte) 0b011;
 			default -> (byte) 0b000;
 		};
 	}
@@ -2450,7 +2457,7 @@ public final class InstructionEncoder {
 								&& isSecondR(inst)
 								&& (isThirdR(inst) || isThirdM(inst))
 								&& inst.fourthOperand() instanceof Immediate),
-				getEvexOpcodeMap(inst.opcode()));
+				getEvexOpcodeMap(inst));
 
 		// TODO: refactor this chain of if-elses
 		Register rvvvv = null;

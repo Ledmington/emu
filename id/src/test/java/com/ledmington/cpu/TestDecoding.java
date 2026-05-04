@@ -17,11 +17,13 @@
  */
 package com.ledmington.cpu;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -31,6 +33,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.Instructions;
 import com.ledmington.utils.BitUtils;
 
 final class TestDecoding extends X64Encodings {
@@ -55,40 +58,60 @@ final class TestDecoding extends X64Encodings {
 						InstructionEncoder.toIntelSyntax(inst)));
 	}
 
-	private static Stream<Arguments> instAndHex() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.hex()));
+	private static Stream<Arguments> instructionAndAllowedEncodings() {
+		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.allowedEncodings()));
 	}
 
+	/**
+	 * This test checks that the given instruction maps to any of the given encodings. This is less strict than decoding
+	 * from binary ({@link TestDecoding#fromHex(Instruction, byte[])}) since we do not care about exact binary encoding.
+	 *
+	 * @param inst The instruction to encode
+	 * @param allowedEncodings The allowed encodings for the given instruction.
+	 */
 	@ParameterizedTest
-	@MethodSource("instAndHex")
-	void toHex(final Instruction inst, final byte[] expected) {
+	@MethodSource("instructionAndAllowedEncodings")
+	void toHex(final Instruction inst, final Set<byte[]> allowedEncodings) {
 		final byte[] actual = InstructionEncoder.toHex(inst, true);
-		assertArrayEquals(expected, actual, () -> {
+		final boolean matchFound = allowedEncodings.stream().anyMatch(allowed -> Arrays.equals(allowed, actual));
+		assertTrue(matchFound, () -> {
+			final String allowedStr =
+					allowedEncodings.stream().map(TestDecoding::asString).collect(Collectors.joining(", "));
 			String s = String.format(
-					"Expected '%s' to be encoded as '%s' but was '%s'.",
-					inst.toString(), asString(expected), asString(actual));
-			if (expected.length == actual.length) {
+					"Expected '%s' to be encoded as one of [%s] but was '%s'.",
+					inst.toString(), allowedStr, asString(actual));
+			final byte[] closestMatch = allowedEncodings.stream()
+					.filter(allowed -> allowed.length == actual.length)
+					.findFirst()
+					.orElse(null);
+			if (closestMatch != null) {
 				int i = 0;
-				for (; i < expected.length; i++) {
-					if (expected[i] != actual[i]) {
+				for (; i < closestMatch.length; i++) {
+					if (closestMatch[i] != actual[i]) {
 						break;
 					}
 				}
-				s = s
-						+ String.format(
-								" First different byte is at index %,d: expected 0b%s but was 0b%s.",
-								i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
+				s += String.format(
+						" First different byte (vs. same-length encoding) is at index %,d: expected 0b%s but was 0b%s.",
+						i, BitUtils.toBinaryString(closestMatch[i]), BitUtils.toBinaryString(actual[i]));
 			} else {
-				s = s
-						+ String.format(
-								" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
+				final String allowedLengths = allowedEncodings.stream()
+						.map(allowed -> String.valueOf(allowed.length))
+						.collect(Collectors.joining(", "));
+				s += String.format(
+						" Wrong length: allowed lengths are [%s] bytes but were %,d.", allowedLengths, actual.length);
 			}
 			return s;
 		});
 	}
 
+	private static Stream<Arguments> instructionAndHex() {
+		return X64_ENCODINGS.stream()
+				.flatMap(x -> x.allowedEncodings().stream().map(hex -> Arguments.of(x.instruction(), hex)));
+	}
+
 	@ParameterizedTest
-	@MethodSource("instAndHex")
+	@MethodSource("instructionAndHex")
 	void fromHex(final Instruction expected, final byte[] hex) {
 		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
 		assertEquals(
@@ -105,7 +128,7 @@ final class TestDecoding extends X64Encodings {
 	}
 
 	private static Stream<Arguments> onlyHex() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of((Object) x.hex()));
+		return X64_ENCODINGS.stream().flatMap(x -> x.allowedEncodings().stream().map(Arguments::of));
 	}
 
 	@ParameterizedTest
@@ -143,9 +166,8 @@ final class TestDecoding extends X64Encodings {
 	@MethodSource("instAndIntelSyntax")
 	void fromIntelSyntax(final Instruction expected, final String intelSyntax) {
 		final Instruction actual = InstructionDecoder.fromIntelSyntax(intelSyntax);
-		assertEquals(
-				expected,
-				actual,
+		assertTrue(
+				Instructions.equals(expected, actual),
 				() -> String.format(
 						"Expected '%s' to be decoded into '%s' but was '%s'.", intelSyntax, expected, actual));
 	}

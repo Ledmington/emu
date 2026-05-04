@@ -35,9 +35,8 @@ final class TestDecodeIncompleteInstruction extends X64Encodings {
 
 	private static Stream<Arguments> incompleteInstructions() {
 		final Set<List<Byte>> validInstructions = X64_ENCODINGS.stream()
-				.map(x -> IntStream.range(0, x.hex().length)
-						.mapToObj(i -> x.hex()[i])
-						.toList())
+				.flatMap(x -> x.allowedEncodings().stream())
+				.map(hex -> IntStream.range(0, hex.length).mapToObj(i -> hex[i]).toList())
 				.collect(Collectors.toSet());
 		return validInstructions.stream()
 				.flatMap(splitted -> {
