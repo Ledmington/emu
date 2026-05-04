@@ -50,7 +50,6 @@ import com.ledmington.cpu.x86.RegisterZMM;
 import com.ledmington.cpu.x86.Registers;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.cpu.x86.SegmentedAddress;
-import com.ledmington.cpu.x86.WeirdVpcmpeqb;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
@@ -2008,9 +2007,7 @@ public final class InstructionEncoder {
 			case VPMINUD -> wb.write((byte) 0x3b);
 			case VPCMPGTB -> wb.write((byte) 0x64);
 			case VPCMPEQB -> {
-				if (inst instanceof WeirdVpcmpeqb) {
-					wb.write((byte) 0x74);
-				} else if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
+				if (isFirstMask(inst) && isSecondR(inst) && (isThirdM(inst) || isThirdR(inst))) {
 					wb.write((byte) 0x3f);
 					lastByte = (byte) 0x00;
 				} else {
@@ -2442,13 +2439,7 @@ public final class InstructionEncoder {
 			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
 			// 0F 3A map (mm = 11)
 			case VPCMPNEQUB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD -> (byte) 0b011;
-			case VPCMPEQB -> {
-				if (inst instanceof WeirdVpcmpeqb) {
-					yield (byte) 0b001;
-				} else {
-					yield (byte) 0b011;
-				}
-			}
+			case VPCMPEQB -> (byte) 0b011;
 			default -> (byte) 0b000;
 		};
 	}
