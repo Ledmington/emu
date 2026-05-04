@@ -40,7 +40,7 @@ public final class Instructions {
 		if (a.hasPrefix() != b.hasPrefix()) {
 			return false;
 		}
-		if (a.hasPrefix() && !a.getPrefix().equals(b.getPrefix())) {
+		if (a.hasPrefix() && a.getPrefix() != b.getPrefix()) {
 			return false;
 		}
 
@@ -50,7 +50,7 @@ public final class Instructions {
 		if (a.hasDestinationMask() != b.hasDestinationMask()) {
 			return false;
 		}
-		if (a.hasDestinationMask() && !a.getDestinationMask().equals(b.getDestinationMask())) {
+		if (a.hasDestinationMask() && a.getDestinationMask() != b.getDestinationMask()) {
 			return false;
 		}
 

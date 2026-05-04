@@ -167,6 +167,7 @@ import com.ledmington.cpu.x86.InstructionPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.SuppressFBWarnings;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
@@ -190,6 +191,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	// FIXME: this is ugly
 	// TODO: do the allowed encodings need to be a set (instead of a list)?
 	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, Set<byte[]> allowedEncodings) {
+		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object as is it is for now.")
 		public Set<byte[]> allowedEncodings() {
 			return allowedEncodings;
 		}
