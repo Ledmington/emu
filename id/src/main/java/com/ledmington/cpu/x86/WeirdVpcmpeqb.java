@@ -18,7 +18,9 @@
 package com.ledmington.cpu.x86;
 
 /**
- * This specific class represents the specific case of: 'vpcmpeqb k0,ymm16,ymm17' when encoded as '62 b1 7d 20 74 c1'.
+ * This specific class represents the specific case of: 'vpcmpeqb k0,ymm16,ymm19' when encoded as '62 b1 7d 20 74 c3'.
+ * That instruction can also be encoded as '62 b3 7d 20 3f c3 00', however that case is handled by the class
+ * {@link GeneralInstruction}.
  *
  * @param firstOperand The first operand of the instruction, usually a mask register.
  * @param secondOperand The second operand of the instruction, usually an YMM register.

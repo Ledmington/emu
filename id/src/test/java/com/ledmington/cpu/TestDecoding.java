@@ -76,14 +76,11 @@ final class TestDecoding extends X64Encodings {
 						break;
 					}
 				}
-				s = s
-						+ String.format(
-								" First different byte is at index %,d: expected 0b%s but was 0b%s.",
-								i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
+				s += String.format(
+						" First different byte is at index %,d: expected 0b%s but was 0b%s.",
+						i, BitUtils.toBinaryString(expected[i]), BitUtils.toBinaryString(actual[i]));
 			} else {
-				s = s
-						+ String.format(
-								" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
+				s += String.format(" Wrong lengths: expected %,d bytes but were %,d.", expected.length, actual.length);
 			}
 			return s;
 		});
