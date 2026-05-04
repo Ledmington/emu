@@ -37,12 +37,15 @@ abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessM
 	protected abstract Memory getMemory();
 
 	protected static Stream<Arguments> randomMemoryLocations() {
-		return Stream.generate(rng::nextLong).distinct().limit(100).map(Arguments::of);
+		return Stream.generate(() -> new MemoryAddress(rng.nextLong()))
+				.distinct()
+				.limit(100)
+				.map(Arguments::of);
 	}
 
 	@ParameterizedTest
 	@MethodSource("randomMemoryLocations")
-	void singleByte(final long address) {
+	void singleByte(final MemoryAddress address) {
 		final Memory mem = getMemory();
 		final byte value = 0x12;
 		mem.write(address, value);
@@ -52,7 +55,7 @@ abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessM
 
 	@ParameterizedTest
 	@MethodSource("randomMemoryLocations")
-	void twoBytes(final long address) {
+	void twoBytes(final MemoryAddress address) {
 		final Memory mem = getMemory();
 		final short value = 0x1234;
 		mem.write(address, value);
@@ -62,7 +65,7 @@ abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessM
 
 	@ParameterizedTest
 	@MethodSource("randomMemoryLocations")
-	void fourBytes(final long address) {
+	void fourBytes(final MemoryAddress address) {
 		final Memory mem = getMemory();
 		final int value = 0x12345678;
 		mem.write(address, value);
@@ -72,7 +75,7 @@ abstract sealed class TestMemory permits TestMemoryController, TestRandomAccessM
 
 	@ParameterizedTest
 	@MethodSource("randomMemoryLocations")
-	void eightBytes(final long address) {
+	void eightBytes(final MemoryAddress address) {
 		final Memory mem = getMemory();
 		final long value = 0x0102030405060708L;
 		mem.write(address, value);

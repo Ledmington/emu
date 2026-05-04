@@ -20,6 +20,7 @@ package com.ledmington.emudb;
 import java.util.Objects;
 
 import com.ledmington.mem.Memory;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.SuppressFBWarnings;
 
@@ -66,6 +67,6 @@ public final class MemoryByteBuffer implements ReadOnlyByteBuffer {
 
 	@Override
 	public byte read() {
-		return memory.read(position);
+		return memory.read(new MemoryAddress(position));
 	}
 }

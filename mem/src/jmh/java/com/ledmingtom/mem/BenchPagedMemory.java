@@ -52,17 +52,17 @@ public class BenchPagedMemory {
 
 	public BenchPagedMemory() {
 		for (int i = 0; i < numBytes; i++) {
-			mem.write(startAddress + i, (byte) 0x99);
+			mem.write(new MemoryAddress(startAddress + i), (byte) 0x99);
 		}
 	}
 
 	@Benchmark
 	public void readInitializedAddress() {
-		mem.read(rng.nextLong(startAddress, startAddress + numBytes));
+		mem.read(new MemoryAddress(rng.nextLong(startAddress, startAddress + numBytes)));
 	}
 
 	@Benchmark
 	public void readUninitializedAddress() {
-		mem.read(rng.nextLong(Long.MIN_VALUE, -startAddress));
+		mem.read(new MemoryAddress(rng.nextLong(Long.MIN_VALUE, -startAddress)));
 	}
 }

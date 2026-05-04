@@ -20,6 +20,7 @@ package com.ledmington.emu;
 import java.util.Objects;
 
 import com.ledmington.cpu.x86.Register64;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.SuppressFBWarnings;
@@ -74,7 +75,7 @@ public final class InstructionFetcher implements ReadOnlyByteBuffer {
 
 	@Override
 	public byte read() {
-		return mem.readCode(getPosition());
+		return mem.readCode(new MemoryAddress(getPosition()));
 	}
 
 	@Override

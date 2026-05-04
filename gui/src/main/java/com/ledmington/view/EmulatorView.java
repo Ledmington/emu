@@ -55,6 +55,7 @@ import com.ledmington.emu.ImmutableRegisterFile;
 import com.ledmington.emu.InstructionFetcher;
 import com.ledmington.emu.RFlags;
 import com.ledmington.emu.RegisterFile;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.PagedMemory;
 import com.ledmington.utils.MiniLogger;
@@ -296,7 +297,7 @@ public final class EmulatorView extends Stage {
 				instString = "(bad)";
 				rip = startRIP + 1L;
 			} catch (final DecodingException e) {
-				instString = String.format(".byte 0x%02x", this.mem.readCode(rip));
+				instString = String.format(".byte 0x%02x", this.mem.readCode(new MemoryAddress(rip)));
 				rip = startRIP + 1L;
 			}
 			sb.append(" : ").append(instString).append('\n');
@@ -305,15 +306,16 @@ public final class EmulatorView extends Stage {
 		regFile.set(Register64.RIP, originalRIP);
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void updateMemory(final long baseAddress) {
 		final StringBuilder sb = new StringBuilder();
 		final int n = AppConstants.getMaxMemoryLines();
 		final int k = AppConstants.getMemoryBytesPerLine();
 		for (int i = 0; i < n * k; i++) {
-			final long address = baseAddress + (long) i * k;
+			final MemoryAddress address = new MemoryAddress(baseAddress + (long) i * k);
 			if (i % k == 0) {
 				sb.append("0x")
-						.append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", address))
+						.append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", address.address()))
 						.append(" :");
 			}
 			if (this.mem.isInitialized(address)) {

@@ -36,7 +36,7 @@ final class TestMemoryController extends TestMemory {
 
 	@ParameterizedTest
 	@MethodSource("randomMemoryLocations")
-	void granularPermissions(final long address) {
+	void granularPermissions(final MemoryAddress address) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, false);
 
@@ -52,7 +52,7 @@ final class TestMemoryController extends TestMemory {
 	void unalignedMultiByteRead(final long numBytes) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		final long address = rng.nextLong();
+		final MemoryAddress address = new MemoryAddress(rng.nextLong());
 		mem.setPermissions(address, numBytes, true, false, false);
 		mem.initialize(address, 8, (byte) 0x00);
 		assertThrows(IllegalReadException.class, () -> mem.read8(address));
@@ -63,7 +63,7 @@ final class TestMemoryController extends TestMemory {
 	void unalignedMultiByteWrite(final long numBytes) {
 		final MemoryController mem =
 				new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true);
-		final long address = rng.nextLong();
+		final MemoryAddress address = new MemoryAddress(rng.nextLong());
 		mem.setPermissions(address, numBytes, false, true, false);
 		mem.initialize(address, 8, (byte) 0x00);
 		assertThrows(IllegalWriteException.class, () -> mem.write(address, 0L));

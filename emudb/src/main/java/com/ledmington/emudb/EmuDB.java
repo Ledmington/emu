@@ -55,6 +55,7 @@ import com.ledmington.emu.RFlags;
 import com.ledmington.emu.RegisterFile;
 import com.ledmington.emu.X86Cpu;
 import com.ledmington.mem.Memory;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.PagedMemory;
@@ -151,7 +152,7 @@ public final class EmuDB {
 					pos.functionName(),
 					TerminalUtils.ANSI_RESET);
 
-			final long nextRbp = this.context.memory().read8(rbp);
+			final long nextRbp = this.context.memory().read8(new MemoryAddress(rbp));
 			// TODO: should we check if nextRbp is aligned?
 			if (nextRbp <= rbp || nextRbp > stackTop || nextRbp < stackBottom) {
 				// out.println("<Invalid frame or corrupted stack>");
@@ -410,7 +411,9 @@ public final class EmuDB {
 						currentAddress,
 						TerminalUtils.ANSI_RESET);
 			}
-			final String s = mem.isInitialized(currentAddress) ? String.format("%02x", mem.read(currentAddress)) : "xx";
+			final String s = mem.isInitialized(new MemoryAddress(currentAddress))
+					? String.format("%02x", mem.read(new MemoryAddress(currentAddress)))
+					: "xx";
 			out.printf(currentAddress == address ? "[" + s + "]" : " " + s + " ");
 			if (i % numBytesPerRow == numBytesPerRow - 1) {
 				out.println();

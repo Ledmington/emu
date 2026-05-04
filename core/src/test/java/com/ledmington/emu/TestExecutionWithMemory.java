@@ -42,6 +42,7 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.PointerSize;
 import com.ledmington.cpu.x86.Register64;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.PagedMemory;
@@ -95,8 +96,8 @@ final class TestExecutionWithMemory {
 		final long oldValue2 = rng.nextLong();
 		set(cpu, r1, oldValue1);
 		set(cpu, r2, oldValue2);
-		mem.initialize(oldValue1, 8L, (byte) 0x00);
-		mem.setPermissions(oldValue1, 8L, false, true, false);
+		mem.initialize(new MemoryAddress(oldValue1), 8L, (byte) 0x00);
+		mem.setPermissions(new MemoryAddress(oldValue1), 8L, false, true, false);
 		cpu.executeOne(new GeneralInstruction(
 				Opcode.MOV,
 				IndirectOperand.builder()
@@ -104,8 +105,8 @@ final class TestExecutionWithMemory {
 						.base(r1)
 						.build(),
 				r2));
-		mem.setPermissions(oldValue1, 8L, true, false, false);
-		final long x = mem.read8(oldValue1);
+		mem.setPermissions(new MemoryAddress(oldValue1), 8L, true, false, false);
+		final long x = mem.read8(new MemoryAddress(oldValue1));
 		assertEquals(
 				oldValue2,
 				x,
@@ -124,8 +125,8 @@ final class TestExecutionWithMemory {
 		final long oldValue2 = rng.nextLong();
 		set(cpu, r2, oldValue2);
 		final long val = rng.nextLong();
-		mem.initialize(oldValue2, val);
-		mem.setPermissions(oldValue2, 8L, true, false, false);
+		mem.initialize(new MemoryAddress(oldValue2), val);
+		mem.setPermissions(new MemoryAddress(oldValue2), 8L, true, false, false);
 		cpu.executeOne(new GeneralInstruction(
 				Opcode.MOV,
 				r1,
@@ -133,7 +134,7 @@ final class TestExecutionWithMemory {
 						.base(r2)
 						.pointer(PointerSize.QWORD_PTR)
 						.build()));
-		final long x = mem.read8(oldValue2);
+		final long x = mem.read8(new MemoryAddress(oldValue2));
 		assertEquals(
 				val,
 				x,
@@ -149,9 +150,9 @@ final class TestExecutionWithMemory {
 				.build();
 
 		final long base = rng.nextLong();
-		mem.setPermissions(base - 8L, base, true, true, false);
+		mem.setPermissions(new MemoryAddress(base - 8L), base, true, true, false);
 		set(cpu, Register64.RSP, base);
-		mem.write(base - 8L, 0L);
+		mem.write(new MemoryAddress(base - 8L), 0L);
 		final long val = rng.nextLong();
 		set(cpu, Register64.RAX, val);
 
@@ -166,8 +167,8 @@ final class TestExecutionWithMemory {
 						newRSP, cpu.getRegisters().get(Register64.RSP)));
 		assertEquals(
 				val,
-				mem.read8(newRSP),
-				() -> String.format("Expected 0x%016x but was 0x%016x.", val, mem.read8(newRSP)));
+				mem.read8(new MemoryAddress(newRSP)),
+				() -> String.format("Expected 0x%016x but was 0x%016x.", val, mem.read8(new MemoryAddress(newRSP))));
 	}
 
 	@Test
@@ -185,8 +186,8 @@ final class TestExecutionWithMemory {
 				.build();
 
 		set(cpu, Register64.RSP, stackTop);
-		mem.setPermissions(stackBottom, stackSize, true, true, false);
-		mem.initialize(stackBottom, stackSize, (byte) 0x00);
+		mem.setPermissions(new MemoryAddress(stackBottom), stackSize, true, true, false);
+		mem.initialize(new MemoryAddress(stackBottom), stackSize, (byte) 0x00);
 
 		final long val = rng.nextLong();
 		set(cpu, Register64.RAX, val);
@@ -220,10 +221,10 @@ final class TestExecutionWithMemory {
 				.stackSize(stackSize)
 				.build();
 
-		mem.setPermissions(stackTop, stackSize, true, true, false);
+		mem.setPermissions(new MemoryAddress(stackTop), stackSize, true, true, false);
 		set(cpu, Register64.RSP, stackTop);
 		final long val = rng.nextLong();
-		mem.write(stackTop, val);
+		mem.write(new MemoryAddress(stackTop), val);
 
 		cpu.executeOne(new GeneralInstruction(Opcode.POP, Register64.RAX));
 
@@ -251,8 +252,8 @@ final class TestExecutionWithMemory {
 		final long stackBottom = stackTop - stackSize;
 
 		set(cpu, Register64.RSP, stackTop);
-		mem.setPermissions(stackBottom, stackSize, true, true, false);
-		mem.initialize(stackBottom, stackSize, (byte) 0x00);
+		mem.setPermissions(new MemoryAddress(stackBottom), stackSize, true, true, false);
+		mem.initialize(new MemoryAddress(stackBottom), stackSize, (byte) 0x00);
 
 		final Instruction pop = new GeneralInstruction(Opcode.POP, Register64.RAX);
 		assertThrows(
@@ -289,7 +290,7 @@ final class TestExecutionWithMemory {
 		// Doing n pushes of random values
 		for (int i = 0; i < n; i++) {
 			// Set memory to readable and writable
-			mem.setPermissions(stackTop - 8L * (i + 1), 8L, true, true, false);
+			mem.setPermissions(new MemoryAddress(stackTop - 8L * (i + 1)), 8L, true, true, false);
 
 			set(cpu, Register64.RAX, values[i]);
 
@@ -361,8 +362,8 @@ final class TestExecutionWithMemory {
 
 	private void writeFunction(final long functionAddress, final Instruction... code) {
 		final byte[] functionCode = InstructionEncoder.toHex(true, code);
-		mem.initialize(functionAddress, functionCode);
-		mem.setPermissions(functionAddress, functionCode.length, false, false, true);
+		mem.initialize(new MemoryAddress(functionAddress), functionCode);
+		mem.setPermissions(new MemoryAddress(functionAddress), functionCode.length, false, false, true);
 	}
 
 	@Test
@@ -379,7 +380,7 @@ final class TestExecutionWithMemory {
 				.stackSize(stackSize)
 				.build();
 
-		mem.setPermissions(stackBottom, stackSize, true, true, false);
+		mem.setPermissions(new MemoryAddress(stackBottom), stackSize, true, true, false);
 		set(cpu, Register64.RSP, stackTop);
 
 		// Setup RIP at random location
@@ -416,8 +417,8 @@ final class TestExecutionWithMemory {
 				.stackSize(stackSize)
 				.build();
 
-		mem.initialize(stackBottom, stackSize, (byte) 0);
-		mem.setPermissions(stackBottom, stackSize, true, true, false);
+		mem.initialize(new MemoryAddress(stackBottom), stackSize, (byte) 0);
+		mem.setPermissions(new MemoryAddress(stackBottom), stackSize, true, true, false);
 		set(cpu, Register64.RSP, stackTop);
 		set(cpu, Register64.RBP, stackTop);
 
