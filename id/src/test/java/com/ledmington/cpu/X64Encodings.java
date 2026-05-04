@@ -151,7 +151,6 @@ import static com.ledmington.cpu.x86.SegmentRegister.DS;
 import static com.ledmington.cpu.x86.SegmentRegister.ES;
 import static com.ledmington.cpu.x86.SegmentRegister.GS;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -189,8 +188,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 			.toList();
 
 	// FIXME: this is ugly
-	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, List<byte[]> allowedEncodings) {
-		public List<byte[]> allowedEncodings() {
+	// TODO: do the allowed encodings need to be a set (instead of a list)?
+	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, Set<byte[]> allowedEncodings) {
+		public Set<byte[]> allowedEncodings() {
 			return allowedEncodings;
 		}
 	}
@@ -201,12 +201,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 		for (int i = 0; i < splitted.length; i++) {
 			code[i] = BitUtils.asByte(Integer.parseInt(splitted[i], 16));
 		}
-		return new X64EncodingTestCase(instruction, intelSyntax, List.of(code));
+		return new X64EncodingTestCase(instruction, intelSyntax, Set.of(code));
 	}
 
 	private static X64EncodingTestCase test(
-			final Instruction instruction, final String intelSyntax, final List<String> allowedEncodings) {
-		final List<byte[]> encodings = new ArrayList<>();
+			final Instruction instruction, final String intelSyntax, final Set<String> allowedEncodings) {
+		final Set<byte[]> encodings = new HashSet<>();
 		for (final String hex : allowedEncodings) {
 			final String[] splitted = hex.strip().split(" ");
 			final byte[] code = new byte[splitted.length];
@@ -10229,7 +10229,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.op(YMM19)
 								.build(),
 						"vpcmpeqb k0,ymm16,ymm19",
-						List.of("62 b3 7d 20 3f c3 00", "62 b1 7d 20 74 c3")),
+						Set.of("62 b3 7d 20 3f c3 00", "62 b1 7d 20 74 c3")),
 				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQB)

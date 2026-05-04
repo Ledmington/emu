@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -61,9 +62,16 @@ final class TestDecoding extends X64Encodings {
 		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.instruction(), x.allowedEncodings()));
 	}
 
+	/**
+	 * This test checks that the given instruction maps to any of the given encodings. This is less strict than decoding
+	 * from binary ({@link TestDecoding#fromHex(Instruction, byte[])}) since we do not care about exact binary encoding.
+	 *
+	 * @param inst The instruction to encode
+	 * @param allowedEncodings The allowed encodings for the given instruction.
+	 */
 	@ParameterizedTest
 	@MethodSource("instructionAndAllowedEncodings")
-	void toHex(final Instruction inst, final List<byte[]> allowedEncodings) {
+	void toHex(final Instruction inst, final Set<byte[]> allowedEncodings) {
 		final byte[] actual = InstructionEncoder.toHex(inst, true);
 		final boolean matchFound = allowedEncodings.stream().anyMatch(allowed -> Arrays.equals(allowed, actual));
 		assertTrue(matchFound, () -> {
@@ -97,8 +105,13 @@ final class TestDecoding extends X64Encodings {
 		});
 	}
 
+	private static Stream<Arguments> instructionAndHex() {
+		return X64_ENCODINGS.stream()
+				.flatMap(x -> x.allowedEncodings().stream().map(hex -> Arguments.of(x.instruction(), hex)));
+	}
+
 	@ParameterizedTest
-	@MethodSource("instructionAndAllowedEncodings")
+	@MethodSource("instructionAndHex")
 	void fromHex(final Instruction expected, final byte[] hex) {
 		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
 		assertEquals(
