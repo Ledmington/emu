@@ -47,6 +47,7 @@ import com.ledmington.elf.section.StringTableSection;
 import com.ledmington.elf.section.sym.SymbolTableEntry;
 import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -135,8 +136,8 @@ public final class ELFLoader {
 			 */
 			final Instruction halt = new GeneralInstruction(Opcode.HLT);
 			final byte[] haltEncoded = InstructionEncoder.toHex(halt, true);
-			mem.setPermissions(baseStackValue, haltEncoded.length, false, false, true);
-			mem.initialize(baseStackValue, haltEncoded);
+			mem.setPermissions(new MemoryAddress(baseStackValue), haltEncoded.length, false, false, true);
+			mem.initialize(new MemoryAddress(baseStackValue), haltEncoded);
 			push(baseStackValue);
 		}
 
@@ -349,8 +350,8 @@ public final class ELFLoader {
 		logger.debug(
 				"Setting stack size to %,d bytes (%.3f MiB) at 0x%016x-0x%016x",
 				stackSize, stackSize / 1_048_576.0, stackBottom, stackTop - 1L);
-		mem.setPermissions(stackBottom, stackSize, true, true, false);
-		mem.initialize(stackBottom, stackSize, (byte) 0x00);
+		mem.setPermissions(new MemoryAddress(stackBottom), stackSize, true, true, false);
+		mem.initialize(new MemoryAddress(stackBottom), stackSize, (byte) 0x00);
 	}
 
 	private void loadCommandLineArgumentsAndEnvironmentVariables(
@@ -469,10 +470,10 @@ public final class ELFLoader {
 			throw new AssertionError("Content on the stack is not word-aligned.");
 		}
 
-		mem.initialize(stackBase, content);
+		mem.initialize(new MemoryAddress(stackBase), content);
 
 		// FIXME: setting the stack's permissions, again?
-		mem.setPermissions(stackBase, content.length, true, true, false);
+		mem.setPermissions(new MemoryAddress(stackBase), content.length, true, true, false);
 	}
 
 	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {
@@ -512,7 +513,8 @@ public final class ELFLoader {
 					(phte.isReadable() ? "R" : "")
 							+ (phte.isWriteable() ? "W" : "")
 							+ (phte.isExecutable() ? "X" : ""));
-			mem.setPermissions(start, end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
+			mem.setPermissions(
+					new MemoryAddress(start), end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
 
 			segmentIndex++;
 			memorySegments.add(new Range(start, end));
@@ -544,7 +546,7 @@ public final class ELFLoader {
 				logger.debug(
 						"Loading section %s in memory segment %,d at range 0x%x-0x%x (%,d bytes)",
 						sec.getName(), segmentIndex, startVirtualAddress, startVirtualAddress + size, size);
-				mem.initialize(startVirtualAddress, size, (byte) 0x00);
+				mem.initialize(new MemoryAddress(startVirtualAddress), size, (byte) 0x00);
 			}
 			case LoadableSection ls -> {
 				final long startVirtualAddress = baseAddress + sec.header().getVirtualAddress();
@@ -557,7 +559,7 @@ public final class ELFLoader {
 						startVirtualAddress,
 						startVirtualAddress + content.length,
 						content.length);
-				mem.initialize(startVirtualAddress, content);
+				mem.initialize(new MemoryAddress(startVirtualAddress), content);
 			}
 			default ->
 				throw new IllegalArgumentException(String.format(

@@ -37,6 +37,7 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.emu.config.CPUConfig;
 import com.ledmington.mem.Memory;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
@@ -292,23 +293,23 @@ public class X86Cpu implements X86Emulator {
 						() -> getAsLongSX(inst.firstOperand()),
 						() -> getAsLongSX(inst.secondOperand()),
 						(a, b) -> a - b,
-						result -> {},
+						_ -> {},
 						true,
 						MathUtils::willCarrySub,
 						MathUtils::willOverflowSub);
 			case TEST -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
-					op(() -> rf.get(r1), () -> rf.get(r2), BitUtils::and, result -> {}, true);
+					op(() -> rf.get(r1), () -> rf.get(r2), BitUtils::and, _ -> {}, true);
 				} else if (inst.firstOperand() instanceof final Register16 r1
 						&& inst.secondOperand() instanceof final Register16 r2) {
-					op(() -> rf.get(r1), () -> rf.get(r2), BitUtils::and, result -> {}, true);
+					op(() -> rf.get(r1), () -> rf.get(r2), BitUtils::and, _ -> {}, true);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Register32 r2) {
-					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
+					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, _ -> {}, true);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
-					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, result -> {}, true);
+					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, _ -> {}, true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
@@ -380,27 +381,27 @@ public class X86Cpu implements X86Emulator {
 					rf.set(op1, imm.asInt());
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register8 op2) {
-					final long address = computeIndirectOperand(io);
+					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, rf.get(op2));
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register16 op2) {
-					final long address = computeIndirectOperand(io);
+					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, rf.get(op2));
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register32 op2) {
-					final long address = computeIndirectOperand(io);
+					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, rf.get(op2));
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Register64 op2) {
-					final long address = computeIndirectOperand(io);
+					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, rf.get(op2));
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					final long address = computeIndirectOperand(io);
+					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, imm.asInt());
 				} else if (inst.firstOperand() instanceof final Register32 op1
 						&& inst.secondOperand() instanceof final IndirectOperand io) {
-					final long address = computeIndirectOperand(io);
+					final MemoryAddress address = computeIndirectOperand(io);
 					rf.set(op1, mem.read4(address));
 				} else {
 					throw new IllegalArgumentException(
@@ -422,7 +423,7 @@ public class X86Cpu implements X86Emulator {
 					long rdi = rf.get(Register64.RDI);
 
 					while (rcx != 0) {
-						mem.write(rdi, rax);
+						mem.write(new MemoryAddress(rdi), rax);
 						rdi += increment;
 						rcx--;
 					}
@@ -449,14 +450,16 @@ public class X86Cpu implements X86Emulator {
 			case LEA -> {
 				final IndirectOperand src = (IndirectOperand) inst.secondOperand();
 				if (inst.firstOperand() instanceof final Register64 dest) {
-					final long address = computeIndirectOperand(src);
-					rf.set(dest, address);
+					final MemoryAddress address = computeIndirectOperand(src);
+					rf.set(dest, address.address());
 				} else if (inst.firstOperand() instanceof final Register32 dest) {
-					final int address = BitUtils.asInt(computeIndirectOperand(src));
+					final int address =
+							BitUtils.asInt(computeIndirectOperand(src).address());
 					rf.set(dest, address);
 				} else {
 					final Register16 dest = (Register16) inst.firstOperand();
-					final short address = BitUtils.asShort(computeIndirectOperand(src));
+					final short address =
+							BitUtils.asShort(computeIndirectOperand(src).address());
 					rf.set(dest, address);
 				}
 			}
@@ -471,7 +474,7 @@ public class X86Cpu implements X86Emulator {
 					final long relativeAddress = getAsLongSX(imm);
 					jumpAddress = rip + relativeAddress;
 				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
-					jumpAddress = computeIndirectOperand(io);
+					jumpAddress = computeIndirectOperand(io).address();
 				} else {
 					throw new IllegalStateException();
 				}
@@ -557,7 +560,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private void op(final IndirectOperand iop, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
-		final long address = computeIndirectOperand(iop);
+		final MemoryAddress address = computeIndirectOperand(iop);
 		op(() -> mem.read(address), () -> rf.get(op2), task, result -> mem.write(address, result), true);
 	}
 
@@ -568,8 +571,8 @@ public class X86Cpu implements X86Emulator {
 				task,
 				result -> rf.set(op1, result),
 				true,
-				(a, b) -> false,
-				(a, b) -> false);
+				(_, _) -> false,
+				(_, _) -> false);
 	}
 
 	private void op(
@@ -742,7 +745,7 @@ public class X86Cpu implements X86Emulator {
 		}
 
 		rf.set(Register64.RSP, newRSP);
-		mem.write(newRSP, value);
+		mem.write(new MemoryAddress(newRSP), value);
 	}
 
 	/**
@@ -758,7 +761,7 @@ public class X86Cpu implements X86Emulator {
 			throw new StackUnderflow();
 		}
 
-		final long value = mem.read8(rsp);
+		final long value = mem.read8(new MemoryAddress(rsp));
 
 		// the stack "grows downward", so it "pops upward"
 		final long newRSP = rsp + 8L;
@@ -777,7 +780,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	private int getAsIntZX(final IndirectOperand io) {
-		final long address = computeIndirectOperand(io);
+		final MemoryAddress address = computeIndirectOperand(io);
 		return switch (io.getPointerSize()) {
 			case BYTE_PTR -> BitUtils.asInt(mem.read(address));
 			case WORD_PTR -> BitUtils.asInt(mem.read2(address));
@@ -811,7 +814,7 @@ public class X86Cpu implements X86Emulator {
 
 	/** Returns a sign-extended long. */
 	private long getAsLongSX(final IndirectOperand io) {
-		final long address = computeIndirectOperand(io);
+		final MemoryAddress address = computeIndirectOperand(io);
 		if (io.getPointerSize() == PointerSize.QWORD_PTR) {
 			return mem.read8(address);
 		} else {
@@ -825,7 +828,7 @@ public class X86Cpu implements X86Emulator {
 	 * @param io The indirect operand pointing at the memory.
 	 * @return The pointed address.
 	 */
-	public long computeIndirectOperand(final IndirectOperand io) {
+	public MemoryAddress computeIndirectOperand(final IndirectOperand io) {
 		final long base = io.hasBase()
 				? (io.getBase() instanceof Register64
 						? rf.get((Register64) io.getBase())
@@ -838,7 +841,7 @@ public class X86Cpu implements X86Emulator {
 				: 0L;
 		final long scale = io.hasScale() ? io.getScale() : 1L;
 		final long displacement = io.hasDisplacement() ? io.getDisplacement() : 0L;
-		return base + index * scale + displacement;
+		return new MemoryAddress(base + index * scale + displacement);
 	}
 
 	@Override

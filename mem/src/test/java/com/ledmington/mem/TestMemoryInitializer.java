@@ -37,12 +37,13 @@ final class TestMemoryInitializer {
 	void zero() {
 		final Memory mem = new RandomAccessMemory(MemoryInitializer.zero());
 		for (int i = 0; i < 100; i++) {
-			final long address = rng.nextLong();
+			final MemoryAddress address = new MemoryAddress(rng.nextLong());
 			assertEquals(
 					(byte) 0x00,
 					mem.read(address),
 					() -> String.format(
-							"Expected read at 0x%016x to return 0 but was 0x%02x.", address, mem.read(address)));
+							"Expected read at 0x%016x to return 0 but was 0x%02x.",
+							address.address(), mem.read(address)));
 		}
 	}
 
@@ -50,7 +51,7 @@ final class TestMemoryInitializer {
 	void random() {
 		final Memory mem = new RandomAccessMemory(MemoryInitializer.random());
 		assertTrue(
-				Stream.generate(rng::nextLong)
+				Stream.generate(() -> new MemoryAddress(rng.nextLong()))
 								.map(mem::read)
 								.limit(100)
 								.collect(Collectors.toSet())
@@ -62,7 +63,7 @@ final class TestMemoryInitializer {
 	@Test
 	void randomReturnsDifferentValueAtSamePlace() {
 		final Memory mem = new RandomAccessMemory(MemoryInitializer.random());
-		final long address = rng.nextLong();
+		final MemoryAddress address = new MemoryAddress(rng.nextLong());
 		assertNotEquals(mem.read(address), mem.read(address));
 	}
 }

@@ -40,64 +40,74 @@ final class TestUninitializedMemory {
 
 	@BeforeEach
 	public void setup() {
-		// Creating a memory controller with all permissions on the whole range, but without initialising anything
+		// Creating a memory controller with all permissions on the whole range, but without initializing anything
 		mem = new MemoryController(new RandomAccessMemory(MemoryInitializer.random()), true, true, true, true, true);
 	}
 
 	@Test
 	void cannotRead() {
-		final Set<Long> positions =
-				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		final Set<MemoryAddress> positions = Stream.generate(() -> new MemoryAddress(rng.nextLong()))
+				.distinct()
+				.limit(100)
+				.collect(Collectors.toSet());
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			assertThrows(AccessToUninitializedMemoryException.class, () -> mem.read(address));
 		}
 	}
 
 	@Test
 	void canReadAfterInitialization() {
-		final Set<Long> positions =
-				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		final Set<MemoryAddress> positions = Stream.generate(() -> new MemoryAddress(rng.nextLong()))
+				.distinct()
+				.limit(100)
+				.collect(Collectors.toSet());
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			mem.write(address, (byte) 0);
 		}
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			assertDoesNotThrow(() -> mem.read(address));
 		}
 	}
 
 	@Test
 	void cannotExecute() {
-		final Set<Long> positions =
-				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		final Set<MemoryAddress> positions = Stream.generate(() -> new MemoryAddress(rng.nextLong()))
+				.distinct()
+				.limit(100)
+				.collect(Collectors.toSet());
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			assertThrows(AccessToUninitializedMemoryException.class, () -> mem.readCode(address));
 		}
 	}
 
 	@Test
 	void canExecuteAfterInitialization() {
-		final Set<Long> positions =
-				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		final Set<MemoryAddress> positions = Stream.generate(() -> new MemoryAddress(rng.nextLong()))
+				.distinct()
+				.limit(100)
+				.collect(Collectors.toSet());
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			mem.write(address, (byte) 0);
 		}
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			assertDoesNotThrow(() -> mem.readCode(address));
 		}
 	}
 
 	@Test
 	void canWrite() {
-		final Set<Long> positions =
-				Stream.generate(rng::nextLong).distinct().limit(100).collect(Collectors.toSet());
+		final Set<MemoryAddress> positions = Stream.generate(() -> new MemoryAddress(rng.nextLong()))
+				.distinct()
+				.limit(100)
+				.collect(Collectors.toSet());
 
-		for (final long address : positions) {
+		for (final MemoryAddress address : positions) {
 			assertDoesNotThrow(() -> mem.write(address, (byte) 0));
 		}
 	}

@@ -17,8 +17,19 @@
  */
 package com.ledmington.mem;
 
-/** A 64-bit memory address. */
+/**
+ * A 64-bit memory address.
+ *
+ * @param address The value of the address.
+ */
 public record MemoryAddress(long address) implements Comparable<MemoryAddress> {
+
+	/**
+	 * Adds the given offset to this MemoryAddress, creating a new one.
+	 *
+	 * @param offset The offset to add.
+	 * @return A new instance of MemoryAddress.
+	 */
 	public MemoryAddress plus(final long offset) {
 		return new MemoryAddress(address + offset);
 	}

@@ -43,6 +43,7 @@ import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.mem.Memory;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BitUtils;
 
@@ -131,20 +132,20 @@ final class TestExecution {
 		cpu = X86Cpu.builder()
 				.memory(new MemoryController(new Memory() {
 					@Override
-					public byte read(final long address) {
-						throw new UnsupportedOperationException(String.format("Attempted read at 0x%016x", address));
+					public byte read(final MemoryAddress address) {
+						throw new UnsupportedOperationException(String.format("Attempted read at %s.", address));
 					}
 
 					@Override
-					public void write(final long address, final byte value) {
+					public void write(final MemoryAddress address, final byte value) {
 						throw new UnsupportedOperationException(
-								String.format("Attempted write of 0x%02x at 0x%016x", value, address));
+								String.format("Attempted write of 0x%02x at %s.", value, address));
 					}
 
 					@Override
-					public boolean isInitialized(final long address) {
+					public boolean isInitialized(final MemoryAddress address) {
 						throw new UnsupportedOperationException(
-								String.format("Attempted initialization check at 0x%016x", address));
+								String.format("Attempted initialization check at %s.", address));
 					}
 				}))
 				.checkInstructions()
@@ -570,7 +571,7 @@ final class TestExecution {
 	@ParameterizedTest
 	@MethodSource("r16m16")
 	void lea16(final Register16 dest, final IndirectOperand src) {
-		final short address = BitUtils.asShort(cpu.computeIndirectOperand(src));
+		final short address = BitUtils.asShort(cpu.computeIndirectOperand(src).address());
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
@@ -583,7 +584,7 @@ final class TestExecution {
 	@ParameterizedTest
 	@MethodSource("r32m32")
 	void lea32(final Register32 dest, final IndirectOperand src) {
-		final int address = BitUtils.asInt(cpu.computeIndirectOperand(src));
+		final int address = BitUtils.asInt(cpu.computeIndirectOperand(src).address());
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
@@ -596,7 +597,7 @@ final class TestExecution {
 	@ParameterizedTest
 	@MethodSource("r64m64")
 	void lea64(final Register64 dest, final IndirectOperand src) {
-		final long address = cpu.computeIndirectOperand(src);
+		final long address = cpu.computeIndirectOperand(src).address();
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));

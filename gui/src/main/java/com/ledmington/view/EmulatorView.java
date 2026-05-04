@@ -55,6 +55,7 @@ import com.ledmington.emu.ImmutableRegisterFile;
 import com.ledmington.emu.InstructionFetcher;
 import com.ledmington.emu.RFlags;
 import com.ledmington.emu.RegisterFile;
+import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.PagedMemory;
 import com.ledmington.utils.MiniLogger;
@@ -296,7 +297,7 @@ public final class EmulatorView extends Stage {
 				instString = "(bad)";
 				rip = startRIP + 1L;
 			} catch (final DecodingException e) {
-				instString = String.format(".byte 0x%02x", this.mem.readCode(rip));
+				instString = String.format(".byte 0x%02x", this.mem.readCode(new MemoryAddress(rip)));
 				rip = startRIP + 1L;
 			}
 			sb.append(" : ").append(instString).append('\n');
@@ -316,8 +317,8 @@ public final class EmulatorView extends Stage {
 						.append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", address))
 						.append(" :");
 			}
-			if (this.mem.isInitialized(address)) {
-				sb.append(String.format(" %02x", this.mem.read(address)));
+			if (this.mem.isInitialized(new MemoryAddress(address))) {
+				sb.append(String.format(" %02x", this.mem.read(new MemoryAddress(address))));
 			} else {
 				sb.append(" xx");
 			}
