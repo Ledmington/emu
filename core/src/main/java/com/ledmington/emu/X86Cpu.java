@@ -144,7 +144,7 @@ public class X86Cpu implements X86Emulator {
 	}
 
 	@Override
-	@SuppressWarnings({"PMD.NcssCount", "PMD.CognitiveComplexity"})
+	@SuppressWarnings({"PMD.NcssCount", "PMD.CognitiveComplexity", "PMD.AvoidInstantiatingObjectsInLoops"})
 	public void executeOne(final Instruction inst) {
 		assertIsRunning();
 

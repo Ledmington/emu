@@ -141,7 +141,7 @@ public final class MemoryController implements Memory {
 
 		final Consumer<MemoryAddress> printer = x -> {
 			final String s = isInitialized(x) ? String.format("%02x", mem.read(x)) : "xx";
-			sb.append(x == address ? '[' : ' ');
+			sb.append(x.equals(address) ? '[' : ' ');
 
 			// Print the bytes accessed in bold
 			if (x.compareTo(address) >= 0 && x.compareTo(address.plus(length)) < 0) {

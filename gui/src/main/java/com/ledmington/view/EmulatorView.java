@@ -306,19 +306,20 @@ public final class EmulatorView extends Stage {
 		regFile.set(Register64.RIP, originalRIP);
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void updateMemory(final long baseAddress) {
 		final StringBuilder sb = new StringBuilder();
 		final int n = AppConstants.getMaxMemoryLines();
 		final int k = AppConstants.getMemoryBytesPerLine();
 		for (int i = 0; i < n * k; i++) {
-			final long address = baseAddress + (long) i * k;
+			final MemoryAddress address = new MemoryAddress(baseAddress + (long) i * k);
 			if (i % k == 0) {
 				sb.append("0x")
-						.append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", address))
+						.append(String.format("%0" + (2 * ADDRESS_BYTES) + "x", address.address()))
 						.append(" :");
 			}
-			if (this.mem.isInitialized(new MemoryAddress(address))) {
-				sb.append(String.format(" %02x", this.mem.read(new MemoryAddress(address))));
+			if (this.mem.isInitialized(address)) {
+				sb.append(String.format(" %02x", this.mem.read(address)));
 			} else {
 				sb.append(" xx");
 			}

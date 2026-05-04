@@ -490,6 +490,7 @@ public final class ELFLoader {
 				new AuxiliaryEntry(AuxiliaryEntryType.AT_EGID, os.getEffectiveGroupID()));
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {
 		logger.debug("Loading ELF segments into memory");
 
