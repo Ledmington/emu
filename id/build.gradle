@@ -68,5 +68,5 @@ tasks.register('fuzz', JavaExec) {
 	description = 'Generates random x86_64 instructions to catch unexpected errors'
 	dependsOn classes
 	classpath sourceSets.test.runtimeClasspath
-	mainClass = 'com.ledmington.cpu.x86.X86Fuzzer'
+	mainClass = 'com.ledmington.cpu.X86Fuzzer'
 }
