@@ -369,7 +369,8 @@ public final class InstructionChecker {
 			Map.entry(Opcode.ANDPD, List.of(RX_M128)),
 			Map.entry(Opcode.XBEGIN, List.of(I32)),
 			Map.entry(Opcode.XEND, List.of(NO_ARGS)),
-			Map.entry(Opcode.STMXCSR, List.of(M32)));
+			Map.entry(Opcode.STMXCSR, List.of(M32)),
+			Map.entry(Opcode.RDTSC, List.of(NO_ARGS)));
 
 	private InstructionChecker() {}
 

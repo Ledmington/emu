@@ -581,6 +581,9 @@ public enum Opcode {
 	/** Read shadow stack pointer. */
 	RDSSPQ,
 
+	/** Read time-stamp counter. */
+	RDTSC,
+
 	/** Return from procedure (near). */
 	RET,
 

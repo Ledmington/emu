@@ -458,6 +458,7 @@ public final class InstructionEncoder {
 			case XTEST -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, OPCODE_GROUP_7_PREFIX, (byte) 0xd6);
 			case ENDBR64 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
 			case SFENCE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae, (byte) 0xf8);
+			case RDTSC -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x31);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}

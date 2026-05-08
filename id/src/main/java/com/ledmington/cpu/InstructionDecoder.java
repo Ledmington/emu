@@ -1148,6 +1148,7 @@ public final class InstructionDecoder {
 		final byte CVTSI2SD_OPCODE = (byte) 0x2a;
 		final byte MOVNTPS_OPCODE = (byte) 0x2b;
 		final byte UCOMISx_OPCODE = (byte) 0x2e;
+		final byte RDTSC_OPCODE = (byte) 0x31;
 		final byte TABLE_A4_OPCODE = (byte) 0x38;
 		final byte TABLE_A5_OPCODE = (byte) 0x3a;
 		final byte CMOVB_OPCODE = (byte) 0x42;
@@ -2249,6 +2250,7 @@ public final class InstructionDecoder {
 								.build())
 						.build();
 			}
+			case RDTSC_OPCODE -> new GeneralInstruction(Opcode.RDTSC);
 			case PMOVMSKB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()

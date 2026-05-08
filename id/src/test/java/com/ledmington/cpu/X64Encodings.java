@@ -11101,7 +11101,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement((byte) 0x2c)
 										.build()),
 						"stmxcsr DWORD PTR [rsp+0x2c]",
-						"0f ae 5c 24 2c"));
+						"0f ae 5c 24 2c"),
+				// Rdtsc
+				test(new GeneralInstruction(Opcode.RDTSC), "rdtsc", "0f 31"));
 	}
 
 	private static String asString(final byte[] v) {
