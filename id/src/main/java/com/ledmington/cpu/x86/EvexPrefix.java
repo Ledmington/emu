@@ -22,7 +22,7 @@ import com.ledmington.utils.BitUtils;
 
 /** The extended VEX prefix (EVEX): 0x62 + 3 bytes. */
 @SuppressWarnings("PMD.UnusedPrivateField")
-public final class EvexPrefix {
+public final class EvexPrefix implements InstructionPrefix {
 
 	private final boolean r;
 	private final boolean x;

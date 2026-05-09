@@ -21,7 +21,7 @@ import com.ledmington.utils.BitUtils;
 
 /** The VEX2 prefix (0xc5 + 1 byte). */
 @SuppressWarnings("PMD.UnusedPrivateField")
-public final class Vex2Prefix {
+public final class Vex2Prefix implements InstructionPrefix {
 
 	private final boolean r;
 	private final byte v;
@@ -73,6 +73,21 @@ public final class Vex2Prefix {
 	 */
 	public boolean r() {
 		return r;
+	}
+
+	@Override
+	public boolean x() {
+		return false;
+	}
+
+	@Override
+	public boolean b() {
+		return false;
+	}
+
+	@Override
+	public boolean w() {
+		return false;
 	}
 
 	/**

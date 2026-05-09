@@ -73,10 +73,7 @@ public final class GeneralInstruction implements Instruction {
 	 * @param secondOperand The second operand of the Instruction.
 	 */
 	public GeneralInstruction(
-			final LegacyPrefix prefix,
-			final Opcode opcode,
-			final Operand firstOperand,
-			final Operand secondOperand) {
+			final LegacyPrefix prefix, final Opcode opcode, final Operand firstOperand, final Operand secondOperand) {
 		this(prefix, opcode, null, false, firstOperand, secondOperand, null, null);
 	}
 
