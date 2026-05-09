@@ -8,3 +8,5 @@ build/
 
 core/src/test/resources/generated/*
 !core/src/test/resources/generated/.gitkeep
+
+**/jmh-result.text
