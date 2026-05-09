@@ -18,7 +18,7 @@
 package com.ledmington.cpu.x86;
 
 /** A prefix for an x86 instruction which changes its behavior. */
-public enum InstructionPrefix {
+public enum LegacyPrefix {
 
 	/** Executes this instruction atomically. */
 	LOCK((byte) 0xf0),
@@ -31,7 +31,7 @@ public enum InstructionPrefix {
 
 	private final byte code;
 
-	InstructionPrefix(final byte code) {
+	LegacyPrefix(final byte code) {
 		this.code = code;
 	}
 
@@ -41,7 +41,7 @@ public enum InstructionPrefix {
 	 * @param x The byte with the prefix.
 	 * @return The InstructionPrefix object.
 	 */
-	public static InstructionPrefix fromByte(final byte x) {
+	public static LegacyPrefix fromByte(final byte x) {
 		return switch (x) {
 			case (byte) 0xf0 -> LOCK;
 			case (byte) 0xf2 -> REPNZ;
@@ -61,6 +61,6 @@ public enum InstructionPrefix {
 
 	@Override
 	public String toString() {
-		return "InstructionPrefix(code=" + code + ')';
+		return "LegacyPrefix(code=" + code + ')';
 	}
 }

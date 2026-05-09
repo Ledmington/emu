@@ -22,7 +22,7 @@ import java.util.Objects;
 /** Most general implementation of an x86 instruction. */
 public final class GeneralInstruction implements Instruction {
 
-	private final InstructionPrefix prefix;
+	private final LegacyPrefix prefix;
 	private final Opcode code;
 	private final MaskRegister destinationMask;
 	private final boolean destinationMaskZero;
@@ -32,7 +32,7 @@ public final class GeneralInstruction implements Instruction {
 	private final Operand op4;
 
 	/* default */ GeneralInstruction(
-			final InstructionPrefix prefix,
+			final LegacyPrefix prefix,
 			final Opcode opcode,
 			final MaskRegister destinationMask,
 			final boolean destinationMaskZero,
@@ -73,7 +73,7 @@ public final class GeneralInstruction implements Instruction {
 	 * @param secondOperand The second operand of the Instruction.
 	 */
 	public GeneralInstruction(
-			final InstructionPrefix prefix,
+			final LegacyPrefix prefix,
 			final Opcode opcode,
 			final Operand firstOperand,
 			final Operand secondOperand) {
@@ -103,7 +103,7 @@ public final class GeneralInstruction implements Instruction {
 	 * @param thirdOperand The third operand of the Instruction.
 	 */
 	public GeneralInstruction(
-			final InstructionPrefix prefix,
+			final LegacyPrefix prefix,
 			final Opcode opcode,
 			final Operand firstOperand,
 			final Operand secondOperand,
@@ -147,7 +147,7 @@ public final class GeneralInstruction implements Instruction {
 	 * @param opcode The opcode of the Instruction.
 	 * @param firstOperand The first operand of the Instruction.
 	 */
-	public GeneralInstruction(final InstructionPrefix prefix, final Opcode opcode, final Operand firstOperand) {
+	public GeneralInstruction(final LegacyPrefix prefix, final Opcode opcode, final Operand firstOperand) {
 		this(prefix, opcode, null, false, firstOperand, null, null, null);
 	}
 
@@ -157,7 +157,7 @@ public final class GeneralInstruction implements Instruction {
 	 * @param prefix The prefix of the Instruction.
 	 * @param opcode The opcode of the Instruction.
 	 */
-	public GeneralInstruction(final InstructionPrefix prefix, final Opcode opcode) {
+	public GeneralInstruction(final LegacyPrefix prefix, final Opcode opcode) {
 		this(prefix, opcode, null, false, null, null, null, null);
 	}
 
@@ -186,7 +186,7 @@ public final class GeneralInstruction implements Instruction {
 	}
 
 	@Override
-	public InstructionPrefix getPrefix() {
+	public LegacyPrefix getPrefix() {
 		if (!hasPrefix()) {
 			throw new IllegalArgumentException("No prefix.");
 		}

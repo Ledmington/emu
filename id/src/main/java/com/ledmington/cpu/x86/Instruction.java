@@ -138,7 +138,7 @@ public interface Instruction {
 	 *
 	 * @return The prefix of this instruction.
 	 */
-	InstructionPrefix getPrefix();
+	LegacyPrefix getPrefix();
 
 	/**
 	 * Checks whether this instruction has a LOCK prefix.
@@ -146,7 +146,7 @@ public interface Instruction {
 	 * @return True if this instruction has a LOCK prefix, false otherwise.
 	 */
 	default boolean hasLockPrefix() {
-		return hasPrefix() && getPrefix() == InstructionPrefix.LOCK;
+		return hasPrefix() && getPrefix() == LegacyPrefix.LOCK;
 	}
 
 	/**
@@ -155,7 +155,7 @@ public interface Instruction {
 	 * @return True if this instruction has a REP prefix, false otherwise.
 	 */
 	default boolean hasRepPrefix() {
-		return hasPrefix() && getPrefix() == InstructionPrefix.REP;
+		return hasPrefix() && getPrefix() == LegacyPrefix.REP;
 	}
 
 	/**
@@ -164,7 +164,7 @@ public interface Instruction {
 	 * @return True if this instruction has a REPNZ prefix, false otherwise.
 	 */
 	default boolean hasRepnzPrefix() {
-		return hasPrefix() && getPrefix() == InstructionPrefix.REPNZ;
+		return hasPrefix() && getPrefix() == LegacyPrefix.REPNZ;
 	}
 
 	/**

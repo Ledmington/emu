@@ -33,7 +33,7 @@ import com.ledmington.cpu.x86.DisplacementType;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionPrefix;
+import com.ledmington.cpu.x86.LegacyPrefix;
 import com.ledmington.cpu.x86.MaskRegister;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.Operand;
@@ -330,7 +330,7 @@ public final class InstructionEncoder {
 			wb.write(OPERAND_SIZE_OVERRIDE_PREFIX);
 		}
 		if (inst.hasLockPrefix()) {
-			wb.write(InstructionPrefix.LOCK.getCode());
+			wb.write(LegacyPrefix.LOCK.getCode());
 		}
 		if (inst.hasRepPrefix()
 				|| (inst.opcode() == Opcode.RDSSPQ
@@ -341,7 +341,7 @@ public final class InstructionEncoder {
 				|| (((inst.opcode() == Opcode.MOVQ || inst.opcode() == Opcode.MOVDQU)
 						&& isFirstXMM(inst)
 						&& isSecondM(inst)))) {
-			wb.write(InstructionPrefix.REP.getCode());
+			wb.write(LegacyPrefix.REP.getCode());
 		}
 		if (inst.hasRepnzPrefix()
 				|| ((inst.opcode() == Opcode.MOVSD && isFirstXMM(inst) && isSecondM(inst))
@@ -350,7 +350,7 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.ADDSD)
 						|| (inst.opcode() == Opcode.LDDQU)
 						|| (inst.opcode() == Opcode.BND_JMP))) {
-			wb.write(InstructionPrefix.REPNZ.getCode());
+			wb.write(LegacyPrefix.REPNZ.getCode());
 		}
 
 		// TODO: maybe refactor this into 'checkRequiredPrefix'?

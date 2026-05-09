@@ -34,7 +34,7 @@ import java.util.Optional;
  * @param evex The EVEX prefix of the instruction.
  */
 public record Prefixes(
-		Optional<InstructionPrefix> p1,
+		Optional<LegacyPrefix> p1,
 		Optional<Byte> p2,
 		boolean hasOperandSizeOverridePrefix,
 		boolean hasAddressSizeOverridePrefix,
