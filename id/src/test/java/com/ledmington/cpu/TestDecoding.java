@@ -113,38 +113,22 @@ final class TestDecoding extends X64Encodings {
 	@ParameterizedTest
 	@MethodSource("instructionAndHex")
 	void fromHex(final Instruction expected, final byte[] hex) {
-		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
+		final List<Instruction> decoded = InstructionDecoder.fromHex(hex, hex.length, false);
 		assertEquals(
 				1,
-				inst.size(),
+				decoded.size(),
 				() -> String.format(
-						"Expected only one instruction to be decoded but there were %,d: %s.", inst.size(), inst));
+						"Expected only one instruction to be decoded but there were %,d: %s.",
+						decoded.size(), decoded));
+		final Instruction inst = decoded.getFirst();
 		assertEquals(
 				expected,
-				inst.getFirst(),
+				inst,
 				() -> String.format(
-						"Expected '%s' to be decoded into '%s' but was '%s'.",
-						asString(hex), expected, inst.getFirst()));
-	}
-
-	private static Stream<Arguments> onlyHex() {
-		return X64_ENCODINGS.stream().flatMap(x -> x.allowedEncodings().stream().map(Arguments::of));
-	}
-
-	@ParameterizedTest
-	@MethodSource("onlyHex")
-	void checkFromHex(final byte[] hex) {
-		final List<Instruction> inst = InstructionDecoder.fromHex(hex, hex.length, true);
-		assertEquals(
-				1,
-				inst.size(),
-				() -> String.format(
-						"Expected only one instruction to be decoded but there were %,d: %s.", inst.size(), inst));
+						"Expected '%s' to be decoded into '%s' but was '%s'.", asString(hex), expected, inst));
 		assertDoesNotThrow(
-				() -> InstructionChecker.check(inst.getFirst()),
-				() -> String.format(
-						"Expected instruction '%s' to be valid but it wasn't.",
-						inst.getFirst().toString()));
+				() -> InstructionChecker.check(inst),
+				() -> String.format("Expected instruction '%s' to be valid but it wasn't.", inst.toString()));
 	}
 
 	private static Stream<Arguments> instAndIntelSyntax() {
@@ -170,18 +154,8 @@ final class TestDecoding extends X64Encodings {
 				Instructions.equals(expected, actual),
 				() -> String.format(
 						"Expected '%s' to be decoded into '%s' but was '%s'.", intelSyntax, expected, actual));
-	}
-
-	private static Stream<Arguments> onlyIntelSyntax() {
-		return X64_ENCODINGS.stream().map(x -> Arguments.of(x.intelSyntax()));
-	}
-
-	@ParameterizedTest
-	@MethodSource("onlyIntelSyntax")
-	void checkFromIntelSyntax(final String intelSyntax) {
-		final Instruction inst = InstructionDecoder.fromIntelSyntax(intelSyntax);
 		assertDoesNotThrow(
-				() -> InstructionChecker.check(inst),
+				() -> InstructionChecker.check(actual),
 				() -> String.format("Expected '%s' to be valid but it wasn't.", intelSyntax));
 	}
 }
