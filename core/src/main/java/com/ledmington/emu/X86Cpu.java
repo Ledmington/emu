@@ -212,13 +212,17 @@ public class X86Cpu implements X86Emulator {
 								(a, b) -> BitUtils.asShort(a + b),
 								MathUtils::willCarryAdd,
 								MathUtils::willOverflowAdd);
-					case Register32 op1 ->
-						op(
-								op1,
-								(Register32) inst.secondOperand(),
-								Integer::sum,
-								MathUtils::willCarryAdd,
-								MathUtils::willOverflowAdd);
+					case Register32 op1 -> {
+						switch (inst.secondOperand()) {
+							case Register32 op2 ->
+								op(op1, op2, Integer::sum, MathUtils::willCarryAdd, MathUtils::willOverflowAdd);
+							case Immediate imm -> opSX(op1, imm, Integer::sum);
+							default ->
+								throw new IllegalArgumentException(String.format(
+										"Don't know what to do with ADD, %s and %s.",
+										inst.firstOperand(), inst.secondOperand()));
+						}
+					}
 					case Register64 op1 -> {
 						switch (inst.secondOperand()) {
 							case Register64 op2 ->
@@ -226,7 +230,7 @@ public class X86Cpu implements X86Emulator {
 							case Immediate imm -> opSX(op1, imm, Long::sum);
 							default ->
 								throw new IllegalArgumentException(String.format(
-										"Don't know what to do with SUB, %s and %s.",
+										"Don't know what to do with ADD, %s and %s.",
 										inst.firstOperand(), inst.secondOperand()));
 						}
 					}
@@ -491,6 +495,30 @@ public class X86Cpu implements X86Emulator {
 					return;
 				}
 				rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+			}
+			case XCHG -> {
+				final Operand op1 = inst.firstOperand();
+				final Operand op2 = inst.secondOperand();
+				if (op1 instanceof final Register8 r1 && op2 instanceof final Register8 r2) {
+					final byte tmp = rf.get(r1);
+					rf.set(r1, rf.get(r2));
+					rf.set(r2, tmp);
+				} else if (op1 instanceof final Register16 r1 && op2 instanceof final Register16 r2) {
+					final short tmp = rf.get(r1);
+					rf.set(r1, rf.get(r2));
+					rf.set(r2, tmp);
+				} else if (op1 instanceof final Register32 r1 && op2 instanceof final Register32 r2) {
+					final int tmp = rf.get(r1);
+					rf.set(r1, rf.get(r2));
+					rf.set(r2, tmp);
+				} else if (op1 instanceof final Register64 r1 && op2 instanceof final Register64 r2) {
+					final long tmp = rf.get(r1);
+					rf.set(r1, rf.get(r2));
+					rf.set(r2, tmp);
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with XCHG and '%s'.", inst));
+				}
 			}
 			case SYSCALL -> handleSyscall();
 			case ENDBR64 -> logger.warning("ENDBR64 not implemented.");
@@ -774,6 +802,8 @@ public class X86Cpu implements X86Emulator {
 	private int getAsIntZX(final Operand op) {
 		return switch (op) {
 			case IndirectOperand io -> getAsIntZX(io);
+			case Register8 r -> BitUtils.asInt(rf.get(r));
+			case Register16 r -> BitUtils.asInt(rf.get(r));
 			case Register32 r -> rf.get(r);
 			default -> throw new IllegalArgumentException(String.format("Unknown operand '%s'.", op));
 		};
@@ -794,6 +824,8 @@ public class X86Cpu implements X86Emulator {
 		return switch (op) {
 			case Immediate imm -> getAsLongSX(imm);
 			case IndirectOperand io -> getAsLongSX(io);
+			case Register8 r -> rf.get(r);
+			case Register16 r -> rf.get(r);
 			case Register32 r -> rf.get(r);
 			case Register64 r -> rf.get(r);
 			default -> throw new IllegalArgumentException(String.format("Unknown operand '%s'.", op));
@@ -815,11 +847,14 @@ public class X86Cpu implements X86Emulator {
 	/** Returns a sign-extended long. */
 	private long getAsLongSX(final IndirectOperand io) {
 		final MemoryAddress address = computeIndirectOperand(io);
-		if (io.getPointerSize() == PointerSize.QWORD_PTR) {
-			return mem.read8(address);
-		} else {
-			throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
-		}
+		return switch (io.getPointerSize()) {
+			case BYTE_PTR -> mem.read(address);
+			case WORD_PTR -> mem.read2(address);
+			case DWORD_PTR -> mem.read4(address);
+			case QWORD_PTR -> mem.read8(address);
+			default ->
+				throw new IllegalArgumentException(String.format("Invalid indirect operand pointer size: '%s'.", io));
+		};
 	}
 
 	/**

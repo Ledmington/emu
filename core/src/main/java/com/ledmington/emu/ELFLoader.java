@@ -115,9 +115,6 @@ public final class ELFLoader {
 
 		final int argc = commandLineArguments.length;
 
-		// Do we *actually* need to do this?
-		push(BitUtils.asLong(argc));
-
 		set(Register64.RDI, BitUtils.asLong(argc));
 
 		loadCommandLineArgumentsAndEnvironmentVariables(
@@ -132,13 +129,12 @@ public final class ELFLoader {
 
 		if (hasPreInitArray || hasInit || hasInitArray || hasCtors) {
 			/*
-			If we need to execute some initializers/constructors from .init/.init_array or similar, we need to push something onto the stack, because these special functions do not have a parent. To do so, we push a default value (usually 0x0) on the stack as the return address of these functions and we write a HLT instruction at the memory location pointed by the base stack value.
+			If we need to execute some initializers/constructors from .init/.init_array or similar, we need to push something onto the stack, because these special functions do not have a parent. To do so, before each one of them we push a default value (usually 0x0) on the stack as its return address and we write a HLT instruction at the memory location pointed by the base stack value.
 			 */
 			final Instruction halt = new GeneralInstruction(Opcode.HLT);
 			final byte[] haltEncoded = InstructionEncoder.toHex(halt, true);
 			mem.setPermissions(new MemoryAddress(baseStackValue), haltEncoded.length, false, false, true);
 			mem.initialize(new MemoryAddress(baseStackValue), haltEncoded);
-			push(baseStackValue);
 		}
 
 		if (hasPreInitArray) {
@@ -151,11 +147,11 @@ public final class ELFLoader {
 				(StringTableSection) elf.getSectionByName(".strtab").orElse(null);
 
 		if (hasInitArray) {
-			runInitArray((ConstructorsSection) initArray.orElseThrow(), baseAddress, symtab, strtab);
+			runInitArray((ConstructorsSection) initArray.orElseThrow(), baseAddress, symtab, strtab, baseStackValue);
 		}
 
 		if (hasInit) {
-			runInit((BasicProgBitsSection) init.orElseThrow(), baseAddress, symtab, strtab);
+			runInit((BasicProgBitsSection) init.orElseThrow(), baseAddress, symtab, strtab, baseStackValue);
 		}
 		if (hasCtors) {
 			runCtors();
@@ -230,7 +226,8 @@ public final class ELFLoader {
 			final ConstructorsSection initArray,
 			final long entryPointVirtualAddress,
 			final SymbolTableSection symtab,
-			final StringTableSection strtab) {
+			final StringTableSection strtab,
+			final long baseStackValue) {
 		logger.debug("Running %,d constructor(s) from .init_array", initArray.getNumConstructors());
 		for (int i = 0; i < initArray.getNumConstructors(); i++) {
 			final long c = initArray.getConstructor(i);
@@ -242,6 +239,9 @@ public final class ELFLoader {
 				logger.debug("Running .init_array[%d] = 0x%x", i, c);
 			}
 			cpu.turnOn();
+			// Each constructor needs its own fake return address, since it will eventually execute a `ret` which
+			// consumes it.
+			push(baseStackValue);
 			runFrom(cpu, entryPointVirtualAddress + c);
 		}
 	}
@@ -251,7 +251,8 @@ public final class ELFLoader {
 			final BasicProgBitsSection init,
 			final long entryPointVirtualAddress,
 			final SymbolTableSection symtab,
-			final StringTableSection strtab) {
+			final StringTableSection strtab,
+			final long baseStackValue) {
 		final long sectionStart = entryPointVirtualAddress + init.header().getFileOffset();
 		final long sectionEnd = sectionStart + init.header().getSectionSize();
 
@@ -269,6 +270,9 @@ public final class ELFLoader {
 						logger.debug("Running constructor from .init");
 					}
 					cpu.turnOn();
+					// Each constructor needs its own fake return address, since it will eventually execute a `ret`
+					// which consumes it.
+					push(baseStackValue);
 					runFrom(cpu, start);
 				}
 			}
