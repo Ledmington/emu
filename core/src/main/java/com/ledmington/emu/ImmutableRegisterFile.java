@@ -21,6 +21,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 
 /** Represents an immutable register file. */
@@ -65,6 +66,23 @@ public interface ImmutableRegisterFile {
 	 * @return The value of the register.
 	 */
 	long get(Register64 r);
+
+	/**
+	 * Returns the low 32 bits of the given 128-bit XMM register, as an int.
+	 *
+	 * @param r The register to be read.
+	 * @return The value of the low 32 bits of the register.
+	 */
+	int getXMM32(RegisterXMM r);
+
+	/**
+	 * Returns the full 128 bits of the given XMM register, as an array containing the low 64 bits at index 0 and the
+	 * high 64 bits at index 1.
+	 *
+	 * @param r The register to be read.
+	 * @return A 2-element array {low, high} with the two 64-bit halves of the register.
+	 */
+	long[] getXMM(RegisterXMM r);
 
 	/**
 	 * Checks whether the given flag is set.
