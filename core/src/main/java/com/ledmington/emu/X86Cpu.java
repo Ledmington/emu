@@ -287,6 +287,9 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r, imm, (a, b) -> a | b);
 				} else if (inst.firstOperand() instanceof final Register32 r
 						&& inst.secondOperand() instanceof final IndirectOperand io) {
 					op(r, io, (a, b) -> a | b);
@@ -469,6 +472,15 @@ public class X86Cpu implements X86Emulator {
 					throw unknownArgumentType(inst);
 				}
 			}
+			case MOVQ -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final RegisterXMM r) {
+					final MemoryAddress address = computeIndirectOperand(io);
+					mem.write(address, rf.getXMM64(r));
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
 			case MOVDQA -> {
 				if (inst.firstOperand() instanceof final RegisterXMM op1
 						&& inst.secondOperand() instanceof final RegisterXMM op2) {
@@ -570,11 +582,30 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RSP, rf.get(Register64.RBP));
 				popInto(Register64.RBP);
 			}
-			case CMOVNE -> {
+			case CMOVE -> {
 				if (rf.isSet(RFlags.ZERO)) {
-					return;
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
 				}
-				rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+			}
+			case CMOVNE -> {
+				if (!rf.isSet(RFlags.ZERO)) {
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				}
+			}
+			case CMOVA -> {
+				if (!rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO)) {
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				}
+			}
+			case CMOVBE -> {
+				if (rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO)) {
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				}
+			}
+			case CMOVNS -> {
+				if (!rf.isSet(RFlags.SIGN)) {
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				}
 			}
 			case XCHG -> {
 				final Operand op1 = inst.firstOperand();
