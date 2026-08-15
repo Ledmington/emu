@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.Arrays;
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -255,6 +256,27 @@ final class TestX86RegisterFile {
 					regFile.get(other),
 					() -> String.format("Expected register %s to be zero but was 0x%08x", other, regFile.get(other)));
 		}
+	}
+
+	private static Stream<Arguments> all32BitsRegistersWithParent64BitRegister() {
+		return IntStream.range(0, ALL_32_BIT_REGISTERS.length)
+				.mapToObj(i -> Arguments.of(ALL_32_BIT_REGISTERS[i], ALL_64_BIT_REGISTERS[i]));
+	}
+
+	@ParameterizedTest
+	@MethodSource("all32BitsRegistersWithParent64BitRegister")
+	void setToValueZeroExtendsIntoParent64BitRegister(final Register32 r32, final Register64 r64) {
+		regFile.set(r64, RNG.nextLong(1, Long.MAX_VALUE) | 0xffffffff00000000L);
+
+		final int x = RNG.nextInt();
+		regFile.set(r32, x);
+
+		assertEquals(
+				BitUtils.asLong(x),
+				regFile.get(r64),
+				() -> String.format(
+						"Expected register %s to be zero-extended to 0x%016x but was 0x%016x",
+						r64, BitUtils.asLong(x), regFile.get(r64)));
 	}
 
 	private static Stream<Arguments> all64BitsRegisters() {

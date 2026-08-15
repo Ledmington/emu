@@ -207,24 +207,25 @@ public final class X86RegisterFile implements RegisterFile {
 
 	@Override
 	public void set(final Register32 r, final int v) {
+		// Writing to a 32-bit register implicitly zero-extends into the full 64-bit register.
 		switch (r) {
-			case EAX -> gpr[0] = (gpr[0] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case EBX -> gpr[1] = (gpr[1] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case ECX -> gpr[2] = (gpr[2] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case EDX -> gpr[3] = (gpr[3] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case ESP -> gpr[4] = (gpr[4] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case EBP -> gpr[5] = (gpr[5] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case ESI -> gpr[6] = (gpr[6] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case EDI -> gpr[7] = (gpr[7] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R8D -> gpr[8] = (gpr[8] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R9D -> gpr[9] = (gpr[9] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R10D -> gpr[10] = (gpr[10] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R11D -> gpr[11] = (gpr[11] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R12D -> gpr[12] = (gpr[12] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R13D -> gpr[13] = (gpr[13] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R14D -> gpr[14] = (gpr[14] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case R15D -> gpr[15] = (gpr[15] & 0xffffffff00000000L) | BitUtils.asLong(v);
-			case EIP -> rip = (rip & 0xffffffff00000000L) | BitUtils.asLong(v);
+			case EAX -> gpr[0] = BitUtils.asLong(v);
+			case EBX -> gpr[1] = BitUtils.asLong(v);
+			case ECX -> gpr[2] = BitUtils.asLong(v);
+			case EDX -> gpr[3] = BitUtils.asLong(v);
+			case ESP -> gpr[4] = BitUtils.asLong(v);
+			case EBP -> gpr[5] = BitUtils.asLong(v);
+			case ESI -> gpr[6] = BitUtils.asLong(v);
+			case EDI -> gpr[7] = BitUtils.asLong(v);
+			case R8D -> gpr[8] = BitUtils.asLong(v);
+			case R9D -> gpr[9] = BitUtils.asLong(v);
+			case R10D -> gpr[10] = BitUtils.asLong(v);
+			case R11D -> gpr[11] = BitUtils.asLong(v);
+			case R12D -> gpr[12] = BitUtils.asLong(v);
+			case R13D -> gpr[13] = BitUtils.asLong(v);
+			case R14D -> gpr[14] = BitUtils.asLong(v);
+			case R15D -> gpr[15] = BitUtils.asLong(v);
+			case EIP -> rip = BitUtils.asLong(v);
 		}
 	}
 
