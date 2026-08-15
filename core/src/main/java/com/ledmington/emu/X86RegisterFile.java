@@ -296,6 +296,11 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	public long getXMM64(final RegisterXMM r) {
+		return xmmLow[xmmIndex(r)];
+	}
+
+	@Override
 	public long[] get(final RegisterXMM r) {
 		final int i = xmmIndex(r);
 		return new long[] {xmmLow[i], xmmHigh[i]};
