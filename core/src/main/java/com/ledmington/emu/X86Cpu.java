@@ -138,6 +138,10 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	private static IllegalArgumentException unknownArgumentType(final Instruction inst) {
+		return new IllegalArgumentException(String.format("Unknown argument type '%s'.", inst.secondOperand()));
+	}
+
 	@Override
 	public void executeOne() {
 		assertIsRunning();
@@ -451,8 +455,7 @@ public class X86Cpu implements X86Emulator {
 					final MemoryAddress address = computeIndirectOperand(io);
 					rf.set(op1, mem.read4(address));
 				} else {
-					throw new IllegalArgumentException(
-							String.format("Unknown argument type '%s'.", inst.secondOperand()));
+					throw unknownArgumentType(inst);
 				}
 			}
 			case MOVD -> {
@@ -463,8 +466,7 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final Register32 op2) {
 					rf.setXMM32(op1, rf.get(op2));
 				} else {
-					throw new IllegalArgumentException(
-							String.format("Unknown argument type '%s'.", inst.secondOperand()));
+					throw unknownArgumentType(inst);
 				}
 			}
 			case MOVDQA -> {
@@ -473,8 +475,21 @@ public class X86Cpu implements X86Emulator {
 					final long[] xmm = rf.get(op2);
 					rf.set(op1, xmm[0], xmm[1]);
 				} else {
-					throw new IllegalArgumentException(
-							String.format("Unknown argument type '%s'.", inst.secondOperand()));
+					throw unknownArgumentType(inst);
+				}
+			}
+			case PUNPCKLDQ -> {
+				if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final RegisterXMM src) {
+					final long d = rf.getXMM64(dest);
+					final long s = rf.getXMM64(src);
+					final long destDword0 = d & 0x00000000ffffffffL;
+					final long destDword1 = d >>> 32;
+					final long srcDword0 = s & 0x00000000ffffffffL;
+					final long srcDword1 = s >>> 32;
+					rf.set(dest, (srcDword0 << 32) | destDword0, (srcDword1 << 32) | destDword1);
+				} else {
+					throw unknownArgumentType(inst);
 				}
 			}
 			case MOVABS -> rf.set((Register64) inst.firstOperand(), ((Immediate) inst.secondOperand()).asLong());

@@ -76,6 +76,14 @@ public interface ImmutableRegisterFile {
 	int getXMM32(RegisterXMM r);
 
 	/**
+	 * Returns the low 64 bits of the given 128-bit XMM register, as a long.
+	 *
+	 * @param r The register to be read.
+	 * @return The value of the low 64 bits of the register.
+	 */
+	long getXMM64(RegisterXMM r);
+
+	/**
 	 * Returns the full 128 bits of the given XMM register, as an array containing the low 64 bits at index 0 and the
 	 * high 64 bits at index 1.
 	 *
