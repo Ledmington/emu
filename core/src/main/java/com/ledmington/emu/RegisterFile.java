@@ -78,7 +78,7 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param low The new low 64 bits.
 	 * @param high The new high 64 bits.
 	 */
-	void setXMM(RegisterXMM r, long low, long high);
+	void set(RegisterXMM r, long low, long high);
 
 	/**
 	 * Sets the given flag to the given value.

@@ -82,7 +82,7 @@ public interface ImmutableRegisterFile {
 	 * @param r The register to be read.
 	 * @return A 2-element array {low, high} with the two 64-bit halves of the register.
 	 */
-	long[] getXMM(RegisterXMM r);
+	long[] get(RegisterXMM r);
 
 	/**
 	 * Checks whether the given flag is set.

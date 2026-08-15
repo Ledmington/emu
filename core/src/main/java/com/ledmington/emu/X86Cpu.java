@@ -306,6 +306,9 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a & b);
+				} else if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r1, imm, BitUtils::and);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					opSX(r1, imm, (a, b) -> a & b);
@@ -459,6 +462,16 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final RegisterXMM op1
 						&& inst.secondOperand() instanceof final Register32 op2) {
 					rf.setXMM32(op1, rf.get(op2));
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Unknown argument type '%s'.", inst.secondOperand()));
+				}
+			}
+			case MOVDQA -> {
+				if (inst.firstOperand() instanceof final RegisterXMM op1
+						&& inst.secondOperand() instanceof final RegisterXMM op2) {
+					final long[] xmm = rf.get(op2);
+					rf.set(op1, xmm[0], xmm[1]);
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'.", inst.secondOperand()));
@@ -745,13 +758,12 @@ public class X86Cpu implements X86Emulator {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
-	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
+	private void opSX(final Register8 op1, final Immediate imm, final BiFunction<Byte, Byte, Byte> task) {
 		op(
 				() -> rf.get(op1),
 				// FIXME: ugly
 				switch (imm.bits()) {
-					case 8 -> () -> (long) imm.asByte();
-					case 32 -> () -> (long) imm.asInt();
+					case 8 -> () -> imm.asByte();
 					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
 				},
 				task,
@@ -766,6 +778,20 @@ public class X86Cpu implements X86Emulator {
 				switch (imm.bits()) {
 					case 8 -> () -> (int) imm.asByte();
 					case 32 -> imm::asInt;
+					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
+				},
+				task,
+				result -> rf.set(op1, result),
+				true);
+	}
+
+	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
+		op(
+				() -> rf.get(op1),
+				// FIXME: ugly
+				switch (imm.bits()) {
+					case 8 -> () -> (long) imm.asByte();
+					case 32 -> () -> (long) imm.asInt();
 					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
 				},
 				task,
