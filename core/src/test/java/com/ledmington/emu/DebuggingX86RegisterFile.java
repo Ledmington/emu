@@ -146,6 +146,12 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	public long getXMM64(final RegisterXMM r) {
+		checkIsInitialized(r);
+		return this.rf.getXMM64(r);
+	}
+
+	@Override
 	public long[] get(final RegisterXMM r) {
 		checkIsInitialized(r);
 		return this.rf.get(r);
