@@ -329,7 +329,7 @@ final class TestX86RegisterFile {
 	@ParameterizedTest
 	@MethodSource("allXmmRegisters")
 	void initiallyAllZero(final RegisterXMM r) {
-		final long[] raw = regFile.getXMM(r);
+		final long[] raw = regFile.get(r);
 		assertEquals(
 				0x0000000000000000L,
 				raw[0],
@@ -376,9 +376,9 @@ final class TestX86RegisterFile {
 	void setXMMToValue(final RegisterXMM r) {
 		final long low = RNG.nextLong();
 		final long high = RNG.nextLong();
-		regFile.setXMM(r, low, high);
+		regFile.set(r, low, high);
 
-		final long[] raw = regFile.getXMM(r);
+		final long[] raw = regFile.get(r);
 		assertEquals(
 				low,
 				raw[0],
@@ -394,13 +394,13 @@ final class TestX86RegisterFile {
 	@ParameterizedTest
 	@MethodSource("allXmmRegisters")
 	void setXMMToValueShouldNotChangeOtherRegisters(final RegisterXMM r) {
-		regFile.setXMM(r, RNG.nextLong(), RNG.nextLong());
+		regFile.set(r, RNG.nextLong(), RNG.nextLong());
 
 		for (final RegisterXMM other : RegisterXMM.values()) {
 			if (r == other) {
 				continue;
 			}
-			final long[] raw = regFile.getXMM(other);
+			final long[] raw = regFile.get(other);
 			assertEquals(
 					0x0000000000000000L,
 					raw[0],
@@ -419,12 +419,12 @@ final class TestX86RegisterFile {
 	void setXMM32ZeroExtendsRestOfRegister(final RegisterXMM r) {
 		// getXMM32 can only observe the low 32 bits of the register, so, to verify that the other 96 bits are
 		// actually cleared (and not just stale from a previous instruction), we "dirty" the register beforehand.
-		regFile.setXMM(r, 0xffffffff00000000L, 0xffffffffffffffffL);
+		regFile.set(r, 0xffffffff00000000L, 0xffffffffffffffffL);
 
 		final int x = RNG.nextInt(1, Integer.MAX_VALUE);
 		regFile.setXMM32(r, x);
 
-		final long[] raw = regFile.getXMM(r);
+		final long[] raw = regFile.get(r);
 		assertEquals(
 				BitUtils.asLong(x),
 				raw[0],
