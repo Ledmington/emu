@@ -25,6 +25,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 
@@ -37,6 +38,10 @@ public final class X86RegisterFile implements RegisterFile {
 
 	// Segment registers
 	private final short[] seg = new short[6];
+
+	// 128-bit XMM registers, each split into its low and high 64 bits
+	private final long[] xmmLow = new long[32];
+	private final long[] xmmHigh = new long[32];
 
 	// instruction pointer
 	private long rip;
@@ -56,6 +61,8 @@ public final class X86RegisterFile implements RegisterFile {
 		final X86RegisterFile regs = (X86RegisterFile) regFile;
 		System.arraycopy(regs.gpr, 0, this.gpr, 0, 16);
 		System.arraycopy(regs.seg, 0, this.seg, 0, 6);
+		System.arraycopy(regs.xmmLow, 0, this.xmmLow, 0, 32);
+		System.arraycopy(regs.xmmHigh, 0, this.xmmHigh, 0, 32);
 		this.rip = regs.rip;
 		this.rflags = regs.rflags;
 	}
@@ -276,6 +283,69 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	public int getXMM32(final RegisterXMM r) {
+		return BitUtils.asInt(xmmLow[xmmIndex(r)]);
+	}
+
+	@Override
+	public void setXMM32(final RegisterXMM r, final int v) {
+		// Writing to the low 32 bits of an XMM register implicitly zero-extends into the full 128-bit register.
+		final int i = xmmIndex(r);
+		xmmLow[i] = BitUtils.asLong(v);
+		xmmHigh[i] = 0L;
+	}
+
+	@Override
+	public long[] getXMM(final RegisterXMM r) {
+		final int i = xmmIndex(r);
+		return new long[] {xmmLow[i], xmmHigh[i]};
+	}
+
+	@Override
+	public void setXMM(final RegisterXMM r, final long low, final long high) {
+		final int i = xmmIndex(r);
+		xmmLow[i] = low;
+		xmmHigh[i] = high;
+	}
+
+	private static int xmmIndex(final RegisterXMM r) {
+		return switch (r) {
+			case XMM0 -> 0;
+			case XMM1 -> 1;
+			case XMM2 -> 2;
+			case XMM3 -> 3;
+			case XMM4 -> 4;
+			case XMM5 -> 5;
+			case XMM6 -> 6;
+			case XMM7 -> 7;
+			case XMM8 -> 8;
+			case XMM9 -> 9;
+			case XMM10 -> 10;
+			case XMM11 -> 11;
+			case XMM12 -> 12;
+			case XMM13 -> 13;
+			case XMM14 -> 14;
+			case XMM15 -> 15;
+			case XMM16 -> 16;
+			case XMM17 -> 17;
+			case XMM18 -> 18;
+			case XMM19 -> 19;
+			case XMM20 -> 20;
+			case XMM21 -> 21;
+			case XMM22 -> 22;
+			case XMM23 -> 23;
+			case XMM24 -> 24;
+			case XMM25 -> 25;
+			case XMM26 -> 26;
+			case XMM27 -> 27;
+			case XMM28 -> 28;
+			case XMM29 -> 29;
+			case XMM30 -> 30;
+			case XMM31 -> 31;
+		};
+	}
+
+	@Override
 	public boolean isSet(final RFlags f) {
 		return (rflags & (1L << f.bit())) != 0L;
 	}
@@ -312,6 +382,10 @@ public final class X86RegisterFile implements RegisterFile {
 				+ Arrays.stream(SegmentRegister.values())
 						.map(r -> String.format("%s=0x%016x", r.name(), get(r)))
 						.collect(Collectors.joining(","))
+				+ ","
+				+ Arrays.stream(RegisterXMM.values())
+						.map(r -> String.format("%s=0x%016x%016x", r.name(), xmmHigh[xmmIndex(r)], xmmLow[xmmIndex(r)]))
+						.collect(Collectors.joining(","))
 				+ ",RFLAGS="
 				+ String.format("0x%016x", rflags) + ")";
 	}
@@ -324,6 +398,12 @@ public final class X86RegisterFile implements RegisterFile {
 		}
 		for (final short s : seg) {
 			h = 31 * h + Short.hashCode(s);
+		}
+		for (final long x : xmmLow) {
+			h = 31 * h + Long.hashCode(x);
+		}
+		for (final long x : xmmHigh) {
+			h = 31 * h + Long.hashCode(x);
 		}
 		h = 31 * h + Long.hashCode(rip);
 		h = 31 * h + Long.hashCode(rflags);
@@ -343,6 +423,8 @@ public final class X86RegisterFile implements RegisterFile {
 		}
 		return Arrays.equals(this.gpr, regs.gpr)
 				&& Arrays.equals(this.seg, regs.seg)
+				&& Arrays.equals(this.xmmLow, regs.xmmLow)
+				&& Arrays.equals(this.xmmHigh, regs.xmmHigh)
 				&& this.rip == regs.rip
 				&& this.rflags == regs.rflags;
 	}

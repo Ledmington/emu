@@ -35,6 +35,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.emu.config.CPUConfig;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryAddress;
@@ -346,13 +347,13 @@ public class X86Cpu implements X86Emulator {
 					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, _ -> {}, true);
 				} else if (inst.firstOperand() instanceof final Register8 r
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					op(() -> rf.get(r), () -> imm.asByte(), (a, b) -> a & b, _ -> {}, true);
+					op(() -> rf.get(r), imm::asByte, (a, b) -> a & b, _ -> {}, true);
 				} else if (inst.firstOperand() instanceof final Register32 r
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					op(() -> rf.get(r), () -> imm.asInt(), (a, b) -> a & b, _ -> {}, true);
+					op(() -> rf.get(r), imm::asInt, (a, b) -> a & b, _ -> {}, true);
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
-					op(() -> mem.read(computeIndirectOperand(io)), () -> imm.asByte(), (a, b) -> a & b, _ -> {}, true);
+					op(() -> mem.read(computeIndirectOperand(io)), imm::asByte, (a, b) -> a & b, _ -> {}, true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
@@ -446,6 +447,18 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final IndirectOperand io) {
 					final MemoryAddress address = computeIndirectOperand(io);
 					rf.set(op1, mem.read4(address));
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Unknown argument type '%s'.", inst.secondOperand()));
+				}
+			}
+			case MOVD -> {
+				if (inst.firstOperand() instanceof final RegisterXMM op1
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					rf.setXMM32(op1, mem.read4(computeIndirectOperand(io)));
+				} else if (inst.firstOperand() instanceof final RegisterXMM op1
+						&& inst.secondOperand() instanceof final Register32 op2) {
+					rf.setXMM32(op1, rf.get(op2));
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Unknown argument type '%s'.", inst.secondOperand()));
