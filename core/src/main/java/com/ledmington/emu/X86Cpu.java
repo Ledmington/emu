@@ -269,6 +269,29 @@ public class X86Cpu implements X86Emulator {
 					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
 				}
 			}
+			case OR -> {
+				if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
+					op(r1, r2, BitUtils::or);
+				} else if (inst.firstOperand() instanceof final Register16 r1
+						&& inst.secondOperand() instanceof final Register16 r2) {
+					op(r1, r2, BitUtils::or);
+				} else if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
+					op(r1, r2, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
+					op(r1, r2, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final Register32 r
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					op(r, io, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register32 r) {
+					op(io, r, (a, b) -> a | b);
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+				}
+			}
 			case AND -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
@@ -288,6 +311,13 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					opSX(r1, imm, (a, b) -> a & b);
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
+				}
+			}
+			case NOT -> {
+				if (inst.firstOperand() instanceof final Register32 r) {
+					op(() -> rf.get(r), () -> 0, (a, b) -> ~a, result -> rf.set(r, result), true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
@@ -314,6 +344,15 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, _ -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register8 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(() -> rf.get(r), () -> imm.asByte(), (a, b) -> a & b, _ -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register32 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(() -> rf.get(r), () -> imm.asInt(), (a, b) -> a & b, _ -> {}, true);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(() -> mem.read(computeIndirectOperand(io)), () -> imm.asByte(), (a, b) -> a & b, _ -> {}, true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
@@ -585,6 +624,16 @@ public class X86Cpu implements X86Emulator {
 
 	private void jumpTo(final long offset) {
 		instFetch.setPosition(instFetch.getPosition() + offset);
+	}
+
+	private void op(final Register32 op1, final IndirectOperand io, final BiFunction<Integer, Integer, Integer> task) {
+		final MemoryAddress address = computeIndirectOperand(io);
+		op(() -> rf.get(op1), () -> mem.read4(address), task, result -> rf.set(op1, result), true);
+	}
+
+	private void op(final IndirectOperand io, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
+		final MemoryAddress address = computeIndirectOperand(io);
+		op(() -> mem.read4(address), () -> rf.get(op2), task, result -> mem.write(address, result), true);
 	}
 
 	private void op(final IndirectOperand iop, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
