@@ -94,9 +94,9 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	}
 
 	@Override
-	public void setXMM(final RegisterXMM r, final long low, final long high) {
+	public void set(final RegisterXMM r, final long low, final long high) {
 		this.initialized.add(r);
-		this.rf.setXMM(r, low, high);
+		this.rf.set(r, low, high);
 	}
 
 	@Override
@@ -146,9 +146,9 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	}
 
 	@Override
-	public long[] getXMM(final RegisterXMM r) {
+	public long[] get(final RegisterXMM r) {
 		checkIsInitialized(r);
-		return this.rf.getXMM(r);
+		return this.rf.get(r);
 	}
 
 	@Override
