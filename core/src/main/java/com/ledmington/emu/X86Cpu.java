@@ -275,7 +275,8 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r) {
 					opSX(r, (Immediate) inst.secondOperand(), (x, i) -> x >>> i);
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with SHR and %s.", inst.firstOperand()));
 				}
 			}
 			case SAR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
@@ -292,7 +293,8 @@ public class X86Cpu implements X86Emulator {
 							result -> rf.set(r, result),
 							true);
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with SHL and %s.", inst.firstOperand()));
 				}
 			}
 			case XOR -> {
@@ -309,7 +311,8 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a ^ b);
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with XOR and %s.", inst.firstOperand()));
 				}
 			}
 			case OR -> {
@@ -957,12 +960,13 @@ public class X86Cpu implements X86Emulator {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
+	@SuppressWarnings("PMD.TooFewBranchesForSwitch")
 	private void opSX(final Register8 op1, final Immediate imm, final BiFunction<Byte, Byte, Byte> task) {
 		op(
 				() -> rf.get(op1),
 				// FIXME: ugly
 				switch (imm.bits()) {
-					case 8 -> () -> imm.asByte();
+					case 8 -> imm::asByte;
 					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
 				},
 				task,
