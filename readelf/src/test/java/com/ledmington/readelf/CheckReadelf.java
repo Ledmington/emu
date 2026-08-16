@@ -18,16 +18,12 @@
 package com.ledmington.readelf;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import com.ledmington.utils.ProcessUtils;
 import com.ledmington.utils.TerminalUtils;
@@ -39,54 +35,8 @@ public final class CheckReadelf {
 	private static final PrintWriter out = System.console() != null
 			? System.console().writer()
 			: new PrintWriter(System.out, false, StandardCharsets.UTF_8);
-	private static final String fatJarPath;
-
-	static {
-		try (Stream<Path> s = Files.find(
-						Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
-				.filter(p -> p.getFileName().toString().startsWith("emu-readelf")
-						&& p.getFileName().toString().endsWith(".jar"))) {
-			fatJarPath = s.max(Comparator.comparingLong(a -> a.toFile().length()))
-					.orElseThrow()
-					.normalize()
-					.toAbsolutePath()
-					.toString();
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
 
 	private CheckReadelf() {}
-
-	private static boolean isELF(final Path p) {
-		try (InputStream is = Files.newInputStream(p, StandardOpenOption.READ)) {
-			final int expectedBytes = 4;
-			final byte[] buffer = new byte[expectedBytes];
-			final int bytesRead = is.read(buffer);
-			return bytesRead == expectedBytes
-					&& buffer[0] == (byte) 0x7f
-					&& buffer[1] == (byte) 0x45
-					&& buffer[2] == (byte) 0x4c
-					&& buffer[3] == (byte) 0x46;
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private static String runSystemReadelf(final Path p, final boolean wide) {
-		final String systemReadelf = "/usr/bin/readelf";
-		final String[] cmd = wide
-				? new String[] {systemReadelf, "-a", "-W", p.toString()}
-				: new String[] {systemReadelf, "-a", p.toString()};
-		return ProcessUtils.run(cmd);
-	}
-
-	private static String runCustomReadelf(final Path p, final boolean wide) {
-		final String[] cmd = wide
-				? new String[] {"java", "-jar", fatJarPath, "-a", "-W", p.toString()}
-				: new String[] {"java", "-jar", fatJarPath, "-a", p.toString()};
-		return ProcessUtils.run(cmd);
-	}
 
 	private static void checkDiff(final String expected, final String actual) {
 		if (expected.equals(actual)) {
@@ -121,8 +71,8 @@ public final class CheckReadelf {
 
 	private static void test(final Path p, final boolean wide) {
 		out.print(p.toString() + (wide ? " (wide)" : "") + " ... ");
-		final String outputSystemReadelf = runSystemReadelf(p, wide);
-		final String outputCustomReadelf = runCustomReadelf(p, wide);
+		final String outputSystemReadelf = ReadelfSystemComparison.runSystemReadelf(p, wide);
+		final String outputCustomReadelf = ReadelfSystemComparison.runCustomReadelf(p, wide);
 		checkDiff(outputSystemReadelf, outputCustomReadelf);
 	}
 
@@ -149,7 +99,7 @@ public final class CheckReadelf {
 				out.printf("File '%s' does not exist, skipping it.%n", p);
 				continue;
 			}
-			if (!isELF(p)) {
+			if (!ReadelfSystemComparison.isELF(p)) {
 				out.printf("File '%s' is not an ELF, skipping it.%n", p);
 				continue;
 			}
