@@ -201,6 +201,20 @@ public class X86Cpu implements X86Emulator {
 								String.format("Don't know what to do with SUB and %s.", inst.firstOperand()));
 				}
 			}
+			case SBB -> {
+				if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
+					op(
+							r1,
+							r2,
+							(a, b) -> a - b - (rf.isSet(RFlags.CARRY) ? 1 : 0),
+							(a, b) -> MathUtils.willCarrySbb(a, b, rf.isSet(RFlags.CARRY)),
+							(a, b) -> MathUtils.willOverflowSbb(a, b, rf.isSet(RFlags.CARRY)));
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with SBB and %s.", inst.firstOperand()));
+				}
+			}
 			case ADD -> {
 				switch (inst.firstOperand()) {
 					case Register8 op1 ->
