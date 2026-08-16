@@ -168,15 +168,6 @@ public final class EvexPrefix implements InstructionPrefix {
 	}
 
 	/**
-	 * Returns the M field value.
-	 *
-	 * @return The M field.
-	 */
-	public byte m() {
-		return m;
-	}
-
-	/**
 	 * Returns the W bit value.
 	 *
 	 * @return The W bit.
@@ -194,6 +185,15 @@ public final class EvexPrefix implements InstructionPrefix {
 	@Override
 	public byte v() {
 		return v;
+	}
+
+	/**
+	 * Returns the P field value.
+	 *
+	 * @return The P field.
+	 */
+	public byte p() {
+		return p;
 	}
 
 	/**

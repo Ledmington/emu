@@ -114,11 +114,11 @@ import static com.ledmington.cpu.x86.RegisterXMM.XMM12;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM13;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM14;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM15;
-import static com.ledmington.cpu.x86.RegisterXMM.XMM16;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM17;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM18;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM2;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM3;
+import static com.ledmington.cpu.x86.RegisterXMM.XMM30;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM4;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM5;
 import static com.ledmington.cpu.x86.RegisterXMM.XMM6;
@@ -10321,7 +10321,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new GeneralInstruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"),
 				// Vmovq
 				test(new GeneralInstruction(Opcode.VMOVQ, RDI, XMM0), "vmovq rdi,xmm0", "c4 e1 f9 7e c7"),
-				test(new GeneralInstruction(Opcode.VMOVQ, RDI, XMM16), "vmovq rdi,xmm16", "62 e1 fd 08 7e c7"),
+				test(new GeneralInstruction(Opcode.VMOVQ, RSI, XMM30), "vmovq rsi,xmm30", "62 61 fd 08 7e f6"),
+				test(new GeneralInstruction(Opcode.VMOVQ, XMM0, XMM1), "vmovq xmm0,xmm1", "c5 fa 7e c1"),
+				test(new GeneralInstruction(Opcode.VMOVQ, XMM9, XMM18), "vmovq xmm9,xmm18", "62 31 fe 08 7e ca"),
+				test(new GeneralInstruction(Opcode.VMOVQ, XMM18, XMM9), "vmovq xmm18,xmm9", "62 c1 fe 08 7e d1"),
 				test(
 						new GeneralInstruction(
 								Opcode.VMOVQ,
@@ -10356,6 +10359,30 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								XMM0),
 						"vmovq QWORD PTR [rdi],xmm0",
 						"c5 f9 d6 07"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVQ,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.index(R9)
+										.scale(1)
+										.build()),
+						"vmovq xmm0,QWORD PTR [rdi+r9*1]",
+						"c4 a1 7a 7e 04 0f"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVQ,
+								XMM17,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.index(R9)
+										.scale(1)
+										.build()),
+						"vmovq xmm17,QWORD PTR [rdi+r9*1]",
+						"62 a1 fd 08 6e 0c 0f"),
 				// Vmovd
 				test(
 						new GeneralInstruction(
