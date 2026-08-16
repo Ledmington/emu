@@ -41,6 +41,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryAddress;
@@ -68,6 +69,9 @@ final class TestExecution {
 			r64.stream().flatMap(a -> r64.stream().map(b -> Arguments.of(a, b))).toList();
 	private static final List<Arguments> r64r32 =
 			r64.stream().flatMap(a -> r32.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<RegisterXMM> xmm = Arrays.asList(RegisterXMM.values());
+	private static final List<Arguments> xmmR64 =
+			xmm.stream().flatMap(a -> r64.stream().map(b -> Arguments.of(a, b))).toList();
 	private static final List<Supplier<IndirectOperandBuilder>> indirectOperands = List.of(
 			() -> IndirectOperand.builder().base(Register32.EAX),
 			() -> IndirectOperand.builder().base(Register64.RAX),
@@ -197,6 +201,10 @@ final class TestExecution {
 
 	private static Stream<Arguments> r64m64() {
 		return r64m64.stream();
+	}
+
+	private static Stream<Arguments> xmmR64() {
+		return xmmR64.stream();
 	}
 
 	@ParameterizedTest
@@ -643,6 +651,19 @@ final class TestExecution {
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("xmmR64")
+	void movqXmmFromR64(final RegisterXMM dest, final Register64 src) {
+		final long value = cpu.getRegisters().get(src);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(dest, value, 0L);
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVQ, dest, src));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),

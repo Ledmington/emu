@@ -502,7 +502,10 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case MOVQ -> {
-				if (inst.firstOperand() instanceof final IndirectOperand io
+				if (inst.firstOperand() instanceof final RegisterXMM r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
+					rf.set(r1, rf.get(r2), 0L);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final RegisterXMM r) {
 					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, rf.getXMM64(r));
