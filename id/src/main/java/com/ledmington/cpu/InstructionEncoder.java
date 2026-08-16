@@ -1904,7 +1904,8 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.RDSSPQ && isFirstER(inst))
 				|| (inst.opcode() == Opcode.INCSSPQ && isFirstER(inst))
 				|| (inst.opcode() == Opcode.RCR && isFirstER(inst))
-				|| (inst.opcode() == Opcode.RCR && hasExtendedBase(inst.firstOperand()))) {
+				|| (inst.opcode() == Opcode.RCR && hasExtendedBase(inst.firstOperand()))
+				|| (inst.opcode() == Opcode.LEA && hasExtendedBase(inst.secondOperand()))) {
 			rex = or(rex, (byte) 0b0001);
 		}
 		if (rex != DEFAULT_REX_PREFIX || isFirstRexR8(inst) || isSecondRexR8(inst)) {
