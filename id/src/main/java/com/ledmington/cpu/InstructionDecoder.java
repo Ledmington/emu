@@ -45,6 +45,7 @@ import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.IndirectOperandBuilder;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionBuilder;
+import com.ledmington.cpu.x86.InstructionPrefix;
 import com.ledmington.cpu.x86.LegacyPrefix;
 import com.ledmington.cpu.x86.MaskRegister;
 import com.ledmington.cpu.x86.ModRM;
@@ -1105,28 +1106,16 @@ public final class InstructionDecoder {
 		return Registers.combine(rex.r(), modrm.reg());
 	}
 
-	private static byte getByteFromReg(final Vex2Prefix vex2, final ModRM modrm) {
-		return Registers.combine(!vex2.r(), modrm.reg());
-	}
-
-	private static byte getByteFromReg(final Vex3Prefix vex3, final ModRM modrm) {
-		return Registers.combine(!vex3.r(), modrm.reg());
-	}
-
-	private static byte getByteFromReg(final EvexPrefix evex, final ModRM modrm) {
-		return Registers.combine(!evex.r(), modrm.reg());
+	private static byte getByteFromReg(final InstructionPrefix prefix, final ModRM modrm) {
+		return Registers.combine(!prefix.r(), modrm.reg());
 	}
 
 	private static byte getByteFromRM(final Prefixes pref, final ModRM modrm) {
 		return Registers.combine(pref.hasRexPrefix() && pref.rex().b(), modrm.rm());
 	}
 
-	private static byte getByteFromRM(final Vex3Prefix vex3, final ModRM modrm) {
-		return Registers.combine(!vex3.b(), modrm.rm());
-	}
-
-	private static byte getByteFromRM(final EvexPrefix evex, final ModRM modrm) {
-		return Registers.combine(!evex.b(), modrm.rm());
+	private static byte getByteFromRM(final InstructionPrefix prefix, final ModRM modrm) {
+		return Registers.combine(!prefix.b(), modrm.rm());
 	}
 
 	private static Instruction parse2BytesOpcode(
@@ -3630,16 +3619,8 @@ public final class InstructionDecoder {
 		};
 	}
 
-	private static byte getByteFromV(final Vex2Prefix vex2) {
-		return and(not(vex2.v()), (byte) 0b00001111);
-	}
-
-	private static byte getByteFromV(final Vex3Prefix vex3) {
-		return and(not(vex3.v()), (byte) 0b00001111);
-	}
-
-	private static byte getByteFromV(final EvexPrefix evex) {
-		return and(not(evex.v()), (byte) 0b00001111);
+	private static byte getByteFromV(final InstructionPrefix prefix) {
+		return and(not(prefix.v()), (byte) 0b00001111);
 	}
 
 	private static Instruction parseVex2Opcodes(
