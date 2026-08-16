@@ -71,6 +71,7 @@ public final class Vex2Prefix implements InstructionPrefix {
 	 *
 	 * @return True if the R bit is set, false otherwise.
 	 */
+	@Override
 	public boolean r() {
 		return r;
 	}
@@ -95,6 +96,7 @@ public final class Vex2Prefix implements InstructionPrefix {
 	 *
 	 * @return The 4-bit V field.
 	 */
+	@Override
 	public byte v() {
 		return v;
 	}
