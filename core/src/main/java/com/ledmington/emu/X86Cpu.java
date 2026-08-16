@@ -270,7 +270,22 @@ public class X86Cpu implements X86Emulator {
 				}
 			}
 			case SAR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
-			case SHL -> op((Register64) inst.firstOperand(), (Register8) inst.secondOperand(), (r, i) -> r << i);
+			case SHL -> {
+				if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
+					op(r1, r2, (r, i) -> r << i);
+				} else if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(
+							() -> rf.get(r),
+							() -> (long) imm.asByte(),
+							(reg, i) -> reg << i,
+							result -> rf.set(r, result),
+							true);
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+				}
+			}
 			case XOR -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
@@ -611,6 +626,11 @@ public class X86Cpu implements X86Emulator {
 					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
 				}
 			}
+			case CMOVB -> {
+				if (rf.isSet(RFlags.CARRY)) {
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				}
+			}
 			case CMOVBE -> {
 				if (rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO)) {
 					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
@@ -618,6 +638,11 @@ public class X86Cpu implements X86Emulator {
 			}
 			case CMOVNS -> {
 				if (!rf.isSet(RFlags.SIGN)) {
+					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				}
+			}
+			case CMOVG -> {
+				if (!rf.isSet(RFlags.ZERO) && !rf.isSet(RFlags.SIGN)) {
 					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
 				}
 			}
