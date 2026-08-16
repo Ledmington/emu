@@ -54,7 +54,11 @@ tasks.register('fatJar', Jar) {
 
 tasks.build.dependsOn(fatJar)
 tasks.javadoc.enabled = false
-tasks.test.enabled = false
+
+tasks.test {
+    dependsOn fatJar
+    systemProperty 'e2eTestFilesDir', rootProject.file(path('core', 'src', 'test', 'resources', 'generated')).absolutePath
+}
 
 tasks.register('checkReadelf', JavaExec) {
     group = 'verification'
