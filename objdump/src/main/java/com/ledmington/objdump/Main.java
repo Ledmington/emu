@@ -60,10 +60,7 @@ public final class Main {
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			out.println();
-			out.flush();
-		}));
+		Runtime.getRuntime().addShutdownHook(new Thread(out::flush));
 
 		String filename = null;
 		boolean disassembleExecutableSections = false;
@@ -110,10 +107,15 @@ public final class Main {
 		out.println();
 
 		if (disassembleExecutableSections) {
+			boolean isFirstSection = true;
 			for (int i = 0; i < elf.getSectionTableLength(); i++) {
 				final Section s = elf.getSection(i);
 				if (!s.header().getFlags().contains(SectionHeaderFlags.SHT_EXECINSTR)) {
 					continue;
+				}
+
+				if (!isFirstSection) {
+					out.println();
 				}
 
 				try {
@@ -123,10 +125,10 @@ public final class Main {
 					out.flush();
 					throw t;
 				}
+				isFirstSection = false;
 			}
 		}
 
-		out.println();
 		out.flush();
 		System.exit(0);
 	}
@@ -213,8 +215,6 @@ public final class Main {
 				out.println();
 			}
 		}
-
-		out.println();
 	}
 
 	private static long getAsLong(final Immediate imm) {
@@ -249,8 +249,10 @@ public final class Main {
 
 			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
 				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
-				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
-				if (!isFunction) {
+				final SymbolTableEntryType type = ste.info().getType();
+				final boolean isLabelWorthy =
+						type == SymbolTableEntryType.STT_FUNC || type == SymbolTableEntryType.STT_NOTYPE;
+				if (!isLabelWorthy) {
 					continue;
 				}
 				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));

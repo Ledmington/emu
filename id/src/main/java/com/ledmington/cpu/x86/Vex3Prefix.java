@@ -138,4 +138,14 @@ public final class Vex3Prefix implements InstructionPrefix {
 	public byte v() {
 		return v;
 	}
+
+	/**
+	 * Returns the value of the mandatory-prefix (pp) field in this VEX3 prefix: 0 for none, 1 for 0x66, 2 for 0xf3, 3
+	 * for 0xf2.
+	 *
+	 * @return The 2-bit mandatory-prefix field.
+	 */
+	public byte p() {
+		return p;
+	}
 }
