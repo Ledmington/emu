@@ -612,39 +612,25 @@ public class X86Cpu implements X86Emulator {
 				popInto(Register64.RBP);
 			}
 			case CMOVE -> {
-				if (rf.isSet(RFlags.ZERO)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVNE -> {
-				if (!rf.isSet(RFlags.ZERO)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(!rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVA -> {
-				if (!rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(!rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVB -> {
-				if (rf.isSet(RFlags.CARRY)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(rf.isSet(RFlags.CARRY), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVBE -> {
-				if (rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVNS -> {
-				if (!rf.isSet(RFlags.SIGN)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(!rf.isSet(RFlags.SIGN), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVG -> {
-				if (!rf.isSet(RFlags.ZERO) && !rf.isSet(RFlags.SIGN)) {
-					rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
-				}
+				moveIf(!rf.isSet(RFlags.ZERO) && !rf.isSet(RFlags.SIGN), inst.firstOperand(), inst.secondOperand());
 			}
 			case XCHG -> {
 				final Operand op1 = inst.firstOperand();
@@ -695,6 +681,38 @@ public class X86Cpu implements X86Emulator {
 			default ->
 				throw new IllegalArgumentException(
 						String.format("Unknown instruction '%s'.", InstructionEncoder.toIntelSyntax(inst)));
+		}
+	}
+
+	private void moveIf(final boolean condition, final Operand op1, final Operand op2) {
+		if (!condition) {
+			return;
+		}
+		switch (op1) {
+			case Register32 r1 -> {
+				final int value =
+						switch (op2) {
+							case Register32 r2 -> rf.get(r2);
+							case IndirectOperand io -> mem.read4(computeIndirectOperand(io));
+							default ->
+								throw new IllegalArgumentException(
+										String.format("Unexpected conditional move operand: '%s'.", op2));
+						};
+				rf.set(r1, value);
+			}
+			case Register64 r1 -> {
+				final long value =
+						switch (op2) {
+							case Register64 r2 -> rf.get(r2);
+							case IndirectOperand io -> mem.read8(computeIndirectOperand(io));
+							default ->
+								throw new IllegalArgumentException(
+										String.format("Unexpected conditional move operand: '%s'.", op2));
+						};
+				rf.set(r1, value);
+			}
+			default ->
+				throw new IllegalArgumentException(String.format("Unexpected conditional move operand: '%s'.", op1));
 		}
 	}
 
