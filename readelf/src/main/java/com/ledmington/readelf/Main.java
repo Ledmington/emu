@@ -35,7 +35,6 @@ import com.ledmington.elf.FileType;
 import com.ledmington.elf.ISA;
 import com.ledmington.elf.OSABI;
 import com.ledmington.elf.PHTEntry;
-import com.ledmington.elf.PHTEntryFlags;
 import com.ledmington.elf.PHTEntryType;
 import com.ledmington.elf.ProgramHeaderTable;
 import com.ledmington.elf.SectionTable;
@@ -97,6 +96,7 @@ public final class Main {
 	private static final String SYMBOL_NAME_SUFFIX = "[...]";
 	private static final short VERSYM_VERSION = (short) 0x7fff;
 	private static final short VERSYM_HIDDEN = (short) 0x8000;
+	private static final long DF_1_PIE = 0x08000000L;
 
 	private Main() {}
 
@@ -339,28 +339,36 @@ public final class Main {
 
 		if (displayRelocationSections) {
 			final Optional<Section> reladyn = elf.getSectionByName(".rela.dyn");
-			if (reladyn.isPresent()) {
-				printRelocationSection(
-						(RelocationAddendSection) reladyn.orElseThrow(),
-						(GnuVersionSection) gv.orElse(null),
-						(GnuVersionRequirementsSection) gvr.orElse(null),
-						elf,
-						elf.getFileHeader().is32Bit());
-				out.println("No processor specific unwind information to decode");
-				out.println();
+			final Optional<Section> relaplt = elf.getSectionByName(".rela.plt");
+
+			if (reladyn.isEmpty() && relaplt.isEmpty()) {
+				out.println("There are no relocations in this file.");
+			} else {
+				if (reladyn.isPresent()) {
+					printRelocationSection(
+							(RelocationAddendSection) reladyn.orElseThrow(),
+							(GnuVersionSection) gv.orElse(null),
+							(GnuVersionRequirementsSection) gvr.orElse(null),
+							elf,
+							elf.getFileHeader().is32Bit());
+				}
+
+				if (reladyn.isPresent() && relaplt.isPresent()) {
+					out.println();
+				}
+
+				if (relaplt.isPresent()) {
+					printRelocationSection(
+							(RelocationAddendSection) relaplt.orElseThrow(),
+							(GnuVersionSection) gv.orElse(null),
+							(GnuVersionRequirementsSection) gvr.orElse(null),
+							elf,
+							elf.getFileHeader().is32Bit());
+				}
 			}
 
-			final Optional<Section> relaplt = elf.getSectionByName(".rela.plt");
-			if (relaplt.isPresent()) {
-				printRelocationSection(
-						(RelocationAddendSection) relaplt.orElseThrow(),
-						(GnuVersionSection) gv.orElse(null),
-						(GnuVersionRequirementsSection) gvr.orElse(null),
-						elf,
-						elf.getFileHeader().is32Bit());
-				out.println("No processor specific unwind information to decode");
-				out.println();
-			}
+			out.println("No processor specific unwind information to decode");
+			out.println();
 		}
 
 		if (displayDynamicSymbolTable) {
@@ -399,9 +407,17 @@ public final class Main {
 			out.println();
 		}
 
+		final boolean hasAnyNoteSection = displayNoteSections
+				&& IntStream.range(0, elf.getSectionTableLength())
+						.mapToObj(elf::getSection)
+						.anyMatch(s -> s.getName().startsWith(".note"));
+
 		if (displayVersionSections) {
 			if (gv.isEmpty() && gvr.isEmpty()) {
 				out.println("No version information found in this file.");
+				if (hasAnyNoteSection) {
+					out.println();
+				}
 			} else {
 				if (gv.isPresent()) {
 					printVersionSection(
@@ -412,8 +428,8 @@ public final class Main {
 				}
 
 				printVersionSection((GnuVersionRequirementsSection) gvr.orElseThrow(), elf);
+				out.println();
 			}
-			out.println();
 		}
 
 		if (displayNoteSections) {
@@ -1546,33 +1562,14 @@ public final class Main {
 	}
 
 	private static String getProperDynDescription(final ELF elf) {
-		final boolean hasDynamicSection = elf.getSectionByName(".dynamic").isPresent();
-		final boolean hasDynamicSegment = IntStream.range(0, elf.getProgramHeaderTableLength())
-				.mapToObj(elf::getProgramHeader)
-				.anyMatch(phte -> phte.type() == PHTEntryType.PT_DYNAMIC);
+		final Optional<Section> dyn = elf.getSectionByName(".dynamic");
+		final boolean isPie = dyn.isPresent()
+				&& IntStream.range(0, ((DynamicSection) dyn.orElseThrow()).getTableLength())
+						.mapToObj(((DynamicSection) dyn.orElseThrow())::getEntry)
+						.anyMatch(dte ->
+								dte.getTag() == DynamicTableEntryTag.DT_FLAGS_1 && (dte.getContent() & DF_1_PIE) != 0L);
 
-		final boolean hasEntrypoint = elf.getFileHeader().entryPointVirtualAddress() != 0L;
-		final boolean hasExecutableSegment = IntStream.range(0, elf.getProgramHeaderTableLength())
-				.mapToObj(elf::getProgramHeader)
-				.anyMatch(phte ->
-						phte.type() == PHTEntryType.PT_LOAD && (phte.flags() & PHTEntryFlags.PF_X.getCode()) != 0);
-
-		final boolean isSharedObject = hasDynamicSection || hasDynamicSegment;
-		final boolean isPIE = hasEntrypoint && hasExecutableSegment;
-
-		if (isPIE) {
-			if (isSharedObject) {
-				return "Shared Object or Position-Independent Executable file";
-			} else {
-				return "Position-Independent Executable file";
-			}
-		} else {
-			if (isSharedObject) {
-				return "Shared Object";
-			} else {
-				throw new AssertionError("ET_DYN ELF is neither a shared object nor a PIE executable");
-			}
-		}
+		return isPie ? "Position-Independent Executable file" : "Shared object file";
 	}
 
 	private static void printHelp() {
