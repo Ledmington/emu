@@ -3877,6 +3877,21 @@ public final class InstructionDecoder {
 		return switch (opcodeFirstByte) {
 			case VMOVQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final byte MANDATORY_PREFIX_F3 = (byte) 2;
+				if (vex3.p() == MANDATORY_PREFIX_F3) {
+					// VEX.128.F3.0F 7E /r: VMOVQ xmm1, xmm2/m64
+					yield Instruction.builder()
+							.opcode(Opcode.VMOVQ)
+							.op(RegisterXMM.fromByte(getByteFromReg(vex3, modrm)))
+							.op(
+									isIndirectOperandNeeded(modrm)
+											? parseIndirectOperand(b, pref, modrm)
+													.pointer(PointerSize.QWORD_PTR)
+													.build()
+											: RegisterXMM.fromByte(getByteFromRM(vex3, modrm)))
+							.build();
+				}
+				// VEX.128.66.0F.W1 7E /r: VMOVQ r64/m64, xmm1
 				yield Instruction.builder()
 						.opcode(Opcode.VMOVQ)
 						.op(Register64.fromByte(getByteFromRM(vex3, modrm)))
