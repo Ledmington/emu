@@ -247,6 +247,15 @@ public class X86Cpu implements X86Emulator {
 							case Register64 op2 ->
 								op(op1, op2, Long::sum, MathUtils::willCarryAdd, MathUtils::willOverflowAdd);
 							case Immediate imm -> opSX(op1, imm, Long::sum);
+							case IndirectOperand io ->
+								op(
+										() -> rf.get(op1),
+										() -> mem.read8(computeIndirectOperand(io)),
+										Long::sum,
+										result -> rf.set(op1, result),
+										true,
+										MathUtils::willCarryAdd,
+										MathUtils::willOverflowAdd);
 							default ->
 								throw new IllegalArgumentException(String.format(
 										"Don't know what to do with ADD, %s and %s.",
@@ -351,6 +360,41 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					opSX(r1, imm, (a, b) -> a & b);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					final MemoryAddress address = computeIndirectOperand(io);
+					final long signExtendedImm = getAsLongSX(imm);
+					switch (io.getPointerSize()) {
+						case BYTE_PTR ->
+							op(
+									() -> mem.read(address),
+									() -> BitUtils.asByte(signExtendedImm),
+									BitUtils::and,
+									result -> mem.write(address, result),
+									true);
+						case WORD_PTR ->
+							op(
+									() -> mem.read2(address),
+									() -> BitUtils.asShort(signExtendedImm),
+									BitUtils::and,
+									result -> mem.write(address, result),
+									true);
+						case DWORD_PTR ->
+							op(
+									() -> mem.read4(address),
+									() -> BitUtils.asInt(signExtendedImm),
+									(a, b) -> a & b,
+									result -> mem.write(address, result),
+									true);
+						case QWORD_PTR ->
+							op(
+									() -> mem.read8(address),
+									() -> signExtendedImm,
+									(a, b) -> a & b,
+									result -> mem.write(address, result),
+									true);
+						default -> throw unknownArgumentType(inst);
+					}
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
@@ -399,7 +443,13 @@ public class X86Cpu implements X86Emulator {
 			}
 
 			// Jumps
-			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
+			case JMP -> {
+				if (inst.firstOperand() instanceof final Immediate imm) {
+					jumpTo(getAsLongSX(imm));
+				} else {
+					rf.set(Register64.RIP, getAsLongSX(inst.firstOperand()));
+				}
+			}
 			case JE /*, JZ */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.ZERO));
 			case JNE /*, JNZ */ -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.ZERO));
 			case JA /*, JNBE */ ->
@@ -481,7 +531,13 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					final MemoryAddress address = computeIndirectOperand(io);
-					mem.write(address, imm.asInt());
+					switch (io.getPointerSize()) {
+						case BYTE_PTR -> mem.write(address, imm.asByte());
+						case WORD_PTR -> mem.write(address, imm.asShort());
+						case DWORD_PTR -> mem.write(address, imm.asInt());
+						case QWORD_PTR -> mem.write(address, (long) imm.asInt());
+						default -> throw unknownArgumentType(inst);
+					}
 				} else if (inst.firstOperand() instanceof final Register32 op1
 						&& inst.secondOperand() instanceof final IndirectOperand io) {
 					final MemoryAddress address = computeIndirectOperand(io);
@@ -509,19 +565,24 @@ public class X86Cpu implements X86Emulator {
 						&& inst.secondOperand() instanceof final RegisterXMM r) {
 					final MemoryAddress address = computeIndirectOperand(io);
 					mem.write(address, rf.getXMM64(r));
+				} else if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					final MemoryAddress address = computeIndirectOperand(io);
+					rf.set(dest, mem.read8(address), 0L);
 				} else {
 					throw unknownArgumentType(inst);
 				}
 			}
-			case MOVDQA -> {
-				if (inst.firstOperand() instanceof final RegisterXMM op1
-						&& inst.secondOperand() instanceof final RegisterXMM op2) {
-					final long[] xmm = rf.get(op2);
-					rf.set(op1, xmm[0], xmm[1]);
+			case MOVHPS -> {
+				if (inst.firstOperand() instanceof final RegisterXMM r
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					final long high = mem.read8(computeIndirectOperand(io));
+					rf.set(r, rf.getXMM64(r), high);
 				} else {
 					throw unknownArgumentType(inst);
 				}
 			}
+			case MOVDQA, MOVAPS, MOVUPS -> movXmm(inst);
 			case PUNPCKLDQ -> {
 				if (inst.firstOperand() instanceof final RegisterXMM dest
 						&& inst.secondOperand() instanceof final RegisterXMM src) {
@@ -532,6 +593,16 @@ public class X86Cpu implements X86Emulator {
 					final long srcDword0 = s & 0x00000000ffffffffL;
 					final long srcDword1 = s >>> 32;
 					rf.set(dest, (srcDword0 << 32) | destDword0, (srcDword1 << 32) | destDword1);
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
+			case PAND -> {
+				if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final RegisterXMM src) {
+					final long[] d = rf.get(dest);
+					final long[] s = rf.get(src);
+					rf.set(dest, d[0] & s[0], d[1] & s[1]);
 				} else {
 					throw unknownArgumentType(inst);
 				}
@@ -601,8 +672,9 @@ public class X86Cpu implements X86Emulator {
 				if (inst.firstOperand() instanceof final Immediate imm) {
 					final long relativeAddress = getAsLongSX(imm);
 					jumpAddress = rip + relativeAddress;
-				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
-					jumpAddress = computeIndirectOperand(io).address();
+				} else if (inst.firstOperand() instanceof IndirectOperand
+						|| inst.firstOperand() instanceof Register64) {
+					jumpAddress = getAsLongSX(inst.firstOperand());
 				} else {
 					throw new IllegalStateException();
 				}
@@ -744,6 +816,27 @@ public class X86Cpu implements X86Emulator {
 			mem.write(computeIndirectOperand(io), value);
 		} else {
 			throw new IllegalArgumentException(String.format("Don't know what to do with SETcc and %s.", operand));
+		}
+	}
+
+	/** Executes a plain 128-bit XMM move between two registers, a register and memory, or memory and a register. */
+	private void movXmm(final Instruction inst) {
+		if (inst.firstOperand() instanceof final RegisterXMM dest
+				&& inst.secondOperand() instanceof final RegisterXMM src) {
+			final long[] xmm = rf.get(src);
+			rf.set(dest, xmm[0], xmm[1]);
+		} else if (inst.firstOperand() instanceof final RegisterXMM dest
+				&& inst.secondOperand() instanceof final IndirectOperand io) {
+			final MemoryAddress address = computeIndirectOperand(io);
+			rf.set(dest, mem.read8(address), mem.read8(address.plus(8L)));
+		} else if (inst.firstOperand() instanceof final IndirectOperand io
+				&& inst.secondOperand() instanceof final RegisterXMM src) {
+			final MemoryAddress address = computeIndirectOperand(io);
+			final long[] xmm = rf.get(src);
+			mem.write(address, xmm[0]);
+			mem.write(address.plus(8L), xmm[1]);
+		} else {
+			throw unknownArgumentType(inst);
 		}
 	}
 
