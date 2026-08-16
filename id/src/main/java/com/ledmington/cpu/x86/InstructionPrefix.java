@@ -17,50 +17,82 @@
  */
 package com.ledmington.cpu.x86;
 
-/** A prefix for an x86 instruction which changes its behavior. */
-public enum InstructionPrefix {
-
-	/** Executes this instruction atomically. */
-	LOCK((byte) 0xf0),
-
-	/** Equivalent to REPNE. Executes the instruction until the ECX (to be checked) register is not zero. */
-	REPNZ((byte) 0xf2),
-
-	/** Equivalent to REPE and REPZ. Executes the instruction until the ECX (to be checked) register is zero. */
-	REP((byte) 0xf3);
-
-	private final byte code;
-
-	InstructionPrefix(final byte code) {
-		this.code = code;
-	}
+/**
+ * Common interface for x86_64 instruction prefixes that extend register encoding: REX (0x4X), VEX2 (0xc5), VEX3 (0xc4),
+ * and EVEX (0x62).
+ *
+ * <p>All four prefix types share a common set of extension bits that expand the register namespace beyond the 3-bit
+ * limit of the base x86 encoding. The methods here expose those bits under consistent semantic names, regardless of
+ * which prefix type is in use.
+ *
+ * <p>Bits that do not exist in a given prefix type (e.g. {@link #x()} in VEX2) must be implemented to return
+ * {@code false} — their logical absence is equivalent to the extension bit being clear.
+ */
+public interface InstructionPrefix {
 
 	/**
-	 * Returns the proper instruction prefix object corresponding to the given byte.
+	 * Returns the R extension bit, which extends the REG field of the ModR/M byte from 3 bits to 4 bits (REX, VEX2,
+	 * VEX3) or to 5 bits combined with R' in EVEX ({@link #r1()}).
 	 *
-	 * @param x The byte with the prefix.
-	 * @return The InstructionPrefix object.
+	 * <p>Equivalent to REX.R, VEX.R, EVEX.R.
+	 *
+	 * @return {@code true} if the R extension bit is set.
 	 */
-	public static InstructionPrefix fromByte(final byte x) {
-		return switch (x) {
-			case (byte) 0xf0 -> LOCK;
-			case (byte) 0xf2 -> REPNZ;
-			case (byte) 0xf3 -> REP;
-			default -> throw new IllegalArgumentException();
-		};
-	}
+	boolean r();
 
 	/**
-	 * Returns the 1-byte code with this prefix.
+	 * Returns the X extension bit, which extends the Index field of the SIB byte from 3 bits to 4 bits.
 	 *
-	 * @return The 1-byte code with this prefix.
+	 * <p>Equivalent to REX.X, VEX.X, EVEX.X. Returns {@code false} for prefix types that do not encode this bit (VEX2).
+	 *
+	 * @return {@code true} if the X extension bit is set.
 	 */
-	public byte getCode() {
-		return code;
-	}
+	boolean x();
 
-	@Override
-	public String toString() {
-		return "InstructionPrefix(code=" + code + ')';
+	/**
+	 * Returns the B extension bit, which extends one of the following fields depending on instruction encoding context:
+	 *
+	 * <ul>
+	 *   <li>the RM field of the ModR/M byte,
+	 *   <li>the Base field of the SIB byte,
+	 *   <li>the register field embedded in the opcode byte.
+	 * </ul>
+	 *
+	 * <p>Equivalent to REX.B, VEX.B, EVEX.B. Returns {@code false} for prefix types that do not encode this bit (VEX2).
+	 *
+	 * @return {@code true} if the B extension bit is set.
+	 */
+	boolean b();
+
+	/**
+	 * Returns the W bit, which typically selects between 32-bit and 64-bit operand size, though its exact meaning is
+	 * opcode-dependent for VEX/EVEX.
+	 *
+	 * <p>Equivalent to REX.W, VEX.W, EVEX.W. Returns {@code false} for prefix types that do not encode this bit (VEX2).
+	 *
+	 * @return {@code true} if the W bit is set.
+	 */
+	boolean w();
+
+	/**
+	 * Returns the V field, a 4-bit value encoding an additional source register operand (in one's complement). Used by
+	 * VEX and EVEX instructions with three or four operands.
+	 *
+	 * <p>Equivalent to VEX.vvvv, EVEX.vvvv. Returns {@code 0} for prefix types that do not encode this field (REX).
+	 *
+	 * @return The 4-bit V field, in the range [0, 15].
+	 */
+	byte v();
+
+	/**
+	 * Returns the R' (R1) extension bit, which combines with {@link #r()} to extend the REG field of the ModR/M byte to
+	 * 5 bits, allowing access to all 32 EVEX registers.
+	 *
+	 * <p>Only meaningful in EVEX. All other prefix types must return {@code false}.
+	 *
+	 * @return {@code true} if the R' extension bit is set.
+	 */
+	default boolean r1() {
+		return false;
 	}
 }

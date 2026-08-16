@@ -46,6 +46,7 @@ import com.ledmington.cpu.x86.IndirectOperandBuilder;
 import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.InstructionBuilder;
 import com.ledmington.cpu.x86.InstructionPrefix;
+import com.ledmington.cpu.x86.LegacyPrefix;
 import com.ledmington.cpu.x86.MaskRegister;
 import com.ledmington.cpu.x86.ModRM;
 import com.ledmington.cpu.x86.NullRegister;
@@ -144,7 +145,7 @@ public final class InstructionDecoder {
 		String opcodeString = readUntilWhitespace(it);
 		if ("lock".equals(opcodeString) || "rep".equals(opcodeString) || "repnz".equals(opcodeString)) {
 			final String finalOpcodeString = opcodeString;
-			ib.prefix(Arrays.stream(InstructionPrefix.values())
+			ib.prefix(Arrays.stream(LegacyPrefix.values())
 					.filter(p -> p.name().toLowerCase(Locale.US).equals(finalOpcodeString))
 					.findAny()
 					.orElseThrow());
@@ -599,7 +600,7 @@ public final class InstructionDecoder {
 												!pref.hasAddressSizeOverridePrefix(),
 												pref.rex().hasModRMRMExtension(),
 												pref.hasOperandSizeOverridePrefix()));
-				if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
+				if (pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REPNZ) {
 					ib.opcode(Opcode.BND_JMP);
 				} else {
 					ib.opcode(Opcode.JMP);
@@ -1105,28 +1106,16 @@ public final class InstructionDecoder {
 		return Registers.combine(rex.r(), modrm.reg());
 	}
 
-	private static byte getByteFromReg(final Vex2Prefix vex2, final ModRM modrm) {
-		return Registers.combine(!vex2.r(), modrm.reg());
-	}
-
-	private static byte getByteFromReg(final Vex3Prefix vex3, final ModRM modrm) {
-		return Registers.combine(!vex3.r(), modrm.reg());
-	}
-
-	private static byte getByteFromReg(final EvexPrefix evex, final ModRM modrm) {
-		return Registers.combine(!evex.r(), modrm.reg());
+	private static byte getByteFromReg(final InstructionPrefix prefix, final ModRM modrm) {
+		return Registers.combine(!prefix.r(), modrm.reg());
 	}
 
 	private static byte getByteFromRM(final Prefixes pref, final ModRM modrm) {
 		return Registers.combine(pref.hasRexPrefix() && pref.rex().b(), modrm.rm());
 	}
 
-	private static byte getByteFromRM(final Vex3Prefix vex3, final ModRM modrm) {
-		return Registers.combine(!vex3.b(), modrm.rm());
-	}
-
-	private static byte getByteFromRM(final EvexPrefix evex, final ModRM modrm) {
-		return Registers.combine(!evex.b(), modrm.rm());
+	private static byte getByteFromRM(final InstructionPrefix prefix, final ModRM modrm) {
+		return Registers.combine(!prefix.b(), modrm.rm());
 	}
 
 	private static Instruction parse2BytesOpcode(
@@ -1356,7 +1345,7 @@ public final class InstructionDecoder {
 					yield Instruction.builder().opcode(Opcode.ENDBR64).build();
 				} else if (x == (byte) 0xfb) {
 					yield Instruction.builder().opcode(Opcode.ENDBR32).build();
-				} else if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
+				} else if (pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP) {
 					final ModRM modrm = new ModRM(x);
 					yield Instruction.builder()
 							.opcode(Opcode.RDSSPQ)
@@ -1515,7 +1504,7 @@ public final class InstructionDecoder {
 			}
 			case BSF_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				final boolean hasRepPrefix = pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP;
+				final boolean hasRepPrefix = pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP;
 				yield Instruction.builder()
 						.opcode(hasRepPrefix ? Opcode.TZCNT : Opcode.BSF)
 						.op(Registers.fromCode(
@@ -1642,7 +1631,7 @@ public final class InstructionDecoder {
 				final byte r1 = getByteFromReg(pref.rex(), modrm);
 				final byte r2 = getByteFromRM(pref, modrm);
 				final boolean movdqa = pref.hasOperandSizeOverridePrefix();
-				final boolean movdqu = pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP;
+				final boolean movdqu = pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP;
 				yield Instruction.builder()
 						.opcode(movdqa ? Opcode.MOVDQA : (movdqu ? Opcode.MOVDQU : Opcode.MOVQ))
 						.op((movdqa || movdqu) ? RegisterXMM.fromByte(r1) : RegisterMMX.fromByte(modrm.reg()))
@@ -2015,7 +2004,7 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				final InstructionBuilder ib = Instruction.builder();
 				ib.op(RegisterXMM.fromByte(getByteFromReg(pref.rex(), modrm)));
-				if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
+				if (pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP) {
 					ib.opcode(Opcode.DIVSS)
 							.op(
 									isIndirectOperandNeeded(modrm)
@@ -2023,7 +2012,7 @@ public final class InstructionDecoder {
 													.pointer(PointerSize.DWORD_PTR)
 													.build()
 											: RegisterXMM.fromByte(getByteFromRM(pref, modrm)));
-				} else if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REPNZ) {
+				} else if (pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REPNZ) {
 					ib.opcode(Opcode.DIVSD)
 							.op(
 									isIndirectOperandNeeded(modrm)
@@ -2196,7 +2185,7 @@ public final class InstructionDecoder {
 			case MOVSD_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final boolean hasRepnePrefix =
-						pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REPNZ;
+						pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REPNZ;
 				yield Instruction.builder()
 						.opcode(hasRepnePrefix ? Opcode.MOVSD : Opcode.MOVUPS)
 						.op(RegisterXMM.fromByte(getByteFromReg(pref.rex(), modrm)))
@@ -2431,7 +2420,7 @@ public final class InstructionDecoder {
 			};
 		}
 
-		if (pref.p1().isPresent() && pref.p1().orElseThrow() == InstructionPrefix.REP) {
+		if (pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP) {
 			notImplemented();
 		}
 
@@ -3630,16 +3619,8 @@ public final class InstructionDecoder {
 		};
 	}
 
-	private static byte getByteFromV(final Vex2Prefix vex2) {
-		return and(not(vex2.v()), (byte) 0b00001111);
-	}
-
-	private static byte getByteFromV(final Vex3Prefix vex3) {
-		return and(not(vex3.v()), (byte) 0b00001111);
-	}
-
-	private static byte getByteFromV(final EvexPrefix evex) {
-		return and(not(evex.v()), (byte) 0b00001111);
+	private static byte getByteFromV(final InstructionPrefix prefix) {
+		return and(not(prefix.v()), (byte) 0b00001111);
 	}
 
 	private static Instruction parseVex2Opcodes(
@@ -4415,7 +4396,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Prefixes parsePrefixes(final ReadOnlyByteBuffer b) {
-		Optional<InstructionPrefix> p1 = Optional.empty(); // Legacy Prefix Group 1
+		Optional<LegacyPrefix> p1 = Optional.empty(); // Legacy Prefix Group 1
 		Optional<Byte> p2 = Optional.empty(); // Legacy Prefix Group 2
 		boolean hasOperandSizeOverridePrefix = false;
 		boolean hasAddressSizeOverridePrefix = false;
@@ -4426,7 +4407,7 @@ public final class InstructionDecoder {
 			final byte x = b.read1();
 
 			if (isLegacyPrefixGroup1(x)) {
-				p1 = Optional.of(InstructionPrefix.fromByte(x));
+				p1 = Optional.of(LegacyPrefix.fromByte(x));
 			} else if (isLegacyPrefixGroup2(x)) {
 				p2 = Optional.of(x);
 			} else if (isOperandSizeOverridePrefix(x)) {
@@ -4662,9 +4643,9 @@ public final class InstructionDecoder {
 	}
 
 	private static boolean isLegacyPrefixGroup1(final byte prefix) {
-		return prefix == InstructionPrefix.LOCK.getCode()
-				|| prefix == InstructionPrefix.REPNZ.getCode()
-				|| prefix == InstructionPrefix.REP.getCode();
+		return prefix == LegacyPrefix.LOCK.getCode()
+				|| prefix == LegacyPrefix.REPNZ.getCode()
+				|| prefix == LegacyPrefix.REP.getCode();
 	}
 
 	private static boolean isLegacyPrefixGroup2(final byte prefix) {

@@ -24,7 +24,7 @@ import com.ledmington.utils.SuppressFBWarnings;
 /** A builder for constructing {@link Instruction} objects. */
 public final class InstructionBuilder {
 
-	private InstructionPrefix prefix = null;
+	private LegacyPrefix prefix = null;
 	private Opcode opcode = null;
 	private MaskRegister destinationMask = null;
 	private boolean destinationMaskZero = false;
@@ -49,7 +49,7 @@ public final class InstructionBuilder {
 	 * @param prefix The prefix to set.
 	 * @return This builder.
 	 */
-	public InstructionBuilder prefix(final InstructionPrefix prefix) {
+	public InstructionBuilder prefix(final LegacyPrefix prefix) {
 		assertNotBuilt();
 		if (this.prefix != null) {
 			throw new IllegalArgumentException("Cannot set prefix twice.");

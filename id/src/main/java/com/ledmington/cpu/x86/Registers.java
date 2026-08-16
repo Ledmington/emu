@@ -73,7 +73,7 @@ public final class Registers {
 			case RegisterZMM rzmm -> RegisterZMM.toByte(rzmm);
 			case MaskRegister rk -> MaskRegister.toByte(rk);
 			case SegmentRegister sr -> SegmentRegister.toByte(sr);
-			case NullRegister ignored -> (byte) 0x06; // also 0x07 is a NullRegister
+			case NullRegister _ -> (byte) 0x06; // also 0x07 is a NullRegister
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}
@@ -90,13 +90,13 @@ public final class Registers {
 			case Register16 r16 -> Register16.requiresExtension(r16);
 			case Register32 r32 -> Register32.requiresExtension(r32);
 			case Register64 r64 -> Register64.requiresExtension(r64);
-			case RegisterMMX ignored -> false;
+			case RegisterMMX _ -> false;
 			case RegisterXMM rxmm -> RegisterXMM.requiresExtension(rxmm);
 			case RegisterYMM rymm -> RegisterYMM.requiresExtension(rymm);
 			case RegisterZMM rzmm -> RegisterZMM.requiresExtension(rzmm);
-			case MaskRegister ignored -> false;
-			case SegmentRegister ignored -> false;
-			case NullRegister ignored -> false;
+			case MaskRegister _ -> false;
+			case SegmentRegister _ -> false;
+			case NullRegister _ -> false;
 			default -> throw new IllegalArgumentException(String.format("Unknown register '%s'.", r));
 		};
 	}
@@ -109,12 +109,12 @@ public final class Registers {
 	 */
 	public static boolean requiresEvexExtension(final Register r) {
 		return switch (r) {
-			case Register8 ignored -> false;
-			case Register16 ignored -> false;
-			case Register32 ignored -> false;
-			case Register64 ignored -> false;
-			case RegisterMMX ignored -> false;
-			case MaskRegister ignored -> false;
+			case Register8 _ -> false;
+			case Register16 _ -> false;
+			case Register32 _ -> false;
+			case Register64 _ -> false;
+			case RegisterMMX _ -> false;
+			case MaskRegister _ -> false;
 			case RegisterXMM rxmm -> RegisterXMM.requiresEvexExtension(rxmm);
 			case RegisterYMM rymm -> RegisterYMM.requiresEvexExtension(rymm);
 			case RegisterZMM rzmm -> RegisterZMM.requiresEvexExtension(rzmm);

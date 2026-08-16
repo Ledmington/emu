@@ -163,7 +163,7 @@ import com.ledmington.cpu.x86.GeneralInstruction;
 import com.ledmington.cpu.x86.Immediate;
 import com.ledmington.cpu.x86.IndirectOperand;
 import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.InstructionPrefix;
+import com.ledmington.cpu.x86.LegacyPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.BitUtils;
@@ -7056,7 +7056,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 66 a5"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -7072,7 +7072,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 f3 a4"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -7088,7 +7088,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 f3 a5"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -7104,7 +7104,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f3 a5"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)
@@ -7120,7 +7120,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 66 f3 a5"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)
@@ -7136,7 +7136,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 f3 a5"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REPNZ,
+								LegacyPrefix.REPNZ,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -7152,7 +7152,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 f2 a4"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REPNZ,
+								LegacyPrefix.REPNZ,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -7168,7 +7168,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 f2 a5"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REPNZ,
+								LegacyPrefix.REPNZ,
 								Opcode.MOVS,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)
@@ -7185,7 +7185,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Rep stos
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.STOS,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -7197,7 +7197,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 f3 aa"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.STOS,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -7209,7 +7209,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f3 aa"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.STOS,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -7221,7 +7221,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f3 ab"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.STOS,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
@@ -7233,7 +7233,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"67 f3 48 ab"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.REP,
+								LegacyPrefix.REP,
 								Opcode.STOS,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
@@ -9291,7 +9291,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 0f b1 16"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -9305,7 +9305,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 0f b0 b4 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -9316,7 +9316,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 40 0f b0 2e"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -9330,7 +9330,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 44 0f b1 94 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -9341,7 +9341,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 0f b1 0e"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
@@ -9355,7 +9355,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 48 0f b1 bc 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
@@ -9366,7 +9366,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 4c 0f b1 0e"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)
@@ -9380,7 +9380,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 f0 44 0f b1 bc 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.CMPXCHG,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)
@@ -9392,7 +9392,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Xadd
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -9406,7 +9406,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 0f c0 b4 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(BYTE_PTR)
@@ -9417,7 +9417,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 40 0f c0 2e"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -9431,7 +9431,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 44 0f c1 94 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(DWORD_PTR)
@@ -9442,7 +9442,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 0f c1 0e"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
@@ -9456,7 +9456,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 48 0f c1 bc 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
@@ -9467,7 +9467,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"f0 4c 0f c1 0e"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)
@@ -9481,7 +9481,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"66 f0 44 0f c1 bc 98 78 56 34 12"),
 				test(
 						new GeneralInstruction(
-								InstructionPrefix.LOCK,
+								LegacyPrefix.LOCK,
 								Opcode.XADD,
 								IndirectOperand.builder()
 										.pointer(WORD_PTR)

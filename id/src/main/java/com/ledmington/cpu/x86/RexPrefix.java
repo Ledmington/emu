@@ -27,7 +27,7 @@ import com.ledmington.utils.BitUtils;
  * @param x The X bit, an extension for the Index field of the SIB byte.
  * @param b The B bit, an extension for the Base field of the SIB byte, the RM field of the ModR/M byte or the opcode.
  */
-public record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
+public record RexPrefix(boolean w, boolean r, boolean x, boolean b) implements InstructionPrefix {
 
 	private static final byte REX_PREFIX_MASK = (byte) 0b11110000;
 	private static final byte REX_PREFIX = (byte) 0b01000000;
@@ -117,5 +117,10 @@ public record RexPrefix(boolean w, boolean r, boolean x, boolean b) {
 	 */
 	public boolean hasOpcodeRegExtension() {
 		return b;
+	}
+
+	@Override
+	public byte v() {
+		return 0;
 	}
 }

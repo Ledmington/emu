@@ -22,7 +22,7 @@ import com.ledmington.utils.BitUtils;
 
 /** The extended VEX prefix (EVEX): 0x62 + 3 bytes. */
 @SuppressWarnings("PMD.UnusedPrivateField")
-public final class EvexPrefix {
+public final class EvexPrefix implements InstructionPrefix {
 
 	private final boolean r;
 	private final boolean x;
@@ -132,6 +132,7 @@ public final class EvexPrefix {
 	 *
 	 * @return The R bit.
 	 */
+	@Override
 	public boolean r() {
 		return r;
 	}
@@ -141,6 +142,7 @@ public final class EvexPrefix {
 	 *
 	 * @return The X bit.
 	 */
+	@Override
 	public boolean x() {
 		return x;
 	}
@@ -150,6 +152,7 @@ public final class EvexPrefix {
 	 *
 	 * @return The B bit.
 	 */
+	@Override
 	public boolean b() {
 		return b;
 	}
@@ -159,6 +162,7 @@ public final class EvexPrefix {
 	 *
 	 * @return The R1 bit.
 	 */
+	@Override
 	public boolean r1() {
 		return r1;
 	}
@@ -177,6 +181,7 @@ public final class EvexPrefix {
 	 *
 	 * @return The W bit.
 	 */
+	@Override
 	public boolean w() {
 		return w;
 	}
@@ -186,6 +191,7 @@ public final class EvexPrefix {
 	 *
 	 * @return The V field.
 	 */
+	@Override
 	public byte v() {
 		return v;
 	}
