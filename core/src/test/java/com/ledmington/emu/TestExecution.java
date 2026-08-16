@@ -320,6 +320,48 @@ final class TestExecution {
 	}
 
 	@ParameterizedTest
+	@MethodSource("pairs32")
+	void sbb32(final Register32 r1, final Register32 r2) {
+		final int oldValue1 = cpu.getRegisters().get(r1);
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final boolean carryIn = cpu.getRegisters().isSet(RFlags.CARRY);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 - oldValue2 - (carryIn ? 1 : 0);
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySbb(oldValue1, oldValue2, carryIn));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSbb(oldValue1, oldValue2, carryIn));
+		cpu.executeOne(new GeneralInstruction(Opcode.SBB, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs32")
+	void sbb32WithCarryIn(final Register32 r1, final Register32 r2) {
+		((RegisterFile) cpu.getRegisters()).set(RFlags.CARRY, true);
+		final int oldValue1 = cpu.getRegisters().get(r1);
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 - oldValue2 - 1;
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySbb(oldValue1, oldValue2, true));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSbb(oldValue1, oldValue2, true));
+		cpu.executeOne(new GeneralInstruction(Opcode.SBB, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
 	@MethodSource("pairs16")
 	void sub16(final Register16 r1, final Register16 r2) {
 		final short oldValue1 = cpu.getRegisters().get(r1);
