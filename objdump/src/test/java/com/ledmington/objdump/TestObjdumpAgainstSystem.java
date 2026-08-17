@@ -17,7 +17,7 @@
  */
 package com.ledmington.objdump;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,9 +60,30 @@ final class TestObjdumpAgainstSystem {
 	void disassembly(final String executableName) {
 		checkSystemObjdumpIsAvailable();
 		final Path p = e2eTestFile(executableName);
-		assertEquals(
-				ObjdumpSystemComparison.runSystemObjdump(p),
-				ObjdumpSystemComparison.runCustomObjdump(p),
-				() -> "objdump output for '" + p + "' did not match the system's objdump output.");
+		assertLinesMatch(p, ObjdumpSystemComparison.runSystemObjdump(p), ObjdumpSystemComparison.runCustomObjdump(p));
+	}
+
+	/**
+	 * Compares the two outputs line by line and fails at the first mismatch, instead of comparing the (potentially
+	 * huge, e.g. hundreds of thousands of lines for statically-linked executables) full strings at once: an
+	 * assertEquals-style comparison would embed both full outputs in the resulting failure message, which then has to
+	 * be shipped back to the Gradle daemon for reporting and can exhaust its heap.
+	 */
+	private static void assertLinesMatch(final Path p, final String systemOutput, final String customOutput) {
+		final String[] systemLines = systemOutput.split("\n", -1);
+		final String[] customLines = customOutput.split("\n", -1);
+		final int commonLines = Math.min(systemLines.length, customLines.length);
+		for (int i = 0; i < commonLines; i++) {
+			if (!systemLines[i].equals(customLines[i])) {
+				fail(String.format(
+						"objdump output for '%s' did not match the system's objdump output at line %,d (system has %,d lines, custom has %,d lines).%nsystem: %s%ncustom: %s",
+						p, i + 1, systemLines.length, customLines.length, systemLines[i], customLines[i]));
+			}
+		}
+		if (systemLines.length != customLines.length) {
+			fail(String.format(
+					"objdump output for '%s' did not match the system's objdump output: system has %,d lines, custom has %,d lines.",
+					p, systemLines.length, customLines.length));
+		}
 	}
 }
