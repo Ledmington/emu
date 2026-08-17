@@ -4940,7 +4940,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement(0x12345678)
 										.build()),
 						"lea rsi,[rdi+r8*4+0x12345678]",
-						"4a 8d b4 87 78 56 34 12"));
+						"4a 8d b4 87 78 56 34 12"),
+				test(
+						new GeneralInstruction(
+								Opcode.LEA,
+								RSI,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(R9)
+										.index(RAX)
+										.scale(1)
+										.build()),
+						"lea rsi,[r9+rax*1]",
+						"49 8d 34 01"));
 	}
 
 	private static List<X64EncodingTestCase> movzx() {

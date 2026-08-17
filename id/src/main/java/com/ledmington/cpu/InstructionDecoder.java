@@ -3523,9 +3523,9 @@ public final class InstructionDecoder {
 			case LEA_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final Register r = Registers.fromCode(
-						getByteFromReg(pref, modrm),
+						modrm.reg(),
 						pref.rex().isOperand64Bit(),
-						pref.rex().b(),
+						pref.rex().hasModRMRegExtension(),
 						pref.hasOperandSizeOverridePrefix());
 				yield Instruction.builder()
 						.opcode(Opcode.LEA)

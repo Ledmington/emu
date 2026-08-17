@@ -26,6 +26,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 
@@ -87,6 +88,18 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	public void setXMM32(final RegisterXMM r, final int v) {
+		this.initialized.add(r);
+		this.rf.setXMM32(r, v);
+	}
+
+	@Override
+	public void set(final RegisterXMM r, final long low, final long high) {
+		this.initialized.add(r);
+		this.rf.set(r, low, high);
+	}
+
+	@Override
 	public void set(final RFlags f, final boolean v) {
 		this.rf.set(f, v);
 	}
@@ -122,6 +135,24 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 
 	@Override
 	public short get(final SegmentRegister r) {
+		checkIsInitialized(r);
+		return this.rf.get(r);
+	}
+
+	@Override
+	public int getXMM32(final RegisterXMM r) {
+		checkIsInitialized(r);
+		return this.rf.getXMM32(r);
+	}
+
+	@Override
+	public long getXMM64(final RegisterXMM r) {
+		checkIsInitialized(r);
+		return this.rf.getXMM64(r);
+	}
+
+	@Override
+	public long[] get(final RegisterXMM r) {
 		checkIsInitialized(r);
 		return this.rf.get(r);
 	}

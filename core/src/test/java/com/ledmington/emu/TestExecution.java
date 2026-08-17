@@ -41,6 +41,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryAddress;
@@ -68,6 +69,9 @@ final class TestExecution {
 			r64.stream().flatMap(a -> r64.stream().map(b -> Arguments.of(a, b))).toList();
 	private static final List<Arguments> r64r32 =
 			r64.stream().flatMap(a -> r32.stream().map(b -> Arguments.of(a, b))).toList();
+	private static final List<RegisterXMM> xmm = Arrays.asList(RegisterXMM.values());
+	private static final List<Arguments> xmmR64 =
+			xmm.stream().flatMap(a -> r64.stream().map(b -> Arguments.of(a, b))).toList();
 	private static final List<Supplier<IndirectOperandBuilder>> indirectOperands = List.of(
 			() -> IndirectOperand.builder().base(Register32.EAX),
 			() -> IndirectOperand.builder().base(Register64.RAX),
@@ -199,6 +203,10 @@ final class TestExecution {
 		return r64m64.stream();
 	}
 
+	private static Stream<Arguments> xmmR64() {
+		return xmmR64.stream();
+	}
+
 	@ParameterizedTest
 	@MethodSource("pairs64")
 	void add64(final Register64 a, final Register64 b) {
@@ -313,6 +321,48 @@ final class TestExecution {
 		expected.set(RFlags.CARRY, MathUtils.willCarrySub(oldValue1, oldValue2));
 		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSub(oldValue1, oldValue2));
 		cpu.executeOne(new GeneralInstruction(Opcode.SUB, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs32")
+	void sbb32(final Register32 r1, final Register32 r2) {
+		final int oldValue1 = cpu.getRegisters().get(r1);
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final boolean carryIn = cpu.getRegisters().isSet(RFlags.CARRY);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 - oldValue2 - (carryIn ? 1 : 0);
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySbb(oldValue1, oldValue2, carryIn));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSbb(oldValue1, oldValue2, carryIn));
+		cpu.executeOne(new GeneralInstruction(Opcode.SBB, r1, r2));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("pairs32")
+	void sbb32WithCarryIn(final Register32 r1, final Register32 r2) {
+		((RegisterFile) cpu.getRegisters()).set(RFlags.CARRY, true);
+		final int oldValue1 = cpu.getRegisters().get(r1);
+		final int oldValue2 = cpu.getRegisters().get(r2);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		final int result = oldValue1 - oldValue2 - 1;
+		expected.set(r1, result);
+		expected.set(RFlags.ZERO, result == 0);
+		expected.set(RFlags.PARITY, (Integer.bitCount(result) % 2) == 0);
+		expected.set(RFlags.SIGN, result < 0);
+		expected.set(RFlags.CARRY, MathUtils.willCarrySbb(oldValue1, oldValue2, true));
+		expected.set(RFlags.OVERFLOW, MathUtils.willOverflowSbb(oldValue1, oldValue2, true));
+		cpu.executeOne(new GeneralInstruction(Opcode.SBB, r1, r2));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),
@@ -601,6 +651,19 @@ final class TestExecution {
 		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
 		expected.set(dest, address);
 		cpu.executeOne(new GeneralInstruction(Opcode.LEA, dest, src));
+		assertEquals(
+				expected,
+				cpu.getRegisters(),
+				() -> String.format("Expected register file to be '%s' but was '%s'.", expected, cpu.getRegisters()));
+	}
+
+	@ParameterizedTest
+	@MethodSource("xmmR64")
+	void movqXmmFromR64(final RegisterXMM dest, final Register64 src) {
+		final long value = cpu.getRegisters().get(src);
+		final X86RegisterFile expected = new X86RegisterFile(cpu.getRegisters());
+		expected.set(dest, value, 0L);
+		cpu.executeOne(new GeneralInstruction(Opcode.MOVQ, dest, src));
 		assertEquals(
 				expected,
 				cpu.getRegisters(),

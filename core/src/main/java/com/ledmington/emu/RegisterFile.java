@@ -21,6 +21,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 
 /** Represents a mutable register file. */
@@ -59,6 +60,25 @@ public interface RegisterFile extends ImmutableRegisterFile {
 	 * @param v The value to be written.
 	 */
 	void set(Register64 r, long v);
+
+	/**
+	 * Sets the low 32 bits of the given 128-bit XMM register to the given int, zero-extending the rest of the register.
+	 * This operation does not modify the other registers.
+	 *
+	 * @param r The Register to be overwritten.
+	 * @param v The value to be written.
+	 */
+	void setXMM32(RegisterXMM r, int v);
+
+	/**
+	 * Sets the full 128 bits of the given XMM register from its low and high 64-bit halves. This operation does not
+	 * modify the other registers.
+	 *
+	 * @param r The Register to be overwritten.
+	 * @param low The new low 64 bits.
+	 * @param high The new high 64 bits.
+	 */
+	void set(RegisterXMM r, long low, long high);
 
 	/**
 	 * Sets the given flag to the given value.
