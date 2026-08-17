@@ -100,7 +100,7 @@ public final class Main {
 
 	private Main() {}
 
-	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
+	@SuppressWarnings({"PMD.AvoidDeeplyNestedIfStmts", "PMD.VariableDeclarationUsageDistance"})
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
@@ -126,6 +126,7 @@ public final class Main {
 		Optional<Integer> sectionIndexToBeStringDumped = Optional.empty();
 		Optional<String> sectionNameToBeStringDumped = Optional.empty();
 
+		// FIXME: rewrite using package 'cmdline'
 		for (int i = 0; i < args.length; i++) {
 			final String arg = args[i];
 			switch (arg) {

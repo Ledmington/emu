@@ -45,7 +45,7 @@ public final class IntervalArray {
 		 * @param index The index to be checked.
 		 * @return True if this block contains the given index, false otherwise.
 		 */
-		public boolean contains(final long index) {
+		/* default */ boolean contains(final long index) {
 			return Long.compareUnsigned(index, start) >= 0 && Long.compareUnsigned(index, end) <= 0;
 		}
 	}

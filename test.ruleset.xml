@@ -27,6 +27,8 @@
         <exclude name="FormalParameterNamingConventions" />
         <!-- Avoid reporting methods and fields with "confusing" names -->
         <exclude name="LinguisticNaming" />
+        <!-- Avoid reporting files with too many static imports (FIXME: workaround until [this issue](https://github.com/pmd/pmd/issues/6983) gets fixed in PMD) -->
+        <exclude name="TooManyStaticImports" />
     </rule>
 
     <!-- Avoid reporting variables with a long name -->

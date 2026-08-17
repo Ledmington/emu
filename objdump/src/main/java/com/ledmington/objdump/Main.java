@@ -68,6 +68,7 @@ public final class Main {
 		String filename = null;
 		boolean disassembleExecutableSections = false;
 
+		// FIXME: rewrite using package 'cmdline'
 		for (final String arg : args) {
 			switch (arg) {
 				case "-H", "--help":

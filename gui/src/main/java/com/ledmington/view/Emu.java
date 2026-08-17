@@ -61,16 +61,13 @@ public final class Emu {
 		bPane.setTop(topPane);
 
 		final BorderPane mainPane = new BorderPane();
-		{
-			mainPane.setCenter(
-					LabelFactory.getDefaultLabel(
-							String.join(
-									"\n",
-									"Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).",
-									"",
-									"If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.")));
-			mainPane.setPadding(new Insets(5));
-		}
+		mainPane.setCenter(LabelFactory.getDefaultLabel(String.join(
+				"\n",
+				"Welcome to Emu, a processor emulator made by Filippo Barbari (filippo.barbari@gmail.com).",
+				"",
+				"If you happen to find any bugs, please report them at https://github.com/Ledmington/emu/issues.")));
+		mainPane.setPadding(new Insets(5));
+
 		bPane.setCenter(mainPane);
 
 		final FlowPane bottomPane = new FlowPane();

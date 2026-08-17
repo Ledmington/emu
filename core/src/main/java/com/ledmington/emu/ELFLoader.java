@@ -440,14 +440,14 @@ public final class ELFLoader {
 			for (final String arg : commandLineArguments) {
 				wb.write(stringsOffset);
 				sb.append(arg).append('\0');
-				stringsOffset += (arg.length() + 1);
+				stringsOffset += arg.length() + 1;
 			}
 			wb.write(0L); // argv[argc]
 
 			for (final Map.Entry<String, String> env : environmentVariables.entrySet()) {
 				wb.write(stringsOffset);
 				sb.append(env.getKey()).append('=').append(env.getValue()).append('\0');
-				stringsOffset += (env.getKey().length() + 1 + env.getValue().length() + 1);
+				stringsOffset += env.getKey().length() + 1 + env.getValue().length() + 1;
 			}
 			wb.write(0L); // envp[envc]
 

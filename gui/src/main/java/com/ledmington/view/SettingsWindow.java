@@ -49,38 +49,33 @@ public final class SettingsWindow extends Stage {
 		final Scene scene = new Scene(bPane);
 
 		final GridPane mainPane = new GridPane(10, 5);
-		{
-			mainPane.add(LabelFactory.getDefaultLabel("Font"), 0, 0);
-			this.fonts = new ComboBox<>();
-			for (final String fontFamily : Font.getFamilies()) {
-				final Label lbl = getFontLabel(fontFamily);
-				this.fonts.getItems().add(lbl);
-				if (this.fonts.getValue() == null) {
-					this.fonts.setValue(lbl);
-				}
+		mainPane.add(LabelFactory.getDefaultLabel("Font"), 0, 0);
+		this.fonts = new ComboBox<>();
+		for (final String fontFamily : Font.getFamilies()) {
+			final Label lbl = getFontLabel(fontFamily);
+			this.fonts.getItems().add(lbl);
+			if (this.fonts.getValue() == null) {
+				this.fonts.setValue(lbl);
 			}
-			mainPane.add(this.fonts, 1, 0);
 		}
-		{
-			mainPane.add(LabelFactory.getDefaultLabel("Font Size"), 0, 1);
-			this.fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
-			mainPane.add(this.fontSize, 1, 1);
-		}
-		{
-			mainPane.add(LabelFactory.getDefaultLabel("Max emulator instructions"), 0, 2);
-			this.maxCodeInstructions = new Spinner<>(1, 1000, AppConstants.getMaxCodeInstructions());
-			mainPane.add(this.maxCodeInstructions, 1, 2);
-		}
-		{
-			mainPane.add(LabelFactory.getDefaultLabel("Max emulator memory lines"), 0, 3);
-			this.maxMemoryLines = new Spinner<>(1, 1000, AppConstants.getMaxMemoryLines());
-			mainPane.add(this.maxMemoryLines, 1, 3);
-		}
-		{
-			mainPane.add(LabelFactory.getDefaultLabel("Memory bytes per line"), 0, 4);
-			this.memoryBytesPerLine = new Spinner<>(1, 1000, AppConstants.getMemoryBytesPerLine());
-			mainPane.add(this.memoryBytesPerLine, 1, 4);
-		}
+		mainPane.add(this.fonts, 1, 0);
+
+		mainPane.add(LabelFactory.getDefaultLabel("Font Size"), 0, 1);
+		this.fontSize = new Spinner<>(1, 20, AppConstants.getDefaultFontSize());
+		mainPane.add(this.fontSize, 1, 1);
+
+		mainPane.add(LabelFactory.getDefaultLabel("Max emulator instructions"), 0, 2);
+		this.maxCodeInstructions = new Spinner<>(1, 1000, AppConstants.getMaxCodeInstructions());
+		mainPane.add(this.maxCodeInstructions, 1, 2);
+
+		mainPane.add(LabelFactory.getDefaultLabel("Max emulator memory lines"), 0, 3);
+		this.maxMemoryLines = new Spinner<>(1, 1000, AppConstants.getMaxMemoryLines());
+		mainPane.add(this.maxMemoryLines, 1, 3);
+
+		mainPane.add(LabelFactory.getDefaultLabel("Memory bytes per line"), 0, 4);
+		this.memoryBytesPerLine = new Spinner<>(1, 1000, AppConstants.getMemoryBytesPerLine());
+		mainPane.add(this.memoryBytesPerLine, 1, 4);
+
 		mainPane.setPadding(new Insets(5));
 		bPane.setCenter(mainPane);
 

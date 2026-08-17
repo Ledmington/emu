@@ -150,11 +150,11 @@ public interface ReadOnlyByteBuffer {
 		int x = 0x00000000;
 		x |= BitUtils.asInt(read());
 		move();
-		x |= (BitUtils.asInt(read()) << 8);
+		x |= BitUtils.asInt(read()) << 8;
 		move();
-		x |= (BitUtils.asInt(read()) << 16);
+		x |= BitUtils.asInt(read()) << 16;
 		move();
-		x |= (BitUtils.asInt(read()) << 24);
+		x |= BitUtils.asInt(read()) << 24;
 		moveAndAlign();
 		return x;
 	}
@@ -166,11 +166,11 @@ public interface ReadOnlyByteBuffer {
 	 */
 	default int read4BE() {
 		int x = 0x00000000;
-		x |= (BitUtils.asInt(read()) << 24);
+		x |= BitUtils.asInt(read()) << 24;
 		move();
-		x |= (BitUtils.asInt(read()) << 16);
+		x |= BitUtils.asInt(read()) << 16;
 		move();
-		x |= (BitUtils.asInt(read()) << 8);
+		x |= BitUtils.asInt(read()) << 8;
 		move();
 		x |= BitUtils.asInt(read());
 		moveAndAlign();
@@ -195,19 +195,19 @@ public interface ReadOnlyByteBuffer {
 		long x = 0x0000000000000000L;
 		x |= BitUtils.asLong(read());
 		move();
-		x |= (BitUtils.asLong(read()) << 8);
+		x |= BitUtils.asLong(read()) << 8;
 		move();
-		x |= (BitUtils.asLong(read()) << 16);
+		x |= BitUtils.asLong(read()) << 16;
 		move();
-		x |= (BitUtils.asLong(read()) << 24);
+		x |= BitUtils.asLong(read()) << 24;
 		move();
-		x |= (BitUtils.asLong(read()) << 32);
+		x |= BitUtils.asLong(read()) << 32;
 		move();
-		x |= (BitUtils.asLong(read()) << 40);
+		x |= BitUtils.asLong(read()) << 40;
 		move();
-		x |= (BitUtils.asLong(read()) << 48);
+		x |= BitUtils.asLong(read()) << 48;
 		move();
-		x |= (BitUtils.asLong(read()) << 56);
+		x |= BitUtils.asLong(read()) << 56;
 		moveAndAlign();
 		return x;
 	}
@@ -219,19 +219,19 @@ public interface ReadOnlyByteBuffer {
 	 */
 	default long read8BE() {
 		long x = 0x0000000000000000L;
-		x |= (BitUtils.asLong(read()) << 56);
+		x |= BitUtils.asLong(read()) << 56;
 		move();
-		x |= (BitUtils.asLong(read()) << 48);
+		x |= BitUtils.asLong(read()) << 48;
 		move();
-		x |= (BitUtils.asLong(read()) << 40);
+		x |= BitUtils.asLong(read()) << 40;
 		move();
-		x |= (BitUtils.asLong(read()) << 32);
+		x |= BitUtils.asLong(read()) << 32;
 		move();
-		x |= (BitUtils.asLong(read()) << 24);
+		x |= BitUtils.asLong(read()) << 24;
 		move();
-		x |= (BitUtils.asLong(read()) << 16);
+		x |= BitUtils.asLong(read()) << 16;
 		move();
-		x |= (BitUtils.asLong(read()) << 8);
+		x |= BitUtils.asLong(read()) << 8;
 		move();
 		x |= BitUtils.asLong(read());
 		moveAndAlign();

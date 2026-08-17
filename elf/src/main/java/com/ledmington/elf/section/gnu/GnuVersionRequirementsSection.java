@@ -63,14 +63,12 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 		this.header = Objects.requireNonNull(sectionHeader);
 
 		int versionRequirementsEntryNum = 0;
-		{
-			Objects.requireNonNull(dynamicSection);
-			for (int i = 0; i < dynamicSection.getTableLength(); i++) {
-				if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
-					versionRequirementsEntryNum =
-							BitUtils.asInt(dynamicSection.getEntry(i).getContent());
-					break;
-				}
+		Objects.requireNonNull(dynamicSection);
+		for (int i = 0; i < dynamicSection.getTableLength(); i++) {
+			if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_VERNEEDNUM) {
+				versionRequirementsEntryNum =
+						BitUtils.asInt(dynamicSection.getEntry(i).getContent());
+				break;
 			}
 		}
 

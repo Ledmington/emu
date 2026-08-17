@@ -58,13 +58,11 @@ public final class ConstructorsSection implements LoadableSection {
 		}
 
 		int constructorsSizeInBytes = 0; // bytes
-		{
-			for (int i = 0; i < dynamicSection.getTableLength(); i++) {
-				if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
-					constructorsSizeInBytes =
-							BitUtils.asInt(dynamicSection.getEntry(i).getContent());
-					break;
-				}
+		for (int i = 0; i < dynamicSection.getTableLength(); i++) {
+			if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_INIT_ARRAYSZ) {
+				constructorsSizeInBytes =
+						BitUtils.asInt(dynamicSection.getEntry(i).getContent());
+				break;
 			}
 		}
 

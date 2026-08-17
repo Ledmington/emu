@@ -58,6 +58,7 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
  * there are the LOCK/REP/REPNE, then the CS segment override, then the address size override, then the operand size
  * override.
  */
+// FIXME: reduce these suppressions
 @SuppressWarnings({
 	"PMD.AvoidLiteralsInIfCondition",
 	"PMD.NPathComplexity",
@@ -65,7 +66,6 @@ import com.ledmington.utils.WriteOnlyByteBufferV1;
 	"PMD.UselessParentheses",
 	"PMD.NcssCount",
 	"PMD.CognitiveComplexity",
-	"PMD.TooManyStaticImports",
 	"PMD.TooManyMethods",
 	"PMD.LinguisticNaming",
 	"PMD.CommentDefaultAccessModifier",

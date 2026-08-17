@@ -58,9 +58,9 @@ public interface Memory {
 		// Little-endian
 		int x = 0;
 		x |= BitUtils.asInt(read(address));
-		x |= (BitUtils.asInt(read(address.plus(1L))) << 8);
-		x |= (BitUtils.asInt(read(address.plus(2L))) << 16);
-		x |= (BitUtils.asInt(read(address.plus(3L))) << 24);
+		x |= BitUtils.asInt(read(address.plus(1L))) << 8;
+		x |= BitUtils.asInt(read(address.plus(2L))) << 16;
+		x |= BitUtils.asInt(read(address.plus(3L))) << 24;
 		return x;
 	}
 
@@ -74,13 +74,13 @@ public interface Memory {
 		// Little-endian
 		long x = 0x0000000000000000L;
 		x |= BitUtils.asLong(read(address));
-		x |= (BitUtils.asLong(read(address.plus(1L))) << 8);
-		x |= (BitUtils.asLong(read(address.plus(2L))) << 16);
-		x |= (BitUtils.asLong(read(address.plus(3L))) << 24);
-		x |= (BitUtils.asLong(read(address.plus(4L))) << 32);
-		x |= (BitUtils.asLong(read(address.plus(5L))) << 40);
-		x |= (BitUtils.asLong(read(address.plus(6L))) << 48);
-		x |= (BitUtils.asLong(read(address.plus(7L))) << 56);
+		x |= BitUtils.asLong(read(address.plus(1L))) << 8;
+		x |= BitUtils.asLong(read(address.plus(2L))) << 16;
+		x |= BitUtils.asLong(read(address.plus(3L))) << 24;
+		x |= BitUtils.asLong(read(address.plus(4L))) << 32;
+		x |= BitUtils.asLong(read(address.plus(5L))) << 40;
+		x |= BitUtils.asLong(read(address.plus(6L))) << 48;
+		x |= BitUtils.asLong(read(address.plus(7L))) << 56;
 		return x;
 	}
 
