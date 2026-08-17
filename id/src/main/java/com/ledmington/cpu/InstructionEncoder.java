@@ -188,27 +188,42 @@ public final class InstructionEncoder {
 
 	private static String immediateOperandString(
 			final Instruction inst, final Operand op, final Immediate imm, final boolean shortHex) {
-		// The legacy 'shift/rotate by 1' encoding (D0/D1) has no immediate byte at all: GNU objdump always displays
-		// its implicit count as a bare '1', never as a hex immediate.
-		if (GROUP2_REG_BYTES.containsKey(inst.opcode()) && imm.bits() == 8 && imm.asByte() == (byte) 1) {
-			return "1";
-		}
+		// The two quirks below are specifically GNU objdump's disassembly display conventions (only used when
+		// 'shortHex' is enabled, i.e. by the objdump module): the general-purpose toIntelSyntax() API keeps showing
+		// the immediate exactly as encoded, at its own declared width.
+		if (shortHex) {
+			// The legacy 'shift/rotate by 1' encoding (D0/D1) has no immediate byte at all: GNU objdump always
+			// displays its implicit count as a bare '1', never as a hex immediate.
+			if (GROUP2_REG_BYTES.containsKey(inst.opcode()) && imm.bits() == 8 && imm.asByte() == (byte) 1) {
+				return "1";
+			}
 
-		// Immediates narrower than their destination (e.g. the imm8 forms of ADD/SUB/AND/CMP/... or the imm32 form of
-		// a 64-bit MOV) are sign-extended by the CPU to the destination's width, and GNU objdump displays the
-		// sign-extended value rather than the raw encoded bytes.
-		final boolean isDestinationOperand = op == inst.firstOperand();
-		final boolean isSignExtendingForm = !GROUP2_REG_BYTES.containsKey(inst.opcode());
-		if (!isDestinationOperand
-				&& isSignExtendingForm
-				&& (inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand)) {
-			final int destinationBits = inst.firstOperand().bits();
-			if (destinationBits > imm.bits()) {
-				return signExtendedIntelSyntax(imm, destinationBits, shortHex);
+			// Immediates narrower than their destination (e.g. the imm8 forms of ADD/SUB/AND/CMP/... or the imm32
+			// form of a 64-bit MOV) are sign-extended by the CPU to the destination's width, and GNU objdump
+			// displays the sign-extended value rather than the raw encoded bytes. This only applies to the classic
+			// 'arithmetic group 1'/TEST/MOV forms: e.g. AVX/SIMD instructions' trailing immediate is a
+			// control/selector byte unrelated to the (much wider) vector destination's width, and must never be
+			// sign-extended.
+			final boolean isDestinationOperand = op == inst.firstOperand();
+			final boolean isSignExtendingForm = isSignExtendingImmediateForm(inst.opcode());
+			if (!isDestinationOperand
+					&& isSignExtendingForm
+					&& (inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand)) {
+				final int destinationBits = inst.firstOperand().bits();
+				if (destinationBits > imm.bits()) {
+					return signExtendedIntelSyntax(imm, destinationBits, shortHex);
+				}
 			}
 		}
 
 		return imm.toIntelSyntax(shortHex);
+	}
+
+	private static boolean isSignExtendingImmediateForm(final Opcode opcode) {
+		return switch (opcode) {
+			case ADD, OR, ADC, SBB, AND, SUB, XOR, CMP, TEST, MOV -> true;
+			default -> false;
+		};
 	}
 
 	private static String signExtendedIntelSyntax(
@@ -473,7 +488,7 @@ public final class InstructionEncoder {
 			case VZEROALL -> wb.write((byte) 0x77);
 			case NOP -> wb.write((byte) 0x90);
 			case CWDE, CDQE -> wb.write((byte) 0x98);
-			case CDQ -> wb.write((byte) 0x99);
+			case CDQ, CQO -> wb.write((byte) 0x99);
 			case FWAIT -> wb.write((byte) 0x9b);
 			case PUSHF -> wb.write((byte) 0x9c);
 			case POPF -> wb.write((byte) 0x9d);
@@ -1753,7 +1768,8 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.MOVQ && isFirstMMX(inst))
 						|| (inst.opcode() == Opcode.MOVQ && isFirstXMM(inst))
 						|| (inst.opcode() == Opcode.CVTSI2SD && isSecondR64(inst))
-						|| (inst.opcode() == Opcode.CDQE))
+						|| (inst.opcode() == Opcode.CDQE)
+						|| (inst.opcode() == Opcode.CQO))
 				&& !(inst.opcode() == Opcode.MOVQ && isFirstM(inst))
 				&& !(inst.opcode() == Opcode.MOVQ && isSecondM(inst))
 				&& !(inst.opcode() == Opcode.PXOR && isFirstMMX(inst))

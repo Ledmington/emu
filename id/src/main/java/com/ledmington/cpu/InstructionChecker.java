@@ -99,6 +99,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.POP, List.of(R16, R64, M64)),
 			Map.entry(Opcode.CDQ, List.of(NO_ARGS)),
 			Map.entry(Opcode.CDQE, List.of(NO_ARGS)),
+			Map.entry(Opcode.CQO, List.of(NO_ARGS)),
 			Map.entry(Opcode.CWDE, List.of(NO_ARGS)),
 			Map.entry(Opcode.LEAVE, List.of(NO_ARGS)),
 			Map.entry(Opcode.INT3, List.of(NO_ARGS)),

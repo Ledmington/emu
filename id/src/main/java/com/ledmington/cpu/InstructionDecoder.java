@@ -2782,7 +2782,10 @@ public final class InstructionDecoder {
 			case INT_OPCODE ->
 				Instruction.builder().opcode(Opcode.INT).op(imm8(b)).build();
 			case IRET_OPCODE -> Instruction.builder().opcode(Opcode.IRET).build();
-			case CDQ_OPCODE -> Instruction.builder().opcode(Opcode.CDQ).build();
+			case CDQ_OPCODE ->
+				Instruction.builder()
+						.opcode(pref.rex().isOperand64Bit() ? Opcode.CQO : Opcode.CDQ)
+						.build();
 			case SAHF_OPCODE -> Instruction.builder().opcode(Opcode.SAHF).build();
 			case LAHF_OPCODE -> Instruction.builder().opcode(Opcode.LAHF).build();
 			case HLT_OPCODE -> Instruction.builder().opcode(Opcode.HLT).build();
@@ -3587,9 +3590,9 @@ public final class InstructionDecoder {
 			case LEA_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final Register r = Registers.fromCode(
-						getByteFromReg(pref, modrm),
+						modrm.reg(),
 						pref.rex().isOperand64Bit(),
-						pref.rex().b(),
+						pref.rex().hasModRMRegExtension(),
 						pref.hasOperandSizeOverridePrefix());
 				yield Instruction.builder()
 						.opcode(Opcode.LEA)
@@ -4961,7 +4964,7 @@ public final class InstructionDecoder {
 
 			// ESP or RSP cannot be index registers of an indirect operand
 			if (isSP(decodedIndex)) {
-				baseRegister = decodedBase;
+				baseRegister = (isBP(decodedBase) && modrm.mod() == (byte) 0b00) ? null : decodedBase;
 			} else {
 				iob.index(decodedIndex);
 				iob.scale(1 << asInt(sib.scale()));
@@ -4976,10 +4979,11 @@ public final class InstructionDecoder {
 			}
 		}
 
+		if (isIndirectOperandNeeded(modrm)) {
+			segmentOverride(pref).ifPresent(iob::segment);
+		}
+
 		if (baseRegister != null) {
-			if (pref.p2().isPresent() && pref.p2().orElseThrow() == CS_SEGMENT_OVERRIDE_PREFIX) {
-				iob.segment(SegmentRegister.CS);
-			}
 			iob.base(baseRegister);
 		}
 
@@ -5052,6 +5056,21 @@ public final class InstructionDecoder {
 				|| prefix == GS_SEGMENT_OVERRIDE_PREFIX
 				|| prefix == BRANCH_NOT_TAKEN_PREFIX
 				|| prefix == BRANCH_TAKEN_PREFIX;
+	}
+
+	private static Optional<SegmentRegister> segmentOverride(final Prefixes pref) {
+		if (pref.p2().isEmpty()) {
+			return Optional.empty();
+		}
+		return switch (pref.p2().orElseThrow()) {
+			case CS_SEGMENT_OVERRIDE_PREFIX -> Optional.of(SegmentRegister.CS);
+			case (byte) 0x36 -> Optional.of(SegmentRegister.SS);
+			case (byte) 0x3e -> Optional.of(SegmentRegister.DS);
+			case (byte) 0x26 -> Optional.of(SegmentRegister.ES);
+			case (byte) 0x64 -> Optional.of(SegmentRegister.FS);
+			case (byte) 0x65 -> Optional.of(SegmentRegister.GS);
+			default -> Optional.empty();
+		};
 	}
 
 	private static boolean isOperandSizeOverridePrefix(final byte prefix) {
