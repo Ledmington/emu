@@ -204,7 +204,7 @@ public final class InstructionEncoder {
 			// 'arithmetic group 1'/TEST/MOV forms: e.g. AVX/SIMD instructions' trailing immediate is a
 			// control/selector byte unrelated to the (much wider) vector destination's width, and must never be
 			// sign-extended.
-			final boolean isDestinationOperand = op == inst.firstOperand();
+			final boolean isDestinationOperand = op.equals(inst.firstOperand());
 			final boolean isSignExtendingForm = isSignExtendingImmediateForm(inst.opcode());
 			if (!isDestinationOperand
 					&& isSignExtendingForm
