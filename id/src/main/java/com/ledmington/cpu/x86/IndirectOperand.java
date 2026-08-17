@@ -290,6 +290,12 @@ public final class IndirectOperand implements Operand {
 		if (hasSegment()) {
 			sb.append(segment.toIntelSyntax()).append(':');
 		}
+		if (hasSegment() && !hasBase() && !hasIndex()) {
+			// GNU objdump renders segment-relative absolute-displacement addressing (e.g. 'fs:0x28') without
+			// brackets, unlike every other addressing form.
+			addDisplacement(sb, compressedDisplacement, shortHex);
+			return sb.toString();
+		}
 		sb.append('[');
 		if (hasBase()) {
 			sb.append(base.toIntelSyntax());

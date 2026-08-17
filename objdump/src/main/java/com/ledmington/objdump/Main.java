@@ -212,22 +212,50 @@ public final class Main {
 			} else if (isJumpWithImmediate(inst)) {
 				// conditional jumps and 'call' instructions need to be printed differently: instead of just the
 				// immediate, we need to add it to the current IP and display the name of the symbol it points to.
+				// An address-size-override prefix has no effect on these (there is no memory operand to address),
+				// so GNU objdump shows it explicitly as a leading pseudo-prefix rather than silently dropping it.
+				final String addressSizeOverride =
+						content[BitUtils.asInt(startOfInstruction)] == (byte) 0x67 ? "addr32 " : "";
 				final long jumpOffset = getAsLong((Immediate) inst.firstOperand());
 				final long actualPointedAddress = startOfSection + endOfInstruction + jumpOffset;
 				final String label = resolveAddressLabel(actualPointedAddress, allSymbols);
+				final String mnemonicFormat = addressSizeOverride.isEmpty() ? "%-6s" : "%s";
 				if (label == null) {
-					out.printf("%-6s %x%n", inst.opcode().mnemonic(), actualPointedAddress);
+					out.printf(
+							"%s" + mnemonicFormat + " %x%n",
+							addressSizeOverride,
+							inst.opcode().mnemonic(),
+							actualPointedAddress);
 				} else {
-					out.printf("%-6s %x <%s>%n", inst.opcode().mnemonic(), actualPointedAddress, label);
+					out.printf(
+							"%s" + mnemonicFormat + " %x <%s>%n",
+							addressSizeOverride,
+							inst.opcode().mnemonic(),
+							actualPointedAddress,
+							label);
 				}
 			} else if (isPaddingNopWithCsPrefix(inst)) {
-				// GNU objdump displays a no-op CS segment override used purely for instruction-length padding as a
-				// leading pseudo-prefix instead of showing it as part of the memory operand.
+				// GNU objdump displays no-op prefixes used purely for instruction-length padding (a CS segment
+				// override, and any operand-size-override byte beyond the first one, which is the only one that
+				// actually affects the operand size) as leading pseudo-prefix words instead of folding them into the
+				// memory operand.
+				int redundantOperandSizePrefixes = -1;
+				for (long i = startOfInstruction;
+						i < content.length && content[BitUtils.asInt(i)] == (byte) 0x66;
+						i++) {
+					redundantOperandSizePrefixes++;
+				}
+				out.print("data16 ".repeat(Math.max(0, redundantOperandSizePrefixes)));
 				out.printf(
 						"cs %s%n",
 						InstructionEncoder.toIntelSyntax(inst, true, 0, true).replace("cs:", ""));
+			} else if (hasNotrackPrefix(inst, content, startOfInstruction)) {
+				// A DS segment override on an indirect jmp/call is the CET 'notrack' hint, not an actual segment
+				// override (there is no memory operand to apply it to).
+				out.printf("notrack %s%n", InstructionEncoder.toIntelSyntax(inst, true, 0, true));
 			} else {
-				final String base = InstructionEncoder.toIntelSyntax(inst, true, 6, true);
+				// GNU objdump does not pad the mnemonic column when a legacy prefix (e.g. 'rep') is shown before it.
+				final String base = InstructionEncoder.toIntelSyntax(inst, true, inst.hasPrefix() ? 0 : 6, true);
 				final String ripComment = ripRelativeComment(inst, startOfSection, endOfInstruction, allSymbols);
 				out.printf("%s%s%n", base, ripComment == null ? "" : ripComment);
 			}
@@ -252,6 +280,13 @@ public final class Main {
 				&& inst.firstOperand() instanceof final IndirectOperand io
 				&& io.hasSegment()
 				&& io.getSegment() == SegmentRegister.CS;
+	}
+
+	private static boolean hasNotrackPrefix(
+			final Instruction inst, final byte[] content, final long startOfInstruction) {
+		return (inst.opcode() == Opcode.JMP || inst.opcode() == Opcode.CALL)
+				&& !(inst.firstOperand() instanceof Immediate)
+				&& content[BitUtils.asInt(startOfInstruction)] == (byte) 0x3e;
 	}
 
 	private static String ripRelativeComment(
@@ -408,6 +443,7 @@ public final class Main {
 	@SuppressWarnings("PMD.UseConcurrentHashMap")
 	private static NavigableMap<Long, String> findAllSymbols(final SectionTable st) {
 		final NavigableMap<Long, String> symbols = new TreeMap<>();
+		final Map<Long, Integer> bindingPriority = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
 		if (symbolTable.isPresent()) {
 			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
@@ -423,10 +459,34 @@ public final class Main {
 				if (!isMeaningful) {
 					continue;
 				}
-				symbols.put(ste.value(), strtab.getString(ste.nameOffset()));
+				// When multiple symbols share the same address, GNU objdump prefers a typed symbol (OBJECT/FUNC/...)
+				// over an untyped boundary marker (NOTYPE); among equally-typed symbols, the strongest binding wins
+				// (GLOBAL over WEAK over LOCAL); among equally-typed, equally-bound symbols, the alphabetically
+				// first name wins.
+				final int priority = symbolPriority(ste);
+				final String candidateName = strtab.getString(ste.nameOffset());
+				final Integer existingPriority = bindingPriority.get(ste.value());
+				final String existingName = symbols.get(ste.value());
+				if (existingPriority == null
+						|| priority > existingPriority
+						|| (priority == existingPriority && candidateName.compareTo(existingName) < 0)) {
+					symbols.put(ste.value(), candidateName);
+					bindingPriority.put(ste.value(), priority);
+				}
 			}
 		}
 		return symbols;
+	}
+
+	private static int symbolPriority(final SymbolTableEntry ste) {
+		final int typeRank = ste.info().getType() == SymbolTableEntryType.STT_NOTYPE ? 0 : 1;
+		final int bindingRank =
+				switch (ste.info().getBinding()) {
+					case STB_GLOBAL -> 2;
+					case STB_WEAK -> 1;
+					case STB_LOCAL -> 0;
+				};
+		return typeRank * 10 + bindingRank;
 	}
 
 	private static long getAsLong(final Immediate imm) {

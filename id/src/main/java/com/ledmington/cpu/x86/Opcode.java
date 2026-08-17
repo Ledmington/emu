@@ -86,6 +86,9 @@ public enum Opcode {
 	/** Convert doubleword to quadword. */
 	CDQE,
 
+	/** Convert quadword to octaword. */
+	CQO,
+
 	/** Clear carry flag. */
 	CLC,
 
