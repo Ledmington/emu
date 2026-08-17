@@ -231,9 +231,26 @@ public final class Main {
 		return inst.hasFirstOperand()
 				&& !inst.hasSecondOperand()
 				&& (inst.opcode() == Opcode.JMP
+						|| inst.opcode() == Opcode.JA
+						|| inst.opcode() == Opcode.JAE
+						|| inst.opcode() == Opcode.JB
+						|| inst.opcode() == Opcode.JBE
 						|| inst.opcode() == Opcode.JE
-						|| inst.opcode() == Opcode.JNE
+						|| inst.opcode() == Opcode.JG
+						|| inst.opcode() == Opcode.JGE
+						|| inst.opcode() == Opcode.JL
 						|| inst.opcode() == Opcode.JLE
+						|| inst.opcode() == Opcode.JNE
+						|| inst.opcode() == Opcode.JNS
+						|| inst.opcode() == Opcode.JO
+						|| inst.opcode() == Opcode.JNO
+						|| inst.opcode() == Opcode.JNP
+						|| inst.opcode() == Opcode.JP
+						|| inst.opcode() == Opcode.JRCXZ
+						|| inst.opcode() == Opcode.JS
+						|| inst.opcode() == Opcode.LOOP
+						|| inst.opcode() == Opcode.LOOPE
+						|| inst.opcode() == Opcode.LOOPNE
 						|| inst.opcode() == Opcode.CALL)
 				&& inst.firstOperand() instanceof Immediate;
 	}

@@ -148,4 +148,13 @@ public final class Vex3Prefix implements InstructionPrefix {
 	public byte p() {
 		return p;
 	}
+
+	/**
+	 * Returns the value of the L bit in this VEX3 prefix.
+	 *
+	 * @return True if the L bit is set (256-bit vector length), false otherwise (128-bit vector length).
+	 */
+	public boolean l() {
+		return l;
+	}
 }

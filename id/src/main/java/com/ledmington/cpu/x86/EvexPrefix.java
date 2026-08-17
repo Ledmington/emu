@@ -206,12 +206,31 @@ public final class EvexPrefix implements InstructionPrefix {
 	}
 
 	/**
+	 * Returns the value of the mandatory-prefix (pp) field in this EVEX prefix: 0 for none, 1 for 0x66, 2 for 0xf3, 3
+	 * for 0xf2.
+	 *
+	 * @return The 2-bit mandatory-prefix field.
+	 */
+	public byte p() {
+		return p;
+	}
+
+	/**
 	 * Returns the L bit value.
 	 *
 	 * @return The L bit.
 	 */
 	public boolean l() {
 		return l;
+	}
+
+	/**
+	 * Returns the L' (L1) bit value.
+	 *
+	 * @return The L1 bit.
+	 */
+	public boolean l1() {
+		return l1;
 	}
 
 	/**
