@@ -167,9 +167,8 @@ import com.ledmington.cpu.x86.LegacyPrefix;
 import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.SuppressFBWarnings;
 
-@SuppressWarnings("PMD.TooManyStaticImports")
+@SuppressWarnings("PMD.UseUtilityClass")
 public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstruction {
 
 	private static final Immediate one = new Immediate((byte) 1);
@@ -190,12 +189,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 
 	// FIXME: this is ugly
 	// TODO: do the allowed encodings need to be a set (instead of a list)?
-	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, Set<byte[]> allowedEncodings) {
-		@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This object as is it is for now.")
-		public Set<byte[]> allowedEncodings() {
-			return allowedEncodings;
-		}
-	}
+	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, Set<byte[]> allowedEncodings) {}
 
 	private static X64EncodingTestCase test(final Instruction instruction, final String intelSyntax, final String hex) {
 		final String[] splitted = hex.strip().split(" ");

@@ -17,8 +17,7 @@
  */
 package com.ledmington.mem;
 
-@SuppressWarnings("PMD.TestClassWithoutTestCases")
-public final class TestPagedMemory extends TestMemory {
+final class TestPagedMemory extends TestMemory {
 	@Override
 	protected Memory getMemory() {
 		return new PagedMemory(MemoryInitializer.random());

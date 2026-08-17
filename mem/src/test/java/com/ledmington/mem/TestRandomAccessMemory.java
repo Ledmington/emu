@@ -17,8 +17,7 @@
  */
 package com.ledmington.mem;
 
-@SuppressWarnings("PMD.TestClassWithoutTestCases")
-public final class TestRandomAccessMemory extends TestMemory {
+final class TestRandomAccessMemory extends TestMemory {
 	@Override
 	protected Memory getMemory() {
 		return new RandomAccessMemory(MemoryInitializer.random());
