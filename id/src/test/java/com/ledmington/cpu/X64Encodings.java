@@ -5190,6 +5190,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new GeneralInstruction(Opcode.CWDE), "cwde", "98"),
 				//  Cdqe
 				test(new GeneralInstruction(Opcode.CDQE), "cdqe", "48 98"),
+				//  Cqo
+				test(new GeneralInstruction(Opcode.CQO), "cqo", "48 99"),
 				//  Leave
 				test(new GeneralInstruction(Opcode.LEAVE), "leave", "c9"),
 				// Int3

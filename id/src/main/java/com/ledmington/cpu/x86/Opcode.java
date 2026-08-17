@@ -35,8 +35,20 @@ public enum Opcode {
 	/** Logical AND. */
 	AND,
 
+	/** Logical AND NOT. */
+	ANDN,
+
 	/** Bitwise logical AND of packed double-precision floating-point values. */
 	ANDPD,
+
+	/** Extract lowest set isolated bit. */
+	BLSI,
+
+	/** Set all lower bits below the lowest set bit to 1. */
+	BLSMSK,
+
+	/** Reset lowest set bit. */
+	BLSR,
 
 	/** Bounded jump. */
 	BND_JMP("bnd jmp"),
@@ -73,6 +85,9 @@ public enum Opcode {
 
 	/** Convert doubleword to quadword. */
 	CDQE,
+
+	/** Convert quadword to octaword. */
+	CQO,
 
 	/** Clear carry flag. */
 	CLC,
@@ -291,13 +306,25 @@ public enum Opcode {
 	KORD,
 
 	/** OR masks and set flags. */
+	KORTESTB,
+
+	/** OR masks and set flags. */
 	KORTESTD,
+
+	/** OR masks and set flags. */
+	KORTESTQ,
+
+	/** OR masks and set flags. */
+	KORTESTW,
 
 	/** Unpack for Mask Registers. */
 	KUNPCKBW,
 
 	/** Unpack for Mask Registers. */
 	KUNPCKDQ,
+
+	/** Bitwise logical XNOR masks. */
+	KXNORQ,
 
 	/** Load status flags into AH register. */
 	LAHF,
@@ -413,6 +440,9 @@ public enum Opcode {
 	/** Output string to port. */
 	OUTS,
 
+	/** Add packed byte integers. */
+	PADDB,
+
 	/** Add packed doubleword integers. */
 	PADDD,
 
@@ -425,6 +455,9 @@ public enum Opcode {
 	/** Logical AND . */
 	PAND,
 
+	/** Logical AND NOT. */
+	PANDN,
+
 	/** Compare packed bytes for equal. */
 	PCMPEQB,
 
@@ -436,6 +469,9 @@ public enum Opcode {
 
 	/** Compare packed signed integers for greater than. */
 	PCMPGTB,
+
+	/** Compare packed signed integers for greater than. */
+	PCMPGTD,
 
 	/** Packed compare implicit-length strings. */
 	PCMPISTRI,
@@ -581,6 +617,9 @@ public enum Opcode {
 	/** Read shadow stack pointer. */
 	RDSSPQ,
 
+	/** Restore saved shadow stack pointer. */
+	RSTORSSP,
+
 	/** Read time-stamp counter. */
 	RDTSC,
 
@@ -604,6 +643,9 @@ public enum Opcode {
 
 	/** Arithmetic shift right without affecting flags. */
 	SARX,
+
+	/** Save previous shadow stack pointer. */
+	SAVEPREVSSP,
 
 	/** Integer subtraction with borrow. */
 	SBB,
@@ -737,6 +779,9 @@ public enum Opcode {
 	/** Compare packed data for equal. */
 	VPCMPEQB,
 
+	/** Compare packed unsigned byte values into mask. */
+	VPCMPEQUB,
+
 	/** Compare packed data for equal. */
 	VPCMPEQD,
 
@@ -752,11 +797,26 @@ public enum Opcode {
 	/** Compare packed data for less than or equal. */
 	VPCMPLEB,
 
+	/** Compare packed data for less than or equal. */
+	VPCMPLED,
+
+	/** Compare packed unsigned byte values into mask. */
+	VPCMPLEUB,
+
 	/** Compare packed data for less than. */
 	VPCMPLTB,
 
+	/** Compare packed data for less than. */
+	VPCMPLTD,
+
+	/** Compare packed unsigned byte values into mask. */
+	VPCMPLTUB,
+
 	/** Compare packed data for not equal. */
 	VPCMPNEQB,
+
+	/** Compare packed data for not equal. */
+	VPCMPNEQD,
 
 	/** Compare packed byte values into mask. */
 	VPCMPNEQUB,
@@ -764,8 +824,20 @@ public enum Opcode {
 	/** Compare packed data for not less than or equal. */
 	VPCMPNLEB,
 
+	/** Compare packed data for not less than or equal. */
+	VPCMPNLED,
+
+	/** Compare packed unsigned byte values into mask. */
+	VPCMPNLEUB,
+
 	/** Compare packed data for not less than. */
 	VPCMPNLTB,
+
+	/** Compare packed data for not less than. */
+	VPCMPNLTD,
+
+	/** Compare packed unsigned byte values into mask. */
+	VPCMPNLTUB,
 
 	/** Minimum of packed unsigned byte integers. */
 	VPMINUB,
@@ -791,11 +863,29 @@ public enum Opcode {
 	/** Logical AND and set mask. */
 	VPTESTMB,
 
+	/** Logical AND and set mask. */
+	VPTESTMD,
+
+	/** Logical AND and set mask. */
+	VPTESTMQ,
+
+	/** Logical NAND and set mask. */
+	VPTESTNMD,
+
+	/** Logical NAND and set mask. */
+	VPTESTNMQ,
+
 	/** Invoke VM function. */
 	VMFUNC,
 
 	/** Move doubleword. */
 	VMOVD,
+
+	/** Move aligned packed integer values. */
+	VMOVDQA32,
+
+	/** Move aligned packed integer values. */
+	VMOVDQA64,
 
 	/** Move unaligned packed integer values. */
 	VMOVDQU,
@@ -826,6 +916,9 @@ public enum Opcode {
 
 	/** Logical AND NOT. */
 	VPANDN,
+
+	/** Add packed byte integers. */
+	VPADDB,
 
 	/** Move byte mask. */
 	VPMOVMSKB,
