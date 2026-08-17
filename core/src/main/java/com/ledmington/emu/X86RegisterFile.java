@@ -295,7 +295,7 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	private void set(final RFlags f) {
-		rflags |= (1L << f.bit());
+		rflags |= 1L << f.bit();
 	}
 
 	private void reset(final RFlags f) {

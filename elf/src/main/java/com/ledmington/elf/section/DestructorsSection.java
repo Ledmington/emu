@@ -58,13 +58,11 @@ public final class DestructorsSection implements LoadableSection {
 		}
 
 		int destructorsSizeInBytes = 0; // bytes
-		{
-			for (int i = 0; i < dynamicSection.getTableLength(); i++) {
-				if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_FINI_ARRAYSZ) {
-					destructorsSizeInBytes =
-							BitUtils.asInt(dynamicSection.getEntry(i).getContent());
-					break;
-				}
+		for (int i = 0; i < dynamicSection.getTableLength(); i++) {
+			if (dynamicSection.getEntry(i).getTag() == DynamicTableEntryTag.DT_FINI_ARRAYSZ) {
+				destructorsSizeInBytes =
+						BitUtils.asInt(dynamicSection.getEntry(i).getContent());
+				break;
 			}
 		}
 

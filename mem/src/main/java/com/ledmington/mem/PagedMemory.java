@@ -42,7 +42,7 @@ public final class PagedMemory implements Memory {
 		private final byte[] bytes;
 		private final boolean[] initialized;
 
-		public Page(final long numBytes, final MemoryInitializer initializer) {
+		/* default */ Page(final long numBytes, final MemoryInitializer initializer) {
 			this.bytes = new byte[Math.toIntExact(numBytes)];
 			this.initialized = new boolean[Math.toIntExact(numBytes)];
 			for (int i = 0; i < numBytes; i++) {

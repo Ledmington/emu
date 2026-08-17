@@ -47,6 +47,13 @@
         </properties>
     </rule>
 
+    <!-- Avoid reporting files with too many static imports (FIXME: workaround until [this issue](https://github.com/pmd/pmd/issues/6983) gets fixed in PMD) -->
+    <rule ref="category/java/codestyle.xml/TooManyStaticImports">
+        <properties>
+            <property name="maximumStaticImports" value="10" />
+        </properties>
+    </rule>
+
     <rule ref="category/java/design.xml">
         <!-- Avoid reporting classes with too many imports -->
 	    <exclude name="ExcessiveImports" />

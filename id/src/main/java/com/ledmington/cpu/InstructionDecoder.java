@@ -92,7 +92,6 @@ import com.ledmington.utils.ReadOnlyByteBufferV1;
 	"PMD.TooManyMethods",
 	"PMD.AvoidDuplicateLiterals",
 	"PMD.CouplingBetweenObjects",
-	"PMD.TooManyStaticImports",
 	"PMD.NcssCount",
 	"PMD.CognitiveComplexity",
 	"PMD.TooFewBranchesForSwitch",
@@ -262,6 +261,7 @@ public final class InstructionDecoder {
 		throw new IllegalArgumentException(String.format("Immediate too long: '%s'.", imm));
 	}
 
+	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
 	private static Operand parseOperand(
 			final String input, final Operand previousOperand, final Optional<Integer> compressedDisplacement) {
 		if (fromStringToRegister.containsKey(input)) {

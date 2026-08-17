@@ -96,7 +96,6 @@ public final class CommandLineParserBuilder {
 	 * @param defaultValue The default value of the argument.
 	 * @return This instance of {@link CommandLineParserBuilder}.
 	 */
-	@SuppressWarnings("PMD.UseObjectForClearerAPI")
 	public CommandLineParserBuilder addString(
 			final String shortName, final String longName, final String description, final String defaultValue) {
 		arguments.add(new StringArgument(shortName, longName, description, defaultValue));

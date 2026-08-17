@@ -87,7 +87,7 @@ public final class ELFView extends BorderPane {
 
 		private static final int MINIMUM_ALLOWED_LENGTH = 1;
 
-		public Range {
+		/* default */ Range {
 			if (offset < 0 || length < MINIMUM_ALLOWED_LENGTH) {
 				throw new IllegalArgumentException(String.format("Invalid range [%d; %d+%d]", offset, offset, length));
 			}
