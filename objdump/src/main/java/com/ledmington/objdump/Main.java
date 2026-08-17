@@ -65,7 +65,7 @@ public final class Main {
 
 	private Main() {}
 
-	@SuppressWarnings("PMD.AvoidCatchingGenericException")
+	@SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.UseConcurrentHashMap"})
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
@@ -401,6 +401,7 @@ public final class Main {
 	 * Finds the '&lt;symbol@plt&gt;'-style labels of PLT-like sections (e.g. '.plt', '.plt.got', '.plt.sec') by
 	 * correlating each stub's RIP-relative jump/call/push target with the GOT slot addresses touched by relocations.
 	 */
+	@SuppressWarnings("PMD.UseConcurrentHashMap")
 	private static Map<Long, String> findPltLabels(
 			final SectionTable st, final Map<Long, RelocatedSymbol> relocatedSymbols) {
 		final Map<Long, String> labels = new HashMap<>();
