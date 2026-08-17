@@ -179,10 +179,52 @@ public final class InstructionEncoder {
 								: Optional.empty();
 				yield io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement, shortHex);
 			}
-			case Immediate imm -> imm.toIntelSyntax(shortHex);
+			case Immediate imm -> immediateOperandString(inst, op, imm, shortHex);
 			case Register r -> r.toIntelSyntax();
 			case SegmentedAddress sa -> sa.toIntelSyntax();
 			default -> throw new IllegalArgumentException(String.format("Unknown operand type: '%s'.", op));
+		};
+	}
+
+	private static String immediateOperandString(
+			final Instruction inst, final Operand op, final Immediate imm, final boolean shortHex) {
+		// The legacy 'shift/rotate by 1' encoding (D0/D1) has no immediate byte at all: GNU objdump always displays
+		// its implicit count as a bare '1', never as a hex immediate.
+		if (GROUP2_REG_BYTES.containsKey(inst.opcode()) && imm.bits() == 8 && imm.asByte() == (byte) 1) {
+			return "1";
+		}
+
+		// Immediates narrower than their destination (e.g. the imm8 forms of ADD/SUB/AND/CMP/... or the imm32 form of
+		// a 64-bit MOV) are sign-extended by the CPU to the destination's width, and GNU objdump displays the
+		// sign-extended value rather than the raw encoded bytes.
+		final boolean isDestinationOperand = op == inst.firstOperand();
+		final boolean isSignExtendingForm = !GROUP2_REG_BYTES.containsKey(inst.opcode());
+		if (!isDestinationOperand
+				&& isSignExtendingForm
+				&& (inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand)) {
+			final int destinationBits = inst.firstOperand().bits();
+			if (destinationBits > imm.bits()) {
+				return signExtendedIntelSyntax(imm, destinationBits, shortHex);
+			}
+		}
+
+		return imm.toIntelSyntax(shortHex);
+	}
+
+	private static String signExtendedIntelSyntax(
+			final Immediate imm, final int destinationBits, final boolean shortHex) {
+		final long signExtended =
+				switch (imm.bits()) {
+					case 8 -> imm.asByte();
+					case 16 -> imm.asShort();
+					case 32 -> imm.asInt();
+					default -> imm.asLong();
+				};
+		return switch (destinationBits) {
+			case 8 -> String.format(shortHex ? "0x%x" : "0x%02x", (byte) signExtended);
+			case 16 -> String.format(shortHex ? "0x%x" : "0x%04x", (short) signExtended);
+			case 32 -> String.format(shortHex ? "0x%x" : "0x%08x", (int) signExtended);
+			default -> String.format(shortHex ? "0x%x" : "0x%016x", signExtended);
 		};
 	}
 
