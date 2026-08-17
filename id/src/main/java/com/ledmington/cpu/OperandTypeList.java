@@ -131,11 +131,20 @@ public enum OperandTypeList {
 	/** The list of operands made of a 256-bit YMM vector register and a 128-bit XMM vector register. */
 	RY_RX(OperandType.RY, OperandType.RX),
 
+	/** The list of operands made of a 256-bit YMM vector register and a 256-bit YMM vector register. */
+	RY_RY(OperandType.RY, OperandType.RY),
+
 	/** The list of operands made of a 512-bit ZMM vector register and a 32-bit general-purpose register. */
 	RZ_R32(OperandType.RZ, OperandType.R32),
 
 	/** The list of operands made of a 512-bit ZMM vector register and a 128-bit XMM vector register. */
 	RZ_RX(OperandType.RZ, OperandType.RX),
+
+	/** The list of operands made of a 512-bit ZMM vector register and a BYTE PTR indirect operand. */
+	RZ_M8(OperandType.RZ, OperandType.M8),
+
+	/** The list of operands made of a 512-bit ZMM vector register and a 512-bit ZMM vector register. */
+	RZ_RZ(OperandType.RZ, OperandType.RZ),
 
 	/** The list of operands made of a 32-bit general-purpose register and a vector mask register. */
 	R32_RK(OperandType.R32, OperandType.RK),
@@ -408,6 +417,18 @@ public enum OperandTypeList {
 	R64_R64_R64(OperandType.R64, OperandType.R64, OperandType.R64),
 
 	/**
+	 * The list of operands made of a 32-bit general-purpose register, a 32-bit general-purpose register and a DWORD PTR
+	 * indirect operand.
+	 */
+	R32_R32_M32(OperandType.R32, OperandType.R32, OperandType.M32),
+
+	/**
+	 * The list of operands made of a 64-bit general-purpose register, a 64-bit general-purpose register and a QWORD PTR
+	 * indirect operand.
+	 */
+	R64_R64_M64(OperandType.R64, OperandType.R64, OperandType.M64),
+
+	/**
 	 * The list of operands made of a vector mask register, a 128-bit XMM vector register and a XMMWORD PTR indirect
 	 * operand.
 	 */
@@ -418,6 +439,12 @@ public enum OperandTypeList {
 	 * operand.
 	 */
 	RK_RY_M256(OperandType.RK, OperandType.RY, OperandType.M256),
+
+	/**
+	 * The list of operands made of a vector mask register, a 512-bit ZMM vector register and a ZMMWORD PTR indirect
+	 * operand.
+	 */
+	RK_RZ_M512(OperandType.RK, OperandType.RZ, OperandType.M512),
 
 	/**
 	 * The list of operands made of a 128-bit XMM vector register, a 128-bit XMM vector register and a 128-bit XMM
@@ -449,6 +476,12 @@ public enum OperandTypeList {
 	 */
 	RK_RY_RY(OperandType.RK, OperandType.RY, OperandType.RY),
 
+	/**
+	 * The list of operands made of a vector mask register, a 512-bit ZMM vector register and a 512-bit ZMM vector
+	 * register.
+	 */
+	RK_RZ_RZ(OperandType.RK, OperandType.RZ, OperandType.RZ),
+
 	/** The list of operands made of a vector mask register, a vector mask register and a vector mask register. */
 	RK_RK_RK(OperandType.RK, OperandType.RK, OperandType.RK),
 
@@ -457,6 +490,18 @@ public enum OperandTypeList {
 	 * indirect operand.
 	 */
 	RY_RY_M256(OperandType.RY, OperandType.RY, OperandType.M256),
+
+	/**
+	 * The list of operands made of a 512-bit ZMM vector register, a 512-bit ZMM vector register and a 512-bit ZMM
+	 * vector register.
+	 */
+	RZ_RZ_RZ(OperandType.RZ, OperandType.RZ, OperandType.RZ),
+
+	/**
+	 * The list of operands made of a 512-bit ZMM vector register, a 512-bit ZMM vector register and a ZMMWORD PTR
+	 * indirect operand.
+	 */
+	RZ_RZ_M512(OperandType.RZ, OperandType.RZ, OperandType.M512),
 
 	/**
 	 * The list of operands made of a 128-bit XMM vector register, a 128-bit XMM vector register, a XMMWORD PTR indirect
