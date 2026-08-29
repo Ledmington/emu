@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import com.ledmington.cpu.x86.DisplacementType;
 import com.ledmington.cpu.x86.Immediate;
@@ -169,21 +170,56 @@ public final class InstructionEncoder {
 						&& code != Opcode.XSAVE
 						&& code != Opcode.XRSTOR
 						&& code != Opcode.XSAVEC;
-				final Optional<Integer> compressedDisplacement =
-						((code == Opcode.VPTERNLOGD || code == Opcode.VPMINUB || code == Opcode.VPMINUD)
-										&& inst.firstOperand() instanceof final Register r1
-										&& Registers.requiresEvexExtension(r1)
-										&& inst.secondOperand() instanceof final Register r2
-										&& Registers.requiresEvexExtension(r2))
-								? Optional.of(32)
-								: Optional.empty();
-				yield io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement, shortHex);
+				yield io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement(inst), shortHex);
 			}
 			case Immediate imm -> immediateOperandString(inst, op, imm, shortHex);
 			case Register r -> r.toIntelSyntax();
 			case SegmentedAddress sa -> sa.toIntelSyntax();
 			default -> throw new IllegalArgumentException(String.format("Unknown operand type: '%s'.", op));
 		};
+	}
+
+	// EVEX-encoded instructions with the "Full Vector" tuple type (no broadcast) encode a memory operand's
+	// 8-bit displacement pre-scaled by the vector width in bytes (16/32/64 for XMM/YMM/ZMM): e.g. a raw disp8
+	// of 1 means an actual displacement of 0x40 for a ZMM operand. Since a decoded Instruction does not retain
+	// whether it came from a VEX or an EVEX encoding, opcodes that exist in both forms (e.g. VMOVUPS, VMOVDQU,
+	// VPMINUB) are only trusted when some unambiguous sign of EVEX is present: a ZMM operand, or a register
+	// numbered 16-31 (both are addressable only through EVEX's extra extension bits, never through VEX).
+	// Opcodes that exist only as EVEX (e.g. the _32/_64/_8/_16-suffixed VMOVDQ* forms, or VPTERNLOGD) are
+	// trusted regardless. Scalar and broadcast EVEX forms use a different scale and are not covered here.
+	private static final Set<Opcode> EVEX_ONLY_OPCODES = Set.of(
+			Opcode.VMOVDQA32,
+			Opcode.VMOVDQA64,
+			Opcode.VMOVDQU8,
+			Opcode.VMOVDQU16,
+			Opcode.VMOVDQU32,
+			Opcode.VMOVDQU64,
+			Opcode.VPTERNLOGD);
+	private static final Set<Opcode> VEX_OR_EVEX_OPCODES = Set.of(
+			Opcode.VMOVUPS,
+			Opcode.VMOVAPS,
+			Opcode.VMOVDQA,
+			Opcode.VMOVDQU,
+			Opcode.VMOVNTDQ,
+			Opcode.VPMINUB,
+			Opcode.VPMINUD);
+
+	private static Optional<Integer> compressedDisplacement(final Instruction inst) {
+		Register vectorRegister = null;
+		boolean isUnambiguouslyEvex = false;
+		for (int i = 0; i < inst.getNumOperands(); i++) {
+			final Operand op = inst.operand(i);
+			if (op instanceof RegisterXMM || op instanceof RegisterYMM || op instanceof RegisterZMM) {
+				vectorRegister = (Register) op;
+				isUnambiguouslyEvex |= op instanceof RegisterZMM || Registers.requiresEvexExtension(vectorRegister);
+			}
+		}
+		if (vectorRegister == null) {
+			return Optional.empty();
+		}
+		final boolean isTrustworthy = EVEX_ONLY_OPCODES.contains(inst.opcode())
+				|| (VEX_OR_EVEX_OPCODES.contains(inst.opcode()) && isUnambiguouslyEvex);
+		return isTrustworthy ? Optional.of(vectorRegister.bits() / 8) : Optional.empty();
 	}
 
 	private static String immediateOperandString(

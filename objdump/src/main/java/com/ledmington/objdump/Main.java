@@ -480,7 +480,15 @@ public final class Main {
 	}
 
 	private static int symbolPriority(final SymbolTableEntry ste) {
-		final int typeRank = ste.info().getType() == SymbolTableEntryType.STT_NOTYPE ? 0 : 1;
+		// GNU objdump prefers a concrete FUNC/OBJECT symbol over a GNU_IFUNC one at the same address (the
+		// ifunc symbol names a resolver indirection, not the code actually at that address), and prefers
+		// either over an untyped boundary marker (NOTYPE).
+		final int typeRank =
+				switch (ste.info().getType()) {
+					case STT_NOTYPE -> 0;
+					case STT_GNU_IFUNC -> 1;
+					default -> 2;
+				};
 		final int bindingRank =
 				switch (ste.info().getBinding()) {
 					case STB_GLOBAL -> 2;
@@ -531,6 +539,7 @@ public final class Main {
 	@SuppressWarnings("PMD.UseConcurrentHashMap")
 	private static Map<Long, String> findFunctionNames(final SectionTable st) {
 		final Map<Long, String> functionNames = new HashMap<>();
+		final Map<Long, Integer> bindingPriority = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
 		if (symbolTable.isPresent()) {
 			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
@@ -545,7 +554,18 @@ public final class Main {
 				if (!isLabelWorthy) {
 					continue;
 				}
-				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
+				// Same tie-break as findAllSymbols: when multiple symbols share an address, prefer the
+				// strongest binding, then the alphabetically first name.
+				final int priority = symbolPriority(ste);
+				final String candidateName = strtab.getString(ste.nameOffset());
+				final Integer existingPriority = bindingPriority.get(ste.value());
+				final String existingName = functionNames.get(ste.value());
+				if (existingPriority == null
+						|| priority > existingPriority
+						|| (priority == existingPriority && candidateName.compareTo(existingName) < 0)) {
+					functionNames.put(ste.value(), candidateName);
+					bindingPriority.put(ste.value(), priority);
+				}
 			}
 		}
 		return functionNames;

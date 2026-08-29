@@ -863,6 +863,9 @@ public enum Opcode {
 	/** Logical AND and set mask. */
 	VPTESTMB,
 
+	/** Logical AND and set mask of the bitwise NOT of the result. */
+	VPTESTNMB,
+
 	/** Logical AND and set mask. */
 	VPTESTMD,
 
@@ -880,6 +883,9 @@ public enum Opcode {
 
 	/** Move doubleword. */
 	VMOVD,
+
+	/** Move aligned packed integer values. */
+	VMOVDQA,
 
 	/** Move aligned packed integer values. */
 	VMOVDQA32,
@@ -940,6 +946,9 @@ public enum Opcode {
 
 	/** Zero all XMM, YMM and ZMM registers. */
 	VZEROALL,
+
+	/** Zero the upper 128 bits of all YMM/ZMM registers. */
+	VZEROUPPER,
 
 	/** Exchange and add. */
 	XADD,

@@ -134,6 +134,9 @@ public enum OperandTypeList {
 	/** The list of operands made of a 256-bit YMM vector register and a 256-bit YMM vector register. */
 	RY_RY(OperandType.RY, OperandType.RY),
 
+	/** The list of operands made of a 256-bit YMM vector register and a 32-bit general-purpose register. */
+	RY_R32(OperandType.RY, OperandType.R32),
+
 	/** The list of operands made of a 512-bit ZMM vector register and a 32-bit general-purpose register. */
 	RZ_R32(OperandType.RZ, OperandType.R32),
 
@@ -266,6 +269,9 @@ public enum OperandTypeList {
 	/** The list of operands made of a QWORD PTR indirect operand and a 64-bit general-purpose register. */
 	M64_R64(OperandType.M64, OperandType.R64),
 
+	/** The list of operands made of a DWORD PTR indirect operand and a 128-bit XMM vector register. */
+	M32_RX(OperandType.M32, OperandType.RX),
+
 	/** The list of operands made of a QWORD PTR indirect operand and a 128-bit XMM vector register. */
 	M64_RX(OperandType.M64, OperandType.RX),
 
@@ -387,10 +393,22 @@ public enum OperandTypeList {
 	RX_M128_I8(OperandType.RX, OperandType.M128, OperandType.I8),
 
 	/**
+	 * The list of operands made of a 32-bit general-purpose register, a DWORD PTR indirect operand and an 8-bit
+	 * immediate value.
+	 */
+	R32_M32_I8(OperandType.R32, OperandType.M32, OperandType.I8),
+
+	/**
 	 * The list of operands made of a 32-bit general-purpose register, a DWORD PTR indirect operand and a 32-bit
 	 * immediate value.
 	 */
 	R32_M32_I32(OperandType.R32, OperandType.M32, OperandType.I32),
+
+	/**
+	 * The list of operands made of a 64-bit general-purpose register, a QWORD PTR indirect operand and an 8-bit
+	 * immediate value.
+	 */
+	R64_M64_I8(OperandType.R64, OperandType.M64, OperandType.I8),
 
 	/**
 	 * The list of operands made of a 64-bit general-purpose register, a QWORD PTR indirect operand and a 32-bit

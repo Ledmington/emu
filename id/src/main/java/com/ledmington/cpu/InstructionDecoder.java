@@ -510,10 +510,14 @@ public final class InstructionDecoder {
 						.pointer(pref.hasOperandSizeOverridePrefix() ? PointerSize.WORD_PTR : PointerSize.BYTE_PTR)
 						.build()
 				: Register8.fromByte(getByteFromRM(pref, modrm), pref.hasRexPrefix());
+		final InstructionBuilder ib = Instruction.builder();
+		if (pref.p1().isPresent()) {
+			ib.prefix(pref.p1().orElseThrow());
+		}
 
 		return switch (modrm.reg()) {
-			case 0 -> Instruction.builder().opcode(Opcode.INC).op(arg).build();
-			case 1 -> Instruction.builder().opcode(Opcode.DEC).op(arg).build();
+			case 0 -> ib.opcode(Opcode.INC).op(arg).build();
+			case 1 -> ib.opcode(Opcode.DEC).op(arg).build();
 			case 2, 3, 4, 5, 6, 7 -> throw new ReservedOpcode(opcodeFirstByte, opcodeSecondByte);
 			default -> throw new UnknownOpcode(opcodeFirstByte, opcodeSecondByte);
 		};
@@ -526,9 +530,12 @@ public final class InstructionDecoder {
 		final ModRM modrm = new ModRM(opcodeSecondByte);
 
 		return switch (modrm.reg()) {
-			case 0b00000000 ->
-				Instruction.builder()
-						.opcode(Opcode.INC)
+			case 0b00000000 -> {
+				final InstructionBuilder ib = Instruction.builder();
+				if (pref.p1().isPresent()) {
+					ib.prefix(pref.p1().orElseThrow());
+				}
+				yield ib.opcode(Opcode.INC)
 						.op(
 								isIndirectOperandNeeded(modrm)
 										? parseIndirectOperand(b, pref, modrm)
@@ -540,9 +547,13 @@ public final class InstructionDecoder {
 												pref.rex().hasModRMRMExtension(),
 												pref.hasOperandSizeOverridePrefix()))
 						.build();
-			case 0b00000001 ->
-				Instruction.builder()
-						.opcode(Opcode.DEC)
+			}
+			case 0b00000001 -> {
+				final InstructionBuilder ib = Instruction.builder();
+				if (pref.p1().isPresent()) {
+					ib.prefix(pref.p1().orElseThrow());
+				}
+				yield ib.opcode(Opcode.DEC)
 						.op(
 								isIndirectOperandNeeded(modrm)
 										? parseIndirectOperand(b, pref, modrm)
@@ -554,6 +565,7 @@ public final class InstructionDecoder {
 												pref.rex().hasModRMRMExtension(),
 												pref.hasOperandSizeOverridePrefix()))
 						.build();
+			}
 			case 0b00000010 -> {
 				// near CALL
 				final Register reg = Registers.fromCode(
@@ -869,8 +881,11 @@ public final class InstructionDecoder {
 
 		if (isRegister8Bit) {
 			// OP R8, imm8
-			return Instruction.builder()
-					.opcode(opcode)
+			final InstructionBuilder ib = Instruction.builder();
+			if (pref.p1().isPresent()) {
+				ib.prefix(pref.p1().orElseThrow());
+			}
+			return ib.opcode(opcode)
 					.op(
 							isIndirectOperandNeeded
 									? parseIndirectOperand(b, pref, modrm)
@@ -928,7 +943,11 @@ public final class InstructionDecoder {
 											immediateBits, operandBits));
 							};
 					};
-			return Instruction.builder().opcode(opcode).op(r).op(imm).build();
+			final InstructionBuilder ib = Instruction.builder();
+			if (pref.p1().isPresent()) {
+				ib.prefix(pref.p1().orElseThrow());
+			}
+			return ib.opcode(opcode).op(r).op(imm).build();
 		}
 	}
 
@@ -1126,6 +1145,12 @@ public final class InstructionDecoder {
 
 	private static byte getByteFromReg(final InstructionPrefix prefix, final ModRM modrm) {
 		return Registers.combine(!prefix.r(), modrm.reg());
+	}
+
+	private static byte getByteFromReg(final EvexPrefix evex, final ModRM modrm) {
+		// EVEX can address registers 16-31 (unlike VEX/REX), using the extra R' bit alongside R.
+		final byte base = Registers.combine(!evex.r(), modrm.reg());
+		return evex.r1() ? base : or(base, (byte) 0b00010000);
 	}
 
 	private static byte getByteFromRM(final Prefixes pref, final ModRM modrm) {
@@ -1691,11 +1716,15 @@ public final class InstructionDecoder {
 			case SHUFPx_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte r1 = getByteFromReg(pref.rex(), modrm);
-				final byte r2 = getByteFromRM(pref, modrm);
 				yield Instruction.builder()
 						.opcode(pref.hasOperandSizeOverridePrefix() ? Opcode.SHUFPD : Opcode.SHUFPS)
 						.op(RegisterXMM.fromByte(r1))
-						.op(RegisterXMM.fromByte(r2))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(PointerSize.XMMWORD_PTR)
+												.build()
+										: RegisterXMM.fromByte(getByteFromRM(pref, modrm)))
 						.op(imm8(b))
 						.build();
 			}
@@ -1780,13 +1809,43 @@ public final class InstructionDecoder {
 			case MOVQ_R128_M64_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref.rex(), modrm);
-				yield Instruction.builder()
-						.opcode(Opcode.MOVQ)
-						.op(RegisterXMM.fromByte(regByte))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.QWORD_PTR)
-								.build())
-						.build();
+				if (pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP) {
+					// F3 0F 7E /r: MOVQ xmm1, xmm2/m64
+					yield Instruction.builder()
+							.opcode(Opcode.MOVQ)
+							.op(RegisterXMM.fromByte(regByte))
+							.op(
+									isIndirectOperandNeeded(modrm)
+											? parseIndirectOperand(b, pref, modrm)
+													.pointer(PointerSize.QWORD_PTR)
+													.build()
+											: RegisterXMM.fromByte(getByteFromRM(pref, modrm)))
+							.build();
+				} else {
+					// 0F 7E /r: MOVD r/m32, mm            66 0F 7E /r: MOVD r/m32, xmm
+					// REX.W 0F 7E /r: MOVQ r/m64, mm      66 REX.W 0F 7E /r: MOVQ r/m64, xmm
+					final Opcode code = pref.rex().isOperand64Bit() ? Opcode.MOVQ : Opcode.MOVD;
+					final Register r1 = pref.hasOperandSizeOverridePrefix()
+							? RegisterXMM.fromByte(regByte)
+							: RegisterMMX.fromByte(regByte);
+					yield Instruction.builder()
+							.opcode(code)
+							.op(
+									isIndirectOperandNeeded(modrm)
+											? parseIndirectOperand(b, pref, modrm)
+													.pointer(
+															pref.rex().isOperand64Bit()
+																	? PointerSize.QWORD_PTR
+																	: PointerSize.DWORD_PTR)
+													.build()
+											: Registers.fromCode(
+													modrm.rm(),
+													pref.rex().isOperand64Bit(),
+													pref.rex().hasModRMRMExtension(),
+													false))
+							.op(r1)
+							.build();
+				}
 			}
 			case MOVHLPS_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -3096,11 +3155,19 @@ public final class InstructionDecoder {
 								pref.rex().isOperand64Bit(),
 								pref.rex().hasModRMRegExtension(),
 								false))
-						.op(Registers.fromCode(
-								modrm.rm(),
-								pref.rex().isOperand64Bit(),
-								pref.rex().hasModRMRMExtension(),
-								false))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(
+														pref.rex().isOperand64Bit()
+																? PointerSize.QWORD_PTR
+																: PointerSize.DWORD_PTR)
+												.build()
+										: Registers.fromCode(
+												modrm.rm(),
+												pref.rex().isOperand64Bit(),
+												pref.rex().hasModRMRMExtension(),
+												false))
 						.op(imm8(b))
 						.build();
 			}
@@ -3325,8 +3392,11 @@ public final class InstructionDecoder {
 				final Opcode opcode = opcodeTable[opcodeByte];
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref, modrm);
-				yield Instruction.builder()
-						.opcode(opcode)
+				final InstructionBuilder ib = Instruction.builder();
+				if (pref.p1().isPresent()) {
+					ib.prefix(pref.p1().orElseThrow());
+				}
+				yield ib.opcode(opcode)
 						.op(
 								isIndirectOperandNeeded(modrm)
 										? parseIndirectOperand(b, pref, modrm)
@@ -3376,8 +3446,11 @@ public final class InstructionDecoder {
 				final Opcode opcode = opcodeTable[opcodeByte];
 				final ModRM modrm = modrm(b);
 				final byte regByte = getByteFromReg(pref, modrm);
-				yield Instruction.builder()
-						.opcode(opcode)
+				final InstructionBuilder ib = Instruction.builder();
+				if (pref.p1().isPresent()) {
+					ib.prefix(pref.p1().orElseThrow());
+				}
+				yield ib.opcode(opcode)
 						.op(Register8.fromByte(regByte, pref.hasRexPrefix()))
 						.op(
 								isIndirectOperandNeeded(modrm)
@@ -3718,7 +3791,9 @@ public final class InstructionDecoder {
 
 		return switch (opcodeFirstByte) {
 			case VZEROALL_OPCODE ->
-				Instruction.builder().opcode(Opcode.VZEROALL).build();
+				Instruction.builder()
+						.opcode(vex2.l() ? Opcode.VZEROALL : Opcode.VZEROUPPER)
+						.build();
 			case VPCMPGTB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
@@ -3732,54 +3807,84 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPXOR)
-						.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterXMM.fromByte(getByteFromV(vex2)))
-						.op(RegisterXMM.fromByte(modrm.rm()))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VPOR_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPOR)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterYMM.fromByte(getByteFromV(vex2)))
-						.op(RegisterYMM.fromByte(modrm.rm()))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VPAND_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPAND)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterYMM.fromByte(getByteFromV(vex2)))
-						.op(RegisterYMM.fromByte(modrm.rm()))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VPANDN_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPANDN)
-						.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterXMM.fromByte(getByteFromV(vex2)))
-						.op(RegisterXMM.fromByte(modrm.rm()))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VPSUBB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPSUBB)
-						.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterXMM.fromByte(getByteFromV(vex2)))
-						.op(RegisterXMM.fromByte(modrm.rm()))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VPMINUB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPMINUB)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterYMM.fromByte(getByteFromV(vex2)))
-						.op(getYMMArgument(b, modrm, pref, modrm.rm()))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VMOVNTDQ_OPCODE -> {
@@ -3787,29 +3892,38 @@ public final class InstructionDecoder {
 				yield Instruction.builder()
 						.opcode(Opcode.VMOVNTDQ)
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
 						.build();
 			}
 			case VMOVDQU_RYMM_M256_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				// pp=01 (66 prefix): VMOVDQA (aligned).      pp=10 (F3 prefix): VMOVDQU (unaligned).
+				final Opcode opcode = vex2.p() == 1 ? Opcode.VMOVDQA : Opcode.VMOVDQU;
 				yield Instruction.builder()
-						.opcode(Opcode.VMOVDQU)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
+						.opcode(opcode)
+						.op(
+								vex2.l()
+										? RegisterYMM.fromByte(getByteFromReg(vex2, modrm))
+										: RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
 						.build();
 			}
 			case VMOVDQU_M256_RYMM_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final Opcode opcode = vex2.p() == 1 ? Opcode.VMOVDQA : Opcode.VMOVDQU;
 				yield Instruction.builder()
-						.opcode(Opcode.VMOVDQU)
+						.opcode(opcode)
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
+						.op(
+								vex2.l()
+										? RegisterYMM.fromByte(getByteFromReg(vex2, modrm))
+										: RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
 						.build();
 			}
 			case VMOVD_OPCODE -> {
@@ -3817,20 +3931,41 @@ public final class InstructionDecoder {
 				yield Instruction.builder()
 						.opcode(Opcode.VMOVD)
 						.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.DWORD_PTR)
-								.build())
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(PointerSize.DWORD_PTR)
+												.build()
+										: Register32.fromByte(getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VMOVQ_RXMM_M64_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield Instruction.builder()
-						.opcode(Opcode.VMOVQ)
-						.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.QWORD_PTR)
-								.build())
-						.build();
+				if (vex2.p() == 1) {
+					// 66 prefix: VEX.128.66.0F.W0 7E /r: VMOVD r/m32, xmm
+					yield Instruction.builder()
+							.opcode(Opcode.VMOVD)
+							.op(
+									isIndirectOperandNeeded(modrm)
+											? parseIndirectOperand(b, pref, modrm)
+													.pointer(PointerSize.DWORD_PTR)
+													.build()
+											: Register32.fromByte(getByteFromRM(vex2, modrm)))
+							.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
+							.build();
+				} else {
+					// F3 prefix: VEX.128.F3.0F.WIG 7E /r: VMOVQ xmm1, xmm2/m64
+					yield Instruction.builder()
+							.opcode(Opcode.VMOVQ)
+							.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
+							.op(
+									isIndirectOperandNeeded(modrm)
+											? parseIndirectOperand(b, pref, modrm)
+													.pointer(PointerSize.QWORD_PTR)
+													.build()
+											: RegisterXMM.fromByte(getByteFromRM(vex2, modrm)))
+							.build();
+				}
 			}
 			case VMOVQ_M64_RXMM_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -3854,11 +3989,14 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPCMPEQB)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(RegisterYMM.fromByte(getByteFromV(vex2)))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
-								.build())
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
+						.op(vectorRegister(vex2, getByteFromV(vex2)))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VPCMPEQD_OPCODE -> {
@@ -4047,32 +4185,41 @@ public final class InstructionDecoder {
 			}
 			case VMOVDQU_RYMM_M256_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				// pp=01 (66 prefix): VMOVDQA (aligned).      pp=10 (F3 prefix): VMOVDQU (unaligned).
+				final Opcode opcode = vex3.p() == 1 ? Opcode.VMOVDQA : Opcode.VMOVDQU;
 				yield Instruction.builder()
-						.opcode(Opcode.VMOVDQU)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex3, modrm)))
+						.opcode(opcode)
+						.op(
+								vex3.l()
+										? RegisterYMM.fromByte(getByteFromReg(vex3, modrm))
+										: RegisterXMM.fromByte(getByteFromReg(vex3, modrm)))
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex3.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
 						.build();
 			}
 			case VMOVDQU_M256_RYMM_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final Opcode opcode = vex3.p() == 1 ? Opcode.VMOVDQA : Opcode.VMOVDQU;
 				yield Instruction.builder()
-						.opcode(Opcode.VMOVDQU)
+						.opcode(opcode)
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex3.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
-						.op(RegisterYMM.fromByte(getByteFromReg(vex3, modrm)))
+						.op(
+								vex3.l()
+										? RegisterYMM.fromByte(getByteFromReg(vex3, modrm))
+										: RegisterXMM.fromByte(getByteFromReg(vex3, modrm)))
 						.build();
 			}
 			case VPCMPEQB_OPCODE -> {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPCMPEQB)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex3, modrm)))
-						.op(RegisterYMM.fromByte(getByteFromV(vex3)))
+						.op(vectorRegister(vex3, getByteFromReg(vex3, modrm)))
+						.op(vectorRegister(vex3, getByteFromV(vex3)))
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex3.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
 						.build();
 			}
@@ -4091,10 +4238,10 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPMINUD)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex3, modrm)))
-						.op(RegisterYMM.fromByte(getByteFromV(vex3)))
+						.op(vectorRegister(vex3, getByteFromReg(vex3, modrm)))
+						.op(vectorRegister(vex3, getByteFromV(vex3)))
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.YMMWORD_PTR)
+								.pointer(vex3.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
 								.build())
 						.build();
 			}
@@ -4102,7 +4249,7 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPBROADCASTB)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex3, modrm)))
+						.op(vectorRegister(vex3, getByteFromReg(vex3, modrm)))
 						.op(RegisterXMM.fromByte(getByteFromRM(vex3, modrm)))
 						.build();
 			}
@@ -4110,7 +4257,7 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPBROADCASTD)
-						.op(RegisterYMM.fromByte(getByteFromReg(vex3, modrm)))
+						.op(vectorRegister(vex3, getByteFromReg(vex3, modrm)))
 						.op(RegisterXMM.fromByte(getByteFromRM(vex3, modrm)))
 						.build();
 			}
@@ -4375,7 +4522,7 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPBROADCASTB)
-						.op(getZmmFromReg(evex, modrm))
+						.op(vectorRegister(evex, getByteFromReg(evex, modrm)))
 						.op(
 								isIndirectOperandNeeded(modrm)
 										? parseIndirectOperand(b, pref, modrm)
@@ -4388,7 +4535,7 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPBROADCASTB)
-						.op(getZmmFromReg(evex, modrm))
+						.op(vectorRegister(evex, getByteFromReg(evex, modrm)))
 						.op(Register32.fromByte(getByteFromRM(evex, modrm)))
 						.build();
 			}
@@ -4396,7 +4543,7 @@ public final class InstructionDecoder {
 				final ModRM modrm = modrm(b);
 				yield Instruction.builder()
 						.opcode(Opcode.VPBROADCASTD)
-						.op(getZmmFromReg(evex, modrm))
+						.op(vectorRegister(evex, getByteFromReg(evex, modrm)))
 						.op(Register32.fromByte(getByteFromRM(evex, modrm)))
 						.build();
 			}
@@ -4447,9 +4594,9 @@ public final class InstructionDecoder {
 				yield Instruction.builder()
 						.opcode(Opcode.VMOVNTDQ)
 						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.ZMMWORD_PTR)
+								.pointer(vectorPointerSize(evex))
 								.build())
-						.op(RegisterZMM.fromByte(getByteFromReg(evex, modrm)))
+						.op(vectorRegister(evex, getByteFromReg(evex, modrm)))
 						.build();
 			}
 			case VMOVQ_R64_RX_OPCODE -> {
@@ -4645,12 +4792,17 @@ public final class InstructionDecoder {
 			}
 			case VPTESTMB_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield Instruction.builder()
-						.opcode(Opcode.VPTESTMB)
+				// pp=01 (66 prefix): VPTESTMB.      pp=10 (F3 prefix): VPTESTNMB (tests the bitwise NOT).
+				final Opcode opcode = evex.p() == 1 ? Opcode.VPTESTMB : Opcode.VPTESTNMB;
+				final InstructionBuilder ib = Instruction.builder()
+						.opcode(opcode)
 						.op(MaskRegister.fromByte(getByteFromReg(evex, modrm)))
 						.op(RegisterYMM.fromByte(or(evex.v1() ? 0 : (byte) 0b00010000, getByteFromV(evex))))
-						.op(RegisterYMM.fromByte(or(evex.x() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm))))
-						.build();
+						.op(RegisterYMM.fromByte(or(evex.x() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm))));
+				if (evex.a() != (byte) 0) {
+					ib.mask(MaskRegister.fromByte(evex.a()));
+				}
+				yield ib.build();
 			}
 			case VPMINUB_OPCODE -> {
 				final ModRM modrm = modrm(b);
@@ -4743,8 +4895,8 @@ public final class InstructionDecoder {
 		};
 	}
 
-	private static RegisterZMM getZmmFromReg(final EvexPrefix evex, final ModRM modrm) {
-		return RegisterZMM.fromByte(or(getByteFromReg(evex, modrm), evex.r1() ? 0 : (byte) 0b00010000));
+	private static Register vectorRegister(final Vex2Prefix vex2, final byte raw) {
+		return vex2.l() ? RegisterYMM.fromByte(raw) : RegisterXMM.fromByte(raw);
 	}
 
 	private static Register vectorRegister(final Vex3Prefix vex3, final byte raw) {
@@ -4890,8 +5042,11 @@ public final class InstructionDecoder {
 				pref.rex().isOperand64Bit(),
 				pref.rex().hasModRMRegExtension(),
 				pref.hasOperandSizeOverridePrefix());
-		return Instruction.builder()
-				.opcode(opcode)
+		final InstructionBuilder ib = Instruction.builder();
+		if (pref.p1().isPresent()) {
+			ib.prefix(pref.p1().orElseThrow());
+		}
+		return ib.opcode(opcode)
 				.op(
 						isIndirectOperandNeeded(modrm)
 								? parseIndirectOperand(b, pref, modrm)
@@ -4915,8 +5070,11 @@ public final class InstructionDecoder {
 				pref.rex().isOperand64Bit(),
 				pref.rex().hasModRMRegExtension(),
 				pref.hasOperandSizeOverridePrefix());
-		return Instruction.builder()
-				.opcode(opcode)
+		final InstructionBuilder ib = Instruction.builder();
+		if (pref.p1().isPresent()) {
+			ib.prefix(pref.p1().orElseThrow());
+		}
+		return ib.opcode(opcode)
 				.op(r1)
 				.op(
 						isIndirectOperandNeeded

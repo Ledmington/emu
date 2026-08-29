@@ -76,14 +76,18 @@ public final class Vex2Prefix implements InstructionPrefix {
 		return r;
 	}
 
+	// VEX2 has no X/B bits at all: instructions using it never need those extensions, which is exactly what
+	// REX/VEX3/EVEX encode by storing X/B in one's complement (0 = extension present). Returning true here
+	// mimics that "bit set" (no extension) encoding, matching what callers like getByteFromRM(InstructionPrefix,
+	// ModRM) expect from every InstructionPrefix implementation.
 	@Override
 	public boolean x() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean b() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -99,5 +103,23 @@ public final class Vex2Prefix implements InstructionPrefix {
 	@Override
 	public byte v() {
 		return v;
+	}
+
+	/**
+	 * Returns the value of the L bit in this VEX2 prefix.
+	 *
+	 * @return True if the L bit is set, false otherwise.
+	 */
+	public boolean l() {
+		return l;
+	}
+
+	/**
+	 * Returns the value of the P field in this VEX2 prefix.
+	 *
+	 * @return The 2-bit P field.
+	 */
+	public byte p() {
+		return p;
 	}
 }

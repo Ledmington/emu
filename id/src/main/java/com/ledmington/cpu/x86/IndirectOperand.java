@@ -252,6 +252,11 @@ public final class IndirectOperand implements Operand {
 		sb.append(isDisplacementNegative() ? '-' : '+');
 	}
 
+	/** The raw sign-extended 64-bit hexadecimal value of the displacement, unaffected by its sign. */
+	private String rawSignExtendedDisplacementHex() {
+		return String.format("0x%x", (long) (int) displacement);
+	}
+
 	private void addDisplacement(
 			final StringBuilder sb, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		switch (displacementType) {
@@ -292,8 +297,15 @@ public final class IndirectOperand implements Operand {
 		}
 		if (hasSegment() && !hasBase() && !hasIndex()) {
 			// GNU objdump renders segment-relative absolute-displacement addressing (e.g. 'fs:0x28') without
-			// brackets, unlike every other addressing form.
-			addDisplacement(sb, compressedDisplacement, shortHex);
+			// brackets, unlike every other addressing form. A negative displacement is rendered as the raw
+			// sign-extended 64-bit value (e.g. 'fs:0xffffffffffffffc8'), not as a negated magnitude. This is
+			// specifically a GNU objdump display quirk (only used when 'shortHex' is enabled): the
+			// general-purpose API keeps showing the negated magnitude.
+			if (shortHex && isDisplacementNegative() && displacementType == DisplacementType.LONG) {
+				sb.append(rawSignExtendedDisplacementHex());
+			} else {
+				addDisplacement(sb, compressedDisplacement, shortHex);
+			}
 			return sb.toString();
 		}
 		sb.append('[');
@@ -310,8 +322,19 @@ public final class IndirectOperand implements Operand {
 			}
 		}
 		if (hasDisplacement()) {
-			addDisplacementSign(sb);
-			addDisplacement(sb, compressedDisplacement, shortHex);
+			if (shortHex
+					&& base == Register64.RIP
+					&& isDisplacementNegative()
+					&& displacementType == DisplacementType.LONG) {
+				// GNU objdump renders a negative rip-relative displacement as the raw sign-extended 64-bit
+				// value (e.g. "+0xffffffffffffea3c"), not as a negated magnitude (e.g. "-0x15c4"). This is
+				// specifically a GNU objdump display quirk: the general-purpose API keeps showing the negated
+				// magnitude.
+				sb.append('+').append(rawSignExtendedDisplacementHex());
+			} else {
+				addDisplacementSign(sb);
+				addDisplacement(sb, compressedDisplacement, shortHex);
+			}
 		}
 		sb.append(']');
 		return sb.toString();
