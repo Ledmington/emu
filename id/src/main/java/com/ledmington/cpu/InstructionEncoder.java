@@ -462,10 +462,12 @@ public final class InstructionEncoder {
 			return Prefix.EVEX;
 		}
 		return switch (inst.opcode()) {
-			case VPOR, VPAND, VZEROALL, VMOVD, VPCMPGTB, VPSUBB, VPSLLDQ, VPSRLDQ, KMOVD, KUNPCKBW -> Prefix.VEX2;
+			case VPOR, VPAND, VZEROALL, VZEROUPPER, VMOVD, VPCMPGTB, VPSUBB, VPSLLDQ, VPSRLDQ, KMOVD, KUNPCKBW ->
+				Prefix.VEX2;
 			case VPMINUD, SARX, BZHI, VPCMPISTRI, VPSHUFB, KMOVQ, VPALIGNR, KORTESTD, KORD, KUNPCKDQ, VPCMPEQQ ->
 				Prefix.VEX3;
-			case VPXORQ, VMOVUPS, VMOVDQU8, VMOVDQU64, VBROADCASTSS, VMOVAPS, VPCMPNEQUB -> Prefix.EVEX;
+			case VPXORQ, VMOVUPS, VMOVDQU8, VMOVDQU64, VBROADCASTSS, VMOVAPS, VPCMPNEQUB, VPTESTMB, VPTESTNMB ->
+				Prefix.EVEX;
 			case VPMOVMSKB -> isSecondER(inst) ? Prefix.VEX3 : Prefix.VEX2;
 			case VPXOR -> countExtensions(inst) >= 2 ? Prefix.VEX3 : Prefix.VEX2;
 			case VPANDN -> countExtensions(inst) >= 3 ? Prefix.VEX3 : Prefix.VEX2;
@@ -475,10 +477,18 @@ public final class InstructionEncoder {
 						? Prefix.EVEX
 						: ((isFirstMS(inst) || isSecondM(inst)) ? Prefix.VEX2 : Prefix.VEX3);
 			case VPMINUB -> countEvexExtensions(inst) > 0 ? Prefix.EVEX : Prefix.VEX2;
-			case VPCMPEQB, VPCMPEQD, VPCMPNEQB ->
-				(isFirstMask(inst) && isSecondEER(inst) && isThirdM(inst))
-						? Prefix.EVEX
-						: (isThirdMS(inst) ? Prefix.VEX2 : Prefix.VEX3);
+			case VPCMPEQB, VPCMPEQD, VPCMPNEQB -> {
+				if (isFirstMask(inst) && isSecondEER(inst) && isThirdM(inst)) {
+					yield Prefix.EVEX;
+				}
+				if (isThirdMS(inst)) {
+					yield Prefix.VEX2;
+				}
+				if (isThirdR(inst) && !isFirstMask(inst)) {
+					yield countExtensions(inst) >= 2 ? Prefix.VEX3 : Prefix.VEX2;
+				}
+				yield Prefix.VEX3;
+			}
 			case VPBROADCASTB, VPBROADCASTD -> isFirstEER(inst) ? Prefix.EVEX : Prefix.VEX3;
 			default -> Prefix.NONE;
 		};
@@ -521,7 +531,7 @@ public final class InstructionEncoder {
 	private static void encodeZeroOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
 		// TODO: refactor this into a map
 		switch (inst.opcode()) {
-			case VZEROALL -> wb.write((byte) 0x77);
+			case VZEROALL, VZEROUPPER -> wb.write((byte) 0x77);
 			case NOP -> wb.write((byte) 0x90);
 			case CWDE, CDQE -> wb.write((byte) 0x98);
 			case CDQ, CQO -> wb.write((byte) 0x99);
@@ -1597,18 +1607,28 @@ public final class InstructionEncoder {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x73);
 				reg = (byte) 0b011;
 			}
-			case VMOVDQU -> {
-				if ((inst.firstOperand() instanceof final IndirectOperand io
-								&& ((io.hasBase() && Registers.requiresExtension(io.getBase()))
-										|| (io.hasIndex() && Registers.requiresExtension(io.getIndex()))))
-						|| (inst.secondOperand() instanceof final IndirectOperand io2
-								&& ((io2.hasBase() && Registers.requiresExtension(io2.getBase()))
-										|| (io2.hasIndex() && Registers.requiresExtension(io2.getIndex()))))) {
+			case VMOVDQU, VMOVDQA -> {
+				// The RM-field operand needs VEX3 to address registers 8-15: VEX2 has no B/X bits for
+				// that. The Reg-field operand always fits VEX2's R bit, regardless of its register number.
+				// In the store direction (mem,reg) the RM field is the first (memory) operand; in the load
+				// direction (reg,mem/reg) it is the second operand.
+				final boolean rmNeedsExtension;
+				if (isFirstM(inst) && inst.secondOperand() instanceof Register) {
+					rmNeedsExtension = inst.firstOperand() instanceof final IndirectOperand io
+							&& ((io.hasBase() && Registers.requiresExtension(io.getBase()))
+									|| (io.hasIndex() && Registers.requiresExtension(io.getIndex())));
+				} else {
+					rmNeedsExtension = isSecondER(inst)
+							|| (inst.secondOperand() instanceof final IndirectOperand io2
+									&& ((io2.hasBase() && Registers.requiresExtension(io2.getBase()))
+											|| (io2.hasIndex() && Registers.requiresExtension(io2.getIndex()))));
+				}
+				if (rmNeedsExtension) {
 					encodeVex3Prefix(wb, inst);
 				} else {
 					encodeVex2Prefix(wb, inst);
 				}
-				if (isFirstR(inst) && isSecondM(inst)) {
+				if (isFirstR(inst) && (isSecondM(inst) || isSecondR(inst))) {
 					wb.write((byte) 0x6f);
 				} else if (isFirstM(inst) && inst.secondOperand() instanceof Register) {
 					wb.write((byte) 0x7f);
@@ -2148,7 +2168,7 @@ public final class InstructionEncoder {
 				wb.write((byte) 0x3e);
 				lastByte = (byte) 0x04;
 			}
-			case VPTESTMB -> wb.write((byte) 0x26);
+			case VPTESTMB, VPTESTNMB -> wb.write((byte) 0x26);
 			case KORD -> wb.write((byte) 0x45);
 			case KUNPCKDQ -> wb.write((byte) 0x4b);
 			case KUNPCKBW -> wb.write((byte) 0x4b);
@@ -2209,12 +2229,15 @@ public final class InstructionEncoder {
 					Registers.toByte(r1),
 					isSimpleIndirectOperand(io) ? Registers.toByte(io.getBase()) : (byte) 0b100);
 			encodeIndirectOperand(wb, io);
-			wb.write(lastByte);
+			if (inst.opcode() != Opcode.VPTESTMB && inst.opcode() != Opcode.VPTESTNMB) {
+				wb.write(lastByte);
+			}
 		} else if (inst.firstOperand() instanceof final MaskRegister r1
 				&& isSecondR(inst)
 				&& inst.thirdOperand() instanceof final Register r3) {
 			encodeModRM(wb, (byte) 0b11, Registers.toByte(r1), Registers.toByte(r3));
 			if (inst.opcode() != Opcode.VPTESTMB
+					&& inst.opcode() != Opcode.VPTESTNMB
 					&& inst.opcode() != Opcode.KORD
 					&& inst.opcode() != Opcode.KUNPCKDQ
 					&& inst.opcode() != Opcode.KUNPCKBW) {
@@ -2362,7 +2385,16 @@ public final class InstructionEncoder {
 
 	private static boolean requiresEvexPrefix(final Instruction inst) {
 		return switch (inst.opcode()) {
-			case VPTESTMB, VPORQ, VPXORQ, VMOVNTDQ, VMOVDQU8, VMOVDQU64, VMOVUPS, VPBROADCASTB, VPBROADCASTD -> true;
+			case VPTESTMB,
+					VPTESTNMB,
+					VPORQ,
+					VPXORQ,
+					VMOVNTDQ,
+					VMOVDQU8,
+					VMOVDQU64,
+					VMOVUPS,
+					VPBROADCASTB,
+					VPBROADCASTD -> true;
 			case VPCMPEQB -> isFirstMask(inst) && isSecondEER(inst) && (isThirdM(inst) || isThirdR(inst));
 			case VPMINUB -> isFirstEER(inst) && isSecondEER(inst);
 			default -> false;
@@ -2371,7 +2403,8 @@ public final class InstructionEncoder {
 
 	private static byte getVex3OpcodeMap(final Opcode opcode) {
 		return switch (opcode) {
-			case VPXOR, VMOVDQU, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD, KUNPCKDQ, VPMOVMSKB -> (byte) 0b01;
+			case VPXOR, VMOVDQU, VMOVDQA, VPCMPEQB, VPANDN, VMOVQ, KMOVQ, KORTESTD, KORD, KUNPCKDQ, VPMOVMSKB ->
+				(byte) 0b01;
 			case VPBROADCASTB, VPBROADCASTD, SARX, BZHI, VPSHUFB, VPMINUD, VPCMPEQQ -> (byte) 0b10;
 			case VPCMPISTRI, VPALIGNR -> (byte) 0b11;
 			default -> throw new IllegalArgumentException(String.format("Unknown VEX3 opcode map for %s.", opcode));
@@ -2409,10 +2442,11 @@ public final class InstructionEncoder {
 					VBROADCASTSS,
 					VPTERNLOGD,
 					VPTESTMB,
+					VMOVDQA,
 					KORTESTD,
 					KORD,
 					KUNPCKBW -> (byte) 0b01;
-			case VMOVDQU, VMOVDQU64, SARX -> (byte) 0b10;
+			case VMOVDQU, VMOVDQU64, SARX, VPTESTNMB -> (byte) 0b10;
 			case VMOVDQU8, KMOVQ, KMOVD -> (byte) 0b11;
 			case VMOVQ ->
 				(inst.firstOperand() instanceof final RegisterXMM r
@@ -2526,7 +2560,7 @@ public final class InstructionEncoder {
 			// 0F map (mm = 01)
 			case VMOVUPS, VMOVAPS, VMOVDQU8, VMOVDQU64, VMOVNTDQ, VMOVQ, VPXORQ, VPORQ, VPMINUB -> (byte) 0b001;
 			// 0F 38 map (mm = 10)
-			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPMINUD -> (byte) 0b010;
+			case VBROADCASTSS, VPBROADCASTB, VPBROADCASTD, VPTESTMB, VPTESTNMB, VPMINUD -> (byte) 0b010;
 			// 0F 3A map (mm = 11)
 			case VPCMPNEQUB, VPCMPEQD, VPCMPNEQB, VPTERNLOGD, VPCMPEQB, VPCMPLTB -> (byte) 0b011;
 			default -> (byte) 0b000;

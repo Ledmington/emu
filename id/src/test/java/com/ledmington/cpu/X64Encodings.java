@@ -9833,6 +9833,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new GeneralInstruction(Opcode.VPXOR, XMM12, XMM6, XMM7), "vpxor xmm12,xmm6,xmm7", "c5 49 ef e7"),
 				test(new GeneralInstruction(Opcode.VPXOR, XMM2, XMM13, XMM7), "vpxor xmm2,xmm13,xmm7", "c5 91 ef d7"),
 				test(new GeneralInstruction(Opcode.VPXOR, XMM9, XMM9, XMM9), "vpxor xmm9,xmm9,xmm9", "c4 41 31 ef c9"),
+				test(
+						new GeneralInstruction(
+								Opcode.VPXOR,
+								XMM0,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpxor xmm0,xmm1,XMMWORD PTR [rdi]",
+						"c5 f1 ef 07"),
 				// Pextrw
 				test(
 						new GeneralInstruction(Opcode.PEXTRW, EDI, MM6, new Immediate((byte) 0x6f)),
@@ -10013,6 +10024,51 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								YMM10),
 						"vmovdqu YMMWORD PTR [rcx+r10*1-0x40],ymm10",
 						"c4 21 7e 7f 54 11 c0"),
+				// Vmovdqa
+				test(new GeneralInstruction(Opcode.VMOVDQA, YMM0, YMM1), "vmovdqa ymm0,ymm1", "c5 fd 6f c1"),
+				test(new GeneralInstruction(Opcode.VMOVDQA, XMM0, XMM1), "vmovdqa xmm0,xmm1", "c5 f9 6f c1"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVDQA,
+								YMM2,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vmovdqa ymm2,YMMWORD PTR [rdi]",
+						"c5 fd 6f 17"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVDQA,
+								XMM2,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vmovdqa xmm2,XMMWORD PTR [rdi]",
+						"c5 f9 6f 17"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVDQA,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								YMM3),
+						"vmovdqa YMMWORD PTR [rdi],ymm3",
+						"c5 fd 7f 1f"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVDQA,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM3),
+						"vmovdqa XMMWORD PTR [rdi],xmm3",
+						"c5 f9 7f 1f"),
+				test(new GeneralInstruction(Opcode.VMOVDQA, YMM1, YMM10), "vmovdqa ymm1,ymm10", "c4 c1 7d 6f ca"),
+				test(new GeneralInstruction(Opcode.VMOVDQA, YMM10, YMM11), "vmovdqa ymm10,ymm11", "c4 41 7d 6f d3"),
 				// Vpminub
 				test(new GeneralInstruction(Opcode.VPMINUB, YMM0, YMM1, YMM2), "vpminub ymm0,ymm1,ymm2", "c5 f5 da c2"),
 				test(
@@ -10182,6 +10238,14 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new GeneralInstruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
 				// Vpcmpeqb
 				test(
+						new GeneralInstruction(Opcode.VPCMPEQB, YMM1, YMM2, YMM3),
+						"vpcmpeqb ymm1,ymm2,ymm3",
+						"c5 ed 74 cb"),
+				test(
+						new GeneralInstruction(Opcode.VPCMPEQB, XMM1, XMM2, XMM3),
+						"vpcmpeqb xmm1,xmm2,xmm3",
+						"c5 e9 74 cb"),
+				test(
 						new GeneralInstruction(
 								Opcode.VPCMPEQB,
 								YMM3,
@@ -10315,6 +10379,8 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"62 f3 7d 20 3f 07 04"),
 				// Vzeroall
 				test(new GeneralInstruction(Opcode.VZEROALL), "vzeroall", "c5 fc 77"),
+				// Vzeroupper
+				test(new GeneralInstruction(Opcode.VZEROUPPER), "vzeroupper", "c5 f8 77"),
 				// Vmovq
 				test(new GeneralInstruction(Opcode.VMOVQ, RDI, XMM0), "vmovq rdi,xmm0", "c4 e1 f9 7e c7"),
 				test(new GeneralInstruction(Opcode.VMOVQ, RDI, XMM16), "vmovq rdi,xmm16", "62 e1 fd 08 7e c7"),
@@ -10433,8 +10499,30 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new GeneralInstruction(Opcode.SARX, ECX, EBX, EAX), "sarx ecx,ebx,eax", "c4 e2 7a f7 cb"),
 				// Vpor
 				test(new GeneralInstruction(Opcode.VPOR, YMM5, YMM2, YMM1), "vpor ymm5,ymm2,ymm1", "c5 ed eb e9"),
+				test(
+						new GeneralInstruction(
+								Opcode.VPOR,
+								XMM0,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpor xmm0,xmm1,XMMWORD PTR [rdi]",
+						"c5 f1 eb 07"),
 				// Vpand
 				test(new GeneralInstruction(Opcode.VPAND, YMM5, YMM2, YMM1), "vpand ymm5,ymm2,ymm1", "c5 ed db e9"),
+				test(
+						new GeneralInstruction(
+								Opcode.VPAND,
+								XMM0,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpand xmm0,xmm1,XMMWORD PTR [rdi]",
+						"c5 f1 db 07"),
 				// Vpandn
 				test(new GeneralInstruction(Opcode.VPANDN, XMM1, XMM2, XMM3), "vpandn xmm1,xmm2,xmm3", "c5 e9 df cb"),
 				test(new GeneralInstruction(Opcode.VPANDN, XMM8, XMM8, XMM7), "vpandn xmm8,xmm8,xmm7", "c5 39 df c7"),
@@ -10442,6 +10530,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new GeneralInstruction(Opcode.VPANDN, XMM10, XMM9, XMM8),
 						"vpandn xmm10,xmm9,xmm8",
 						"c4 41 31 df d0"),
+				test(
+						new GeneralInstruction(
+								Opcode.VPANDN,
+								XMM0,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpandn xmm0,xmm1,XMMWORD PTR [rdi]",
+						"c5 f1 df 07"),
 				// Bzhi
 				test(new GeneralInstruction(Opcode.BZHI, EDX, ECX, EBX), "bzhi edx,ecx,ebx", "c4 e2 60 f5 d1"),
 				test(new GeneralInstruction(Opcode.BZHI, EDX, EBX, ECX), "bzhi edx,ebx,ecx", "c4 e2 70 f5 d3"),
@@ -10614,6 +10713,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"c5 f1 64 fc"),
 				// Vpsubb
 				test(new GeneralInstruction(Opcode.VPSUBB, XMM1, XMM1, XMM0), "vpsubb xmm1,xmm1,xmm0", "c5 f1 f8 c8"),
+				test(
+						new GeneralInstruction(
+								Opcode.VPSUBB,
+								XMM0,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build()),
+						"vpsubb xmm0,xmm1,XMMWORD PTR [rdi]",
+						"c5 f1 f8 07"),
 				// Vpcmpistri
 				test(
 						new GeneralInstruction(Opcode.VPCMPISTRI, XMM0, XMM1, new Immediate((byte) 0x1a)),
@@ -10992,6 +11102,29 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vptestmb k1,ymm20,ymm20",
 						"62 b2 5d 20 26 cc"),
+				// Vptestnmb
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPTESTNMB)
+								.op(K0)
+								.op(YMM1)
+								.op(YMM2)
+								.build(),
+						"vptestnmb k0,ymm1,ymm2",
+						"62 f2 76 28 26 c2"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPTESTNMB)
+								.mask(K2)
+								.op(K1)
+								.op(YMM3)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.build())
+								.build(),
+						"vptestnmb k1{k2},ymm3,YMMWORD PTR [rdi]",
+						"62 f2 66 2a 26 0f"),
 				// Kortestd
 				test(new GeneralInstruction(Opcode.KORTESTD, K1, K0), "kortestd k1,k0", "c4 e1 f9 98 c8"),
 				// Kord

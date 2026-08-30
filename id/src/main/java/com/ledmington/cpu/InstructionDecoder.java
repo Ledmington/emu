@@ -3903,13 +3903,13 @@ public final class InstructionDecoder {
 				final Opcode opcode = vex2.p() == 1 ? Opcode.VMOVDQA : Opcode.VMOVDQU;
 				yield Instruction.builder()
 						.opcode(opcode)
+						.op(vectorRegister(vex2, getByteFromReg(vex2, modrm)))
 						.op(
-								vex2.l()
-										? RegisterYMM.fromByte(getByteFromReg(vex2, modrm))
-										: RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
-								.build())
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex2.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex2, getByteFromRM(vex2, modrm)))
 						.build();
 			}
 			case VMOVDQU_M256_RYMM_OPCODE -> {
@@ -4189,13 +4189,13 @@ public final class InstructionDecoder {
 				final Opcode opcode = vex3.p() == 1 ? Opcode.VMOVDQA : Opcode.VMOVDQU;
 				yield Instruction.builder()
 						.opcode(opcode)
+						.op(vectorRegister(vex3, getByteFromReg(vex3, modrm)))
 						.op(
-								vex3.l()
-										? RegisterYMM.fromByte(getByteFromReg(vex3, modrm))
-										: RegisterXMM.fromByte(getByteFromReg(vex3, modrm)))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(vex3.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
-								.build())
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(vex3.l() ? PointerSize.YMMWORD_PTR : PointerSize.XMMWORD_PTR)
+												.build()
+										: vectorRegister(vex3, getByteFromRM(vex3, modrm)))
 						.build();
 			}
 			case VMOVDQU_M256_RYMM_OPCODE -> {
@@ -4798,7 +4798,13 @@ public final class InstructionDecoder {
 						.opcode(opcode)
 						.op(MaskRegister.fromByte(getByteFromReg(evex, modrm)))
 						.op(RegisterYMM.fromByte(or(evex.v1() ? 0 : (byte) 0b00010000, getByteFromV(evex))))
-						.op(RegisterYMM.fromByte(or(evex.x() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm))));
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(PointerSize.YMMWORD_PTR)
+												.build()
+										: RegisterYMM.fromByte(
+												or(evex.x() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm))));
 				if (evex.a() != (byte) 0) {
 					ib.mask(MaskRegister.fromByte(evex.a()));
 				}
