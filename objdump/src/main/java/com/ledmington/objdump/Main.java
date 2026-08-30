@@ -445,6 +445,7 @@ public final class Main {
 	private static NavigableMap<Long, String> findAllSymbols(final SectionTable st) {
 		final NavigableMap<Long, String> symbols = new TreeMap<>();
 		final Map<Long, Integer> bindingPriority = new HashMap<>();
+		final Map<Long, Long> sizeAtAddress = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
 		if (symbolTable.isPresent()) {
 			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
@@ -462,16 +463,23 @@ public final class Main {
 				}
 				// When multiple symbols share the same address, GNU objdump prefers a typed symbol (OBJECT/FUNC/...)
 				// over an untyped boundary marker (NOTYPE); among equally-typed symbols, the strongest binding wins
-				// (GLOBAL over WEAK over LOCAL); among equally-typed, equally-bound symbols, the alphabetically
-				// first name wins.
+				// (GLOBAL over WEAK over LOCAL); among equally-typed, equally-bound symbols, the larger one wins
+				// (e.g. '_r_debug_extended', which embeds a legacy 'r_debug' struct, over the plain '_r_debug'
+				// alias at the same address); among equally-typed, equally-bound, equally-sized symbols, the
+				// alphabetically first name wins.
 				final int priority = symbolPriority(ste);
 				final String candidateName = strtab.getString(ste.nameOffset());
 				final Integer existingPriority = bindingPriority.get(ste.value());
 				final String existingName = symbols.get(ste.value());
+				final Long existingSize = sizeAtAddress.get(ste.value());
 				if (existingPriority == null
 						|| priority > existingPriority
-						|| (priority == existingPriority && candidateName.compareTo(existingName) < 0)) {
+						|| (priority == existingPriority && ste.size() > existingSize)
+						|| (priority == existingPriority
+								&& ste.size() == existingSize
+								&& candidateName.compareTo(existingName) < 0)) {
 					symbols.put(ste.value(), candidateName);
+					sizeAtAddress.put(ste.value(), ste.size());
 					bindingPriority.put(ste.value(), priority);
 				}
 			}
@@ -540,6 +548,7 @@ public final class Main {
 	private static Map<Long, String> findFunctionNames(final SectionTable st) {
 		final Map<Long, String> functionNames = new HashMap<>();
 		final Map<Long, Integer> bindingPriority = new HashMap<>();
+		final Map<Long, Long> sizeAtAddress = new HashMap<>();
 		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
 		if (symbolTable.isPresent()) {
 			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
@@ -555,15 +564,20 @@ public final class Main {
 					continue;
 				}
 				// Same tie-break as findAllSymbols: when multiple symbols share an address, prefer the
-				// strongest binding, then the alphabetically first name.
+				// strongest binding, then the larger symbol, then the alphabetically first name.
 				final int priority = symbolPriority(ste);
 				final String candidateName = strtab.getString(ste.nameOffset());
 				final Integer existingPriority = bindingPriority.get(ste.value());
 				final String existingName = functionNames.get(ste.value());
+				final Long existingSize = sizeAtAddress.get(ste.value());
 				if (existingPriority == null
 						|| priority > existingPriority
-						|| (priority == existingPriority && candidateName.compareTo(existingName) < 0)) {
+						|| (priority == existingPriority && ste.size() > existingSize)
+						|| (priority == existingPriority
+								&& ste.size() == existingSize
+								&& candidateName.compareTo(existingName) < 0)) {
 					functionNames.put(ste.value(), candidateName);
+					sizeAtAddress.put(ste.value(), ste.size());
 					bindingPriority.put(ste.value(), priority);
 				}
 			}

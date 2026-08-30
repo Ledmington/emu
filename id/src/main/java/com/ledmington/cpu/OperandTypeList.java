@@ -50,6 +50,9 @@ public enum OperandTypeList {
 	/** The list of operands made of a QWORD PTR indirect operand. */
 	M64(OperandType.M64),
 
+	/** The list of operands made of a TBYTE PTR indirect operand. */
+	M80(OperandType.M80),
+
 	/** The list of operands made of an 8-bit immediate value. */
 	I8(OperandType.I8),
 

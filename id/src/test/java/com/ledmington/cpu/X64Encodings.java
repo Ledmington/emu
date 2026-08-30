@@ -20,10 +20,12 @@ package com.ledmington.cpu;
 import static com.ledmington.cpu.x86.MaskRegister.K0;
 import static com.ledmington.cpu.x86.MaskRegister.K1;
 import static com.ledmington.cpu.x86.MaskRegister.K2;
+import static com.ledmington.cpu.x86.MaskRegister.K4;
 import static com.ledmington.cpu.x86.MaskRegister.K7;
 import static com.ledmington.cpu.x86.PointerSize.BYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.DWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.QWORD_PTR;
+import static com.ledmington.cpu.x86.PointerSize.TBYTE_PTR;
 import static com.ledmington.cpu.x86.PointerSize.WORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.XMMWORD_PTR;
 import static com.ledmington.cpu.x86.PointerSize.YMMWORD_PTR;
@@ -143,6 +145,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM0;
+import static com.ledmington.cpu.x86.RegisterZMM.ZMM1;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM15;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM16;
 import static com.ledmington.cpu.x86.RegisterZMM.ZMM2;
@@ -217,6 +220,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	private static List<X64EncodingTestCase> nop() {
 		return List.of(
 				test(new GeneralInstruction(Opcode.NOP), "nop", "90"),
+				test(new GeneralInstruction(Opcode.PAUSE), "pause", "f3 90"),
 				//
 				test(new GeneralInstruction(Opcode.NOP, AX), "nop ax", "66 0f 1f c0"),
 				test(new GeneralInstruction(Opcode.NOP, EAX), "nop eax", "0f 1f c0"),
@@ -417,6 +421,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								BL),
 						"mov BYTE PTR [rdi],bl",
 						"88 1f"),
+				test(new GeneralInstruction(Opcode.MOV, CL, AL), "mov cl,al", "88 c1"),
 				test(
 						new GeneralInstruction(
 								Opcode.MOV,
@@ -7375,6 +7380,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movdqu xmm10,XMMWORD PTR [rip+0x000b3426]",
 						"f3 44 0f 6f 15 26 34 0b 00"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVDQU,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM1),
+						"movdqu XMMWORD PTR [rdi],xmm1",
+						"f3 0f 7f 0f"),
 				//  Movaps
 				test(
 						new GeneralInstruction(
@@ -7683,6 +7698,52 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Movhlps
 				test(new GeneralInstruction(Opcode.MOVHLPS, XMM0, XMM0), "movhlps xmm0,xmm0", "0f 12 c0"),
 				test(new GeneralInstruction(Opcode.MOVHLPS, XMM3, XMM7), "movhlps xmm3,xmm7", "0f 12 df"),
+				//  Movlpd
+				test(
+						new GeneralInstruction(
+								Opcode.MOVLPD,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.displacement((byte) -0x28)
+										.build()),
+						"movlpd xmm1,QWORD PTR [rax-0x28]",
+						"66 0f 12 48 d8"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVLPD,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.displacement((byte) -0x28)
+										.build(),
+								XMM1),
+						"movlpd QWORD PTR [rax-0x28],xmm1",
+						"66 0f 13 48 d8"),
+				//  Movlps
+				test(
+						new GeneralInstruction(
+								Opcode.MOVLPS,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.displacement((byte) -0x28)
+										.build()),
+						"movlps xmm1,QWORD PTR [rax-0x28]",
+						"0f 12 48 d8"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVLPS,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.displacement((byte) -0x28)
+										.build(),
+								XMM1),
+						"movlps QWORD PTR [rax-0x28],xmm1",
+						"0f 13 48 d8"),
 				//  Punpcklqdq
 				test(new GeneralInstruction(Opcode.PUNPCKLQDQ, XMM0, XMM0), "punpcklqdq xmm0,xmm0", "66 0f 6c c0"),
 				test(new GeneralInstruction(Opcode.PUNPCKLQDQ, XMM3, XMM9), "punpcklqdq xmm3,xmm9", "66 41 0f 6c d9"),
@@ -8001,6 +8062,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movsd xmm14,QWORD PTR [rbx+rdi*8+0x12345678]",
 						"f2 44 0f 10 b4 fb 78 56 34 12"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVSD,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM0),
+						"movsd QWORD PTR [rdi],xmm0",
+						"f2 0f 11 07"),
 				//  Endbr64
 				test(new GeneralInstruction(Opcode.ENDBR64), "endbr64", "f3 0f 1e fa"),
 				//  Inc
@@ -10024,6 +10095,9 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								YMM10),
 						"vmovdqu YMMWORD PTR [rcx+r10*1-0x40],ymm10",
 						"c4 21 7e 7f 54 11 c0"),
+				test(new GeneralInstruction(Opcode.VMOVDQU, YMM2, YMM6), "vmovdqu ymm2,ymm6", "c5 fe 6f d6"),
+				test(new GeneralInstruction(Opcode.VMOVDQU, YMM10, YMM1), "vmovdqu ymm10,ymm1", "c5 7e 6f d1"),
+				test(new GeneralInstruction(Opcode.VMOVDQU, YMM1, YMM10), "vmovdqu ymm1,ymm10", "c4 c1 7e 6f ca"),
 				// Vmovdqa
 				test(new GeneralInstruction(Opcode.VMOVDQA, YMM0, YMM1), "vmovdqa ymm0,ymm1", "c5 fd 6f c1"),
 				test(new GeneralInstruction(Opcode.VMOVDQA, XMM0, XMM1), "vmovdqa xmm0,xmm1", "c5 f9 6f c1"),
@@ -10091,6 +10165,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						new GeneralInstruction(Opcode.VPMINUB, YMM18, YMM18, YMM21),
 						"vpminub ymm18,ymm18,ymm21",
 						"62 a1 6d 20 da d5"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPMINUB)
+								.mask(K1)
+								.maskZero()
+								.op(YMM19)
+								.op(YMM19)
+								.op(YMM18)
+								.build(),
+						"vpminub ymm19{k1}{z},ymm19,ymm18",
+						"62 a1 65 a1 da da"),
 				test(
 						new GeneralInstruction(
 								Opcode.VPMINUB,
@@ -10236,6 +10321,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Vpmovmskb
 				test(new GeneralInstruction(Opcode.VPMOVMSKB, ESI, XMM8), "vpmovmskb esi,xmm8", "c4 c1 79 d7 f0"),
 				test(new GeneralInstruction(Opcode.VPMOVMSKB, ECX, YMM0), "vpmovmskb ecx,ymm0", "c5 fd d7 c8"),
+				test(new GeneralInstruction(Opcode.VPMOVMSKB, EAX, XMM2), "vpmovmskb eax,xmm2", "c5 f9 d7 c2"),
 				// Vpcmpeqb
 				test(
 						new GeneralInstruction(Opcode.VPCMPEQB, YMM1, YMM2, YMM3),
@@ -10283,6 +10369,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqb k0,ymm16,YMMWORD PTR [rdi]",
 						"62 f3 7d 20 3f 07 00"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQB)
+								.op(K0)
+								.op(YMM16)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x01)
+										.build())
+								.build(),
+						"vpcmpeqb k0,ymm16,YMMWORD PTR [rdi+0x20]",
+						Set.of("62 f1 7d 20 74 47 01", "62 f3 7d 20 3f 47 01 00")),
 				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQB)
@@ -10418,6 +10517,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								XMM0),
 						"vmovq QWORD PTR [rdi],xmm0",
 						"c5 f9 d6 07"),
+				test(
+						new GeneralInstruction(
+								Opcode.VMOVQ,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.build(),
+								XMM16),
+						"vmovq QWORD PTR [rdi],xmm16",
+						"62 e1 fd 08 7e 07"),
 				// Vmovd
 				test(
 						new GeneralInstruction(
@@ -10431,6 +10540,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovd xmm1,DWORD PTR [rdi+rdx*1]",
 						"c5 f9 6e 0c 17"),
+				test(new GeneralInstruction(Opcode.VMOVD, ESI, XMM16), "vmovd esi,xmm16", "62 e1 7d 08 7e c6"),
 				// Pcmpistri
 				test(
 						new GeneralInstruction(Opcode.PCMPISTRI, XMM0, XMM1, new Immediate((byte) 0x1a)),
@@ -10497,6 +10607,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(new GeneralInstruction(Opcode.SARX, EAX, ECX, EBX), "sarx eax,ecx,ebx", "c4 e2 62 f7 c1"),
 				test(new GeneralInstruction(Opcode.SARX, EBX, ECX, EAX), "sarx ebx,ecx,eax", "c4 e2 7a f7 d9"),
 				test(new GeneralInstruction(Opcode.SARX, ECX, EBX, EAX), "sarx ecx,ebx,eax", "c4 e2 7a f7 cb"),
+				// Shrx
+				test(new GeneralInstruction(Opcode.SHRX, EAX, EAX, EDI), "shrx eax,eax,edi", "c4 e2 43 f7 c0"),
+				// Shlx
+				test(new GeneralInstruction(Opcode.SHLX, EAX, EBX, ECX), "shlx eax,ebx,ecx", "c4 e2 71 f7 c3"),
 				// Vpor
 				test(new GeneralInstruction(Opcode.VPOR, YMM5, YMM2, YMM1), "vpor ymm5,ymm2,ymm1", "c5 ed eb e9"),
 				test(
@@ -10556,6 +10670,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movbe eax,DWORD PTR [rdi]",
 						"0f 38 f0 07"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVBE,
+								RAX,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.build()),
+						"movbe rax,QWORD PTR [rdi]",
+						"48 0f 38 f0 07"),
 				// Movntdq
 				test(
 						new GeneralInstruction(
@@ -10662,6 +10786,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vmovdqu8 zmm0,ZMMWORD PTR [rsi]",
 						"62 f1 7f 48 6f 06"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VMOVDQU8)
+								.mask(K2)
+								.maskZero()
+								.op(YMM18)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RSI)
+										.build())
+								.build(),
+						"vmovdqu8 ymm18{k2}{z},YMMWORD PTR [rsi]",
+						"62 e1 7f aa 6f 16"),
 				// Vmodqu64
 				test(
 						new GeneralInstruction(
@@ -10841,6 +10978,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPNEQUB)
+								.op(K1)
+								.op(YMM18)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x01)
+										.build())
+								.build(),
+						"vpcmpnequb k1,ymm18,YMMWORD PTR [rdi+0x20]",
+						"62 f3 6d 20 3e 4f 01 04"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPNEQUB)
 								.mask(K2)
 								.op(K1)
 								.op(XMM2)
@@ -10885,6 +11035,18 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpxorq ymm17,ymm1,YMMWORD PTR [rdi]",
 						"62 e1 f5 28 ef 0f"),
+				test(
+						new GeneralInstruction(
+								Opcode.VPXORQ,
+								YMM18,
+								YMM16,
+								IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x01)
+										.build()),
+						"vpxorq ymm18,ymm16,YMMWORD PTR [rdi+0x20]",
+						"62 e1 fd 20 ef 57 01"),
 				// Vporq,
 				test(
 						new GeneralInstruction(Opcode.VPORQ, YMM26, YMM20, YMM18),
@@ -11042,6 +11204,55 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"fild WORD PTR [rax]",
 						"df 00"),
+				test(
+						new GeneralInstruction(
+								Opcode.FLD,
+								IndirectOperand.builder()
+										.pointer(TBYTE_PTR)
+										.base(RDX)
+										.build()),
+						"fld TBYTE PTR [rdx]",
+						"db 2a"),
+				// Fstp
+				test(
+						new GeneralInstruction(
+								Opcode.FSTP,
+								IndirectOperand.builder()
+										.pointer(TBYTE_PTR)
+										.base(RDX)
+										.build()),
+						"fstp TBYTE PTR [rdx]",
+						"db 3a"),
+				// Fisttp
+				test(
+						new GeneralInstruction(
+								Opcode.FISTTP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDX)
+										.build()),
+						"fisttp DWORD PTR [rdx]",
+						"db 0a"),
+				// Fist
+				test(
+						new GeneralInstruction(
+								Opcode.FIST,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDX)
+										.build()),
+						"fist DWORD PTR [rdx]",
+						"db 12"),
+				// Fistp
+				test(
+						new GeneralInstruction(
+								Opcode.FISTP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RDX)
+										.build()),
+						"fistp DWORD PTR [rdx]",
+						"db 1a"),
 				// Loopne
 				test(new GeneralInstruction(Opcode.LOOPNE, bimm), "loopne 0x12", "e0 12"),
 				// Loope
@@ -11102,6 +11313,15 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vptestmb k1,ymm20,ymm20",
 						"62 b2 5d 20 26 cc"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPTESTMB)
+								.op(K2)
+								.op(XMM0)
+								.op(XMM0)
+								.build(),
+						"vptestmb k2,xmm0,xmm0",
+						"62 f2 7d 08 26 d0"),
 				// Vptestnmb
 				test(
 						Instruction.builder()
@@ -11125,6 +11345,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vptestnmb k1{k2},ymm3,YMMWORD PTR [rdi]",
 						"62 f2 66 2a 26 0f"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPTESTNMB)
+								.mask(K1)
+								.op(K4)
+								.op(ZMM1)
+								.op(ZMM1)
+								.build(),
+						"vptestnmb k4{k1},zmm1,zmm1",
+						"62 f2 76 49 26 e1"),
 				// Kortestd
 				test(new GeneralInstruction(Opcode.KORTESTD, K1, K0), "kortestd k1,k0", "c4 e1 f9 98 c8"),
 				// Kord

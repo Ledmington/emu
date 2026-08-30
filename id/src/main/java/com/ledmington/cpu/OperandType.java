@@ -65,6 +65,9 @@ public enum OperandType {
 	/** An indirect operand with QWORD PTR size. */
 	M64,
 
+	/** An indirect operand with TBYTE PTR size. */
+	M80,
+
 	/** An indirect operand with XMMWORD PTR size. */
 	M128,
 

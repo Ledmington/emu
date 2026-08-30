@@ -194,8 +194,20 @@ public enum Opcode {
 	/** Load integer. */
 	FILD,
 
+	/** Store integer. */
+	FIST,
+
+	/** Store integer and pop. */
+	FISTP,
+
+	/** Store integer with truncation and pop. */
+	FISTTP,
+
 	/** Load real. */
 	FLD,
+
+	/** Store real and pop. */
+	FSTP,
 
 	/** Wait for floating-point unit. */
 	FWAIT,
@@ -389,6 +401,18 @@ public enum Opcode {
 	 */
 	MOVHPS,
 
+	/**
+	 * Move low packed double precision floating-point values to and from the low quadword of an XMM register and
+	 * memory.
+	 */
+	MOVLPD,
+
+	/**
+	 * Move low packed single precision floating-point values to and from the low quadword of an XMM register and
+	 * memory.
+	 */
+	MOVLPS,
+
 	/** Extract packed single-precision floating-point values. */
 	MOVMSKPS,
 
@@ -457,6 +481,9 @@ public enum Opcode {
 
 	/** Logical AND NOT. */
 	PANDN,
+
+	/** Spin loop hint. */
+	PAUSE,
 
 	/** Compare packed bytes for equal. */
 	PCMPEQB,
@@ -704,11 +731,17 @@ public enum Opcode {
 	/** Double-precision shift left. */
 	SHLD,
 
+	/** Logical shift left without affecting flags. */
+	SHLX,
+
 	/** Logical shift right. */
 	SHR,
 
 	/** Double-precision shift right. */
 	SHRD,
+
+	/** Logical shift right without affecting flags. */
+	SHRX,
 
 	/** Shuffles values in packed double-precision floating-point operands. */
 	SHUFPD,
