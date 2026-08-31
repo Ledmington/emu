@@ -44,6 +44,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterFPU;
 import com.ledmington.cpu.x86.RegisterMMX;
 import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.RegisterYMM;
@@ -157,27 +158,20 @@ public final class InstructionEncoder {
 			Map.entry(Opcode.IDIV, (byte) 0b111), Map.entry(Opcode.DIV, (byte) 0b110), Map.entry(Opcode.MUL, (byte)
 					0b100));
 
-	private InstructionEncoder() {}
-
-	private static String operandString(final Instruction inst, final Operand op, final boolean shortHex) {
-		return switch (op) {
-			case IndirectOperand io -> {
-				final Opcode code = inst.opcode();
-				final boolean requiresExplicitPointerSize = code != Opcode.LEA
-						&& code != Opcode.LDDQU
-						&& code != Opcode.FXSAVE
-						&& code != Opcode.FXRSTOR
-						&& code != Opcode.XSAVE
-						&& code != Opcode.XRSTOR
-						&& code != Opcode.XSAVEC;
-				yield io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement(inst), shortHex);
-			}
-			case Immediate imm -> immediateOperandString(inst, op, imm, shortHex);
-			case Register r -> r.toIntelSyntax();
-			case SegmentedAddress sa -> sa.toIntelSyntax();
-			default -> throw new IllegalArgumentException(String.format("Unknown operand type: '%s'.", op));
-		};
-	}
+	// Opcodes whose memory operand is a whole environment/state block rather than a fixed-width scalar,
+	// so objdump does not print a pointer-size prefix for it.
+	private static final Set<Opcode> NO_EXPLICIT_POINTER_SIZE_OPCODES = Set.of(
+			Opcode.LEA,
+			Opcode.LDDQU,
+			Opcode.FXSAVE,
+			Opcode.FXRSTOR,
+			Opcode.XSAVE,
+			Opcode.XRSTOR,
+			Opcode.XSAVEC,
+			Opcode.FLDENV,
+			Opcode.FNSTENV,
+			Opcode.FRSTOR,
+			Opcode.FNSAVE);
 
 	// EVEX-encoded instructions with the "Full Vector" tuple type (no broadcast) encode a memory operand's
 	// 8-bit displacement pre-scaled by the vector width in bytes (16/32/64 for XMM/YMM/ZMM): e.g. a raw disp8
@@ -205,7 +199,28 @@ public final class InstructionEncoder {
 			Opcode.VMOVNTDQ,
 			Opcode.VPMINUB,
 			Opcode.VPMINUD,
-			Opcode.VPCMPEQB);
+			Opcode.VPCMPEQB,
+			Opcode.VPCMPEQD);
+
+	// Opcodes for which the REP (0xf3) legacy prefix is displayed as "rep" rather than "repz": these string
+	// operations don't rely on ZF to terminate, so GNU objdump doesn't display the "repe/repz" name for them.
+	private static final Set<Opcode> REP_OPCODES =
+			Set.of(Opcode.MOVS, Opcode.STOS, Opcode.LODS, Opcode.INS, Opcode.OUTS);
+
+	private InstructionEncoder() {}
+
+	private static String operandString(final Instruction inst, final Operand op, final boolean shortHex) {
+		return switch (op) {
+			case IndirectOperand io -> {
+				final boolean requiresExplicitPointerSize = !NO_EXPLICIT_POINTER_SIZE_OPCODES.contains(inst.opcode());
+				yield io.toIntelSyntax(requiresExplicitPointerSize, compressedDisplacement(inst), shortHex);
+			}
+			case Immediate imm -> immediateOperandString(inst, op, imm, shortHex);
+			case Register r -> r.toIntelSyntax();
+			case SegmentedAddress sa -> sa.toIntelSyntax();
+			default -> throw new IllegalArgumentException(String.format("Unknown operand type: '%s'.", op));
+		};
+	}
 
 	private static Optional<Integer> compressedDisplacement(final Instruction inst) {
 		Register vectorRegister = null;
@@ -245,13 +260,11 @@ public final class InstructionEncoder {
 			// sign-extended.
 			final boolean isDestinationOperand = op.equals(inst.firstOperand());
 			final boolean isSignExtendingForm = isSignExtendingImmediateForm(inst.opcode());
-			if (!isDestinationOperand
-					&& isSignExtendingForm
-					&& (inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand)) {
-				final int destinationBits = inst.firstOperand().bits();
-				if (destinationBits > imm.bits()) {
-					return signExtendedIntelSyntax(imm, destinationBits, shortHex);
-				}
+			final boolean hasWideDestination =
+					inst.firstOperand() instanceof Register || inst.firstOperand() instanceof IndirectOperand;
+			final int destinationBits = hasWideDestination ? inst.firstOperand().bits() : -1;
+			if (!isDestinationOperand && isSignExtendingForm && hasWideDestination && destinationBits > imm.bits()) {
+				return signExtendedIntelSyntax(imm, destinationBits, shortHex);
 			}
 		}
 
@@ -280,6 +293,13 @@ public final class InstructionEncoder {
 			case 32 -> String.format(shortHex ? "0x%x" : "0x%08x", (int) signExtended);
 			default -> String.format(shortHex ? "0x%x" : "0x%016x", signExtended);
 		};
+	}
+
+	private static String legacyPrefixName(final LegacyPrefix prefix, final Opcode opcode) {
+		if (prefix == LegacyPrefix.REP) {
+			return REP_OPCODES.contains(opcode) ? "rep" : "repz";
+		}
+		return prefix.name().toLowerCase(Locale.US);
 	}
 
 	/**
@@ -325,7 +345,7 @@ public final class InstructionEncoder {
 		}
 		final StringBuilder sb = new StringBuilder();
 		if (inst.hasPrefix()) {
-			sb.append(inst.getPrefix().name().toLowerCase(Locale.US)).append(' ');
+			sb.append(legacyPrefixName(inst.getPrefix(), inst.opcode())).append(' ');
 		}
 
 		final String opcode = inst.opcode().mnemonic();
@@ -438,12 +458,14 @@ public final class InstructionEncoder {
 				|| ((inst.opcode() == Opcode.MOVQ || inst.opcode() == Opcode.MOVDQU)
 						&& isFirstXMM(inst)
 						&& isSecondM(inst))
-				|| (inst.opcode() == Opcode.MOVDQU && isFirstM(inst) && isSecondXMM(inst))) {
+				|| (inst.opcode() == Opcode.MOVDQU && isFirstM(inst) && isSecondXMM(inst))
+				|| (inst.opcode() == Opcode.MOVSS
+						&& ((isFirstXMM(inst) && (isSecondM(inst) || isSecondXMM(inst))) || isFirstM(inst)))) {
 			wb.write(LegacyPrefix.REP.getCode());
 		}
 		if (inst.hasRepnzPrefix()
 				|| ((inst.opcode() == Opcode.MOVSD
-								&& ((isFirstXMM(inst) && isSecondM(inst)) || (isFirstM(inst) && isSecondXMM(inst))))
+								&& ((isFirstXMM(inst) && (isSecondM(inst) || isSecondXMM(inst))) || isFirstM(inst)))
 						|| (inst.opcode() == Opcode.CVTSI2SD)
 						|| (inst.opcode() == Opcode.DIVSD)
 						|| (inst.opcode() == Opcode.ADDSD)
@@ -580,6 +602,38 @@ public final class InstructionEncoder {
 			case ENDBR64 -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1e, (byte) 0xfa);
 			case SFENCE -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xae, (byte) 0xf8);
 			case RDTSC -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x31);
+			case FNOP -> wb.write((byte) 0xd9, (byte) 0xd0);
+			case FCHS -> wb.write((byte) 0xd9, (byte) 0xe0);
+			case FABS -> wb.write((byte) 0xd9, (byte) 0xe1);
+			case FTST -> wb.write((byte) 0xd9, (byte) 0xe4);
+			case FXAM -> wb.write((byte) 0xd9, (byte) 0xe5);
+			case FLD1 -> wb.write((byte) 0xd9, (byte) 0xe8);
+			case FLDL2T -> wb.write((byte) 0xd9, (byte) 0xe9);
+			case FLDL2E -> wb.write((byte) 0xd9, (byte) 0xea);
+			case FLDPI -> wb.write((byte) 0xd9, (byte) 0xeb);
+			case FLDLG2 -> wb.write((byte) 0xd9, (byte) 0xec);
+			case FLDLN2 -> wb.write((byte) 0xd9, (byte) 0xed);
+			case FLDZ -> wb.write((byte) 0xd9, (byte) 0xee);
+			case F2XM1 -> wb.write((byte) 0xd9, (byte) 0xf0);
+			case FYL2X -> wb.write((byte) 0xd9, (byte) 0xf1);
+			case FPTAN -> wb.write((byte) 0xd9, (byte) 0xf2);
+			case FPATAN -> wb.write((byte) 0xd9, (byte) 0xf3);
+			case FXTRACT -> wb.write((byte) 0xd9, (byte) 0xf4);
+			case FPREM1 -> wb.write((byte) 0xd9, (byte) 0xf5);
+			case FDECSTP -> wb.write((byte) 0xd9, (byte) 0xf6);
+			case FINCSTP -> wb.write((byte) 0xd9, (byte) 0xf7);
+			case FPREM -> wb.write((byte) 0xd9, (byte) 0xf8);
+			case FYL2XP1 -> wb.write((byte) 0xd9, (byte) 0xf9);
+			case FSQRT -> wb.write((byte) 0xd9, (byte) 0xfa);
+			case FSINCOS -> wb.write((byte) 0xd9, (byte) 0xfb);
+			case FRNDINT -> wb.write((byte) 0xd9, (byte) 0xfc);
+			case FSCALE -> wb.write((byte) 0xd9, (byte) 0xfd);
+			case FSIN -> wb.write((byte) 0xd9, (byte) 0xfe);
+			case FCOS -> wb.write((byte) 0xd9, (byte) 0xff);
+			case FUCOMPP -> wb.write((byte) 0xda, (byte) 0xe9);
+			case FNCLEX -> wb.write((byte) 0xdb, (byte) 0xe2);
+			case FNINIT -> wb.write((byte) 0xdb, (byte) 0xe3);
+			case FCOMPP -> wb.write((byte) 0xde, (byte) 0xd9);
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode '%s'.", inst.opcode()));
 		}
 	}
@@ -611,6 +665,11 @@ public final class InstructionEncoder {
 			case RET -> wb.write((byte) 0xc2);
 			case RETF -> wb.write((byte) 0xca);
 			case INT -> wb.write((byte) 0xcd);
+			case XABORT -> {
+				wb.write((byte) 0xc6, (byte) 0xf8);
+				encodeImmediate(wb, (Immediate) inst.firstOperand());
+				return;
+			}
 			case LOOPNE -> wb.write((byte) 0xe0);
 			case LOOPE -> wb.write((byte) 0xe1);
 			case LOOP -> wb.write((byte) 0xe2);
@@ -650,6 +709,9 @@ public final class InstructionEncoder {
 						wb.write((byte) 0xdb);
 					} else if (io.getPointerSize() == PointerSize.WORD_PTR) {
 						wb.write((byte) 0xdf);
+					} else if (io.getPointerSize() == PointerSize.QWORD_PTR) {
+						wb.write((byte) 0xdf);
+						reg = (byte) 0b101;
 					}
 				}
 			}
@@ -663,14 +725,113 @@ public final class InstructionEncoder {
 						wb.write((byte) 0xdb);
 						reg = (byte) 0b101;
 					}
+				} else if (inst.firstOperand() instanceof RegisterFPU) {
+					wb.write((byte) 0xd9);
 				}
 			}
+			case FST -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.QWORD_PTR ? (byte) 0xdd : (byte) 0xd9);
+				} else if (inst.firstOperand() instanceof RegisterFPU) {
+					wb.write((byte) 0xdd);
+				}
+				reg = (byte) 0b010;
+			}
 			case FSTP -> {
-				wb.write((byte) 0xdb);
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					if (io.getPointerSize() == PointerSize.TBYTE_PTR) {
+						wb.write((byte) 0xdb);
+						reg = (byte) 0b111;
+					} else {
+						wb.write(io.getPointerSize() == PointerSize.QWORD_PTR ? (byte) 0xdd : (byte) 0xd9);
+						reg = (byte) 0b011;
+					}
+				} else if (inst.firstOperand() instanceof RegisterFPU) {
+					wb.write((byte) 0xdd);
+					reg = (byte) 0b011;
+				}
+			}
+			case FXCH -> {
+				wb.write((byte) 0xd9);
+				reg = (byte) 0b001;
+			}
+			case FCOM -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.QWORD_PTR ? (byte) 0xdc : (byte) 0xd8);
+				} else {
+					wb.write((byte) 0xd8);
+				}
+				reg = (byte) 0b010;
+			}
+			case FCOMP -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.QWORD_PTR ? (byte) 0xdc : (byte) 0xd8);
+				} else {
+					wb.write((byte) 0xd8);
+				}
+				reg = (byte) 0b011;
+			}
+			case FFREE -> {
+				wb.write((byte) 0xdd);
+			}
+			case FUCOM -> {
+				wb.write((byte) 0xdd);
+				reg = (byte) 0b100;
+			}
+			case FUCOMP -> {
+				wb.write((byte) 0xdd);
+				reg = (byte) 0b101;
+			}
+			case FFREEP -> {
+				wb.write((byte) 0xdf);
+			}
+			case FLDENV -> {
+				wb.write((byte) 0xd9);
+				reg = (byte) 0b100;
+			}
+			case FLDCW -> {
+				wb.write((byte) 0xd9);
+				reg = (byte) 0b101;
+			}
+			case FNSTENV -> {
+				wb.write((byte) 0xd9);
+				reg = (byte) 0b110;
+			}
+			case FNSTCW -> {
+				wb.write((byte) 0xd9);
 				reg = (byte) 0b111;
 			}
+			case FRSTOR -> {
+				wb.write((byte) 0xdd);
+				reg = (byte) 0b100;
+			}
+			case FNSAVE -> {
+				wb.write((byte) 0xdd);
+				reg = (byte) 0b110;
+			}
+			case FNSTSW -> {
+				if (inst.firstOperand() instanceof Register16) {
+					wb.write((byte) 0xdf, (byte) 0xe0);
+					return;
+				}
+				wb.write((byte) 0xdd);
+				reg = (byte) 0b111;
+			}
+			case FBLD -> {
+				wb.write((byte) 0xdf);
+				reg = (byte) 0b100;
+			}
+			case FBSTP -> {
+				wb.write((byte) 0xdf);
+				reg = (byte) 0b110;
+			}
 			case FISTTP -> {
-				wb.write((byte) 0xdb);
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& io.getPointerSize() == PointerSize.QWORD_PTR) {
+					wb.write((byte) 0xdd);
+				} else {
+					wb.write((byte) 0xdb);
+				}
 				reg = (byte) 0b001;
 			}
 			case FIST -> {
@@ -678,8 +839,56 @@ public final class InstructionEncoder {
 				reg = (byte) 0b010;
 			}
 			case FISTP -> {
-				wb.write((byte) 0xdb);
+				if (inst.firstOperand() instanceof final IndirectOperand io
+						&& io.getPointerSize() == PointerSize.QWORD_PTR) {
+					wb.write((byte) 0xdf);
+					reg = (byte) 0b111;
+				} else {
+					wb.write((byte) 0xdb);
+					reg = (byte) 0b011;
+				}
+			}
+			case FIMUL -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
+				reg = (byte) 0b001;
+			}
+			case FICOM -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
+				reg = (byte) 0b010;
+			}
+			case FICOMP -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
 				reg = (byte) 0b011;
+			}
+			case FISUB -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
+				reg = (byte) 0b100;
+			}
+			case FISUBR -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
+				reg = (byte) 0b101;
+			}
+			case FIDIV -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
+				reg = (byte) 0b110;
+			}
+			case FIDIVR -> {
+				if (inst.firstOperand() instanceof final IndirectOperand io) {
+					wb.write(io.getPointerSize() == PointerSize.WORD_PTR ? (byte) 0xde : (byte) 0xda);
+				}
+				reg = (byte) 0b111;
 			}
 			case CALL -> {
 				if (inst.firstOperand() instanceof Immediate) {
@@ -899,6 +1108,8 @@ public final class InstructionEncoder {
 						|| (inst.opcode() == Opcode.PUNPCKHDQ)
 						|| (inst.opcode() == Opcode.MOVHPD)
 						|| (inst.opcode() == Opcode.MOVLPD)
+						|| (inst.opcode() == Opcode.MOVMSKPD)
+						|| (inst.opcode() == Opcode.MOVUPD)
 						|| (inst.opcode() == Opcode.PXOR && isFirstXMM(inst))
 						|| (inst.opcode() == Opcode.POR && isFirstXMM(inst))
 						|| (inst.opcode() == Opcode.PAND && isFirstXMM(inst))
@@ -935,7 +1146,17 @@ public final class InstructionEncoder {
 				&& inst.opcode() != Opcode.OUT
 				&& inst.opcode() != Opcode.SLDT
 				&& inst.opcode() != Opcode.FIADD
-				&& inst.opcode() != Opcode.FILD;
+				&& inst.opcode() != Opcode.FILD
+				&& inst.opcode() != Opcode.FLDCW
+				&& inst.opcode() != Opcode.FNSTCW
+				&& inst.opcode() != Opcode.FNSTSW
+				&& inst.opcode() != Opcode.FIMUL
+				&& inst.opcode() != Opcode.FICOM
+				&& inst.opcode() != Opcode.FICOMP
+				&& inst.opcode() != Opcode.FISUB
+				&& inst.opcode() != Opcode.FISUBR
+				&& inst.opcode() != Opcode.FIDIV
+				&& inst.opcode() != Opcode.FIDIVR;
 	}
 
 	private static boolean isSecondXMM(final Instruction inst) {
@@ -944,6 +1165,22 @@ public final class InstructionEncoder {
 
 	private static boolean isFirstR16(final Instruction inst) {
 		return inst.hasFirstOperand() && inst.firstOperand() instanceof Register16;
+	}
+
+	// True when the numbered FPU stack register st(i) is the first operand (e.g. "fadd st(1),st") rather than the
+	// second (e.g. "fadd st,st(1)"): the two forms use different opcode bytes and, for FSUB(R)/FDIV(R), even swap
+	// which mnemonic maps to which ModRM /reg value.
+	private static boolean isReversedFpuForm(final Instruction inst) {
+		return inst.firstOperand() instanceof final RegisterFPU rf && rf != RegisterFPU.ST;
+	}
+
+	private static byte fpuStackIndex(final Instruction inst) {
+		for (int i = 0; i < inst.getNumOperands(); i++) {
+			if (inst.operand(i) instanceof final RegisterFPU rf && rf != RegisterFPU.ST) {
+				return RegisterFPU.toByte(rf);
+			}
+		}
+		throw new IllegalArgumentException(String.format("No numbered FPU stack register found in '%s'.", inst));
 	}
 
 	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
@@ -1516,7 +1753,13 @@ public final class InstructionEncoder {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x16);
 				}
 			}
-			case MOVHPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x17);
+			case MOVHPD -> {
+				if (isFirstM(inst) && isSecondXMM(inst)) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x17);
+				} else if (isFirstXMM(inst) && isSecondM(inst)) {
+					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x16);
+				}
+			}
 			case MOVHLPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x12);
 			case MOVLPS, MOVLPD -> {
 				if (isFirstM(inst) && isSecondXMM(inst)) {
@@ -1569,17 +1812,10 @@ public final class InstructionEncoder {
 					return;
 				}
 			}
-			case MOVUPS -> {
+			case MOVUPS, MOVUPD, MOVSS, MOVSD -> {
 				if (isFirstM(inst) && isSecondXMM(inst)) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x11);
-				} else if (isFirstXMM(inst) && isSecondM(inst)) {
-					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
-				}
-			}
-			case MOVSD -> {
-				if (isFirstM(inst) && isSecondXMM(inst)) {
-					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x11);
-				} else if (isFirstXMM(inst) && isSecondM(inst)) {
+				} else if ((isFirstXMM(inst) && isSecondM(inst)) || (isFirstXMM(inst) && isSecondXMM(inst))) {
 					wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x10);
 				}
 			}
@@ -1761,10 +1997,112 @@ public final class InstructionEncoder {
 			}
 			case KORTESTD -> wb.write((byte) 0x98);
 			case TZCNT -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0xbc);
-			case MOVMSKPS -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x50);
+			case MOVMSKPS, MOVMSKPD -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x50);
 			case ANDPD -> {
 				wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x54);
 				reg = (byte) 0b001;
+			}
+			case FADD -> {
+				final boolean rev = isReversedFpuForm(inst);
+				wb.write(rev ? (byte) 0xdc : (byte) 0xd8, asByte(0xc0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FMUL -> {
+				final boolean rev = isReversedFpuForm(inst);
+				wb.write(rev ? (byte) 0xdc : (byte) 0xd8, asByte(0xc8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FSUB -> {
+				final boolean rev = isReversedFpuForm(inst);
+				wb.write(rev ? (byte) 0xdc : (byte) 0xd8, asByte((rev ? 0xe8 : 0xe0) + fpuStackIndex(inst)));
+				return;
+			}
+			case FSUBR -> {
+				final boolean rev = isReversedFpuForm(inst);
+				wb.write(rev ? (byte) 0xdc : (byte) 0xd8, asByte((rev ? 0xe0 : 0xe8) + fpuStackIndex(inst)));
+				return;
+			}
+			case FDIV -> {
+				final boolean rev = isReversedFpuForm(inst);
+				wb.write(rev ? (byte) 0xdc : (byte) 0xd8, asByte((rev ? 0xf8 : 0xf0) + fpuStackIndex(inst)));
+				return;
+			}
+			case FDIVR -> {
+				final boolean rev = isReversedFpuForm(inst);
+				wb.write(rev ? (byte) 0xdc : (byte) 0xd8, asByte((rev ? 0xf0 : 0xf8) + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVB -> {
+				wb.write((byte) 0xda, asByte(0xc0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVE -> {
+				wb.write((byte) 0xda, asByte(0xc8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVBE -> {
+				wb.write((byte) 0xda, asByte(0xd0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVU -> {
+				wb.write((byte) 0xda, asByte(0xd8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVNB -> {
+				wb.write((byte) 0xdb, asByte(0xc0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVNE -> {
+				wb.write((byte) 0xdb, asByte(0xc8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVNBE -> {
+				wb.write((byte) 0xdb, asByte(0xd0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCMOVNU -> {
+				wb.write((byte) 0xdb, asByte(0xd8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FUCOMI -> {
+				wb.write((byte) 0xdb, asByte(0xe8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCOMI -> {
+				wb.write((byte) 0xdb, asByte(0xf0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FADDP -> {
+				wb.write((byte) 0xde, asByte(0xc0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FMULP -> {
+				wb.write((byte) 0xde, asByte(0xc8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FSUBRP -> {
+				wb.write((byte) 0xde, asByte(0xe0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FSUBP -> {
+				wb.write((byte) 0xde, asByte(0xe8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FDIVRP -> {
+				wb.write((byte) 0xde, asByte(0xf0 + fpuStackIndex(inst)));
+				return;
+			}
+			case FDIVP -> {
+				wb.write((byte) 0xde, asByte(0xf8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FUCOMIP -> {
+				wb.write((byte) 0xdf, asByte(0xe8 + fpuStackIndex(inst)));
+				return;
+			}
+			case FCOMIP -> {
+				wb.write((byte) 0xdf, asByte(0xf0 + fpuStackIndex(inst)));
+				return;
 			}
 			default -> throw new IllegalArgumentException(String.format("Unknown opcode: '%s'.", inst.opcode()));
 		}
@@ -1915,6 +2253,28 @@ public final class InstructionEncoder {
 				&& inst.opcode() != Opcode.POP
 				&& inst.opcode() != Opcode.FADD
 				&& inst.opcode() != Opcode.FLD
+				&& inst.opcode() != Opcode.FST
+				&& inst.opcode() != Opcode.FSTP
+				&& inst.opcode() != Opcode.FCOM
+				&& inst.opcode() != Opcode.FCOMP
+				&& inst.opcode() != Opcode.FILD
+				&& inst.opcode() != Opcode.FISTTP
+				&& inst.opcode() != Opcode.FIST
+				&& inst.opcode() != Opcode.FISTP
+				&& inst.opcode() != Opcode.FIMUL
+				&& inst.opcode() != Opcode.FICOM
+				&& inst.opcode() != Opcode.FICOMP
+				&& inst.opcode() != Opcode.FISUB
+				&& inst.opcode() != Opcode.FISUBR
+				&& inst.opcode() != Opcode.FIDIV
+				&& inst.opcode() != Opcode.FIDIVR
+				&& inst.opcode() != Opcode.FBLD
+				&& inst.opcode() != Opcode.FBSTP
+				&& inst.opcode() != Opcode.FLDENV
+				&& inst.opcode() != Opcode.FNSTENV
+				&& inst.opcode() != Opcode.FRSTOR
+				&& inst.opcode() != Opcode.FNSAVE
+				&& inst.opcode() != Opcode.FNSTSW
 				&& inst.opcode() != Opcode.FXSAVE
 				&& inst.opcode() != Opcode.FXRSTOR
 				&& inst.opcode() != Opcode.XSAVE
@@ -1958,6 +2318,9 @@ public final class InstructionEncoder {
 				|| (inst.opcode() == Opcode.XOR && isFirstER(inst) && isSecondM(inst))
 				|| (inst.opcode() == Opcode.IMUL && isFirstER(inst))
 				|| (inst.opcode() == Opcode.MOVMSKPS && isFirstER(inst))
+				|| (inst.opcode() == Opcode.MOVMSKPD && isFirstER(inst))
+				|| (inst.opcode() == Opcode.BSF && isFirstER(inst))
+				|| (inst.opcode() == Opcode.TZCNT && isFirstER(inst))
 				|| (inst.opcode() == Opcode.SHLD && isSecondER(inst))
 				|| (inst.opcode() == Opcode.SHRD && isSecondER(inst))) {
 			rex = or(rex, (byte) 0b0100);
@@ -2387,7 +2750,7 @@ public final class InstructionEncoder {
 		}
 		return switch (inst.opcode()) {
 			case VPXOR, VPMINUB, VPCMPGTB, VPOR, VPAND, VPANDN, VPSUBB, VPMOVMSKB, VZEROALL -> true;
-			case VPCMPEQB ->
+			case VPCMPEQB, VPCMPEQD ->
 				!(isFirstR(inst)
 						&& inst.thirdOperand() instanceof final IndirectOperand io
 						&& !isSimpleIndirectOperand(io));
@@ -2446,6 +2809,7 @@ public final class InstructionEncoder {
 					VPBROADCASTD,
 					VPMINUD,
 					VPANDN,
+					VPCMPEQQ,
 					KORD,
 					KUNPCKDQ,
 					KORTESTD -> true;
@@ -2602,7 +2966,9 @@ public final class InstructionEncoder {
 												&& !(inst.thirdOperand() instanceof Immediate))
 										? Registers.combine(Registers.requiresExtension(r), Registers.toByte(r))
 										: 0))
-						: 0,
+						: (inst.getNumOperands() == 4 && inst.secondOperand() instanceof final Register r)
+								? Registers.combine(Registers.requiresExtension(r), Registers.toByte(r))
+								: 0,
 				isFirstYMM(inst)
 						|| isSecondYMM(inst)
 						|| (inst.hasThirdOperand() && inst.thirdOperand() instanceof MaskRegister),

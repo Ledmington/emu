@@ -185,14 +185,113 @@ public enum Opcode {
 	/** Make stack frame for high level procedure. */
 	ENTER,
 
+	/** Compute 2^x-1. */
+	F2XM1,
+
+	/** Absolute value. */
+	FABS,
+
 	/** Add. */
 	FADD,
+
+	/** Add and pop. */
+	FADDP,
+
+	/** Load binary coded decimal. */
+	FBLD,
+
+	/** Store binary coded decimal and pop. */
+	FBSTP,
+
+	/** Change sign. */
+	FCHS,
+
+	/** Move if below. */
+	FCMOVB,
+
+	/** Move if below or equal. */
+	FCMOVBE,
+
+	/** Move if equal. */
+	FCMOVE,
+
+	/** Move if not below. */
+	FCMOVNB,
+
+	/** Move if not below or equal. */
+	FCMOVNBE,
+
+	/** Move if not equal. */
+	FCMOVNE,
+
+	/** Move if not unordered. */
+	FCMOVNU,
+
+	/** Move if unordered. */
+	FCMOVU,
+
+	/** Compare real. */
+	FCOM,
+
+	/** Compare and set EFLAGS. */
+	FCOMI,
+
+	/** Compare and set EFLAGS and pop. */
+	FCOMIP,
+
+	/** Compare real and pop. */
+	FCOMP,
+
+	/** Compare real and pop twice. */
+	FCOMPP,
+
+	/** Cosine. */
+	FCOS,
+
+	/** Decrement stack pointer. */
+	FDECSTP,
+
+	/** Divide. */
+	FDIV,
+
+	/** Divide and pop. */
+	FDIVP,
+
+	/** Reverse divide. */
+	FDIVR,
+
+	/** Reverse divide and pop. */
+	FDIVRP,
+
+	/** Free floating-point register. */
+	FFREE,
+
+	/** Free floating-point register and pop. */
+	FFREEP,
 
 	/** Add integer. */
 	FIADD,
 
+	/** Compare integer. */
+	FICOM,
+
+	/** Compare integer and pop. */
+	FICOMP,
+
+	/** Divide integer. */
+	FIDIV,
+
+	/** Reverse divide integer. */
+	FIDIVR,
+
 	/** Load integer. */
 	FILD,
+
+	/** Multiply integer. */
+	FIMUL,
+
+	/** Increment stack pointer. */
+	FINCSTP,
 
 	/** Store integer. */
 	FIST,
@@ -203,20 +302,158 @@ public enum Opcode {
 	/** Store integer with truncation and pop. */
 	FISTTP,
 
+	/** Subtract integer. */
+	FISUB,
+
+	/** Reverse subtract integer. */
+	FISUBR,
+
 	/** Load real. */
 	FLD,
+
+	/** Load 1.0. */
+	FLD1,
+
+	/** Load control word. */
+	FLDCW,
+
+	/** Load FPU environment. */
+	FLDENV,
+
+	/** Load log2(e). */
+	FLDL2E,
+
+	/** Load log2(10). */
+	FLDL2T,
+
+	/** Load log10(2). */
+	FLDLG2,
+
+	/** Load ln(2). */
+	FLDLN2,
+
+	/** Load pi. */
+	FLDPI,
+
+	/** Load 0.0. */
+	FLDZ,
+
+	/** Multiply. */
+	FMUL,
+
+	/** Multiply and pop. */
+	FMULP,
+
+	/** Clear exceptions and flags (no wait). */
+	FNCLEX,
+
+	/** Initialize FPU (no wait). */
+	FNINIT,
+
+	/** No operation. */
+	FNOP,
+
+	/** Store control word (no wait). */
+	FNSTCW,
+
+	/** Store FPU environment (no wait). */
+	FNSTENV,
+
+	/** Store status word (no wait). */
+	FNSTSW,
+
+	/** Partial arctangent. */
+	FPATAN,
+
+	/** Partial remainder. */
+	FPREM,
+
+	/** Partial remainder (IEEE). */
+	FPREM1,
+
+	/** Partial tangent. */
+	FPTAN,
+
+	/** Round to integer. */
+	FRNDINT,
+
+	/** Scale. */
+	FSCALE,
+
+	/** Sine. */
+	FSIN,
+
+	/** Sine and cosine. */
+	FSINCOS,
+
+	/** Square root. */
+	FSQRT,
+
+	/** Store real. */
+	FST,
 
 	/** Store real and pop. */
 	FSTP,
 
+	/** Subtract. */
+	FSUB,
+
+	/** Subtract and pop. */
+	FSUBP,
+
+	/** Reverse subtract. */
+	FSUBR,
+
+	/** Reverse subtract and pop. */
+	FSUBRP,
+
+	/** Test. */
+	FTST,
+
+	/** Unordered compare real. */
+	FUCOM,
+
+	/** Compare unordered and set EFLAGS. */
+	FUCOMI,
+
+	/** Compare unordered and set EFLAGS and pop. */
+	FUCOMIP,
+
+	/** Unordered compare real and pop. */
+	FUCOMP,
+
+	/** Unordered compare real and pop twice. */
+	FUCOMPP,
+
+	/** Store FPU, MMX and SSE state. */
+	FNSAVE,
+
+	/** Restore FPU, MMX and SSE state. */
+	FRSTOR,
+
 	/** Wait for floating-point unit. */
 	FWAIT,
+
+	/** Examine. */
+	FXAM,
+
+	/** Exchange register contents. */
+	FXCH,
 
 	/** Restore x87 FPU and SIMD state. */
 	FXRSTOR,
 
 	/** Save x87 FPU and SIMD state. */
 	FXSAVE,
+
+	/** Extract exponent and significand. */
+	FXTRACT,
+
+	/** Compute y*log2(x). */
+	FYL2X,
+
+	/** Compute y*log2(x+1). */
+	FYL2XP1,
 
 	/** Halt. */
 	HLT,
@@ -413,6 +650,9 @@ public enum Opcode {
 	 */
 	MOVLPS,
 
+	/** Extract packed double-precision floating-point sign mask. */
+	MOVMSKPD,
+
 	/** Extract packed single-precision floating-point values. */
 	MOVMSKPS,
 
@@ -431,11 +671,17 @@ public enum Opcode {
 	/** Move double-word string. */
 	MOVSD,
 
+	/** Move scalar single precision floating-point value. */
+	MOVSS,
+
 	/** Move and sign-extend. */
 	MOVSX,
 
 	/** Move and sign-extend doubleword. */
 	MOVSXD,
+
+	/** Move unaligned packed double precision floating-point values into XMM register. */
+	MOVUPD,
 
 	/** Move unaligned packed single precision floating-point values into XMM register. */
 	MOVUPS,
@@ -985,6 +1231,9 @@ public enum Opcode {
 
 	/** Exchange and add. */
 	XADD,
+
+	/** Transactional abort. */
+	XABORT,
 
 	/** Transactional begin. */
 	XBEGIN,

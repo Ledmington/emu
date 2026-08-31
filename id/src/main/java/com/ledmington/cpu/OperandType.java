@@ -49,6 +49,9 @@ public enum OperandType {
 	/** A mask register. */
 	RK,
 
+	/** An x87 FPU stack register. */
+	RF,
+
 	/** A segment register. */
 	RS,
 

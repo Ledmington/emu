@@ -40,6 +40,8 @@ import com.ledmington.utils.BitUtils;
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class IndirectOperand implements Operand {
 
+	private static final String SHORT_HEX_FORMAT = "0x%x";
+
 	private final PointerSize ptrSize;
 	private final SegmentRegister segment;
 	private final Register base;
@@ -254,14 +256,14 @@ public final class IndirectOperand implements Operand {
 
 	/** The raw sign-extended 64-bit hexadecimal value of the displacement, unaffected by its sign. */
 	private String rawSignExtendedDisplacementHex() {
-		return String.format("0x%x", (long) (int) displacement);
+		return String.format(SHORT_HEX_FORMAT, (long) (int) displacement);
 	}
 
 	private void addDisplacement(
 			final StringBuilder sb, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		switch (displacementType) {
 			case DisplacementType.SHORT -> {
-				final String fmt = shortHex ? "0x%x" : "0x%02x";
+				final String fmt = shortHex ? SHORT_HEX_FORMAT : "0x%02x";
 				if (compressedDisplacement.isEmpty()) {
 					final byte x = BitUtils.asByte(displacement);
 					sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
@@ -271,7 +273,7 @@ public final class IndirectOperand implements Operand {
 				}
 			}
 			case DisplacementType.LONG -> {
-				final String fmt = shortHex ? "0x%x" : "0x%08x";
+				final String fmt = shortHex ? SHORT_HEX_FORMAT : "0x%08x";
 				final int x = BitUtils.asInt(displacement);
 				sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
 			}
@@ -286,6 +288,7 @@ public final class IndirectOperand implements Operand {
 	 * @param shortHex WHen enabled, does not add leading zeroes in the displacement.
 	 * @return The assembly representation of this instruction in Intel syntax.
 	 */
+	@SuppressWarnings("PMD.NPathComplexity")
 	public String toIntelSyntax(
 			final boolean addPointerSize, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		final StringBuilder sb = new StringBuilder();
@@ -353,7 +356,7 @@ public final class IndirectOperand implements Operand {
 				+ ";index="
 				+ (index == null ? "null" : index.toString()) + ";scale="
 				+ scale + ";displacement="
-				+ (displacement == null ? "null" : String.format("0x%x", displacement)) + ";displacementType="
+				+ (displacement == null ? "null" : String.format(SHORT_HEX_FORMAT, displacement)) + ";displacementType="
 				+ displacementType
 				+ ")";
 	}

@@ -540,7 +540,8 @@ public final class Main {
 						|| inst.opcode() == Opcode.LOOP
 						|| inst.opcode() == Opcode.LOOPE
 						|| inst.opcode() == Opcode.LOOPNE
-						|| inst.opcode() == Opcode.CALL)
+						|| inst.opcode() == Opcode.CALL
+						|| inst.opcode() == Opcode.XBEGIN)
 				&& inst.firstOperand() instanceof Immediate;
 	}
 

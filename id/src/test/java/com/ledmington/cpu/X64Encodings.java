@@ -100,6 +100,15 @@ import static com.ledmington.cpu.x86.Register8.R8B;
 import static com.ledmington.cpu.x86.Register8.R9B;
 import static com.ledmington.cpu.x86.Register8.SIL;
 import static com.ledmington.cpu.x86.Register8.SPL;
+import static com.ledmington.cpu.x86.RegisterFPU.ST;
+import static com.ledmington.cpu.x86.RegisterFPU.ST0;
+import static com.ledmington.cpu.x86.RegisterFPU.ST1;
+import static com.ledmington.cpu.x86.RegisterFPU.ST2;
+import static com.ledmington.cpu.x86.RegisterFPU.ST3;
+import static com.ledmington.cpu.x86.RegisterFPU.ST4;
+import static com.ledmington.cpu.x86.RegisterFPU.ST5;
+import static com.ledmington.cpu.x86.RegisterFPU.ST6;
+import static com.ledmington.cpu.x86.RegisterFPU.ST7;
 import static com.ledmington.cpu.x86.RegisterMMX.MM0;
 import static com.ledmington.cpu.x86.RegisterMMX.MM1;
 import static com.ledmington.cpu.x86.RegisterMMX.MM2;
@@ -141,6 +150,7 @@ import static com.ledmington.cpu.x86.RegisterYMM.YMM21;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM24;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM26;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM3;
+import static com.ledmington.cpu.x86.RegisterYMM.YMM4;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM5;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM6;
 import static com.ledmington.cpu.x86.RegisterYMM.YMM8;
@@ -186,13 +196,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 	//
 	protected static final List<X64EncodingTestCase> X64_ENCODINGS = Stream.of(
 					nop(), mov(), movsxd(), cmp(), call(), jump(), cmov(), lea(), movzx(), movsx(), push(), pop(),
-					others())
+					others(), others2(), others3(), others4(), x87())
 			.flatMap(Collection::stream)
 			.toList();
 
 	// FIXME: this is ugly
 	// TODO: do the allowed encodings need to be a set (instead of a list)?
-	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, Set<byte[]> allowedEncodings) {}
+	protected record X64EncodingTestCase(Instruction instruction, String intelSyntax, Set<byte[]> allowedEncodings) {
+		protected X64EncodingTestCase {
+			allowedEncodings = Set.copyOf(allowedEncodings);
+		}
+	}
 
 	private static X64EncodingTestCase test(final Instruction instruction, final String intelSyntax, final String hex) {
 		final String[] splitted = hex.strip().split(" ");
@@ -5187,6 +5201,332 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"8f 00"));
 	}
 
+	private static List<X64EncodingTestCase> x87() {
+		return List.of(
+				// x87 register-to-register arithmetic (D8: st,st(i) / DC: st(i),st)
+				test(new GeneralInstruction(Opcode.FADD, ST, ST1), "fadd st,st(1)", "d8 c1"),
+				test(new GeneralInstruction(Opcode.FMUL, ST, ST2), "fmul st,st(2)", "d8 ca"),
+				test(new GeneralInstruction(Opcode.FCOM, ST3), "fcom st(3)", "d8 d3"),
+				test(new GeneralInstruction(Opcode.FCOMP, ST4), "fcomp st(4)", "d8 dc"),
+				test(new GeneralInstruction(Opcode.FSUB, ST, ST5), "fsub st,st(5)", "d8 e5"),
+				test(new GeneralInstruction(Opcode.FSUBR, ST, ST6), "fsubr st,st(6)", "d8 ee"),
+				test(new GeneralInstruction(Opcode.FDIV, ST, ST7), "fdiv st,st(7)", "d8 f7"),
+				test(new GeneralInstruction(Opcode.FDIVR, ST0, ST), "fdivr st(0),st", "dc f0"),
+				test(new GeneralInstruction(Opcode.FADD, ST1, ST), "fadd st(1),st", "dc c1"),
+				test(new GeneralInstruction(Opcode.FMUL, ST2, ST), "fmul st(2),st", "dc ca"),
+				test(new GeneralInstruction(Opcode.FSUBR, ST3, ST), "fsubr st(3),st", "dc e3"),
+				test(new GeneralInstruction(Opcode.FSUB, ST4, ST), "fsub st(4),st", "dc ec"),
+				test(new GeneralInstruction(Opcode.FDIVR, ST5, ST), "fdivr st(5),st", "dc f5"),
+				test(new GeneralInstruction(Opcode.FDIV, ST6, ST), "fdiv st(6),st", "dc fe"),
+				// D9 register forms
+				test(new GeneralInstruction(Opcode.FLD, ST0), "fld st(0)", "d9 c0"),
+				test(new GeneralInstruction(Opcode.FXCH, ST1), "fxch st(1)", "d9 c9"),
+				test(new GeneralInstruction(Opcode.FNOP), "fnop", "d9 d0"),
+				test(new GeneralInstruction(Opcode.FCHS), "fchs", "d9 e0"),
+				test(new GeneralInstruction(Opcode.FABS), "fabs", "d9 e1"),
+				test(new GeneralInstruction(Opcode.FTST), "ftst", "d9 e4"),
+				test(new GeneralInstruction(Opcode.FXAM), "fxam", "d9 e5"),
+				test(new GeneralInstruction(Opcode.FLD1), "fld1", "d9 e8"),
+				test(new GeneralInstruction(Opcode.FLDL2T), "fldl2t", "d9 e9"),
+				test(new GeneralInstruction(Opcode.FLDL2E), "fldl2e", "d9 ea"),
+				test(new GeneralInstruction(Opcode.FLDPI), "fldpi", "d9 eb"),
+				test(new GeneralInstruction(Opcode.FLDLG2), "fldlg2", "d9 ec"),
+				test(new GeneralInstruction(Opcode.FLDLN2), "fldln2", "d9 ed"),
+				test(new GeneralInstruction(Opcode.FLDZ), "fldz", "d9 ee"),
+				test(new GeneralInstruction(Opcode.F2XM1), "f2xm1", "d9 f0"),
+				test(new GeneralInstruction(Opcode.FYL2X), "fyl2x", "d9 f1"),
+				test(new GeneralInstruction(Opcode.FPTAN), "fptan", "d9 f2"),
+				test(new GeneralInstruction(Opcode.FPATAN), "fpatan", "d9 f3"),
+				test(new GeneralInstruction(Opcode.FXTRACT), "fxtract", "d9 f4"),
+				test(new GeneralInstruction(Opcode.FPREM1), "fprem1", "d9 f5"),
+				test(new GeneralInstruction(Opcode.FDECSTP), "fdecstp", "d9 f6"),
+				test(new GeneralInstruction(Opcode.FINCSTP), "fincstp", "d9 f7"),
+				test(new GeneralInstruction(Opcode.FPREM), "fprem", "d9 f8"),
+				test(new GeneralInstruction(Opcode.FYL2XP1), "fyl2xp1", "d9 f9"),
+				test(new GeneralInstruction(Opcode.FSQRT), "fsqrt", "d9 fa"),
+				test(new GeneralInstruction(Opcode.FSINCOS), "fsincos", "d9 fb"),
+				test(new GeneralInstruction(Opcode.FRNDINT), "frndint", "d9 fc"),
+				test(new GeneralInstruction(Opcode.FSCALE), "fscale", "d9 fd"),
+				test(new GeneralInstruction(Opcode.FSIN), "fsin", "d9 fe"),
+				test(new GeneralInstruction(Opcode.FCOS), "fcos", "d9 ff"),
+				// DA register forms
+				test(new GeneralInstruction(Opcode.FCMOVB, ST, ST0), "fcmovb st,st(0)", "da c0"),
+				test(new GeneralInstruction(Opcode.FCMOVE, ST, ST1), "fcmove st,st(1)", "da c9"),
+				test(new GeneralInstruction(Opcode.FCMOVBE, ST, ST2), "fcmovbe st,st(2)", "da d2"),
+				test(new GeneralInstruction(Opcode.FCMOVU, ST, ST3), "fcmovu st,st(3)", "da db"),
+				test(new GeneralInstruction(Opcode.FUCOMPP), "fucompp", "da e9"),
+				// DB register forms
+				test(new GeneralInstruction(Opcode.FCMOVNB, ST, ST0), "fcmovnb st,st(0)", "db c0"),
+				test(new GeneralInstruction(Opcode.FCMOVNE, ST, ST1), "fcmovne st,st(1)", "db c9"),
+				test(new GeneralInstruction(Opcode.FCMOVNBE, ST, ST2), "fcmovnbe st,st(2)", "db d2"),
+				test(new GeneralInstruction(Opcode.FCMOVNU, ST, ST3), "fcmovnu st,st(3)", "db db"),
+				test(new GeneralInstruction(Opcode.FNCLEX), "fnclex", "db e2"),
+				test(new GeneralInstruction(Opcode.FNINIT), "fninit", "db e3"),
+				test(new GeneralInstruction(Opcode.FUCOMI, ST, ST1), "fucomi st,st(1)", "db e9"),
+				test(new GeneralInstruction(Opcode.FCOMI, ST, ST2), "fcomi st,st(2)", "db f2"),
+				// DD register forms
+				test(new GeneralInstruction(Opcode.FFREE, ST0), "ffree st(0)", "dd c0"),
+				test(new GeneralInstruction(Opcode.FST, ST1), "fst st(1)", "dd d1"),
+				test(new GeneralInstruction(Opcode.FSTP, ST2), "fstp st(2)", "dd da"),
+				test(new GeneralInstruction(Opcode.FUCOM, ST3), "fucom st(3)", "dd e3"),
+				test(new GeneralInstruction(Opcode.FUCOMP, ST4), "fucomp st(4)", "dd ec"),
+				// DE register forms
+				test(new GeneralInstruction(Opcode.FADDP, ST0, ST), "faddp st(0),st", "de c0"),
+				test(new GeneralInstruction(Opcode.FMULP, ST1, ST), "fmulp st(1),st", "de c9"),
+				test(new GeneralInstruction(Opcode.FCOMPP), "fcompp", "de d9"),
+				test(new GeneralInstruction(Opcode.FSUBRP, ST2, ST), "fsubrp st(2),st", "de e2"),
+				test(new GeneralInstruction(Opcode.FSUBP, ST3, ST), "fsubp st(3),st", "de eb"),
+				test(new GeneralInstruction(Opcode.FDIVRP, ST4, ST), "fdivrp st(4),st", "de f4"),
+				test(new GeneralInstruction(Opcode.FDIVP, ST5, ST), "fdivp st(5),st", "de fd"),
+				// DF register forms
+				test(new GeneralInstruction(Opcode.FFREEP, ST0), "ffreep st(0)", "df c0"),
+				test(new GeneralInstruction(Opcode.FNSTSW, AX), "fnstsw ax", "df e0"),
+				test(new GeneralInstruction(Opcode.FUCOMIP, ST, ST1), "fucomip st,st(1)", "df e9"),
+				test(new GeneralInstruction(Opcode.FCOMIP, ST, ST2), "fcomip st,st(2)", "df f2"),
+				// x87 environment/control-word memory forms
+				test(
+						new GeneralInstruction(
+								Opcode.FLDENV,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RBP)
+										.displacement((byte) -0x20)
+										.build()),
+						"fldenv [rbp-0x20]",
+						"d9 65 e0"),
+				test(
+						new GeneralInstruction(
+								Opcode.FLDCW,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RBP)
+										.displacement((byte) -0x10)
+										.build()),
+						"fldcw WORD PTR [rbp-0x10]",
+						"d9 6d f0"),
+				test(
+						new GeneralInstruction(
+								Opcode.FNSTENV,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RBP)
+										.displacement((byte) -0x20)
+										.build()),
+						"fnstenv [rbp-0x20]",
+						"d9 75 e0"),
+				test(
+						new GeneralInstruction(
+								Opcode.FNSTCW,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RBP)
+										.displacement((byte) -0x10)
+										.build()),
+						"fnstcw WORD PTR [rbp-0x10]",
+						"d9 7d f0"),
+				test(
+						new GeneralInstruction(
+								Opcode.FRSTOR,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RBP)
+										.displacement((byte) -0x20)
+										.build()),
+						"frstor [rbp-0x20]",
+						"dd 65 e0"),
+				test(
+						new GeneralInstruction(
+								Opcode.FNSAVE,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RBP)
+										.displacement((byte) -0x20)
+										.build()),
+						"fnsave [rbp-0x20]",
+						"dd 75 e0"),
+				// x87 integer/packed-decimal memory forms
+				test(
+						new GeneralInstruction(
+								Opcode.FBLD,
+								IndirectOperand.builder()
+										.pointer(TBYTE_PTR)
+										.base(RAX)
+										.build()),
+						"fbld TBYTE PTR [rax]",
+						"df 20"),
+				test(
+						new GeneralInstruction(
+								Opcode.FBSTP,
+								IndirectOperand.builder()
+										.pointer(TBYTE_PTR)
+										.base(RAX)
+										.build()),
+						"fbstp TBYTE PTR [rax]",
+						"df 30"),
+				test(
+						new GeneralInstruction(
+								Opcode.FILD,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fild QWORD PTR [rax]",
+						"df 28"),
+				test(
+						new GeneralInstruction(
+								Opcode.FISTP,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fistp QWORD PTR [rax]",
+						"df 38"),
+				test(
+						new GeneralInstruction(
+								Opcode.FIMUL,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fimul DWORD PTR [rax]",
+						"da 08"),
+				test(
+						new GeneralInstruction(
+								Opcode.FICOM,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"ficom DWORD PTR [rax]",
+						"da 10"),
+				test(
+						new GeneralInstruction(
+								Opcode.FICOMP,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"ficomp DWORD PTR [rax]",
+						"da 18"),
+				test(
+						new GeneralInstruction(
+								Opcode.FISUB,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fisub DWORD PTR [rax]",
+						"da 20"),
+				test(
+						new GeneralInstruction(
+								Opcode.FISUBR,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fisubr DWORD PTR [rax]",
+						"da 28"),
+				test(
+						new GeneralInstruction(
+								Opcode.FIDIV,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fidiv DWORD PTR [rax]",
+						"da 30"),
+				test(
+						new GeneralInstruction(
+								Opcode.FIDIVR,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fidivr DWORD PTR [rax]",
+						"da 38"),
+				test(
+						new GeneralInstruction(
+								Opcode.FIMUL,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"fimul WORD PTR [rax]",
+						"de 08"),
+				test(
+						new GeneralInstruction(
+								Opcode.FICOM,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"ficom WORD PTR [rax]",
+						"de 10"),
+				test(
+						new GeneralInstruction(
+								Opcode.FICOMP,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"ficomp WORD PTR [rax]",
+						"de 18"),
+				test(
+						new GeneralInstruction(
+								Opcode.FISUB,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"fisub WORD PTR [rax]",
+						"de 20"),
+				test(
+						new GeneralInstruction(
+								Opcode.FISUBR,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"fisubr WORD PTR [rax]",
+						"de 28"),
+				test(
+						new GeneralInstruction(
+								Opcode.FIDIV,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"fidiv WORD PTR [rax]",
+						"de 30"),
+				test(
+						new GeneralInstruction(
+								Opcode.FIDIVR,
+								IndirectOperand.builder()
+										.pointer(WORD_PTR)
+										.base(RAX)
+										.build()),
+						"fidivr WORD PTR [rax]",
+						"de 38"),
+				test(
+						new GeneralInstruction(
+								Opcode.FST,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fst DWORD PTR [rax]",
+						"d9 10"),
+				test(
+						new GeneralInstruction(
+								Opcode.FST,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RAX)
+										.build()),
+						"fst QWORD PTR [rax]",
+						"dd 10"));
+	}
+
 	private static List<X64EncodingTestCase> others() {
 		return List.of(
 				//  Cdq
@@ -5208,6 +5548,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				//  Ret
 				test(new GeneralInstruction(Opcode.RET, simm), "ret 0x1234", "c2 34 12"),
 				test(new GeneralInstruction(Opcode.RET), "ret", "c3"),
+				test(new GeneralInstruction(LegacyPrefix.REP, Opcode.RET), "repz ret", "f3 c3"),
 				//  Retf
 				test(new GeneralInstruction(Opcode.RETF, simm), "retf 0x1234", "ca 34 12"),
 				test(new GeneralInstruction(Opcode.RETF), "retf", "cb"),
@@ -6793,7 +7134,11 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build(),
 								new Immediate((byte) 0x45)),
 						"xor BYTE PTR [rcx],0x45",
-						"80 31 45"),
+						"80 31 45"));
+	}
+
+	private static List<X64EncodingTestCase> others2() {
+		return List.of(
 				//  Not
 				test(new GeneralInstruction(Opcode.NOT, CX), "not cx", "66 f7 d1"),
 				test(new GeneralInstruction(Opcode.NOT, EAX), "not eax", "f7 d0"),
@@ -7040,6 +7385,22 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movs DWORD PTR es:[rdi],DWORD PTR ds:[rsi]",
 						"a5"),
+				test(
+						new GeneralInstruction(
+								LegacyPrefix.REP,
+								Opcode.MOVS,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.segment(ES)
+										.base(RDI)
+										.build(),
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.segment(DS)
+										.base(RSI)
+										.build()),
+						"rep movs QWORD PTR es:[rdi],QWORD PTR ds:[rsi]",
+						"f3 48 a5"),
 				test(
 						new GeneralInstruction(
 								Opcode.MOVS,
@@ -7687,6 +8048,17 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				test(
 						new GeneralInstruction(
 								Opcode.MOVHPD,
+								XMM1,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x08)
+										.build()),
+						"movhpd xmm1,QWORD PTR [rdi+0x08]",
+						"66 0f 16 4f 08"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVHPD,
 								IndirectOperand.builder()
 										.pointer(QWORD_PTR)
 										.base(RCX)
@@ -8015,6 +8387,51 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movups xmm0,XMMWORD PTR [rbx]",
 						"0f 10 03"),
+				test(new GeneralInstruction(Opcode.MOVUPS, XMM0, XMM1), "movups xmm0,xmm1", "0f 10 c1"),
+				//  Movupd
+				test(
+						new GeneralInstruction(
+								Opcode.MOVUPD,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RAX)
+										.build()),
+						"movupd xmm0,XMMWORD PTR [rax]",
+						"66 0f 10 00"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVUPD,
+								IndirectOperand.builder()
+										.pointer(XMMWORD_PTR)
+										.base(RAX)
+										.build(),
+								XMM0),
+						"movupd XMMWORD PTR [rax],xmm0",
+						"66 0f 11 00"),
+				test(new GeneralInstruction(Opcode.MOVUPD, XMM0, XMM1), "movupd xmm0,xmm1", "66 0f 10 c1"),
+				//  Movss
+				test(
+						new GeneralInstruction(
+								Opcode.MOVSS,
+								XMM0,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build()),
+						"movss xmm0,DWORD PTR [rax]",
+						"f3 0f 10 00"),
+				test(
+						new GeneralInstruction(
+								Opcode.MOVSS,
+								IndirectOperand.builder()
+										.pointer(DWORD_PTR)
+										.base(RAX)
+										.build(),
+								XMM0),
+						"movss DWORD PTR [rax],xmm0",
+						"f3 0f 11 00"),
+				test(new GeneralInstruction(Opcode.MOVSS, XMM0, XMM1), "movss xmm0,xmm1", "f3 0f 10 c1"),
 				//  Movsd
 				test(
 						new GeneralInstruction(
@@ -8062,6 +8479,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"movsd xmm14,QWORD PTR [rbx+rdi*8+0x12345678]",
 						"f2 44 0f 10 b4 fb 78 56 34 12"),
+				test(new GeneralInstruction(Opcode.MOVSD, XMM0, XMM1), "movsd xmm0,xmm1", "f2 0f 10 c1"),
 				test(
 						new GeneralInstruction(
 								Opcode.MOVSD,
@@ -8322,7 +8740,11 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.displacement(0x12345678)
 										.build()),
 						"inc WORD PTR [rdx+rdi*2+0x12345678]",
-						"66 ff 84 7a 78 56 34 12"),
+						"66 ff 84 7a 78 56 34 12"));
+	}
+
+	private static List<X64EncodingTestCase> others3() {
+		return List.of(
 				//  Dec
 				test(new GeneralInstruction(Opcode.DEC, AH), "dec ah", "fe cc"),
 				test(new GeneralInstruction(Opcode.DEC, AL), "dec al", "fe c8"),
@@ -8722,6 +9144,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"ucomisd xmm13,QWORD PTR [rip+0x12345678]",
 						"66 44 0f 2e 2d 78 56 34 12"),
+				test(new GeneralInstruction(Opcode.UCOMISD, XMM0, XMM0), "ucomisd xmm0,xmm0", "66 0f 2e c0"),
 				//  Ucomiss
 				test(
 						new GeneralInstruction(
@@ -8734,6 +9157,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"ucomiss xmm13,DWORD PTR [rip+0x12345678]",
 						"44 0f 2e 2d 78 56 34 12"),
+				test(new GeneralInstruction(Opcode.UCOMISS, XMM0, XMM0), "ucomiss xmm0,xmm0", "0f 2e c0"),
 				//  BTx
 				test(new GeneralInstruction(Opcode.BT, EDX, bimm), "bt edx,0x12", "0f ba e2 12"),
 				test(new GeneralInstruction(Opcode.BT, EDX, ESI), "bt edx,esi", "0f a3 f2"),
@@ -9722,6 +10146,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Bsf
 				test(new GeneralInstruction(Opcode.BSF, RDX, RDX), "bsf rdx,rdx", "48 0f bc d2"),
 				test(new GeneralInstruction(Opcode.BSF, ECX, EDX), "bsf ecx,edx", "0f bc ca"),
+				test(
+						new GeneralInstruction(
+								Opcode.BSF,
+								R8,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSI)
+										.build()),
+						"bsf r8,QWORD PTR [rsi]",
+						"4c 0f bc 06"),
 				// Ror
 				test(new GeneralInstruction(Opcode.ROR, DL, bimm), "ror dl,0x12", "c0 ca 12"),
 				test(new GeneralInstruction(Opcode.ROR, BX, bimm), "ror bx,0x12", "66 c1 cb 12"),
@@ -9887,7 +10321,11 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build(),
 								new Immediate((byte) 0x0f)),
 						"palignr xmm0,XMMWORD PTR [rsi+0x20],0x0f",
-						"66 0f 3a 0f 46 20 0f"),
+						"66 0f 3a 0f 46 20 0f"));
+	}
+
+	private static List<X64EncodingTestCase> others4() {
+		return List.of(
 				// Pcmpeqb
 				test(
 						new GeneralInstruction(
@@ -10298,6 +10736,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"vpminud ymm18,ymm17,YMMWORD PTR [rdi+0xa0]",
 						"62 e2 75 20 3b 57 05"),
 				test(
+						new GeneralInstruction(Opcode.VPMINUD, YMM5, YMM4, YMM2),
+						"vpminud ymm5,ymm4,ymm2",
+						"c4 e2 5d 3b ea"),
+				test(
 						Instruction.builder()
 								.opcode(Opcode.VPMINUD)
 								.mask(K1)
@@ -10439,6 +10881,14 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"vpcmpeqd ymm1,ymm0,YMMWORD PTR [rdi]",
 						"c5 fd 76 0f"),
 				test(
+						new GeneralInstruction(Opcode.VPCMPEQD, YMM5, YMM0, YMM5),
+						"vpcmpeqd ymm5,ymm0,ymm5",
+						"c5 fd 76 ed"),
+				test(
+						new GeneralInstruction(Opcode.VPCMPEQD, XMM1, XMM2, XMM3),
+						"vpcmpeqd xmm1,xmm2,xmm3",
+						"c5 e9 76 cb"),
+				test(
 						Instruction.builder()
 								.opcode(Opcode.VPCMPEQD)
 								.op(K0)
@@ -10450,6 +10900,19 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								.build(),
 						"vpcmpeqd k0,ymm16,YMMWORD PTR [rdi]",
 						"62 f3 7d 20 1f 07 00"),
+				test(
+						Instruction.builder()
+								.opcode(Opcode.VPCMPEQD)
+								.op(K0)
+								.op(YMM16)
+								.op(IndirectOperand.builder()
+										.pointer(YMMWORD_PTR)
+										.base(RDI)
+										.displacement((byte) 0x01)
+										.build())
+								.build(),
+						"vpcmpeqd k0,ymm16,YMMWORD PTR [rdi+0x20]",
+						Set.of("62 f1 7d 20 76 47 01", "62 f3 7d 20 1f 47 01 00")),
 				// Vpcmpeqq
 				test(
 						new GeneralInstruction(
@@ -10463,6 +10926,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 										.build()),
 						"vpcmpeqq xmm8,xmm0,XMMWORD PTR [rsp+0x00000300]",
 						"c4 62 79 29 84 24 00 03 00 00"),
+				test(
+						new GeneralInstruction(Opcode.VPCMPEQQ, XMM1, XMM2, XMM3),
+						"vpcmpeqq xmm1,xmm2,xmm3",
+						"c4 e2 69 29 cb"),
 				// Vpcmpneqb
 				test(
 						Instruction.builder()
@@ -10900,6 +11367,10 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 								new Immediate((byte) 0x01)),
 						"vpalignr xmm0,xmm0,XMMWORD PTR [rdi+rdx*1-0x10],0x01",
 						"c4 e3 79 0f 44 17 f0 01"),
+				test(
+						new GeneralInstruction(Opcode.VPALIGNR, XMM1, XMM2, XMM3, new Immediate((byte) 0x10)),
+						"vpalignr xmm1,xmm2,xmm3,0x10",
+						"c4 e3 69 0f cb 10"),
 				// Cld
 				test(new GeneralInstruction(Opcode.CLD), "cld", "fc"),
 				// Std
@@ -10933,6 +11404,7 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 				// Kmovd
 				test(new GeneralInstruction(Opcode.KMOVD, K2, ECX), "kmovd k2,ecx", "c5 fb 92 d1"),
 				test(new GeneralInstruction(Opcode.KMOVD, EAX, K1), "kmovd eax,k1", "c5 fb 93 c1"),
+				test(new GeneralInstruction(Opcode.KMOVD, R9D, K0), "kmovd r9d,k0", "c5 7b 93 c8"),
 				// Xtest
 				test(new GeneralInstruction(Opcode.XTEST), "xtest", "0f 01 d6"),
 				// Vpcmpnequb
@@ -11369,6 +11841,16 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"c4 e1 f5 45 c0"),
 				// Tzcnt
 				test(new GeneralInstruction(Opcode.TZCNT, EAX, EAX), "tzcnt eax,eax", "f3 0f bc c0"),
+				test(
+						new GeneralInstruction(
+								Opcode.TZCNT,
+								R8,
+								IndirectOperand.builder()
+										.pointer(QWORD_PTR)
+										.base(RSI)
+										.build()),
+						"tzcnt r8,QWORD PTR [rsi]",
+						"f3 4c 0f bc 06"),
 				// Kunpckdq
 				test(
 						Instruction.builder()
@@ -11446,8 +11928,12 @@ public sealed class X64Encodings permits TestDecoding, TestDecodeIncompleteInstr
 						"0f c7 64 24 40"),
 				// Movmskps
 				test(new GeneralInstruction(Opcode.MOVMSKPS, R13D, XMM2), "movmskps r13d,xmm2", "44 0f 50 ea"),
+				// Movmskpd
+				test(new GeneralInstruction(Opcode.MOVMSKPD, EAX, XMM0), "movmskpd eax,xmm0", "66 0f 50 c0"),
 				// Xbegin
 				test(new GeneralInstruction(Opcode.XBEGIN, new Immediate(0)), "xbegin 0x00000000", "c7 f8 00 00 00 00"),
+				// Xabort
+				test(new GeneralInstruction(Opcode.XABORT, bimm), "xabort 0x12", "c6 f8 12"),
 				// Xend
 				test(new GeneralInstruction(Opcode.XEND), "xend", "0f 01 d5"),
 				// Stmxcsr

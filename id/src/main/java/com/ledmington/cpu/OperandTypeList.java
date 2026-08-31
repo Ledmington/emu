@@ -38,6 +38,9 @@ public enum OperandTypeList {
 	/** The list of operands made of a 64-bit general-purpose register. */
 	R64(OperandType.R64),
 
+	/** The list of operands made of an x87 FPU stack register. */
+	RF(OperandType.RF),
+
 	/** The list of operands made of a BYTE PTR indirect operand. */
 	M8(OperandType.M8),
 
@@ -164,6 +167,9 @@ public enum OperandTypeList {
 	/** The list of operands made of a vector mask register and a vector mask register. */
 	RK_RK(OperandType.RK, OperandType.RK),
 
+	/** The list of operands made of two x87 FPU stack registers. */
+	RF_RF(OperandType.RF, OperandType.RF),
+
 	/** The list of operands made of an 8-bit general-purpose register and an 8-bit immediate value. */
 	R8_I8(OperandType.R8, OperandType.I8),
 
@@ -244,6 +250,9 @@ public enum OperandTypeList {
 
 	/** The list of operands made of a DWORD PTR indirect operand and a DWORD PTR indirect operand. */
 	M32_M32(OperandType.M32, OperandType.M32),
+
+	/** The list of operands made of a QWORD PTR indirect operand and a QWORD PTR indirect operand. */
+	M64_M64(OperandType.M64, OperandType.M64),
 
 	/** The list of operands made of a BYTE PTR indirect operand and an 8-bit general-purpose register. */
 	M8_R8(OperandType.M8, OperandType.R8),
@@ -529,6 +538,12 @@ public enum OperandTypeList {
 	 * operand and an 8-bit immediate value.
 	 */
 	RX_RX_M128_I8(OperandType.RX, OperandType.RX, OperandType.M128, OperandType.I8),
+
+	/**
+	 * The list of operands made of a 128-bit XMM vector register, a 128-bit XMM vector register, a 128-bit XMM vector
+	 * register and an 8-bit immediate value.
+	 */
+	RX_RX_RX_I8(OperandType.RX, OperandType.RX, OperandType.RX, OperandType.I8),
 
 	/**
 	 * The list of operands made of a 256-bit YMM vector register, a 256-bit YMM vector register, a YMMWORD PTR indirect
