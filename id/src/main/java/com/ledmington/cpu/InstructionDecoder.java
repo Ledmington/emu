@@ -3760,9 +3760,12 @@ public final class InstructionDecoder {
 				yield Instruction.builder()
 						.opcode(Opcode.VMOVQ)
 						.op(RegisterXMM.fromByte(getByteFromReg(vex2, modrm)))
-						.op(parseIndirectOperand(b, pref, modrm)
-								.pointer(PointerSize.QWORD_PTR)
-								.build())
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(PointerSize.QWORD_PTR)
+												.build()
+										: RegisterXMM.fromByte(getByteFromRM(pref, modrm)))
 						.build();
 			}
 			case VMOVQ_M64_RXMM_OPCODE -> {
@@ -3877,10 +3880,17 @@ public final class InstructionDecoder {
 		return switch (opcodeFirstByte) {
 			case VMOVQ_OPCODE -> {
 				final ModRM modrm = modrm(b);
+				final byte r1 = getByteFromRM(vex3, modrm);
+				final byte r2 = or(vex3.x() ? 0 : (byte) 0b00010000, getByteFromReg(vex3, modrm));
 				yield Instruction.builder()
 						.opcode(Opcode.VMOVQ)
-						.op(Register64.fromByte(getByteFromRM(vex3, modrm)))
-						.op(RegisterXMM.fromByte(getByteFromReg(vex3, modrm)))
+						.op(vex3.x() ? Register64.fromByte(r1) : RegisterXMM.fromByte(r1))
+						.op(
+								isIndirectOperandNeeded(modrm)
+										? parseIndirectOperand(b, pref, modrm)
+												.pointer(PointerSize.XMMWORD_PTR)
+												.build()
+										: (RegisterXMM.fromByte(r2)))
 						.build();
 			}
 			case KMOVQ_RK_R64_OPCODE -> {
@@ -4095,12 +4105,12 @@ public final class InstructionDecoder {
 		final byte VPMINUD_OPCODE = (byte) 0x3b;
 		final byte VPCMPNEQUB_OPCODE = (byte) 0x3e;
 		final byte VPCMPxxB_OPCODE = (byte) 0x3f;
-		final byte VMOVQ_RX_M128_OPCODE = (byte) 0x6e;
+		final byte VMOVQ_R_M_OPCODE = (byte) 0x6e;
 		final byte VMOVDQU64_RZMM_M512_OPCODE = (byte) 0x6f;
 		final byte VPCMPEQB_OPCODE = (byte) 0x74;
 		final byte VPBROADCASTB_OPCODE = (byte) 0x7a;
 		final byte VPBROADCASTD_OPCODE = (byte) 0x7c;
-		final byte VMOVQ_R64_RX_OPCODE = (byte) 0x7e;
+		final byte VMOVQ_R_R_OPCODE = (byte) 0x7e;
 		final byte VMOVDQU64_M512_RZMM_OPCODE = (byte) 0x7f;
 		final byte VPMINUB_OPCODE = (byte) 0xda;
 		final byte VMOVNTDQ_OPCODE = (byte) 0xe7;
@@ -4200,21 +4210,29 @@ public final class InstructionDecoder {
 						.op(RegisterZMM.fromByte(getByteFromReg(evex, modrm)))
 						.build();
 			}
-			case VMOVQ_R64_RX_OPCODE -> {
+			case VMOVQ_R_R_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new GeneralInstruction(
-						Opcode.VMOVQ,
-						Register64.fromByte(getByteFromRM(evex, modrm)),
-						RegisterXMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm))));
+				final byte r1 = getByteFromReg(evex, modrm);
+				final byte r2 = or(evex.b() ? 0 : (byte) 0b00010000, getByteFromRM(evex, modrm));
+				yield Instruction.builder()
+						.opcode(Opcode.VMOVQ)
+						.op(
+								evex.p() == (byte) 0b00000010
+										? RegisterXMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, r1))
+										: Register64.fromByte(modrm.reg()))
+						.op(RegisterXMM.fromByte(r2))
+						.build();
 			}
-			case VMOVQ_RX_M128_OPCODE -> {
+			case VMOVQ_R_M_OPCODE -> {
 				final ModRM modrm = modrm(b);
-				yield new GeneralInstruction(
-						Opcode.VMOVQ,
-						RegisterXMM.fromByte(or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm))),
-						parseIndirectOperand(b, pref, modrm)
+				final byte r1 = or(evex.r1() ? 0 : (byte) 0b00010000, getByteFromReg(evex, modrm));
+				yield Instruction.builder()
+						.opcode(Opcode.VMOVQ)
+						.op(RegisterXMM.fromByte(r1))
+						.op(parseIndirectOperand(b, pref, modrm)
 								.pointer(PointerSize.QWORD_PTR)
-								.build());
+								.build())
+						.build();
 			}
 			case VPCMPNEQUB_OPCODE -> {
 				final ModRM modrm = modrm(b);

@@ -299,7 +299,7 @@ public final class InstructionChecker {
 			Map.entry(Opcode.VPCMPEQQ, List.of(RX_RX_M128)),
 			Map.entry(Opcode.VPCMPNEQB, List.of(RK_RY_RY, RK_RY_M256)),
 			Map.entry(Opcode.VZEROALL, List.of(NO_ARGS)),
-			Map.entry(Opcode.VMOVQ, List.of(R64_RX, RX_M64, M64_RX)),
+			Map.entry(Opcode.VMOVQ, List.of(R64_RX, RX_RX, RX_M64, M64_RX)),
 			Map.entry(Opcode.VMOVD, List.of(RX_M32)),
 			Map.entry(Opcode.PCMPISTRI, List.of(RX_RX_I8, RX_M128_I8)),
 			Map.entry(Opcode.PUNPCKLBW, List.of(RX_RX)),
