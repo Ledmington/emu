@@ -99,4 +99,18 @@ public interface RegisterFile extends ImmutableRegisterFile {
 
 	/** Resets all RFLAGS. */
 	void resetFlags();
+
+	/**
+	 * Sets the 64-bit base address of the FS segment, as done by the {@code arch_prctl(ARCH_SET_FS, ...)} syscall.
+	 *
+	 * @param v The new base address of the FS segment.
+	 */
+	void setFsBase(long v);
+
+	/**
+	 * Sets the 64-bit base address of the GS segment, as done by the {@code arch_prctl(ARCH_SET_GS, ...)} syscall.
+	 *
+	 * @param v The new base address of the GS segment.
+	 */
+	void setGsBase(long v);
 }

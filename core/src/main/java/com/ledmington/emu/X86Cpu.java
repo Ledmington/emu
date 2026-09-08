@@ -17,6 +17,7 @@
  */
 package com.ledmington.emu;
 
+import java.math.BigInteger;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -36,6 +37,7 @@ import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
 import com.ledmington.cpu.x86.RegisterXMM;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.emu.config.CPUConfig;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryAddress;
@@ -51,6 +53,15 @@ public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
+
+	private static final int SYS_EXIT = 60;
+	private static final int SYS_ARCH_PRCTL = 158;
+	private static final int SYS_EXIT_GROUP = 231;
+
+	private static final long ARCH_SET_GS = 0x1001L;
+	private static final long ARCH_SET_FS = 0x1002L;
+	private static final long ARCH_GET_FS = 0x1003L;
+	private static final long ARCH_GET_GS = 0x1004L;
 
 	/** The state of the CPU. */
 	protected enum State {
@@ -292,6 +303,14 @@ public class X86Cpu implements X86Emulator {
 							(reg, i) -> reg << i,
 							result -> rf.set(r, result),
 							true);
+				} else if (inst.firstOperand() instanceof final Register32 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(
+							() -> rf.get(r),
+							() -> (int) imm.asByte(),
+							(reg, i) -> reg << i,
+							result -> rf.set(r, result),
+							true);
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Don't know what to do with SHL and %s.", inst.firstOperand()));
@@ -310,6 +329,9 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a ^ b);
+				} else if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r, imm, (a, b) -> a ^ b);
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Don't know what to do with XOR and %s.", inst.firstOperand()));
@@ -407,6 +429,21 @@ public class X86Cpu implements X86Emulator {
 					op(() -> rf.get(r), () -> 0, (a, b) -> ~a, result -> rf.set(r, result), true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
+				}
+			}
+			case NEG -> {
+				if (inst.firstOperand() instanceof final Register64 r) {
+					op(
+							() -> 0L,
+							() -> rf.get(r),
+							(a, b) -> a - b,
+							(final Long result) -> rf.set(r, result),
+							true,
+							MathUtils::willCarrySub,
+							MathUtils::willOverflowSub);
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with NEG and %s.", inst.firstOperand()));
 				}
 			}
 			case CMP ->
@@ -693,6 +730,24 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RIP, jumpAddress);
 			}
 			case RET -> popInto(Register64.RIP);
+			case CDQE -> rf.set(Register64.RAX, (long) rf.get(Register32.EAX));
+			case DIV -> {
+				if (inst.firstOperand() instanceof final Register64 r) {
+					final BigInteger divisor = MathUtils.toUnsignedBigInteger(rf.get(r));
+					if (divisor.signum() == 0) {
+						throw new ArithmeticException("Division by zero.");
+					}
+					final BigInteger dividend = MathUtils.toUnsignedBigInteger(rf.get(Register64.RDX))
+							.shiftLeft(64)
+							.or(MathUtils.toUnsignedBigInteger(rf.get(Register64.RAX)));
+					final BigInteger[] quotientAndRemainder = dividend.divideAndRemainder(divisor);
+					rf.set(Register64.RAX, quotientAndRemainder[0].longValue());
+					rf.set(Register64.RDX, quotientAndRemainder[1].longValue());
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with DIV and %s.", inst.firstOperand()));
+				}
+			}
 			case LEAVE -> {
 				rf.set(Register64.RSP, rf.get(Register64.RBP));
 				popInto(Register64.RBP);
@@ -708,6 +763,9 @@ public class X86Cpu implements X86Emulator {
 			}
 			case CMOVB -> {
 				moveIf(rf.isSet(RFlags.CARRY), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVAE -> {
+				moveIf(!rf.isSet(RFlags.CARRY), inst.firstOperand(), inst.secondOperand());
 			}
 			case CMOVBE -> {
 				moveIf(rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
@@ -809,14 +867,32 @@ public class X86Cpu implements X86Emulator {
 	private void handleSyscall() {
 		// Useful reference: https://filippo.io/linux-syscall-table/
 		final int sysCallCode = rf.get(Register32.EAX);
-		final int sysCallExitCode = 60;
-		if (sysCallCode == sysCallExitCode) {
-			final long exitCode = rf.get(Register64.RDI);
-			logger.info("syscall exit %d encountered", exitCode);
-			state = State.HALTED;
-		} else {
-			throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
+		switch (sysCallCode) {
+			case SYS_EXIT, SYS_EXIT_GROUP -> {
+				final long exitCode = rf.get(Register64.RDI);
+				logger.info("syscall exit %d encountered", exitCode);
+				state = State.HALTED;
+			}
+			case SYS_ARCH_PRCTL -> handleArchPrctl();
+			default -> throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
 		}
+	}
+
+	private void handleArchPrctl() {
+		final long code = rf.get(Register64.RDI);
+		final long addr = rf.get(Register64.RSI);
+		if (code == ARCH_SET_FS) {
+			rf.setFsBase(addr);
+		} else if (code == ARCH_SET_GS) {
+			rf.setGsBase(addr);
+		} else if (code == ARCH_GET_FS) {
+			mem.write(new MemoryAddress(addr), rf.getFsBase());
+		} else if (code == ARCH_GET_GS) {
+			mem.write(new MemoryAddress(addr), rf.getGsBase());
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown arch_prctl code 0x%x.", code));
+		}
+		rf.set(Register64.RAX, 0L);
 	}
 
 	private void setIf(final Operand operand, final boolean condition) {
@@ -1175,7 +1251,20 @@ public class X86Cpu implements X86Emulator {
 				: 0L;
 		final long scale = io.hasScale() ? io.getScale() : 1L;
 		final long displacement = io.hasDisplacement() ? io.getDisplacement() : 0L;
-		return new MemoryAddress(base + index * scale + displacement);
+		final long segmentBase = io.hasSegment() ? segmentBase(io.getSegment()) : 0L;
+		return new MemoryAddress(segmentBase + base + index * scale + displacement);
+	}
+
+	/**
+	 * Returns the base address of the given segment. In 64-bit long mode, CS/DS/ES/SS are always flat (base 0); only
+	 * FS/GS carry a real base, set through {@code arch_prctl}.
+	 */
+	private long segmentBase(final SegmentRegister segment) {
+		return switch (segment) {
+			case FS -> rf.getFsBase();
+			case GS -> rf.getGsBase();
+			case CS, DS, ES, SS -> 0L;
+		};
 	}
 
 	@Override

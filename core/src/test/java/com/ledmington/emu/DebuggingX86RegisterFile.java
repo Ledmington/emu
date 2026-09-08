@@ -161,4 +161,24 @@ public final class DebuggingX86RegisterFile implements RegisterFile {
 	public boolean isSet(final RFlags f) {
 		return this.rf.isSet(f);
 	}
+
+	@Override
+	public long getFsBase() {
+		return this.rf.getFsBase();
+	}
+
+	@Override
+	public void setFsBase(final long v) {
+		this.rf.setFsBase(v);
+	}
+
+	@Override
+	public long getGsBase() {
+		return this.rf.getGsBase();
+	}
+
+	@Override
+	public void setGsBase(final long v) {
+		this.rf.setGsBase(v);
+	}
 }

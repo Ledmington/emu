@@ -17,6 +17,9 @@
  */
 package com.ledmington.emu;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,6 +28,7 @@ import java.util.stream.Stream;
 
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
+import com.ledmington.elf.ELFParsingException;
 import com.ledmington.elf.FileHeader;
 import com.ledmington.elf.FileType;
 import com.ledmington.elf.ISA;
@@ -130,7 +134,13 @@ public final class Emu {
 	 * @param commandLineArguments The arguments to be loaded as if they were passed on the command-line.
 	 */
 	public void load(final String filename, final String... commandLineArguments) {
-		this.elf = ELFParser.parse(filename);
+		final byte[] rawFile;
+		try {
+			rawFile = Files.readAllBytes(Path.of(filename));
+		} catch (final IOException e) {
+			throw new ELFParsingException(e);
+		}
+		this.elf = ELFParser.parse(rawFile);
 		logger.info("ELF file parsed successfully");
 
 		final FileHeader fh = elf.getFileHeader();
@@ -155,6 +165,7 @@ public final class Emu {
 
 		loader.load(
 				elf,
+				rawFile,
 				args,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),
