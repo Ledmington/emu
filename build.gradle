@@ -6,7 +6,6 @@ plugins {
     id 'com.adarshr.test-logger' version '4.0.0'
     id 'com.diffplug.spotless' version '8.10.0'
     id 'io.github.ben-manes.versions' version '0.61.0'
-    id 'de.undercouch.download' version '5.6.0'
 }
 
 static def path(String... args) {
@@ -49,10 +48,10 @@ allprojects {
     }
 
     dependencies {
-        testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-        testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
-        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-        testRuntimeOnly "org.junit.platform:junit-platform-launcher:${junitLauncherVersion}"
+        testImplementation "org.junit.jupiter:junit-jupiter-api:${rootProject.junitVersion}"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:${rootProject.junitVersion}"
+        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${rootProject.junitVersion}"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher:${rootProject.junitLauncherVersion}"
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -84,7 +83,7 @@ allprojects {
     }
 
     jacoco {
-        toolVersion = "${jacocoVersion}"
+        toolVersion = "${rootProject.jacocoVersion}"
         reportsDirectory = layout.buildDirectory.dir('jacoco')
     }
 
@@ -115,7 +114,7 @@ allprojects {
 
     // Common config for all PMD tasks
     pmd {
-        toolVersion = "${pmdVersion}"
+        toolVersion = "${rootProject.pmdVersion}"
         ignoreFailures = false
         consoleOutput = true
         rulesMinimumPriority = 5
@@ -125,18 +124,18 @@ allprojects {
 
     // Config for production code
     pmdMain {
-        ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "prod.ruleset.xml"))
+        ruleSetConfig = resources.text.fromFile(rootProject.path("${project.rootDir}", "prod.ruleset.xml"))
         ruleSets = [] // avoid using default configuration
     }
 
     // Config for testing code
     pmdTest {
-        ruleSetConfig = resources.text.fromFile(path("${project.rootDir}", "test.ruleset.xml"))
+        ruleSetConfig = resources.text.fromFile(rootProject.path("${project.rootDir}", "test.ruleset.xml"))
         ruleSets = [] // avoid using default configuration
     }
 
     spotbugs {
-        toolVersion = "${spotbugsVersion}"
+        toolVersion = "${rootProject.spotbugsVersion}"
         ignoreFailures = false
         showStackTraces = true
         showProgress = false // too verbose for parallel output
