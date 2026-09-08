@@ -40,6 +40,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 	private static final String standardName = ".gnu.version_d";
 
 	private final SectionHeader header;
+	private final boolean isLittleEndian;
 	private final GnuVersionDefinitionEntry[] entries;
 
 	/**
@@ -61,6 +62,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 	public GnuVersionDefinitionSection(
 			final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
 		this.header = Objects.requireNonNull(sectionHeader);
+		this.isLittleEndian = b.isLittleEndian();
 
 		int versionDefinitionEntryNum = 0;
 		Objects.requireNonNull(dynamicSection);
@@ -103,7 +105,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 		for (final GnuVersionDefinitionEntry gvre : entries) {
 			bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
 		}
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded);
+		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded, isLittleEndian);
 		for (final GnuVersionDefinitionEntry gvre : entries) {
 			wb.write(gvre.getVersion());
 			wb.write(gvre.getFlags());
