@@ -19,6 +19,7 @@ package com.ledmington.emu;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -62,7 +63,7 @@ import com.ledmington.utils.os.OSUtils;
  * href="https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779" >here</a> and <a
  * href="https://gitlab.com/x86-psABIs/x86-64-ABI">here</a>.
  */
-@SuppressWarnings("PMD.CouplingBetweenObjects")
+@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.CyclomaticComplexity"})
 public final class ELFLoader {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-loader");
@@ -88,6 +89,7 @@ public final class ELFLoader {
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
+	 * @param rawFile The raw bytes of the ELF file, as found on disk.
 	 * @param commandLineArguments The arguments to pass to the program. Must include the name of the program as the
 	 *     first argument.
 	 * @param baseAddress The address where to start loading the file.
@@ -97,12 +99,13 @@ public final class ELFLoader {
 	 */
 	public void load(
 			final ELF elf,
+			final byte[] rawFile,
 			final String[] commandLineArguments,
 			final long baseAddress,
 			final long baseStackAddress,
 			final long stackSize,
 			final long baseStackValue) {
-		loadSegments(elf, baseAddress);
+		loadSegments(elf, rawFile, baseAddress);
 		loadSections(elf, baseAddress);
 
 		final long stackTop = alignAddress(baseStackAddress); // highest address (initial RSP)
@@ -118,7 +121,7 @@ public final class ELFLoader {
 		set(Register64.RDI, BitUtils.asLong(argc));
 
 		loadCommandLineArgumentsAndEnvironmentVariables(
-				elf, stackTop, elf.getFileHeader().is32Bit(), commandLineArguments);
+				elf, stackTop, baseAddress, elf.getFileHeader().is32Bit(), commandLineArguments);
 
 		final boolean hasPreInitArray = elf.getSectionByName(".preinit_array").isPresent();
 		final Optional<Section> initArray = elf.getSectionByName(".init_array");
@@ -359,7 +362,11 @@ public final class ELFLoader {
 	}
 
 	private void loadCommandLineArgumentsAndEnvironmentVariables(
-			final ELF elf, final long stackBase, final boolean is32Bit, final String... commandLineArguments) {
+			final ELF elf,
+			final long stackBase,
+			final long baseAddress,
+			final boolean is32Bit,
+			final String... commandLineArguments) {
 		/*
 		low address
 		┌────────────────┐
@@ -413,7 +420,7 @@ public final class ELFLoader {
 		final Map<String, String> environmentVariables = System.getenv();
 		final long envc = BitUtils.asLong(environmentVariables.size());
 
-		final List<AuxiliaryEntry> auxv = getAuxiliaryVector(elf);
+		final List<AuxiliaryEntry> auxv = getAuxiliaryVector(elf, baseAddress);
 		final long numAuxvEntries = auxv.size();
 
 		final long wordSize = is32Bit ? 4L : 8L;
@@ -480,12 +487,34 @@ public final class ELFLoader {
 		mem.setPermissions(new MemoryAddress(stackBase), content.length, true, true, false);
 	}
 
-	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf) {
+	/**
+	 * Computes the runtime virtual address at which the program header table is mapped, i.e. the value the kernel would
+	 * pass as {@code AT_PHDR}. The program header table's file offset ({@code e_phoff}) is not itself a virtual
+	 * address: it must be translated through whichever PT_LOAD segment covers that file range.
+	 */
+	private long computePhdrRuntimeAddress(final ELF elf, final long baseAddress) {
+		final long phOff = elf.getFileHeader().programHeaderTableOffset();
+		for (int i = 0; i < elf.getProgramHeaderTableLength(); i++) {
+			final PHTEntry phte = elf.getProgramHeader(i);
+			if (phte.type() != PHTEntryType.PT_LOAD) {
+				continue;
+			}
+			final long segStart = phte.segmentFileOffset();
+			final long segEnd = segStart + phte.segmentFileSize();
+			if (phOff >= segStart && phOff < segEnd) {
+				return baseAddress + phte.segmentVirtualAddress() + phOff - segStart;
+			}
+		}
+		// Fallback: should not happen for a well-formed ELF file, since the program header table is always
+		// contained within the first loadable segment.
+		return baseAddress + phOff;
+	}
+
+	private List<AuxiliaryEntry> getAuxiliaryVector(final ELF elf, final long baseAddress) {
 		final OSUtils os = OSUtils.INSTANCE;
 		return List.of(
 				new AuxiliaryEntry(AuxiliaryEntryType.AT_PHNUM, elf.getProgramHeaderTableLength()),
-				new AuxiliaryEntry(
-						AuxiliaryEntryType.AT_PHDR, elf.getFileHeader().programHeaderTableOffset()),
+				new AuxiliaryEntry(AuxiliaryEntryType.AT_PHDR, computePhdrRuntimeAddress(elf, baseAddress)),
 				new AuxiliaryEntry(
 						AuxiliaryEntryType.AT_PHENT, elf.getFileHeader().programHeaderTableEntrySize()),
 				new AuxiliaryEntry(AuxiliaryEntryType.AT_UID, os.getUserID()),
@@ -495,7 +524,7 @@ public final class ELFLoader {
 	}
 
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-	private void loadSegments(final ProgramHeaderTable pht, final long baseAddress) {
+	private void loadSegments(final ProgramHeaderTable pht, final byte[] rawFile, final long baseAddress) {
 		logger.debug("Loading ELF segments into memory");
 
 		// NOTE: this index is not the PHTE index, this index makes sense only during loading
@@ -520,6 +549,27 @@ public final class ELFLoader {
 							+ (phte.isExecutable() ? "X" : ""));
 			mem.setPermissions(
 					new MemoryAddress(start), end, phte.isReadable(), phte.isWriteable(), phte.isExecutable());
+
+			/*
+			A PT_LOAD segment is mapped directly from the file: bytes [p_offset, p_offset+p_filesz) come verbatim
+			from the file (this covers the ELF/program headers and any inter-section padding/alignment gaps that
+			don't belong to a named section, e.g. what AT_PHDR points into), and the remainder up to p_memsz (if
+			any, typically .bss) starts out zeroed. loadSections() below re-writes the byte ranges covered by
+			named sections with their (possibly reconstructed) content; this only needs to fill in the gaps.
+			*/
+			final long fileSize = phte.segmentFileSize();
+			final long memSize = phte.segmentMemorySize();
+			final boolean hasFileBackedContent = fileSize > 0L;
+			if (hasFileBackedContent) {
+				final byte[] content = Arrays.copyOfRange(
+						rawFile,
+						BitUtils.asInt(phte.segmentFileOffset()),
+						BitUtils.asInt(phte.segmentFileOffset() + fileSize));
+				mem.initialize(new MemoryAddress(start), content);
+			}
+			if (memSize > fileSize) {
+				mem.initialize(new MemoryAddress(start + fileSize), memSize - fileSize, (byte) 0x00);
+			}
 
 			segmentIndex++;
 			memorySegments.add(new Range(start, end));

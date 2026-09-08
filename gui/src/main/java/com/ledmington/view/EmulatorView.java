@@ -18,7 +18,10 @@
 package com.ledmington.view;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -237,9 +240,17 @@ public final class EmulatorView extends Stage {
 		// TODO: implement this
 		final String[] args = {file.toString()};
 
+		final byte[] rawFile;
+		try {
+			rawFile = Files.readAllBytes(file.toPath());
+		} catch (final IOException e) {
+			throw new UncheckedIOException(e);
+		}
+
 		final ELFLoader loader = new ELFLoader(cpu, mem);
 		loader.load(
-				ELFParser.parse(file.toPath().toString()),
+				ELFParser.parse(rawFile),
+				rawFile,
 				args,
 				EmulatorConstants.getBaseAddress(),
 				EmulatorConstants.getBaseStackAddress(),

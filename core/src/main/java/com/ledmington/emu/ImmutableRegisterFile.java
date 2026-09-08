@@ -99,4 +99,20 @@ public interface ImmutableRegisterFile {
 	 * @return True if it is set, false otherwise.
 	 */
 	boolean isSet(RFlags f);
+
+	/**
+	 * Returns the 64-bit base address of the FS segment, as set through the {@code arch_prctl(ARCH_SET_FS, ...)}
+	 * syscall. Used to resolve {@code fs}-relative memory operands (e.g. thread-local storage accesses).
+	 *
+	 * @return The base address of the FS segment.
+	 */
+	long getFsBase();
+
+	/**
+	 * Returns the 64-bit base address of the GS segment, as set through the {@code arch_prctl(ARCH_SET_GS, ...)}
+	 * syscall. Used to resolve {@code gs}-relative memory operands.
+	 *
+	 * @return The base address of the GS segment.
+	 */
+	long getGsBase();
 }

@@ -48,6 +48,10 @@ public final class X86RegisterFile implements RegisterFile {
 
 	private long rflags = RFlags.defaultValue();
 
+	// 64-bit segment bases for FS and GS, set through arch_prctl
+	private long fsBase;
+	private long gsBase;
+
 	/** Creates the register file initializing every register to 0. */
 	public X86RegisterFile() {}
 
@@ -65,6 +69,8 @@ public final class X86RegisterFile implements RegisterFile {
 		System.arraycopy(regs.xmmHigh, 0, this.xmmHigh, 0, 32);
 		this.rip = regs.rip;
 		this.rflags = regs.rflags;
+		this.fsBase = regs.fsBase;
+		this.gsBase = regs.gsBase;
 	}
 
 	@Override
@@ -378,6 +384,26 @@ public final class X86RegisterFile implements RegisterFile {
 	}
 
 	@Override
+	public long getFsBase() {
+		return fsBase;
+	}
+
+	@Override
+	public void setFsBase(final long v) {
+		fsBase = v;
+	}
+
+	@Override
+	public long getGsBase() {
+		return gsBase;
+	}
+
+	@Override
+	public void setGsBase(final long v) {
+		gsBase = v;
+	}
+
+	@Override
 	public String toString() {
 		return "X86RegisterFile("
 				+ Arrays.stream(Register64.values())
@@ -392,7 +418,8 @@ public final class X86RegisterFile implements RegisterFile {
 						.map(r -> String.format("%s=0x%016x%016x", r.name(), xmmHigh[xmmIndex(r)], xmmLow[xmmIndex(r)]))
 						.collect(Collectors.joining(","))
 				+ ",RFLAGS="
-				+ String.format("0x%016x", rflags) + ")";
+				+ String.format("0x%016x", rflags)
+				+ String.format(",FS_BASE=0x%016x,GS_BASE=0x%016x", fsBase, gsBase) + ")";
 	}
 
 	@Override
@@ -412,6 +439,8 @@ public final class X86RegisterFile implements RegisterFile {
 		}
 		h = 31 * h + Long.hashCode(rip);
 		h = 31 * h + Long.hashCode(rflags);
+		h = 31 * h + Long.hashCode(fsBase);
+		h = 31 * h + Long.hashCode(gsBase);
 		return h;
 	}
 
@@ -431,6 +460,8 @@ public final class X86RegisterFile implements RegisterFile {
 				&& Arrays.equals(this.xmmLow, regs.xmmLow)
 				&& Arrays.equals(this.xmmHigh, regs.xmmHigh)
 				&& this.rip == regs.rip
-				&& this.rflags == regs.rflags;
+				&& this.rflags == regs.rflags
+				&& this.fsBase == regs.fsBase
+				&& this.gsBase == regs.gsBase;
 	}
 }

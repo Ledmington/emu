@@ -70,7 +70,7 @@ public final class MathUtils {
 		return (BitUtils.asLong(a) + BitUtils.asLong(b)) > UINT32_MAX;
 	}
 
-	private static BigInteger toUnsignedBigInteger(final long value) {
+	/* default */ static BigInteger toUnsignedBigInteger(final long value) {
 		return new BigInteger(1, ByteBuffer.allocate(8).putLong(value).array());
 	}
 
