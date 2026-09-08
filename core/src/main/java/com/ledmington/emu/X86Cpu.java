@@ -17,6 +17,7 @@
  */
 package com.ledmington.emu;
 
+import java.math.BigInteger;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -35,6 +36,8 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
+import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.emu.config.CPUConfig;
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryAddress;
@@ -50,6 +53,15 @@ public class X86Cpu implements X86Emulator {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
+
+	private static final int SYS_EXIT = 60;
+	private static final int SYS_ARCH_PRCTL = 158;
+	private static final int SYS_EXIT_GROUP = 231;
+
+	private static final long ARCH_SET_GS = 0x1001L;
+	private static final long ARCH_SET_FS = 0x1002L;
+	private static final long ARCH_GET_FS = 0x1003L;
+	private static final long ARCH_GET_GS = 0x1004L;
 
 	/** The state of the CPU. */
 	protected enum State {
@@ -137,6 +149,10 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	private static IllegalArgumentException unknownArgumentType(final Instruction inst) {
+		return new IllegalArgumentException(String.format("Unknown argument type '%s'.", inst.secondOperand()));
+	}
+
 	@Override
 	public void executeOne() {
 		assertIsRunning();
@@ -196,6 +212,20 @@ public class X86Cpu implements X86Emulator {
 								String.format("Don't know what to do with SUB and %s.", inst.firstOperand()));
 				}
 			}
+			case SBB -> {
+				if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
+					op(
+							r1,
+							r2,
+							(a, b) -> a - b - (rf.isSet(RFlags.CARRY) ? 1 : 0),
+							(a, b) -> MathUtils.willCarrySbb(a, b, rf.isSet(RFlags.CARRY)),
+							(a, b) -> MathUtils.willOverflowSbb(a, b, rf.isSet(RFlags.CARRY)));
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with SBB and %s.", inst.firstOperand()));
+				}
+			}
 			case ADD -> {
 				switch (inst.firstOperand()) {
 					case Register8 op1 ->
@@ -228,6 +258,15 @@ public class X86Cpu implements X86Emulator {
 							case Register64 op2 ->
 								op(op1, op2, Long::sum, MathUtils::willCarryAdd, MathUtils::willOverflowAdd);
 							case Immediate imm -> opSX(op1, imm, Long::sum);
+							case IndirectOperand io ->
+								op(
+										() -> rf.get(op1),
+										() -> mem.read8(computeIndirectOperand(io)),
+										Long::sum,
+										result -> rf.set(op1, result),
+										true,
+										MathUtils::willCarryAdd,
+										MathUtils::willOverflowAdd);
 							default ->
 								throw new IllegalArgumentException(String.format(
 										"Don't know what to do with ADD, %s and %s.",
@@ -247,11 +286,36 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r) {
 					opSX(r, (Immediate) inst.secondOperand(), (x, i) -> x >>> i);
 				} else {
-					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with SHR and %s.", inst.firstOperand()));
 				}
 			}
 			case SAR -> opSX((Register64) inst.firstOperand(), (Immediate) inst.secondOperand(), (r, i) -> r >> i);
-			case SHL -> op((Register64) inst.firstOperand(), (Register8) inst.secondOperand(), (r, i) -> r << i);
+			case SHL -> {
+				if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
+					op(r1, r2, (r, i) -> r << i);
+				} else if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(
+							() -> rf.get(r),
+							() -> (long) imm.asByte(),
+							(reg, i) -> reg << i,
+							result -> rf.set(r, result),
+							true);
+				} else if (inst.firstOperand() instanceof final Register32 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(
+							() -> rf.get(r),
+							() -> (int) imm.asByte(),
+							(reg, i) -> reg << i,
+							result -> rf.set(r, result),
+							true);
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with SHL and %s.", inst.firstOperand()));
+				}
+			}
 			case XOR -> {
 				if (inst.firstOperand() instanceof final Register8 r1
 						&& inst.secondOperand() instanceof final Register8 r2) {
@@ -265,6 +329,36 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a ^ b);
+				} else if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r, imm, (a, b) -> a ^ b);
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with XOR and %s.", inst.firstOperand()));
+				}
+			}
+			case OR -> {
+				if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Register8 r2) {
+					op(r1, r2, BitUtils::or);
+				} else if (inst.firstOperand() instanceof final Register16 r1
+						&& inst.secondOperand() instanceof final Register16 r2) {
+					op(r1, r2, BitUtils::or);
+				} else if (inst.firstOperand() instanceof final Register32 r1
+						&& inst.secondOperand() instanceof final Register32 r2) {
+					op(r1, r2, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final Register64 r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
+					op(r1, r2, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final Register64 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r, imm, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final Register32 r
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					op(r, io, (a, b) -> a | b);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Register32 r) {
+					op(io, r, (a, b) -> a | b);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with %s.", inst));
 				}
@@ -282,14 +376,74 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(r1, r2, (a, b) -> a & b);
+				} else if (inst.firstOperand() instanceof final Register8 r1
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					opSX(r1, imm, BitUtils::and);
 				} else if (inst.firstOperand() instanceof final Register32 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					opSX(r1, imm, (a, b) -> a & b);
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					opSX(r1, imm, (a, b) -> a & b);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					final MemoryAddress address = computeIndirectOperand(io);
+					final long signExtendedImm = getAsLongSX(imm);
+					switch (io.getPointerSize()) {
+						case BYTE_PTR ->
+							op(
+									() -> mem.read(address),
+									() -> BitUtils.asByte(signExtendedImm),
+									BitUtils::and,
+									result -> mem.write(address, result),
+									true);
+						case WORD_PTR ->
+							op(
+									() -> mem.read2(address),
+									() -> BitUtils.asShort(signExtendedImm),
+									BitUtils::and,
+									result -> mem.write(address, result),
+									true);
+						case DWORD_PTR ->
+							op(
+									() -> mem.read4(address),
+									() -> BitUtils.asInt(signExtendedImm),
+									(a, b) -> a & b,
+									result -> mem.write(address, result),
+									true);
+						case QWORD_PTR ->
+							op(
+									() -> mem.read8(address),
+									() -> signExtendedImm,
+									(a, b) -> a & b,
+									result -> mem.write(address, result),
+									true);
+						default -> throw unknownArgumentType(inst);
+					}
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
+				}
+			}
+			case NOT -> {
+				if (inst.firstOperand() instanceof final Register32 r) {
+					op(() -> rf.get(r), () -> 0, (a, b) -> ~a, result -> rf.set(r, result), true);
+				} else {
+					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
+				}
+			}
+			case NEG -> {
+				if (inst.firstOperand() instanceof final Register64 r) {
+					op(
+							() -> 0L,
+							() -> rf.get(r),
+							(a, b) -> a - b,
+							(final Long result) -> rf.set(r, result),
+							true,
+							MathUtils::willCarrySub,
+							MathUtils::willOverflowSub);
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with NEG and %s.", inst.firstOperand()));
 				}
 			}
 			case CMP ->
@@ -314,13 +468,28 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final Register64 r1
 						&& inst.secondOperand() instanceof final Register64 r2) {
 					op(() -> rf.get(r1), () -> rf.get(r2), (a, b) -> a & b, _ -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register8 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(() -> rf.get(r), imm::asByte, (a, b) -> a & b, _ -> {}, true);
+				} else if (inst.firstOperand() instanceof final Register32 r
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(() -> rf.get(r), imm::asInt, (a, b) -> a & b, _ -> {}, true);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final Immediate imm) {
+					op(() -> mem.read(computeIndirectOperand(io)), imm::asByte, (a, b) -> a & b, _ -> {}, true);
 				} else {
 					throw new IllegalArgumentException(String.format("Don't know what to do with '%s'.", inst));
 				}
 			}
 
 			// Jumps
-			case JMP -> jumpTo(getAsLongSX(inst.firstOperand()));
+			case JMP -> {
+				if (inst.firstOperand() instanceof final Immediate imm) {
+					jumpTo(getAsLongSX(imm));
+				} else {
+					rf.set(Register64.RIP, getAsLongSX(inst.firstOperand()));
+				}
+			}
 			case JE /*, JZ */ -> jumpToIf(getAsLongSX(inst.firstOperand()), rf.isSet(RFlags.ZERO));
 			case JNE /*, JNZ */ -> jumpToIf(getAsLongSX(inst.firstOperand()), !rf.isSet(RFlags.ZERO));
 			case JA /*, JNBE */ ->
@@ -402,14 +571,88 @@ public class X86Cpu implements X86Emulator {
 				} else if (inst.firstOperand() instanceof final IndirectOperand io
 						&& inst.secondOperand() instanceof final Immediate imm) {
 					final MemoryAddress address = computeIndirectOperand(io);
-					mem.write(address, imm.asInt());
+					switch (io.getPointerSize()) {
+						case BYTE_PTR -> mem.write(address, imm.asByte());
+						case WORD_PTR -> mem.write(address, imm.asShort());
+						case DWORD_PTR -> mem.write(address, imm.asInt());
+						case QWORD_PTR -> mem.write(address, (long) imm.asInt());
+						default -> throw unknownArgumentType(inst);
+					}
 				} else if (inst.firstOperand() instanceof final Register32 op1
 						&& inst.secondOperand() instanceof final IndirectOperand io) {
 					final MemoryAddress address = computeIndirectOperand(io);
 					rf.set(op1, mem.read4(address));
 				} else {
-					throw new IllegalArgumentException(
-							String.format("Unknown argument type '%s'.", inst.secondOperand()));
+					throw unknownArgumentType(inst);
+				}
+			}
+			case MOVD -> {
+				if (inst.firstOperand() instanceof final RegisterXMM op1
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					rf.setXMM32(op1, mem.read4(computeIndirectOperand(io)));
+				} else if (inst.firstOperand() instanceof final RegisterXMM op1
+						&& inst.secondOperand() instanceof final Register32 op2) {
+					rf.setXMM32(op1, rf.get(op2));
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
+			case MOVQ -> {
+				if (inst.firstOperand() instanceof final RegisterXMM r1
+						&& inst.secondOperand() instanceof final Register64 r2) {
+					rf.set(r1, rf.get(r2), 0L);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io
+						&& inst.secondOperand() instanceof final RegisterXMM r) {
+					final MemoryAddress address = computeIndirectOperand(io);
+					mem.write(address, rf.getXMM64(r));
+				} else if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					final MemoryAddress address = computeIndirectOperand(io);
+					rf.set(dest, mem.read8(address), 0L);
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
+			case MOVHPS -> {
+				if (inst.firstOperand() instanceof final RegisterXMM r
+						&& inst.secondOperand() instanceof final IndirectOperand io) {
+					final long high = mem.read8(computeIndirectOperand(io));
+					rf.set(r, rf.getXMM64(r), high);
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
+			case MOVDQA, MOVAPS, MOVUPS -> movXmm(inst);
+			case PUNPCKLDQ -> {
+				if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final RegisterXMM src) {
+					final long d = rf.getXMM64(dest);
+					final long s = rf.getXMM64(src);
+					final long destDword0 = d & 0x00000000ffffffffL;
+					final long destDword1 = d >>> 32;
+					final long srcDword0 = s & 0x00000000ffffffffL;
+					final long srcDword1 = s >>> 32;
+					rf.set(dest, (srcDword0 << 32) | destDword0, (srcDword1 << 32) | destDword1);
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
+			case PUNPCKLQDQ -> {
+				if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final RegisterXMM src) {
+					rf.set(dest, rf.getXMM64(dest), rf.getXMM64(src));
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
+			case PAND -> {
+				if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final RegisterXMM src) {
+					final long[] d = rf.get(dest);
+					final long[] s = rf.get(src);
+					rf.set(dest, d[0] & s[0], d[1] & s[1]);
+				} else {
+					throw unknownArgumentType(inst);
 				}
 			}
 			case MOVABS -> rf.set((Register64) inst.firstOperand(), ((Immediate) inst.secondOperand()).asLong());
@@ -477,8 +720,9 @@ public class X86Cpu implements X86Emulator {
 				if (inst.firstOperand() instanceof final Immediate imm) {
 					final long relativeAddress = getAsLongSX(imm);
 					jumpAddress = rip + relativeAddress;
-				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
-					jumpAddress = computeIndirectOperand(io).address();
+				} else if (inst.firstOperand() instanceof IndirectOperand
+						|| inst.firstOperand() instanceof Register64) {
+					jumpAddress = getAsLongSX(inst.firstOperand());
 				} else {
 					throw new IllegalStateException();
 				}
@@ -486,15 +730,51 @@ public class X86Cpu implements X86Emulator {
 				rf.set(Register64.RIP, jumpAddress);
 			}
 			case RET -> popInto(Register64.RIP);
+			case CDQE -> rf.set(Register64.RAX, (long) rf.get(Register32.EAX));
+			case DIV -> {
+				if (inst.firstOperand() instanceof final Register64 r) {
+					final BigInteger divisor = MathUtils.toUnsignedBigInteger(rf.get(r));
+					if (divisor.signum() == 0) {
+						throw new ArithmeticException("Division by zero.");
+					}
+					final BigInteger dividend = MathUtils.toUnsignedBigInteger(rf.get(Register64.RDX))
+							.shiftLeft(64)
+							.or(MathUtils.toUnsignedBigInteger(rf.get(Register64.RAX)));
+					final BigInteger[] quotientAndRemainder = dividend.divideAndRemainder(divisor);
+					rf.set(Register64.RAX, quotientAndRemainder[0].longValue());
+					rf.set(Register64.RDX, quotientAndRemainder[1].longValue());
+				} else {
+					throw new IllegalArgumentException(
+							String.format("Don't know what to do with DIV and %s.", inst.firstOperand()));
+				}
+			}
 			case LEAVE -> {
 				rf.set(Register64.RSP, rf.get(Register64.RBP));
 				popInto(Register64.RBP);
 			}
+			case CMOVE -> {
+				moveIf(rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
+			}
 			case CMOVNE -> {
-				if (rf.isSet(RFlags.ZERO)) {
-					return;
-				}
-				rf.set((Register64) inst.firstOperand(), rf.get((Register64) inst.secondOperand()));
+				moveIf(!rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVA -> {
+				moveIf(!rf.isSet(RFlags.CARRY) && !rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVB -> {
+				moveIf(rf.isSet(RFlags.CARRY), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVAE -> {
+				moveIf(!rf.isSet(RFlags.CARRY), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVBE -> {
+				moveIf(rf.isSet(RFlags.CARRY) || rf.isSet(RFlags.ZERO), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVNS -> {
+				moveIf(!rf.isSet(RFlags.SIGN), inst.firstOperand(), inst.secondOperand());
+			}
+			case CMOVG -> {
+				moveIf(!rf.isSet(RFlags.ZERO) && !rf.isSet(RFlags.SIGN), inst.firstOperand(), inst.secondOperand());
 			}
 			case XCHG -> {
 				final Operand op1 = inst.firstOperand();
@@ -548,6 +828,38 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	private void moveIf(final boolean condition, final Operand op1, final Operand op2) {
+		if (!condition) {
+			return;
+		}
+		switch (op1) {
+			case Register32 r1 -> {
+				final int value =
+						switch (op2) {
+							case Register32 r2 -> rf.get(r2);
+							case IndirectOperand io -> mem.read4(computeIndirectOperand(io));
+							default ->
+								throw new IllegalArgumentException(
+										String.format("Unexpected conditional move operand: '%s'.", op2));
+						};
+				rf.set(r1, value);
+			}
+			case Register64 r1 -> {
+				final long value =
+						switch (op2) {
+							case Register64 r2 -> rf.get(r2);
+							case IndirectOperand io -> mem.read8(computeIndirectOperand(io));
+							default ->
+								throw new IllegalArgumentException(
+										String.format("Unexpected conditional move operand: '%s'.", op2));
+						};
+				rf.set(r1, value);
+			}
+			default ->
+				throw new IllegalArgumentException(String.format("Unexpected conditional move operand: '%s'.", op1));
+		}
+	}
+
 	private void popInto(final Register64 reg) {
 		rf.set(reg, pop());
 	}
@@ -555,14 +867,32 @@ public class X86Cpu implements X86Emulator {
 	private void handleSyscall() {
 		// Useful reference: https://filippo.io/linux-syscall-table/
 		final int sysCallCode = rf.get(Register32.EAX);
-		final int sysCallExitCode = 60;
-		if (sysCallCode == sysCallExitCode) {
-			final long exitCode = rf.get(Register64.RDI);
-			logger.info("syscall exit %d encountered", exitCode);
-			state = State.HALTED;
-		} else {
-			throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
+		switch (sysCallCode) {
+			case SYS_EXIT, SYS_EXIT_GROUP -> {
+				final long exitCode = rf.get(Register64.RDI);
+				logger.info("syscall exit %d encountered", exitCode);
+				state = State.HALTED;
+			}
+			case SYS_ARCH_PRCTL -> handleArchPrctl();
+			default -> throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
 		}
+	}
+
+	private void handleArchPrctl() {
+		final long code = rf.get(Register64.RDI);
+		final long addr = rf.get(Register64.RSI);
+		if (code == ARCH_SET_FS) {
+			rf.setFsBase(addr);
+		} else if (code == ARCH_SET_GS) {
+			rf.setGsBase(addr);
+		} else if (code == ARCH_GET_FS) {
+			mem.write(new MemoryAddress(addr), rf.getFsBase());
+		} else if (code == ARCH_GET_GS) {
+			mem.write(new MemoryAddress(addr), rf.getGsBase());
+		} else {
+			throw new IllegalArgumentException(String.format("Unknown arch_prctl code 0x%x.", code));
+		}
+		rf.set(Register64.RAX, 0L);
 	}
 
 	private void setIf(final Operand operand, final boolean condition) {
@@ -576,6 +906,27 @@ public class X86Cpu implements X86Emulator {
 		}
 	}
 
+	/** Executes a plain 128-bit XMM move between two registers, a register and memory, or memory and a register. */
+	private void movXmm(final Instruction inst) {
+		if (inst.firstOperand() instanceof final RegisterXMM dest
+				&& inst.secondOperand() instanceof final RegisterXMM src) {
+			final long[] xmm = rf.get(src);
+			rf.set(dest, xmm[0], xmm[1]);
+		} else if (inst.firstOperand() instanceof final RegisterXMM dest
+				&& inst.secondOperand() instanceof final IndirectOperand io) {
+			final MemoryAddress address = computeIndirectOperand(io);
+			rf.set(dest, mem.read8(address), mem.read8(address.plus(8L)));
+		} else if (inst.firstOperand() instanceof final IndirectOperand io
+				&& inst.secondOperand() instanceof final RegisterXMM src) {
+			final MemoryAddress address = computeIndirectOperand(io);
+			final long[] xmm = rf.get(src);
+			mem.write(address, xmm[0]);
+			mem.write(address.plus(8L), xmm[1]);
+		} else {
+			throw unknownArgumentType(inst);
+		}
+	}
+
 	private void jumpToIf(final long offset, final boolean condition) {
 		if (!condition) {
 			return;
@@ -585,6 +936,16 @@ public class X86Cpu implements X86Emulator {
 
 	private void jumpTo(final long offset) {
 		instFetch.setPosition(instFetch.getPosition() + offset);
+	}
+
+	private void op(final Register32 op1, final IndirectOperand io, final BiFunction<Integer, Integer, Integer> task) {
+		final MemoryAddress address = computeIndirectOperand(io);
+		op(() -> rf.get(op1), () -> mem.read4(address), task, result -> rf.set(op1, result), true);
+	}
+
+	private void op(final IndirectOperand io, final Register32 op2, final BiFunction<Integer, Integer, Integer> task) {
+		final MemoryAddress address = computeIndirectOperand(io);
+		op(() -> mem.read4(address), () -> rf.get(op2), task, result -> mem.write(address, result), true);
 	}
 
 	private void op(final IndirectOperand iop, final Register8 op2, final BiFunction<Byte, Byte, Byte> task) {
@@ -683,13 +1044,13 @@ public class X86Cpu implements X86Emulator {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
 	}
 
-	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
+	@SuppressWarnings("PMD.TooFewBranchesForSwitch")
+	private void opSX(final Register8 op1, final Immediate imm, final BiFunction<Byte, Byte, Byte> task) {
 		op(
 				() -> rf.get(op1),
 				// FIXME: ugly
 				switch (imm.bits()) {
-					case 8 -> () -> (long) imm.asByte();
-					case 32 -> () -> (long) imm.asInt();
+					case 8 -> imm::asByte;
 					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
 				},
 				task,
@@ -704,6 +1065,20 @@ public class X86Cpu implements X86Emulator {
 				switch (imm.bits()) {
 					case 8 -> () -> (int) imm.asByte();
 					case 32 -> imm::asInt;
+					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
+				},
+				task,
+				result -> rf.set(op1, result),
+				true);
+	}
+
+	private void opSX(final Register64 op1, final Immediate imm, final BiFunction<Long, Long, Long> task) {
+		op(
+				() -> rf.get(op1),
+				// FIXME: ugly
+				switch (imm.bits()) {
+					case 8 -> () -> (long) imm.asByte();
+					case 32 -> () -> (long) imm.asInt();
 					default -> throw new IllegalArgumentException(String.format("Unknown immediate: %s.", imm));
 				},
 				task,
@@ -876,7 +1251,20 @@ public class X86Cpu implements X86Emulator {
 				: 0L;
 		final long scale = io.hasScale() ? io.getScale() : 1L;
 		final long displacement = io.hasDisplacement() ? io.getDisplacement() : 0L;
-		return new MemoryAddress(base + index * scale + displacement);
+		final long segmentBase = io.hasSegment() ? segmentBase(io.getSegment()) : 0L;
+		return new MemoryAddress(segmentBase + base + index * scale + displacement);
+	}
+
+	/**
+	 * Returns the base address of the given segment. In 64-bit long mode, CS/DS/ES/SS are always flat (base 0); only
+	 * FS/GS carry a real base, set through {@code arch_prctl}.
+	 */
+	private long segmentBase(final SegmentRegister segment) {
+		return switch (segment) {
+			case FS -> rf.getFsBase();
+			case GS -> rf.getGsBase();
+			case CS, DS, ES, SS -> 0L;
+		};
 	}
 
 	@Override

@@ -37,6 +37,7 @@ public final class HashTableSection implements LoadableSection {
 	private final SectionHeader header;
 	private final int[] buckets;
 	private final int[] chains;
+	private final boolean isLittleEndian;
 
 	/**
 	 * Creates an hash table section with the given data.
@@ -48,6 +49,7 @@ public final class HashTableSection implements LoadableSection {
 	public HashTableSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
+		this.isLittleEndian = b.isLittleEndian();
 
 		if (sectionHeader.getSectionSize() % 4 != 0) {
 			throw new IllegalArgumentException(String.format(
@@ -146,7 +148,8 @@ public final class HashTableSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(4 + 4 + (buckets.length * 4) + (chains.length * 4));
+		final WriteOnlyByteBuffer bb =
+				new WriteOnlyByteBufferV1(4 + 4 + (buckets.length * 4) + (chains.length * 4), isLittleEndian);
 		bb.write(buckets.length);
 		bb.write(chains.length);
 		bb.write(buckets);

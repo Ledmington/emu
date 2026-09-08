@@ -32,6 +32,7 @@ public final class ConstructorsSection implements LoadableSection {
 	private final SectionHeader header;
 	private final long[] constructors; // function pointers
 	private final boolean is32Bit;
+	private final boolean isLittleEndian;
 
 	/**
 	 * Creates a ConstructorsSection with the given name and header.
@@ -51,6 +52,7 @@ public final class ConstructorsSection implements LoadableSection {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
+		this.isLittleEndian = b.isLittleEndian();
 
 		if (dynamicSection == null) {
 			this.constructors = new long[0];
@@ -114,7 +116,7 @@ public final class ConstructorsSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final int wordSize = is32Bit ? 4 : 8;
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * wordSize);
+		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * wordSize, isLittleEndian);
 		for (final long c : constructors) {
 			if (is32Bit) {
 				wb.write(BitUtils.asInt(c));
