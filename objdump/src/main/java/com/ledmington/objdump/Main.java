@@ -19,30 +19,12 @@ package com.ledmington.objdump;
 
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
-import com.ledmington.cpu.InstructionDecoder;
-import com.ledmington.cpu.InstructionEncoder;
-import com.ledmington.cpu.x86.Immediate;
-import com.ledmington.cpu.x86.IndirectOperand;
-import com.ledmington.cpu.x86.Instruction;
-import com.ledmington.cpu.x86.Opcode;
 import com.ledmington.elf.ELF;
 import com.ledmington.elf.ELFParser;
-import com.ledmington.elf.SectionTable;
-import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeaderFlags;
-import com.ledmington.elf.section.StringTableSection;
-import com.ledmington.elf.section.sym.SymbolTableEntry;
-import com.ledmington.elf.section.sym.SymbolTableEntryType;
-import com.ledmington.elf.section.sym.SymbolTableSection;
-import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Copy of GNU's objdump utility. Original source code available <a href=
@@ -56,19 +38,41 @@ public final class Main {
 
 	private Main() {}
 
-	@SuppressWarnings("PMD.AvoidCatchingGenericException")
+	/**
+	 * Entry point.
+	 *
+	 * @param args The command-line arguments.
+	 */
 	public static void main(final String[] args) {
 		MiniLogger.setMinimumLevel(MiniLogger.LoggingLevel.ERROR);
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			out.println();
-			out.flush();
-		}));
+		Runtime.getRuntime().addShutdownHook(new Thread(out::flush));
 
+		final CliOptions options = parseArgs(args);
+
+		final ELF elf = ELFParser.parse(options.filename());
+
+		out.println();
+		out.printf("%s:     file format elf64-x86-64%n", options.filename());
+		out.println();
+		out.println();
+
+		if (options.disassemble()) {
+			disassembleExecutableSections(elf);
+		}
+
+		out.flush();
+		System.exit(0);
+	}
+
+	/** The command-line options accepted by this program. */
+	private record CliOptions(String filename, boolean disassemble) {}
+
+	// FIXME: rewrite using package 'cmdline'
+	private static CliOptions parseArgs(final String... args) {
 		String filename = null;
-		boolean disassembleExecutableSections = false;
+		boolean disassemble = false;
 
-		// FIXME: rewrite using package 'cmdline'
 		for (final String arg : args) {
 			switch (arg) {
 				case "-H", "--help":
@@ -82,7 +86,7 @@ public final class Main {
 					System.exit(0);
 					break;
 				case "-d", "--disassemble":
-					disassembleExecutableSections = true;
+					disassemble = true;
 					break;
 				default:
 					if (arg.startsWith("-")) {
@@ -102,161 +106,35 @@ public final class Main {
 			System.exit(0);
 		}
 
-		final ELF elf = ELFParser.parse(filename);
-
-		out.println();
-		out.printf("%s:     file format elf64-x86-64%n", filename);
-		out.println();
-		out.println();
-
-		if (disassembleExecutableSections) {
-			for (int i = 0; i < elf.getSectionTableLength(); i++) {
-				final Section s = elf.getSection(i);
-				if (!s.header().getFlags().contains(SectionHeaderFlags.SHT_EXECINSTR)) {
-					continue;
-				}
-
-				try {
-					disassembleSection(elf, i);
-				} catch (final Throwable t) {
-					out.println();
-					out.flush();
-					throw t;
-				}
-			}
-		}
-
-		out.println();
-		out.flush();
-		System.exit(0);
+		return new CliOptions(filename, disassemble);
 	}
 
-	@SuppressWarnings({"PMD.AvoidLiteralsInIfCondition", "PMD.NPathComplexity"})
-	private static void disassembleSection(final SectionTable st, final int sectionIndex) {
-		final Section s = st.getSection(sectionIndex);
-		out.printf("Disassembly of section %s:%n", s.getName());
-		out.println();
+	@SuppressWarnings("PMD.AvoidCatchingGenericException")
+	private static void disassembleExecutableSections(final ELF elf) {
+		final SymbolResolver.SymbolInfo symbols = SymbolResolver.resolveSymbols(elf);
 
-		final long startOfSection = s.header().getVirtualAddress();
-
-		final Map<Long, String> functionNames = findFunctionNames(st);
-
-		final boolean hasNoFunctions = functionNames.isEmpty();
-		if (hasNoFunctions) {
-			out.printf("%016x <%s>:%n", startOfSection, s.getName());
-		}
-
-		final byte[] content = ((LoadableSection) s).getLoadableContent();
-		final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(content, true, 1L);
-		String functionName = "";
-		while (b.getPosition() < content.length) {
-			final long currentPosition = startOfSection + b.getPosition();
-			final boolean hasFunctionName = functionNames.containsKey(currentPosition);
-
-			if (hasFunctionName) {
-				functionName = functionNames.get(currentPosition);
-				if (b.getPosition() > 0L) {
-					out.println();
-				}
-				out.printf("%016x <%s>:%n", currentPosition, functionName);
+		boolean isFirstSection = true;
+		for (int i = 0; i < elf.getSectionTableLength(); i++) {
+			final Section s = elf.getSection(i);
+			if (!s.header().getFlags().contains(SectionHeaderFlags.SHT_EXECINSTR)) {
+				continue;
 			}
 
-			final long startOfInstruction = b.getPosition();
-			final Instruction inst = InstructionDecoder.fromHex(b);
-			final long endOfInstruction = b.getPosition();
-			final long lengthOfInstruction = endOfInstruction - startOfInstruction;
-			out.printf("%8x:\t", startOfSection + startOfInstruction);
-			for (int i = 0; i < 7; i++) {
-				if (i < lengthOfInstruction) {
-					out.printf("%02x ", content[BitUtils.asInt(startOfInstruction + i)]);
-				} else {
-					out.print("   ");
-				}
-			}
-
-			out.print("\t");
-
-			if (inst.opcode() == Opcode.BND_JMP) {
-				// bnd jmps and LEAs need to print the address they point to
-				final IndirectOperand io = (IndirectOperand) inst.firstOperand();
-				final long displacement = io.getDisplacement();
-				final long computedOffset = startOfSection + endOfInstruction + displacement;
-				final long gotSectionAddress =
-						st.getSectionByName(".got.plt").orElseThrow().header().getVirtualAddress();
-				out.printf(
-						"%s        # %x <_GLOBAL_OFFSET_TABLE_+0x%x>%n",
-						InstructionEncoder.toIntelSyntax(inst, true, 6, true),
-						computedOffset,
-						computedOffset - gotSectionAddress);
-			} else if (isJumpWithImmediate(inst)) {
-				// conditional jumps and 'call' instructions need to be printed differently: instead of just the
-				// immediate, we need to add it to the current IP and display the name of the function it points to.
-				final long jumpOffset = getAsLong((Immediate) inst.firstOperand());
-				final long offsetFromStartOfFunction = endOfInstruction + jumpOffset;
-				final long actualPointedAddress = startOfSection + offsetFromStartOfFunction;
-				out.printf(
-						"%-6s %x <%s+0x%x>%n",
-						inst.opcode().mnemonic(), actualPointedAddress, functionName, offsetFromStartOfFunction);
-			} else {
-				out.printf("%s%n", InstructionEncoder.toIntelSyntax(inst, true, 6, true));
-			}
-
-			if (lengthOfInstruction >= 8L) {
-				out.printf("%8x:\t", startOfSection + startOfInstruction + 7L);
-				for (int i = 7; i < 14; i++) {
-					if (i < lengthOfInstruction) {
-						out.printf("%02x ", content[BitUtils.asInt(startOfInstruction + i)]);
-					} else {
-						break;
-					}
-				}
+			if (!isFirstSection) {
 				out.println();
 			}
-		}
 
-		out.println();
-	}
-
-	private static long getAsLong(final Immediate imm) {
-		return switch (imm.bits()) {
-			case 8 -> imm.asByte();
-			case 16 -> imm.asShort();
-			case 32 -> imm.asInt();
-			case 64 -> imm.asLong();
-			default -> throw new IllegalArgumentException("Invalid immediate.");
-		};
-	}
-
-	private static boolean isJumpWithImmediate(final Instruction inst) {
-		return inst.hasFirstOperand()
-				&& !inst.hasSecondOperand()
-				&& (inst.opcode() == Opcode.JMP
-						|| inst.opcode() == Opcode.JE
-						|| inst.opcode() == Opcode.JNE
-						|| inst.opcode() == Opcode.JLE
-						|| inst.opcode() == Opcode.CALL)
-				&& inst.firstOperand() instanceof Immediate;
-	}
-
-	@SuppressWarnings("PMD.UseConcurrentHashMap")
-	private static Map<Long, String> findFunctionNames(final SectionTable st) {
-		final Map<Long, String> functionNames = new HashMap<>();
-		final Optional<Section> symbolTable = st.getSectionByName(".symtab");
-		if (symbolTable.isPresent()) {
-			final SymbolTableSection symtab = (SymbolTableSection) symbolTable.orElseThrow();
-			final StringTableSection strtab =
-					(StringTableSection) st.getSection(symtab.header().getLinkedSectionIndex());
-
-			for (int i = 0; i < symtab.getSymbolTableLength(); i++) {
-				final SymbolTableEntry ste = symtab.getSymbolTableEntry(i);
-				final boolean isFunction = ste.info().getType() == SymbolTableEntryType.STT_FUNC;
-				if (!isFunction) {
-					continue;
-				}
-				functionNames.put(ste.value(), strtab.getString(ste.nameOffset()));
+			try {
+				Disassembler.disassembleSection(out, elf, i, symbols.functionNames(), symbols.allSymbols());
+			} catch (final Throwable t) {
+				// Ensure any output already produced for this section is flushed and visually terminated
+				// before letting the failure propagate (and, eventually, crash the process).
+				out.println();
+				out.flush();
+				throw t;
 			}
+			isFirstSection = false;
 		}
-		return functionNames;
 	}
 
 	private static void printHelp() {

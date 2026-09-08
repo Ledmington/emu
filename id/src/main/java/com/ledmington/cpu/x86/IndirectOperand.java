@@ -40,6 +40,8 @@ import com.ledmington.utils.BitUtils;
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public final class IndirectOperand implements Operand {
 
+	private static final String SHORT_HEX_FORMAT = "0x%x";
+
 	private final PointerSize ptrSize;
 	private final SegmentRegister segment;
 	private final Register base;
@@ -252,11 +254,16 @@ public final class IndirectOperand implements Operand {
 		sb.append(isDisplacementNegative() ? '-' : '+');
 	}
 
+	/** The raw sign-extended 64-bit hexadecimal value of the displacement, unaffected by its sign. */
+	private String rawSignExtendedDisplacementHex() {
+		return String.format(SHORT_HEX_FORMAT, (long) (int) displacement);
+	}
+
 	private void addDisplacement(
 			final StringBuilder sb, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		switch (displacementType) {
 			case DisplacementType.SHORT -> {
-				final String fmt = shortHex ? "0x%x" : "0x%02x";
+				final String fmt = shortHex ? SHORT_HEX_FORMAT : "0x%02x";
 				if (compressedDisplacement.isEmpty()) {
 					final byte x = BitUtils.asByte(displacement);
 					sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
@@ -266,7 +273,7 @@ public final class IndirectOperand implements Operand {
 				}
 			}
 			case DisplacementType.LONG -> {
-				final String fmt = shortHex ? "0x%x" : "0x%08x";
+				final String fmt = shortHex ? SHORT_HEX_FORMAT : "0x%08x";
 				final int x = BitUtils.asInt(displacement);
 				sb.append(String.format(fmt, isDisplacementNegative() ? -x : x));
 			}
@@ -281,6 +288,7 @@ public final class IndirectOperand implements Operand {
 	 * @param shortHex WHen enabled, does not add leading zeroes in the displacement.
 	 * @return The assembly representation of this instruction in Intel syntax.
 	 */
+	@SuppressWarnings("PMD.NPathComplexity")
 	public String toIntelSyntax(
 			final boolean addPointerSize, final Optional<Integer> compressedDisplacement, final boolean shortHex) {
 		final StringBuilder sb = new StringBuilder();
@@ -289,6 +297,19 @@ public final class IndirectOperand implements Operand {
 		}
 		if (hasSegment()) {
 			sb.append(segment.toIntelSyntax()).append(':');
+		}
+		if (hasSegment() && !hasBase() && !hasIndex()) {
+			// GNU objdump renders segment-relative absolute-displacement addressing (e.g. 'fs:0x28') without
+			// brackets, unlike every other addressing form. A negative displacement is rendered as the raw
+			// sign-extended 64-bit value (e.g. 'fs:0xffffffffffffffc8'), not as a negated magnitude. This is
+			// specifically a GNU objdump display quirk (only used when 'shortHex' is enabled): the
+			// general-purpose API keeps showing the negated magnitude.
+			if (shortHex && isDisplacementNegative() && displacementType == DisplacementType.LONG) {
+				sb.append(rawSignExtendedDisplacementHex());
+			} else {
+				addDisplacement(sb, compressedDisplacement, shortHex);
+			}
+			return sb.toString();
 		}
 		sb.append('[');
 		if (hasBase()) {
@@ -304,8 +325,19 @@ public final class IndirectOperand implements Operand {
 			}
 		}
 		if (hasDisplacement()) {
-			addDisplacementSign(sb);
-			addDisplacement(sb, compressedDisplacement, shortHex);
+			if (shortHex
+					&& base == Register64.RIP
+					&& isDisplacementNegative()
+					&& displacementType == DisplacementType.LONG) {
+				// GNU objdump renders a negative rip-relative displacement as the raw sign-extended 64-bit
+				// value (e.g. "+0xffffffffffffea3c"), not as a negated magnitude (e.g. "-0x15c4"). This is
+				// specifically a GNU objdump display quirk: the general-purpose API keeps showing the negated
+				// magnitude.
+				sb.append('+').append(rawSignExtendedDisplacementHex());
+			} else {
+				addDisplacementSign(sb);
+				addDisplacement(sb, compressedDisplacement, shortHex);
+			}
 		}
 		sb.append(']');
 		return sb.toString();
@@ -324,7 +356,7 @@ public final class IndirectOperand implements Operand {
 				+ ";index="
 				+ (index == null ? "null" : index.toString()) + ";scale="
 				+ scale + ";displacement="
-				+ (displacement == null ? "null" : String.format("0x%x", displacement)) + ";displacementType="
+				+ (displacement == null ? "null" : String.format(SHORT_HEX_FORMAT, displacement)) + ";displacementType="
 				+ displacementType
 				+ ")";
 	}
