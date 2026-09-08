@@ -29,6 +29,12 @@ application {
 run {
 	args = []
 	jvmArgs = []
+	// org.openjfx.javafxplugin (0.1.0) wires JavaFX module args into this task in a way that
+	// touches Task.extensions/SourceSetContainer at execution time, which the configuration
+	// cache disallows. This is a known upstream limitation of the plugin that has not seen
+	// activity since 2025; if it remains unaddressed we may need to fork the plugin or drop
+	// the gui module entirely.
+	notCompatibleWithConfigurationCache("org.openjfx.javafxplugin is incompatible with the configuration cache")
 }
 
 javafx {
