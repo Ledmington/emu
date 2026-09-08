@@ -600,6 +600,14 @@ public class X86Cpu implements X86Emulator {
 					throw unknownArgumentType(inst);
 				}
 			}
+			case PUNPCKLQDQ -> {
+				if (inst.firstOperand() instanceof final RegisterXMM dest
+						&& inst.secondOperand() instanceof final RegisterXMM src) {
+					rf.set(dest, rf.getXMM64(dest), rf.getXMM64(src));
+				} else {
+					throw unknownArgumentType(inst);
+				}
+			}
 			case PAND -> {
 				if (inst.firstOperand() instanceof final RegisterXMM dest
 						&& inst.secondOperand() instanceof final RegisterXMM src) {

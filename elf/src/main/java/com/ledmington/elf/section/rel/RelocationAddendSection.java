@@ -34,6 +34,7 @@ public final class RelocationAddendSection implements LoadableSection {
 	private final String name;
 	private final SectionHeader header;
 	private final boolean is32Bit;
+	private final boolean isLittleEndian;
 	private final RelocationAddendEntry[] relocationAddendTable;
 
 	/**
@@ -54,6 +55,7 @@ public final class RelocationAddendSection implements LoadableSection {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
+		this.isLittleEndian = b.isLittleEndian();
 
 		b.setPosition(sectionHeader.getFileOffset());
 		final int nEntries = (int) (sectionHeader.getSectionSize() / sectionHeader.getEntrySize());
@@ -113,7 +115,8 @@ public final class RelocationAddendSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24));
+		final WriteOnlyByteBuffer bb =
+				new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24), isLittleEndian);
 		for (final RelocationAddendEntry entry : relocationAddendTable) {
 			if (is32Bit) {
 				bb.write(BitUtils.asInt(entry.offset()));
@@ -133,7 +136,8 @@ public final class RelocationAddendSection implements LoadableSection {
 	@Override
 	public String toString() {
 		return "RelocationAddendSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit
-				+ ";relocationAddendTable=" + Arrays.toString(relocationAddendTable) + ")";
+				+ ";isLittleEndian=" + isLittleEndian + ";relocationAddendTable="
+				+ Arrays.toString(relocationAddendTable) + ")";
 	}
 
 	@Override
@@ -142,6 +146,7 @@ public final class RelocationAddendSection implements LoadableSection {
 		h = 31 * h + name.hashCode();
 		h = 31 * h + header.hashCode();
 		h = 31 * h + Boolean.hashCode(is32Bit);
+		h = 31 * h + Boolean.hashCode(isLittleEndian);
 		h = 31 * h + Arrays.hashCode(relocationAddendTable);
 		return h;
 	}
@@ -160,6 +165,7 @@ public final class RelocationAddendSection implements LoadableSection {
 		return this.name.equals(ras.name)
 				&& this.header.equals(ras.header)
 				&& this.is32Bit == ras.is32Bit
+				&& this.isLittleEndian == ras.isLittleEndian
 				&& Arrays.equals(this.relocationAddendTable, ras.relocationAddendTable);
 	}
 }

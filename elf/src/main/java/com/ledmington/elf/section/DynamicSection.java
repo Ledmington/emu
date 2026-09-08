@@ -33,6 +33,7 @@ public final class DynamicSection implements LoadableSection {
 	private final String name;
 	private final SectionHeader header;
 	private final boolean is32Bit;
+	private final boolean isLittleEndian;
 	private final DynamicTableEntry[] dynamicTable;
 
 	/**
@@ -48,6 +49,7 @@ public final class DynamicSection implements LoadableSection {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
+		this.isLittleEndian = b.isLittleEndian();
 		b.setPosition(sectionHeader.getFileOffset());
 		final int entrySize = is32Bit ? 8 : 16;
 		final int nEntries = (int) sectionHeader.getSectionSize() / entrySize;
@@ -98,7 +100,8 @@ public final class DynamicSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(dynamicTable.length * (is32Bit ? 8 : 16));
+		final WriteOnlyByteBuffer bb =
+				new WriteOnlyByteBufferV1(dynamicTable.length * (is32Bit ? 8 : 16), isLittleEndian);
 		for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
 			if (is32Bit) {
 				bb.write(BitUtils.asInt(dynamicTableEntry.getTag().getCode()));
@@ -117,14 +120,15 @@ public final class DynamicSection implements LoadableSection {
 		h = 31 * h + name.hashCode();
 		h = 31 * h + header.hashCode();
 		h = 31 * h + Boolean.hashCode(is32Bit);
+		h = 31 * h + Boolean.hashCode(isLittleEndian);
 		h = 31 * h + Arrays.hashCode(dynamicTable);
 		return h;
 	}
 
 	@Override
 	public String toString() {
-		return "DynamicSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit + ";dynamicTable="
-				+ Arrays.toString(dynamicTable) + ")";
+		return "DynamicSection(name=" + name + ";header=" + header + ";is32Bit=" + is32Bit + ";isLittleEndian="
+				+ isLittleEndian + ";dynamicTable=" + Arrays.toString(dynamicTable) + ")";
 	}
 
 	@Override
@@ -141,6 +145,7 @@ public final class DynamicSection implements LoadableSection {
 		return this.name.equals(ds.name)
 				&& this.header.equals(ds.header)
 				&& this.is32Bit == ds.is32Bit
+				&& this.isLittleEndian == ds.isLittleEndian
 				&& Arrays.equals(this.dynamicTable, ds.dynamicTable);
 	}
 }
