@@ -100,7 +100,11 @@ public final class EmuDB {
 			Map.entry("mem", new Command("Shows the content of the memory", this::showMemory)),
 			Map.entry("regs", new Command("Shows the content of the register file", ignored -> showRegisters())),
 			Map.entry("asm", new Command("Shows the assembly at the current position", this::showAsm)),
-			Map.entry("break", new Command("Sets up a breakpoint at the given function", this::setBreakpoint)),
+			Map.entry(
+					"break",
+					new Command(
+							"Sets up a breakpoint at the given function, or at the given address if prefixed with '*'",
+							this::setBreakpoint)),
 			Map.entry("where", new Command("Shows the stack", ignored -> showStack())),
 			Map.entry("step", new Command("Executes a single instruction", ignored -> step())));
 
@@ -240,6 +244,11 @@ public final class EmuDB {
 			return;
 		}
 
+		if (args[0].startsWith("*")) {
+			setBreakpointAtAddress(args[0].substring(1));
+			return;
+		}
+
 		final String functionName = args[0];
 		final Optional<Section> symbolTable = this.currentFile.getSectionByName(".symtab");
 		final Optional<Section> stringTable = this.currentFile.getSectionByName(".strtab");
@@ -258,29 +267,7 @@ public final class EmuDB {
 			}
 			final String name = strtab.getString(e.nameOffset());
 			if (name.equals(functionName)) {
-				final Breakpoint b = new Breakpoint(e.value(), name);
-				final List<Integer> sameBreakpoints = new ArrayList<>();
-				for (int j = 0; j < breakpoints.size(); j++) {
-					if (breakpoints.get(j).address() == b.address()) {
-						sameBreakpoints.add(j);
-					}
-				}
-				if (!sameBreakpoints.isEmpty()) {
-					out.printf(
-							"Note: breakpoint%s %s are also set at 0x%x '%s'%n",
-							sameBreakpoints.size() == 1 ? "" : "s",
-							(sameBreakpoints.size() > 1
-											? IntStream.range(0, sameBreakpoints.size() - 1)
-															.mapToObj(String::valueOf)
-															.collect(Collectors.joining(", "))
-													+ " and "
-											: "")
-									+ sameBreakpoints.getLast(),
-							b.address(),
-							b.name());
-				}
-				breakpoints.add(b);
-				printBreakpoint(breakpoints.size() - 1);
+				addBreakpoint(new Breakpoint(e.value(), name));
 				found = true;
 				break;
 			}
@@ -288,6 +275,43 @@ public final class EmuDB {
 		if (!found) {
 			out.printf("Function '%s' not defined.%n", functionName);
 		}
+	}
+
+	private void setBreakpointAtAddress(final String addressArg) {
+		final Optional<Long> parsed = parseAddress(addressArg);
+		if (parsed.isEmpty()) {
+			out.printf(
+					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
+					addressArg);
+			return;
+		}
+		final long address = parsed.orElseThrow();
+		addBreakpoint(new Breakpoint(address, findFunctionName(address).toString()));
+	}
+
+	private void addBreakpoint(final Breakpoint b) {
+		final List<Integer> sameBreakpoints = new ArrayList<>();
+		for (int j = 0; j < breakpoints.size(); j++) {
+			if (breakpoints.get(j).address() == b.address()) {
+				sameBreakpoints.add(j);
+			}
+		}
+		if (!sameBreakpoints.isEmpty()) {
+			out.printf(
+					"Note: breakpoint%s %s are also set at 0x%x '%s'%n",
+					sameBreakpoints.size() == 1 ? "" : "s",
+					(sameBreakpoints.size() > 1
+									? IntStream.range(0, sameBreakpoints.size() - 1)
+													.mapToObj(String::valueOf)
+													.collect(Collectors.joining(", "))
+											+ " and "
+									: "")
+							+ sameBreakpoints.getLast(),
+					b.address(),
+					b.name());
+		}
+		breakpoints.add(b);
+		printBreakpoint(breakpoints.size() - 1);
 	}
 
 	private void showAsm(final String... args) {
