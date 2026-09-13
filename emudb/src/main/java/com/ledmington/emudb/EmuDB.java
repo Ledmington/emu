@@ -29,12 +29,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.ledmington.cpu.InstructionDecoder;
 import com.ledmington.cpu.InstructionEncoder;
+import com.ledmington.cpu.x86.IndirectOperand;
+import com.ledmington.cpu.x86.IndirectOperandBuilder;
 import com.ledmington.cpu.x86.Instruction;
+import com.ledmington.cpu.x86.PointerSize;
+import com.ledmington.cpu.x86.Register;
+import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.cpu.x86.exc.DecodingException;
@@ -73,7 +80,8 @@ import org.jline.terminal.TerminalBuilder;
 	"PMD.CyclomaticComplexity",
 	"PMD.AvoidInstantiatingObjectsInLoops",
 	"PMD.AvoidDuplicateLiterals",
-	"PMD.CouplingBetweenObjects"
+	"PMD.CouplingBetweenObjects",
+	"PMD.TooManyMethods"
 })
 public final class EmuDB {
 
@@ -399,15 +407,18 @@ public final class EmuDB {
 			return;
 		}
 		if (args.length == 0) {
-			out.println("Command 'mem' expects an address.");
+			out.println("Command 'mem' expects an address or a pointer expression.");
 			return;
 		}
 
-		final Optional<Long> parsed = parseAddress(args[0]);
+		final String expression = String.join("", args);
+		final Optional<Long> parsed = parseMemoryExpression(expression);
 		if (parsed.isEmpty()) {
 			out.printf(
-					"'%s' is not a valid address, enter a 64-bit address in decimal or hexadecimal (prefixed with '0x').%n",
-					args[0]);
+					"'%s' is not a valid address or pointer expression. Enter a 64-bit address in decimal or "
+							+ "hexadecimal (prefixed with '0x'), or an Intel-syntax indirect operand such as "
+							+ "'[rax+rbx*4+0x10]' or '[rbp-0x8]'.%n",
+					expression);
 			return;
 		}
 		final long address = parsed.orElseThrow();
@@ -450,6 +461,138 @@ public final class EmuDB {
 		} catch (final NumberFormatException e) {
 			return Optional.empty();
 		}
+	}
+
+	/**
+	 * Parses either a plain address (decimal or hexadecimal) or an Intel-syntax indirect operand (e.g.
+	 * '[rax+rbx*4+0x10]', '[rbp-0x8]', 'fs:0x28') and resolves it to a concrete address using the current register
+	 * values.
+	 */
+	private Optional<Long> parseMemoryExpression(final String expression) {
+		final Optional<Long> plain = parseAddress(expression);
+		if (plain.isPresent()) {
+			return plain;
+		}
+		return parseIndirectOperand(expression)
+				.map(io ->
+						((X86Cpu) this.context.cpu()).computeIndirectOperand(io).address());
+	}
+
+	private record SegmentedRemainder(SegmentRegister segment, String remainder) {}
+
+	/** Strips a leading segment prefix (e.g. 'fs:'), if present. */
+	private static SegmentedRemainder stripSegmentPrefix(final String s) {
+		for (final SegmentRegister sr : SegmentRegister.values()) {
+			final String prefix = sr.toIntelSyntax() + ":";
+			if (s.startsWith(prefix)) {
+				return new SegmentedRemainder(sr, s.substring(prefix.length()));
+			}
+		}
+		return new SegmentedRemainder(null, s);
+	}
+
+	/** Applies every '+'/'-'-separated term found in {@code inner} to the given builder. */
+	private boolean applyAllTerms(final IndirectOperandBuilder builder, final String inner) {
+		final Matcher termMatcher = Pattern.compile("[+-]?[^+-]+").matcher(inner);
+		boolean matchedAnyTerm = false;
+		while (termMatcher.find()) {
+			matchedAnyTerm = true;
+			if (!applyTerm(builder, termMatcher.group())) {
+				return false;
+			}
+		}
+		return matchedAnyTerm;
+	}
+
+	private Optional<IndirectOperand> parseIndirectOperand(final String expression) {
+		final SegmentedRemainder segmented = stripSegmentPrefix(expression);
+		final String s = segmented.remainder();
+		final SegmentRegister segment = segmented.segment();
+
+		final String inner;
+		if (s.length() >= 2 && s.startsWith("[") && s.endsWith("]")) {
+			inner = s.substring(1, s.length() - 1);
+		} else if (segment != null && !s.isEmpty()) {
+			// Segment-relative addressing with an absolute displacement is written without brackets (e.g. 'fs:0x28').
+			inner = s;
+		} else {
+			return Optional.empty();
+		}
+
+		if (inner.isBlank()) {
+			return Optional.empty();
+		}
+
+		final IndirectOperandBuilder builder = IndirectOperand.builder().pointer(PointerSize.QWORD_PTR);
+		if (segment != null) {
+			builder.segment(segment);
+		}
+
+		if (!applyAllTerms(builder, inner)) {
+			return Optional.empty();
+		}
+
+		try {
+			return Optional.of(builder.build());
+		} catch (final IllegalArgumentException e) {
+			return Optional.empty();
+		}
+	}
+
+	/** Parses a single '+'/'-'-separated term of an indirect operand ('rax', 'rbx*4', '0x10', '-0x8', ...). */
+	private boolean applyTerm(final IndirectOperandBuilder builder, final String rawTerm) {
+		final boolean negative = rawTerm.startsWith("-");
+		final String term = (negative || rawTerm.startsWith("+")) ? rawTerm.substring(1) : rawTerm;
+		if (term.isBlank()) {
+			return false;
+		}
+
+		try {
+			if (term.contains("*")) {
+				final String[] parts = term.split("\\*", 2);
+				final Optional<Register> reg = parseRegister(parts[0]);
+				if (reg.isEmpty()) {
+					return false;
+				}
+				final int scale;
+				try {
+					scale = Integer.parseInt(parts[1]);
+				} catch (final NumberFormatException e) {
+					return false;
+				}
+				builder.index(reg.orElseThrow()).scale(scale);
+				return true;
+			}
+
+			final Optional<Register> reg = parseRegister(term);
+			if (reg.isPresent()) {
+				builder.base(reg.orElseThrow());
+				return true;
+			}
+
+			final Optional<Long> disp = parseAddress(term);
+			if (disp.isEmpty()) {
+				return false;
+			}
+			builder.displacement((int) (negative ? -disp.orElseThrow() : disp.orElseThrow()));
+			return true;
+		} catch (final IllegalArgumentException e) {
+			return false;
+		}
+	}
+
+	private static Optional<Register> parseRegister(final String name) {
+		for (final Register64 r : Register64.values()) {
+			if (r.toIntelSyntax().equals(name)) {
+				return Optional.of(r);
+			}
+		}
+		for (final Register32 r : Register32.values()) {
+			if (r.toIntelSyntax().equals(name)) {
+				return Optional.of(r);
+			}
+		}
+		return Optional.empty();
 	}
 
 	private void step() {
