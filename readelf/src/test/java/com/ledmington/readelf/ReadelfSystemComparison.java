@@ -36,8 +36,10 @@ final class ReadelfSystemComparison {
 	static {
 		try (Stream<Path> s = Files.find(
 						Path.of(".", "build").normalize().toAbsolutePath(), 999, (p, bfa) -> bfa.isRegularFile())
-				.filter(p -> p.getFileName().toString().startsWith("emu-readelf")
-						&& p.getFileName().toString().endsWith(".jar"))) {
+				.filter(p -> {
+					final String fileName = p.toFile().getName();
+					return fileName.startsWith("emu-readelf") && fileName.endsWith(".jar");
+				})) {
 			fatJarPath = s.max(Comparator.comparingLong(a -> a.toFile().length()))
 					.orElseThrow()
 					.normalize()
