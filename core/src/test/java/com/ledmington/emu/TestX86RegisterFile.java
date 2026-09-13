@@ -35,6 +35,7 @@ import com.ledmington.cpu.x86.Register16;
 import com.ledmington.cpu.x86.Register32;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.cpu.x86.Register8;
+import com.ledmington.cpu.x86.RegisterXMM;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.utils.BitUtils;
 
@@ -319,6 +320,122 @@ final class TestX86RegisterFile {
 					() -> String.format(
 							"Expected register %s to be initially zero but was 0x%016x", other, regFile.get(other)));
 		}
+	}
+
+	private static Stream<Arguments> allXmmRegisters() {
+		return Arrays.stream(RegisterXMM.values()).map(Arguments::of);
+	}
+
+	@ParameterizedTest
+	@MethodSource("allXmmRegisters")
+	void initiallyAllZero(final RegisterXMM r) {
+		final long[] raw = regFile.get(r);
+		assertEquals(
+				0x0000000000000000L,
+				raw[0],
+				() -> String.format(
+						"Expected the low 64 bits of register %s to be initially zero but was 0x%016x", r, raw[0]));
+		assertEquals(
+				0x0000000000000000L,
+				raw[1],
+				() -> String.format(
+						"Expected the high 64 bits of register %s to be initially zero but was 0x%016x", r, raw[1]));
+	}
+
+	@ParameterizedTest
+	@MethodSource("allXmmRegisters")
+	void setXMM32ToValue(final RegisterXMM r) {
+		final int x = RNG.nextInt();
+		regFile.setXMM32(r, x);
+		assertEquals(
+				x,
+				regFile.getXMM32(r),
+				() -> String.format("Expected register %s to be 0x%08x but was 0x%08x", r, x, regFile.getXMM32(r)));
+	}
+
+	@ParameterizedTest
+	@MethodSource("allXmmRegisters")
+	void setXMM32ToValueShouldNotChangeOtherRegisters(final RegisterXMM r) {
+		final int x = RNG.nextInt();
+		regFile.setXMM32(r, x);
+
+		for (final RegisterXMM other : RegisterXMM.values()) {
+			if (r == other) {
+				continue;
+			}
+			assertEquals(
+					0x00000000,
+					regFile.getXMM32(other),
+					() -> String.format(
+							"Expected register %s to be zero but was 0x%08x", other, regFile.getXMM32(other)));
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("allXmmRegisters")
+	void setXMMToValue(final RegisterXMM r) {
+		final long low = RNG.nextLong();
+		final long high = RNG.nextLong();
+		regFile.set(r, low, high);
+
+		final long[] raw = regFile.get(r);
+		assertEquals(
+				low,
+				raw[0],
+				() -> String.format(
+						"Expected the low 64 bits of register %s to be 0x%016x but was 0x%016x", r, low, raw[0]));
+		assertEquals(
+				high,
+				raw[1],
+				() -> String.format(
+						"Expected the high 64 bits of register %s to be 0x%016x but was 0x%016x", r, high, raw[1]));
+	}
+
+	@ParameterizedTest
+	@MethodSource("allXmmRegisters")
+	void setXMMToValueShouldNotChangeOtherRegisters(final RegisterXMM r) {
+		regFile.set(r, RNG.nextLong(), RNG.nextLong());
+
+		for (final RegisterXMM other : RegisterXMM.values()) {
+			if (r == other) {
+				continue;
+			}
+			final long[] raw = regFile.get(other);
+			assertEquals(
+					0x0000000000000000L,
+					raw[0],
+					() -> String.format(
+							"Expected the low 64 bits of register %s to be zero but was 0x%016x", other, raw[0]));
+			assertEquals(
+					0x0000000000000000L,
+					raw[1],
+					() -> String.format(
+							"Expected the high 64 bits of register %s to be zero but was 0x%016x", other, raw[1]));
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("allXmmRegisters")
+	void setXMM32ZeroExtendsRestOfRegister(final RegisterXMM r) {
+		// getXMM32 can only observe the low 32 bits of the register, so, to verify that the other 96 bits are
+		// actually cleared (and not just stale from a previous instruction), we "dirty" the register beforehand.
+		regFile.set(r, 0xffffffff00000000L, 0xffffffffffffffffL);
+
+		final int x = RNG.nextInt(1, Integer.MAX_VALUE);
+		regFile.setXMM32(r, x);
+
+		final long[] raw = regFile.get(r);
+		assertEquals(
+				BitUtils.asLong(x),
+				raw[0],
+				() -> String.format(
+						"Expected the low 64 bits of register %s to be zero-extended to 0x%016x but was 0x%016x",
+						r, BitUtils.asLong(x), raw[0]));
+		assertEquals(
+				0x0000000000000000L,
+				raw[1],
+				() -> String.format(
+						"Expected the high 64 bits of register %s to be zeroed but was 0x%016x", r, raw[1]));
 	}
 
 	private static Stream<Arguments> allSegmentRegisters() {

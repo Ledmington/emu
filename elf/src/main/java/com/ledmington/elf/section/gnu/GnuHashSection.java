@@ -36,6 +36,7 @@ public final class GnuHashSection implements LoadableSection {
 	private final String name;
 	private final SectionHeader header;
 	private final boolean is32Bit;
+	private final boolean isLittleEndian;
 	private final int symIndex;
 	private final int bloomShift;
 	private final long[] bloom;
@@ -55,6 +56,7 @@ public final class GnuHashSection implements LoadableSection {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
+		this.isLittleEndian = b.isLittleEndian();
 
 		if (sectionHeader.getSectionSize() % 4 != 0) {
 			throw new IllegalArgumentException(String.format(
@@ -194,8 +196,8 @@ public final class GnuHashSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb =
-				new WriteOnlyByteBufferV1(4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4);
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(
+				4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4, isLittleEndian);
 		bb.write(buckets.length);
 		bb.write(symIndex);
 		bb.write(bloom.length);

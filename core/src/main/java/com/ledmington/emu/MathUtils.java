@@ -70,7 +70,7 @@ public final class MathUtils {
 		return (BitUtils.asLong(a) + BitUtils.asLong(b)) > UINT32_MAX;
 	}
 
-	private static BigInteger toUnsignedBigInteger(final long value) {
+	/* default */ static BigInteger toUnsignedBigInteger(final long value) {
 		return new BigInteger(1, ByteBuffer.allocate(8).putLong(value).array());
 	}
 
@@ -130,6 +130,19 @@ public final class MathUtils {
 	 */
 	public static boolean willCarrySub(final long a, final long b) {
 		return toUnsignedBigInteger(a).compareTo(toUnsignedBigInteger(b)) < 0;
+	}
+
+	/**
+	 * Determines whether subtracting an int and an incoming borrow bit from another int, as unsigned values, produces a
+	 * borrow.
+	 *
+	 * @param a The first int operand.
+	 * @param b The second int operand.
+	 * @param borrowIn The incoming borrow bit, subtracted on top of {@code b}.
+	 * @return True if the subtraction produces an unsigned borrow.
+	 */
+	public static boolean willCarrySbb(final int a, final int b, final boolean borrowIn) {
+		return BitUtils.asLong(a) < BitUtils.asLong(b) + (borrowIn ? 1L : 0L);
 	}
 
 	// Signed Addition Overflow
@@ -230,5 +243,19 @@ public final class MathUtils {
 	public static boolean willOverflowSub(final long a, final long b) {
 		final long r = a - b;
 		return ((a ^ b) & (a ^ r)) < 0L;
+	}
+
+	/**
+	 * Determines whether subtracting an int and an incoming borrow bit from another int, as signed values, produces an
+	 * overflow.
+	 *
+	 * @param a The first int operand.
+	 * @param b The second int operand.
+	 * @param borrowIn The incoming borrow bit, subtracted on top of {@code b}.
+	 * @return True if the subtraction produces a signed overflow.
+	 */
+	public static boolean willOverflowSbb(final int a, final int b, final boolean borrowIn) {
+		final long exact = a - (long) b - (borrowIn ? 1L : 0L);
+		return exact < Integer.MIN_VALUE || exact > Integer.MAX_VALUE;
 	}
 }

@@ -33,6 +33,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 	private final String name;
 	private final SectionHeader header;
 	private final boolean is32Bit;
+	private final boolean isLittleEndian;
 	private final SymbolTableEntry[] symbolTable;
 
 	/**
@@ -49,6 +50,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
+		this.isLittleEndian = b.isLittleEndian();
 
 		final long size = sectionHeader.getSectionSize();
 		b.setPosition(sectionHeader.getFileOffset());
@@ -89,7 +91,8 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24));
+		final WriteOnlyByteBuffer bb =
+				new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24), isLittleEndian);
 		for (final SymbolTableEntry ste : symbolTable) {
 			if (is32Bit) {
 				bb.write(ste.nameOffset());

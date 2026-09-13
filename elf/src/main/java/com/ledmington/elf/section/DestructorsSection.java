@@ -32,6 +32,7 @@ public final class DestructorsSection implements LoadableSection {
 	private final SectionHeader header;
 	private final long[] destructors; // function pointers
 	private final boolean is32Bit;
+	private final boolean isLittleEndian;
 
 	/**
 	 * Creates a DestructorsSection with the given name and the given header.
@@ -51,6 +52,7 @@ public final class DestructorsSection implements LoadableSection {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
+		this.isLittleEndian = b.isLittleEndian();
 
 		if (dynamicSection == null) {
 			this.destructors = new long[0];
@@ -114,7 +116,7 @@ public final class DestructorsSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final int wordSize = is32Bit ? 4 : 8;
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length * wordSize);
+		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(destructors.length * wordSize, isLittleEndian);
 		for (final long d : destructors) {
 			if (is32Bit) {
 				wb.write(BitUtils.asInt(d));

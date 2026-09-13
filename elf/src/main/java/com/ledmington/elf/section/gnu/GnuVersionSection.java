@@ -38,6 +38,7 @@ public final class GnuVersionSection implements LoadableSection {
 	private static final String standardName = ".gnu.version";
 
 	private final SectionHeader header;
+	private final boolean isLittleEndian;
 	private final short[] versions;
 
 	/**
@@ -57,6 +58,7 @@ public final class GnuVersionSection implements LoadableSection {
 	 */
 	public GnuVersionSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
 		this.header = Objects.requireNonNull(sectionHeader);
+		this.isLittleEndian = b.isLittleEndian();
 
 		b.setPosition(sectionHeader.getFileOffset());
 		final int nEntries = BitUtils.asInt(sectionHeader.getSectionSize() / 2L);
@@ -99,7 +101,7 @@ public final class GnuVersionSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2);
+		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2, isLittleEndian);
 		for (final short version : versions) {
 			bb.write(version);
 		}
