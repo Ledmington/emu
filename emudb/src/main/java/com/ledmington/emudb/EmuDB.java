@@ -110,6 +110,16 @@ public final class EmuDB {
 
 	public EmuDB() {}
 
+	/** Colors the given already-formatted address in blue, the color always used for addresses. */
+	private static String colorAddress(final String formattedAddress) {
+		return TerminalUtils.ANSI_BLUE + formattedAddress + TerminalUtils.ANSI_RESET;
+	}
+
+	/** Colors the given function name (plus optional offset) in yellow, the color always used for function names. */
+	private static String colorFunctionName(final String functionName) {
+		return TerminalUtils.ANSI_YELLOW + functionName + TerminalUtils.ANSI_RESET;
+	}
+
 	private void printHelp() {
 		for (final Map.Entry<String, Command> e : commands.entrySet()) {
 			out.printf(
@@ -133,28 +143,16 @@ public final class EmuDB {
 		final long rip = this.context.cpu().getRegisters().get(Register64.RIP);
 		final Position initialPos = findFunctionName(rip);
 		out.printf(
-				"#%-2d %s0x%016x%s in %s%s%s ()%n",
-				0,
-				TerminalUtils.ANSI_BLUE,
-				rip,
-				TerminalUtils.ANSI_RESET,
-				TerminalUtils.ANSI_YELLOW,
-				initialPos.functionName(),
-				TerminalUtils.ANSI_RESET);
+				"#%-2d %s in %s ()%n",
+				0, colorAddress(String.format("0x%016x", rip)), colorFunctionName(initialPos.toString()));
 
 		long rbp = this.context.cpu().getRegisters().get(Register64.RBP);
 		int stackLevel = 1;
 		for (; rbp != 0L && rbp != baseStackAddress && stackLevel < maxStackTraceDepth; stackLevel++) {
 			final Position pos = findFunctionName(rbp);
 			out.printf(
-					"#%-2d %s0x%016x%s in %s%s%s ()%n",
-					stackLevel,
-					TerminalUtils.ANSI_BLUE,
-					rbp,
-					TerminalUtils.ANSI_RESET,
-					TerminalUtils.ANSI_YELLOW,
-					pos.functionName(),
-					TerminalUtils.ANSI_RESET);
+					"#%-2d %s in %s ()%n",
+					stackLevel, colorAddress(String.format("0x%016x", rbp)), colorFunctionName(pos.toString()));
 
 			final long nextRbp = this.context.memory().read8(new MemoryAddress(rbp));
 			// TODO: should we check if nextRbp is aligned?
@@ -218,14 +216,11 @@ public final class EmuDB {
 
 	private void printBreakpoint(final int breakpointIndex) {
 		out.printf(
-				"Breakpoint %,d at %s0x%x%s %s%s%s%n",
+				"Breakpoint %,d at %s %s%n",
 				breakpointIndex,
-				TerminalUtils.ANSI_BLUE,
-				breakpoints.get(breakpointIndex).address(),
-				TerminalUtils.ANSI_RESET,
-				TerminalUtils.ANSI_YELLOW,
-				breakpoints.get(breakpointIndex).name(),
-				TerminalUtils.ANSI_RESET);
+				colorAddress(
+						String.format("0x%x", breakpoints.get(breakpointIndex).address())),
+				colorFunctionName(breakpoints.get(breakpointIndex).name()));
 	}
 
 	private void setBreakpoint(final String... args) {
@@ -350,7 +345,7 @@ public final class EmuDB {
 			} catch (final DecodingException e) {
 				str = "<unknown: " + e.getMessage() + ">";
 			}
-			out.printf("0x%016x : %s%n", pos, str);
+			out.printf("%s : %s%n", colorAddress(String.format("0x%x", pos)), str);
 		}
 	}
 
@@ -429,11 +424,7 @@ public final class EmuDB {
 		for (int i = 0; i < numTotalBytes; i++) {
 			final long currentAddress = actualStartAddress + i;
 			if (i % numBytesPerRow == 0) {
-				out.printf(
-						"%s" + addressFormatString + "%s:",
-						TerminalUtils.ANSI_BLUE,
-						currentAddress,
-						TerminalUtils.ANSI_RESET);
+				out.printf("%s:", colorAddress(String.format(addressFormatString, currentAddress)));
 			}
 			final String s = mem.isInitialized(new MemoryAddress(currentAddress))
 					? String.format("%02x", mem.read(new MemoryAddress(currentAddress)))
@@ -470,7 +461,7 @@ public final class EmuDB {
 		executeOneInstruction();
 
 		final long here = this.context.cpu().getRegisters().get(Register64.RIP);
-		out.printf("%s0x%016x%s%n", TerminalUtils.ANSI_BLUE, here, TerminalUtils.ANSI_RESET);
+		out.printf("%s%n", colorAddress(String.format("0x%016x", here)));
 	}
 
 	private boolean executeOneInstruction() {
@@ -481,14 +472,10 @@ public final class EmuDB {
 			// set interrupt flag when hitting a breakpoint
 			((RegisterFile) this.context.cpu().getRegisters()).set(RFlags.INTERRUPT_ENABLE, true);
 			out.printf(
-					"Breakpoint %,d, %s0x%016x%s in %s%s%s ()%n",
+					"Breakpoint %,d, %s in %s ()%n",
 					breakpointIndex.orElseThrow(),
-					TerminalUtils.ANSI_BLUE,
-					b.address(),
-					TerminalUtils.ANSI_RESET,
-					TerminalUtils.ANSI_YELLOW,
-					b.name(),
-					TerminalUtils.ANSI_RESET);
+					colorAddress(String.format("0x%016x", b.address())),
+					colorFunctionName(b.name()));
 		} else {
 			this.context.cpu().turnOn();
 			this.context.cpu().executeOne();
