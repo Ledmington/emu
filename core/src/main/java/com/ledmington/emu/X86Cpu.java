@@ -54,10 +54,6 @@ public class X86Cpu implements X86Emulator {
 	private static final MiniLogger logger = MiniLogger.getLogger("x86-emu");
 	private static final CPUConfig CPU_CONFIG = CPUConfig.GENERIC_INTEL; // TODO: convert to constructor parameter
 
-	private static final int SYS_EXIT = 60;
-	private static final int SYS_ARCH_PRCTL = 158;
-	private static final int SYS_EXIT_GROUP = 231;
-
 	private static final long ARCH_SET_GS = 0x1001L;
 	private static final long ARCH_SET_FS = 0x1002L;
 	private static final long ARCH_GET_FS = 0x1003L;
@@ -83,6 +79,9 @@ public class X86Cpu implements X86Emulator {
 
 	/** Lowest address (stack limit). */
 	private final long stackBottom;
+
+	/** Current program break used to answer the `brk` syscall. Lazily initialized on the first call. */
+	private long programBreak = -1L;
 
 	/**
 	 * The current state of the CPU. Children classes can modify this field before executing instructions or to forcibly
@@ -199,6 +198,7 @@ public class X86Cpu implements X86Emulator {
 							case Register64 op2 ->
 								op(op1, op2, (a, b) -> a - b, MathUtils::willCarrySub, MathUtils::willOverflowSub);
 							case Immediate imm -> opSX(op1, imm, (a, b) -> a - b);
+							case IndirectOperand io -> op(op1, io, (a, b) -> a - b);
 							default ->
 								throw new IllegalArgumentException(String.format(
 										"Don't know what to do with SUB, %s and %s.",
@@ -732,21 +732,25 @@ public class X86Cpu implements X86Emulator {
 			case RET -> popInto(Register64.RIP);
 			case CDQE -> rf.set(Register64.RAX, (long) rf.get(Register32.EAX));
 			case DIV -> {
+				final long divisorValue;
 				if (inst.firstOperand() instanceof final Register64 r) {
-					final BigInteger divisor = MathUtils.toUnsignedBigInteger(rf.get(r));
-					if (divisor.signum() == 0) {
-						throw new ArithmeticException("Division by zero.");
-					}
-					final BigInteger dividend = MathUtils.toUnsignedBigInteger(rf.get(Register64.RDX))
-							.shiftLeft(64)
-							.or(MathUtils.toUnsignedBigInteger(rf.get(Register64.RAX)));
-					final BigInteger[] quotientAndRemainder = dividend.divideAndRemainder(divisor);
-					rf.set(Register64.RAX, quotientAndRemainder[0].longValue());
-					rf.set(Register64.RDX, quotientAndRemainder[1].longValue());
+					divisorValue = rf.get(r);
+				} else if (inst.firstOperand() instanceof final IndirectOperand io) {
+					divisorValue = getAsLongSX(io);
 				} else {
 					throw new IllegalArgumentException(
 							String.format("Don't know what to do with DIV and %s.", inst.firstOperand()));
 				}
+				final BigInteger divisor = MathUtils.toUnsignedBigInteger(divisorValue);
+				if (divisor.signum() == 0) {
+					throw new ArithmeticException("Division by zero.");
+				}
+				final BigInteger dividend = MathUtils.toUnsignedBigInteger(rf.get(Register64.RDX))
+						.shiftLeft(64)
+						.or(MathUtils.toUnsignedBigInteger(rf.get(Register64.RAX)));
+				final BigInteger[] quotientAndRemainder = dividend.divideAndRemainder(divisor);
+				rf.set(Register64.RAX, quotientAndRemainder[0].longValue());
+				rf.set(Register64.RDX, quotientAndRemainder[1].longValue());
 			}
 			case LEAVE -> {
 				rf.set(Register64.RSP, rf.get(Register64.RBP));
@@ -866,14 +870,27 @@ public class X86Cpu implements X86Emulator {
 
 	private void handleSyscall() {
 		// Useful reference: https://filippo.io/linux-syscall-table/
+
+		// TODO: convert them into an enum?
+		final int sysBrk = 12;
+		final int sysExit = 60;
+		final int sysArchPrctl = 158;
+		final int sysSetTidAddress = 218;
+		final int sysExitGroup = 231;
+		final int sysSetRobustList = 273;
+		final int sysRseq = 334;
+
 		final int sysCallCode = rf.get(Register32.EAX);
 		switch (sysCallCode) {
-			case SYS_EXIT, SYS_EXIT_GROUP -> {
+			case sysExit, sysExitGroup -> {
 				final long exitCode = rf.get(Register64.RDI);
 				logger.info("syscall exit %d encountered", exitCode);
 				state = State.HALTED;
 			}
-			case SYS_ARCH_PRCTL -> handleArchPrctl();
+			case sysArchPrctl -> handleArchPrctl();
+			case sysBrk -> handleBrk();
+			case sysSetTidAddress -> handleSetTidAddress();
+			case sysSetRobustList, sysRseq -> rf.set(Register64.RAX, 0L);
 			default -> throw new IllegalArgumentException(String.format("Unknown syscall code %,d.", sysCallCode));
 		}
 	}
@@ -893,6 +910,25 @@ public class X86Cpu implements X86Emulator {
 			throw new IllegalArgumentException(String.format("Unknown arch_prctl code 0x%x.", code));
 		}
 		rf.set(Register64.RAX, 0L);
+	}
+
+	private void handleBrk() {
+		final long requestedBreak = rf.get(Register64.RDI);
+		if (programBreak == -1L) {
+			// The first `brk` call in a freshly-started process is a query (brk(0)) used by libc to discover
+			// where the heap starts.
+			programBreak = EmulatorConstants.getHeapAddress();
+		}
+		if (requestedBreak > programBreak) {
+			programBreak = requestedBreak;
+		}
+		rf.set(Register64.RAX, programBreak);
+	}
+
+	private void handleSetTidAddress() {
+		// We don't emulate threads (for now), so a fixed dummy thread id is returned, matching a single-threaded
+		// process.
+		rf.set(Register64.RAX, 1L);
 	}
 
 	private void setIf(final Operand operand, final boolean condition) {
@@ -1042,6 +1078,11 @@ public class X86Cpu implements X86Emulator {
 
 	private void op(final Register64 op1, final Register8 op2, final BiFunction<Long, Byte, Long> task) {
 		op(() -> rf.get(op1), () -> rf.get(op2), task, result -> rf.set(op1, result), true);
+	}
+
+	private void op(final Register64 op1, final IndirectOperand io, final BiFunction<Long, Long, Long> task) {
+		final MemoryAddress address = computeIndirectOperand(io);
+		op(() -> rf.get(op1), () -> mem.read8(address), task, result -> rf.set(op1, result), true);
 	}
 
 	@SuppressWarnings("PMD.TooFewBranchesForSwitch")
