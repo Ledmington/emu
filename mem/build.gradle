@@ -1,11 +1,11 @@
 plugins {
 	id 'java-library'
 	id 'info.solidsoft.pitest' version '1.19.0-rc.1'
-    id 'me.champeau.jmh' version '0.7.3'
+	id 'me.champeau.jmh' version '0.7.3'
 }
 
 dependencies {
-    implementation project(':utils')
+	implementation project(':utils')
 }
 
 pitest {
@@ -21,34 +21,34 @@ pitest {
 }
 
 jmh {
-    includes = ['com.ledmington.mem.*'] // include pattern (regular expression) for benchmarks to be executed
-    fork = 2 // How many times to fork a single benchmark. Use 0 to disable forking altogether.
-    failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
-    forceGC = false // Should JMH force GC between iterations?
-    jvmArgs = []
-    resultsFile = project.file("${project.layout.buildDirectory.get()}/reports/jmh/results.txt")
-    resultFormat = 'TEXT'
-    threads = 1
-    verbosity = 'EXTRA'
-    zip64 = true // Use ZIP64 format for bigger archives
-    jmhVersion = '1.37'
-    duplicateClassesStrategy = DuplicatesStrategy.INCLUDE
+	includes = ['com.ledmington.mem.*'] // include pattern (regular expression) for benchmarks to be executed
+	fork = 2 // How many times to fork a single benchmark. Use 0 to disable forking altogether.
+	failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
+	forceGC = false // Should JMH force GC between iterations?
+	jvmArgs = []
+	resultsFile = project.file("${project.layout.buildDirectory.get()}/reports/jmh/results.txt")
+	resultFormat = 'TEXT'
+	threads = 1
+	verbosity = 'EXTRA'
+	zip64 = true // Use ZIP64 format for bigger archives
+	jmhVersion = '1.37'
+	duplicateClassesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 tasks.register("jmhDryRun", JavaExec) {
-    group = "verification"
-    description = "JMH dry-run (runs benchmarks only 1 time)."
-    dependsOn jmhJar
-    mainClass = "-jar"
-    systemProperty "jmh.ignoreLock", "true"
-    args = [
-        tasks.named("jmhJar").get().archiveFile.get().asFile.absolutePath,
-        "com.ledmington.mem.*",
-        "-f", "1",
-        "-wi", "0",
-        "-i", "1",
-        "-rf", "TEXT"
-    ]
+	group = "verification"
+	description = "JMH dry-run (runs benchmarks only 1 time)."
+	dependsOn jmhJar
+	mainClass = "-jar"
+	systemProperty "jmh.ignoreLock", "true"
+	args = [
+		tasks.named("jmhJar").get().archiveFile.get().asFile.absolutePath,
+		"com.ledmington.mem.*",
+		"-f", "1",
+		"-wi", "0",
+		"-i", "1",
+		"-rf", "TEXT"
+	]
 }
 
 tasks.build.dependsOn(jmhJar)
