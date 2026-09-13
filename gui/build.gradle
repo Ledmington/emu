@@ -1,6 +1,6 @@
 plugins {
 	id 'application'
-    id 'org.openjfx.javafxplugin' version '0.1.0'
+	id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 // utility function
@@ -15,11 +15,11 @@ String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "l
 String mainClassName = "${rootProject.basePackage}.view.Launcher"
 
 dependencies {
-    implementation project(':core')
-    implementation project(':elf')
-    implementation project(':id')
-    implementation project(':mem')
-    implementation project(':utils')
+	implementation project(':core')
+	implementation project(':elf')
+	implementation project(':id')
+	implementation project(':mem')
+	implementation project(':utils')
 }
 
 application {

@@ -1,10 +1,10 @@
 plugins {
-    id 'application'
+	id 'application'
 }
 
 // utility function
 static def path(final String ...s) {
-    return String.join(File.separator, s)
+	return String.join(File.separator, s)
 }
 
 String objdumpVersion = "0.1.0"
@@ -14,57 +14,57 @@ String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "l
 String mainClassName = "${rootProject.basePackage}.objdump.Main"
 
 dependencies {
-    implementation project(':id')
-    implementation project(':elf')
-    implementation project(':utils')
+	implementation project(':id')
+	implementation project(':elf')
+	implementation project(':utils')
 }
 
 application {
-    mainClass = mainClassName
+	mainClass = mainClassName
 }
 
 run {
-    args = []
-    jvmArgs = []
+	args = []
+	jvmArgs = []
 }
 
 tasks.register('fatJar', Jar) {
-    group = 'distribution'
-    description = 'Builds the fat jar of the application'
-    from sourceSets.main.output
-    dependsOn configurations.runtimeClasspath
-    from {
-        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
-    }
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    manifest {
-        archiveBaseName = rootProject.appNameLowerCase
-        attributes(
-                "Implementation-Title": "EMU Objdump",
-                "Implementation-Version": "${objdumpVersion}",
-                "Main-Class": "$mainClassName"
-        )
-    }
-    archiveBaseName = "${fatJarBaseName}"
+	group = 'distribution'
+	description = 'Builds the fat jar of the application'
+	from sourceSets.main.output
+	dependsOn configurations.runtimeClasspath
+	from {
+		configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+	}
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+	manifest {
+		archiveBaseName = rootProject.appNameLowerCase
+		attributes(
+				"Implementation-Title": "EMU Objdump",
+				"Implementation-Version": "${objdumpVersion}",
+				"Main-Class": "$mainClassName"
+		)
+	}
+	archiveBaseName = "${fatJarBaseName}"
 
-    doLast {
-        printf "The fat jar is %s\n", fatJarPath
-        printf "Fat jar size: %.3f MB\n", new File(fatJarPath).length() / 1_000_000L
-    }
+	doLast {
+		printf "The fat jar is %s\n", fatJarPath
+		printf "Fat jar size: %.3f MB\n", new File(fatJarPath).length() / 1_000_000L
+	}
 }
 
 tasks.build.dependsOn(fatJar)
 tasks.javadoc.enabled = false
 
 tasks.test {
-    dependsOn fatJar
-    systemProperty 'e2eTestFilesDir', rootProject.file(path('core', 'src', 'test', 'resources', 'generated')).absolutePath
+	dependsOn fatJar
+	systemProperty 'e2eTestFilesDir', rootProject.file(path('core', 'src', 'test', 'resources', 'generated')).absolutePath
 }
 
 tasks.register('checkObjdump', JavaExec) {
-    group = 'verification'
-    description = 'Checks the objdump output against the one provided by the system'
-    dependsOn fatJar
-    classpath sourceSets.test.runtimeClasspath
-    mainClass = 'com.ledmington.objdump.CheckObjdump'
+	group = 'verification'
+	description = 'Checks the objdump output against the one provided by the system'
+	dependsOn fatJar
+	classpath sourceSets.test.runtimeClasspath
+	mainClass = 'com.ledmington.objdump.CheckObjdump'
 }

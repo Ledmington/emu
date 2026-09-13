@@ -14,13 +14,13 @@ String fatJarPath = path("${project.layout.buildDirectory.get().toString()}", "l
 String mainClassName = "${rootProject.basePackage}.emudb.Main"
 
 dependencies {
-    implementation project(':core')
-    implementation project(':elf')
-    implementation project(':mem')
-    implementation project(':id')
-    implementation project(':utils')
+	implementation project(':core')
+	implementation project(':elf')
+	implementation project(':mem')
+	implementation project(':id')
+	implementation project(':utils')
 
-    implementation 'org.jline:jline:3.30.6'
+	implementation 'org.jline:jline:3.30.6'
 }
 
 application {
