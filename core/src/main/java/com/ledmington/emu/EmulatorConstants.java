@@ -36,6 +36,9 @@ public final class EmulatorConstants {
 	/** The default stack address. */
 	private static long baseStackAddress = 0x0000_7fff_ffff_dc50L; // This is the value gdb uses, why?
 
+	/** The default address of the start of the heap, used to answer the initial (query) `brk` syscall. */
+	private static long heapAddress = 0x0000_0000_0080_0000L;
+
 	/** The default stack size (in bytes). */
 	private static long stackSize = 8L * 1024L * 1024L;
 
@@ -137,6 +140,24 @@ public final class EmulatorConstants {
 	 */
 	public static long getBaseStackAddress() {
 		return baseStackAddress;
+	}
+
+	/**
+	 * Sets the default heap address used by the emulator.
+	 *
+	 * @param newHeapAddress The new heap address.
+	 */
+	public static void setHeapAddress(final long newHeapAddress) {
+		heapAddress = newHeapAddress;
+	}
+
+	/**
+	 * Returns the default heap address used by the emulator.
+	 *
+	 * @return the current heap address.
+	 */
+	public static long getHeapAddress() {
+		return heapAddress;
 	}
 
 	/**
