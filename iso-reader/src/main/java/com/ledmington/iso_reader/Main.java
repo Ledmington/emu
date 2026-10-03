@@ -17,8 +17,52 @@
  */
 package com.ledmington.iso_reader;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public final class Main {
 	public static void main(final String[] args) {
-		System.out.println("Hello world!");
+		if (args.length != 1) {
+			System.err.println("Usage: iso-reader <iso_file>");
+			System.exit(1);
+			return;
+		}
+
+		if ("-h".equals(args[0]) || "--help".equals(args[0])) {
+			System.out.println("Usage: iso-reader <iso_file>");
+			System.exit(0);
+			return;
+		}
+
+		final Path input = Path.of(args[0]).normalize().toAbsolutePath();
+		try {
+			System.out.printf("The file '%s' is %,d bytes long.%n", input, Files.size(input));
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		try (final DataInputStream in =
+				new DataInputStream(new BufferedInputStream(new FileInputStream(input.toFile())))) {
+			final byte[] buffer = new byte[32_768];
+			final int bytesRead = in.read(buffer, 0, buffer.length);
+			System.out.printf("Read %,d bytes%n", bytesRead);
+
+			for (int i = 0; i < Math.min(bytesRead, buffer.length); i++) {
+				if (i % 16 == 0) {
+					System.out.printf("0x%06x : ", i);
+				}
+				System.out.printf(" %02x", buffer[i]);
+				if (i % 16 == 15) {
+					System.out.println();
+				}
+			}
+			System.out.println();
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

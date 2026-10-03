@@ -1,6 +1,7 @@
 plugins {
 	id 'java-library'
 	id 'info.solidsoft.pitest' version '1.19.0-rc.1'
+	id 'de.undercouch.download' version '5.6.0'
 }
 
 dependencies {
@@ -17,4 +18,13 @@ pitest {
 	useClasspathFile = true     // useful with bigger projects on Windows
 	verbose = true
 	timestampedReports = false
+}
+
+tasks.register('downloadISO9660Manual', Download) {
+	group = 'utilities'
+	description = 'Downloads the ISO 9660 file format specification in the project root directory'
+	src "https://ecma-international.org/wp-content/uploads/ECMA-119_6th_edition_december_2025.pdf"
+	dest new File(project.getRootDir(), "ISO9660.pdf")
+	overwrite false
+	acceptAnyCertificate true
 }
