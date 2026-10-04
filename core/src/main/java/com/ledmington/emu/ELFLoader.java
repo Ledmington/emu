@@ -50,9 +50,9 @@ import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 import com.ledmington.utils.os.OSUtils;
 
@@ -436,7 +436,7 @@ public final class ELFLoader {
 								+ 2 // auxv[n]
 						);
 
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(true);
+		final BinaryWriter wb = new WriteOnlyByteBufferV1(true);
 		final StringBuilder sb = new StringBuilder();
 
 		if (is32Bit) {

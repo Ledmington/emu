@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** An ELF .init_array section. */
@@ -116,7 +116,7 @@ public final class ConstructorsSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final int wordSize = is32Bit ? 4 : 8;
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * wordSize, isLittleEndian);
+		final BinaryWriter wb = new WriteOnlyByteBufferV1(constructors.length * wordSize, isLittleEndian);
 		for (final long c : constructors) {
 			if (is32Bit) {
 				wb.write(BitUtils.asInt(c));

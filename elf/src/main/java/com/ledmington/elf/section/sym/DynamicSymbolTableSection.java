@@ -23,8 +23,8 @@ import java.util.Objects;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** An ELF .dynsym section. */
@@ -91,8 +91,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb =
-				new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24), isLittleEndian);
+		final BinaryWriter bb = new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24), isLittleEndian);
 		for (final SymbolTableEntry ste : symbolTable) {
 			if (is32Bit) {
 				bb.write(ste.nameOffset());

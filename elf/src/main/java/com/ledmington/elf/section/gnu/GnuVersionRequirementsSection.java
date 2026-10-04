@@ -25,8 +25,8 @@ import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
@@ -158,7 +158,7 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 		for (final GnuVersionRequirementEntry gvre : entries) {
 			bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
 		}
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded, isLittleEndian);
+		final BinaryWriter wb = new WriteOnlyByteBufferV1(bytesNeeded, isLittleEndian);
 		for (final GnuVersionRequirementEntry gvre : entries) {
 			wb.write(gvre.getVersion());
 			wb.write(gvre.getCount());

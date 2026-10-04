@@ -24,7 +24,7 @@ import java.util.stream.IntStream;
 
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.utils.BinaryReader;
-import com.ledmington.utils.WriteOnlyByteBuffer;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** An ELF section with type SHT_NOTE (.note*). */
@@ -96,7 +96,7 @@ public interface NoteSection extends LoadableSection {
 	@Override
 	default byte[] getLoadableContent() {
 		final int numEntries = getNumEntries();
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(IntStream.range(0, numEntries)
+		final BinaryWriter bb = new WriteOnlyByteBufferV1(IntStream.range(0, numEntries)
 				.map(i -> getEntry(i).getAlignedSize())
 				.sum());
 		int runningTotal = 0;

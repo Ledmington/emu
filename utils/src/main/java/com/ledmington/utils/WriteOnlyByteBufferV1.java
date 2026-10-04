@@ -20,7 +20,7 @@ package com.ledmington.utils;
 import java.util.Arrays;
 
 /** A ByteBuffer which allows only write operations and automatically resizes itself. */
-public final class WriteOnlyByteBufferV1 implements WriteOnlyByteBuffer {
+public final class WriteOnlyByteBufferV1 implements BinaryWriter {
 
 	private static final int DEFAULT_CAPACITY = 16;
 

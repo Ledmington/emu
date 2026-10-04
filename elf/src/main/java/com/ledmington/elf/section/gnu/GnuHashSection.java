@@ -23,8 +23,8 @@ import java.util.Objects;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
@@ -196,7 +196,7 @@ public final class GnuHashSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(
+		final BinaryWriter bb = new WriteOnlyByteBufferV1(
 				4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4, isLittleEndian);
 		bb.write(buckets.length);
 		bb.write(symIndex);

@@ -17,8 +17,8 @@
  */
 package com.ledmington.utils;
 
-/** An interface for a ByteBuffer which allows only write operations. */
-public interface WriteOnlyByteBuffer {
+/** A common interface for writing binary values to a sink. */
+public interface BinaryWriter {
 
 	/**
 	 * Writes the given byte at the current address.
@@ -42,7 +42,7 @@ public interface WriteOnlyByteBuffer {
 	void write(int x);
 
 	/**
-	 * Writes the fiven long with the current endianness at the current position.
+	 * Writes the given long with the current endianness at the current position.
 	 *
 	 * @param x The 8-byte value to be written.
 	 */

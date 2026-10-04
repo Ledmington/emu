@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Objects;
 
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** An ELF .dynamic section. */
@@ -100,8 +100,7 @@ public final class DynamicSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb =
-				new WriteOnlyByteBufferV1(dynamicTable.length * (is32Bit ? 8 : 16), isLittleEndian);
+		final BinaryWriter bb = new WriteOnlyByteBufferV1(dynamicTable.length * (is32Bit ? 8 : 16), isLittleEndian);
 		for (final DynamicTableEntry dynamicTableEntry : dynamicTable) {
 			if (is32Bit) {
 				bb.write(BitUtils.asInt(dynamicTableEntry.getTag().getCode()));

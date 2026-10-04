@@ -23,8 +23,8 @@ import java.util.Objects;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /**
@@ -101,7 +101,7 @@ public final class GnuVersionSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(versions.length * 2, isLittleEndian);
+		final BinaryWriter bb = new WriteOnlyByteBufferV1(versions.length * 2, isLittleEndian);
 		for (final short version : versions) {
 			bb.write(version);
 		}
