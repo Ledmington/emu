@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import com.ledmington.elf.section.LoadableSection;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
@@ -38,7 +38,7 @@ public interface NoteSection extends LoadableSection {
 	 * @return A non-null array of NoteSectionEntry.
 	 */
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-	static NoteSectionEntry[] loadNoteSectionEntries(final ReadOnlyByteBuffer b, final long length) {
+	static NoteSectionEntry[] loadNoteSectionEntries(final BinaryReader b, final long length) {
 		final long start = b.getPosition();
 		final List<NoteSectionEntry> entries = new ArrayList<>();
 

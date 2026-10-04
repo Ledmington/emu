@@ -20,7 +20,7 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** An ELF String table section. */
 public final class StringTableSection implements LoadableSection {
@@ -36,7 +36,7 @@ public final class StringTableSection implements LoadableSection {
 	 * @param header The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public StringTableSection(final String name, final SectionHeader header, final ReadOnlyByteBuffer b) {
+	public StringTableSection(final String name, final SectionHeader header, final BinaryReader b) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(header);
 

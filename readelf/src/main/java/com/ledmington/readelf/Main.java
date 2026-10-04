@@ -63,9 +63,9 @@ import com.ledmington.elf.section.sym.DynamicSymbolTableSection;
 import com.ledmington.elf.section.sym.SymbolTable;
 import com.ledmington.elf.section.sym.SymbolTableEntry;
 import com.ledmington.elf.section.sym.SymbolTableSection;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
@@ -454,7 +454,7 @@ public final class Main {
 	}
 
 	private static void printStringDumpOfSection(final String filename, final ELF elf, final String sectionName) {
-		final ReadOnlyByteBuffer b;
+		final BinaryReader b;
 		try {
 			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
@@ -472,7 +472,7 @@ public final class Main {
 	}
 
 	private static void printStringDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
-		final ReadOnlyByteBuffer b;
+		final BinaryReader b;
 		try {
 			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
@@ -486,7 +486,7 @@ public final class Main {
 		return x >= 32 && x < 127;
 	}
 
-	private static void printStringDump(final ReadOnlyByteBuffer b, final Section s) {
+	private static void printStringDump(final BinaryReader b, final Section s) {
 		out.printf("%nString dump of section '%s':%n", s.getName());
 		final long start = s.header().getFileOffset();
 		b.setPosition(start);
@@ -512,7 +512,7 @@ public final class Main {
 	}
 
 	private static void printHexDumpOfSection(final String filename, final ELF elf, final String sectionName) {
-		final ReadOnlyByteBuffer b;
+		final BinaryReader b;
 		try {
 			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
@@ -530,7 +530,7 @@ public final class Main {
 	}
 
 	private static void printHexDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
-		final ReadOnlyByteBuffer b;
+		final BinaryReader b;
 		try {
 			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
@@ -539,7 +539,7 @@ public final class Main {
 		printHexDump(b, elf.getSection(sectionIndex));
 	}
 
-	private static void printHexDump(final ReadOnlyByteBuffer b, final Section s) {
+	private static void printHexDump(final BinaryReader b, final Section s) {
 		out.printf("%nHex dump of section '%s':%n", s.getName());
 		final long start = s.header().getFileOffset();
 		b.setPosition(start);
@@ -1012,7 +1012,7 @@ public final class Main {
 	}
 
 	private static void printSystemtapProperties(final NoteSectionEntry nse) {
-		final ReadOnlyByteBuffer robb = new ReadOnlyByteBuffer() {
+		final BinaryReader robb = new BinaryReader() {
 
 			private long k = 0;
 
@@ -1101,7 +1101,7 @@ public final class Main {
 
 		out.print("      Properties: ");
 
-		final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true, 1L);
+		final BinaryReader robb = new ReadOnlyByteBufferV1(v, true, 1L);
 		final long start = robb.getPosition();
 		while (robb.getPosition() < BitUtils.asLong(nse.getDescriptionLength())) {
 			if (wide && robb.getPosition() > start) {
@@ -1132,7 +1132,7 @@ public final class Main {
 	}
 
 	private static void printGNUPropertiesX86(
-			final ReadOnlyByteBuffer robb,
+			final BinaryReader robb,
 			final int datasz,
 			final String header,
 			final Function<Integer, List<GnuPropertyType>> decoder) {
@@ -1163,7 +1163,7 @@ public final class Main {
 		for (int i = 0; i < v.length; i++) {
 			v[i] = nse.getDescriptionByte(i);
 		}
-		final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(v, true);
+		final BinaryReader robb = new ReadOnlyByteBufferV1(v, true);
 		final int osCode = robb.read4();
 		out.printf(
 				"    OS: %s, ABI: %d.%d.%d%n",
@@ -1500,7 +1500,7 @@ public final class Main {
 	private static void printFileHeader(final String filename, final ELF elf) {
 		out.println("ELF Header:");
 		{
-			final ReadOnlyByteBuffer bb;
+			final BinaryReader bb;
 			try {
 				bb = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
 			} catch (IOException e) {

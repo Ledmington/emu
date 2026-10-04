@@ -21,10 +21,10 @@ import java.util.Objects;
 
 import com.ledmington.mem.Memory;
 import com.ledmington.mem.MemoryAddress;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.SuppressFBWarnings;
 
-public final class MemoryByteBuffer implements ReadOnlyByteBuffer {
+public final class MemoryByteBuffer implements BinaryReader {
 
 	private long position;
 	private final Memory memory;

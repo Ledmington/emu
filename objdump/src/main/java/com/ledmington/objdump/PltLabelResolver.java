@@ -27,7 +27,7 @@ import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.Section;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
@@ -56,7 +56,7 @@ final class PltLabelResolver {
 			final byte[] content = ls.getLoadableContent();
 			// A new buffer is unavoidably needed for every PLT-like section being scanned.
 			@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-			final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(content, true, 1L);
+			final BinaryReader b = new ReadOnlyByteBufferV1(content, true, 1L);
 			while (b.getPosition() < content.length) {
 				final long instructionStart = b.getPosition();
 				final Instruction inst;

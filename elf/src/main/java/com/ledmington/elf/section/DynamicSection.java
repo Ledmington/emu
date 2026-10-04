@@ -22,8 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
@@ -45,7 +45,7 @@ public final class DynamicSection implements LoadableSection {
 	 * @param is32Bit Used for alignment.
 	 */
 	public DynamicSection(
-			final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+			final String name, final SectionHeader sectionHeader, final BinaryReader b, final boolean is32Bit) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;

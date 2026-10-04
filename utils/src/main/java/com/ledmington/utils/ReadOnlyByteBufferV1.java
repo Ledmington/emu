@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /** A buffer which allows reading with endianness. This implementation uses a byte array. */
-public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
+public final class ReadOnlyByteBufferV1 implements BinaryReader {
 
 	private final byte[] b;
 	private long position;

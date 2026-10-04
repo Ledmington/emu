@@ -32,8 +32,8 @@ import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.elf.SectionTable;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.Section;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /** Prints the disassembly of a single executable section of an ELF file, in the style of GNU objdump. */
@@ -68,7 +68,7 @@ final class Disassembler {
 		}
 
 		final byte[] content = ((LoadableSection) s).getLoadableContent();
-		final ReadOnlyByteBuffer b = new ReadOnlyByteBufferV1(content, true, 1L);
+		final BinaryReader b = new ReadOnlyByteBufferV1(content, true, 1L);
 		while (b.getPosition() < content.length) {
 			final long currentPosition = startOfSection + b.getPosition();
 

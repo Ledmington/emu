@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** A .note.stapsdt ELF section. */
 public final class SystemtapUSDTSection implements NoteSection {
@@ -35,7 +35,7 @@ public final class SystemtapUSDTSection implements NoteSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public SystemtapUSDTSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public SystemtapUSDTSection(final SectionHeader sectionHeader, final BinaryReader b) {
 		this.header = Objects.requireNonNull(sectionHeader);
 
 		b.setPosition(sectionHeader.getFileOffset());

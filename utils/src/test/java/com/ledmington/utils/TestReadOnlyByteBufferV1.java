@@ -52,14 +52,14 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(ints = {-99, -1, 0, 3, 99})
 	void invalidSetAlignment(final int alignment) {
-		final ReadOnlyByteBuffer robb = new ReadOnlyByteBufferV1(new byte[0]);
+		final BinaryReader robb = new ReadOnlyByteBufferV1(new byte[0]);
 		assertThrows(IllegalArgumentException.class, () -> robb.setAlignment(alignment));
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = {false, true})
 	void bytes(final boolean endianness) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, endianness);
 		final ByteBuffer ref = ByteBuffer.wrap(arr);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < arr.length; i++) {
@@ -77,7 +77,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(booleans = {false, true})
 	void words(final boolean endianness) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, endianness);
 		final ByteBuffer ref = ByteBuffer.wrap(arr);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < arr.length; i += 2) {
@@ -91,7 +91,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(booleans = {false, true})
 	void doubleWords(final boolean endianness) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, endianness);
 		final ByteBuffer ref = ByteBuffer.wrap(arr);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < arr.length; i += 4) {
@@ -105,7 +105,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(booleans = {false, true})
 	void quadWords(final boolean endianness) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, endianness);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, endianness);
 		final ByteBuffer ref = ByteBuffer.wrap(arr);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < arr.length; i += 8) {
@@ -121,7 +121,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(ints = {1, 2, 4, 8})
 	void byteAlignment(final int alignment) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, false, alignment);
 		while (bb.getPosition() < arr.length) {
 			final long start = bb.getPosition();
 			bb.read1();
@@ -138,7 +138,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(ints = {1, 2, 4, 8})
 	void wordAlignment(final int alignment) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, false, alignment);
 		while (bb.getPosition() + 1 < arr.length) {
 			final long start = bb.getPosition();
 			bb.read2();
@@ -155,7 +155,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(ints = {1, 2, 4, 8})
 	void doubleWordAlignment(final int alignment) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, false, alignment);
 		while (bb.getPosition() + 3 < arr.length) {
 			final long start = bb.getPosition();
 			bb.read4();
@@ -172,7 +172,7 @@ final class TestReadOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(ints = {1, 2, 4, 8})
 	void quadWordAlignment(final int alignment) {
-		final ReadOnlyByteBuffer bb = new ReadOnlyByteBufferV1(arr, false, alignment);
+		final BinaryReader bb = new ReadOnlyByteBufferV1(arr, false, alignment);
 		while (bb.getPosition() + 7 < arr.length) {
 			final long start = bb.getPosition();
 			bb.read8();

@@ -18,10 +18,10 @@
 package com.ledmington.utils;
 
 /**
- * An interface for a ByteBuffer which allows only read operations. Most methods are already implemented which call on
- * the {@link #read()}, {@link #getPosition()} and {@link #setPosition(long)} methods.
+ * A common interface for reading binary values from a source. Most methods are already implemented which call on the
+ * {@link #read()}, {@link #getPosition()} and {@link #setPosition(long)} methods.
  */
-public interface ReadOnlyByteBuffer {
+public interface BinaryReader {
 
 	/**
 	 * Returns the current endianness.
@@ -38,13 +38,6 @@ public interface ReadOnlyByteBuffer {
 	void setEndianness(boolean isLittleEndian);
 
 	/**
-	 * Sets the given alignment to be used while reading.
-	 *
-	 * @param newAlignment The new alignment.
-	 */
-	void setAlignment(long newAlignment);
-
-	/**
 	 * Returns the current alignment.
 	 *
 	 * @return The number of bytes to align to.
@@ -52,21 +45,28 @@ public interface ReadOnlyByteBuffer {
 	long getAlignment();
 
 	/**
-	 * Changes the position in the buffer.
+	 * Sets the given alignment to be used while reading.
 	 *
-	 * @param newPosition The new position in the buffer.
+	 * @param newAlignment The new alignment.
+	 */
+	void setAlignment(long newAlignment);
+
+	/**
+	 * Changes the position in the binary source.
+	 *
+	 * @param newPosition The new position in the binary source.
 	 */
 	void setPosition(long newPosition);
 
 	/**
-	 * Returns the current position in the buffer.
+	 * Returns the current position in the binary source.
 	 *
-	 * @return The current position in the buffer.
+	 * @return The current position in the binary source.
 	 */
 	long getPosition();
 
 	/**
-	 * Reads 1 byte from the buffer.
+	 * Reads 1 byte from the binary source.
 	 *
 	 * @return The byte read.
 	 */

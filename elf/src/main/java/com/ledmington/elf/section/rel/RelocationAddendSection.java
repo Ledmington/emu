@@ -23,8 +23,8 @@ import java.util.Objects;
 import com.ledmington.elf.ISA;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
@@ -49,7 +49,7 @@ public final class RelocationAddendSection implements LoadableSection {
 	public RelocationAddendSection(
 			final String name,
 			final SectionHeader sectionHeader,
-			final ReadOnlyByteBuffer b,
+			final BinaryReader b,
 			final boolean is32Bit,
 			final ISA isa) {
 		this.name = Objects.requireNonNull(name);

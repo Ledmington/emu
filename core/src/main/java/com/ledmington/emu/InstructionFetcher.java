@@ -22,11 +22,11 @@ import java.util.Objects;
 import com.ledmington.cpu.x86.Register64;
 import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.SuppressFBWarnings;
 
 /** A class which represents the part of the emulated CPU which reads instructions from memory during execution. */
-public final class InstructionFetcher implements ReadOnlyByteBuffer {
+public final class InstructionFetcher implements BinaryReader {
 
 	private final MemoryController mem;
 	private final RegisterFile regFile;

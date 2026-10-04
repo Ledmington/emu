@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** An ELF symbol table section. */
 public final class SymbolTableSection implements SymbolTable {
@@ -39,7 +39,7 @@ public final class SymbolTableSection implements SymbolTable {
 	 * @param is32Bit Used for byte alignment.
 	 */
 	public SymbolTableSection(
-			final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+			final String name, final SectionHeader sectionHeader, final BinaryReader b, final boolean is32Bit) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 

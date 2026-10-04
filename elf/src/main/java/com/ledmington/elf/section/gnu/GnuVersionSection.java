@@ -22,8 +22,8 @@ import java.util.Objects;
 
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
@@ -56,7 +56,7 @@ public final class GnuVersionSection implements LoadableSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read the contents from.
 	 */
-	public GnuVersionSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public GnuVersionSection(final SectionHeader sectionHeader, final BinaryReader b) {
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.isLittleEndian = b.isLittleEndian();
 

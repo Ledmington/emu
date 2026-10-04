@@ -20,7 +20,7 @@ package com.ledmington.elf.section;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** The .interp ELF section. */
 public final class InterpreterPathSection implements ProgBitsSection {
@@ -34,7 +34,7 @@ public final class InterpreterPathSection implements ProgBitsSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public InterpreterPathSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public InterpreterPathSection(final SectionHeader sectionHeader, final BinaryReader b) {
 		this.header = Objects.requireNonNull(sectionHeader);
 
 		b.setPosition(sectionHeader.getFileOffset());

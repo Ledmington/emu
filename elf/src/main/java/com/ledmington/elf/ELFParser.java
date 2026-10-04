@@ -52,9 +52,9 @@ import com.ledmington.elf.section.rel.RelocationAddendSection;
 import com.ledmington.elf.section.rel.RelocationSection;
 import com.ledmington.elf.section.sym.DynamicSymbolTableSection;
 import com.ledmington.elf.section.sym.SymbolTableSection;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /** A parser of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
@@ -62,7 +62,7 @@ public final class ELFParser {
 
 	private static final MiniLogger logger = MiniLogger.getLogger("elf-parser");
 
-	private static ReadOnlyByteBuffer b;
+	private static BinaryReader b;
 
 	private ELFParser() {}
 

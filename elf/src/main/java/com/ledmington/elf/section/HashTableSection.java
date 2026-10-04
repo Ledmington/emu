@@ -20,8 +20,8 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBuffer;
 import com.ledmington.utils.WriteOnlyByteBufferV1;
 
@@ -46,7 +46,7 @@ public final class HashTableSection implements LoadableSection {
 	 * @param sectionHeader The header of the section.
 	 * @param b The buffer to read data from.
 	 */
-	public HashTableSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public HashTableSection(final String name, final SectionHeader sectionHeader, final BinaryReader b) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.isLittleEndian = b.isLittleEndian();
