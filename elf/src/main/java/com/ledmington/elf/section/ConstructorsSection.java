@@ -20,10 +20,10 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /** An ELF .init_array section. */
 public final class ConstructorsSection implements LoadableSection {
@@ -39,14 +39,14 @@ public final class ConstructorsSection implements LoadableSection {
 	 *
 	 * @param name The name of this section.
 	 * @param sectionHeader The header of this section.
-	 * @param b The {@link ReadOnlyByteBuffer} to read data from.
+	 * @param b The {@link BinaryReader} to read data from.
 	 * @param dynamicSection The dynamic section of the current executable to retrieve the DT_INIT_ARRAYSZ entry.
 	 * @param is32Bit Used for alignment.
 	 */
 	public ConstructorsSection(
 			final String name,
 			final SectionHeader sectionHeader,
-			final ReadOnlyByteBuffer b,
+			final BinaryReader b,
 			final DynamicSection dynamicSection,
 			final boolean is32Bit) {
 		this.name = Objects.requireNonNull(name);
@@ -116,7 +116,7 @@ public final class ConstructorsSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final int wordSize = is32Bit ? 4 : 8;
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(constructors.length * wordSize, isLittleEndian);
+		final BinaryWriter wb = new InMemoryArrayWriter(constructors.length * wordSize, isLittleEndian);
 		for (final long c : constructors) {
 			if (is32Bit) {
 				wb.write(BitUtils.asInt(c));

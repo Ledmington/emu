@@ -19,8 +19,8 @@ package com.ledmington.elf.section.gnu;
 
 import java.util.Arrays;
 
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
  * An entry of the .gnu.version_r section. Usually this structure is called Elfxx_Verneed in the ELF documentation.
@@ -41,7 +41,7 @@ public final class GnuVersionRequirementEntry {
 	 *
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public GnuVersionRequirementEntry(final ReadOnlyByteBuffer b) {
+	public GnuVersionRequirementEntry(final BinaryReader b) {
 		final long start = b.getPosition();
 
 		this.version = b.read2();

@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** The ELF note section containing the GNU Gold linker version used. */
 public final class GnuGoldVersion implements NoteSection {
@@ -35,7 +35,7 @@ public final class GnuGoldVersion implements NoteSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public GnuGoldVersion(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public GnuGoldVersion(final SectionHeader sectionHeader, final BinaryReader b) {
 		this.header = Objects.requireNonNull(sectionHeader);
 
 		if (header.getEntrySize() != 0) {

@@ -76,9 +76,9 @@ import com.ledmington.cpu.x86.exc.InvalidLegacyOpcode;
 import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.InMemoryArrayReader;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
@@ -425,7 +425,7 @@ public final class InstructionDecoder {
 	 */
 	public static List<Instruction> fromHex(
 			final byte[] bytes, final int nBytesToDecode, final boolean checkInstructions) {
-		return fromHex(new ReadOnlyByteBufferV1(bytes, true, 1), nBytesToDecode, checkInstructions);
+		return fromHex(new InMemoryArrayReader(bytes, true, 1), nBytesToDecode, checkInstructions);
 	}
 
 	/**
@@ -437,7 +437,7 @@ public final class InstructionDecoder {
 	 * @return The list of decoded instructions.
 	 */
 	public static List<Instruction> fromHex(
-			final ReadOnlyByteBuffer b, final int nBytesToDecode, final boolean checkInstructions) {
+			final BinaryReader b, final int nBytesToDecode, final boolean checkInstructions) {
 		if (nBytesToDecode < 0) {
 			throw new IllegalArgumentException(String.format("Negative bytes: %,d.", nBytesToDecode));
 		}
@@ -474,7 +474,7 @@ public final class InstructionDecoder {
 	 * @param b The buffer to read bytes from.
 	 * @return The decoded instruction.
 	 */
-	public static Instruction fromHex(final ReadOnlyByteBuffer b) {
+	public static Instruction fromHex(final BinaryReader b) {
 		Objects.requireNonNull(b);
 		final Prefixes pref = parsePrefixes(b);
 
@@ -541,7 +541,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup4(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
 
 		final ModRM modrm = new ModRM(opcodeSecondByte);
@@ -564,7 +564,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup5(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
 
 		final ModRM modrm = new ModRM(opcodeSecondByte);
@@ -692,7 +692,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup3(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
 
 		final ModRM modrm = new ModRM(opcodeSecondByte);
@@ -815,7 +815,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup11(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
 		final ModRM modrm = new ModRM(opcodeSecondByte);
 
@@ -857,7 +857,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup2(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
 
 		final ModRM modrm = new ModRM(opcodeSecondByte);
@@ -897,7 +897,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup1(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte opcodeSecondByte = b.read1();
 
 		final ModRM modrm = new ModRM(opcodeSecondByte);
@@ -994,7 +994,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup7(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final ModRM modrm = modrm(b);
 
 		final boolean hasRepPrefix = pref.p1().isPresent() && pref.p1().orElseThrow() == LegacyPrefix.REP;
@@ -1035,7 +1035,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup16(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final ModRM modrm = modrm(b);
 
 		if (!isIndirectOperandNeeded(modrm)) {
@@ -1058,7 +1058,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup8(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final ModRM modrm = modrm(b);
 
 		final Opcode opcode =
@@ -1083,7 +1083,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup12(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte) {
 		final ModRM modrm = modrm(b);
 
 		if (isIndirectOperandNeeded(modrm)) {
@@ -1104,7 +1104,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup13(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte) {
 		final ModRM modrm = modrm(b);
 
 		if (isIndirectOperandNeeded(modrm)) {
@@ -1125,7 +1125,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup14(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final ModRM modrm = modrm(b);
 
 		if (isIndirectOperandNeeded(modrm)) {
@@ -1160,7 +1160,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Operand getXMMArgument(
-			final ReadOnlyByteBuffer b, final ModRM modrm, final Prefixes pref, final byte r2Byte) {
+			final BinaryReader b, final ModRM modrm, final Prefixes pref, final byte r2Byte) {
 		return isIndirectOperandNeeded(modrm)
 				? parseIndirectOperand(b, pref, modrm)
 						.pointer(PointerSize.XMMWORD_PTR)
@@ -1195,7 +1195,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parse2BytesOpcode(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte SLDT_OPCODE = (byte) 0x00;
 		final byte GROUP7_OPCODE = (byte) 0x01;
 		final byte SYSCALL_OPCODE = (byte) 0x05;
@@ -2476,7 +2476,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseTableA4(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final byte PSHUFB_OPCODE = (byte) 0x00;
 		final byte PMINUD_OPCODE = (byte) 0x3b;
 		final byte MOVBE_OPCODE = (byte) 0xf0;
@@ -2515,7 +2515,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseTableA5(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final byte PALIGNR_OPCODE = (byte) 0x0f;
 		final byte PCMPISTRI_OPCODE = (byte) 0x63;
 
@@ -2552,7 +2552,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup15(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final ModRM modrm = modrm(b);
 
 		if (isIndirectOperandNeeded(modrm)) {
@@ -2603,7 +2603,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseExtendedOpcodeGroup9(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final byte opcodeSecondByte, final Prefixes pref) {
 		final ModRM modrm = modrm(b);
 
 		if (isIndirectOperandNeeded(modrm)) {
@@ -2649,7 +2649,7 @@ public final class InstructionDecoder {
 	}
 
 	private static Instruction parseSingleByteOpcode(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+			final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte OPCODE_REG_MASK = 0b00000111;
 
 		final byte ADD_M8_R8_OPCODE = (byte) 0x00;
@@ -4394,8 +4394,7 @@ public final class InstructionDecoder {
 		return and(not(prefix.v()), (byte) 0b00001111);
 	}
 
-	private static Instruction parseVex2Opcodes(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+	private static Instruction parseVex2Opcodes(final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte KUNPCKBW_OPCODE = (byte) 0x4b;
 		final byte VPCMPGTB_OPCODE = (byte) 0x64;
 		final byte VMOVD_OPCODE = (byte) 0x6e;
@@ -4687,8 +4686,7 @@ public final class InstructionDecoder {
 		};
 	}
 
-	private static Instruction parseVex3Opcodes(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+	private static Instruction parseVex3Opcodes(final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VPSHUFB_OPCODE = (byte) 0x00;
 		final byte VPALIGNR_OPCODE = (byte) 0x0f;
 		final byte VPCMPGTB_OPCODE = (byte) 0x64;
@@ -5111,8 +5109,7 @@ public final class InstructionDecoder {
 		};
 	}
 
-	private static Instruction parseEvexOpcodes(
-			final ReadOnlyByteBuffer b, final byte opcodeFirstByte, final Prefixes pref) {
+	private static Instruction parseEvexOpcodes(final BinaryReader b, final byte opcodeFirstByte, final Prefixes pref) {
 		final byte VMOVUPS_R512_M512_OPCODE = (byte) 0x10;
 		final byte VMOVUPS_M512_R512_OPCODE = (byte) 0x11;
 		final byte VBROADCASTSS_OPCODE = (byte) 0x18;
@@ -5625,7 +5622,7 @@ public final class InstructionDecoder {
 		throw new IllegalArgumentException("Invalid value.");
 	}
 
-	private static Prefixes parsePrefixes(final ReadOnlyByteBuffer b) {
+	private static Prefixes parsePrefixes(final BinaryReader b) {
 		Optional<LegacyPrefix> p1 = Optional.empty(); // Legacy Prefix Group 1
 		Optional<Byte> p2 = Optional.empty(); // Legacy Prefix Group 2
 		boolean hasOperandSizeOverridePrefix = false;
@@ -5722,7 +5719,7 @@ public final class InstructionDecoder {
 	}
 
 	/** Parses an instruction like OP IndirectXX,RXX (where XX can be 16, 32 or 64) */
-	private static Instruction parseMxRx(final ReadOnlyByteBuffer b, final Prefixes pref, final Opcode opcode) {
+	private static Instruction parseMxRx(final BinaryReader b, final Prefixes pref, final Opcode opcode) {
 		final ModRM modrm = modrm(b);
 		final Register r2 = Registers.fromCode(
 				modrm.reg(),
@@ -5749,7 +5746,7 @@ public final class InstructionDecoder {
 	}
 
 	/** Parses an instruction like OP RXX,IndirectXX (where XX can be 16, 32 or 64) */
-	private static Instruction parseRxMx(final ReadOnlyByteBuffer b, final Prefixes pref, final Opcode opcode) {
+	private static Instruction parseRxMx(final BinaryReader b, final Prefixes pref, final Opcode opcode) {
 		final ModRM modrm = modrm(b);
 		final boolean isIndirectOperandNeeded = isIndirectOperandNeeded(modrm);
 		final Register r1 = Registers.fromCode(
@@ -5785,7 +5782,7 @@ public final class InstructionDecoder {
 	}
 
 	private static IndirectOperandBuilder parseIndirectOperand(
-			final ReadOnlyByteBuffer b, final Prefixes pref, final ModRM modrm) {
+			final BinaryReader b, final Prefixes pref, final ModRM modrm) {
 		final boolean baseRegisterExtension = (pref.hasRexPrefix() && pref.rex().hasSIBBaseExtension())
 				|| (pref.vex3().isPresent() && !pref.vex3().orElseThrow().b())
 				|| (pref.evex().isPresent() && !pref.evex().orElseThrow().b());
@@ -5848,29 +5845,29 @@ public final class InstructionDecoder {
 		return iob;
 	}
 
-	private static ModRM modrm(final ReadOnlyByteBuffer b) {
+	private static ModRM modrm(final BinaryReader b) {
 		final byte m = b.read1();
 		return new ModRM(m);
 	}
 
-	private static SIB sib(final ReadOnlyByteBuffer b) {
+	private static SIB sib(final BinaryReader b) {
 		final byte s = b.read1();
 		return new SIB(s);
 	}
 
-	private static Immediate imm8(final ReadOnlyByteBuffer b) {
+	private static Immediate imm8(final BinaryReader b) {
 		return new Immediate(b.read1());
 	}
 
-	private static Immediate imm16(final ReadOnlyByteBuffer b) {
+	private static Immediate imm16(final BinaryReader b) {
 		return new Immediate(b.read2LE());
 	}
 
-	private static Immediate imm32(final ReadOnlyByteBuffer b) {
+	private static Immediate imm32(final BinaryReader b) {
 		return new Immediate(b.read4LE());
 	}
 
-	private static Immediate imm64(final ReadOnlyByteBuffer b) {
+	private static Immediate imm64(final BinaryReader b) {
 		return new Immediate(b.read8LE());
 	}
 

@@ -24,10 +24,10 @@ import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * The .gnu.version_d ELF section.
@@ -60,7 +60,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 	 * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_VERDEFNUM from.
 	 */
 	public GnuVersionDefinitionSection(
-			final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
+			final SectionHeader sectionHeader, final BinaryReader b, final DynamicSection dynamicSection) {
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.isLittleEndian = b.isLittleEndian();
 
@@ -105,7 +105,7 @@ public final class GnuVersionDefinitionSection implements LoadableSection {
 		for (final GnuVersionDefinitionEntry gvre : entries) {
 			bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
 		}
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded, isLittleEndian);
+		final BinaryWriter wb = new InMemoryArrayWriter(bytesNeeded, isLittleEndian);
 		for (final GnuVersionDefinitionEntry gvre : entries) {
 			wb.write(gvre.getVersion());
 			wb.write(gvre.getFlags());

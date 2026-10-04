@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** The .note.gnu.build-id ELF section. */
 public final class GnuBuildIDSection implements NoteSection {
@@ -35,7 +35,7 @@ public final class GnuBuildIDSection implements NoteSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public GnuBuildIDSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public GnuBuildIDSection(final SectionHeader sectionHeader, final BinaryReader b) {
 		this.header = Objects.requireNonNull(sectionHeader);
 
 		if (header.getEntrySize() != 0) {

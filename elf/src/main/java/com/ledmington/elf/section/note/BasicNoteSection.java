@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** Implementation of a "non-special" {@code .note*} ELF section. */
 public final class BasicNoteSection implements NoteSection {
@@ -40,7 +40,7 @@ public final class BasicNoteSection implements NoteSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The buffer to read bytes from.
 	 */
-	public BasicNoteSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public BasicNoteSection(final String name, final SectionHeader sectionHeader, final BinaryReader b) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 

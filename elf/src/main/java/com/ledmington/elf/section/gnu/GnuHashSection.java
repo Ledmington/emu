@@ -22,10 +22,10 @@ import java.util.Objects;
 
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * A GNU-style hash table ELF section. A useful reference can be found <a href=
@@ -52,7 +52,7 @@ public final class GnuHashSection implements LoadableSection {
 	 * @param is32Bit Used for alignment.
 	 */
 	public GnuHashSection(
-			final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+			final String name, final SectionHeader sectionHeader, final BinaryReader b, final boolean is32Bit) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
@@ -196,7 +196,7 @@ public final class GnuHashSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(
+		final BinaryWriter bb = new InMemoryArrayWriter(
 				4 + 4 + 4 + 4 + bloom.length * (is32Bit ? 4 : 8) + buckets.length * 4, isLittleEndian);
 		bb.write(buckets.length);
 		bb.write(symIndex);

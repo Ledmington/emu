@@ -29,7 +29,7 @@ import java.util.random.RandomGeneratorFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-final class TestWriteOnlyByteBufferV1 {
+final class TestInMemoryArrayWriter {
 
 	private static final RandomGenerator rng =
 			RandomGeneratorFactory.getDefault().create(42);
@@ -38,7 +38,7 @@ final class TestWriteOnlyByteBufferV1 {
 	@ValueSource(booleans = {false, true})
 	void bytes(final boolean endianness) {
 		final int length = 200;
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final BinaryWriter bb = new InMemoryArrayWriter(length, endianness);
 		final ByteBuffer ref = ByteBuffer.allocate(length);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < length; i++) {
@@ -58,7 +58,7 @@ final class TestWriteOnlyByteBufferV1 {
 	@ValueSource(booleans = {false, true})
 	void words(final boolean endianness) {
 		final int length = 200;
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final BinaryWriter bb = new InMemoryArrayWriter(length, endianness);
 		final ByteBuffer ref = ByteBuffer.allocate(length);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < length; i += 2) {
@@ -78,7 +78,7 @@ final class TestWriteOnlyByteBufferV1 {
 	@ValueSource(booleans = {false, true})
 	void doubleWords(final boolean endianness) {
 		final int length = 200;
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final BinaryWriter bb = new InMemoryArrayWriter(length, endianness);
 		final ByteBuffer ref = ByteBuffer.allocate(length);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < length; i += 4) {
@@ -98,7 +98,7 @@ final class TestWriteOnlyByteBufferV1 {
 	@ValueSource(booleans = {false, true})
 	void quadWords(final boolean endianness) {
 		final int length = 200;
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length, endianness);
+		final BinaryWriter bb = new InMemoryArrayWriter(length, endianness);
 		final ByteBuffer ref = ByteBuffer.allocate(length);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 		for (int i = 0; i < length; i += 8) {
@@ -117,7 +117,7 @@ final class TestWriteOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
 	void getPositionAfterNWrites(final int length) {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(length);
+		final BinaryWriter bb = new InMemoryArrayWriter(length);
 		for (int i = 0; i < length; i++) {
 			bb.write(BitUtils.asByte(i));
 		}
@@ -132,7 +132,7 @@ final class TestWriteOnlyByteBufferV1 {
 	@ParameterizedTest
 	@ValueSource(booleans = {false, true})
 	void writeAfterSetPositionOverwrites(final boolean endianness) {
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(0, endianness);
+		final BinaryWriter bb = new InMemoryArrayWriter(0, endianness);
 		final ByteBuffer ref = ByteBuffer.allocate(4);
 		ref.order(endianness ? ByteOrder.LITTLE_ENDIAN : ByteOrder.BIG_ENDIAN);
 

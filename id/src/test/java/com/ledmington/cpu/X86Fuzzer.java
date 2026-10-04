@@ -29,11 +29,11 @@ import com.ledmington.cpu.x86.Instruction;
 import com.ledmington.cpu.x86.NullRegister;
 import com.ledmington.cpu.x86.exc.DecodingException;
 import com.ledmington.cpu.x86.exc.InvalidInstruction;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.InMemoryArrayWriter;
 import com.ledmington.utils.MiniLogger;
 import com.ledmington.utils.TerminalUtils;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
 
 /** A very simple fuzzer for x86_64 instructions. */
 @SuppressWarnings({"PMD.SystemPrintln", "PMD.UnnecessaryCast", "PMD.AvoidLiteralsInIfCondition"})
@@ -73,7 +73,7 @@ public final class X86Fuzzer {
 
 	private static Instruction generateRandomInstruction() {
 		Instruction inst = null;
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1();
+		final BinaryWriter wb = new InMemoryArrayWriter();
 		boolean valid;
 		do {
 			valid = true;

@@ -20,8 +20,8 @@ package com.ledmington.utils;
 import java.util.Arrays;
 import java.util.Objects;
 
-/** A buffer which allows reading with endianness. This implementation uses a byte array. */
-public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
+/** A buffer which allows reading with endianness. This implementation uses a byte array entirely stored in memory. */
+public final class InMemoryArrayReader implements BinaryReader {
 
 	private final byte[] b;
 	private long position;
@@ -29,34 +29,34 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 	private long alignment;
 
 	/**
-	 * Creates a big-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
-	 * ReadOnlyByteBufferV1(b, false, 1)}.
+	 * Creates a big-endian {@link InMemoryArrayReader} with the given array. It is equivalent to calling {@code new
+	 * InMemoryArrayReader(b, false, 1)}.
 	 *
 	 * @param b The byte array ot be used.
 	 */
-	public ReadOnlyByteBufferV1(final byte[] b) {
+	public InMemoryArrayReader(final byte[] b) {
 		this(b, false, 1L);
 	}
 
 	/**
-	 * Creates a ReadOnlyByteBufferV1 with the given array and the given endianness. Equivalent to calling {@code new
-	 * ReadOnlyByteBufferV1(b, e, 1)}.
+	 * Creates a {@link InMemoryArrayReader} with the given array and the given endianness. Equivalent to calling
+	 * {@code new InMemoryArrayReader(b, e, 1)}.
 	 *
 	 * @param b The byte array ot be used.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 */
-	public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian) {
+	public InMemoryArrayReader(final byte[] b, final boolean isLittleEndian) {
 		this(b, isLittleEndian, 1L);
 	}
 
 	/**
-	 * Creates a ReadOnlyByteBufferV1 with the given array, the given endianness and the given alignment.
+	 * Creates a {@link InMemoryArrayReader} with the given array, the given endianness and the given alignment.
 	 *
 	 * @param bytes The byte array ot be used.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 * @param alignment The byte alignment to be used while reading.
 	 */
-	public ReadOnlyByteBufferV1(final byte[] bytes, final boolean isLittleEndian, final long alignment) {
+	public InMemoryArrayReader(final byte[] bytes, final boolean isLittleEndian, final long alignment) {
 		this.isLE = isLittleEndian;
 		checkAlignment(alignment);
 		this.alignment = alignment;
@@ -111,7 +111,7 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 
 	@Override
 	public String toString() {
-		return "ReadOnlyByteBufferV1(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE
+		return "InMemoryArrayReader(buffer=" + Arrays.toString(b) + ";position=" + position + ";isLittleEndian=" + isLE
 				+ ";alignment=" + alignment + ")";
 	}
 
@@ -133,7 +133,7 @@ public final class ReadOnlyByteBufferV1 implements ReadOnlyByteBuffer {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof final ReadOnlyByteBufferV1 bb)) {
+		if (!(other instanceof final InMemoryArrayReader bb)) {
 			return false;
 		}
 		return Arrays.equals(this.b, bb.b)

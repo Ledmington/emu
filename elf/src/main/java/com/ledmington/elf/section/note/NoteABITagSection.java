@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import com.ledmington.elf.section.SectionHeader;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 
 /** The .note.ABI-tag ELF Note section. */
 public final class NoteABITagSection implements NoteSection {
@@ -35,7 +35,7 @@ public final class NoteABITagSection implements NoteSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The ReadOnlyByteBuffer to read data from.
 	 */
-	public NoteABITagSection(final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public NoteABITagSection(final SectionHeader sectionHeader, final BinaryReader b) {
 		this.header = Objects.requireNonNull(sectionHeader);
 
 		if (header.getEntrySize() != 0) {

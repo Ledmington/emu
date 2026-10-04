@@ -22,8 +22,8 @@ import java.util.Objects;
 
 import com.ledmington.elf.section.Section;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** An ELF Relocation table without explicit addends. */
 public final class RelocationSection implements Section {
@@ -41,7 +41,7 @@ public final class RelocationSection implements Section {
 	 * @param is32Bit Used for byte alignment.
 	 */
 	public RelocationSection(
-			final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+			final String name, final SectionHeader sectionHeader, final BinaryReader b, final boolean is32Bit) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 

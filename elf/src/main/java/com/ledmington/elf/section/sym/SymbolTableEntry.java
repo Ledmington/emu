@@ -17,8 +17,8 @@
  */
 package com.ledmington.elf.section.sym;
 
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /**
  * An entry of an ELF symbol table.
@@ -41,11 +41,11 @@ public record SymbolTableEntry(
 	/**
 	 * Reads a symbol table entry from the given buffer.
 	 *
-	 * @param b The {@link ReadOnlyByteBuffer} to read data from.
+	 * @param b The {@link BinaryReader} to read data from.
 	 * @param is32Bit Used for correct parsing.
 	 * @return A symbol table entry.
 	 */
-	public static SymbolTableEntry read(final ReadOnlyByteBuffer b, final boolean is32Bit) {
+	public static SymbolTableEntry read(final BinaryReader b, final boolean is32Bit) {
 		final int name;
 		final long val;
 		final long sz;

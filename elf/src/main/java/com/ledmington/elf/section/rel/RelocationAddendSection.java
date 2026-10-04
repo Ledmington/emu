@@ -23,10 +23,10 @@ import java.util.Objects;
 import com.ledmington.elf.ISA;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /** An ELF Relocation table with explicit addends. */
 public final class RelocationAddendSection implements LoadableSection {
@@ -49,7 +49,7 @@ public final class RelocationAddendSection implements LoadableSection {
 	public RelocationAddendSection(
 			final String name,
 			final SectionHeader sectionHeader,
-			final ReadOnlyByteBuffer b,
+			final BinaryReader b,
 			final boolean is32Bit,
 			final ISA isa) {
 		this.name = Objects.requireNonNull(name);
@@ -115,8 +115,8 @@ public final class RelocationAddendSection implements LoadableSection {
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb =
-				new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24), isLittleEndian);
+		final BinaryWriter bb =
+				new InMemoryArrayWriter(relocationAddendTable.length * (is32Bit ? 12 : 24), isLittleEndian);
 		for (final RelocationAddendEntry entry : relocationAddendTable) {
 			if (is32Bit) {
 				bb.write(BitUtils.asInt(entry.offset()));

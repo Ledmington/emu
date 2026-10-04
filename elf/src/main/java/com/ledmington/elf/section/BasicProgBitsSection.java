@@ -20,8 +20,8 @@ package com.ledmington.elf.section;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
 
 /** A "non-special" PROGBITS ELF section. */
 public final class BasicProgBitsSection implements ProgBitsSection {
@@ -37,7 +37,7 @@ public final class BasicProgBitsSection implements ProgBitsSection {
 	 * @param sectionHeader The header of this section.
 	 * @param b The buffer to read bytes from.
 	 */
-	public BasicProgBitsSection(final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b) {
+	public BasicProgBitsSection(final String name, final SectionHeader sectionHeader, final BinaryReader b) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 

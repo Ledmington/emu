@@ -22,10 +22,10 @@ import java.util.Objects;
 
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /** An ELF .dynsym section. */
 public final class DynamicSymbolTableSection implements LoadableSection, SymbolTable {
@@ -46,7 +46,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 	 * @param is32Bit Used for alignment.
 	 */
 	public DynamicSymbolTableSection(
-			final String name, final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final boolean is32Bit) {
+			final String name, final SectionHeader sectionHeader, final BinaryReader b, final boolean is32Bit) {
 		this.name = Objects.requireNonNull(name);
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.is32Bit = is32Bit;
@@ -91,8 +91,7 @@ public final class DynamicSymbolTableSection implements LoadableSection, SymbolT
 
 	@Override
 	public byte[] getLoadableContent() {
-		final WriteOnlyByteBuffer bb =
-				new WriteOnlyByteBufferV1(symbolTable.length * (is32Bit ? 16 : 24), isLittleEndian);
+		final BinaryWriter bb = new InMemoryArrayWriter(symbolTable.length * (is32Bit ? 16 : 24), isLittleEndian);
 		for (final SymbolTableEntry ste : symbolTable) {
 			if (is32Bit) {
 				bb.write(ste.nameOffset());

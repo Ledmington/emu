@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import com.ledmington.elf.section.LoadableSection;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /** An ELF section with type SHT_NOTE (.note*). */
 public interface NoteSection extends LoadableSection {
@@ -38,7 +38,7 @@ public interface NoteSection extends LoadableSection {
 	 * @return A non-null array of NoteSectionEntry.
 	 */
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-	static NoteSectionEntry[] loadNoteSectionEntries(final ReadOnlyByteBuffer b, final long length) {
+	static NoteSectionEntry[] loadNoteSectionEntries(final BinaryReader b, final long length) {
 		final long start = b.getPosition();
 		final List<NoteSectionEntry> entries = new ArrayList<>();
 
@@ -96,7 +96,7 @@ public interface NoteSection extends LoadableSection {
 	@Override
 	default byte[] getLoadableContent() {
 		final int numEntries = getNumEntries();
-		final WriteOnlyByteBuffer bb = new WriteOnlyByteBufferV1(IntStream.range(0, numEntries)
+		final BinaryWriter bb = new InMemoryArrayWriter(IntStream.range(0, numEntries)
 				.map(i -> getEntry(i).getAlignedSize())
 				.sum());
 		int runningTotal = 0;

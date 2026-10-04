@@ -66,7 +66,7 @@ import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.MemoryInitializer;
 import com.ledmington.mem.PagedMemory;
-import com.ledmington.utils.ReadOnlyByteBuffer;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.TerminalUtils;
 
 import org.jline.reader.EndOfFileException;
@@ -342,7 +342,7 @@ public final class EmuDB {
 
 	private void showAssemblyAt(final long address) {
 		final int maxInstructions = 5;
-		final ReadOnlyByteBuffer bb = new MemoryByteBuffer(address, context.memory());
+		final BinaryReader bb = new MemoryByteBuffer(address, context.memory());
 
 		for (int i = 0; i < maxInstructions; i++) {
 			final long pos = bb.getPosition();

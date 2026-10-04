@@ -24,10 +24,10 @@ import com.ledmington.elf.section.DynamicSection;
 import com.ledmington.elf.section.DynamicTableEntryTag;
 import com.ledmington.elf.section.LoadableSection;
 import com.ledmington.elf.section.SectionHeader;
+import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.ReadOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * The .gnu.version_r ELF section.
@@ -56,11 +56,11 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 	 * Creates the GNU version requirements section with the given header.
 	 *
 	 * @param sectionHeader The header for this section.
-	 * @param b The {@link ReadOnlyByteBuffer} to read data from.
+	 * @param b The {@link BinaryReader} to read data from.
 	 * @param dynamicSection The Dynamic section of the ELF file to retrieve the value of DT_VERNEEDNUM from.
 	 */
 	public GnuVersionRequirementsSection(
-			final SectionHeader sectionHeader, final ReadOnlyByteBuffer b, final DynamicSection dynamicSection) {
+			final SectionHeader sectionHeader, final BinaryReader b, final DynamicSection dynamicSection) {
 		this.header = Objects.requireNonNull(sectionHeader);
 		this.isLittleEndian = b.isLittleEndian();
 
@@ -158,7 +158,7 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 		for (final GnuVersionRequirementEntry gvre : entries) {
 			bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
 		}
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(bytesNeeded, isLittleEndian);
+		final BinaryWriter wb = new InMemoryArrayWriter(bytesNeeded, isLittleEndian);
 		for (final GnuVersionRequirementEntry gvre : entries) {
 			wb.write(gvre.getVersion());
 			wb.write(gvre.getCount());

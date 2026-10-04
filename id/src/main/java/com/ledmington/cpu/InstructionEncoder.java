@@ -52,8 +52,8 @@ import com.ledmington.cpu.x86.RegisterZMM;
 import com.ledmington.cpu.x86.Registers;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.cpu.x86.SegmentedAddress;
-import com.ledmington.utils.WriteOnlyByteBuffer;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.BinaryWriter;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * Encodes an x86 instruction to either binary or intel syntax. NOTE: prefix are encoded in a specific order. First
@@ -384,7 +384,7 @@ public final class InstructionEncoder {
 	 * @return The raw bytes containing the encoded instructions.
 	 */
 	public static byte[] toHex(final boolean check, final Instruction... code) {
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
+		final BinaryWriter wb = new InMemoryArrayWriter(0, true);
 		for (final Instruction inst : code) {
 			toHex(wb, inst, check);
 		}
@@ -400,12 +400,12 @@ public final class InstructionEncoder {
 	 */
 	public static byte[] toHex(final Instruction inst, final boolean check) {
 		Objects.requireNonNull(inst);
-		final WriteOnlyByteBuffer wb = new WriteOnlyByteBufferV1(0, true);
+		final BinaryWriter wb = new InMemoryArrayWriter(0, true);
 		toHex(wb, inst, check);
 		return wb.array();
 	}
 
-	private static void toHex(final WriteOnlyByteBuffer wb, final Instruction inst, final boolean check) {
+	private static void toHex(final BinaryWriter wb, final Instruction inst, final boolean check) {
 		if (check) {
 			InstructionChecker.check(inst);
 		}
@@ -431,7 +431,7 @@ public final class InstructionEncoder {
 		NONE
 	}
 
-	private static void encodePrefixes(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodePrefixes(final BinaryWriter wb, final Instruction inst) {
 		if (inst.hasFirstOperand()
 				&& inst.firstOperand() instanceof final IndirectOperand io
 				&& io.hasSegment()
@@ -567,7 +567,7 @@ public final class InstructionEncoder {
 				&& Registers.requiresEvexExtension(r);
 	}
 
-	private static void encodeZeroOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeZeroOperandsInstruction(final BinaryWriter wb, final Instruction inst) {
 		// TODO: refactor this into a map
 		switch (inst.opcode()) {
 			case VZEROALL, VZEROUPPER -> wb.write((byte) 0x77);
@@ -658,7 +658,7 @@ public final class InstructionEncoder {
 		return io.hasBase() && !io.hasIndex() && !io.hasScale();
 	}
 
-	private static void encodeSingleOperandInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeSingleOperandInstruction(final BinaryWriter wb, final Instruction inst) {
 		byte reg = (byte) 0;
 		switch (inst.opcode()) {
 			case NOP -> wb.write(DOUBLE_BYTE_OPCODE_PREFIX, (byte) 0x1f);
@@ -1184,7 +1184,7 @@ public final class InstructionEncoder {
 	}
 
 	@SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
-	private static void encodeTwoOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeTwoOperandsInstruction(final BinaryWriter wb, final Instruction inst) {
 		byte reg = 0;
 		switch (inst.opcode()) {
 			case ENTER -> {
@@ -2213,7 +2213,7 @@ public final class InstructionEncoder {
 				|| opcode == Opcode.CMOVNS;
 	}
 
-	private static void encodeRexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeRexPrefix(final BinaryWriter wb, final Instruction inst) {
 		final boolean isShift =
 				inst.opcode() == Opcode.SHR || inst.opcode() == Opcode.SAR || inst.opcode() == Opcode.SHL;
 
@@ -2528,7 +2528,7 @@ public final class InstructionEncoder {
 		return inst.hasFirstOperand() && inst.firstOperand() instanceof RegisterXMM;
 	}
 
-	private static void encodeThreeOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeThreeOperandsInstruction(final BinaryWriter wb, final Instruction inst) {
 		byte reg = -1;
 		byte lastByte = -1;
 		switch (inst.opcode()) {
@@ -2711,7 +2711,7 @@ public final class InstructionEncoder {
 		return inst.hasFirstOperand() && inst.firstOperand() instanceof MaskRegister;
 	}
 
-	private static void encodeFourOperandsInstruction(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeFourOperandsInstruction(final BinaryWriter wb, final Instruction inst) {
 		switch (inst.opcode()) {
 			case VPALIGNR -> wb.write((byte) 0x0f);
 			case VPTERNLOGD -> wb.write((byte) 0x25);
@@ -2903,7 +2903,7 @@ public final class InstructionEncoder {
 		};
 	}
 
-	private static void encodeVex2Prefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeVex2Prefix(final BinaryWriter wb, final Instruction inst) {
 		wb.write((byte) 0xc5);
 
 		byte v = 0;
@@ -2927,11 +2927,11 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeVex2Byte(
-			final WriteOnlyByteBuffer wb, final boolean r, final byte v, final boolean l, final byte p) {
+			final BinaryWriter wb, final boolean r, final byte v, final boolean l, final byte p) {
 		wb.write(or(r ? (byte) 0b10000000 : 0, shl(and(not(v), (byte) 0b00001111), 3), l ? (byte) 0b00000100 : 0, p));
 	}
 
-	private static void encodeVex3Prefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeVex3Prefix(final BinaryWriter wb, final Instruction inst) {
 		wb.write((byte) 0xc4);
 
 		final boolean hasExtendedThirdRegister = isThirdER(inst);
@@ -2989,12 +2989,12 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeVex3FirstByte(
-			final WriteOnlyByteBuffer wb, final boolean r, final boolean x, final boolean b, final byte m) {
+			final BinaryWriter wb, final boolean r, final boolean x, final boolean b, final byte m) {
 		wb.write(or(r ? (byte) 0b10000000 : 0, x ? (byte) 0b01000000 : 0, b ? (byte) 0b00100000 : 0, m));
 	}
 
 	private static void encodeVex3SecondByte(
-			final WriteOnlyByteBuffer wb, final boolean w, final byte v, final boolean l, final byte p) {
+			final BinaryWriter wb, final boolean w, final byte v, final boolean l, final byte p) {
 		wb.write(or(w ? (byte) 0b10000000 : 0, shl(and(not(v), (byte) 0b00001111), 3), l ? (byte) 0b00000100 : 0, p));
 	}
 
@@ -3017,7 +3017,7 @@ public final class InstructionEncoder {
 		};
 	}
 
-	private static void encodeEvexPrefix(final WriteOnlyByteBuffer wb, final Instruction inst) {
+	private static void encodeEvexPrefix(final BinaryWriter wb, final Instruction inst) {
 		wb.write((byte) 0x62);
 
 		encodeEvexFirstByte(
@@ -3102,12 +3102,7 @@ public final class InstructionEncoder {
 	}
 
 	private static void encodeEvexFirstByte(
-			final WriteOnlyByteBuffer wb,
-			final boolean r,
-			final boolean x,
-			final boolean b,
-			final boolean r1,
-			final byte m) {
+			final BinaryWriter wb, final boolean r, final boolean x, final boolean b, final boolean r1, final byte m) {
 		wb.write(or(
 				r ? 0 : (byte) 0b10000000,
 				x ? 0 : (byte) 0b01000000,
@@ -3116,13 +3111,12 @@ public final class InstructionEncoder {
 				m));
 	}
 
-	private static void encodeEvexSecondByte(
-			final WriteOnlyByteBuffer wb, final boolean w, final byte v, final byte p) {
+	private static void encodeEvexSecondByte(final BinaryWriter wb, final boolean w, final byte v, final byte p) {
 		wb.write(or(w ? (byte) 0b10000000 : 0, shl(and(not(v), (byte) 0b00001111), 3), (byte) 0b00000100, p));
 	}
 
 	private static void encodeEvexThirdByte(
-			final WriteOnlyByteBuffer wb,
+			final BinaryWriter wb,
 			final boolean z,
 			final boolean l1,
 			final boolean l,
@@ -3149,7 +3143,7 @@ public final class InstructionEncoder {
 		};
 	}
 
-	private static void encodeModRM(final WriteOnlyByteBuffer wb, final byte mod, final byte reg, final byte rm) {
+	private static void encodeModRM(final BinaryWriter wb, final byte mod, final byte reg, final byte rm) {
 		wb.write(or(shl(mod, 6), shl(reg, 3), rm));
 	}
 
@@ -3163,7 +3157,7 @@ public final class InstructionEncoder {
 		};
 	}
 
-	private static void encodeIndirectOperand(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
+	private static void encodeIndirectOperand(final BinaryWriter wb, final IndirectOperand io) {
 		// no SIB needed for "simple" indirect operands
 		if (!isSimpleIndirectOperand(io)) {
 			final byte base = io.hasBase() ? Registers.toByte(io.getBase()) : (byte) 0b101;
@@ -3175,14 +3169,14 @@ public final class InstructionEncoder {
 		}
 	}
 
-	private static void encodeDisplacement(final WriteOnlyByteBuffer wb, final IndirectOperand io) {
+	private static void encodeDisplacement(final BinaryWriter wb, final IndirectOperand io) {
 		switch (io.getDisplacementType()) {
 			case DisplacementType.SHORT -> wb.write(asByte(io.getDisplacement()));
 			case DisplacementType.LONG -> wb.write(asInt(io.getDisplacement()));
 		}
 	}
 
-	private static void encodeSIB(final WriteOnlyByteBuffer wb, final byte scale, final byte index, final byte base) {
+	private static void encodeSIB(final BinaryWriter wb, final byte scale, final byte index, final byte base) {
 		wb.write(or(shl(scale, 6), shl(index, 3), base));
 	}
 
@@ -3190,7 +3184,7 @@ public final class InstructionEncoder {
 		return io.hasBase() && !io.hasIndex() && !io.hasScale();
 	}
 
-	private static void encodeImmediate(final WriteOnlyByteBuffer wb, final Immediate imm) {
+	private static void encodeImmediate(final BinaryWriter wb, final Immediate imm) {
 		switch (imm.bits()) {
 			case 8 -> wb.write(imm.asByte());
 			case 16 -> wb.write(imm.asShort());
