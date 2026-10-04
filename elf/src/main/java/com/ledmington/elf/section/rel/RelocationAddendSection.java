@@ -26,7 +26,7 @@ import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /** An ELF Relocation table with explicit addends. */
 public final class RelocationAddendSection implements LoadableSection {
@@ -116,7 +116,7 @@ public final class RelocationAddendSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final BinaryWriter bb =
-				new WriteOnlyByteBufferV1(relocationAddendTable.length * (is32Bit ? 12 : 24), isLittleEndian);
+				new InMemoryArrayWriter(relocationAddendTable.length * (is32Bit ? 12 : 24), isLittleEndian);
 		for (final RelocationAddendEntry entry : relocationAddendTable) {
 			if (is32Bit) {
 				bb.write(BitUtils.asInt(entry.offset()));

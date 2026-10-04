@@ -27,7 +27,7 @@ import com.ledmington.elf.section.SectionHeader;
 import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * The .gnu.version_r ELF section.
@@ -158,7 +158,7 @@ public final class GnuVersionRequirementsSection implements LoadableSection {
 		for (final GnuVersionRequirementEntry gvre : entries) {
 			bytesNeeded += (4 + 2 + 2 + 4 + 4) * gvre.getAuxiliaryLength();
 		}
-		final BinaryWriter wb = new WriteOnlyByteBufferV1(bytesNeeded, isLittleEndian);
+		final BinaryWriter wb = new InMemoryArrayWriter(bytesNeeded, isLittleEndian);
 		for (final GnuVersionRequirementEntry gvre : entries) {
 			wb.write(gvre.getVersion());
 			wb.write(gvre.getCount());

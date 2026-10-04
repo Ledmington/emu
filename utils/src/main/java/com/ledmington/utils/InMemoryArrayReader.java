@@ -29,8 +29,8 @@ public final class InMemoryArrayReader implements BinaryReader {
 	private long alignment;
 
 	/**
-	 * Creates a big-endian ReadOnlyByteBufferV1 with the given array. It is equivalent to calling {@code new
-	 * ReadOnlyByteBufferV1(b, false, 1)}.
+	 * Creates a big-endian {@link InMemoryArrayReader} with the given array. It is equivalent to calling {@code new
+	 * InMemoryArrayReader(b, false, 1)}.
 	 *
 	 * @param b The byte array ot be used.
 	 */
@@ -39,8 +39,8 @@ public final class InMemoryArrayReader implements BinaryReader {
 	}
 
 	/**
-	 * Creates a ReadOnlyByteBufferV1 with the given array and the given endianness. Equivalent to calling {@code new
-	 * ReadOnlyByteBufferV1(b, e, 1)}.
+	 * Creates a {@link InMemoryArrayReader} with the given array and the given endianness. Equivalent to calling
+	 * {@code new InMemoryArrayReader(b, e, 1)}.
 	 *
 	 * @param b The byte array ot be used.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
@@ -50,7 +50,7 @@ public final class InMemoryArrayReader implements BinaryReader {
 	}
 
 	/**
-	 * Creates a ReadOnlyByteBufferV1 with the given array, the given endianness and the given alignment.
+	 * Creates a {@link InMemoryArrayReader} with the given array, the given endianness and the given alignment.
 	 *
 	 * @param bytes The byte array ot be used.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
@@ -111,7 +111,7 @@ public final class InMemoryArrayReader implements BinaryReader {
 
 	@Override
 	public String toString() {
-		return "ReadOnlyByteBufferV1(b=" + Arrays.toString(b) + ";i=" + position + ";isLittleEndian=" + isLE
+		return "InMemoryArrayReader(buffer=" + Arrays.toString(b) + ";position=" + position + ";isLittleEndian=" + isLE
 				+ ";alignment=" + alignment + ")";
 	}
 

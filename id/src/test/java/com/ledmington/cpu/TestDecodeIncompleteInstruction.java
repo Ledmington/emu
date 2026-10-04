@@ -82,7 +82,7 @@ final class TestDecodeIncompleteInstruction extends X64Encodings {
 		// Here we expect an ArrayIndexOutOfBoundsException to be thrown because,
 		// like CPUs which break when requesting a new byte and not finding it,
 		// the InstructionDecoder will ask for more bytes than are available and
-		// the ReadOnlyByteBufferV1 will throw this exception.
+		// the BinaryReader will throw this exception.
 		assertThrows(
 				ArrayIndexOutOfBoundsException.class,
 				() -> InstructionDecoder.fromHex(toByteArray(code), code.size(), true));

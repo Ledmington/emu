@@ -19,8 +19,8 @@ package com.ledmington.utils;
 
 import java.util.Arrays;
 
-/** A ByteBuffer which allows only write operations and automatically resizes itself. */
-public final class WriteOnlyByteBufferV1 implements BinaryWriter {
+/** A buffer which allows only write operations and automatically resizes itself. */
+public final class InMemoryArrayWriter implements BinaryWriter {
 
 	private static final int DEFAULT_CAPACITY = 16;
 
@@ -30,37 +30,37 @@ public final class WriteOnlyByteBufferV1 implements BinaryWriter {
 	private int size = 0;
 
 	/**
-	 * Creates an empty WriteOnlyByteBuffer with the given capacity and the given endianness.
+	 * Creates an empty {@link InMemoryArrayWriter} with the given capacity and the given endianness.
 	 *
 	 * @param capacity The initial capacity of the underlying array.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 */
-	public WriteOnlyByteBufferV1(final int capacity, final boolean isLittleEndian) {
+	public InMemoryArrayWriter(final int capacity, final boolean isLittleEndian) {
 		this.v = new byte[capacity];
 		this.isLittleEndian = isLittleEndian;
 	}
 
 	/**
-	 * Creates an empty WriteOnlyByteBuffer with a default capacity and the given endianness.
+	 * Creates an empty {@link InMemoryArrayWriter} with a default capacity and the given endianness.
 	 *
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 */
-	public WriteOnlyByteBufferV1(final boolean isLittleEndian) {
+	public InMemoryArrayWriter(final boolean isLittleEndian) {
 		this(DEFAULT_CAPACITY, isLittleEndian);
 	}
 
 	/**
-	 * Creates a big-endian WriteOnlyByteBuffer with the given capacity. It is equivalent to calling {@code new
-	 * WriteOnlyByteBuffer(capacity, false)}.
+	 * Creates a big-endian {@link InMemoryArrayWriter} with the given capacity. It is equivalent to calling {@code new
+	 * InMemoryArrayWriter(capacity, false)}.
 	 *
 	 * @param capacity The initial capacity of the underlying array.
 	 */
-	public WriteOnlyByteBufferV1(final int capacity) {
+	public InMemoryArrayWriter(final int capacity) {
 		this(capacity, false);
 	}
 
-	/** Creates a big-endian WriteOnlyByteBuffer with a default capacity. */
-	public WriteOnlyByteBufferV1() {
+	/** Creates a big-endian {@link InMemoryArrayWriter} with a default capacity. */
+	public InMemoryArrayWriter() {
 		this(DEFAULT_CAPACITY, false);
 	}
 
@@ -262,8 +262,8 @@ public final class WriteOnlyByteBufferV1 implements BinaryWriter {
 
 	@Override
 	public String toString() {
-		return "WriteOnlyByteBufferV1(v=" + Arrays.toString(v) + ";isLE=" + isLittleEndian + ";size=" + size + ";i="
-				+ position + ")";
+		return "InMemoryArrayWriter(buffer=" + Arrays.toString(v) + ";isLE=" + isLittleEndian + ";size=" + size
+				+ ";position=" + position + ")";
 	}
 
 	@Override
@@ -284,7 +284,7 @@ public final class WriteOnlyByteBufferV1 implements BinaryWriter {
 		if (this == other) {
 			return false;
 		}
-		if (!(other instanceof final WriteOnlyByteBufferV1 wobb)) {
+		if (!(other instanceof final InMemoryArrayWriter wobb)) {
 			return false;
 		}
 		return Arrays.equals(this.v, wobb.v)

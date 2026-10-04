@@ -52,8 +52,8 @@ import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.InMemoryArrayWriter;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
 import com.ledmington.utils.os.OSUtils;
 
 /**
@@ -436,7 +436,7 @@ public final class ELFLoader {
 								+ 2 // auxv[n]
 						);
 
-		final BinaryWriter wb = new WriteOnlyByteBufferV1(true);
+		final BinaryWriter wb = new InMemoryArrayWriter(true);
 		final StringBuilder sb = new StringBuilder();
 
 		if (is32Bit) {

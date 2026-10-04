@@ -23,7 +23,7 @@ import java.util.Objects;
 import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /** An ELF .fini_array section. */
 public final class DestructorsSection implements LoadableSection {
@@ -116,7 +116,7 @@ public final class DestructorsSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final int wordSize = is32Bit ? 4 : 8;
-		final BinaryWriter wb = new WriteOnlyByteBufferV1(destructors.length * wordSize, isLittleEndian);
+		final BinaryWriter wb = new InMemoryArrayWriter(destructors.length * wordSize, isLittleEndian);
 		for (final long d : destructors) {
 			if (is32Bit) {
 				wb.write(BitUtils.asInt(d));

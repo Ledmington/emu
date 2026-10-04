@@ -53,7 +53,7 @@ import com.ledmington.cpu.x86.Registers;
 import com.ledmington.cpu.x86.SegmentRegister;
 import com.ledmington.cpu.x86.SegmentedAddress;
 import com.ledmington.utils.BinaryWriter;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * Encodes an x86 instruction to either binary or intel syntax. NOTE: prefix are encoded in a specific order. First
@@ -384,7 +384,7 @@ public final class InstructionEncoder {
 	 * @return The raw bytes containing the encoded instructions.
 	 */
 	public static byte[] toHex(final boolean check, final Instruction... code) {
-		final BinaryWriter wb = new WriteOnlyByteBufferV1(0, true);
+		final BinaryWriter wb = new InMemoryArrayWriter(0, true);
 		for (final Instruction inst : code) {
 			toHex(wb, inst, check);
 		}
@@ -400,7 +400,7 @@ public final class InstructionEncoder {
 	 */
 	public static byte[] toHex(final Instruction inst, final boolean check) {
 		Objects.requireNonNull(inst);
-		final BinaryWriter wb = new WriteOnlyByteBufferV1(0, true);
+		final BinaryWriter wb = new InMemoryArrayWriter(0, true);
 		toHex(wb, inst, check);
 		return wb.array();
 	}

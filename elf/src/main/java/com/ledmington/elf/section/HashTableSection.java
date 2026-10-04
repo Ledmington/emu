@@ -23,7 +23,7 @@ import java.util.Objects;
 import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
-import com.ledmington.utils.WriteOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayWriter;
 
 /**
  * A .hash ELF section.
@@ -149,7 +149,7 @@ public final class HashTableSection implements LoadableSection {
 	@Override
 	public byte[] getLoadableContent() {
 		final BinaryWriter bb =
-				new WriteOnlyByteBufferV1(4 + 4 + (buckets.length * 4) + (chains.length * 4), isLittleEndian);
+				new InMemoryArrayWriter(4 + 4 + (buckets.length * 4) + (chains.length * 4), isLittleEndian);
 		bb.write(buckets.length);
 		bb.write(chains.length);
 		bb.write(buckets);
