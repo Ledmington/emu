@@ -65,8 +65,8 @@ import com.ledmington.elf.section.sym.SymbolTableEntry;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.InMemoryArrayReader;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Copy of GNU's readelf utility. Original source code available <a href=
@@ -456,7 +456,7 @@ public final class Main {
 	private static void printStringDumpOfSection(final String filename, final ELF elf, final String sectionName) {
 		final BinaryReader b;
 		try {
-			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -474,7 +474,7 @@ public final class Main {
 	private static void printStringDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
 		final BinaryReader b;
 		try {
-			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -514,7 +514,7 @@ public final class Main {
 	private static void printHexDumpOfSection(final String filename, final ELF elf, final String sectionName) {
 		final BinaryReader b;
 		try {
-			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -532,7 +532,7 @@ public final class Main {
 	private static void printHexDumpOfSection(final String filename, final ELF elf, final int sectionIndex) {
 		final BinaryReader b;
 		try {
-			b = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -1101,7 +1101,7 @@ public final class Main {
 
 		out.print("      Properties: ");
 
-		final BinaryReader robb = new ReadOnlyByteBufferV1(v, true, 1L);
+		final BinaryReader robb = new InMemoryArrayReader(v, true, 1L);
 		final long start = robb.getPosition();
 		while (robb.getPosition() < BitUtils.asLong(nse.getDescriptionLength())) {
 			if (wide && robb.getPosition() > start) {
@@ -1163,7 +1163,7 @@ public final class Main {
 		for (int i = 0; i < v.length; i++) {
 			v[i] = nse.getDescriptionByte(i);
 		}
-		final BinaryReader robb = new ReadOnlyByteBufferV1(v, true);
+		final BinaryReader robb = new InMemoryArrayReader(v, true);
 		final int osCode = robb.read4();
 		out.printf(
 				"    OS: %s, ABI: %d.%d.%d%n",
@@ -1502,7 +1502,7 @@ public final class Main {
 		{
 			final BinaryReader bb;
 			try {
-				bb = new ReadOnlyByteBufferV1(Files.readAllBytes(Path.of(filename)));
+				bb = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

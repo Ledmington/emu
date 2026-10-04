@@ -30,7 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.ledmington.elf.section.note.NoteSection;
 import com.ledmington.elf.section.note.NoteSectionEntry;
 import com.ledmington.elf.section.note.NoteSectionEntryType;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
+import com.ledmington.utils.InMemoryArrayReader;
 
 final class TestNoteSectionParsing {
 
@@ -359,7 +359,7 @@ final class TestNoteSectionParsing {
 	@MethodSource("exampleNoteSections")
 	void correctParsing(final byte[] content, final NoteSectionEntry... expected) {
 		final NoteSectionEntry[] parsed =
-				NoteSection.loadNoteSectionEntries(new ReadOnlyByteBufferV1(content, true), content.length);
+				NoteSection.loadNoteSectionEntries(new InMemoryArrayReader(content, true), content.length);
 		assertArrayEquals(
 				expected,
 				parsed,

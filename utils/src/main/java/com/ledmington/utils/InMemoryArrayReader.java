@@ -20,8 +20,8 @@ package com.ledmington.utils;
 import java.util.Arrays;
 import java.util.Objects;
 
-/** A buffer which allows reading with endianness. This implementation uses a byte array. */
-public final class ReadOnlyByteBufferV1 implements BinaryReader {
+/** A buffer which allows reading with endianness. This implementation uses a byte array entirely stored in memory. */
+public final class InMemoryArrayReader implements BinaryReader {
 
 	private final byte[] b;
 	private long position;
@@ -34,7 +34,7 @@ public final class ReadOnlyByteBufferV1 implements BinaryReader {
 	 *
 	 * @param b The byte array ot be used.
 	 */
-	public ReadOnlyByteBufferV1(final byte[] b) {
+	public InMemoryArrayReader(final byte[] b) {
 		this(b, false, 1L);
 	}
 
@@ -45,7 +45,7 @@ public final class ReadOnlyByteBufferV1 implements BinaryReader {
 	 * @param b The byte array ot be used.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 */
-	public ReadOnlyByteBufferV1(final byte[] b, final boolean isLittleEndian) {
+	public InMemoryArrayReader(final byte[] b, final boolean isLittleEndian) {
 		this(b, isLittleEndian, 1L);
 	}
 
@@ -56,7 +56,7 @@ public final class ReadOnlyByteBufferV1 implements BinaryReader {
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 * @param alignment The byte alignment to be used while reading.
 	 */
-	public ReadOnlyByteBufferV1(final byte[] bytes, final boolean isLittleEndian, final long alignment) {
+	public InMemoryArrayReader(final byte[] bytes, final boolean isLittleEndian, final long alignment) {
 		this.isLE = isLittleEndian;
 		checkAlignment(alignment);
 		this.alignment = alignment;
@@ -133,7 +133,7 @@ public final class ReadOnlyByteBufferV1 implements BinaryReader {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof final ReadOnlyByteBufferV1 bb)) {
+		if (!(other instanceof final InMemoryArrayReader bb)) {
 			return false;
 		}
 		return Arrays.equals(this.b, bb.b)

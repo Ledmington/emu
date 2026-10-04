@@ -77,8 +77,8 @@ import com.ledmington.cpu.x86.exc.ReservedOpcode;
 import com.ledmington.cpu.x86.exc.UnknownOpcode;
 import com.ledmington.cpu.x86.exc.UnrecognizedPrefix;
 import com.ledmington.utils.BinaryReader;
+import com.ledmington.utils.InMemoryArrayReader;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /**
  * Reference Intel® 64 and IA-32 Architectures Software Developer's Manual volume 2. Legacy prefixes: Paragraph 2.1.1.
@@ -425,7 +425,7 @@ public final class InstructionDecoder {
 	 */
 	public static List<Instruction> fromHex(
 			final byte[] bytes, final int nBytesToDecode, final boolean checkInstructions) {
-		return fromHex(new ReadOnlyByteBufferV1(bytes, true, 1), nBytesToDecode, checkInstructions);
+		return fromHex(new InMemoryArrayReader(bytes, true, 1), nBytesToDecode, checkInstructions);
 	}
 
 	/**

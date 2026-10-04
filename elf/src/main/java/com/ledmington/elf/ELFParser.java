@@ -54,8 +54,8 @@ import com.ledmington.elf.section.sym.DynamicSymbolTableSection;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BitUtils;
+import com.ledmington.utils.InMemoryArrayReader;
 import com.ledmington.utils.MiniLogger;
-import com.ledmington.utils.ReadOnlyByteBufferV1;
 
 /** A parser of ELF files. This class is not meant to be instantiated but to be used through its static methods. */
 public final class ELFParser {
@@ -97,7 +97,7 @@ public final class ELFParser {
 	 * @return An ELF file object.
 	 */
 	public static ELF parse(final byte[] bytes) {
-		b = new ReadOnlyByteBufferV1(bytes);
+		b = new InMemoryArrayReader(bytes);
 		final FileHeader fileHeader = parseFileHeader();
 		final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
 		final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
