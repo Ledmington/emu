@@ -19,6 +19,7 @@ package com.ledmington.readelf;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -276,7 +277,7 @@ public final class Main {
 		try {
 			elf = ELFParser.parse(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 
 		if (sectionIndexToBeHexDumped.isPresent()) {
@@ -458,7 +459,7 @@ public final class Main {
 		try {
 			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 
 		final Optional<Section> s = elf.getSectionByName(sectionName);
@@ -476,7 +477,7 @@ public final class Main {
 		try {
 			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 
 		printStringDump(b, elf.getSection(sectionIndex));
@@ -516,7 +517,7 @@ public final class Main {
 		try {
 			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 
 		final Optional<Section> s = elf.getSectionByName(sectionName);
@@ -534,7 +535,7 @@ public final class Main {
 		try {
 			b = new InMemoryArrayReader(Files.readAllBytes(Path.of(filename)));
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 		printHexDump(b, elf.getSection(sectionIndex));
 	}
