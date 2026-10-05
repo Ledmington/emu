@@ -17,29 +17,24 @@
  */
 package com.ledmington.iso;
 
-import java.util.Objects;
+import com.ledmington.utils.BitUtils;
 
-import com.ledmington.utils.BinaryReader;
+public enum VolumeDescriptorType {
+	BOOT_RECORD,
+	PRIMARY,
+	SUPPLEMENTARY,
+	PARTITION,
+	SET_TERMINATOR;
 
-public final class Sector {
-
-	public static final int DEFAULT_SECTOR_SIZE = 2_048;
-
-	private final byte content[] = new byte[DEFAULT_SECTOR_SIZE];
-
-	public Sector(final byte[] content) {
-		Objects.requireNonNull(content);
-		if (content.length != this.content.length) {
-			throw new IllegalArgumentException("Wrong sector length.");
-		}
-		System.arraycopy(content, 0, this.content, 0, this.content.length);
-	}
-
-	public static Sector read(final BinaryReader reader) {
-		final byte[] content = new byte[DEFAULT_SECTOR_SIZE];
-		for (int i = 0; i < content.length; i++) {
-			content[i] = reader.read1();
-		}
-		return new Sector(content);
+	public static VolumeDescriptorType fromByte(final byte x) {
+		return switch (BitUtils.asInt(x)) {
+			case 0 -> BOOT_RECORD;
+			case 1 -> PRIMARY;
+			case 2 -> SUPPLEMENTARY;
+			case 3 -> PARTITION;
+			case 255 -> SET_TERMINATOR;
+			default ->
+				throw new IllegalArgumentException(String.format("Unknown volume descriptor byte %d (0x%02x).", x, x));
+		};
 	}
 }

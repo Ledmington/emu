@@ -66,7 +66,8 @@ public interface BinaryReader {
 	long getPosition();
 
 	/**
-	 * Reads 1 byte from the binary source.
+	 * Reads 1 byte from the binary source without moving the "pointer" to the underlying source. If you except this
+	 * method to automatically move the pointer, you are probably looking for {@link read1()}.
 	 *
 	 * @return The byte read.
 	 */

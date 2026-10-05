@@ -23,6 +23,8 @@ import java.nio.file.Path;
 
 import com.ledmington.iso.Iso;
 import com.ledmington.iso.Sector;
+import com.ledmington.iso.VolumeDescriptor;
+import com.ledmington.iso.VolumeDescriptorType;
 import com.ledmington.utils.BufferedBinaryReader;
 
 public final class Main {
@@ -54,6 +56,11 @@ public final class Main {
 			}
 
 			// Data area
+			VolumeDescriptor vd;
+			do {
+				vd = VolumeDescriptor.read(reader);
+				System.out.println(vd.getType());
+			} while (vd.getType() != VolumeDescriptorType.SET_TERMINATOR);
 
 			final Iso iso = new Iso(systemArea);
 		}
