@@ -17,13 +17,16 @@
  */
 package com.ledmington.iso;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public final class Iso {
 
 	private final Sector systemArea[] = new Sector[16];
+	private final VolumeDescriptor volumeDescriptors[];
 
-	public Iso(final Sector[] sectors) {
+	public Iso(final Sector[] sectors, final List<VolumeDescriptor> volumeDescriptors) {
 		Objects.requireNonNull(sectors);
 		for (final Sector s : sectors) {
 			Objects.requireNonNull(s);
@@ -32,5 +35,18 @@ public final class Iso {
 			throw new IllegalArgumentException("System area is expected to be made of 16 sectors.");
 		}
 		System.arraycopy(sectors, 0, this.systemArea, 0, 16);
+
+		Objects.requireNonNull(volumeDescriptors);
+		this.volumeDescriptors = new VolumeDescriptor[volumeDescriptors.size()];
+		for (int i = 0; i < volumeDescriptors.size(); i++) {
+			this.volumeDescriptors[i] = Objects.requireNonNull(volumeDescriptors.get(i));
+		}
+		if (Arrays.stream(this.volumeDescriptors).noneMatch(vd -> vd.getType().equals(VolumeDescriptorType.PRIMARY))) {
+			throw new AssertionError("No primary volume descriptor was found.");
+		}
+		if (Arrays.stream(this.volumeDescriptors)
+				.noneMatch(vd -> vd.getType().equals(VolumeDescriptorType.SET_TERMINATOR))) {
+			throw new AssertionError("No set terminator volume descriptor was found.");
+		}
 	}
 }

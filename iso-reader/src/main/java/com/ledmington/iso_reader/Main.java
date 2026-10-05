@@ -20,6 +20,8 @@ package com.ledmington.iso_reader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.ledmington.iso.Iso;
 import com.ledmington.iso.Sector;
@@ -56,13 +58,51 @@ public final class Main {
 			}
 
 			// Data area
-			VolumeDescriptor vd;
+			final List<VolumeDescriptor> volumeDescriptors = new ArrayList<>();
 			do {
-				vd = VolumeDescriptor.read(reader);
-				System.out.println(vd.getType());
-			} while (vd.getType() != VolumeDescriptorType.SET_TERMINATOR);
+				volumeDescriptors.add(VolumeDescriptor.read(reader));
+			} while (volumeDescriptors.getLast().getType() != VolumeDescriptorType.SET_TERMINATOR);
 
-			final Iso iso = new Iso(systemArea);
+			final VolumeDescriptor primary = volumeDescriptors.stream()
+					.filter(vd -> vd.getType().equals(VolumeDescriptorType.PRIMARY))
+					.findFirst()
+					.orElseThrow();
+
+			final byte[] content = primary.getData();
+			final int bytesPerRow = 16;
+			final int numRows = content.length / bytesPerRow + 1;
+			for (int i = 0; i < numRows; i++) {
+				System.out.printf("0x%04x : ", i);
+
+				for (int j = 0; j < bytesPerRow; j++) {
+					final int index = i * bytesPerRow + j;
+					if (index < content.length) {
+						System.out.printf("%02x ", content[index]);
+					} else {
+						System.out.print("   ");
+					}
+				}
+
+				System.out.print(" | ");
+
+				for (int j = 0; j < bytesPerRow; j++) {
+					final int index = i * bytesPerRow + j;
+					if (index < content.length) {
+						System.out.printf("%c", isAsciiPrintable(content[index]) ? content[index] : '.');
+					} else {
+						System.out.print(" ");
+					}
+				}
+
+				System.out.println();
+			}
+			System.out.println();
+
+			final Iso iso = new Iso(systemArea, volumeDescriptors);
 		}
+	}
+
+	private static boolean isAsciiPrintable(final byte x) {
+		return x >= 32 && x < 127;
 	}
 }

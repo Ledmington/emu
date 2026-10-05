@@ -76,4 +76,8 @@ public final class VolumeDescriptor {
 	public VolumeDescriptorType getType() {
 		return type;
 	}
+
+	public byte[] getData() {
+		return data;
+	}
 }
