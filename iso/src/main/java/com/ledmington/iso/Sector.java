@@ -19,18 +19,27 @@ package com.ledmington.iso;
 
 import java.util.Objects;
 
-public final class Iso {
+import com.ledmington.utils.BinaryReader;
 
-	private final Sector systemArea[] = new Sector[16];
+public final class Sector {
 
-	public Iso(final Sector[] sectors) {
-		Objects.requireNonNull(sectors);
-		for (final Sector s : sectors) {
-			Objects.requireNonNull(s);
+	public static final int DEFAULT_SECTOR_SIZE = 2_048;
+
+	private final byte content[] = new byte[DEFAULT_SECTOR_SIZE];
+
+	public Sector(final byte[] content) {
+		Objects.requireNonNull(content);
+		if (content.length != this.content.length) {
+			throw new IllegalArgumentException("Wrong sector length.");
 		}
-		if (sectors.length != 16) {
-			throw new IllegalArgumentException("System area is expected to be made of 16 sectors.");
+		System.arraycopy(content, 0, this.content, 0, this.content.length);
+	}
+
+	public static Sector read(final BinaryReader reader) {
+		final byte[] content = new byte[DEFAULT_SECTOR_SIZE];
+		for (int i = 0; i < content.length; i++) {
+			content[i] = reader.read();
 		}
-		System.arraycopy(sectors, 0, this.systemArea, 0, 16);
+		return new Sector(content);
 	}
 }

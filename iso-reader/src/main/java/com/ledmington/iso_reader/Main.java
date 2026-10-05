@@ -17,12 +17,13 @@
  */
 package com.ledmington.iso_reader;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import com.ledmington.iso.Iso;
+import com.ledmington.iso.Sector;
+import com.ledmington.utils.BufferedBinaryReader;
 
 public final class Main {
 	public static void main(final String[] args) {
@@ -45,24 +46,16 @@ public final class Main {
 			throw new RuntimeException(e);
 		}
 
-		try (final DataInputStream in =
-				new DataInputStream(new BufferedInputStream(new FileInputStream(input.toFile())))) {
-			final byte[] buffer = new byte[32_768];
-			final int bytesRead = in.read(buffer, 0, buffer.length);
-			System.out.printf("Read %,d bytes%n", bytesRead);
-
-			for (int i = 0; i < Math.min(bytesRead, buffer.length); i++) {
-				if (i % 16 == 0) {
-					System.out.printf("0x%06x : ", i);
-				}
-				System.out.printf(" %02x", buffer[i]);
-				if (i % 16 == 15) {
-					System.out.println();
-				}
+		try (BufferedBinaryReader reader = new BufferedBinaryReader(input)) {
+			// System area
+			final Sector[] systemArea = new Sector[16];
+			for (int i = 0; i < 16; i++) {
+				systemArea[i] = Sector.read(reader);
 			}
-			System.out.println();
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
+
+			// Data area
+
+			final Iso iso = new Iso(systemArea);
 		}
 	}
 }
