@@ -50,6 +50,7 @@ import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
+import com.ledmington.utils.BinaryReader;
 import com.ledmington.utils.BinaryWriter;
 import com.ledmington.utils.BitUtils;
 import com.ledmington.utils.InMemoryArrayWriter;
@@ -89,7 +90,7 @@ public final class ELFLoader {
 	 * Loads the given ELF file in the emulated memory.
 	 *
 	 * @param elf The file to be loaded.
-	 * @param rawFile The raw bytes of the ELF file, as found on disk.
+	 * @param reader A reader over the raw bytes of the ELF file, as found on disk.
 	 * @param commandLineArguments The arguments to pass to the program. Must include the name of the program as the
 	 *     first argument.
 	 * @param baseAddress The address where to start loading the file.
@@ -99,13 +100,13 @@ public final class ELFLoader {
 	 */
 	public void load(
 			final ELF elf,
-			final byte[] rawFile,
+			final BinaryReader reader,
 			final String[] commandLineArguments,
 			final long baseAddress,
 			final long baseStackAddress,
 			final long stackSize,
 			final long baseStackValue) {
-		loadSegments(elf, rawFile, baseAddress);
+		loadSegments(elf, reader, baseAddress);
 		loadSections(elf, baseAddress);
 
 		final long stackTop = alignAddress(baseStackAddress); // highest address (initial RSP)
@@ -524,7 +525,7 @@ public final class ELFLoader {
 	}
 
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-	private void loadSegments(final ProgramHeaderTable pht, final byte[] rawFile, final long baseAddress) {
+	private void loadSegments(final ProgramHeaderTable pht, final BinaryReader reader, final long baseAddress) {
 		logger.debug("Loading ELF segments into memory");
 
 		// NOTE: this index is not the PHTE index, this index makes sense only during loading
@@ -561,11 +562,7 @@ public final class ELFLoader {
 			final long memSize = phte.segmentMemorySize();
 			final boolean hasFileBackedContent = fileSize > 0L;
 			if (hasFileBackedContent) {
-				final byte[] content = Arrays.copyOfRange(
-						rawFile,
-						BitUtils.asInt(phte.segmentFileOffset()),
-						BitUtils.asInt(phte.segmentFileOffset() + fileSize));
-				mem.initialize(new MemoryAddress(start), content);
+				copyFromFile(reader, phte.segmentFileOffset(), fileSize, start);
 			}
 			if (memSize > fileSize) {
 				mem.initialize(new MemoryAddress(start + fileSize), memSize - fileSize, (byte) 0x00);
@@ -573,6 +570,20 @@ public final class ELFLoader {
 
 			segmentIndex++;
 			memorySegments.add(new Range(start, end));
+		}
+	}
+
+	private void copyFromFile(final BinaryReader reader, final long fileOffset, final long length, final long address) {
+		final long segmentChunkSize = 64L * 1024L;
+		final byte[] chunk = new byte[BitUtils.asInt(Math.min(length, segmentChunkSize))];
+		for (long done = 0L; done < length; done += chunk.length) {
+			final int n = BitUtils.asInt(Math.min(chunk.length, length - done));
+			for (int i = 0; i < n; i++) {
+				// Using read() with explicit positioning ignores whatever alignment the parser left on the reader
+				reader.setPosition(fileOffset + done + i);
+				chunk[i] = reader.read();
+			}
+			mem.initialize(new MemoryAddress(address + done), n == chunk.length ? chunk : Arrays.copyOf(chunk, n));
 		}
 	}
 
