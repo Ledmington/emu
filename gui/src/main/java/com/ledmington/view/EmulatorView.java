@@ -18,10 +18,7 @@
 package com.ledmington.view;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -61,6 +58,7 @@ import com.ledmington.emu.RegisterFile;
 import com.ledmington.mem.MemoryAddress;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.PagedMemory;
+import com.ledmington.utils.BufferedBinaryReader;
 import com.ledmington.utils.MiniLogger;
 
 @SuppressWarnings("PMD.CouplingBetweenObjects")
@@ -240,22 +238,17 @@ public final class EmulatorView extends Stage {
 		// TODO: implement this
 		final String[] args = {file.toString()};
 
-		final byte[] rawFile;
-		try {
-			rawFile = Files.readAllBytes(file.toPath());
-		} catch (final IOException e) {
-			throw new UncheckedIOException(e);
-		}
-
 		final ELFLoader loader = new ELFLoader(cpu, mem);
-		loader.load(
-				ELFParser.parse(rawFile),
-				rawFile,
-				args,
-				EmulatorConstants.getBaseAddress(),
-				EmulatorConstants.getBaseStackAddress(),
-				EmulatorConstants.getStackSize(),
-				EmulatorConstants.getBaseStackValue());
+		try (BufferedBinaryReader reader = new BufferedBinaryReader(file.toPath())) {
+			loader.load(
+					ELFParser.parse(reader),
+					reader,
+					args,
+					EmulatorConstants.getBaseAddress(),
+					EmulatorConstants.getBaseStackAddress(),
+					EmulatorConstants.getStackSize(),
+					EmulatorConstants.getBaseStackValue());
+		}
 
 		updateRegisters();
 		updateCode();

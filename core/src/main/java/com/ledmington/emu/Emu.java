@@ -17,8 +17,7 @@
  */
 package com.ledmington.emu;
 
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
@@ -38,6 +37,7 @@ import com.ledmington.elf.section.sym.SymbolTableEntryType;
 import com.ledmington.elf.section.sym.SymbolTableSection;
 import com.ledmington.mem.MemoryController;
 import com.ledmington.mem.PagedMemory;
+import com.ledmington.utils.BufferedBinaryReader;
 import com.ledmington.utils.MiniLogger;
 
 /** The emulator. */
@@ -134,43 +134,41 @@ public final class Emu {
 	 * @param commandLineArguments The arguments to be loaded as if they were passed on the command-line.
 	 */
 	public void load(final String filename, final String... commandLineArguments) {
-		final byte[] rawFile;
-		try {
-			rawFile = Files.readAllBytes(Path.of(filename));
-		} catch (final IOException e) {
+		try (BufferedBinaryReader reader = new BufferedBinaryReader(Path.of(filename))) {
+			this.elf = ELFParser.parse(reader);
+			logger.info("ELF file parsed successfully");
+
+			final FileHeader fh = elf.getFileHeader();
+			this.entryPointVirtualAddress = fh.entryPointVirtualAddress();
+
+			final FileType type = fh.fileType();
+			if (type != FileType.ET_EXEC && type != FileType.ET_DYN) {
+				throw new IllegalArgumentException(
+						String.format("Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s.", type));
+			}
+
+			final ISA isa = fh.isa();
+			if (isa != ISA.AMD_X86_64) {
+				throw new IllegalArgumentException(
+						String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
+			}
+
+			// Add again the filename as first command-line argument
+			final String[] args = Stream.concat(Stream.of(filename), Arrays.stream(commandLineArguments))
+					.toList()
+					.toArray(new String[0]);
+
+			loader.load(
+					elf,
+					reader,
+					args,
+					EmulatorConstants.getBaseAddress(),
+					EmulatorConstants.getBaseStackAddress(),
+					EmulatorConstants.getStackSize(),
+					EmulatorConstants.getBaseStackValue());
+		} catch (final UncheckedIOException e) {
 			throw new ELFParsingException(e);
 		}
-		this.elf = ELFParser.parse(rawFile);
-		logger.info("ELF file parsed successfully");
-
-		final FileHeader fh = elf.getFileHeader();
-		this.entryPointVirtualAddress = fh.entryPointVirtualAddress();
-
-		final FileType type = fh.fileType();
-		if (type != FileType.ET_EXEC && type != FileType.ET_DYN) {
-			throw new IllegalArgumentException(
-					String.format("Invalid ELF file type: expected ET_EXEC or ET_DYN but was %s.", type));
-		}
-
-		final ISA isa = fh.isa();
-		if (isa != ISA.AMD_X86_64) {
-			throw new IllegalArgumentException(
-					String.format("This file requires ISA %s, which is not implemented.", isa.getName()));
-		}
-
-		// Add again the filename as first command-line argument
-		final String[] args = Stream.concat(Stream.of(filename), Arrays.stream(commandLineArguments))
-				.toList()
-				.toArray(new String[0]);
-
-		loader.load(
-				elf,
-				rawFile,
-				args,
-				EmulatorConstants.getBaseAddress(),
-				EmulatorConstants.getBaseStackAddress(),
-				EmulatorConstants.getStackSize(),
-				EmulatorConstants.getBaseStackValue());
 
 		this.context.cpu().setInstructionPointer(EmulatorConstants.getBaseAddress() + entryPointVirtualAddress);
 	}

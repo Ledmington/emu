@@ -97,7 +97,19 @@ public final class ELFParser {
 	 * @return An ELF file object.
 	 */
 	public static ELF parse(final byte[] bytes) {
-		b = new InMemoryArrayReader(bytes);
+		return parse(new InMemoryArrayReader(bytes));
+	}
+
+	/**
+	 * Parses the bytes read from the given {@link BinaryReader} and returns an {@link ELF} file object. The reader's
+	 * position, endianness and alignment are modified during parsing.
+	 *
+	 * @param reader The source of the bytes to be parsed.
+	 * @return An ELF file object.
+	 */
+	public static ELF parse(final BinaryReader reader) {
+		b = Objects.requireNonNull(reader);
+		b.setPosition(0L);
 		final FileHeader fileHeader = parseFileHeader();
 		final PHTEntry[] programHeaderTable = parseProgramHeaderTable(fileHeader);
 		final SectionHeader[] sectionHeaderTable = parseSectionHeaderTable(fileHeader);
