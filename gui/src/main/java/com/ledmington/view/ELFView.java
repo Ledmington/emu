@@ -20,6 +20,7 @@ package com.ledmington.view;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -654,7 +655,7 @@ public final class ELFView extends BorderPane {
 			raf.skipBytes(startByte);
 			raf.readFully(fileBytes);
 		} catch (final IOException e) {
-			throw new IllegalStateException(e);
+			throw new UncheckedIOException(e);
 		}
 
 		final StringBuilder sbAddress = new StringBuilder();

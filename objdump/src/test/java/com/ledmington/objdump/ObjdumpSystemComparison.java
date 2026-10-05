@@ -19,6 +19,7 @@ package com.ledmington.objdump;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -46,7 +47,7 @@ final class ObjdumpSystemComparison {
 					.toAbsolutePath()
 					.toString();
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 	}
 
@@ -63,7 +64,7 @@ final class ObjdumpSystemComparison {
 					&& buffer[2] == (byte) 0x4c
 					&& buffer[3] == (byte) 0x46;
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 	}
 

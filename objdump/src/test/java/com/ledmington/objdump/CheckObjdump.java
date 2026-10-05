@@ -19,6 +19,7 @@ package com.ledmington.objdump;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +55,7 @@ public final class CheckObjdump {
 			Files.writeString(fileExpected, expected);
 			Files.writeString(fileActual, actual);
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 
 		out.println(ProcessUtils.run(
@@ -65,7 +66,7 @@ public final class CheckObjdump {
 			Files.deleteIfExists(fileExpected);
 			Files.deleteIfExists(fileActual);
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			throw new UncheckedIOException(e);
 		}
 	}
 
