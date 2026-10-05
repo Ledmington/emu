@@ -573,6 +573,7 @@ public final class ELFLoader {
 		}
 	}
 
+	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void copyFromFile(final BinaryReader reader, final long fileOffset, final long length, final long address) {
 		final long segmentChunkSize = 64L * 1024L;
 		final byte[] chunk = new byte[BitUtils.asInt(Math.min(length, segmentChunkSize))];
@@ -583,7 +584,7 @@ public final class ELFLoader {
 				reader.setPosition(fileOffset + done + i);
 				chunk[i] = reader.read();
 			}
-			mem.initialize(new MemoryAddress(address + done), n == chunk.length ? chunk : Arrays.copyOf(chunk, n));
+			mem.initialize(new MemoryAddress(address + done), (n == chunk.length) ? chunk : Arrays.copyOf(chunk, n));
 		}
 	}
 

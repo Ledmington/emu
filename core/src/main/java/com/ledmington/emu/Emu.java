@@ -134,7 +134,7 @@ public final class Emu {
 	 * @param commandLineArguments The arguments to be loaded as if they were passed on the command-line.
 	 */
 	public void load(final String filename, final String... commandLineArguments) {
-		try (final BufferedBinaryReader reader = new BufferedBinaryReader(Path.of(filename))) {
+		try (BufferedBinaryReader reader = new BufferedBinaryReader(Path.of(filename))) {
 			this.elf = ELFParser.parse(reader);
 			logger.info("ELF file parsed successfully");
 

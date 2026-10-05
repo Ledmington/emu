@@ -239,7 +239,7 @@ public final class EmulatorView extends Stage {
 		final String[] args = {file.toString()};
 
 		final ELFLoader loader = new ELFLoader(cpu, mem);
-		try (final BufferedBinaryReader reader = new BufferedBinaryReader(file.toPath())) {
+		try (BufferedBinaryReader reader = new BufferedBinaryReader(file.toPath())) {
 			loader.load(
 					ELFParser.parse(reader),
 					reader,
