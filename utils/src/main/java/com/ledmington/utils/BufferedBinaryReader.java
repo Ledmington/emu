@@ -25,32 +25,29 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * A {@link BinaryReader} backed by a file which is read lazily: only a fixed-size window of the file is kept in memory
+ * A {@link BinaryReader} backed by a file which is read lazily: only a fixed-size buffer of the file is kept in memory
  * at any time, and it is refilled from disk only when a byte outside of it is requested. This allows reading files of
  * arbitrary size with a constant memory footprint.
- *
- * <p>Windows are aligned to multiples of the buffer size, so sequential reads and short backward jumps are served from
- * memory.
  */
 public final class BufferedBinaryReader implements AutoCloseable, BinaryReader {
 
-	/** The default size of the in-memory window, in bytes. */
+	/** The default size of the in-memory buffer, in bytes. */
 	public static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
 
-	private static final InMemoryArrayReader EMPTY_WINDOW = new InMemoryArrayReader(new byte[0]);
+	private static final InMemoryArrayReader EMPTY_BUFFER = new InMemoryArrayReader(new byte[0]);
 
 	private final Path path;
 	private final RandomAccessFile file;
 	private final long fileSize;
-	// Scratch array the file is read into before being wrapped by the window.
+	// Scratch array the file is read into before being wrapped by the buffer.
 	private final byte[] scratch;
 
 	// The currently loaded portion of the file.
-	private InMemoryArrayReader window = EMPTY_WINDOW;
-	// File offset of the first byte of the window.
-	private long windowStart;
-	// Number of bytes in the window (0 means nothing has been loaded yet).
-	private int windowLength;
+	private InMemoryArrayReader buffer = EMPTY_BUFFER;
+	// File offset of the first byte of the buffer.
+	private long bufferStart;
+	// Number of bytes in the buffer (0 means nothing has been loaded yet).
+	private int bufferLength;
 
 	private long position;
 	private boolean isLE;
@@ -84,7 +81,7 @@ public final class BufferedBinaryReader implements AutoCloseable, BinaryReader {
 	 * @param path The file to be read.
 	 * @param isLittleEndian The endianness: true for little-endian, false for big-endian.
 	 * @param alignment The byte alignment to be used while reading.
-	 * @param bufferSize The size in bytes of the in-memory window.
+	 * @param bufferSize The size in bytes of the in-memory buffer.
 	 * @throws UncheckedIOException If the file cannot be opened.
 	 */
 	public BufferedBinaryReader(
@@ -178,95 +175,94 @@ public final class BufferedBinaryReader implements AutoCloseable, BinaryReader {
 			throw new IndexOutOfBoundsException(
 					String.format("Position %,d is outside of file of %,d bytes", position, fileSize));
 		}
-		if (position < windowStart || position >= windowStart + windowLength) {
+		if (position < bufferStart || position >= bufferStart + bufferLength) {
 			fill(position);
 		}
-		window.setPosition(position - windowStart);
-		return window.read();
+		buffer.setPosition(position - bufferStart);
+		return buffer.read();
 	}
 
 	/**
-	 * Prepares the window for reading {@code n} bytes at the current position.
+	 * Prepares the buffer for reading {@code n} bytes at the current position.
 	 *
-	 * @return True if all {@code n} bytes are in the window, false if the caller must fall back to byte-by-byte reads.
+	 * @return True if all {@code n} bytes are in the buffer, false if the caller must fall back to byte-by-byte reads.
 	 */
-	private boolean prepareWindow(final int n) {
+	private boolean preparebuffer(final int n) {
 		if (position < 0L || position + n > fileSize) {
 			return false;
 		}
-		if (position < windowStart || position >= windowStart + windowLength) {
+		if (position < bufferStart || position >= bufferStart + bufferLength) {
 			fill(position);
 		}
-		if (position + n > windowStart + windowLength) {
+		if (position + n > bufferStart + bufferLength) {
 			return false;
 		}
-		window.setPosition(position - windowStart);
+		buffer.setPosition(position - bufferStart);
 		return true;
 	}
 
-	// Moves the cursor past n bytes and aligns it, matching what the default BinaryReader methods do.
-	private void advance(final int n) {
+	private void move(final int n) {
 		final long next = position + n;
-		position = (next % alignment == 0L) ? next : ((next / alignment + 1L) * alignment);
+		position = ((next % alignment) == 0L) ? next : (((next / alignment) + 1L) * alignment);
 	}
 
 	@Override
 	public short read2LE() {
-		if (!prepareWindow(2)) {
+		if (!preparebuffer(2)) {
 			return BinaryReader.super.read2LE();
 		}
-		final short x = window.read2LE();
-		advance(2);
+		final short x = buffer.read2LE();
+		move(2);
 		return x;
 	}
 
 	@Override
 	public short read2BE() {
-		if (!prepareWindow(2)) {
+		if (!preparebuffer(2)) {
 			return BinaryReader.super.read2BE();
 		}
-		final short x = window.read2BE();
-		advance(2);
+		final short x = buffer.read2BE();
+		move(2);
 		return x;
 	}
 
 	@Override
 	public int read4LE() {
-		if (!prepareWindow(4)) {
+		if (!preparebuffer(4)) {
 			return BinaryReader.super.read4LE();
 		}
-		final int x = window.read4LE();
-		advance(4);
+		final int x = buffer.read4LE();
+		move(4);
 		return x;
 	}
 
 	@Override
 	public int read4BE() {
-		if (!prepareWindow(4)) {
+		if (!preparebuffer(4)) {
 			return BinaryReader.super.read4BE();
 		}
-		final int x = window.read4BE();
-		advance(4);
+		final int x = buffer.read4BE();
+		move(4);
 		return x;
 	}
 
 	@Override
 	public long read8LE() {
-		if (!prepareWindow(8)) {
+		if (!preparebuffer(8)) {
 			return BinaryReader.super.read8LE();
 		}
-		final long x = window.read8LE();
-		advance(8);
+		final long x = buffer.read8LE();
+		move(8);
 		return x;
 	}
 
 	@Override
 	public long read8BE() {
-		if (!prepareWindow(8)) {
+		if (!preparebuffer(8)) {
 			return BinaryReader.super.read8BE();
 		}
-		final long x = window.read8BE();
-		advance(8);
+		final long x = buffer.read8BE();
+		move(8);
 		return x;
 	}
 
@@ -277,14 +273,14 @@ public final class BufferedBinaryReader implements AutoCloseable, BinaryReader {
 			file.seek(start);
 			file.readFully(scratch, 0, toRead);
 		} catch (final IOException e) {
-			// Invalidate the window so that stale data is never served.
-			window = EMPTY_WINDOW;
-			windowLength = 0;
+			// Invalidate the buffer so that partial data cannot be used.
+			buffer = EMPTY_BUFFER;
+			bufferLength = 0;
 			throw new UncheckedIOException(e);
 		}
-		window = new InMemoryArrayReader(toRead == scratch.length ? scratch : Arrays.copyOf(scratch, toRead));
-		windowStart = start;
-		windowLength = toRead;
+		buffer = new InMemoryArrayReader(toRead == scratch.length ? scratch : Arrays.copyOf(scratch, toRead));
+		bufferStart = start;
+		bufferLength = toRead;
 	}
 
 	/**
